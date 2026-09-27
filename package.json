@@ -1,0 +1,65 @@
+{
+  "name": "catbus-cli",
+  "version": "0.1.0",
+  "description": "catbus（猫巴士）：上车，开往任何平台。一个命令操作小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X。",
+  "keywords": [
+    "cli",
+    "xiaohongshu",
+    "douyin",
+    "tiktok",
+    "bilibili",
+    "kuaishou",
+    "weibo",
+    "xianyu",
+    "taobao",
+    "jd",
+    "twitter"
+  ],
+  "author": "cv-cat",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cv-cat/catbus.git"
+  },
+  "homepage": "https://github.com/cv-cat/catbus#readme",
+  "bugs": {
+    "url": "https://github.com/cv-cat/catbus/issues"
+  },
+  "type": "module",
+  "bin": {
+    "catbus": "dist/cli/main.js"
+  },
+  "files": [
+    "dist",
+    "static",
+    "assets/banner.txt"
+  ],
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+  },
+  "workspaces": [
+    "packages/assets-jd"
+  ],
+  "scripts": {
+    "build": "node scripts/clean.mjs && tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "gen:capabilities": "npm run build && node scripts/gen-capabilities.mjs",
+    "prepack": "npm run build",
+    "assets:jd": "node scripts/fetch-jd-models.mjs"
+  },
+  "dependencies": {
+    "@cv-cat/catbus-assets-jd": "0.1.0",
+    "@napi-rs/canvas": "^1.0.9",
+    "catbus-cli": "file:",
+    "onnxruntime-web": "^1.30.0",
+    "smol-toml": "^1.9.0",
+    "wreq-js": "^3.2.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.2"
+  }
+}

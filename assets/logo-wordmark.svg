@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 420" width="1280" height="420" role="img" aria-labelledby="title">
+  <title id="title">catbus — 上车，开往任何平台</title>
+  <defs>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1E1E2E"/>
+      <stop offset="1" stop-color="#11111B"/>
+    </linearGradient>
+    <linearGradient id="fur" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FAB387"/>
+      <stop offset="1" stop-color="#F38BA8"/>
+    </linearGradient>
+    <linearGradient id="word" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FAB387"/>
+      <stop offset="1" stop-color="#F5C2E7"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="420" rx="48" fill="url(#card)"/>
+
+  <!-- 图标：与 logo.svg 相同，去掉底板 -->
+  <svg x="40" y="50" width="320" height="320" viewBox="0 0 512 512">
+    <g stroke="#CDD6F4" stroke-width="8" stroke-linecap="round" opacity=".75">
+      <path d="M86 300 L34 288 M86 324 L30 324 M86 348 L34 360"/>
+      <path d="M426 300 L478 288 M426 324 L482 324 M426 348 L478 360"/>
+    </g>
+    <path fill="url(#fur)" d="M96 260 L104 128 Q106 96 134 112 L214 170 Q256 160 298 170 L378 112 Q406 96 408 128 L416 260 L416 344 Q416 424 336 424 L176 424 Q96 424 96 344 Z"/>
+    <g fill="#1E1E2E" stroke="#1E1E2E" stroke-width="12" stroke-linejoin="round" opacity=".22">
+      <path d="M128 184 L130 136 L186 176 Z"/>
+      <path d="M384 184 L382 136 L326 176 Z"/>
+    </g>
+    <g fill="#1E1E2E" opacity=".35">
+      <circle cx="232" cy="186" r="6"/>
+      <circle cx="256" cy="186" r="6"/>
+      <circle cx="280" cy="186" r="6"/>
+    </g>
+    <rect x="128" y="204" width="256" height="188" rx="44" fill="#1E1E2E"/>
+    <g fill="#F5C2E7" opacity=".28">
+      <ellipse cx="170" cy="340" rx="18" ry="10"/>
+      <ellipse cx="342" cy="340" rx="18" ry="10"/>
+    </g>
+    <path d="M178 262 L212 286 L178 310" fill="none" stroke="#A6E3A1" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="294" y="298" width="48" height="14" rx="5" fill="#FAB387">
+      <animate attributeName="opacity" values="1;1;0;0" keyTimes="0;.5;.5;1" dur="1.1s" repeatCount="indefinite"/>
+    </rect>
+    <path d="M249 322 L263 322 L256 331 Z" fill="#F5C2E7" stroke="#F5C2E7" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M234 338 Q245 356 256 336 Q267 356 278 338" fill="none" stroke="#F5C2E7" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+
+  <!-- 文字 -->
+  <g font-family="'JetBrains Mono','Cascadia Code','SF Mono',Consolas,Menlo,monospace">
+    <text x="400" y="178" font-size="120" font-weight="800" letter-spacing="-3" fill="url(#word)">catbus</text>
+    <text x="404" y="246" font-size="34" fill="#CDD6F4"><tspan fill="#A6E3A1">❯</tspan> catbus xhs item get &lt;url&gt;<tspan fill="#FAB387">▋<animate attributeName="fill-opacity" values="1;1;0;0" keyTimes="0;.5;.5;1" dur="1.1s" repeatCount="indefinite"/></tspan></text>
+  </g>
+  <text x="404" y="312" font-size="32" fill="#A6ADC8" font-family="'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif">上车，开往任何平台 · all aboard, every platform</text>
+  <text x="404" y="362" font-size="18" fill="#6C7086" font-family="'JetBrains Mono','Cascadia Code','SF Mono',Consolas,Menlo,monospace">xhs · douyin · tiktok · bilibili · kuaishou · weibo · xianyu · taobao · jd · x</text>
+</svg>

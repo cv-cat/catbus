@@ -1,0 +1,32 @@
+{
+  "name": "@cv-cat/catbus-assets-jd",
+  "version": "0.1.0",
+  "description": "catbus 的京东验证码（JCAP）onnx 模型，来自 cv-cat/JdApis",
+  "author": "cv-cat",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cv-cat/catbus.git",
+    "directory": "packages/assets-jd"
+  },
+  "homepage": "https://github.com/cv-cat/catbus/tree/master/packages/assets-jd",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "models"
+  ],
+  "scripts": {
+    "prepack": "node ../../scripts/fetch-jd-models.mjs"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

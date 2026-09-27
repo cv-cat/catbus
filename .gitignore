@@ -1,0 +1,7 @@
+references/
+node_modules/
+dist/
+coverage/
+*.tgz
+packages/assets-jd/models/
+.claude/settings.local.json

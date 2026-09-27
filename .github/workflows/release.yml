@@ -1,0 +1,46 @@
+name: release
+
+# 推送 v* tag 发布。先跑完整 CI（含全部目标系统的冒烟），再发布 CI 里打好、测过的同一份 tarball。
+# 发布顺序：@cv-cat/catbus-assets-jd（该版本还没发布时）→ catbus-cli（AGENTS 7.2）。
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: ci
+    runs-on: ubuntu-latest
+    env:
+      # 首次发布用 NPM_TOKEN；在 npm 上配好 trusted publishing 后可以删掉这个 secret，走 OIDC
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@latest
+      - name: tag 与版本号一致
+        run: |
+          version=$(node -p "require('./package.json').version")
+          test "v$version" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME 与 package.json 的 $version 不一致"; exit 1; }
+      - uses: actions/download-artifact@v8
+        with:
+          name: packages
+      - name: publish @cv-cat/catbus-assets-jd
+        run: |
+          version=$(node -p "require('./packages/assets-jd/package.json').version")
+          if npm view "@cv-cat/catbus-assets-jd@$version" version >/dev/null 2>&1; then
+            echo "@cv-cat/catbus-assets-jd@$version 已发布，跳过"
+          else
+            npm publish "./cv-cat-catbus-assets-jd-$version.tgz" --access public --provenance
+          fi
+      - name: publish catbus-cli
+        run: npm publish ./catbus-cli-*.tgz --access public --provenance

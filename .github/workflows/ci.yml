@@ -1,0 +1,93 @@
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.os }}, node ${{ matrix.node }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [22, 24, 26]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/cache@v6
+        with:
+          path: packages/assets-jd/models
+          key: jd-models-${{ hashFiles('src/platforms/jd/UPSTREAM') }}
+      - run: npm ci
+      # prepack：catbus-cli 先 build；assets-jd 先取回模型并校验 sha256
+      - run: npm pack
+      - run: npm pack -w packages/assets-jd
+      - uses: actions/upload-artifact@v7
+        with:
+          name: packages
+          path: |
+            *.tgz
+            scripts/smoke.mjs
+          if-no-files-found: error
+
+  # 在全部目标系统上安装打好的包并运行冒烟测试（AGENTS 7.2、7.5）
+  smoke:
+    name: smoke (${{ matrix.target }}, node ${{ matrix.node }})
+    needs: pack
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+        target: [win32-x64, win32-arm64, darwin-arm64, darwin-x64, linux-x64-gnu, linux-arm64-gnu, linux-x64-musl, linux-arm64-musl]
+        include:
+          - { target: win32-x64, os: windows-latest }
+          - { target: win32-arm64, os: windows-11-arm }
+          - { target: darwin-arm64, os: macos-latest }
+          - { target: darwin-x64, os: macos-15-intel }
+          - { target: linux-x64-gnu, os: ubuntu-latest }
+          - { target: linux-arm64-gnu, os: ubuntu-24.04-arm }
+          - { target: linux-x64-musl, os: ubuntu-latest, alpine: true }
+          - { target: linux-arm64-musl, os: ubuntu-24.04-arm, alpine: true }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: packages
+      - uses: actions/setup-node@v7
+        if: ${{ !matrix.alpine }}
+        with:
+          node-version: ${{ matrix.node }}
+      - name: install & smoke
+        if: ${{ !matrix.alpine }}
+        shell: bash
+        run: |
+          npm install -g ./cv-cat-catbus-assets-jd-*.tgz ./catbus-cli-*.tgz
+          node scripts/smoke.mjs
+      # Alpine 容器里跑不了 JS action（arm64 尤其如此），直接用 docker run
+      - name: install & smoke (alpine)
+        if: ${{ matrix.alpine }}
+        run: >-
+          docker run --rm -v "$PWD:/w" -w /w node:${{ matrix.node }}-alpine
+          sh -c 'npm install -g ./cv-cat-catbus-assets-jd-*.tgz ./catbus-cli-*.tgz && node scripts/smoke.mjs'

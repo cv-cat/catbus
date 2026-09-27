@@ -1,0 +1,166 @@
+# 能力矩阵
+
+各平台 web 端能力的规划。命令规范见 [AGENTS.md](../AGENTS.md) 第 4 节，上游代码位置见 [upstream-map.md](upstream-map.md)。
+
+- 本文件由注册表（`src/platforms/<p>/index.ts`）生成：`npm run gen:capabilities`。不要手改，测试会检查它是否最新。
+- app / pc 端目前全部是 planned，不在本表列出。
+
+| 符号 | 含义 | 注册表 status | 执行结果 |
+|---|---|---|---|
+| ✓ | 上游已有，M2 / M3 移植 | implemented（移植后） | 正常执行 |
+| ◐ | 上游部分支持，限制写在注册表的 `note` 里 | implemented（移植后） | 正常执行 |
+| ○ | 平台有这个概念，上游没有，规划中 | planned | `NOT_IMPLEMENTED`，退出码 4 |
+| — | 平台没有这个概念 | 不注册 | `UNSUPPORTED`，退出码 2 |
+
+列顺序：xhs · douyin · tiktok · bilibili · kuaishou · weibo · xianyu · taobao · jd · x。
+
+## 登录方式
+
+|  | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x |
+|---|---|---|---|---|---|---|---|---|---|---|
+| qrcode | ✓ | ✓ |  | ✓ | ✓ |  | ✓ |  | ✓ |  |
+| sms | ✓ | ✓ |  | ✓ | ✓ |  |  |  | ✓ |  |
+| password |  |  |  | ✓ |  |  |  |  |  | ✓ |
+| cookie | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 默认 | qrcode | qrcode | cookie | qrcode | qrcode | cookie | qrcode | cookie | qrcode | password |
+| 子站点 | creator |  |  |  |  |  |  |  |  |  |
+
+## auth
+
+`login` 见上表。`logout` / `list` / `use` 由 core 实现，所有平台都有；服务端登出只有 bilibili。
+
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x |
+|---|---|---|---|---|---|---|---|---|---|---|
+| auth status | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ |
+
+## user
+
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x |
+|---|---|---|---|---|---|---|---|---|---|---|
+| user get | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | ◐ | ◐ | ◐ | ✓ |
+| user search | ✓ | ✓ | ○ | ✓ | ✓ | ○ | — | — | — | ✓ |
+| user items | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | ○ | — | ✓ |
+| user likes | ✓ | ✓ | ○ | — | ✓ | ○ | — | — | — | ○ |
+| user collects | ✓ | ✓ | ✓ | ○ | ✓ | ○ | ○ | ○ | ✓ | ○ |
+| user reposts | — | — | ✓ | — | — | ○ | — | — | — | ○ |
+| user followers / following | ○ | ✓ | ✓ | ○ | ✓ | ○ | — | — | — | ○ |
+| user follow / unfollow | ○ | ○ | ✓ | ○ | ○ | ○ | ○ | — | — | ✓ |
+
+- tiktok `user get`：me 部分支持
+- xianyu `user get`：只支持 me；查询他人规划中
+- taobao `user get`：me 规划中
+- jd `user get`：只支持 me
+
+## item
+
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x |
+|---|---|---|---|---|---|---|---|---|---|---|
+| item get | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | ✓ | ✓ |
+| item search | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ○ | ○ | ✓ | ✓ |
+| item related | ○ | ○ | ✓ | ○ | ✓ | — | ○ | ○ | ✓ | — |
+| item list | ✓ | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — |
+| item media / download | ✓ | ✓ | ◐ | ✓ | ✓ | ○ | — | — | — | ✓ |
+| item like / unlike | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — | ✓ |
+| item collect / uncollect | ○ | ✓ | ✓ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ |
+| item repost / unrepost | — | — | ○ | — | — | ○ | — | — | — | ✓ |
+| item publish | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | — | — | ✓ |
+| item delete | ○ | ○ | ○ | ✓ | ○ | ○ | ○ | — | — | ✓ |
+| item categories | — | — | — | ✓ | — | — | ○ | — | — | — |
+
+## product 与商品评价
+
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x |
+|---|---|---|---|---|---|---|---|---|---|---|
+| product get | ○ | ◐ | ✓ | — | ○ | — | — | — | — | — |
+
+商品评价用 `comment list <product>`（见下节）：传商品 URL 时自动识别，传纯 ID 时加 `--product`。
+
+闲鱼、淘宝、京东的商品本身就是 item：商品详情用 `item get`，商品评价用 `comment list <item>`。
+
+## comment
+
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x |
+|---|---|---|---|---|---|---|---|---|---|---|
+| comment list | ◐ | ✓ | ✓ | ✓ | ◐ | ◐ | — | ○ | ◐ | ✓ |
+| comment replies | ✓ | ✓ | ✓ | ○ | ◐ | ○ | — | — | — | ○ |
+| comment add | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — | ✓ |
+| comment delete | ○ | ○ | ○ | ✓ | ○ | ○ | — | — | — | ✓ |
+| comment like / unlike | ○ | ○ | ○ | ○ | ○ | ○ | — | — | — | ✓ |
+
+- xhs `comment list`：--product 规划中
+- kuaishou `comment list`：--product 规划中
+- `comment list --product`：xhs、douyin、tiktok、kuaishou
+
+## feed 与 keyword
+
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x |
+|---|---|---|---|---|---|---|---|---|---|---|
+| feed list | ◐ | ◐ | ✓ | ◐ | ◐ | ○ | ○ | ○ | ○ | ◐ |
+| feed categories | ✓ | — | ◐ | — | — | — | — | — | — | — |
+| keyword suggest | ○ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ○ |
+| keyword hot | ✓ | ○ | ○ | ○ | ○ | ○ | — | — | ✓ | ○ |
+
+- xhs `feed list`：following 规划中
+- douyin `feed list`：hot、following 规划中
+- bilibili `feed list`：following 规划中
+- kuaishou `feed list`：recommend 规划中；hot 部分支持
+- x `feed list`：following 规划中
+- `feed list --kind` 取值：xhs recommend / following；douyin recommend / hot / following；tiktok recommend / following；bilibili recommend / hot / following；kuaishou recommend / hot / following；weibo recommend / hot / following；xianyu recommend；taobao recommend；jd recommend；x recommend / following
+
+## notice 与 msg
+
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x |
+|---|---|---|---|---|---|---|---|---|---|---|
+| notice list | ✓ | ✓ | ✓ | ○ | ○ | ○ | — | — | — | ○ |
+| notice count | ✓ | ○ | ✓ | ○ | ✓ | ○ | — | — | — | ○ |
+| msg list | ✓ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ✓ |
+| msg history | ✓ | ○ | ✓ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ✓ |
+| msg send | ✓ | ✓ | ◐ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ◐ |
+| msg listen | ✓ | ✓ | ✓ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ○ |
+| msg read / revoke / delete | ✓ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ |
+
+## media、folder、series、history、topic、poi
+
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x |
+|---|---|---|---|---|---|---|---|---|---|---|
+| media upload | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ |
+| folder list / items | ◐ | ✓ | ✓ | ◐ | ○ | ○ | — | — | — | ○ |
+| folder create / update / delete | ○ | ○ | ◐ | ○ | ○ | — | — | — | — | ○ |
+| series list / items | ○ | ○ | ✓ | ○ | ○ | — | — | — | — | — |
+| history list | ○ | ○ | ○ | ○ | ✓ | ○ | ○ | ○ | ✓ | — |
+| topic search | ✓ | ○ | ○ | ○ | ○ | ○ | — | — | — | — |
+| poi search | ✓ | ○ | ✓ | — | ○ | ○ | — | — | — | — |
+
+## live
+
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x |
+|---|---|---|---|---|---|---|---|---|---|---|
+| live get | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — |
+| live list | ✓ | ○ | ✓ | ○ | ✓ | ○ | — | ○ | — | — |
+| live search | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | ○ | — | — |
+| live categories | ✓ | ○ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — |
+| live listen | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — |
+| live history | ○ | ○ | ◐ | ✓ | ○ | ○ | — | ○ | — | — |
+| live send | ◐ | ◐ | ◐ | ✓ | ◐ | ○ | — | ○ | — | — |
+| live like | ○ | ✓ | ✓ | ○ | ◐ | ○ | — | ○ | — | — |
+| live rank | ○ | ✓ | ✓ | ○ | ○ | ○ | — | ○ | — | — |
+| live gifts | ✓ | ○ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — |
+| live products | ✓ | ✓ | ○ | — | ○ | ○ | — | ○ | — | — |
+| live media | ○ | ○ | ○ | ✓ | ○ | ○ | — | ○ | — | — |
+| live replays | — | ○ | — | ○ | ✓ | ○ | — | ○ | — | — |
+| live start / stop | ○ | ○ | ○ | ✓ | ○ | ○ | — | ○ | — | — |
+
+- xhs `live send`：--gift 规划中
+- douyin `live send`：--gift 规划中
+- tiktok `live send`：--gift 规划中
+- kuaishou `live send`：--gift 规划中
+
+## 平台扩展
+
+命令定义见 AGENTS.md 4.7。
+
+| 平台 | 命令 |
+|---|---|
+| xhs | `kol categories` ✓ · `kol list` ✓ · `kol get` ✓ · `kol fans` ✓ · `kol items` ✓ · `kol invite` ✓ · `distributor categories` ✓ · `distributor list` ✓ · `distributor get` ✓ · `distributor items` ✓ · `distributor fans` ✓ |
+| bilibili | `item coin` ✓ · `item triple` ✓ · `item subtitles` ✓ · `danmaku list` ✓ · `danmaku send` ✓ · `dynamic publish` ✓ · `dynamic delete` ✓ · `article publish` ✓ |
+| jd | `order list` ✓ · `cart count` ✓ · `coupon list` ✓ |
