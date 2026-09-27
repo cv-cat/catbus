@@ -120,7 +120,7 @@ const wreqSender: Sender = async (p, o) => {
     const form = new FormData()
     for (const part of p.multipart) {
       if (part.filename != null || typeof part.data !== 'string') {
-        const data = typeof part.data === 'string' ? Buffer.from(part.data) : part.data
+        const data = typeof part.data === 'string' ? Buffer.from(part.data) : new Uint8Array(part.data)
         form.append(part.name, new Blob([data], { type: part.contentType ?? 'application/octet-stream' }), part.filename ?? part.name)
       } else form.append(part.name, part.data)
     }
