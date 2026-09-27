@@ -128,7 +128,9 @@ const wreqSender: Sender = async (p, o) => {
     }
     body = form
   } else if (p.body != null) body = p.body as BodyInit
-  return wreqFetch(p.url, {
+  // wreq-js 会把空路径的 URL（https://host?x=1）发成坏请求，补上 /
+  const url = p.url.replace(/^(https?:\/\/[^/?#]+)(?=[?#]|$)/i, '$1/')
+  return wreqFetch(url, {
     method: p.method,
     headers,
     body,
