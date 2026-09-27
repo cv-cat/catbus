@@ -1,0 +1,120 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://pgy.xiaohongshu.com/api/draco/distributor-square/distributor/cooperative/category/v2",
+      "headers": [
+        [
+          "authority",
+          "pgy.xiaohongshu.com"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "content-type",
+          "application/json;charset=UTF-8"
+        ],
+        [
+          "origin",
+          "https://pgy.xiaohongshu.com"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "referer",
+          "https://pgy.xiaohongshu.com/microapp/distribution/live-blogger-info/d1"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Google Chrome\";v=\"122\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+        ],
+        [
+          "x-b3-traceid",
+          "3feb0559fcbfb6dd"
+        ]
+      ],
+      "cookies": [
+        [
+          "a1",
+          "19a0c4506c7fakea1fakea1fakea1fakea1fakea150000123456"
+        ],
+        [
+          "webId",
+          "0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "gid",
+          "fake-gid-value"
+        ],
+        [
+          "web_session",
+          "fake-web-session"
+        ],
+        [
+          "access-token-pgy.xiaohongshu.com",
+          "fake-pgy-token"
+        ]
+      ],
+      "body": "{\"buyer_id\":\"d1\",\"first_live_category\":\"\",\"second_live_category\":\"\",\"date_type\":2,\"page\":1,\"size\":10}",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "success": true,
+        "msg": "成功",
+        "data": {}
+      }
+    }
+  ],
+  "result": {
+    "code": 0,
+    "success": true,
+    "msg": "成功",
+    "data": {}
+  },
+  "error": null
+}

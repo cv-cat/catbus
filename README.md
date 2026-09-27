@@ -8,7 +8,7 @@
 
 一个命令操作小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X。能力来自 [cv-cat](https://github.com/cv-cat) 的开源项目，用 TypeScript 重写。
 
-> **开发中（M1 骨架）**：命令解析、帮助、登录态管理、配置、`doctor` 已经可用；各平台的具体能力在 M2 / M3 移植，目前执行时返回 `NOT_IMPLEMENTED`（退出码 4）。各平台的规划见 [能力矩阵](docs/capabilities.md)。
+10 个平台的 web 端能力都已移植，每个平台支持哪些命令见 [能力矩阵](docs/capabilities.md)，也可以运行 `catbus platforms <platform>` 查看。矩阵里标 ○ 的是规划中的能力，执行时返回 `NOT_IMPLEMENTED`（退出码 4）；app / pc 端目前都是规划中。
 
 ## 安装
 

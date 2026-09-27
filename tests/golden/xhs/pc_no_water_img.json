@@ -1,0 +1,14 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": [
+    "https://ci.xiaohongshu.com/notes_pre_post/1040g2abc?imageView2/format/jpeg",
+    "https://ci.xiaohongshu.com/spectrum/1040g0k0abc?imageView2/format/jpeg",
+    "https://ci.xiaohongshu.com/a/b/c.jpg?imageView2/format/jpeg",
+    "https://ci.xiaohongshu.com/1040g008xyz?imageView2/format/jpeg"
+  ],
+  "error": null
+}

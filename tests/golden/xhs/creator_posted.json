@@ -1,0 +1,360 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://as.xiaohongshu.com/api/sec/v1/ds?appId=ugc",
+      "headers": [
+        [
+          "User-Agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "Referer",
+          "https://creator.xiaohongshu.com/"
+        ],
+        [
+          "Accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ]
+      ],
+      "cookies": [],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://creator.xiaohongshu.com/api/galaxy/v2/creator/note/user/posted?tab=0&page=0",
+      "headers": [
+        [
+          "authorization",
+          ""
+        ],
+        [
+          "referer",
+          "https://creator.xiaohongshu.com/new/note-manager"
+        ],
+        [
+          "x-xray-traceid",
+          "d06228363d8003e9b0dbd4c8284a64f1"
+        ],
+        [
+          "x-t",
+          "1790000000123"
+        ],
+        [
+          "x-b3-traceid",
+          "feb0559fcbfb6ddd"
+        ],
+        [
+          "x-s-common",
+          "2UQAPsHC+aIjqArjwjHjNsQhPsHCH0rjNsQhPaHCH0c1PUh9HjIj2eHjwjQgynEDJ74AHjIj2ePjwjQM89PjNsQh+sHCH0r1P0G1PsHVHdWMH0ijP/SYPBPF+/Z9GA4fGnTSG/bfGnTSG/bfGnTSG/bfGnTSG/bfGnTSG/rMPeZIPerUPAcM+jHVHdW9H0ijHjIj2eqjwjHjNsQhwsHCHDDAwoQH8B4AyfRI8FS98g+Dpd4daLP3JFSb/BMsn0pSPM87nrldzSzQ2bPAGdb7zgQB8nph8emSy9E0cgk+zSS1qgzianYt8Lz1/LzN4gzaa/+NqMS6qS4HLozoqfQnPbZEp98QyaRSp9P98pSl4oSzcgmca/P78nTTL08z/sVManD9q9z18np/8db8aob7JeQl4epsPrzsagW3Lr4ryaRApdz3agYDq7YM47HFqgzkanYMGLSbP9LA/bGIa/+nprSe+9LI4gzVPDbrJg+P4fprLFTALMm7+LSb4d+kpdzt/7b7wrQM498cqBzSpr8g/FSh+bzQygL9nSm7qSmM4epQ4flY/BQdqA+l4oYQ2BpAPp87arS34nMQyFSE8nkdqMD6pMzd8/4SL7bF8aRr+7+rG7mkqBpD8pSUzozQcA8Szb87PDSb/d+/qgzVJfl/4LExpdzQ4fRSy7bFP9+y+7+nJAzdaLp/2LSiz/zzwgbMagYiJdbCwB4QyFSfJ7b7yFSeqS4oJA+A8BlO8p8c4A+Q4DbSPB8d8nzryo4QzLRAPpq3zdSl4bYQye+SPnzm8/+B/7+nLo4O8n8OqMSl4e+Q2bzA8ML9qM+M4ApP+FTA8S878FDALdkQP9TrqS878gkl49EUyDSPafQtq9zS+7+nqgq3anTN8LcIcg+n/bQsagGM8gWI8BpDaaTsaL+dq98c4FYQ4DSBLpm7abmn4rbQ2epS+dpF4DS3J9L94gzAa/+D8/bn47+1pdzV2gbFqFS3LFlQcFYUP04VyAQQ8nLl4gzeaLp/4FSb+d+xqgz12DSCqf+1/d+8ySSManSi/r4M4okU4gzVagGM8nTl4bpOqrTAPgQw8gYy4g+Qyo8SngkmqAbl4Fls4gz7agY68p4n4e4Qy94S2Bka4FS98np/8sRS8S8FLFDA+7+3qg4M/fza/FSiaomQc94A2rMd8nTYN9pxz08AnpmFLLSkz0bQ2oi9GpmF+rSe2fkQz/4A+Db3asRf/9pk4g41agYH4fMM4o8y/nRAL9Mdq9kl4r8E4gzVanSoLLS9pbQcLoc7ndb7zDS3/d+nqFkS8ob7y/Ql4oYQc9T9/M8FqLS3zFzFpMkQagY6q9Tr+d+hGjRSzbm78MbM4BEQyFzlanT6qM8n4bYQcA4SydmTzrS9t9S6ndmIag8VqFS94fph4g4PqgpFtFYc4eSQygpGaLp9q7YQ/fL9Lo49af8y/LSi/BcUqgz0qdpF/LDAnfSQ2rpEanTazLS9PBpDG0pAy0S3PLRn4FQQzgbQ2S8749MM4AQQyemSy98kyDDAzDpPcfzSydpFnDEc4rRwq9YI8nEP2LS3LgpPLo4EagYOqAbCqrlQyaTHqdp7cFSknnbALozVqS8FGFSip7bQyezkaLp84npn4MpQyMkxaLpDq9SM498ynfF7ag8Q2LSe4d+f8FkA2ob7nrS9+b4QznYHzMkU8FSbGDYIpnP9ag8DqAr78np3pdqFanYNqA+M4rbQzp4DaLLIqAmM47kQcM+Bqdp7yDSe/7+3GMZI8M8F4dQl4okQcA8SPbm7/rS38oPl8ezQaLpOq98+a7+nLozaqjRdqM4n4FzzqBRAPbmF+DSh87+LpLbS+SmF/rSbLe8QyUTwqMm7nLE0/pkQyAmSySm7PfMS8nphpnMIqM8FyrSkpb8QP94A2Bp+PrSkcnLlLozQaLpn4LSe8nphwpDAag8cLLSkyr4t/okYag8N8nT8qg8QyecEanSyyLSe+d+fySSjLopFJFln4rlsJ/mSzb+DqA8n4rzQ40pSyDldqMzc4BbCpdzIag8r+BpM4AmSqg4N4MmF+jTn49zwqgz9qnEN8/b8+9phw/+AP9MO8/8l494Qypk1anY3PFShLfYQ4DkSpfr68pzDzFbwpd4sanSrGgkc4BE78FRApdp7qrSh+d+8qjRAL9ihGFDA87+/pdzO4r88wLS9/7+r4gzLaL+98p8n4rSH4gzEag8O8pSSJBEcqg4SnDHA8n8Q4/4Qz/pAL7pFJdkc4Aps8LEApS8FwnRc4eYyLozHagYL/DS3t78yzB4AzBIIqAbn4b8Q2BRSpS87GgQM4Fko8rRAyp4cJoH6JppFanTMGp8F8g+n4rEQ2bH9a/+B2LS9z0bzG0mSpB4+PDShLezQcMzy/bm7qDSezbq3LozdanDAq9T/ynSIqgq7anSn2f+M4ezQPA8ApBl+JFSi/BTQP9RSyS8FqBRn4MmUJLbSzBk9q98M4rTwqg47ag8bpLRc4ozQyLRAL9868n8S+fLlLo4taL+0JDSbJ9pLc/YHagYm8pSc4bmQcMzDa/P9qM4c4rIhJpbAGM87znQn4r4QP9SL8p8F2LS98o+/p9zSySmF4FSkN9phPbGRHjIj2eDjw0rFw/GI+AqlP0DVHdWlPsHCPsIj2erlH0ijJfRUJnbVHjIj2erUH0ijP/qhw/DEw/DEPerUPAVl+AWEw/DEw/WIPeZIHdF="
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "x-s",
+          "XYS_2UQhPsHCH0c1PUh9HjIj2erjwjQM89PjNsQhPjHCHS4kJfz647PjNsQhPUHCHfM1qAZlPebK/MSB8LLAqbmNy0H3cFkzJLRs+9YV4DzOLDh3zfIMPeQ1PebT4rEtyL8OPnQjGLQkPSkbJeL78ebt/eWlpMYjJAmt+LpGnfY1+Bza8BMQ2g4oarR/8pmaafpGyoZEPnr9Pfl3/94CP0b1cA4sGMrU2rMEqBEGwpmx+BQg8BTDcfMSnnEktF4C8LlQ2SQfzdp02aV7/7zPJ0QtnLuUafMP2DzQy78/GDMtLLuUPFEiPFVI2BF9afb+8bky//qjNsQh+sHCHjQR"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "abRequestId",
+          "fake-ab-request-id"
+        ],
+        [
+          "ets",
+          "1789999990000"
+        ],
+        [
+          "a1",
+          "19a0c4506c7fakea1fakea1fakea1fakea1fakea150000123456"
+        ],
+        [
+          "webId",
+          "0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "gid",
+          "fake-gid-value"
+        ],
+        [
+          "customer-sso-sid",
+          "fake-sso"
+        ],
+        [
+          "x-user-id-creator.xiaohongshu.com",
+          "5f0000000000000000000001"
+        ],
+        [
+          "customerClientId",
+          "fake-client"
+        ],
+        [
+          "access-token-creator.xiaohongshu.com",
+          "fake-creator-token"
+        ],
+        [
+          "galaxy_creator_session_id",
+          "fake-galaxy"
+        ],
+        [
+          "galaxy.creator.beaker.session.id",
+          "fake-beaker"
+        ],
+        [
+          "web_session",
+          "fake-web-session"
+        ],
+        [
+          "webBuild",
+          "1.26.0"
+        ],
+        [
+          "xsecappid",
+          "ugc"
+        ],
+        [
+          "websectiga",
+          "0000000000000000000000000000000000000000000000000000000000000000"
+        ],
+        [
+          "sec_poison_id",
+          "00000000-0000-0000-0000-000000000000"
+        ],
+        [
+          "loadts",
+          "1789999990123"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://creator.xiaohongshu.com/api/galaxy/v2/creator/note/user/posted?tab=0&page=1",
+      "headers": [
+        [
+          "authorization",
+          ""
+        ],
+        [
+          "referer",
+          "https://creator.xiaohongshu.com/new/note-manager"
+        ],
+        [
+          "x-xray-traceid",
+          "d06228363d8003ea9477015bc01587aa"
+        ],
+        [
+          "x-t",
+          "1790000000123"
+        ],
+        [
+          "x-b3-traceid",
+          "fcaab76da818becc"
+        ],
+        [
+          "x-s-common",
+          "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"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "x-s",
+          "XYS_2UQhPsHCH0c1PUh9HjIj2erjwjQM89PjNsQhPjHCHS4kJfz647PjNsQhPUHCHfM1qAZlPebK/MSB8LLAcAHFwnk18rDF4rWh4gpO8pzQ/DSHafMb4rpr8LFU8DkyPeQcPD+CNApIpMma/08w/fTrndkV4M+Y2bbe4DEL/AYt+bm0zpQhwb+MzfpYaAp6w/zfaeHlcfSt8g4k+DSg+g4y8d8OP0+y8S4cJ9S0GLl/zLTczdiMLfVFL/zzJb41/oG9LFk+/fESaDE/qBYE8Si7zDSy8SD9N9I9/jRs+D+SygpxtMzVzg4VLrlhcfRVLfbQynhjNsQh+sHCHjQR"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "abRequestId",
+          "fake-ab-request-id"
+        ],
+        [
+          "ets",
+          "1789999990000"
+        ],
+        [
+          "a1",
+          "19a0c4506c7fakea1fakea1fakea1fakea1fakea150000123456"
+        ],
+        [
+          "webId",
+          "0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "gid",
+          "fake-gid-value"
+        ],
+        [
+          "customer-sso-sid",
+          "fake-sso"
+        ],
+        [
+          "x-user-id-creator.xiaohongshu.com",
+          "5f0000000000000000000001"
+        ],
+        [
+          "customerClientId",
+          "fake-client"
+        ],
+        [
+          "access-token-creator.xiaohongshu.com",
+          "fake-creator-token"
+        ],
+        [
+          "galaxy_creator_session_id",
+          "fake-galaxy"
+        ],
+        [
+          "galaxy.creator.beaker.session.id",
+          "fake-beaker"
+        ],
+        [
+          "web_session",
+          "fake-web-session"
+        ],
+        [
+          "webBuild",
+          "1.26.0"
+        ],
+        [
+          "xsecappid",
+          "ugc"
+        ],
+        [
+          "websectiga",
+          "0000000000000000000000000000000000000000000000000000000000000000"
+        ],
+        [
+          "sec_poison_id",
+          "00000000-0000-0000-0000-000000000000"
+        ],
+        [
+          "loadts",
+          "1789999990123"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "application/javascript"
+      },
+      "body": "function getdss() { return '1789999980000'; };\nvar __$c='00';\nvar _dsf = function (k, b) { var o = []; for (var i = 0; i < 16; i++) o.push((b[i] * 31 + b[23 - i] + i) & 255); return o; };\n"
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "success": true,
+        "msg": "成功",
+        "data": {}
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "success": true,
+        "msg": "成功",
+        "data": {}
+      }
+    }
+  ],
+  "result": [
+    [
+      true,
+      "成功",
+      {
+        "code": 0,
+        "success": true,
+        "msg": "成功",
+        "data": {}
+      }
+    ],
+    [
+      true,
+      "成功",
+      {
+        "code": 0,
+        "success": true,
+        "msg": "成功",
+        "data": {}
+      }
+    ]
+  ],
+  "error": null
+}

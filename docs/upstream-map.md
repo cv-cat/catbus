@@ -207,7 +207,7 @@
 - **API**
   - `taobao_apis.py` 的 `TaobaoApis`：`get_token`、`get_goods_uid_encrypt_uid(goods_url)`（从商品页 HTML 里取卖家 `uid` / `encrypt_uid`，供 `msg send --item` 用）、`upload_media`
   - 私信：`taobao_live.py` 的 `taobaoLive(cookies_str)`（async WebSocket）：`list_all_conversations(cid)`（→ `msg history`）、`create_chat`、`send_msg`
-  - `utils/taobao_utils.py`：`generate_sign`、`generate_mid`、`generate_uuid`、`generate_device_id`、`decrypt`（blackboxprotobuf）、`trans_cookies`
+  - `utils/taobao_utils.py`：`generate_sign`、`generate_mid`、`generate_uuid`、`generate_device_id`、`decrypt`（实际是 base64 + MessagePack，由上游 JS 解码；import 了 blackboxprotobuf 但没用）、`trans_cookies`
 - **JS 资产**：`static/taobao_js_20260407.js`
 - **注意**
   - 上游**没有商品详情和商品搜索接口**。`item_detail_url` 字段是从闲鱼代码带过来的，没有使用。矩阵里 `item get` / `item search` 是 ○。
@@ -251,7 +251,7 @@
   - `x_apis/x_api.py` 的 `XAPI`：`get_work_info`、`get_work_comments`、`get_all_work_comments`、`search_work`、`get_user_info(user_name)`、`get_user_post_note`、`get_user_all_post_note`、`get_home_timeline`、`get_viewer`
   - `x_apis/x_write_api.py` 的 `XWriteAPI`：`post_tweet`、`delete_tweet`、`favorite`、`retweet`、`bookmark`、`follow/unfollow`
   - 媒体上传：`x_apis/x_media_api.py` 的 `XMediaAPI.upload`；私信：`x_apis/x_dm_api.py` 的 `XChatAPI`
-- **JS 资产**
+- **JS 资产**（catbus 暂未移植账密登录，Castle 与 ui_metrics 没有复制）
   - `static/castle/`：`castle.js`、`castle.umd-BneRArir.js`、`env_core.js`、`rolldown-runtime-XXLRXQBO.js`、`run.js`、`castle_meta.json`、`chromium_zlib.meta.json`
   - `static/ui_metrics.js`
   - `static/graphql.json`（GraphQL 操作表）、`static/transaction_l1.json`

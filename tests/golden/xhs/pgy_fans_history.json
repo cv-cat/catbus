@@ -1,0 +1,132 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://pgy.xiaohongshu.com/api/solar/kol/data/kol1/fans_overall_new_history?dateType=1&increaseType=1",
+      "headers": [
+        [
+          "authority",
+          "pgy.xiaohongshu.com"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6"
+        ],
+        [
+          "authorization",
+          ""
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "content-type",
+          "application/json;charset=UTF-8"
+        ],
+        [
+          "origin",
+          "https://pgy.xiaohongshu.com"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "referer",
+          "https://pgy.xiaohongshu.com/solar/pre-trade/kol"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Microsoft Edge\";v=\"122\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0"
+        ],
+        [
+          "x-b3-traceid",
+          "5c5fcaab76da818b"
+        ],
+        [
+          "x-s",
+          "XYS_2UQhPsHCH0c1+shAHjIj2erjwjQhyoPTqBPT49pjHjIj2eHjwjQgynEDJ74AHjIj2ePjwjQTJdPIPAZlg94aGLTlLSQOGLTr/A4nnSm9PAmk8rzH+LD7+nkawepnPaRx2bSoyFDUyfE8+FDF8BMC4FkdPLlMy78GLgSI+bpMzgP9+FRLzobn/gYazo8DzSm9q7kQ8ecI2nYgcnp7GfzV8fQpwBL9P0mg2DTDnp8p/rkmPrkHaMY/aS4PwBSePB8+c9EIqMQCLDkcpnbLP9le8LT/Jfznnfl0yFLIaSQQyAmOarEaLSz+q7GApDzN2L4oqMQcprPE2BExcUR1/sHVHdWFH0ijHjIj2eLjwjHF8/Ll+BpDGfPE+npD8fHUwBrA8eYjP04YPAZUP9QDwsQR"
+        ],
+        [
+          "x-t",
+          "1790000000123"
+        ]
+      ],
+      "cookies": [
+        [
+          "a1",
+          "19a0c4506c7fakea1fakea1fakea1fakea1fakea150000123456"
+        ],
+        [
+          "webId",
+          "0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "gid",
+          "fake-gid-value"
+        ],
+        [
+          "web_session",
+          "fake-web-session"
+        ],
+        [
+          "access-token-pgy.xiaohongshu.com",
+          "fake-pgy-token"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "success": true,
+        "msg": "成功",
+        "data": {}
+      }
+    }
+  ],
+  "result": {
+    "code": 0,
+    "success": true,
+    "msg": "成功",
+    "data": {}
+  },
+  "error": null
+}

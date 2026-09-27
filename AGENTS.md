@@ -37,15 +37,17 @@
 
 ## 2. 当前阶段与里程碑
 
-**当前处于 M1：骨架。** M0 的方案已确认；改规范仍然先改本文件，再写代码。
+**M0–M3 已完成：10 个平台的 web 端全部移植。** 下一步是首次发布，然后是 M4。改规范仍然先改本文件，再写代码。
 
 | 阶段 | 内容 |
 |---|---|
 | M0 | 定名（已定：catbus）、定规范、定技术方案（本文件 + `docs/`）。已完成 |
-| M1 | 骨架，拆成下面三块 |
-| M2 | bilibili、xhs 的 web 端：上游已有（✓ / ◐）的能力全部移植并通过对拍 |
-| M3 | 其余 8 个平台的 web 端，范围同 M2 |
+| M1 | 骨架，拆成下面三块。已完成 |
+| M2 | bilibili、xhs 的 web 端：上游已有（✓ / ◐）的能力全部移植并通过对拍。已完成 |
+| M3 | 其余 8 个平台的 web 端，范围同 M2。已完成 |
 | M4 | MCP 模式、`table` 输出、shell 补全、external provider、app / pc 端 |
+
+移植中发现矩阵与上游不符（上游其实没有、或只是占位）的能力，已按上游实际情况改为 ○ 或 ◐，以 `docs/capabilities.md` 为准。
 
 M1 的内容：
 - **项目与 CLI**：TS 工程；argv 解析、注册表、帮助、信封、退出码；auth store 与游客态；`platforms` / `doctor` / `auth list` / `config` / `version`。
@@ -235,13 +237,13 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | bilibili | `dynamic publish --text [--image]` | 发动态 | `{id url}` |
 | bilibili | `dynamic delete <id>` | 删动态 | `{id}` |
 | bilibili | `article publish --title --text [--cover] [--category]` | 发专栏：先存草稿，再提交 | `{id url}` |
-| xhs | `kol list [--category]` / `get` / `fans` / `items` / `categories` / `invite` | 蒲公英达人 | Kol |
-| xhs | `distributor list` / `get` / `items` / `fans` / `categories` | 千帆分销达人。`get` 合并详情、合作信息、店铺 | Distributor |
+| xhs | `kol list [--category]` / `get` / `fans` / `items` / `categories` / `invite <kol> --product-name --start --end --text --contact` | 蒲公英达人。`invite` 的日期写成 `2026-10-01` | Kol；`invite` 为 `{id}` |
+| xhs | `distributor list [--category]` / `get` / `items` / `fans` / `categories` | 千帆分销达人。`get` 合并详情、合作信息、店铺 | Distributor |
 | jd | `order list` | 订单 | Order[] |
 | jd | `cart count` | 购物车数量 | `{count}` |
 | jd | `coupon list <item>` | 商品可用优惠券 | Coupon[] |
 
-扩展类型的字段见 6.2。Kol、Distributor 在 M2 移植时按上游返回定义，复用 User 的字段，再追加平台字段，定义后补到 6.2。
+扩展类型的字段见 6.2。
 
 ### 4.8 参数
 
@@ -459,7 +461,7 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie] [--scope
 | `qrcode` | — | 二维码画到 stderr，同时把 PNG 存到 `cache/<p>/`，然后等待扫码 |
 | `sms` | `--phone`、`--code` | TTY 下先发验证码，再交互输入。非 TTY 下分两步：`--phone` 发验证码并保存中间态（10 分钟有效），再单独用 `--code` 完成登录 |
 | `password` | `--username`、`--password-stdin` | 密码只从 stdin 读取，TTY 下隐藏输入 |
-| `cookie` | `--cookie <str\|@file\|->` | 导入后调一次 `me` 校验 |
+| `cookie` | `--cookie <str\|@file\|->` | 导入后调一次 `me` 校验。也接受浏览器导出的 cookie JSON 数组；douyin、tiktok 另外接受一个 JSON 对象，把 ticket、证书、私钥等设备数据一并导入（这两个平台的写操作需要它们） |
 
 - **验证码**：上游能自动过的就自动过，过不了报 `RISK_CONTROL`（`detail.kind = captcha`），退出码 5。
 - **子站点**（创作者中心、直播、IM 等）：
@@ -605,6 +607,8 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | Danmaku | `id item_id offset text created_at`，`offset` 为视频内的秒数 |
 | Order | `id status total:Price items:Item[] created_at` |
 | Coupon | `id title discount:Price threshold:Price\|null start_at end_at` |
+| Kol | User 的全部字段，加 `gender location tags:string[] price{picture video} data`。`data` 是该接口返回的统计对象（详情 / 粉丝 / 笔记数据），结构随接口不同 |
+| Distributor | User 的全部字段，加 `tags:string[] categories:string[] data`。`get` 的 `data` 合并了详情、合作信息和店铺 |
 
 **枚举值**：
 

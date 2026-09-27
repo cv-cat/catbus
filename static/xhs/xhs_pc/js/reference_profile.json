@@ -1,0 +1,262 @@
+{
+  "schemaVersion": 1,
+  "source": "xhs-pc-browser-fixtures-20260718",
+  "release": {
+    "appId": "xhs-pc-web",
+    "platform": "Windows",
+    "signVersion": "4.4.3",
+    "b1SdkVersion": "3.5.4",
+    "webProfileSdkVersion": "4.4.3",
+    "webBuild": "6.47.2",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "secChUa": "\"Not;A=Brand\";v=\"8\", \"Chromium\";v=\"152\", \"Google Chrome\";v=\"152\""
+  },
+  "b1Reference": {
+    "frameCount": 2,
+    "x39": 22,
+    "x50": "131,88,103",
+    "secCanvas": "__SEC_CAV__1-1-1-1-1|",
+    "timeOriginOffsetMs": -2027.8,
+    "telemetryProfile": "active",
+    "selectedGlobalNames": [
+      "_BHjFmfUMEtxhI",
+      "_AUuXfEG27Xa3x",
+      "__xhsPendingNotePoint25300ReportMap",
+      "__xhsReportedNotePoint25300RecordMap",
+      "setImDebugMode",
+      "anti_hp_sign_config",
+      "__rap_app_id__",
+      "__rap_report__",
+      "__rap_last_sign_cost__",
+      "__rap_last_transform_cost__",
+      "__rap_hijack_installed__",
+      "__ed1a7dddf7c818e4bd",
+      "__hp_xhs_search_input_state__",
+      "__hp_xhs_search_submit_state__"
+    ],
+    "mouse": {
+      "me": 50,
+      "mm": 50,
+      "md": 3,
+      "mu": 3,
+      "c": 3,
+      "dc": 1
+    },
+    "keyboard": {},
+    "page": {
+      "ulr": 5,
+      "ps": 1,
+      "f": 20,
+      "b": 19,
+      "vc": 2,
+      "rs": 1,
+      "sc": 1
+    },
+    "state": {
+      "h": 0,
+      "f": 1,
+      "kr": 0
+    },
+    "features": {
+      "ae": 2.8905690597867015,
+      "ak": 5.664426623996462,
+      "cdr": 0.15566784512304102,
+      "bf": {
+        "ar": 0.9785478547854786,
+        "fr": 6.242728437964205
+      },
+      "fi": 3363
+    }
+  },
+  "b1Profiles": {
+    "login": {
+      "frameCount": 2,
+      "x39": 0,
+      "x50": "",
+      "generatedAtOffsetMs": 1839,
+      "secCanvas": "__SEC_CAV__1-1-1-1-1|__SEC_UD__|",
+      "timeOriginOffsetMs": -791.9,
+      "telemetryProfile": "login",
+      "telemetryTemplate": "{mt:{to:__TIME_ORIGIN__},m:{},k:{},p:{ulr:0,rs:1,ps:1,f:1},st:{h:0,f:1,kr:0},ft:{ae:null,ak:null,cdr:null,bf:null,fi:null}}",
+      "x37": "0|0|0|0|0|0|0|0|0|1|0|0|0|0|0|0|0|0|1|0|0|0|0|0",
+      "x38": "0|0|1|0|1|0|0|0|0|0|1|0|1|0|1|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0",
+      "x82": "1|_BHjFmfUMEtxhI|_AUuXfEG27Xa3x|__xhsPendingNotePoint25300ReportMap|__xhsReportedNotePoint25300RecordMap|setImDebugMode|anti_hp_sign_config|__rap_app_id__|__rap_report__|__rap_last_sign_cost__|__rap_last_transform_cost__|__rap_hijack_installed__|__ed1a7dddf7c818e4bd|__hp_xhs_search_input_state__|__h",
+      "evidence": "Fresh isolated PC login page6 webprofile collector on 2026-07-19"
+    }
+  },
+  "webProfile": {
+    "algorithm": "base64-des-ecb-zero-padding-hex",
+    "i12Seed": 70,
+    "i12DynamicIndexes": [],
+    "telemetryFi": 326,
+    "timeOriginOffsetMs": -791.9,
+    "telemetryTemplate": "{mt:{to:__TIME_ORIGIN__},m:{},k:{},p:{ulr:0,rs:1,ps:1,f:1},st:{h:0,f:1,kr:0},ft:{ae:null,ak:null,cdr:null,bf:null,fi:null}}",
+    "fields": {
+      "x1": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+      "x2": "false",
+      "x3": "zh-CN",
+      "x4": "24",
+      "x5": "32",
+      "x6": "24",
+      "x7": "Google Inc. (NVIDIA),ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 Ti (0x00002D04) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "x8": "20",
+      "x9": "2560;1440",
+      "x10": "2560;1392",
+      "x11": "-480",
+      "x12": "Asia/Shanghai",
+      "x13": "true",
+      "x14": "true",
+      "x15": "true",
+      "x16": "false",
+      "x17": "false",
+      "x18": "un",
+      "x19": "Win32",
+      "x20": "un",
+      "x21": "PDF Viewer,Chrome PDF Viewer,Chromium PDF Viewer,Microsoft Edge PDF Viewer,WebKit built-in PDF",
+      "x22": "c8e2f6ff2a07957f70a18cde6b905ebb",
+      "x23": "false",
+      "x24": "false",
+      "x25": "false",
+      "x26": "false",
+      "x27": "false",
+      "x28": "10,false,false",
+      "x29": "4,7,8",
+      "x30": "swf object not loaded",
+      "x31": "124.04347527516074",
+      "x33": "0",
+      "x34": "0",
+      "x35": "0",
+      "x36": "2",
+      "x37": "0|0|0|0|0|0|0|0|0|1|0|0|0|0|0|0|0|0|1|0|0|0|0|0",
+      "x38": "0|0|1|0|1|0|0|0|0|0|1|0|1|0|1|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0",
+      "x39": "0",
+      "x40": "0",
+      "x41": "0",
+      "x42": "3.5.4",
+      "x43": "Canvas not supported",
+      "x44": "1784388700729",
+      "x45": "__SEC_CAV__1-1-1-1-1|__SEC_UD__|",
+      "x46": "false",
+      "x47": "1|0|0|0|0|0",
+      "x48": "",
+      "x49": "{list:[],type:}",
+      "x50": "",
+      "x51": "",
+      "x52": "",
+      "x54": "11311144241322244122",
+      "x55": "280,300,280,260,280,280,260,280,240,280,280,340,260,320",
+      "x56": "Google Inc. (NVIDIA)|ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 Ti (0x00002D04) Direct3D11 vs_5_0 ps_5_0, D3D11)|0ebc53d03ea89d69525d81de558e2544|35",
+      "x53": "993da9a681fd3994c9f53de11f2903b3",
+      "x57": "ets=1784388696387; domain=.xiaohongshu.com; path=/; max-age=2592000",
+      "x58": "251",
+      "x59": "47",
+      "x60": "63",
+      "x61": "1352",
+      "x62": "2047",
+      "x63": "0",
+      "x64": "0",
+      "x65": "0",
+      "x66": {
+        "referer": "",
+        "location": "https://www.xiaohongshu.com/explore",
+        "frame": 0
+      },
+      "x67": "1|0",
+      "x68": "0",
+      "x69": "un",
+      "x70": [
+        "location",
+        "getElementById",
+        "getElementsByTagName",
+        "querySelector",
+        "querySelectorAll",
+        "evaluate"
+      ],
+      "x71": "true",
+      "x72": "complete",
+      "x73": "1800",
+      "x74": "0|0|0",
+      "x75": "Google Inc.",
+      "x76": "true",
+      "x77": "1|1|1|1|1|1|1|1|1|1",
+      "x78": {
+        "x": 0,
+        "y": 2598.9375,
+        "left": 0,
+        "right": 290.828125,
+        "bottom": 2616.9375,
+        "height": 18,
+        "top": 2598.9375,
+        "width": 290.828125,
+        "font": "system-ui, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\", -apple-system, \"Segoe UI\", Roboto, Ubuntu, Cantarell, \"Noto Sans\", sans-serif, BlinkMacSystemFont, \"Helvetica Neue\", Arial, \"PingFang SC\", \"PingFang TC\", \"PingFang HK\", \"Microsoft Yahei\", \"Microsoft JhengHei\""
+      },
+      "x79": "14442|6442465386",
+      "x80": "1|[object FileSystemDirectoryHandle]",
+      "x82": "1|_BHjFmfUMEtxhI|_AUuXfEG27Xa3x|__xhsPendingNotePoint25300ReportMap|__xhsReportedNotePoint25300RecordMap|setImDebugMode|anti_hp_sign_config|__rap_app_id__|__rap_report__|__rap_last_sign_cost__|__rap_last_transform_cost__|__rap_hijack_installed__|__ed1a7dddf7c818e4bd|__hp_xhs_search_input_state__|__h",
+      "x83": "eyJkIjp7IjAiOjEzMiwiMSI6MTYyLCIyIjoxMDksIjMiOjExNiwiNCI6MTI5LCI1IjoxNjIsIjYiOjExNiwiNyI6MTExLCI4IjoyMDMsIjkiOjY2LCIxMCI6MTIxLCIxMSI6MjQ3LCIxMiI6MTU4LCIxMyI6MTQ0LCIxNCI6MTQ1LCIxNSI6ODEsIjE2IjoxNTQsIjE3IjoxNjEsIjE4IjoxMDksIjE5IjoxMjgsIjIwIjoxNjEsIjIxIjoxMDcsIjIyIjoxMjgsIjIzIjoxNjEsIjI0IjoxMTIsIjI1IjoxMzIsIjI2IjoxNjMsIjI3IjoxMTcsIjI4IjoxMDgsIjI5IjoxMTQsIjMwIjoxNDQsIjMxIjoxNjIsIjMyIjoxMTQsIjMzIjoxMTUsIjM0IjoxNDUsIjM1IjoxMzEsIjM2IjoxNjIsIjM3IjoxMTYsIjM4IjoxMTUsIjM5IjoyMDUsIjQwIjoyLCI0MSI6MTUwLCI0MiI6MTYxLCI0MyI6MTA0LCI0NCI6MTk0LCI0NSI6MTYxLCI0NiI6MTAyLCI0NyI6MTk1LCI0OCI6MTYyLCI0OSI6MTEyLCI1MCI6MTE1LCI1MSI6MTQ1LCI1MiI6MTMxLCI1MyI6MTYyLCI1NCI6MTE2LCI1NSI6MTE1LCI1NiI6MjA1LCI1NyI6NSwiNTgiOjU1LCI1OSI6MTYxLCI2MCI6MTA0LCI2MSI6MTk0LCI2MiI6MTYxLCI2MyI6MTAyLCI2NCI6MTk1LCI2NSI6MTYxLCI2NiI6MTAyLCI2NyI6MTQ1LCI2OCI6MTMxLCI2OSI6MTYyLCI3MCI6MTE2LCI3MSI6MTE1LCI3MiI6MjA1LCI3MyI6NywiNzQiOjU3LCI3NSI6MTYxLCI3NiI6MTA0LCI3NyI6MTk0LCI3OCI6MTYxLCI3OSI6MTAyLCI4MCI6MTk1fSwidiI6MSwiZSI6Im0ifQ==",
+      "x84": "{mt:{to:1784456743189.1},m:{},k:{},p:{ulr:0,rs:1,ps:1,f:1},st:{h:0,f:1,kr:0},ft:{ae:null,ak:null,cdr:null,bf:null,fi:null}}"
+    }
+  },
+  "mnsStages": {
+    "security": {
+      "tier": "0201",
+      "envConst": 1315,
+      "envFpTailHex": "f8536767c9b581635e0744fa8415",
+      "evidence": "cold-start seq 1-4, four browser fixtures byte-exact"
+    },
+    "coldContent": {
+      "tier": "0101",
+      "envConst": 1327,
+      "envFpTailHex": "f9536767c9b581635e0744fa8415",
+      "evidence": "cold-start seq 5-10, six browser fixtures byte-exact"
+    },
+    "steadyContent": {
+      "tier": "0301",
+      "envConst": 1352,
+      "envFpTailHex": "f9416767c9b581635e0744fa8415",
+      "evidence": "Fresh isolated PC login page6 webprofile x61; runtime-state dependent"
+    }
+  },
+  "loginMnsProfiles": {
+    "security_initial": {
+      "tier": "0201",
+      "envConst": 1322,
+      "envFpTailHex": "f8536767c9b581635e0744fa8415",
+      "evidence": "Fresh isolated Chrome 152 PC login security chain, 2026-09-06"
+    },
+    "security_callback": {
+      "tier": "0101",
+      "envConst": 1332,
+      "envFpTailHex": "f9526767c9b581635e0744fa8415",
+      "evidence": "Fresh isolated Chrome 152 PC seccallback, 2026-09-06"
+    },
+    "activate": {
+      "tier": "0101",
+      "envConst": 1335,
+      "envFpTailHex": "f9526767c9b581635e0744fa8415",
+      "evidence": "Fresh isolated Chrome 152 PC login activation, 2026-09-06"
+    },
+    "qrcode_create": {
+      "tier": "0301",
+      "envConst": 1350,
+      "envFpTailHex": "f9416767c9b581635e0744fa8415",
+      "evidence": "Fresh isolated Chrome 152 PC QR creation, 2026-09-06"
+    },
+    "qrcode_poll": {
+      "tier": "0301",
+      "envConst": 1351,
+      "envFpTailHex": "f9416767c9b581635e0744fa8415",
+      "evidence": "Fresh isolated Chrome 152 PC QR polling, 2026-09-06"
+    },
+    "webprofile": {
+      "tier": "0301",
+      "envConst": 1358,
+      "envFpTailHex": "f9416767c9b581635e0744fa8415",
+      "evidence": "Fresh isolated Chrome 152 PC webprofile, 2026-09-06"
+    }
+  },
+  "rap": {
+    "fingerprintVersion": 10301,
+    "fingerprintTemplate": "rap_fingerprint_template.json"
+  }
+}

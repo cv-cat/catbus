@@ -72,7 +72,8 @@
 
 - weibo `item search`：只能取第一页
 - jd `item related`：用第一个相关搜索词的搜索结果
-- `item search --sort` 取值：bilibili general / views / latest / collects；jd general / sales / price_asc / price_desc / comments；x general / latest
+- `item search --sort` 取值：xhs general / latest / popular / comments / collects；bilibili general / views / latest / collects；jd general / sales / price_asc / price_desc / comments；x general / latest
+- `item search --type` 取值：xhs all / video / image
 - `item publish --shipping`：xianyu
 - `item publish --postage`：xianyu
 - `item publish --pickup`：xianyu
@@ -118,6 +119,7 @@
 - kuaishou `feed list`：recommend 规划中；hot 部分支持
 - x `feed list`：following 规划中
 - `feed list --kind` 取值：xhs recommend / following；douyin recommend / hot / following；tiktok recommend / following；bilibili recommend / hot / following；kuaishou recommend / hot / following；weibo recommend / hot / following；xianyu recommend；taobao recommend；jd recommend；x recommend / following
+- `feed list --category`：xhs
 
 ## notice 与 msg
 
@@ -139,7 +141,7 @@
 |---|---|---|---|---|---|---|---|---|---|---|
 | media upload | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ |
 | folder list | ◐ | ✓ | ✓ | ◐ | ○ | ○ | — | — | — | ○ |
-| folder items | ◐ | ○ | ✓ | ◐ | ○ | ○ | — | — | — | ○ |
+| folder items | ○ | ○ | ✓ | ◐ | ○ | ○ | — | — | — | ○ |
 | folder create / update | ○ | ○ | ◐ | ○ | ○ | — | — | — | — | ○ |
 | folder delete | ○ | ○ | ○ | ○ | ○ | — | — | — | — | ○ |
 | series list | ○ | ○ | ✓ | ○ | ○ | — | — | — | — | — |
@@ -171,6 +173,7 @@
 - xhs `live send`：--gift 规划中
 - douyin `live send`：--gift 规划中
 - tiktok `live send`：--gift 规划中
+- `live list --category`：xhs
 - `live start --category`：bilibili
 
 ## 平台扩展

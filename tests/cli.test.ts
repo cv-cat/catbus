@@ -40,7 +40,7 @@ describe('全局命令', () => {
       resource: 'feed',
       action: 'list',
       auth: 'optional',
-      status: 'planned',
+      status: 'implemented',
       upstream: 'partial',
       note: 'following 规划中',
     })
@@ -105,7 +105,8 @@ describe('帮助', () => {
     const cmd = await cli('xhs', 'item', 'get', '--help')
     expect(cmd.code).toBe(0)
     expect(cmd.stdout).toContain('用法: catbus xhs item get <item>')
-    expect(cmd.stdout).toContain('端:   web ○ planned · app ○ planned · pc ○ planned')
+    expect(cmd.stdout).toContain('端:   web ✓ · app ○ planned · pc ○ planned')
+    expect((await cli('xhs', 'item', 'like', '--help')).stdout).toContain('端:   web ○ planned · app ○ planned · pc ○ planned')
     expect(cmd.stdout).toContain('登录: 可选')
   })
 
@@ -142,7 +143,7 @@ describe('命令判定', () => {
   })
 
   it('平台别名输出规范 id', async () => {
-    expect((await cli('rednote', 'item', 'get', 'x')).env.platform).toBe('xhs')
+    expect((await cli('rednote', 'item', 'like', 'x')).env.platform).toBe('xhs')
   })
 
   it('原生叫法提示规范词', async () => {
@@ -184,7 +185,7 @@ describe('命令判定', () => {
   })
 
   it('-- 之后的内容一律按参数处理', async () => {
-    expect((await cli('xhs', 'item', 'get', '--', '--not-an-option')).code).toBe(4)
+    expect((await cli('xhs', 'item', 'like', '--', '--not-an-option')).code).toBe(4)
   })
 })
 
@@ -214,8 +215,7 @@ describe('auth（core 实现）', () => {
     expect((await cli('xhs', 'auth', 'logout')).env.error.code).toBe('USAGE')
   })
 
-  it('auth login / status 是 planned', async () => {
-    expect((await cli('xhs', 'auth', 'login')).code).toBe(4)
+  it('auth login 的登录方式与子站点只能取注册表声明的值', async () => {
     expect((await cli('xhs', 'auth', 'login', '--method', 'password')).env.error.code).toBe('UNSUPPORTED')
     expect((await cli('xhs', 'auth', 'login', '--scope', 'nope')).env.error.code).toBe('USAGE')
     expect((await cli('tiktok', 'auth', 'login', '--scope', 'creator')).env.error.code).toBe('USAGE')
