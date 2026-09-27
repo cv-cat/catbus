@@ -7,3 +7,5 @@ packages/assets-jd/models/
 .claude/settings.local.json
 .golden/
 .build/
+__pycache__/
+*.pyc
