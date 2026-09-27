@@ -1,0 +1,129 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://passport.jd.com/loginservice.aspx?method=Login&callback=jsonpLogin",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "sec-fetch-dest",
+          "script"
+        ],
+        [
+          "sec-fetch-mode",
+          "no-cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "referer",
+          "https://www.jd.com/"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "__jda",
+          "122270672.17899999991231234567890.1789999999.1789999999.1789999999.1"
+        ],
+        [
+          "__jdc",
+          "122270672"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0.1234567890"
+        ],
+        [
+          "3AB9D23F7A4B3C9B",
+          "FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEI"
+        ],
+        [
+          "3AB9D23F7A4B3CSS",
+          "jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX"
+        ],
+        [
+          "thor",
+          "FAKETHOR0123456789ABCDEF"
+        ],
+        [
+          "pin",
+          "fake_pin_%E6%B5%8B%E8%AF%95"
+        ],
+        [
+          "unick",
+          "fake"
+        ],
+        [
+          "shshshfpa",
+          "0f0e0d0c-0b0a-0908-0706-050403020100-1789999999"
+        ],
+        [
+          "shshshfpx",
+          "0f0e0d0c-0b0a-0908-0706-050403020100-1789999999"
+        ],
+        [
+          "shshshfpb",
+          "FAKEshshshfpb"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": "jsonpLogin({\"Identity\":{\"Unick\":\"fake\",\"Name\":\"fake_pin_测试\",\"IsAuthenticated\":true}})"
+    }
+  ],
+  "result": [
+    true,
+    "fake_pin_测试"
+  ],
+  "error": null
+}

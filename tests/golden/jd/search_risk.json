@@ -1,0 +1,576 @@
+{
+  "input": {
+    "keyword": "机械键盘"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://api.m.jd.com/api?appid=search-pc-java&t=1790000000123&client=pc&clientVersion=1.0.0&cthr=1&uuid=17899999991231234567890&loginType=3&keyword=%E6%9C%BA%E6%A2%B0%E9%94%AE%E7%9B%98&functionId=pc_search_searchWare&body=%7B%22enc%22%3A%22utf-8%22%2C%22area%22%3A%221_2800_55812_0%22%2C%22page%22%3A1%2C%22mode%22%3A%22%22%2C%22concise%22%3Afalse%2C%22hoverPictures%22%3Afalse%2C%22newAdvRepeat%22%3Afalse%2C%22mixerParam%22%3Afalse%2C%22new_interval%22%3Atrue%2C%22s%22%3A1%2C%22pageSize%22%3A30%7D&x-api-eid-token=jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX&h5st=20260921221323123%3B222b5a1biy2ybbb7%3Bf06cc%3Btk03wcafe000018nFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAK%3Bf50529770af0060fbbf4c79a7db3261422197e655d59db57041a315d226678d0%3B5.3%3B1790000000123%3BpjbMhj5eJiFTyiYNCiVfKWIT5jIfJrJdJrESJrpjh75f5nof7rof7rofyPYfLDIj3ipjLDrgJ3VbmmHRfmUbZSGjLDIj3nYOJipjLDrg5fojxjJQIeFjLrJp-jJjLDIj7SnQEiVS0ipjLDrgJTFSGmlf2j4T5nleKWVdIaVe5nFeIa4f5L4fHaFfKWFfJrJdJfUT1yVTIipjLDrgJrIjLDIj3XETJrpjh7Jj2z5f9XIOMWlQCS1U2LFjLDIj1ipjLDrgJDlazj3TJe1a3bIRJrJdJ31QHyVT5ipjLDrgJj4f9G1WJrJdJTlPJrpjh7ZMLrJpJbFa-nYYJrJdJfYf2iFjLrpjLDrg3rJdJnYf2iFjLrpjLDrg3nojxjpf6XETJrpjLrJp-LYgLDIj5nYOJipjLrpjh7JjzLFVpaHQ3b4SDipjxjZQ8aFQKiEjLrpjLDrg7rJdJLYOJipjLrpjh7pfLDIj0XETJrpjLrJp-jIfLDIj1XETJrpjLrJp-rojxjZe2iFjLrpjLDrg7rJdJbYOJipjLrpjh7Ze7nojxj5f2iFjLrpjLDrgJTIg6zpfJrJdJnYOJipjLrpjh7pfLDIjAOEjLrpjLDrg2rJdJfkQJrpjLrJp-rojxjpQJrpjLrJp-rojxjpS0ipjLrpjh-kjxjpS9WlOzWFjLrJp-3kjLDLjWthxgVAyMyVR7uWSAmFSJrJdJjoPJrpjLrJpwqJdJrkPJrpjh7Jj3ToNL-oe1zVRUq5d7zpf6rpWdq5P0ulS9G1WJrJdJnVO4ipjLD7N%3B570bae05aca71c5198fa9b0f9fa3cc914dc0a8dbdbf05deed24cae3f107b454d%3BqbkgHGHQ8GlOIyVOF6JQ8G1P5WFW3yVSC61T-bEQGGlQI6ZNHuFT-bVR7qUT&t=1790000000123",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://search.jd.com/Search?keyword=%E6%9C%BA%E6%A2%B0%E9%94%AE%E7%9B%98&enc=utf-8"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://search.jd.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "__jda",
+          "122270672.17899999991231234567890.1789999999.1789999999.1789999999.1"
+        ],
+        [
+          "__jdc",
+          "122270672"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0.1234567890"
+        ],
+        [
+          "3AB9D23F7A4B3C9B",
+          "FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEI"
+        ],
+        [
+          "3AB9D23F7A4B3CSS",
+          "jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX"
+        ],
+        [
+          "thor",
+          "FAKETHOR0123456789ABCDEF"
+        ],
+        [
+          "pin",
+          "fake_pin_%E6%B5%8B%E8%AF%95"
+        ],
+        [
+          "unick",
+          "fake"
+        ],
+        [
+          "shshshfpa",
+          "0f0e0d0c-0b0a-0908-0706-050403020100-1789999999"
+        ],
+        [
+          "shshshfpx",
+          "0f0e0d0c-0b0a-0908-0706-050403020100-1789999999"
+        ],
+        [
+          "shshshfpb",
+          "FAKEshshshfpb"
+        ],
+        [
+          "unionwsws",
+          "%7B%22devicefinger%22%3A%22FAKEDEVICEFINGER%22%7D"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://api.m.jd.com/api",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded;charset=UTF-8"
+        ],
+        [
+          "referer",
+          "https://cfe.m.jd.com/privatedomain/risk_handler/03101900/?returnurl=https%3A%2F%2Fsearch.jd.com%2FSearch%3Fkeyword%3D%25E6%259C%25BA%25E6%25A2%25B0%25E9%2594%25AE%25E7%259B%2598%26enc%3Dutf-8&rqhost=https%3A%2F%2Fapi.m.jd.com&rpid=FAKERPID&evtype=3&evapi=color_pc_search_searchWare&source=1&forceCurrentView=1&evsid="
+        ],
+        [
+          "origin",
+          "https://cfe.m.jd.com"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "__jda",
+          "122270672.17899999991231234567890.1789999999.1789999999.1789999999.1"
+        ],
+        [
+          "__jdc",
+          "122270672"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0.1234567890"
+        ],
+        [
+          "3AB9D23F7A4B3C9B",
+          "FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEI"
+        ],
+        [
+          "3AB9D23F7A4B3CSS",
+          "jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX"
+        ],
+        [
+          "thor",
+          "FAKETHOR0123456789ABCDEF"
+        ],
+        [
+          "pin",
+          "fake_pin_%E6%B5%8B%E8%AF%95"
+        ],
+        [
+          "unick",
+          "fake"
+        ],
+        [
+          "shshshfpa",
+          "0f0e0d0c-0b0a-0908-0706-050403020100-1789999999"
+        ],
+        [
+          "shshshfpx",
+          "0f0e0d0c-0b0a-0908-0706-050403020100-1789999999"
+        ],
+        [
+          "shshshfpb",
+          "FAKEshshshfpb"
+        ],
+        [
+          "unionwsws",
+          "%7B%22devicefinger%22%3A%22FAKEDEVICEFINGER%22%7D"
+        ]
+      ],
+      "body": "appid=risk_h5&functionId=createSid&body=%7B%22sdkClient%22%3A%22pc%22%2C%22sdkVersion%22%3A%22pc_2.1.0%22%2C%22enbody%22%3A%22QtYe-Hy8DmXDwYigXt7ITDx8rL7S3VRr8VXO4hAF4YW3ec0TTALoZVFvHRWqd0IDFWAJNaSCZvJPtRz7fU00lFKla9cTIZTzdZ65yKxyVolMg-heLxD0YFWYba4ThH3K-A56PsjfQMB5bEIfiH1QpXyAR5f-Ee9L45eNNLfej8FjNntCh40ck52ceAJUcLAG0luZ6oIb26b29Xgs10fwP7Or6rwMfIRpgH6IjrNBPg4%22%7D&x-api-eid-token=jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://api.m.jd.com/api",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded;charset=UTF-8"
+        ],
+        [
+          "referer",
+          "https://cfe.m.jd.com/privatedomain/risk_handler/03101900/?returnurl=https%3A%2F%2Fsearch.jd.com%2FSearch%3Fkeyword%3D%25E6%259C%25BA%25E6%25A2%25B0%25E9%2594%25AE%25E7%259B%2598%26enc%3Dutf-8&rqhost=https%3A%2F%2Fapi.m.jd.com&rpid=FAKERPID&evtype=3&evapi=color_pc_search_searchWare&source=1&forceCurrentView=1&evsid="
+        ],
+        [
+          "origin",
+          "https://cfe.m.jd.com"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "__jda",
+          "122270672.17899999991231234567890.1789999999.1789999999.1789999999.1"
+        ],
+        [
+          "__jdc",
+          "122270672"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0.1234567890"
+        ],
+        [
+          "3AB9D23F7A4B3C9B",
+          "FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEI"
+        ],
+        [
+          "3AB9D23F7A4B3CSS",
+          "jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX"
+        ],
+        [
+          "thor",
+          "FAKETHOR0123456789ABCDEF"
+        ],
+        [
+          "pin",
+          "fake_pin_%E6%B5%8B%E8%AF%95"
+        ],
+        [
+          "unick",
+          "fake"
+        ],
+        [
+          "shshshfpa",
+          "0f0e0d0c-0b0a-0908-0706-050403020100-1789999999"
+        ],
+        [
+          "shshshfpx",
+          "0f0e0d0c-0b0a-0908-0706-050403020100-1789999999"
+        ],
+        [
+          "shshshfpb",
+          "FAKEshshshfpb"
+        ],
+        [
+          "unionwsws",
+          "%7B%22devicefinger%22%3A%22FAKEDEVICEFINGER%22%7D"
+        ]
+      ],
+      "body": "appid=risk_h5&functionId=checkToken&body=%7B%22sdkClient%22%3A%22pc%22%2C%22sdkVersion%22%3A%22pc_2.1.0%22%2C%22enbody%22%3A%22ROuOzsi1KFUoc9fErmcVY15J6Dysm-vqOEsbpYxnkLtwG_j-BAXeKXBOIfxEnVL6rodmQHFQ7pdK10_uPzRCOxwCgMu-VVbkqS0UpW40acopTkNFJwhS6WHJT_PLfwxS5WdPyHs31GTIthw6vfz-p569twPW_8szDg6qxz3iHx-EPEItC496VYAHgW_EFk9LhcUBQ7iyrV2Wr5wHhzeoxFrKaI7LCkpK97kk2l3IPOURezTaCqyx2ot8z3YnzKnzxRhfaLnMKLq0o5_ZhWLb40bXr-ZUHs9wEQs5b7JCr_NRqJ5X41ClF7-Oen2RSizhU5f3eI36gCqt0Tw-Tusn__CK1fk8AOxaa8S2Nc07ORmVGDyM3Ctnoi40O67QTak1%22%7D&x-api-eid-token=jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX",
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://api.m.jd.com/api?appid=search-pc-java&t=1790000000123&client=pc&clientVersion=1.0.0&cthr=1&uuid=17899999991231234567890&loginType=3&keyword=%E6%9C%BA%E6%A2%B0%E9%94%AE%E7%9B%98&functionId=pc_search_searchWare&body=%7B%22enc%22%3A%22utf-8%22%2C%22area%22%3A%221_2800_55812_0%22%2C%22page%22%3A1%2C%22mode%22%3A%22%22%2C%22concise%22%3Afalse%2C%22hoverPictures%22%3Afalse%2C%22newAdvRepeat%22%3Afalse%2C%22mixerParam%22%3Afalse%2C%22new_interval%22%3Atrue%2C%22s%22%3A1%2C%22pageSize%22%3A30%7D&x-api-eid-token=jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX&h5st=20260921221323123%3B222b5a1biy2ybbb7%3Bf06cc%3Btk03wcafe000018nFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAK%3Bf50529770af0060fbbf4c79a7db3261422197e655d59db57041a315d226678d0%3B5.3%3B1790000000123%3BpjbMhj5eJiFTyiYNCiVfKWIT5jIfJrJdJrESJrpjh75f5nof7rof7rofyPYfLDIj3ipjLDrgJ3VbmmHRfmUbZSGjLDIj3nYOJipjLDrg5fojxjJQIeFjLrJp-jJjLDIj7SnQEiVS0ipjLDrgJTFSGmlf2j4T5nleKWVdIaVe5nFeIa4f5L4fHaFfKWFfJrJdJfUT1yVTIipjLDrgJrIjLDIj3XETJrpjh7Jj2z5f9XIOMWlQCS1U2LFjLDIj1ipjLDrgJDlazj3TJe1a3bIRJrJdJ31QHyVT5ipjLDrgJj4f9G1WJrJdJTlPJrpjh7ZMLrJpJbFa-nYYJrJdJfYf2iFjLrpjLDrg3rJdJnYf2iFjLrpjLDrg3nojxjpf6XETJrpjLrJp-LYgLDIj5nYOJipjLrpjh7JjzLFVpaHQ3b4SDipjxjZQ8aFQKiEjLrpjLDrg7rJdJLYOJipjLrpjh7pfLDIj0XETJrpjLrJp-jIfLDIj1XETJrpjLrJp-rojxjZe2iFjLrpjLDrg7rJdJbYOJipjLrpjh7Ze7nojxj5f2iFjLrpjLDrgJTIg6zpfJrJdJnYOJipjLrpjh7pfLDIjAOEjLrpjLDrg2rJdJfkQJrpjLrJp-rojxjpQJrpjLrJp-rojxjpS0ipjLrpjh-kjxjpS9WlOzWFjLrJp-3kjLDLjWthxgVAyMyVR7uWSAmFSJrJdJjoPJrpjLrJpwqJdJrkPJrpjh7Jj3ToNL-oe1zVRUq5d7zpf6rpWdq5P0ulS9G1WJrJdJnVO4ipjLD7N%3B570bae05aca71c5198fa9b0f9fa3cc914dc0a8dbdbf05deed24cae3f107b454d%3BqbkgHGHQ8GlOIyVOF6JQ8G1P5WFW3yVSC61T-bEQGGlQI6ZNHuFT-bVR7qUT&t=1790000000123",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://search.jd.com/Search?keyword=%E6%9C%BA%E6%A2%B0%E9%94%AE%E7%9B%98&enc=utf-8"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://search.jd.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "__jda",
+          "122270672.17899999991231234567890.1789999999.1789999999.1789999999.1"
+        ],
+        [
+          "__jdc",
+          "122270672"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0.1234567890"
+        ],
+        [
+          "3AB9D23F7A4B3C9B",
+          "FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEI"
+        ],
+        [
+          "3AB9D23F7A4B3CSS",
+          "jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX"
+        ],
+        [
+          "thor",
+          "FAKETHOR0123456789ABCDEF"
+        ],
+        [
+          "pin",
+          "fake_pin_%E6%B5%8B%E8%AF%95"
+        ],
+        [
+          "unick",
+          "fake"
+        ],
+        [
+          "shshshfpa",
+          "0f0e0d0c-0b0a-0908-0706-050403020100-1789999999"
+        ],
+        [
+          "shshshfpx",
+          "0f0e0d0c-0b0a-0908-0706-050403020100-1789999999"
+        ],
+        [
+          "shshshfpb",
+          "FAKEshshshfpb"
+        ],
+        [
+          "unionwsws",
+          "%7B%22devicefinger%22%3A%22FAKEDEVICEFINGER%22%7D"
+        ],
+        [
+          "x-rp-evtoken",
+          "FAKEEVTOKEN"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": "605",
+        "echo": "the request needs to authenticate",
+        "disposal": {
+          "rpId": "FAKERPID",
+          "evContent": "{\"evType\": \"3\", \"evUrl\": \"https://cfe.m.jd.com/privatedomain/risk_handler/03101900/\", \"evApi\": \"color_pc_search_searchWare\", \"title\": \"京东验证\", \"evSid\": \"\"}"
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "data": "FAKERISKSID"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "data": "FAKEEVTOKEN"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "data": {
+          "resultCount": 1,
+          "wareList": [
+            {
+              "wareId": "100087543376",
+              "wareName": "<font>机械</font>键盘",
+              "jdPrice": "299.00",
+              "shopName": "假店铺",
+              "venderId": 1000,
+              "comment": "2万+"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "result": {
+    "result": {
+      "code": 0,
+      "data": {
+        "resultCount": 1,
+        "wareList": [
+          {
+            "wareId": "100087543376",
+            "wareName": "<font>机械</font>键盘",
+            "jdPrice": "299.00",
+            "shopName": "假店铺",
+            "venderId": 1000,
+            "comment": "2万+"
+          }
+        ]
+      },
+      "_verification": {
+        "code": 0,
+        "stage": "complete",
+        "token_length": 11
+      }
+    },
+    "evtoken": "FAKEEVTOKEN"
+  },
+  "error": null
+}

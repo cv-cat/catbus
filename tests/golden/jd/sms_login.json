@@ -1,0 +1,1273 @@
+{
+  "input": {
+    "mobile": "13800000000"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://passport.jd.com/new/login.aspx?ReturnUrl=https://home.jd.com/index.html",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
+        ],
+        [
+          "sec-fetch-dest",
+          "document"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-site",
+          "none"
+        ],
+        [
+          "sec-fetch-user",
+          "?1"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://qr.m.jd.com/show?appid=133&size=147&t=1790000000123",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://passport.jd.com/"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "accept",
+          "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "image"
+        ],
+        [
+          "sec-fetch-mode",
+          "no-cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0"
+        ],
+        [
+          "__jd_ref_cls",
+          "Login_Page"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://passport.jd.com/publicKey/init",
+      "headers": [
+        [
+          "sgm-context",
+          "515111226144135894;515111226144135894"
+        ],
+        [
+          "jdas-trace-id",
+          "01a0c450-6c7b-7d3b-8d7c-d743c4595f6a"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://passport.jd.com/new/login.aspx?ReturnUrl=https://home.jd.com/index.html"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "x-requested-with",
+          "XMLHttpRequest"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "jdas-page-id",
+          "fake-page-uuid-0001"
+        ],
+        [
+          "jdas-session-id",
+          "01a0c450-6c7b-794e-9342-b18651550001"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0"
+        ],
+        [
+          "__jd_ref_cls",
+          "Login_Page"
+        ],
+        [
+          "wlfstk_smdl",
+          "FAKEQRTOKEN"
+        ],
+        [
+          "QRCodeKey",
+          "FAKEQRCODEKEY"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://jra.jd.com/jsTk.do",
+      "headers": [
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "User-Agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "Accept",
+          "application/json"
+        ],
+        [
+          "Accept-Encoding",
+          "identity"
+        ],
+        [
+          "Accept-Language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "Origin",
+          "https://passport.jd.com"
+        ],
+        [
+          "Referer",
+          "https://passport.jd.com/new/login.aspx?ReturnUrl=https://home.jd.com/index.html"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "Content-Type",
+          "application/x-www-form-urlencoded;charset=UTF-8"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0"
+        ],
+        [
+          "__jd_ref_cls",
+          "Login_Page"
+        ],
+        [
+          "wlfstk_smdl",
+          "FAKEQRTOKEN"
+        ],
+        [
+          "QRCodeKey",
+          "FAKEQRCODEKEY"
+        ]
+      ],
+      "body": "a=7TJI7TceW0Pu7Tce7TZ37Tce7Tce7T7L7TcezlP47Tce7TZ37Tce7Tce7T7L7TceiQPmSg6PwHcPwj<PwHcPwHcPw4wPwH7CzlRP7Tce7TZ37TceWtReygZj7Tce7T7L7TceWIAewGAB6SAewdwPwHcPw4wPwH7QWIAewGAB6SAewHwEZTAeOL6*OL34O0AtFgRbZgwlwTRPwQfGFHAewlcl7Tce7T7L7TceitREW0APwHcPwj<x7T7L7TceJGAewGAB6SAewH<*vH<uZSD*7Tce7T7L7TceW1iPwHcPwj<PwHc*wP9*JN8xO<JNhBWDZHcxZH2DZTaj7Tce7T7L7TceFGAewGAB6SAewH<PwHcPw4wPwH7B7Tce7TZ37TcewQ6eiB<lFgNbwB2lZLikwBWlZTcBwH3bFH4*wQNQiT6PwHcPw4wPwH7X7Tce7TZ37TceW0NBWt3XWd6uyQ6uil9C7T70zQft7T70z09dygDuihZ*qIAewGAe6eAewdNB7Tce7TZ37TceAQfjJh7ufh7s7TZ<y1RjW1wPwj<Pw4iPw4FozlkPvQp4vQZXzSAeRQPuF0fDvQbjzg*PwHcPw4wPwH7xySAewGAB6SAewGAewGAtR2/&d=7TJI7TceJ1wPwHcPwj<PZjcPwH74FhFpilfAygkP7Tce7TZ3wTWEwL2*wL2*wL<eweAe6eAewQRPJQPHFAfuFNRpzgAPwHcPwj<xZB4*wL2*wL2*wTcB7TJ<7T7L7Tceil<PwHcPwj<PZjcPwH7jF<bbWlaPwHcPwj<PwHc*ZgwkigN4FLbGZHcBOLwtiH6lwH6jZQwtiB4tw0<jFSAewGAtRIAe6eAewQjPwHcPwj<PZjcPwH7Hzlk*ihRZzlRP7Tce7TZ37Tce6kZTwAZXzh3bJIAewGAtRIAe6eAewQDPwHcPwj<PZjcPwH7kWlfe6gJPzd6PwHcPwj<PwH7Zztppz0xb7T70ZSD*7Tc*KNJpzQRXJtwPwH3OfIAewL<*vH2PwjcPwH3hygDlZIAB6GAew1alZI4PwH33W13sFfJPi4CpJIAeRHABZeDBZGAewIbvSNRZTIAe6eAew0xpylAPwH31FgZrze4PwH3Ly17XzgAPw4ixZTcuwID*vH2PwH3TigFbWQ4Pw4ikwBWuwBiPwHcPw4wPwH7bW13gFh7Byg9u7Tce7TZ37TceZSD*7Tc*KNJpzQRXJtwPwH3OfIAewL<*vH2PwjcPwH3hygDlZIAB6GAew1alZI4PwH33W13sFfJPi4CpJIAeRHABZeDBZGAewIbvSNRZTIAe6eAew0xpylAPwH31FgZrze4PwH3Ly17XzgAPw4ixZTcuwID*vH2PwH3TigFbWQ4Pw4ikwBWuwBiPwHcPw4wPwH7*z0NjFQ9ezSAewGAB6SAewPJpzHwe7Tce7T7L7TceJQfuF09e7Tce7TZ37TceRl9XFlxP7Tc*SgEHvGAewGAe6eAewQxbzQJkigJP7Tce7TZ37TceqQaC6jDPwHcPw4wPwH7oih74JlNeFAZXzQZkWd7PzQZE7Tce7TZ3wBcPw4wPwH74FhFpilfZFgkXWd4PwHcPwj<D7T7L7TcezgNDf09kilb6zlPuJ1wPwHcPwj<*7T7L7TceJlfGF17pJQfe7Tce7TZ3FQNsWlAPw4wPwH7Hzl9rygfNzQNGz0f47Tce7TZ3J17kFSAe6eAewd34FPFpFhJPW4fuig7sFg6PwHcPwjNjWdfP7T7L7TceyQNliAfuig7sFg6PwHcPwjNQigxBFSAe6eAewQN*W<ZXF0fOigkP7Tce7TZ37TceTg9mygxsiSAewGAe6eAewQN*W<EbzgAPwHcPwj<PwH7OFhRBilN*FSAewGAe6eAewd3ezlRkit6PwHcPwj<PwH71FgZrzeAewGAe6eAewd3ezlRkitRTJgcPwHcPwj<PwHcewL2BwL<*ZeAewGAe6eAewdFPzQRXWPZkiGAewGAB6SAewGAewGAe6eAewQ9uT0PuFSAewGAB6hReJgAPw4wPwH7PzdfCFh7bJ0PXz49eF0fe7Tce7TZ37TfI7TceJhZPW4NdFgEj7Tce7T7L7Tceih3*fQfeWlPXzGAewGAe6eAewd3sihRQzt7C7Tce7T7L7TceJQfuF09e7Tce7T7L7Tcez0NuFtfbFlAPwHcPw4wPwH7sigEdJgNdFhwPwHcPw4wPwH7oih74JlNeFAZXzQZkWd7PzQZE7Tce7T7L7TceF0flygZPTgfCzt7E7Tce7T7L7TcezgNDf09kilb6zlPuJ1wPwHcPw4wPwH7tFg74WQPlFhcPwHcPw4wPwH74zjEXJNReigZr7Tce7T7L7Tceil9XylPPRgEbiQxPFIAewGAe6eAewd34FPFpFhJPW4fuig7sFg6PwHcPw4wPwH7kWlfe6gJPzdR<ihRb7Tce7T7L7Tceil9uzQfHJ0PXzGAewGAe6eAewd3sJgJpzdwPwHcPw4wPwH7CygkPf1P*FhwPwHcPw4wPwH7*Fh7CyhZByg9uWeAewGAe6eAewQpbJQNNzQNGz0f47Tce7T7L7Tceih3*6l94FAEbzgAPwHcPw4wPwH7bW13OigkP7Tce7T7L7TceW17XF1fHJIAewGAe6eAewd3ezlRkitRTJgcPwHcPw4wPwH7lFgE4zt7TJgcPwHcPw4wPwH7Xz4xpzQAPwHcPZA6PZj6Pw4wPwH7*7Tce7TZ37TfI7TJI7TcezQNCFSAewGAB6SAewP3<RGAewNFpFhJPWGAewGAtRIAe6eAt6GAewQEbzgAPwHcPwj<PwH7Ly17XzgAPwH36R<iPwH3gygftFhcPwHcPZj6Pw4wPZjcPwH7uigkP7Tce7TZ37Tce6lbezlkpJgjPwH36R<iPwH3gygftFhcPwHcPZj6Pw4wPZjcPwH7uigkP7Tce7TZ37TceTgPHWQ9BzlFj7Tc*RgRdFSAewN3<RGAewNFpFhJPWGAewGAtRIAe6eAt6GAewQEbzgAPwHcPwj<PwH7hFg7vyh6PwH3GJgPsJIkpzGAewN3<RGAewGAtRIAkRIAe6eAewdWPwHcPwj<PZjcPwH74FhFpilf6yhbPzN7bJ0PX7Tce7TZ3wSAe6eAewdZHWQfPzPRXWIAewGAB6T2Pw4wPwH7Bit7PFgEwFgFj7Tce7TZ3wIAtRIAe6eAewdwPwHcPwj<PZjcPwH7bJQNpz<bPygJoJIAewGAB6T<BOTcPw4wPwH7bJQNpzNJpF1Ro7Tce7TZ3wHAlwIAe6eAewQZXz09eR0f*J0aPwHcPwj<eZIAe6eAewQbPygJoJIAewGAB6T<jZL2Pw4wPwH7tygRjyIAewGAB6TckZH2Pw4wPwH7*yhbPz<RPW1Ro7Tce7TZ3wH6PZj6Pw4wPwH7BieAewGAB6SAt6GAew4NHJ0PlFA7XWQRPWGAewGAB6SAewQNHJ0PlFg7XWQRPWGAewGAe6eAew4NHJ0PlFAZbW1RpzlDPwHcPwj<PwH7bitRpJQfHih3jyg9u7Tce7T7L7Tce6h3*fl9eytZ*igZP7Tce7TZ37Tceih3*Jl9eytZ*igZP7Tce7T7L7Tce6QNHylJeztfuFIAewGAB6SAewQ7bilCdWQ9kzQ6PwHcPw4wPwH7IJhRjzlE0igZP7Tce7TZ37TceidfjJ09uFQNHFSAewGAe6eAew47kJ1RXz4bpFlbsygJoJIAewGAB6SAewQ7kJ1RXzQbpFlbsygJoJIAewGAe6eAew47kJ1RXzPZoigRXJeAewGAB6SAewQ7kJ1RXzdZoigRXJeAewGAe6eAew47kJ1RXzPRPq16PwHcPwj<PwH7GJhRjzlEjFhbj7Tce7T7L7Tce6lN*J0PXzPRPq16PwHcPwj<PwH7Hih3jyg9uJ0fDJIAewGAe6eAew4JeihPAFhbj7Tce7TZ37TceFt7bqhRPq16PwHcPw4wPwH7cygJoz0Pdy16PwHcPwj<PwH7oygJoz0Pdy16PwHcPw4wPwH7cygJoz0Pdy1RAFhbj7Tce7TZ37Tcey0Pdy0xpFlbjJ0fDJIAewGAe6eAew4PuigZjyhFP6Q9eF0fe7Tce7TZ37TceygEbitRpJQfGzt74FhcPwHcPw4wPwH77zQNHJ0PlFAZbW1RpzlDPwHcPwj<PwH7pzQNHJ0PlFgZbW1RpzlDPwHcPw4wPwH77zQNHJ0PlFAZbW1RpzlEAFhbj7Tce7TZ37TceygEbitRpJQfHih3jyg9uJ0fDJIAewGAe6eAew4PuFQ9IigZrFt7XJgE47Tce7TZ37TceygEQzl7bilCdWQ9kzQ6PwHcPw4wPwH77zQFXf0fDJIAewGAB6SAewQPuFQ9jFhbj7Tce7T7L7TceTgfuJSAewGAB6SAewQkPzdAPwHcPw4wPwH7ZFgEkf0fDJIAewGAB6SAewQkPzdfjFhbj7Tce7T7L7TceAlZezlxsiQNe7Tce7TZ37TceWlZezlxsiQNe7Tce7T7L7Tcef0beFgf<R0NeykZoigRXJeAewGAB6SAewdRoWQfPF0RbWQCBy0N4ztWPwHcPw4wPwH7Ay17PFAR0igZP7Tce7TZ37TceJ0beFgf4FQNHFSAewGAe6eAewPRoWQfPR<bpFlbsygJoJIAewGAB6SAewdRoWQfPF0bpFlbsygJoJIAewGAe6eAewPRoWQfPR<xpFlbjAlbbF09t7Tce7TZ37TceJ0beFgf4z0Pdy1RBy0N4ztWPwHcPw4wPwH7Ay17PFARTy0N4ztWPwHcPwj<PwH7jy17PFgRBy0N4ztWPwHcPw4wPwH7hygE4ztWPwHcPwj<PwH7tygE4ztWPwHcPw4wPwH7hygE4ztJ0WQNCFSAewGAB6SAewdJpzQRXJlFeigkP7Tce7T7L7TceflPuF09tf0fDJIAewGAB6SAewdJpzQRXJtRPq16PwHcPZj6Pw4wPwH7BWeAewGAB6SAt6GAewQZXzlCpFSAewGAB6hReJgAPw4wPwH7szlZbzNZjzt7bFlAPwHcPwjNjWdfP7T7L7TceWlfBWlPXzPZjzt7bFlAPwHcPwjNjWdfP7T7L7TceFlxXiQNsAtRXWQNdFSAewGAB6gFbz1ZP7T7L7TceygE4FhbPF<RI7Tce7TZ3FQNsWlAPZj6Pw4wPwH7jqGAewGAB6SjjOL2Pw4wPwH7syg*PwHcPwj<PwHcPwHcPw4wPwH7tyg*PwHcPwj<PwHcPwHcPw4wPwH7tySAewGAB6SAt6GAewQ9t7Tce7TZ3wHAlwIAe6eAewQ9o7Tce7TZ3wTwEwGAe6eAewQPt7Tce7TZ3wHAlwIAe6eAewQPo7Tce7TZ3wTcEZeAe6eAewQfjzGAewGAB6SAewGAk6Q9GyQfHJIAew<fDJ0fezQNs7Tf<7Tce7T7L7TcezQxH7Tce7TZ3wIAe6eAewdZsieAewGAB6T2PZj6PZj6/",
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://passport.jd.com/ssoDomain/getList?ReturnUrl=https%3A%2F%2Fhome.jd.com%2Findex.html&r=0.5939828956034034",
+      "headers": [
+        [
+          "sgm-context",
+          "962315314440211111;962315314440211111"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "jdas-trace-id",
+          "01a0c450-6c7b-7ad8-9891-71f2de0189a7"
+        ],
+        [
+          "referer",
+          "https://passport.jd.com/new/login.aspx?ReturnUrl=https://home.jd.com/index.html"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "x-requested-with",
+          "XMLHttpRequest"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/javascript, */*; q=0.01"
+        ],
+        [
+          "jdas-page-id",
+          "fake-page-uuid-0001"
+        ],
+        [
+          "jdas-session-id",
+          "01a0c450-6c7b-794e-9342-b18651550001"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0"
+        ],
+        [
+          "__jd_ref_cls",
+          "Login_Page"
+        ],
+        [
+          "wlfstk_smdl",
+          "FAKEQRTOKEN"
+        ],
+        [
+          "QRCodeKey",
+          "FAKEQRCODEKEY"
+        ],
+        [
+          "3AB9D23F7A4B3C9B",
+          "FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEI"
+        ],
+        [
+          "3AB9D23F7A4B3CSS",
+          "jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX"
+        ],
+        [
+          "_gia_d",
+          "1"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://sso.jd.hk/alive?callback=jQuery7844740&_=1790000000123",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://passport.jd.com/new/login.aspx?ReturnUrl=https://home.jd.com/index.html"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "sec-fetch-dest",
+          "script"
+        ],
+        [
+          "sec-fetch-mode",
+          "no-cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://sso.jdpay.com/alive?callback=jQuery1663047&_=1790000000123",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://passport.jd.com/new/login.aspx?ReturnUrl=https://home.jd.com/index.html"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "sec-fetch-dest",
+          "script"
+        ],
+        [
+          "sec-fetch-mode",
+          "no-cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://seq.jd.com/jseqf.html?bizId=passport_jd_com_login_pc&platform=js&version=1",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://passport.jd.com/new/login.aspx?ReturnUrl=https://home.jd.com/index.html"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "sec-fetch-dest",
+          "script"
+        ],
+        [
+          "sec-fetch-mode",
+          "no-cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0"
+        ],
+        [
+          "__jd_ref_cls",
+          "Login_Page"
+        ],
+        [
+          "wlfstk_smdl",
+          "FAKEQRTOKEN"
+        ],
+        [
+          "QRCodeKey",
+          "FAKEQRCODEKEY"
+        ],
+        [
+          "3AB9D23F7A4B3C9B",
+          "FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEI"
+        ],
+        [
+          "3AB9D23F7A4B3CSS",
+          "jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX"
+        ],
+        [
+          "_gia_d",
+          "1"
+        ],
+        [
+          "sso_alive",
+          "1"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://passport.jd.com/uc/graphic/sessionId/refresh?aksParamsU=AAGLSudPWOVpAPSBWn7cLarU2ra4EnltHrWGnYbTGnfYpjRsiNteZ7fwq4xDeYUZdXZMYzqovUR4an9PyCRdL9aOkthMyFjhf1DWiDb1tF2Bmz1Ww0GrcCI%2BFFh1UUat8qixvX02RCI8awAKjviBpc5MdmUTFyY9E00kfHJLT2oLKnGnRXE4UPzSkHHzHMjElbs%3D",
+      "headers": [
+        [
+          "sgm-context",
+          "149291492441441511;149291492441441511"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "jdas-trace-id",
+          "01a0c450-6c7b-7c73-904c-9adfc46436f3"
+        ],
+        [
+          "referer",
+          "https://passport.jd.com/new/login.aspx?ReturnUrl=https://home.jd.com/index.html"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "x-requested-with",
+          "XMLHttpRequest"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/javascript, */*; q=0.01"
+        ],
+        [
+          "jdas-page-id",
+          "fake-page-uuid-0001"
+        ],
+        [
+          "jdas-session-id",
+          "01a0c450-6c7b-794e-9342-b18651550001"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0"
+        ],
+        [
+          "__jd_ref_cls",
+          "Login_Page"
+        ],
+        [
+          "wlfstk_smdl",
+          "FAKEQRTOKEN"
+        ],
+        [
+          "QRCodeKey",
+          "FAKEQRCODEKEY"
+        ],
+        [
+          "3AB9D23F7A4B3C9B",
+          "FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEI"
+        ],
+        [
+          "3AB9D23F7A4B3CSS",
+          "jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX"
+        ],
+        [
+          "_gia_d",
+          "1"
+        ],
+        [
+          "sso_alive",
+          "1"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://passport.jd.com/uc/mobile/sendMessage?aksParamsU=AAHn5qeIS0V8S7QJ68I7McjX05Ip9iJZzXPaGkQke9S2EIvzxwAXZqQzIIadhMHCRHmcaL41XxnLC2cUYzF5hrI5mJdHF5iU6u2o1mhWFjhEJnIbwp2E52H15SUWRNVvgkZGJAZdusefpwwKGFhS6QE0TXVNcDsFDHUvfil9SgRSRgmWZmYlotN4Y%2FuQilklbGzCzGNfe9mzpjr1rUQFBNf1YYZt0b6KvBmySu5sdy1tVrdl4RQ3rH%2F7jw36HiKNxFXqFbZpzMgfWXIFv8tqHOaLMa6C2uGuW0BSmwRkKkifdeh49taJhJgvelg7VAe%2BAaCMF2Y1M8zct5O4Q%2FuryWoSe0%2B9drj2lAdjFqT6fEwi97I7BGvcdiU3cQS3g47ykQSPbEdrisjfRsm3MxeM5yKB6kwhl2OHkzeHlvwUeciqAZSyHLxhxQdukNwMXknxycyk317KhYhmeFRZQbTyixzcupLti1skSyZOL2NOooaZNTCrWuRydF3LMBHlpQGvKbcwAtCo%2FZ279%2FvsAombh6FMBNvRn1DIQEPCkp63rkrwpqoGUCZrzD1k%2BXjt%2B%2B7%2FHdfI5DqgSm8KMPHv%2FbiSSvKjf4GD1nSyDI4AImEQmzXuKMFLP62Gyz9DkfSjsqnF2e64uZNWJG1XsttamOm%2FRzChQMTXBxBeiqSc35BrktGLPA%3D%3D",
+      "headers": [
+        [
+          "sgm-context",
+          "151012124141504362;151012124141504362"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "jdas-trace-id",
+          "01a0c450-6c7b-77e7-ae97-c3c227b10eea"
+        ],
+        [
+          "referer",
+          "https://passport.jd.com/new/login.aspx?ReturnUrl=https://home.jd.com/index.html"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "x-requested-with",
+          "XMLHttpRequest"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "jdas-page-id",
+          "fake-page-uuid-0001"
+        ],
+        [
+          "jdas-session-id",
+          "01a0c450-6c7b-794e-9342-b18651550001"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0"
+        ],
+        [
+          "__jd_ref_cls",
+          "Login_Page"
+        ],
+        [
+          "wlfstk_smdl",
+          "FAKEQRTOKEN"
+        ],
+        [
+          "QRCodeKey",
+          "FAKEQRCODEKEY"
+        ],
+        [
+          "3AB9D23F7A4B3C9B",
+          "FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEI"
+        ],
+        [
+          "3AB9D23F7A4B3CSS",
+          "jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX"
+        ],
+        [
+          "_gia_d",
+          "1"
+        ],
+        [
+          "sso_alive",
+          "1"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://passport.jd.com/uc/mobile/loginService?aksParamsU=AAHb2mS6xhQ9jXkJfolAM2CpUafSwQczHu7zzfwhc%2BalbGxkBXAW0JmPwOFRLU0X0PF%2BLrih4ldcDI97jymtuc1CT%2FTW3%2FeX3RJhRL7HPAkU01xtyLzjx63FvavAXJnY%2F9g5JPBMlyMX4ST9IfVukiFXETgHFQYgdF97eTh3F1wnV707Urc7iRG7e%2FXcYUcoh6TEsbtS4tmVipE4ANgf9GTi5co6yGjSsK7BeZCyXouPR1TOuvNPOjJ1ElS%2FvuKbQsfJwzIMgh3ahUZzBegDAXVj",
+      "headers": [
+        [
+          "sgm-context",
+          "615131370142487888;615131370142487888"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "jdas-trace-id",
+          "01a0c450-6c7b-72e4-81fb-ab93646a5bd6"
+        ],
+        [
+          "referer",
+          "https://passport.jd.com/new/login.aspx?ReturnUrl=https://home.jd.com/index.html"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "x-requested-with",
+          "XMLHttpRequest"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "text/plain, */*; q=0.01"
+        ],
+        [
+          "jdas-page-id",
+          "fake-page-uuid-0001"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded; charset=UTF-8"
+        ],
+        [
+          "jdas-session-id",
+          "01a0c450-6c7b-794e-9342-b18651550001"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://passport.jd.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0"
+        ],
+        [
+          "__jd_ref_cls",
+          "Login_Page"
+        ],
+        [
+          "wlfstk_smdl",
+          "FAKEQRTOKEN"
+        ],
+        [
+          "QRCodeKey",
+          "FAKEQRCODEKEY"
+        ],
+        [
+          "3AB9D23F7A4B3C9B",
+          "FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEI"
+        ],
+        [
+          "3AB9D23F7A4B3CSS",
+          "jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX"
+        ],
+        [
+          "_gia_d",
+          "1"
+        ],
+        [
+          "sso_alive",
+          "1"
+        ]
+      ],
+      "body": "aksParamsB=AAHIzL%2BH7sHxf7BxGyP2K5ACHO4d3SkrdDN8NtdLYK0j9%2BlKPid%2FX1Vw568zu4tqoM4gn1AqDhwyL7l9X%2BZM7IR3ADrJwgdTxuCaVWk2TY3vrMXLwFLy6zvNeCAlq6CfGsAmV4y7fb2xbja5O2ywAFnCOjtsV2FkcjMOUil5TkcZAocu7xSiLFzHh5EoLxeUIIYz2fx4bGjDyR6Sw1l9vN4TNx0AH2dffONHzQB9LU8Wg3NUeiLfJjIhv90SaDYGnnlJ1NFPmlRo%2B9HcTB7%2FzY25KDs5XfqWGzpMSRLuOSgDOigXoUr3rbaFwOUbs%2B%2FsHCW7mZCPT%2BWux6gpiDe0FZISPHlnCn5v729VE8Tih08zqDU7CQ5apieS4BRj52%2FIBUnFW2R5NSoLEpcl3%2Fh5fJ%2F46ZfL8tjDaVcOHqs7%2FeyckKHq7tBQENVO2g%2BmU6WAFz1fYi8ZLpbsf563Dg6dkZeiQGrIowGp2XM8jFPThoiyw6lrHsCp%2FknKRX6jSd4puizzTLrlGrm8dARQeSMhEPJt%2BQOF2rv5Ey27k33muv%2BSG687c%2FU3qPm5UqwD26UYWXCCAQ%2BSwlhtNM8TmBxBRff8cKWI3NfypRIe3BuftOCmyNvADBdT%2BNw%2F2I4fl3D1f0ujpcjp5axb44pYE2uW1wEvZHOyblU%2F%2BQWy6S57yx73efS3E%2FYc1o4De8DzKdIDBGC890kAd9MLVMl1k7IjZuveab4k0kBoeHwSaZyqHnVWzAznVkGc6s0yep1Jwx6jGxHNFKW4j%2FKC%2BjuYMI6ymEpcb0eR2kKqsqyGn8yUrsXM6eMZwcJ2%2BGtnM21KcLB1ER08FqNRDRe7I3OVdgZJ0R%2FFuzozXYF9TUHumUBgbvDhHSTwOmVNyOO4rruJd0MXDauqxyFmdafM4UYXOstGo1PQ4NjWg2B936RkzIiBU%2BauwOhi8Vb1UsKscFduUqRyDRwCB%2Fo7TnTzOAVSPJaaJYa0qmG4cPXQluCrts9ErAr0TekMGIVrNjFvVlukl%2FjDiKWbHXGzlOQovjE%2BoJAlBff3y5MgpFtYTC5fYKetecVdnRhHkeOLSUEzE1LfxeJGareJmGfrxpVjTAI4%2F78gm%2BGVx20US4P1fK%2B9XyD8nNlM9lCxs9Xh4ZwCGT48nrxBhdjj70u%2BNBZGbdmBByH6LFivjK7G9Z5tKtg4EZvA%2Fy7X4C8oJc2VOD1F971LfM8CARerwuWlcRvNnWypqdU8kjOw3g7M%2BAUXwOF1HcPctqZXHEY0bayLa2MI2stt2XRYoV%2FCkSxu8WB5cyh2toUTIKLdXswmtgcjpK6ZpJsvT4f%2FFNcf8LoerBGABepp3V0SYLrB3orOA85dLPr%2Figs1EvKxdd96iOPNpUVzDYcK71t5BMtMLV92uo67hQuTmhJ10Z6Fj%2F8bFFw47PuC%2F9mbhTMAExUY2X7ywFXV11IMIoDiNCRzRC7DNyBLsjr2yzzsLDwot8La5YxH8xiTSrjC8LYnwRj4clbdekPws9NS1AWulkKziu%2BSSuAcB3dlLLh0easslzfL1v%2BGIf%2FncCBJxY6iCa1GRt8lsTj9PQ1M8ORW7xB3X59JfgEoo8%2BYCwrlXfCkqalVNJNKOy8p1eC4wk3TGfjXAVf%2FrfO%2FBJGnhrMMIdH34nip1WIsQjSDlAt9HknZD%2BwVSWFWYHu115EtqK0AAtViERwB09cBAI8EpBfC%2BC6Uq7hMWSXjYrWuXE%2FKND0EoJrhFd357vvOgS8PHzM5nFJP3sog6Yo528Ry8J8w7pTg3%2FbvZkH79gUDiRyhlhoUosMGb25syryj1Y1A121QElQ47Cdj1PWMri706VCKz5nsU1WtdoKc%2F2A5QhPQkwvZ0BJj5VWsjpx5EZpNjz8QrrIuEAq4pEaQFQzx4mR5Di8y%2Frbz5MGYsK6WdwiDifH6CGRTiCLqPJniE5kAOYlRNdkwExzdfeZnH49hUJI2nJz0l2%2FuUpCT9%2B83W%2BGbvwpawsqFJ0kDOp6hYu1GZ7ue07OX9ko%2B%2FOyTeM1qoSMyi3i6FSaF37NV93Cj5t3GpU8Y%2FeqmTPM5xYcypgR94iveCznDGpJghbjPt6yOyLiVYuLiGGutupDxZq246BViflZOSpq3nJkn0h5Kyf9zZGogPvWnkQHJaSq1jr5XgElOnpVNx1zxQlMs5D10plkecFKF%2BMY1jpBNku90iMfSB9bk8gohqmioug31eDjT%2FMpV%2FfQ7l%2BcaP4Fa5AH6ovFhkEw%3D",
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://passport.jd.com/uc/crossDomain?next=1",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
+        ],
+        [
+          "sec-fetch-dest",
+          "document"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-site",
+          "none"
+        ],
+        [
+          "sec-fetch-user",
+          "?1"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "referer",
+          "https://passport.jd.com/new/login.aspx?ReturnUrl=https://home.jd.com/index.html"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0"
+        ],
+        [
+          "__jd_ref_cls",
+          "Login_Page"
+        ],
+        [
+          "wlfstk_smdl",
+          "FAKEQRTOKEN"
+        ],
+        [
+          "QRCodeKey",
+          "FAKEQRCODEKEY"
+        ],
+        [
+          "3AB9D23F7A4B3C9B",
+          "FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEI"
+        ],
+        [
+          "3AB9D23F7A4B3CSS",
+          "jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX"
+        ],
+        [
+          "_gia_d",
+          "1"
+        ],
+        [
+          "sso_alive",
+          "1"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [
+          "__jd_ref_cls=Login_Page; Path=/"
+        ]
+      },
+      "body": "<html><body><form><input type=\"hidden\" id=\"uuid\" name=\"uuid\" value=\"fake-page-uuid-0001\"/><input type=\"hidden\" name=\"source\" value=\"pc_login\"/><input type=\"hidden\" id=\"loginType\" value=\"f\"/><input type=\"hidden\" name=\"_t\" value=\"fake_t\"/><input type=\"hidden\" id=\"sa_token\" value=\"FAKESATOKEN\"/><input type=\"hidden\" id=\"useRandomSlideAuthCode\" value=\"1\"/></form></body></html>"
+    },
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "image/png",
+        "set-cookie": [
+          "wlfstk_smdl=FAKEQRTOKEN; Domain=.jd.com; Path=/",
+          "QRCodeKey=FAKEQRCODEKEY; HttpOnly"
+        ]
+      },
+      "body": "FAKE-PNG-BYTES"
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "data": "AAEECfnfMR5UIaFQ3X0WHkvFxnIXn60YM/wHa7CP81bzUCDM6kkM4md1pS3G6nGMwapgCu0F+/NeCEpmMvYHLamtEw=="
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": "{\"code\":0,\"msg\":\"成功\",\"data\":{\"token\":\"jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX\",\"eid\":\"FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEI\",\"gia_d\":1,\"deMap\":null,\"ds\":120}}"
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": [
+        "sso.jd.hk",
+        "sso.jdpay.com",
+        "bad domain!"
+      ]
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": "jQuery1({\"result\":\"success\"})"
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [
+          "sso_alive=1; Path=/"
+        ]
+      },
+      "body": "jQuery2('{\"result\":\"fail\"}')"
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": "var _jdtdmap_sessionId=\"9876543210\";"
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 1,
+        "status": 1,
+        "sessionId": "FAKECAPTCHASID",
+        "jwtToken": "FAKEJWT"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": "({\"code\":1,\"msg\":\"验证码已发送至13800000000\"})"
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "_t": "next_t",
+        "success": "/uc/crossDomain?next=1"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [
+          "thor=FAKESMSTHOR; Domain=.jd.com; Path=/",
+          "pin=fake_pin; Domain=.jd.com; Path=/"
+        ]
+      },
+      "body": "ok"
+    }
+  ],
+  "result": {
+    "fields": {
+      "uuid": "fake-page-uuid-0001",
+      "source": "pc_login",
+      "loginType": "f",
+      "_t": "next_t",
+      "sa_token": "FAKESATOKEN",
+      "useRandomSlideAuthCode": "1",
+      "eid": "FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEI",
+      "eid2": "jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX",
+      "fp": "3955284080d8e7eda5c614e2ebf523b6",
+      "giaD": "1",
+      "sessionId": "3955284080d8e7eda5c614e2ebf523b6",
+      "ssoDomains": "sso.jd.hk",
+      "seqSid": "9876543210"
+    },
+    "sent": [
+      true,
+      "验证码已发送至<mobile>"
+    ],
+    "submitted": [
+      true,
+      "手机号短信登录成功"
+    ],
+    "cookie": {
+      "__jdu": "17899999991231234567890",
+      "areaId": "1",
+      "ipLoc-djd": "1-2800-55812-0",
+      "__jd_ref_cls": "Login_Page",
+      "wlfstk_smdl": "FAKEQRTOKEN",
+      "QRCodeKey": "FAKEQRCODEKEY",
+      "3AB9D23F7A4B3C9B": "FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEI",
+      "3AB9D23F7A4B3CSS": "jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX",
+      "_gia_d": "1",
+      "sso_alive": "1",
+      "thor": "FAKESMSTHOR",
+      "pin": "fake_pin"
+    },
+    "captcha": [
+      1,
+      "FAKECAPTCHASID",
+      "FAKEJWT"
+    ]
+  },
+  "error": null
+}

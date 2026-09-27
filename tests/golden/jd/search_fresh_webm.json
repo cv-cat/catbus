@@ -1,0 +1,321 @@
+{
+  "input": {
+    "keyword": "机械键盘"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://api.m.jd.com?appid=risk_h5_info&functionId=getCustomCtrl&t=1790000000123&body=%7B%22domain%22%3A%22.jd.com%22%7D",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "referer",
+          "https://search.jd.com/Search?keyword=%E6%9C%BA%E6%A2%B0%E9%94%AE%E7%9B%98&enc=utf-8"
+        ],
+        [
+          "origin",
+          "https://search.jd.com"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0"
+        ],
+        [
+          "shshshfpa",
+          "94514d14-6fbb-b1f3-5226-1e5d15c83934-1790000000"
+        ],
+        [
+          "shshshfpx",
+          "94514d14-6fbb-b1f3-5226-1e5d15c83934-1790000000"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://api.m.jd.com",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded;charset=UTF-8"
+        ],
+        [
+          "referer",
+          "https://search.jd.com/Search?keyword=%E6%9C%BA%E6%A2%B0%E9%94%AE%E7%9B%98&enc=utf-8"
+        ],
+        [
+          "origin",
+          "https://search.jd.com"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0"
+        ],
+        [
+          "shshshfpa",
+          "94514d14-6fbb-b1f3-5226-1e5d15c83934-1790000000"
+        ],
+        [
+          "shshshfpx",
+          "94514d14-6fbb-b1f3-5226-1e5d15c83934-1790000000"
+        ]
+      ],
+      "body": "appid=risk_h5&functionId=wsgw_getinfo&t=1790000000123&body=%7B%22appname%22%3A%22jdwebm_hf%22%2C%22client%22%3A%22h5%22%2C%22jdkey%22%3A%22%22%2C%22isJdApp%22%3Afalse%2C%22jmafinger%22%3A%22%22%2C%22whwswswws%22%3A%22%22%2C%22businness%22%3A%22riskhandle%22%2C%22body%22%3A%7B%22client_time%22%3A1790000000123%2C%22period%22%3A24%2C%22jdu%22%3A%2217899999991231234567890%22%2C%22mba_muid%22%3A%22%22%2C%22visitkey%22%3A%22%22%2C%22plugin%22%3A5%2C%22functionbind%22%3Afalse%2C%22xrst%22%3A%22%22%2C%22fet%22%3A%22%22%2C%22browser_info%22%3A%22fd3dfd3c84da5d5c04a02bc3478f9aec%22%2C%22shshshfpa%22%3A%2294514d14-6fbb-b1f3-5226-1e5d15c83934-1790000000%22%2C%22whwswswws%22%3A%22%22%2C%22ecflag%22%3A%22n%22%2C%22jdkey%22%3A%22%22%2C%22isJdApp%22%3Afalse%2C%22jmafinger%22%3A%22%22%2C%22cookie_pin%22%3A%22%22%2C%22msdk_version%22%3A%226.0.0%22%2C%22wid%22%3A%22%22%2C%22lan%22%3A%22zh-CN%22%2C%22scrh%22%3A1440%2C%22scrah%22%3A1392%2C%22scrw%22%3A2560%2C%22scaw%22%3A2560%2C%22oscpu%22%3A%22%22%2C%22platf%22%3A%22Win32%22%2C%22pros%22%3A%2220030107%22%2C%22temp%22%3A33%2C%22hll%22%3Afalse%2C%22hlr%22%3Afalse%2C%22hlo%22%3Afalse%2C%22hlb%22%3Afalse%2C%22ll%22%3A%22arE7gAUAgA%22%2C%22lm%22%3A%22%22%2C%22assoId%22%3A%22%22%2C%22clog%22%3A%22%22%2C%22an%22%3A0%2C%22al%22%3A%22%22%2C%22il%22%3A%22%22%2C%22sn%22%3A1%2C%22cn%22%3A0%2C%22is%22%3A%22%22%2C%22bil%22%3A%22%22%2C%22ol%22%3A%22%22%2C%22fa%22%3A%22%22%2C%22sl%22%3A%22%22%2C%22as%22%3A%22%22%2C%22fs%22%3A%22%22%2C%22pe%22%3A%220%22%2C%22color_depth%22%3A24%2C%22pixel_ratio%22%3A1%2C%22resolution%22%3A%222560%253B1440%22%2C%22available_resolution%22%3A%222560%253B1392%22%2C%22session_storage%22%3A1%2C%22local_storage%22%3A1%2C%22indexed_db%22%3A1%2C%22open_database%22%3A0%2C%22cpu_class%22%3A%22unknown%22%2C%22navigator_platform%22%3A%22Win32%22%2C%22regular_plugins%22%3A%22PDF%2520Viewer%253A%253APortable%2520Document%2520Format%253A%253Aapplication%252Fpdf~pdf%252Ctext%252Fpdf~pdf%253BChrome%2520PDF%2520Viewer%253A%253APortable%2520Document%2520Format%253A%253Aapplication%252Fpdf~pdf%252Ctext%252Fpdf~pdf%253BChromium%2520PDF%2520Viewer%253A%253APortable%2520Document%2520Format%253A%253Aapplication%252Fpdf~pdf%252Ctext%252Fpdf~pdf%253BMicrosoft%2520Edge%2520PDF%2520Viewer%253A%253APortable%2520Document%2520Format%253A%253Aapplication%252Fpdf~pdf%252Ctext%252Fpdf~pdf%253BWebKit%2520built-in%2520PDF%253A%253APortable%2520Document%2520Format%253A%253Aapplication%252Fpdf~pdf%252Ctext%252Fpdf~pdf%22%2C%22adblock%22%3Afalse%2C%22touch_support%22%3A0%2C%22app_code_name%22%3A%22Mozilla%22%2C%22app_name%22%3A%22Netscape%22%2C%22app_version%22%3A%225.0%2520%28Windows%2520NT%252010.0%253B%2520Win64%253B%2520x64%29%2520AppleWebKit%252F537.36%2520%28KHTML%252C%2520like%2520Gecko%29%2520Chrome%252F152.0.0.0%2520Safari%252F537.36%22%2C%22cookie_enabled%22%3Atrue%2C%22regular_mimetypes%22%3A%22%253A%253APortable%2520Document%2520Format%253A%253A~%252C~%252C~%252C~%253B%253A%253APortable%2520Document%2520Format%253A%253A~%252C~%252C~%252C~%22%2C%22online%22%3Atrue%2C%22hardwareConcurrency%22%3A32%2C%22product%22%3A%22Gecko%22%2C%22vendor%22%3A%22Google%2520Inc.%22%2C%22vendorSub%22%3A%22unknown%22%2C%22devicePixelRatio%22%3A1%2C%22updateInterval%22%3A%22unknown%22%2C%22orientationType%22%3A%22landscape-primary%22%2C%22doNotTrack%22%3A0%2C%22canvas%22%3A%22canvas%2520winding%253Ayes~canvas%2520fp%253Ad1b6c2f09f7325b7f596ca370023c4bb%22%2C%22webgl%22%3A%22fp%253A4f2252d030a015a9d2325a3d14c263bb~vendor%253AWebKit~version%253AWebGL%25201.0%2520%28OpenGL%2520ES%25202.0%2520Chromium%29~unmasked%2520vendor%253AGoogle%2520Inc.%2520%28NVIDIA%29~unmasked%2520renderer%253AANGLE%2520%28NVIDIA%252C%2520NVIDIA%2520GeForce%2520RTX%25205060%2520Ti%2520%280x00002D04%29%2520Direct3D11%2520vs_5_0%2520ps_5_0%252C%2520D3D11%29%22%2C%22device_memory%22%3A8%2C%22fonts%22%3A%22Arial%253BArial%2520Black%253BBook%2520Antiqua%253BCalibri%253BCambria%253BCentury%253BCentury%2520Gothic%253BComic%2520Sans%2520MS%253BConsolas%253BCourier%253BCourier%2520New%253BGeorgia%253BLucida%2520Console%253BLucida%2520Sans%2520Unicode%253BMicrosoft%2520Sans%2520Serif%253BMS%2520Gothic%253BSegoe%2520UI%253BTahoma%253BTimes%2520New%2520Roman%253BTrebuchet%2520MS%253BVerdana%22%2C%22incognito%22%3A%22Chrome_0%22%2C%22asa%22%3A%2248000_2_1_0_2_explicit_speakers%22%2C%22domBlockers%22%3A%22%22%2C%22timezone%22%3A%22Asia%2FShanghai%22%2C%22vendorFlavors%22%3A%5B%22chrome%22%5D%2C%22monochrome%22%3A%22%22%2C%22contrast%22%3A%22%22%2C%22reducedMotion%22%3A%22%22%2C%22reducedTransparency%22%3A%22%22%2C%22hdr%22%3A%22%22%2C%22math%22%3A%7B%22acos%22%3A1.4473588658278522%2C%22acosh%22%3A709.889355822726%2C%22acoshPf%22%3A355.291251501643%2C%22asin%22%3A0.12343746096704435%2C%22asinh%22%3A0.881373587019543%2C%22asinhPf%22%3A0.8813735870195429%2C%22atanh%22%3A0.5493061443340548%2C%22atanhPf%22%3A0.5493061443340548%2C%22atan%22%3A0.4636476090008061%2C%22sin%22%3A0.8178819121159085%2C%22sinh%22%3A1.1752011936438014%2C%22sinhPf%22%3A2.534342107873324%2C%22cos%22%3A-0.8390715290095377%2C%22cosh%22%3A1.5430806348152437%2C%22coshPf%22%3A1.5430806348152437%2C%22tan%22%3A-1.4214488238747245%2C%22tanh%22%3A0.7615941559557649%2C%22tanhPf%22%3A0.7615941559557649%2C%22exp%22%3A2.718281828459045%2C%22expm1%22%3A1.718281828459045%2C%22expm1Pf%22%3A1.718281828459045%2C%22log1p%22%3A2.3978952727983707%2C%22log1pPf%22%3A2.3978952727983707%2C%22powPI%22%3A1.9275814160560204e-50%7D%2C%22pdfViewerEnabled%22%3Atrue%2C%22architecture%22%3A%22255%22%2C%22applePay%22%3A-1%2C%22privateClickMeasurement%22%3A%22%22%2C%22tz%22%3A%22-8%22%2C%22ssl%22%3A%22d41d8cd98f00b204e9800998ecf8427e%22%2C%22cbfp%22%3A%22ae705695a2d2f91efc6178420a782039%22%2C%22ssgv%22%3A0%2C%22geolocation%22%3A%222%22%2C%22dvt%22%3A0%2C%22is_headless_browser%22%3A%220000%22%2C%22nhb%22%3A%22000%22%2C%22ev%22%3A%22%22%2C%22fec%22%3A%22ZnVuY3Rpb25mZXRjaCgpe1tuYXRpdmVjb2RlXX0%22%2C%22xrsc%22%3A%22ZnVuY3Rpb25zZW5kKCl7W25hdGl2ZWNvZGVdfQ%22%7D%7D",
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://api.m.jd.com/api?appid=search-pc-java&t=1790000000123&client=pc&clientVersion=1.0.0&cthr=1&uuid=-1&loginType=3&keyword=%E6%9C%BA%E6%A2%B0%E9%94%AE%E7%9B%98&functionId=pc_search_searchWare&body=%7B%22enc%22%3A%22utf-8%22%2C%22area%22%3A%221_2800_55812_0%22%2C%22page%22%3A1%2C%22mode%22%3A%22%22%2C%22concise%22%3Afalse%2C%22hoverPictures%22%3Afalse%2C%22newAdvRepeat%22%3Afalse%2C%22mixerParam%22%3Afalse%2C%22new_interval%22%3Atrue%2C%22s%22%3A1%2C%22pageSize%22%3A30%7D&h5st=20260921221323123%3B222b5a1biy2ybbb7%3Bf06cc%3Btk03wcafe000018nFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAK%3Bf50529770af0060fbbf4c79a7db3261422197e655d59db57041a315d226678d0%3B5.3%3B1790000000123%3Bof7ruCLj0jFTJGEfyGFT6nVeJiIf5jpjxjpPFipjLDrg4jYf7rof7rof7H4e6rJdJbEjLrJp-jZQqWXbB6XPqiGWJrJdJbYf2iFjLrJp-j4fLDIj9e1TJrpjh7JjJrJdJrEa-OFTGOEjLrJp-jJSFWVT7XIfIiYT3nVSyflS2jYT1fle4jod4blS5nVS5jpjxj5PKSEQKeFjLrJp-jpfJrJdJbYOJipjLDrgJXIg4zZe1uWS-GFSMWoRJrJdJTEjLrJp-jJRnKIbIi1TkaoeBipjxjZQ8aFQKiEjLrJp-jJf4zVRUipjxjJS7ipjLDrguqpjhjpSl6Zfeipjxj5f6XETJrpjLrJp-bojxjZf6XETJrpjLrJp-bYfLDIj7nYOJipjLrpjh7pd_rJdJjYf2iFjLrpjLDrgJLoRRina9aoeEKFjLDIj_ulS9mFPJrpjLrJp-rojxjpd2iFjLrpjLDrg7rJdJPYOJipjLrpjh7Jf5rJdJTYOJipjLrpjh7pfLDIj2XETJrpjLrJp-rojxjpe2iFjLrpjLDrg2rYfLDIj4XETJrpjLrJp-jJe9nIg7jpjxjZf2iFjLrpjLDrg7rJdJ-1OJrpjLrJp-Xojxj5P-ipjLrpjh7pfLDIj-ipjLrpjh7pfLDIjHOEjLrpjLD7NLDIjHyVS3KUSJrpjh7ZMwqJdJrkPJrpjh7Jj3ToNL-oe1zVRUq5d7zpf6rpWdq5P0ulS9G1WJrJdJnVO4ipjLD7N%3B570bae05aca71c5198fa9b0f9fa3cc914dc0a8dbdbf05deed24cae3f107b454d%3BqbkgHGHQ8GlOIyVOF6JQ8G1P5WFW3yVSC61T-bEQGGlQI6ZNHuFT-bVR7qUT&t=1790000000123",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://search.jd.com/Search?keyword=%E6%9C%BA%E6%A2%B0%E9%94%AE%E7%9B%98&enc=utf-8"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://search.jd.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0"
+        ],
+        [
+          "shshshfpa",
+          "94514d14-6fbb-b1f3-5226-1e5d15c83934-1790000000"
+        ],
+        [
+          "shshshfpx",
+          "94514d14-6fbb-b1f3-5226-1e5d15c83934-1790000000"
+        ],
+        [
+          "shshshfpb",
+          "FAKEWHWSWSWWS"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "data": "FAKECONFIG"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "whwswswws": "FAKEWHWSWSWWS",
+        "interval": 1440
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "data": {}
+      }
+    }
+  ],
+  "result": {
+    "result": {
+      "code": 0,
+      "data": {}
+    },
+    "cookie": {
+      "__jdu": "17899999991231234567890",
+      "areaId": "1",
+      "ipLoc-djd": "1-2800-55812-0",
+      "shshshfpa": "94514d14-6fbb-b1f3-5226-1e5d15c83934-1790000000",
+      "shshshfpx": "94514d14-6fbb-b1f3-5226-1e5d15c83934-1790000000",
+      "shshshfpb": "FAKEWHWSWSWWS"
+    },
+    "local_storage": {
+      "https://search.jd.com": {
+        "__we_m_cv__": "Y2FudmFzJTIwd2luZGluZyUzQXllc35jYW52YXMlMjBmcCUzQWQxYjZjMmYwOWY3MzI1YjdmNTk2Y2EzNzAwMjNjNGJi",
+        "__we_m_gl__": "ZnAlM0E0ZjIyNTJkMDMwYTAxNWE5ZDIzMjVhM2QxNGMyNjNiYn52ZW5kb3IlM0FXZWJLaXR+dmVyc2lvbiUzQVdlYkdMJTIwMS4wJTIwKE9wZW5HTCUyMEVTJTIwMi4wJTIwQ2hyb21pdW0pfnVubWFza2VkJTIwdmVuZG9yJTNBR29vZ2xlJTIwSW5jLiUyMChOVklESUEpfnVubWFza2VkJTIwcmVuZGVyZXIlM0FBTkdMRSUyMChOVklESUElMkMlMjBOVklESUElMjBHZUZvcmNlJTIwUlRYJTIwNTA2MCUyMFRpJTIwKDB4MDAwMDJEMDQpJTIwRGlyZWN0M0QxMSUyMHZzXzVfMCUyMHBzXzVfMCUyQyUyMEQzRDExKQ==",
+        "__we_m_ft__": "QXJpYWwlMkNBcmlhbCUyMEJsYWNrJTJDQm9vayUyMEFudGlxdWElMkNDYWxpYnJpJTJDQ2FtYnJpYSUyQ0NlbnR1cnklMkNDZW50dXJ5JTIwR290aGljJTJDQ29taWMlMjBTYW5zJTIwTVMlMkNDb25zb2xhcyUyQ0NvdXJpZXIlMkNDb3VyaWVyJTIwTmV3JTJDR2VvcmdpYSUyQ0x1Y2lkYSUyMENvbnNvbGUlMkNMdWNpZGElMjBTYW5zJTIwVW5pY29kZSUyQ01pY3Jvc29mdCUyMFNhbnMlMjBTZXJpZiUyQ01TJTIwR290aGljJTJDU2Vnb2UlMjBVSSUyQ1RhaG9tYSUyQ1RpbWVzJTIwTmV3JTIwUm9tYW4lMkNUcmVidWNoZXQlMjBNUyUyQ1ZlcmRhbmE=",
+        "__we_m_ftk__": "ZmQzZGZkM2M4NGRhNWQ1YzA0YTAyYmMzNDc4ZjlhZWM=",
+        "shshshfpa": "94514d14-6fbb-b1f3-5226-1e5d15c83934-1790000000",
+        "shshshfpx": "94514d14-6fbb-b1f3-5226-1e5d15c83934-1790000000",
+        "__jdapis_webm_runtime__": "6.0.0-exact-1",
+        "hf_time": "1790086400123"
+      }
+    }
+  },
+  "error": null
+}

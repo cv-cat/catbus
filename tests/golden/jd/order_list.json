@@ -1,0 +1,151 @@
+{
+  "input": {
+    "page": 2,
+    "date_range": "2025"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://order.jd.com/center/list.action?search=0&d=2025&s=4096&page=2",
+      "headers": [
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=0, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "document"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-site",
+          "none"
+        ],
+        [
+          "sec-fetch-user",
+          "?1"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "__jda",
+          "122270672.17899999991231234567890.1789999999.1789999999.1789999999.1"
+        ],
+        [
+          "__jdc",
+          "122270672"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0.1234567890"
+        ],
+        [
+          "3AB9D23F7A4B3C9B",
+          "FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEI"
+        ],
+        [
+          "3AB9D23F7A4B3CSS",
+          "jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX"
+        ],
+        [
+          "thor",
+          "FAKETHOR0123456789ABCDEF"
+        ],
+        [
+          "pin",
+          "fake_pin_%E6%B5%8B%E8%AF%95"
+        ],
+        [
+          "unick",
+          "fake"
+        ],
+        [
+          "shshshfpa",
+          "0f0e0d0c-0b0a-0908-0706-050403020100-1789999999"
+        ],
+        [
+          "shshshfpx",
+          "0f0e0d0c-0b0a-0908-0706-050403020100-1789999999"
+        ],
+        [
+          "shshshfpb",
+          "FAKEshshshfpb"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><title>我的订单</title></head>\n<body>\n<table class=\"td-void order-tb\">\n<tbody id=\"tb-300000000001\" class=\"parent-300000000001\">\n  <tr class=\"sep-row\"><td colspan=\"5\"></td></tr>\n  <tr class=\"tr-th\">\n    <td colspan=\"5\">\n      <span class=\"gap\"></span>\n      <span class=\"dealtime\" title=\"2025-08-01 12:00:00\">2025-08-01 12:00:00</span>\n      <span class=\"number\">订单号：<a name=\"orderIdLinks\" id=\"idUrl300000000001\" target=\"_blank\" href=\"//details.jd.com/normal/item.action?orderid=300000000001\">300000000001</a></span>\n    </td>\n  </tr>\n  <tr class=\"tr-bd\">\n    <td>\n      <div class=\"goods-item p-100087543376\">\n        <div class=\"p-img\"><a href=\"//item.jd.com/100087543376.html\" target=\"_blank\"><img src=\"//img.example/fake.jpg\"></a></div>\n        <div class=\"p-msg\">\n          <div class=\"p-name\">\n            <a href=\"//item.jd.com/100087543376.html\" class=\"a-link\" target=\"_blank\" title=\"假商品 A\">假商品 A &amp; 配件 <font class=\"skcolor_ljg\">键盘</font></a>\n          </div>\n        </div>\n      </div>\n      <div class=\"goods-item p-100000000002\">\n        <div class=\"p-msg\">\n          <div class=\"p-name\">\n            <a href=\"//item.jd.com/100000000002.html\" class=\"a-link\" target=\"_blank\">假商品 B</a>\n          </div>\n        </div>\n      </div>\n    </td>\n    <td>\n      <div class=\"consignee tooltip\">\n        <span class=\"txt\">张*</span><b></b>\n        <div class=\"prompt-01 prompt-02\"><div class=\"pc\"><strong>假名字</strong><p>假地址</p><p>138****0000</p></div></div>\n      </div>\n    </td>\n    <td>\n      <div class=\"amount\">\n        <span>总额 &yen;23.28</span> <br>\n        <span class=\"ftx-13\">在线支付</span>\n      </div>\n    </td>\n    <td>\n      <div class=\"status\">\n        <span class=\"order-status ftx-03\">已完成</span><br>\n        <a href=\"//details.jd.com/normal/item.action?orderid=300000000001\" target=\"_blank\">订单详情</a>\n      </div>\n    </td>\n  </tr>\n</tbody>\n<tbody id=\"tb-300000000002\" class=\"parent-300000000002\">\n  <tr class=\"tr-th\">\n    <td colspan=\"5\">\n      <span class=\"dealtime\" title=\"2025-07-15 08:30:00\">2025-07-15 08:30:00</span>\n    </td>\n  </tr>\n  <tr class=\"tr-bd\">\n    <td>\n      <div class=\"p-name\"><a href=\"//item.jd.com/100000000003.html\">假商品 C</a></div>\n    </td>\n    <td><div class=\"consignee tooltip\"><span class=\"txt\">李*</span></div></td>\n    <td><div class=\"amount\"><span>总额 ¥1,099.00</span></div></td>\n    <td><div class=\"status\"><span class=\"order-status ftx-02\">等待收货</span></div></td>\n  </tr>\n</tbody>\n</table>\n</body></html>\n"
+    }
+  ],
+  "result": {
+    "orders": [
+      {
+        "orderId": "300000000001",
+        "time": "2025-08-01 12:00:00",
+        "consignee": "张*",
+        "amount": "总额 ¥23.28",
+        "payType": "在线支付",
+        "status": "已完成",
+        "products": [
+          "假商品 A & 配件 键盘",
+          "假商品 B"
+        ],
+        "url": "https://details.jd.com/normal/item.action?orderid=300000000001"
+      },
+      {
+        "orderId": "300000000002",
+        "time": "2025-07-15 08:30:00",
+        "consignee": "李*",
+        "amount": "总额 ¥1,099.00",
+        "payType": "",
+        "status": "等待收货",
+        "products": [
+          "假商品 C"
+        ],
+        "url": "https://details.jd.com/normal/item.action?orderid=300000000002"
+      }
+    ],
+    "count": 2,
+    "page": 2
+  },
+  "error": null
+}

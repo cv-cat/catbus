@@ -1,0 +1,4 @@
+{
+  "//": "上游签名 JS 是 CommonJS；catbus 主包是 ESM，这里让 static/jd 下的 .js 按 CommonJS 加载",
+  "type": "commonjs"
+}

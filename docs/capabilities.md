@@ -60,7 +60,7 @@
 |---|---|---|---|---|---|---|---|---|---|---|
 | item get | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | ✓ | ✓ |
 | item search | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ○ | ○ | ✓ | ✓ |
-| item related | ○ | ○ | ✓ | ○ | ✓ | — | ○ | ○ | ✓ | — |
+| item related | ○ | ○ | ✓ | ○ | ✓ | — | ○ | ○ | ◐ | — |
 | item list | ✓ | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — |
 | item media / download | ✓ | ✓ | ◐ | ✓ | ✓ | ○ | — | — | — | ✓ |
 | item like / unlike | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — | ✓ |
@@ -71,7 +71,8 @@
 | item categories | — | — | — | ✓ | — | — | ○ | — | — | — |
 
 - weibo `item search`：只能取第一页
-- `item search --sort` 取值：bilibili general / views / latest / collects；x general / latest
+- jd `item related`：用第一个相关搜索词的搜索结果
+- `item search --sort` 取值：bilibili general / views / latest / collects；jd general / sales / price_asc / price_desc / comments；x general / latest
 - `item publish --shipping`：xianyu
 - `item publish --postage`：xianyu
 - `item publish --pickup`：xianyu
@@ -99,6 +100,7 @@
 - xhs `comment list`：--product 规划中
 - kuaishou `comment list`：--product 规划中
 - weibo `comment list`：只有一级评论
+- jd `comment list`：只有第一页
 - `comment list --product`：xhs、douyin、tiktok、kuaishou
 
 ## feed 与 keyword
