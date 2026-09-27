@@ -24,7 +24,13 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: npm
+      - uses: actions/cache@v6
+        with:
+          path: packages/assets-jd/models
+          key: jd-models-${{ hashFiles('src/platforms/jd/UPSTREAM') }}
       - run: npm ci
+      # JD 验证码求解器的测试要用 onnx 模型
+      - run: npm run assets:jd
       - run: npm run typecheck
       - run: npm test
 

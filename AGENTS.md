@@ -776,6 +776,7 @@ wreq-js 默认会读 `HTTP(S)_PROXY` 环境变量和 Windows 系统代理。为�
 - **对拍数据**：用 `scripts/golden/<p>/gen.py` 生成，框架是 `scripts/golden/catbus_golden.py`。
   - 在开发机上用 Python 3.13 + uv 建一个不进 git 的虚拟环境 `.golden/<p>/`（`uv venv .golden/<p> --python 3.13`，再装上游的依赖），运行 `references/` 里的上游代码。
   - 框架替换了 Python 的 `random` / `secrets` / `uuid` / `os.urandom` / `time`，并截获 curl_cffi 与 requests 的请求（不联网，按用例给的响应回复）；上游起的 node 子进程通过 `NODE_OPTIONS` 预加载 `node_determinism.cjs`，固定 `Math.random` 与 `Date`。
+  - 时区固定为北京时间（`Asia/Shanghai`）：框架会设置 `TZ`，TS 侧的测试在 `vitest.config.ts` 里固定同一时区。
   - 输出到 `tests/golden/<p>/<case>.json`。**只能用假凭证。**
 - **对拍测试**：`tests/<p>.test.ts` 用 `tests/golden.ts` 的 `replay()` 在同样的随机数与时钟下运行 TS 实现，`expectRequests()` 逐字节比较请求（URL、header 顺序、cookie、body）。请求构造和签名都必须有对拍测试。
 - **平台实现的约定**（参考实现是 `src/platforms/bilibili/web/`）：

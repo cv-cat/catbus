@@ -163,6 +163,10 @@ class _FixedDateTime(_dt.datetime):
 
 
 def _patch_clock() -> None:
+    # 对拍数据统一在北京时间下生成，TS 侧的测试也固定这个时区（vitest.config.ts）
+    os.environ['TZ'] = 'Asia/Shanghai'
+    if hasattr(time, 'tzset'):
+        time.tzset()
     time.time = lambda: NOW_MS / 1000
     time.time_ns = lambda: NOW_MS * 1_000_000
     _dt.datetime = _FixedDateTime  # type: ignore[misc]
