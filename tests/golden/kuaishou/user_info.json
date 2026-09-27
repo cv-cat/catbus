@@ -1,0 +1,158 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://www.kuaishou.com/graphql",
+      "headers": [
+        [
+          "referer",
+          "https://www.kuaishou.com/myFollow"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "kww",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://www.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "did",
+          "web_0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "wid",
+          "12345678901234567"
+        ],
+        [
+          "didv",
+          "1789990000000"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "kuaishou.server.webday7_st",
+          "fake-www-st"
+        ],
+        [
+          "kuaishou.server.webday7_ph",
+          "fake-www-ph"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "ktrace-context",
+          "fake|trace"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwfv1",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ]
+      ],
+      "body": "{\"operationName\":\"userInfoQuery\",\"variables\":{},\"query\":\"query userInfoQuery {\\n  userInfo {\\n    id\\n    name\\n    avatar\\n    eid\\n    userId\\n    __typename\\n  }\\n}\\n\"}",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "data": {
+          "userInfo": {
+            "id": "3xfakeself00001",
+            "name": "测试",
+            "avatar": null,
+            "eid": "3xfakeself00001",
+            "userId": 10001
+          }
+        }
+      }
+    }
+  ],
+  "result": {
+    "id": "3xfakeself00001",
+    "name": "测试",
+    "avatar": null,
+    "eid": "3xfakeself00001",
+    "userId": 10001
+  },
+  "error": null
+}

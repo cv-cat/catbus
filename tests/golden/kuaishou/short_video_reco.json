@@ -1,0 +1,294 @@
+{
+  "input": {
+    "photo": "3xfakephoto0001"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://www.kuaishou.com/graphql",
+      "headers": [
+        [
+          "referer",
+          "https://www.kuaishou.com/short-video/3xfakephoto0001"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "kww",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://www.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "did",
+          "web_0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "wid",
+          "12345678901234567"
+        ],
+        [
+          "didv",
+          "1789990000000"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "kuaishou.server.webday7_st",
+          "fake-www-st"
+        ],
+        [
+          "kuaishou.server.webday7_ph",
+          "fake-www-ph"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "ktrace-context",
+          "fake|trace"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "kwfv1",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ]
+      ],
+      "body": "{\"operationName\":\"visionShortVideoReco\",\"variables\":{\"page\":\"detail\",\"photoId\":\"3xfakephoto0001\"},\"query\":\"fragment photoContent on PhotoEntity {\\n  __typename\\n  id\\n  duration\\n  caption\\n  originCaption\\n  likeCount\\n  viewCount\\n  commentCount\\n  realLikeCount\\n  coverUrl\\n  photoUrl\\n  photoH265Url\\n  manifest\\n  manifestH265\\n  videoResource\\n  coverUrls {\\n    url\\n    __typename\\n  }\\n  timestamp\\n  expTag\\n  animatedCoverUrl\\n  distance\\n  disableSensitivePhoto\\n  videoRatio\\n  liked\\n  stereoType\\n  profileUserTopPhoto\\n  musicBlocked\\n  riskTagContent\\n  riskTagUrl\\n}\\n\\nquery visionShortVideoReco($semKeyword: String, $semCrowd: String, $utmSource: String, $utmMedium: String, $page: String, $photoId: String, $utmCampaign: String) {\\n  visionShortVideoReco(semKeyword: $semKeyword, semCrowd: $semCrowd, utmSource: $utmSource, utmMedium: $utmMedium, page: $page, photoId: $photoId, utmCampaign: $utmCampaign) {\\n    llsid\\n    feeds {\\n      type\\n      author {\\n        id\\n        name\\n        following\\n        headerUrl\\n        __typename\\n      }\\n      photo {\\n        ...photoContent\\n        __typename\\n      }\\n      tags {\\n        type\\n        name\\n        __typename\\n      }\\n      authorStatement {\\n        content\\n        type\\n        riskStyleType\\n        __typename\\n      }\\n      canAddComment\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"}",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "data": {
+          "visionShortVideoReco": {
+            "llsid": "1",
+            "feeds": [
+              {
+                "type": 1,
+                "photo": {
+                  "id": "3xfakephoto0001",
+                  "duration": 16000,
+                  "caption": "测试作品 #话题",
+                  "likeCount": "1.2万",
+                  "realLikeCount": 12345,
+                  "coverUrl": "https://p1.a.yximgs.com/cover.jpg",
+                  "photoUrl": "https://v1.kwaicdn.com/b.mp4",
+                  "liked": false,
+                  "timestamp": 1789990000000,
+                  "expTag": "x",
+                  "llsid": "1",
+                  "viewCount": "82.1万",
+                  "videoRatio": 0.56,
+                  "stereoType": 0,
+                  "musicBlocked": null,
+                  "riskTagContent": null,
+                  "riskTagUrl": null,
+                  "manifest": {
+                    "mediaType": 2,
+                    "businessType": 2,
+                    "version": "1.0.0",
+                    "adaptationSet": [
+                      {
+                        "id": 1,
+                        "duration": 16000,
+                        "representation": [
+                          {
+                            "id": 1,
+                            "url": "https://v1.kwaicdn.com/low.mp4",
+                            "width": 540,
+                            "height": 960,
+                            "maxBitrate": 1000
+                          },
+                          {
+                            "id": 2,
+                            "url": "https://v1.kwaicdn.com/high.mp4",
+                            "width": 720,
+                            "height": 1280,
+                            "maxBitrate": 3000
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "manifestH265": null,
+                  "photoH265Url": null,
+                  "coronaCropManifest": null,
+                  "coronaCropManifestH265": null,
+                  "croppedPhotoH265Url": null,
+                  "croppedPhotoUrl": null,
+                  "videoResource": null,
+                  "commentCount": 7
+                },
+                "author": {
+                  "id": "3xfakeuser00001",
+                  "name": "作者",
+                  "following": false,
+                  "headerUrl": "https://p1.a.yximgs.com/head.jpg",
+                  "livingInfo": null,
+                  "verifiedDetail": null
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "result": {
+    "llsid": "1",
+    "feeds": [
+      {
+        "type": 1,
+        "photo": {
+          "id": "3xfakephoto0001",
+          "duration": 16000,
+          "caption": "测试作品 #话题",
+          "likeCount": "1.2万",
+          "realLikeCount": 12345,
+          "coverUrl": "https://p1.a.yximgs.com/cover.jpg",
+          "photoUrl": "https://v1.kwaicdn.com/b.mp4",
+          "liked": false,
+          "timestamp": 1789990000000,
+          "expTag": "x",
+          "llsid": "1",
+          "viewCount": "82.1万",
+          "videoRatio": 0.56,
+          "stereoType": 0,
+          "musicBlocked": null,
+          "riskTagContent": null,
+          "riskTagUrl": null,
+          "manifest": {
+            "mediaType": 2,
+            "businessType": 2,
+            "version": "1.0.0",
+            "adaptationSet": [
+              {
+                "id": 1,
+                "duration": 16000,
+                "representation": [
+                  {
+                    "id": 1,
+                    "url": "https://v1.kwaicdn.com/low.mp4",
+                    "width": 540,
+                    "height": 960,
+                    "maxBitrate": 1000
+                  },
+                  {
+                    "id": 2,
+                    "url": "https://v1.kwaicdn.com/high.mp4",
+                    "width": 720,
+                    "height": 1280,
+                    "maxBitrate": 3000
+                  }
+                ]
+              }
+            ]
+          },
+          "manifestH265": null,
+          "photoH265Url": null,
+          "coronaCropManifest": null,
+          "coronaCropManifestH265": null,
+          "croppedPhotoH265Url": null,
+          "croppedPhotoUrl": null,
+          "videoResource": null,
+          "commentCount": 7
+        },
+        "author": {
+          "id": "3xfakeuser00001",
+          "name": "作者",
+          "following": false,
+          "headerUrl": "https://p1.a.yximgs.com/head.jpg",
+          "livingInfo": null,
+          "verifiedDetail": null
+        }
+      }
+    ]
+  },
+  "error": null
+}

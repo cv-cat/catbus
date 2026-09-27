@@ -1,0 +1,148 @@
+{
+  "input": {
+    "room": "3xfakeroom00001"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://live.kuaishou.com/live_api/liveroom/websocketinfo?__NS_hxfalcon=HUDR_sFnX-DtsGUFXsbDPT3TMP-sk0is6A6ZH7E4jlryNsQCuNZZRdSj1s8iIQL_CzYl1qEaCKXZ1Qul4A0B9srS50qlqmo1ekhckPk6DAhrslMP3hB67Z7lgc3p-2cIjWWAFDvwSRQLu6-_7QxYIzhKdDXvJ7k1ZiNdT-bUlhQif$HE_7b64fd999b4b5c60f49031cfcfe492792a3130303031efa89c8a20e84e83138b2a3c9031ab660eea4b660ed830&caver=2&liveStreamId=fakeStream01",
+      "headers": [
+        [
+          "sentry-trace",
+          "94514d146fbbb1f352261e5d15c83934-3ab028bb5a2c0a08-0"
+        ],
+        [
+          "referer",
+          "https://live.kuaishou.com/u/3xfakeroom00001"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "kww",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ],
+        [
+          "baggage",
+          "sentry-environment=prod,sentry-release=ab256f1"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "wid",
+          "12345678901234567"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "did",
+          "web_0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ],
+        [
+          "didv",
+          "1789990000000"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "kwpsecproductname",
+          "PCLive"
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "kwfv1",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "data": {
+          "result": 1,
+          "token": "fake-ws-token",
+          "websocketUrls": [
+            "wss://live-ws.example/websocket"
+          ]
+        }
+      }
+    }
+  ],
+  "result": {
+    "data": {
+      "result": 1,
+      "token": "fake-ws-token",
+      "websocketUrls": [
+        "wss://live-ws.example/websocket"
+      ]
+    }
+  },
+  "error": null
+}

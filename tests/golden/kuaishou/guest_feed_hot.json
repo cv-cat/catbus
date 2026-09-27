@@ -1,0 +1,440 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "OPTIONS",
+      "url": "https://gdfp.gifshow.com/s/w/c",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "access-control-request-headers",
+          "content-type"
+        ],
+        [
+          "access-control-request-method",
+          "POST"
+        ],
+        [
+          "origin",
+          "https://www.kuaishou.com"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "referer",
+          "https://www.kuaishou.com/new-reco"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-site",
+          "cross-site"
+        ]
+      ],
+      "cookies": [],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://gdfp.gifshow.com/s/w/c",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "referer",
+          "https://www.kuaishou.com/new-reco"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://www.kuaishou.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "cross-site"
+        ]
+      ],
+      "cookies": [],
+      "body": "{\"data\":\"1gCA6FEVQdV1z+g5/OHPFD0Mt0bwGXEHsNRKbmEKhvEnadVP3W/MPbNebvko1tf7kWF5alg7K8d0ON4QRPyTMwFMjUkRTj5MRrr7r0ydMgNvPRF1+vUb+GU3OVpAx70sL8BiOtTWxxXkXoudVh7K7w==\"}",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://gdfp.gifshow.com/s/w/p",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "referer",
+          "https://cp.kuaishou.com/"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "origin",
+          "https://cp.kuaishou.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "cross-site"
+        ]
+      ],
+      "cookies": [],
+      "body": "{\"1\":\"web_94514d146fbbb1f352261e5d15c83934\",\"2\":\"onvideo-cp\",\"9\":1790000000123,\"data\":\"PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUw/WFPAQfwnPEP0Z7PeHF80ZAP/cMP0DlwecMG0rF+/chGApSP/chGAr7P/Wh8epYPnP98fQYPfGM8nPMG/rh+Ac=\",\"p\":\"w\"}",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://www.kuaishou.com/rest/v/feed/hot?__NS_hxfalcon=HUDR_sFnX-DtsGUFXsbDPT3TMP-sk0is6A6ZH7E4jlryNsQCuNZZRdSj1s8iIQL_CzYl1qEaCKXZ1Qul4A0B9srS50qlqmo1ekhckPk6DAhrslMP3hB67Z7lgc3p-2cIjWWAFDvwSRQLu6-_7QxYIzhKdDXvJ7k1ZiNdT-bUlhQif$HE_d6c9513436e6f1cd593d9c62622e280ca79c9d9d9d9c42053127db43eb24be2687913d9c06cba347e6cba3759d&caver=2",
+      "headers": [
+        [
+          "referer",
+          "https://www.kuaishou.com/new-reco"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "kww",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://www.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "did",
+          "web_94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "wid",
+          "98765432109876543"
+        ],
+        [
+          "didv",
+          "1790000000123"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ],
+        [
+          "kwfv1",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "access-control-allow-origin": "*",
+        "access-control-allow-methods": "POST",
+        "access-control-allow-headers": "content-type",
+        "access-control-max-age": "1800"
+      },
+      "body": ""
+    },
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "application/json;charset=UTF-8"
+      },
+      "body": "{\"dataRsp\": \"PHDGhFJ7ngwJPAmJNJS6EHGB9dCJFKzb8Nm5xdZo3M3Ab3BowftURvOD6ClobbJ3uJiXG30SjeP248Tb6ax0Qf/5uIO4r60p0OP1E32WtGKhQC3EC4Lt9u7WDkqu9BHaKXwLgwMP/sjJZqHNDOWvEcL2ZaqhBwz1FA5tV2Wk0C+ZSggdkb+WPUA0KPllTslSvgeqkiQ9S1C5I2Ls/BxrfEw2BPSzM23H/OZsr1n/1VTHZJvuuD3JIc/AcYxHQHO+niCk/lMzaKsQeg0yG2qjKiOte5NoxmSZVITg3dr+EcAgAm/co6cOsZmNEz0N7VM8Ysfcr8JpPsKa6W5msYAtKQDSh5srD90RNY3TJLqcH+YFZ87b++TfkWpR6u6D5eVFE43/ApNBpXTyVG5SHpVshazV3ydqNalcqD5mLL1jc3ZMF4sYUEOSIu30tq5h1Su3YY6FT7HZWV3nIj6j4e89eTnh07+LXhg6/Q5edVKlbgiVyfypCvfnBXGau5rIt7G9mVBX0RA44od/pUAxB3yc77ZFmFYhO7r5dsQKFAbd71ObQiMD/OScJJm013SpCB0R\", \"result\": 1, \"error_msg\": \"\"}"
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "c": 200,
+        "r": "98765432109876543"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": 1,
+        "pcursor": "no_more",
+        "searchSessionId": "sess",
+        "feeds": [
+          {
+            "type": 1,
+            "photo": {
+              "id": "3xfakephoto0001",
+              "duration": 16000,
+              "caption": "测试作品 #话题",
+              "likeCount": "1.2万",
+              "realLikeCount": 12345,
+              "coverUrl": "https://p1.a.yximgs.com/cover.jpg",
+              "photoUrl": "https://v1.kwaicdn.com/b.mp4",
+              "liked": false,
+              "timestamp": 1789990000000,
+              "expTag": "x",
+              "llsid": "1",
+              "viewCount": "82.1万",
+              "videoRatio": 0.56,
+              "stereoType": 0,
+              "musicBlocked": null,
+              "riskTagContent": null,
+              "riskTagUrl": null,
+              "manifest": {
+                "mediaType": 2,
+                "businessType": 2,
+                "version": "1.0.0",
+                "adaptationSet": [
+                  {
+                    "id": 1,
+                    "duration": 16000,
+                    "representation": [
+                      {
+                        "id": 1,
+                        "url": "https://v1.kwaicdn.com/low.mp4",
+                        "width": 540,
+                        "height": 960,
+                        "maxBitrate": 1000
+                      },
+                      {
+                        "id": 2,
+                        "url": "https://v1.kwaicdn.com/high.mp4",
+                        "width": 720,
+                        "height": 1280,
+                        "maxBitrate": 3000
+                      }
+                    ]
+                  }
+                ]
+              },
+              "manifestH265": null,
+              "photoH265Url": null,
+              "coronaCropManifest": null,
+              "coronaCropManifestH265": null,
+              "croppedPhotoH265Url": null,
+              "croppedPhotoUrl": null,
+              "videoResource": null,
+              "commentCount": 7
+            },
+            "author": {
+              "id": "3xfakeuser00001",
+              "name": "作者",
+              "following": false,
+              "headerUrl": "https://p1.a.yximgs.com/head.jpg",
+              "livingInfo": null,
+              "verifiedDetail": null
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "result": {
+    "result": 1,
+    "pcursor": "no_more",
+    "searchSessionId": "sess",
+    "feeds": [
+      {
+        "type": 1,
+        "photo": {
+          "id": "3xfakephoto0001",
+          "duration": 16000,
+          "caption": "测试作品 #话题",
+          "likeCount": "1.2万",
+          "realLikeCount": 12345,
+          "coverUrl": "https://p1.a.yximgs.com/cover.jpg",
+          "photoUrl": "https://v1.kwaicdn.com/b.mp4",
+          "liked": false,
+          "timestamp": 1789990000000,
+          "expTag": "x",
+          "llsid": "1",
+          "viewCount": "82.1万",
+          "videoRatio": 0.56,
+          "stereoType": 0,
+          "musicBlocked": null,
+          "riskTagContent": null,
+          "riskTagUrl": null,
+          "manifest": {
+            "mediaType": 2,
+            "businessType": 2,
+            "version": "1.0.0",
+            "adaptationSet": [
+              {
+                "id": 1,
+                "duration": 16000,
+                "representation": [
+                  {
+                    "id": 1,
+                    "url": "https://v1.kwaicdn.com/low.mp4",
+                    "width": 540,
+                    "height": 960,
+                    "maxBitrate": 1000
+                  },
+                  {
+                    "id": 2,
+                    "url": "https://v1.kwaicdn.com/high.mp4",
+                    "width": 720,
+                    "height": 1280,
+                    "maxBitrate": 3000
+                  }
+                ]
+              }
+            ]
+          },
+          "manifestH265": null,
+          "photoH265Url": null,
+          "coronaCropManifest": null,
+          "coronaCropManifestH265": null,
+          "croppedPhotoH265Url": null,
+          "croppedPhotoUrl": null,
+          "videoResource": null,
+          "commentCount": 7
+        },
+        "author": {
+          "id": "3xfakeuser00001",
+          "name": "作者",
+          "following": false,
+          "headerUrl": "https://p1.a.yximgs.com/head.jpg",
+          "livingInfo": null,
+          "verifiedDetail": null
+        }
+      }
+    ]
+  },
+  "error": null
+}

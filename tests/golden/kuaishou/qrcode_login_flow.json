@@ -1,0 +1,2094 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "OPTIONS",
+      "url": "https://gdfp.gifshow.com/s/w/c",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "access-control-request-headers",
+          "content-type"
+        ],
+        [
+          "access-control-request-method",
+          "POST"
+        ],
+        [
+          "origin",
+          "https://www.kuaishou.com"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "referer",
+          "https://www.kuaishou.com/new-reco"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-site",
+          "cross-site"
+        ]
+      ],
+      "cookies": [],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://gdfp.gifshow.com/s/w/c",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "referer",
+          "https://www.kuaishou.com/new-reco"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://www.kuaishou.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "cross-site"
+        ]
+      ],
+      "cookies": [],
+      "body": "{\"data\":\"1gCA6FEVQdV1z+g5/OHPFD0Mt0bwGXEHsNRKbmEKhvEnadVP3W/MPbNebvko1tf7kWF5alg7K8d0ON4QRPyTMwFMjUkRTj5MRrr7r0ydMgNvPRF1+vUb+GU3OVpAx70sL8BiOtTWxxXkXoudVh7K7w==\"}",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://id.kuaishou.com/rest/c/infra/ks/qr/start?__NS_hxfalcon=HUDR_sFnX-DtsGUFXsbDPT3TMP-sk0is6A6ZH7E4jlryNsQCuNZZRdSj1s8iIQL_CzYl1qEaCKXZ1Qul4A0B9srS50qlqmo1ekhckPk6DAhrslMP3hB67Z7lgc3p-2cIjWWAFDvwSRQLu6-_7QxYIzhKdDXvJ7k1ZiNdT-bUlhQif$HE_aab52d484a9a8db12541e01e1e525470dbe0e1e1e1e03e794d5bf7339750c25afbed41e07ab7df3b9ab7df09e1&caver=2",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "kww",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "origin",
+          "https://www.kuaishou.com"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "referer",
+          "https://www.kuaishou.com/"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "didv",
+          "1790000000123"
+        ],
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwfv1",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ]
+      ],
+      "body": "sid=kuaishou.server.webday7&channelType=UNKNOWN&isWebSig4=true",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://id.kuaishou.com/rest/c/infra/ks/qr/scanResult?__NS_hxfalcon=HUDR_sFnX-DtsGUFXsbDPTnTMP-sk0is6A6ZH7E4jlryNsQCuNZZRdSj1s8iIQL_CzYl1qEaCKXZ1Qul4A0B9srS50qlqmo1ekhckPk6DAhrslMP3hB67Z7lgc3p-2cIjWWAFDvwSRQLu6-_7QxYIzhKdDXvJ7k1ZiNdT-bUkhQif$HE_c3dc442123f3e4d84c288977774f5c53388988888889561024329d01ab3dab339284288913deb652f3deb66088&caver=2",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "kww",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "origin",
+          "https://www.kuaishou.com"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "referer",
+          "https://www.kuaishou.com/"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "didv",
+          "1790000000123"
+        ],
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwfv1",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ]
+      ],
+      "body": "qrLoginToken=fake-qr-token&qrLoginSignature=fake-qr-sig&channelType=UNKNOWN&isWebSig4=true",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://id.kuaishou.com/rest/c/infra/ks/qr/acceptResult?__NS_hxfalcon=HUDR_sFnX-DtsGUFXsbDPTXTMP-sk0is6A6ZH7E4jlryNsQCuNZZRdSj1s8iIQL_CzYl1qEaCKXZ1Qul4A0B9srS50qlqmo1ekhckPk6DAhrslMP3hB67Z7lgc3p-2cIjWWAFDvwSRQLu6-_7QxYIzhKdDXvJ7k1ZiNdT-bUnhQif$HE_071880e5e737201c88ec4db3b3bc2806644d4c4c4c4d91d4e0f6589439fe6ff75640ec4dd71a7296371a72a44c&caver=2",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "kww",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "origin",
+          "https://www.kuaishou.com"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "referer",
+          "https://www.kuaishou.com/"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "didv",
+          "1790000000123"
+        ],
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwfv1",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ]
+      ],
+      "body": "qrLoginToken=fake-qr-token&qrLoginSignature=fake-qr-sig&sid=kuaishou.server.webday7&channelType=UNKNOWN&isWebSig4=true",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://id.kuaishou.com/pass/kuaishou/login/qr/callback?__NS_hxfalcon=HUDR_sFnX-DtsGUFXsbDPTHTMP-sk0is6A6ZH7E4jlryNsQCuNZZRdSj1s8iIQL_CzYl1qEaCKXZ1Qul4A0B9srS50qlqmo1ekhckPk6DAhrslMP3hB67Z7lgc3p-2cIjWWAFDvwSRQLu6-_7QxYIzhKdDXvJ7k1ZiNdT-bUmhQif$HE_ddc25a3f3dedfac6523697696910900b2d97969696974a0e3a2c8219b075b52d8c9a36970dc0a84cedc0a87e96&caver=2",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "kww",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "origin",
+          "https://www.kuaishou.com"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "referer",
+          "https://www.kuaishou.com/"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "didv",
+          "1790000000123"
+        ],
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwfv1",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ]
+      ],
+      "body": "qrToken=fake-qr-accepted&sid=kuaishou.server.webday7&channelType=UNKNOWN&isWebSig4=true",
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://id.kuaishou.com/pass/kuaishou/login/passToken?callback=https%3A%2F%2Fwww.kuaishou.com%2Frest%2Finfra%2Fsts%3FfollowUrl%3Dhttps%253A%252F%252Fpassport.kuaishou.com%252Fpc%252Faccount%252FpassToken%252Fresult%253Fsuccessful%253Dtrue%2526id%253DSSO_1790000000123%2526for%253DpassTokenSuccess%26failUrl%3Dhttps%253A%252F%252Fpassport.kuaishou.com%252Fpc%252Faccount%252FpassToken%252Fresult%253Fsuccessful%253Dfalse%2526id%253DSSO_1790000000123%2526for%253DpassTokenSuccess%26setRootDomain%3Dfalse&__loginPage=https%3A%2F%2Fpassport.kuaishou.com%2Fpc%2Faccount%2FpassToken%2Fresult%3Fsuccessful%3Dfalse%26id%3DSSO_1790000000123%26for%3DpullTokenFail&sid=kuaishou.server.webday7",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-dest",
+          "iframe"
+        ],
+        [
+          "referer",
+          "https://www.kuaishou.com/"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "didv",
+          "1790000000123"
+        ],
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ],
+        [
+          "passToken",
+          "fake-pass-token"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "ssecurity",
+          "fake-ssecurity"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.server.webday7_st",
+          "fake-callback-st"
+        ],
+        [
+          "kuaishou.server.webday7.at",
+          "fake-www-at"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwfv1",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://www.kuaishou.com/rest/infra/sts?followUrl=https%3A%2F%2Fpassport.kuaishou.com%2Fpc%2Faccount%2FpassToken%2Fresult%3Fsuccessful%3Dtrue%26id%3DSSO_1790000000123%26for%3DpassTokenSuccess&failUrl=https%3A%2F%2Fpassport.kuaishou.com%2Fpc%2Faccount%2FpassToken%2Fresult%3Fsuccessful%3Dfalse%26id%3DSSO_1790000000123%26for%3DpassTokenSuccess&setRootDomain=false&authToken=fake-sts-at&sid=kuaishou.server.webday7",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-dest",
+          "iframe"
+        ],
+        [
+          "referer",
+          "https://www.kuaishou.com/"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "didv",
+          "1790000000123"
+        ],
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ],
+        [
+          "passToken",
+          "fake-pass-token"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "ssecurity",
+          "fake-ssecurity"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.server.webday7_st",
+          "fake-callback-st"
+        ],
+        [
+          "kuaishou.server.webday7.at",
+          "fake-www-at"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwfv1",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://www.kuaishou.com/new-reco",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "sec-fetch-dest",
+          "document"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-site",
+          "none"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"151\", \"Google Chrome\";v=\"151\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-user",
+          "?1"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "priority",
+          "u=0, i"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "didv",
+          "1790000000123"
+        ],
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ],
+        [
+          "passToken",
+          "fake-pass-token"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "ssecurity",
+          "fake-ssecurity"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.server.webday7_st",
+          "fake-www-st"
+        ],
+        [
+          "kuaishou.server.webday7.at",
+          "fake-www-at"
+        ],
+        [
+          "kuaishou.server.webday7_ph",
+          "fake-www-ph"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwfv1",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://id.kuaishou.com/pass/kuaishou/login/passToken?callback=https%3A%2F%2Fcp.kuaishou.com%2Frest%2Finfra%2Fsts%3FfollowUrl%3Dhttps%253A%252F%252Fpassport.kuaishou.com%252Fpc%252Faccount%252FpassToken%252Fresult%253Fsuccessful%253Dtrue%2526id%253DSSO_1790000000123%2526for%253DpassTokenSuccess%26failUrl%3Dhttps%253A%252F%252Fpassport.kuaishou.com%252Fpc%252Faccount%252FpassToken%252Fresult%253Fsuccessful%253Dfalse%2526id%253DSSO_1790000000123%2526for%253DpassTokenSuccess%26setRootDomain%3Dtrue&__loginPage=https%3A%2F%2Fpassport.kuaishou.com%2Fpc%2Faccount%2FpassToken%2Fresult%3Fsuccessful%3Dfalse%26id%3DSSO_1790000000123%26for%3DpullTokenFail&sid=kuaishou.web.cp.api",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-dest",
+          "iframe"
+        ],
+        [
+          "referer",
+          "https://cp.kuaishou.com/"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "didv",
+          "1790000000123"
+        ],
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ],
+        [
+          "passToken",
+          "fake-pass-token"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "ssecurity",
+          "fake-ssecurity"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.server.webday7_st",
+          "fake-www-st"
+        ],
+        [
+          "kuaishou.server.webday7.at",
+          "fake-www-at"
+        ],
+        [
+          "kuaishou.server.webday7_ph",
+          "fake-www-ph"
+        ],
+        [
+          "ktrace-context",
+          "fake|trace"
+        ],
+        [
+          "kwpsecproductname",
+          "onvideo-cp"
+        ],
+        [
+          "kwfv1",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://cp.kuaishou.com/rest/infra/sts?followUrl=https%3A%2F%2Fpassport.kuaishou.com%2Fpc%2Faccount%2FpassToken%2Fresult%3Fsuccessful%3Dtrue%26id%3DSSO_1790000000123%26for%3DpassTokenSuccess&failUrl=https%3A%2F%2Fpassport.kuaishou.com%2Fpc%2Faccount%2FpassToken%2Fresult%3Fsuccessful%3Dfalse%26id%3DSSO_1790000000123%26for%3DpassTokenSuccess&setRootDomain=true&authToken=fake-sts-at&sid=kuaishou.web.cp.api",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-dest",
+          "iframe"
+        ],
+        [
+          "referer",
+          "https://cp.kuaishou.com/"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "didv",
+          "1790000000123"
+        ],
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ],
+        [
+          "passToken",
+          "fake-pass-token"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "ssecurity",
+          "fake-ssecurity"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.server.webday7_st",
+          "fake-www-st"
+        ],
+        [
+          "kuaishou.server.webday7.at",
+          "fake-www-at"
+        ],
+        [
+          "kuaishou.server.webday7_ph",
+          "fake-www-ph"
+        ],
+        [
+          "ktrace-context",
+          "fake|trace"
+        ],
+        [
+          "kwpsecproductname",
+          "onvideo-cp"
+        ],
+        [
+          "kwfv1",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://cp.kuaishou.com/article/publish/video?origin=www.kuaishou.com",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "sec-fetch-dest",
+          "document"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-site",
+          "none"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"151\", \"Google Chrome\";v=\"151\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-user",
+          "?1"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "priority",
+          "u=0, i"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "didv",
+          "1790000000123"
+        ],
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ],
+        [
+          "passToken",
+          "fake-pass-token"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "ssecurity",
+          "fake-ssecurity"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.server.webday7_st",
+          "fake-www-st"
+        ],
+        [
+          "kuaishou.server.webday7.at",
+          "fake-www-at"
+        ],
+        [
+          "kuaishou.server.webday7_ph",
+          "fake-www-ph"
+        ],
+        [
+          "ktrace-context",
+          "fake|trace"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "kwpsecproductname",
+          "onvideo-cp"
+        ],
+        [
+          "kwfv1",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://gdfp.gifshow.com/s/w/p",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "referer",
+          "https://cp.kuaishou.com/"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "origin",
+          "https://cp.kuaishou.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "cross-site"
+        ]
+      ],
+      "cookies": [],
+      "body": "{\"1\":\"web_94514d146fbbb1f352261e5d15c83934\",\"2\":\"onvideo-cp\",\"9\":1790000000123,\"data\":\"PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUw/WFPAQfwnPEP0Z7PeHF80ZAP/cMP0DlwecMG0rF+/chGApSP/chGAr7P/Wh8epYPnP98fQYPfGM8nPMG/rh+Ac=\",\"p\":\"w\"}",
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://www.kuaishou.com/new-reco",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "sec-fetch-dest",
+          "document"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-site",
+          "none"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"151\", \"Google Chrome\";v=\"151\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-user",
+          "?1"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "priority",
+          "u=0, i"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "didv",
+          "1790000000123"
+        ],
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ],
+        [
+          "passToken",
+          "fake-pass-token"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "ssecurity",
+          "fake-ssecurity"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.server.webday7_st",
+          "fake-www-st"
+        ],
+        [
+          "kuaishou.server.webday7.at",
+          "fake-www-at"
+        ],
+        [
+          "kuaishou.server.webday7_ph",
+          "fake-www-ph"
+        ],
+        [
+          "ktrace-context",
+          "fake|trace"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "wid",
+          "98765432109876543"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwfv1",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://id.kuaishou.com/pass/kuaishou/getCdns",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "referer",
+          "https://live.kuaishou.com/"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://live.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "wid",
+          "98765432109876543"
+        ],
+        [
+          "didv",
+          "1790000000123"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "passToken",
+          "fake-pass-token"
+        ],
+        [
+          "kwfv1",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "kwpsecproductname",
+          "PCLive"
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ]
+      ],
+      "body": "{\"sid\":\"kuaishou.live.web\",\"did\":\"web_94514d146fbbb1f352261e5d15c83934\"}",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://id.kuaishou.com/pass/kuaishou/login/passToken",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "referer",
+          "https://live.kuaishou.com/"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://live.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "wid",
+          "98765432109876543"
+        ],
+        [
+          "didv",
+          "1790000000123"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "passToken",
+          "fake-pass-token"
+        ],
+        [
+          "kwfv1",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "kwpsecproductname",
+          "PCLive"
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ]
+      ],
+      "body": "sid=kuaishou.live.web&channelType=UNKNOWN&encryptHeaders=",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://live.kuaishou.com/live_api/baseuser/userLogin?__NS_hxfalcon=HUDR_sFnX-DtsGUFXsbDPT3TMP-sk0is6A6ZH7E4jlryNsQCuNZZRdSj1s8iIQL_CzYl1qEaCKXZ1Qul4A0B9srS50qlqmo1ekhckPk6DAhrslMP3hB67Z7lgc3p-2cIjWWAFDvwSRQLu6-_7QxYIzhKdDXvJ7k1ZiNdT-bUlhQif$HE_a5ba2347459582be2a4eef1111bcd925faefeeeeeeef31764254f467995ccd55f4e24eef75b8d03495b8d006ee&caver=2",
+      "headers": [
+        [
+          "sentry-trace",
+          "5a2c0a081ad3c43508e672e31e432124-94c0826bbb4b6b58-0"
+        ],
+        [
+          "referer",
+          "https://live.kuaishou.com/"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "kww",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "baggage",
+          "sentry-environment=prod,sentry-release=ab256f1"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://live.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "wid",
+          "98765432109876543"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "did",
+          "web_94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ],
+        [
+          "didv",
+          "1790000000123"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "kuaishou.live.web_st",
+          "fake-live-st0"
+        ],
+        [
+          "kwpsecproductname",
+          "PCLive"
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ],
+        [
+          "kwfv1",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ]
+      ],
+      "body": "{\"userLoginInfo\":{\"authToken\":\"fake-live-at\",\"sid\":\"kuaishou.live.web\"}}",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://www.kuaishou.com/graphql",
+      "headers": [
+        [
+          "referer",
+          "https://www.kuaishou.com/myFollow"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "kww",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://www.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "did",
+          "web_94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "wid",
+          "98765432109876543"
+        ],
+        [
+          "didv",
+          "1790000000123"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "kuaishou.server.webday7_st",
+          "fake-www-st"
+        ],
+        [
+          "kuaishou.server.webday7_ph",
+          "fake-www-ph"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "ktrace-context",
+          "fake|trace"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwfv1",
+          "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r="
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ]
+      ],
+      "body": "{\"operationName\":\"userInfoQuery\",\"variables\":{},\"query\":\"query userInfoQuery {\\n  userInfo {\\n    id\\n    name\\n    avatar\\n    eid\\n    userId\\n    __typename\\n  }\\n}\\n\"}",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "access-control-allow-origin": "*",
+        "access-control-allow-methods": "POST",
+        "access-control-allow-headers": "content-type",
+        "access-control-max-age": "1800"
+      },
+      "body": ""
+    },
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "application/json;charset=UTF-8"
+      },
+      "body": "{\"dataRsp\": \"PHDGhFJ7ngwJPAmJNJS6EHGB9dCJFKzb8Nm5xdZo3M3Ab3BowftURvOD6ClobbJ3uJiXG30SjeP248Tb6ax0Qf/5uIO4r60p0OP1E32WtGKhQC3EC4Lt9u7WDkqu9BHaKXwLgwMP/sjJZqHNDOWvEcL2ZaqhBwz1FA5tV2Wk0C+ZSggdkb+WPUA0KPllTslSvgeqkiQ9S1C5I2Ls/BxrfEw2BPSzM23H/OZsr1n/1VTHZJvuuD3JIc/AcYxHQHO+niCk/lMzaKsQeg0yG2qjKiOte5NoxmSZVITg3dr+EcAgAm/co6cOsZmNEz0N7VM8Ysfcr8JpPsKa6W5msYAtKQDSh5srD90RNY3TJLqcH+YFZ87b++TfkWpR6u6D5eVFE43/ApNBpXTyVG5SHpVshazV3ydqNalcqD5mLL1jc3ZMF4sYUEOSIu30tq5h1Su3YY6FT7HZWV3nIj6j4e89eTnh07+LXhg6/Q5edVKlbgiVyfypCvfnBXGau5rIt7G9mVBX0RA44od/pUAxB3yc77ZFmFYhO7r5dsQKFAbd71ObQiMD/OScJJm013SpCB0R\", \"result\": 1, \"error_msg\": \"\"}"
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": 1,
+        "qrLoginToken": "fake-qr-token",
+        "qrLoginSignature": "fake-qr-sig",
+        "qrUrl": "https://v.kuaishou.com/fake-qr",
+        "imageData": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+        "expireTime": 1790000060000
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": 1
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": 1,
+        "qrToken": "fake-qr-accepted",
+        "callback": "",
+        "sid": "kuaishou.server.webday7"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [
+          "passToken=fake-pass-token; Path=/",
+          "userId=10001; Path=/"
+        ]
+      },
+      "body": {
+        "result": 1,
+        "passToken": "fake-pass-token",
+        "userId": 10001,
+        "bUserId": 20001,
+        "ssecurity": "fake-ssecurity",
+        "kuaishou.server.webday7_st": "fake-callback-st",
+        "kuaishou.server.webday7.at": "fake-www-at",
+        "sid": "kuaishou.server.webday7"
+      }
+    },
+    {
+      "status": 302,
+      "headers": {
+        "location": "https://www.kuaishou.com/rest/infra/sts?followUrl=https%3A%2F%2Fpassport.kuaishou.com%2Fpc%2Faccount%2FpassToken%2Fresult%3Fsuccessful%3Dtrue%26id%3DSSO_1790000000123%26for%3DpassTokenSuccess&failUrl=https%3A%2F%2Fpassport.kuaishou.com%2Fpc%2Faccount%2FpassToken%2Fresult%3Fsuccessful%3Dfalse%26id%3DSSO_1790000000123%26for%3DpassTokenSuccess&setRootDomain=false&authToken=fake-sts-at&sid=kuaishou.server.webday7"
+      },
+      "body": ""
+    },
+    {
+      "status": 302,
+      "headers": {
+        "set-cookie": [
+          "kuaishou.server.webday7_st=fake-www-st; Path=/",
+          "kuaishou.server.webday7_ph=fake-www-ph; Path=/",
+          "userId=10001; Path=/"
+        ],
+        "location": "https://passport.kuaishou.com/pc/account/passToken/result"
+      },
+      "body": ""
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [
+          "ktrace-context=fake|trace; Path=/"
+        ],
+        "content-type": "text/html"
+      },
+      "body": "<html></html>"
+    },
+    {
+      "status": 302,
+      "headers": {
+        "location": "https://cp.kuaishou.com/rest/infra/sts?followUrl=https%3A%2F%2Fpassport.kuaishou.com%2Fpc%2Faccount%2FpassToken%2Fresult%3Fsuccessful%3Dtrue%26id%3DSSO_1790000000123%26for%3DpassTokenSuccess&failUrl=https%3A%2F%2Fpassport.kuaishou.com%2Fpc%2Faccount%2FpassToken%2Fresult%3Fsuccessful%3Dfalse%26id%3DSSO_1790000000123%26for%3DpassTokenSuccess&setRootDomain=true&authToken=fake-sts-at&sid=kuaishou.web.cp.api"
+      },
+      "body": ""
+    },
+    {
+      "status": 302,
+      "headers": {
+        "set-cookie": [
+          "kuaishou.web.cp.api_st=fake-cp-st; Path=/",
+          "kuaishou.web.cp.api_ph=fake0000-cp00-ph00-0000-000000000000; Path=/"
+        ],
+        "location": "https://passport.kuaishou.com/pc/account/passToken/result"
+      },
+      "body": ""
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [],
+        "content-type": "text/html"
+      },
+      "body": "<html></html>"
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "c": 200,
+        "r": "98765432109876543"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [
+          "ktrace-context=fake|trace; Path=/"
+        ],
+        "content-type": "text/html"
+      },
+      "body": "<html></html>"
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": 1
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [
+          "kuaishou.live.web_st=fake-live-st0; Path=/"
+        ]
+      },
+      "body": {
+        "result": 1,
+        "kuaishou.live.web.at": "fake-live-at",
+        "kuaishou.live.web_st": "fake-live-st0",
+        "userId": 10001
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [
+          "kuaishou.live.web_st=fake-live-st; Path=/",
+          "kuaishou.live.web_ph=fake-live-ph; Path=/"
+        ]
+      },
+      "body": {
+        "data": {
+          "result": 1
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "data": {
+          "userInfo": {
+            "id": "3xfakeself00001",
+            "name": "测试",
+            "avatar": null,
+            "eid": "3xfakeself00001",
+            "userId": 10001
+          }
+        }
+      }
+    }
+  ],
+  "result": {
+    "cookies": {
+      "did": "web_94514d146fbbb1f352261e5d15c83934",
+      "kwpsecproductname": "kuaishou-vision",
+      "didv": "1790000000123",
+      "kpf": "PC_WEB",
+      "clientid": "3",
+      "kpn": "KUAISHOU_VISION",
+      "kwfv1": "PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnQYP9GlG9GlP0rFG/qhGnGl8n80+9Plw/zfG9PM+n8j8eqFw/pf+9pY+eH78f8f8eZFP9HIP/mY+ADl80L7G9r=",
+      "kwssectoken": "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake",
+      "kwscode": "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944",
+      "passToken": "fake-pass-token",
+      "userId": "10001",
+      "ssecurity": "fake-ssecurity",
+      "bUserId": "20001",
+      "kuaishou.server.webday7_st": "fake-www-st",
+      "kuaishou.server.webday7.at": "fake-www-at",
+      "kuaishou.server.webday7_ph": "fake-www-ph",
+      "ktrace-context": "fake|trace",
+      "kuaishou.web.cp.api_st": "fake-cp-st",
+      "kuaishou.web.cp.api_ph": "fake0000-cp00-ph00-0000-000000000000",
+      "wid": "98765432109876543",
+      "kuaishou.live.web_st": "fake-live-st",
+      "kuaishou.live.web.at": "fake-live-at",
+      "kuaishou.live.web_ph": "fake-live-ph"
+    },
+    "info": {
+      "id": "3xfakeself00001",
+      "name": "测试",
+      "avatar": null,
+      "eid": "3xfakeself00001",
+      "userId": 10001
+    },
+    "kwfcv1": "2"
+  },
+  "error": null
+}

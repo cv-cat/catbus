@@ -1,0 +1,77 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://gdfp.gifshow.com/s/w/p",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "referer",
+          "https://cp.kuaishou.com/"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "origin",
+          "https://cp.kuaishou.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "cross-site"
+        ]
+      ],
+      "cookies": [],
+      "body": "{\"1\":\"web_0123456789abcdef0123456789abcdef\",\"2\":\"onvideo-cp\",\"9\":1790000000123,\"data\":\"PnGU+9+Y8008S+nH0U+0mjPf8fP08f+98f+nLlwnrIP9PI8fPAwBc7PBzDP/4S8/cUweQj8/80Pnch+/PIw/DUwnrUwBQSP0ZUwBcFPf+f+0ZF8nQ08f8YPAqE+9Pl8/rl80rIP/GhGnPlP0HEweWl80zfPeYSPALUPAPIPfHIGnL=\",\"p\":\"w\"}",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "c": 200,
+        "r": "98765432109876543"
+      }
+    }
+  ],
+  "result": {
+    "ok": true,
+    "wid": "98765432109876543",
+    "didv": "1789990000000",
+    "reused": false
+  },
+  "error": null
+}

@@ -1,5 +1,15 @@
 import { filter, PRODUCT } from '../../core/options.js'
-import { definePlatform } from '../../core/registry.js'
+import { type CommandDecl, definePlatform, type Handler, type Upstream } from '../../core/registry.js'
+
+type Commands = typeof import('./web/commands.js')
+
+/** 懒加载 web 端的 handler：只有执行到这条命令时才加载实现。 */
+const h =
+  (name: keyof Commands) =>
+  (): Promise<Handler> =>
+    import('./web/commands.js').then((m) => m[name] as Handler)
+
+const impl = (upstream: Upstream, name: keyof Commands, extra: Partial<CommandDecl> = {}): CommandDecl => ({ upstream, handler: h(name), ...extra })
 
 export default definePlatform({
   id: 'kuaishou',
@@ -10,60 +20,60 @@ export default definePlatform({
     web: {
       login: { methods: ['qrcode', 'sms', 'cookie'], default: 'qrcode' },
       commands: {
-        'auth login': 'full',
-        'auth status': 'full',
+        'auth login': impl('full', 'authLogin'),
+        'auth status': impl('full', 'authStatus'),
 
-        'user get': 'full',
-        'user search': 'full',
-        'user items': 'full',
-        'user likes': 'full',
-        'user collects': 'full',
-        'user followers': 'full',
-        'user following': 'full',
+        'user get': impl('full', 'userGet'),
+        'user search': impl('full', 'userSearch'),
+        'user items': impl('full', 'userItems'),
+        'user likes': impl('full', 'userLikes', { note: '只支持 me' }),
+        'user collects': impl('full', 'userCollects'),
+        'user followers': impl('full', 'userFollowers', { note: '只支持 me' }),
+        'user following': impl('full', 'userFollowing', { note: '只支持 me' }),
         'user follow': 'none',
         'user unfollow': 'none',
 
-        'item get': 'full',
-        'item search': 'partial',
-        'item related': 'full',
-        'item list': 'full',
-        'item media': 'full',
-        'item download': 'full',
+        'item get': impl('full', 'itemGet'),
+        'item search': impl('partial', 'itemSearch'),
+        'item related': impl('full', 'itemRelated'),
+        'item list': impl('full', 'itemList'),
+        'item media': impl('full', 'itemMedia'),
+        'item download': impl('full', 'itemDownload'),
         'item like': 'none',
         'item unlike': 'none',
         'item collect': 'none',
         'item uncollect': 'none',
-        'item publish': 'partial',
+        'item publish': impl('partial', 'itemPublish'),
         'item delete': 'none',
 
         'product get': 'none',
 
-        'comment list': { upstream: 'partial', note: '--product 规划中', options: { product: PRODUCT } },
-        'comment replies': 'partial',
+        'comment list': impl('partial', 'commentList', { note: '--product 规划中', options: { product: PRODUCT } }),
+        'comment replies': impl('partial', 'commentReplies'),
         'comment add': 'none',
         'comment delete': 'none',
         'comment like': 'none',
         'comment unlike': 'none',
 
-        'feed list': {
-          upstream: 'partial',
+        'feed list': impl('partial', 'feedList', {
           note: 'recommend 规划中；hot 部分支持',
           options: { kind: filter.kind('recommend', 'hot', 'following') },
-        },
+        }),
 
-        'live get': 'full',
-        'live list': 'full',
+        'live get': impl('full', 'liveGet'),
+        'live list': impl('full', 'liveList'),
         'live search': 'none',
-        'live categories': 'full',
-        'live listen': 'full',
+        'live categories': impl('full', 'liveCategories'),
+        'live listen': impl('full', 'liveListen'),
         'live history': 'none',
-        'live send': { upstream: 'partial', note: '--gift 规划中' },
-        'live like': 'partial',
+        // 上游没有发直播弹幕、直播间点赞的方法（README：“直播间主动发送弹幕尚未接入”）
+        'live send': 'none',
+        'live like': 'none',
         'live rank': 'none',
-        'live gifts': 'full',
+        'live gifts': impl('full', 'liveGifts'),
         'live products': 'none',
         'live media': 'none',
-        'live replays': 'full',
+        'live replays': impl('full', 'liveReplays'),
         'live start': 'none',
         'live stop': 'none',
 
@@ -71,7 +81,7 @@ export default definePlatform({
         'keyword hot': 'none',
 
         'notice list': 'none',
-        'notice count': 'full',
+        'notice count': impl('full', 'noticeCount'),
 
         'msg list': 'none',
         'msg history': 'none',
@@ -81,7 +91,7 @@ export default definePlatform({
         'msg revoke': 'none',
         'msg delete': 'none',
 
-        'media upload': 'full',
+        'media upload': impl('full', 'mediaUpload'),
 
         'folder list': 'none',
         'folder items': 'none',
@@ -92,7 +102,8 @@ export default definePlatform({
         'series list': 'none',
         'series items': 'none',
 
-        'history list': 'full',
+        // 上游 get_history_list 已下线（服务端 404，上游直接拒绝发包）
+        'history list': 'none',
         'topic search': 'none',
         'poi search': 'none',
       },

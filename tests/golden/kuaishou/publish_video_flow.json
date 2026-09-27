@@ -1,0 +1,885 @@
+{
+  "input": {
+    "video": "clip.mp4"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://cp.kuaishou.com/rest/v2/creator/pc/authority/account/current?__NS_sig3=d5c582b205bf36eced888b8ae1956db250b41cf09494969699989b81",
+      "headers": [
+        [
+          "referer",
+          "https://cp.kuaishou.com/article/publish/video?origin=www.kuaishou.com"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "content-type",
+          "application/json;charset=UTF-8"
+        ],
+        [
+          "returnsetrootdomainloginurl",
+          "true"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://cp.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "wid",
+          "12345678901234567"
+        ],
+        [
+          "didv",
+          "1789990000000"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "kwpsecproductname",
+          "onvideo-cp"
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "kwfv1",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ]
+      ],
+      "body": "{\"kuaishou.web.cp.api_ph\":\"fake0000-cp00-ph00-0000-000000000000\"}",
+      "multipart": null
+    },
+    {
+      "method": "OPTIONS",
+      "url": "https://gdfp.gifshow.com/s/w/c",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "access-control-request-headers",
+          "content-type"
+        ],
+        [
+          "access-control-request-method",
+          "POST"
+        ],
+        [
+          "origin",
+          "https://cp.kuaishou.com"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "referer",
+          "https://cp.kuaishou.com/article/publish/video?origin=www.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-site",
+          "cross-site"
+        ]
+      ],
+      "cookies": [],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://gdfp.gifshow.com/s/w/c",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "referer",
+          "https://cp.kuaishou.com/article/publish/video?origin=www.kuaishou.com"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://cp.kuaishou.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "cross-site"
+        ]
+      ],
+      "cookies": [],
+      "body": "{\"data\":\"1gCA6FEVQdV1z+g5/OHPFEbOBovwvgnMgLtTtNxrkgQ1CX6pWnHsicCaKlM47gIgz4aPiOhX5FoJsE4HzOVY61hq3WaH+1NXcAauPH/lAS+5HmjMTXr1Q0JIKLdPq5mS\"}",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://cp.kuaishou.com/rest/cp/works/v2/video/pc/upload/pre?__NS_sig3=a1b1f6c671cb429898fcfffe50bd9b1a24c06884e0e0e2e2edeceff5",
+      "headers": [
+        [
+          "referer",
+          "https://cp.kuaishou.com/article/publish/video?origin=www.kuaishou.com"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/json;charset=UTF-8"
+        ],
+        [
+          "kww",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://cp.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "wid",
+          "12345678901234567"
+        ],
+        [
+          "didv",
+          "1789990000000"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwfv1",
+          "+f8Y+nHMwe0QD8fP0hPfL9PAPI+0bS8/pjwnbf8fGI+9+YG/pDwePAG0GlP0cE8/HIG9r9+9zY+/WI+/HFwezjweP78BQD+BLM8nzYPnrIPfPF+08YPAYD8/bf8eqAweLE+9rh8BcFPerAPfGU8/qMwBGl+ncl80LUP08SGnbDG/SS+e8j8fr7GnHF8fHlwBr9Pf80Gf8Sw/cMPe40P0WIwc=="
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ]
+      ],
+      "body": "{\"uploadType\":1,\"kuaishou.web.cp.api_ph\":\"fake0000-cp00-ph00-0000-000000000000\"}",
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://upload.kuaishouzt.com/api/upload/resume?upload_token=fake-upload-token",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "referer",
+          "https://cp.kuaishou.com/"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://cp.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "cross-site"
+        ]
+      ],
+      "cookies": [],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://upload.kuaishouzt.com/api/upload/fragment?upload_token=fake-upload-token&fragment_id=0",
+      "headers": [
+        [
+          "referer",
+          "https://cp.kuaishou.com/"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "content-type",
+          "application/octet-stream"
+        ],
+        [
+          "content-range",
+          "bytes 0-1035/1036"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://cp.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "cross-site"
+        ]
+      ],
+      "cookies": [],
+      "body": {
+        "base64": "AAAAGGZ0eXBtcDQyAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/wABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8AAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=="
+      },
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://upload.kuaishouzt.com/api/upload/complete?fragment_count=1&upload_token=fake-upload-token",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "referer",
+          "https://cp.kuaishou.com/"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://cp.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "cross-site"
+        ]
+      ],
+      "cookies": [],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://cp.kuaishou.com/rest/cp/works/v2/video/pc/upload/finish?__NS_sig3=41511626912ba2787b1c1f1e37965313c4208864000002020d0c0f15",
+      "headers": [
+        [
+          "referer",
+          "https://cp.kuaishou.com/article/publish/video?origin=www.kuaishou.com"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/json;charset=UTF-8"
+        ],
+        [
+          "kww",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://cp.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "wid",
+          "12345678901234567"
+        ],
+        [
+          "didv",
+          "1789990000000"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwfv1",
+          "+f8Y+nHMwe0QD8fP0hPfL9PAPI+0bS8/pjwnbf8fGI+9+YG/pDwePAG0GlP0cE8/HIG9r9+9zY+/WI+/HFwezjweP78BQD+BLM8nzYPnrIPfPF+08YPAYD8/bf8eqAweLE+9rh8BcFPerAPfGU8/qMwBGl+ncl80LUP08SGnbDG/SS+e8j8fr7GnHF8fHlwBr9Pf80Gf8Sw/cMPe40P0WIwc=="
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ]
+      ],
+      "body": "{\"token\":\"fake-upload-token\",\"fileName\":\"clip.mp4\",\"fileType\":\"video/mp4\",\"fileLength\":1036,\"kuaishou.web.cp.api_ph\":\"fake0000-cp00-ph00-0000-000000000000\"}",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://cp.kuaishou.com/rest/cp/works/v2/common/pc/report?__NS_sig3=62723505b208815b593f3c3de2a8e69be703ab47232321212e2f2c36",
+      "headers": [
+        [
+          "referer",
+          "https://cp.kuaishou.com/article/publish/video?origin=www.kuaishou.com"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/json;charset=UTF-8"
+        ],
+        [
+          "kww",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "connection",
+          "keep-alive"
+        ],
+        [
+          "content-length",
+          "143"
+        ],
+        [
+          "host",
+          "cp.kuaishou.com"
+        ],
+        [
+          "origin",
+          "https://cp.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "wid",
+          "12345678901234567"
+        ],
+        [
+          "didv",
+          "1789990000000"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwfv1",
+          "+f8Y+nHMwe0QD8fP0hPfL9PAPI+0bS8/pjwnbf8fGI+9+YG/pDwePAG0GlP0cE8/HIG9r9+9zY+/WI+/HFwezjweP78BQD+BLM8nzYPnrIPfPF+08YPAYD8/bf8eqAweLE+9rh8BcFPerAPfGU8/qMwBGl+ncl80LUP08SGnbDG/SS+e8j8fr7GnHF8fHlwBr9Pf80Gf8Sw/cMPe40P0WIwc=="
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ]
+      ],
+      "body": "{\"bizKey\":\"cp_video_upload_cover_0123456789abcdef.jpg\",\"bizType\":1,\"data\":\"{}\",\"kuaishou.web.cp.api_ph\":\"fake0000-cp00-ph00-0000-000000000000\"}",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://cp.kuaishou.com/rest/cp/works/v2/video/pc/submit?__NS_hxfalcon=HUDR_sFnX-DtsGUFXsbDPT3TMP-sk0is6A6ZH7E4jlryNsQCuNZZRdSj1s8iIQL_CzYl1qEaCKXZ1Qul4A0B9srS50qlqmo1ekhckPk6DAhrslMP3hB67Z7lgc3p-2cIjWWAFDvwSRQLu6-_7QxYIzhKdDXvJ7k1ZiNdT-bUlhQif$HE_819e066361b1a69a0e6acb3535ab04275ecbcacacacb155266708d43eb72e971d0c66acb519cf410b19cf422ca&caver=2",
+      "headers": [
+        [
+          "referer",
+          "https://cp.kuaishou.com/article/publish/video?origin=www.kuaishou.com"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/json;charset=UTF-8"
+        ],
+        [
+          "kww",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "connection",
+          "keep-alive"
+        ],
+        [
+          "content-length",
+          "1121"
+        ],
+        [
+          "host",
+          "cp.kuaishou.com"
+        ],
+        [
+          "origin",
+          "https://cp.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "wid",
+          "12345678901234567"
+        ],
+        [
+          "didv",
+          "1789990000000"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwfv1",
+          "+f8Y+nHMwe0QD8fP0hPfL9PAPI+0bS8/pjwnbf8fGI+9+YG/pDwePAG0GlP0cE8/HIG9r9+9zY+/WI+/HFwezjweP78BQD+BLM8nzYPnrIPfPF+08YPAYD8/bf8eqAweLE+9rh8BcFPerAPfGU8/qMwBGl+ncl80LUP08SGnbDG/SS+e8j8fr7GnHF8fHlwBr9Pf80Gf8Sw/cMPe40P0WIwc=="
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ]
+      ],
+      "body": "{\"fileId\":555,\"coverKey\":\"cp_video_upload_cover_0123456789abcdef.jpg\",\"coverTimeStamp\":0,\"caption\":\"\",\"photoStatus\":2,\"coverType\":1,\"coverTitle\":\"\",\"photoType\":0,\"collectionId\":0,\"publishTime\":0,\"longitude\":\"\",\"latitude\":\"\",\"poiId\":0,\"notifyResult\":0,\"domain\":\"\",\"secondDomain\":\"\",\"coverCropped\":false,\"pkCoverKey\":\"\",\"profileCoverKey\":\"\",\"downloadType\":1,\"disableNearbyShow\":false,\"allowSameFrame\":true,\"movieId\":\"\",\"openPrePreview\":false,\"declareInfo\":{\"source\":0,\"platform\":0,\"time\":0,\"location\":\"\",\"sourceId\":0,\"sourceName\":\"\",\"statementId\":0},\"activityIds\":[],\"riseQuality\":false,\"chapters\":null,\"videoComposite\":null,\"useAiCaptionCover\":false,\"useAiCaption\":false,\"isUseIdealTime\":false,\"useAiCover\":false,\"kceInfo\":\"\",\"coverSize\":\"\",\"pkCoverTimeStamp\":-1,\"pkCoverType\":1,\"pkCoverSize\":\"\",\"innerChannel\":0,\"mediaId\":\"12345678901234567890123456\",\"videoInfoMeta\":\"\",\"triggerH265\":false,\"recTagIdList\":[],\"onvideoDuration\":0,\"disallowRecreation\":false,\"previewUrlErrorMessage\":\"\",\"coPublishUser\":[],\"coPublishRole\":0,\"extraInfo\":\"\",\"videoDuration\":16000,\"kuaishou.web.cp.api_ph\":\"fake0000-cp00-ph00-0000-000000000000\"}",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": 1,
+        "data": {
+          "ab": {
+            "enablePublish": true
+          }
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "access-control-allow-origin": "*",
+        "access-control-allow-methods": "POST",
+        "access-control-allow-headers": "content-type",
+        "access-control-max-age": "1800"
+      },
+      "body": ""
+    },
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "application/json;charset=UTF-8"
+      },
+      "body": "{\"dataRsp\": \"PHDGhFJ7ngwJPAmJNJS6EHGB9dCJFKzb8Nm5xdZo3M3Ab3BowftURvOD6ClobbJ3uJiXG30SjeP248Tb6ax0QVUdUGctvG/HofXl8MS0V0qcZiiL0fGH0okYYijCkUFiu4BEUKo/jLJ10g+Ew1HLNlRN/PBhWpJ/xYyMNKY1hqTtED6fIReaEQxTz6QOzknMQDnVi219UpsjlpjEms10qmfcUHZb8wVBfevEXCb3NFbeQT/wRYdgDjgO2w4/2KUm+sh9XznKg+PrQPUzWZEOZUC88D6SWj3eSo//wOWK5B2YxUqdi8XSpouu3m03+25DvGZNXSo7DfSVGi9weYDELmdEyhTr+volmN7C8iapho+xqn5eTGpJ1ZGSrZ6ZeVV1+Sf/1gxdrsbqK7Ra+ONLzyB++ox1nMSxlf8MVETD4WblqoMBe6XvEY+YqKa/VqkIGhHcruMixJUDCbFZRaHqUE8/PbD/iHGxgq6AcLl5xMShkY/8Hoe3vP0Wyt4jHx2Yil8wQkFIKvfY68eTK2quRCrrLHDvivdrVNeeLlTXnfUigZEAsRF9R/Q2ZPjEwNfO\", \"result\": 1, \"error_msg\": \"\"}"
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": 1,
+        "data": {
+          "token": "fake-upload-token",
+          "fileId": 555,
+          "endPoints": [
+            "https://upload.kuaishouzt.com"
+          ]
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": 1,
+        "existed": false,
+        "fragment_index": -1,
+        "fragment_list": [],
+        "endpoint": []
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": 1
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": 1
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": 1,
+        "data": {
+          "fileId": 555,
+          "coverKey": "cp_video_upload_cover_0123456789abcdef.jpg",
+          "mediaId": "12345678901234567890123456",
+          "videoDuration": 16000
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": 1,
+        "message": "成功",
+        "data": {}
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": 1,
+        "message": "成功",
+        "data": {}
+      }
+    }
+  ],
+  "result": {
+    "result": 1,
+    "message": "成功",
+    "data": {}
+  },
+  "error": null
+}

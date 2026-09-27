@@ -1,0 +1,1342 @@
+{
+ "livestream": {
+  "nested": {
+   "web": {
+    "options": {
+     "java_package": "com.kuaishou.livestream.message",
+     "java_outer_classname": "LiveStreamWebMessages",
+     "objc_class_prefix": "KSU"
+    },
+    "nested": {
+     "SimpleUserInfo": {
+      "fields": {
+       "principalId": {
+        "type": "string",
+        "id": 1
+       },
+       "userName": {
+        "type": "string",
+        "id": 2
+       },
+       "headUrl": {
+        "type": "string",
+        "id": 3
+       },
+       "mystery": {
+        "type": "bool",
+        "id": 4
+       },
+       "desc": {
+        "type": "string",
+        "id": 5
+       }
+      }
+     },
+     "LiveAudienceState": {
+      "fields": {
+       "isFromFansTop": {
+        "type": "bool",
+        "id": 1
+       },
+       "isKoi": {
+        "type": "bool",
+        "id": 2
+       },
+       "assistantType": {
+        "type": "AssistantType",
+        "id": 3
+       },
+       "fansGroupIntimacyLevel": {
+        "type": "uint32",
+        "id": 4
+       },
+       "nameplate": {
+        "type": "GzoneNameplate",
+        "id": 5
+       },
+       "liveFansGroupState": {
+        "type": "LiveFansGroupState",
+        "id": 6
+       },
+       "wealthGrade": {
+        "type": "uint32",
+        "id": 7
+       },
+       "badgeKey": {
+        "type": "string",
+        "id": 8
+       }
+      },
+      "nested": {
+       "AssistantType": {
+        "values": {
+         "UNKNOWN_ASSISTANT_TYPE": 0,
+         "SUPER": 1,
+         "JUNIOR": 2
+        }
+       }
+      }
+     },
+     "GzoneNameplate": {
+      "fields": {
+       "id": {
+        "type": "int64",
+        "id": 1
+       },
+       "name": {
+        "type": "string",
+        "id": 2
+       },
+       "urls": {
+        "rule": "repeated",
+        "type": "PicUrl",
+        "id": 3
+       }
+      }
+     },
+     "LiveFansGroupState": {
+      "fields": {
+       "intimacyLevel": {
+        "type": "uint32",
+        "id": 1
+       },
+       "enterRoomSpecialEffect": {
+        "type": "uint32",
+        "id": 2
+       }
+      }
+     },
+     "CSWebEnterRoom": {
+      "fields": {
+       "token": {
+        "type": "string",
+        "id": 1
+       },
+       "liveStreamId": {
+        "type": "string",
+        "id": 2
+       },
+       "reconnectCount": {
+        "type": "uint32",
+        "id": 3
+       },
+       "lastErrorCode": {
+        "type": "uint32",
+        "id": 4
+       },
+       "expTag": {
+        "type": "string",
+        "id": 5
+       },
+       "attach": {
+        "type": "string",
+        "id": 6
+       },
+       "pageId": {
+        "type": "string",
+        "id": 7
+       }
+      }
+     },
+     "SCWebEnterRoomAck": {
+      "fields": {
+       "minReconnectMs": {
+        "type": "uint64",
+        "id": 1
+       },
+       "maxReconnectMs": {
+        "type": "uint64",
+        "id": 2
+       },
+       "heartbeatIntervalMs": {
+        "type": "uint64",
+        "id": 3
+       }
+      }
+     },
+     "CSWebHeartbeat": {
+      "fields": {
+       "timestamp": {
+        "type": "uint64",
+        "id": 1
+       }
+      }
+     },
+     "SCWebHeartbeatAck": {
+      "fields": {
+       "timestamp": {
+        "type": "uint64",
+        "id": 1
+       },
+       "clientTimestamp": {
+        "type": "uint64",
+        "id": 2
+       }
+      }
+     },
+     "SCWebError": {
+      "fields": {
+       "code": {
+        "type": "uint32",
+        "id": 1
+       },
+       "msg": {
+        "type": "string",
+        "id": 2
+       },
+       "subCode": {
+        "type": "uint32",
+        "id": 3
+       }
+      }
+     },
+     "CSWebError": {
+      "fields": {
+       "code": {
+        "type": "uint32",
+        "id": 1
+       },
+       "msg": {
+        "type": "string",
+        "id": 2
+       }
+      }
+     },
+     "WebUserPauseType": {
+      "values": {
+       "UNKNOWN_USER_PAUSE_TYPE": 0,
+       "BACKGROUND": 1
+      }
+     },
+     "CSWebUserPause": {
+      "fields": {
+       "time": {
+        "type": "uint64",
+        "id": 1
+       },
+       "pauseType": {
+        "type": "WebUserPauseType",
+        "id": 2
+       }
+      }
+     },
+     "CSWebUserExit": {
+      "fields": {
+       "time": {
+        "type": "uint64",
+        "id": 1
+       }
+      }
+     },
+     "WebPauseType": {
+      "values": {
+       "UNKNOWN_PAUSE_TYPE": 0,
+       "TELEPHONE": 1,
+       "SHARE": 2
+      }
+     },
+     "SCWebAuthorPause": {
+      "fields": {
+       "time": {
+        "type": "uint64",
+        "id": 1
+       },
+       "pauseType": {
+        "type": "WebPauseType",
+        "id": 2
+       }
+      }
+     },
+     "SCWebAuthorResume": {
+      "fields": {
+       "time": {
+        "type": "uint64",
+        "id": 1
+       }
+      }
+     },
+     "SCWebPipStarted": {
+      "fields": {
+       "time": {
+        "type": "uint64",
+        "id": 1
+       }
+      }
+     },
+     "SCWebPipEnded": {
+      "fields": {
+       "time": {
+        "type": "uint64",
+        "id": 1
+       }
+      }
+     },
+     "SCWebFeedPush": {
+      "fields": {
+       "displayWatchingCount": {
+        "type": "string",
+        "id": 1
+       },
+       "displayLikeCount": {
+        "type": "string",
+        "id": 2
+       },
+       "pendingLikeCount": {
+        "type": "uint64",
+        "id": 3
+       },
+       "pushInterval": {
+        "type": "uint64",
+        "id": 4
+       },
+       "commentFeeds": {
+        "rule": "repeated",
+        "type": "WebCommentFeed",
+        "id": 5
+       },
+       "commentCursor": {
+        "type": "string",
+        "id": 6
+       },
+       "comboCommentFeed": {
+        "rule": "repeated",
+        "type": "WebComboCommentFeed",
+        "id": 7
+       },
+       "likeFeeds": {
+        "rule": "repeated",
+        "type": "WebLikeFeed",
+        "id": 8
+       },
+       "giftFeeds": {
+        "rule": "repeated",
+        "type": "WebGiftFeed",
+        "id": 9
+       },
+       "giftCursor": {
+        "type": "string",
+        "id": 10
+       },
+       "systemNoticeFeeds": {
+        "rule": "repeated",
+        "type": "WebSystemNoticeFeed",
+        "id": 11
+       },
+       "shareFeeds": {
+        "rule": "repeated",
+        "type": "WebShareFeed",
+        "id": 12
+       }
+      }
+     },
+     "WebLikeFeed": {
+      "fields": {
+       "id": {
+        "type": "string",
+        "id": 1
+       },
+       "user": {
+        "type": "SimpleUserInfo",
+        "id": 2
+       },
+       "sortRank": {
+        "type": "uint64",
+        "id": 3
+       },
+       "deviceHash": {
+        "type": "string",
+        "id": 4
+       }
+      }
+     },
+     "WebCommentFeedShowType": {
+      "values": {
+       "FEED_SHOW_UNKNOWN": 0,
+       "FEED_SHOW_NORMAL": 1,
+       "FEED_HIDDEN": 2
+      }
+     },
+     "WebCommentFeed": {
+      "fields": {
+       "id": {
+        "type": "string",
+        "id": 1
+       },
+       "user": {
+        "type": "SimpleUserInfo",
+        "id": 2
+       },
+       "content": {
+        "type": "string",
+        "id": 3
+       },
+       "deviceHash": {
+        "type": "string",
+        "id": 4
+       },
+       "sortRank": {
+        "type": "uint64",
+        "id": 5
+       },
+       "color": {
+        "type": "string",
+        "id": 6
+       },
+       "showType": {
+        "type": "WebCommentFeedShowType",
+        "id": 7
+       },
+       "senderState": {
+        "type": "LiveAudienceState",
+        "id": 8
+       },
+       "time": {
+        "type": "uint64",
+        "id": 9
+       }
+      }
+     },
+     "WebComboCommentFeed": {
+      "fields": {
+       "id": {
+        "type": "string",
+        "id": 1
+       },
+       "content": {
+        "type": "string",
+        "id": 2
+       },
+       "comboCount": {
+        "type": "uint32",
+        "id": 3
+       }
+      }
+     },
+     "WebSystemNoticeFeed": {
+      "fields": {
+       "id": {
+        "type": "string",
+        "id": 1
+       },
+       "user": {
+        "type": "SimpleUserInfo",
+        "id": 2
+       },
+       "time": {
+        "type": "uint64",
+        "id": 3
+       },
+       "content": {
+        "type": "string",
+        "id": 4
+       },
+       "displayDuration": {
+        "type": "uint64",
+        "id": 5
+       },
+       "sortRank": {
+        "type": "uint64",
+        "id": 6
+       },
+       "displayType": {
+        "type": "DisplayType",
+        "id": 7
+       }
+      },
+      "nested": {
+       "DisplayType": {
+        "values": {
+         "UNKNOWN_DISPLAY_TYPE": 0,
+         "COMMENT": 1,
+         "ALERT": 2,
+         "TOAST": 3
+        }
+       }
+      }
+     },
+     "WebGiftFeed": {
+      "fields": {
+       "id": {
+        "type": "string",
+        "id": 1
+       },
+       "user": {
+        "type": "SimpleUserInfo",
+        "id": 2
+       },
+       "time": {
+        "type": "uint64",
+        "id": 3
+       },
+       "giftId": {
+        "type": "uint32",
+        "id": 4
+       },
+       "sortRank": {
+        "type": "uint64",
+        "id": 5
+       },
+       "mergeKey": {
+        "type": "string",
+        "id": 6
+       },
+       "batchSize": {
+        "type": "uint32",
+        "id": 7
+       },
+       "comboCount": {
+        "type": "uint32",
+        "id": 8
+       },
+       "rank": {
+        "type": "uint32",
+        "id": 9
+       },
+       "expireDuration": {
+        "type": "uint64",
+        "id": 10
+       },
+       "clientTimestamp": {
+        "type": "uint64",
+        "id": 11
+       },
+       "slotDisplayDuration": {
+        "type": "uint64",
+        "id": 12
+       },
+       "starLevel": {
+        "type": "uint32",
+        "id": 13
+       },
+       "styleType": {
+        "type": "StyleType",
+        "id": 14
+       },
+       "liveAssistantType": {
+        "type": "WebLiveAssistantType",
+        "id": 15
+       },
+       "deviceHash": {
+        "type": "string",
+        "id": 16
+       },
+       "danmakuDisplay": {
+        "type": "bool",
+        "id": 17
+       },
+       "aiDataInfo": {
+        "type": "AiDataInfo",
+        "id": 19
+       }
+      },
+      "nested": {
+       "StyleType": {
+        "values": {
+         "UNKNOWN_STYLE": 0,
+         "BATCH_STAR_0": 1,
+         "BATCH_STAR_1": 2,
+         "BATCH_STAR_2": 3,
+         "BATCH_STAR_3": 4,
+         "BATCH_STAR_4": 5,
+         "BATCH_STAR_5": 6,
+         "BATCH_STAR_6": 7
+        }
+       }
+      }
+     },
+     "SCWebRefreshWallet": {
+      "fields": {}
+     },
+     "SCWebCurrentRedPackFeed": {
+      "fields": {
+       "redPack": {
+        "rule": "repeated",
+        "type": "WebRedPackInfo",
+        "id": 1
+       }
+      }
+     },
+     "WebRedPackCoverType": {
+      "values": {
+       "UNKNOWN_COVER_TYPE": 0,
+       "NORMAL_COVER": 1,
+       "PRETTY_COVER": 2
+      }
+     },
+     "WebRedPackInfo": {
+      "fields": {
+       "id": {
+        "type": "string",
+        "id": 1
+       },
+       "author": {
+        "type": "SimpleUserInfo",
+        "id": 2
+       },
+       "balance": {
+        "type": "uint64",
+        "id": 3
+       },
+       "openTime": {
+        "type": "uint64",
+        "id": 4
+       },
+       "currentTime": {
+        "type": "uint64",
+        "id": 5
+       },
+       "grabToken": {
+        "type": "string",
+        "id": 6
+       },
+       "needSendRequest": {
+        "type": "bool",
+        "id": 7
+       },
+       "requestDelayMillis": {
+        "type": "uint64",
+        "id": 8
+       },
+       "luckiestDelayMillis": {
+        "type": "uint64",
+        "id": 9
+       },
+       "coverType": {
+        "type": "WebRedPackCoverType",
+        "id": 10
+       }
+      }
+     },
+     "WebLiveAssistantType": {
+      "values": {
+       "UNKNOWN_ASSISTANT_TYPE": 0,
+       "SUPER": 1,
+       "JUNIOR": 2
+      }
+     },
+     "AiDataInfo": {
+      "fields": {
+       "apiScatterMs": {
+        "type": "uint64",
+        "id": 1
+       },
+       "downGradeMaxMs": {
+        "type": "uint64",
+        "id": 2
+       },
+       "downGradeGiftId": {
+        "type": "uint32",
+        "id": 3
+       },
+       "unitPrice": {
+        "type": "uint32",
+        "id": 4
+       },
+       "giftName": {
+        "type": "string",
+        "id": 5
+       },
+       "picUrl": {
+        "rule": "repeated",
+        "type": "PicUrl",
+        "id": 6
+       },
+       "enableApiRequest": {
+        "type": "uint64",
+        "id": 7
+       }
+      }
+     },
+     "WebWatchingUserInfo": {
+      "fields": {
+       "user": {
+        "type": "SimpleUserInfo",
+        "id": 1
+       },
+       "offline": {
+        "type": "bool",
+        "id": 2
+       },
+       "tuhao": {
+        "type": "bool",
+        "id": 3
+       },
+       "liveAssistantType": {
+        "type": "WebLiveAssistantType",
+        "id": 4
+       },
+       "displayKsCoin": {
+        "type": "string",
+        "id": 5
+       }
+      }
+     },
+     "SCWebLiveWatchingUsers": {
+      "fields": {
+       "watchingUser": {
+        "rule": "repeated",
+        "type": "WebWatchingUserInfo",
+        "id": 1
+       },
+       "displayWatchingCount": {
+        "type": "string",
+        "id": 2
+       },
+       "pendingDuration": {
+        "type": "uint64",
+        "id": 3
+       }
+      }
+     },
+     "WebShareFeed": {
+      "fields": {
+       "id": {
+        "type": "string",
+        "id": 1
+       },
+       "user": {
+        "type": "SimpleUserInfo",
+        "id": 2
+       },
+       "time": {
+        "type": "uint64",
+        "id": 3
+       },
+       "thirdPartyPlatform": {
+        "type": "uint32",
+        "id": 4
+       },
+       "sortRank": {
+        "type": "uint64",
+        "id": 5
+       },
+       "liveAssistantType": {
+        "type": "WebLiveAssistantType",
+        "id": 6
+       },
+       "deviceHash": {
+        "type": "string",
+        "id": 7
+       }
+      }
+     },
+     "SCWebSuspectedViolation": {
+      "fields": {
+       "suspectedViolation": {
+        "type": "bool",
+        "id": 1
+       }
+      }
+     },
+     "SCWebGuessOpened": {
+      "fields": {
+       "time": {
+        "type": "uint64",
+        "id": 1
+       },
+       "guessId": {
+        "type": "string",
+        "id": 2
+       },
+       "submitDeadline": {
+        "type": "uint64",
+        "id": 3
+       },
+       "displayMaxDelayMillis": {
+        "type": "uint64",
+        "id": 4
+       }
+      }
+     },
+     "SCWebGuessClosed": {
+      "fields": {
+       "time": {
+        "type": "uint64",
+        "id": 1
+       },
+       "guessId": {
+        "type": "string",
+        "id": 2
+       },
+       "displayMaxDelayMillis": {
+        "type": "uint64",
+        "id": 3
+       }
+      }
+     },
+     "SCWebRideChanged": {
+      "fields": {
+       "rideId": {
+        "type": "string",
+        "id": 1
+       },
+       "requestMaxDelayMillis": {
+        "type": "uint32",
+        "id": 2
+       }
+      }
+     },
+     "SCWebBetChanged": {
+      "fields": {
+       "maxDelayMillis": {
+        "type": "uint64",
+        "id": 1
+       }
+      }
+     },
+     "SCWebBetClosed": {
+      "fields": {
+       "maxDelayMillis": {
+        "type": "uint64",
+        "id": 1
+       }
+      }
+     },
+     "ConfigSwitchType": {
+      "values": {
+       "UNKNOWN": 0,
+       "HIDE_BARRAGE": 1,
+       "HIDE_SPECIAL_EFFECT": 2
+      }
+     },
+     "ConfigSwitchItem": {
+      "fields": {
+       "configSwitchType": {
+        "type": "ConfigSwitchType",
+        "id": 1
+       },
+       "value": {
+        "type": "bool",
+        "id": 2
+       }
+      }
+     },
+     "SCWebLiveSpecialAccountConfigState": {
+      "fields": {
+       "configSwitchItem": {
+        "rule": "repeated",
+        "type": "ConfigSwitchItem",
+        "id": 1
+       },
+       "timestamp": {
+        "type": "uint64",
+        "id": 2
+       }
+      }
+     },
+     "LiveCdnNodeView": {
+      "fields": {
+       "cdn": {
+        "type": "string",
+        "id": 1
+       },
+       "url": {
+        "type": "string",
+        "id": 2
+       },
+       "freeTraffic": {
+        "type": "bool",
+        "id": 3
+       }
+      }
+     },
+     "AuditAudienceMask": {
+      "fields": {
+       "iconCdnNodeView": {
+        "rule": "repeated",
+        "type": "LiveCdnNodeView",
+        "id": 1
+       },
+       "title": {
+        "type": "string",
+        "id": 2
+       },
+       "detail": {
+        "type": "string",
+        "id": 3
+       }
+      }
+     },
+     "SCLiveWarningMaskStatusChangedAudience": {
+      "fields": {
+       "displayMask": {
+        "type": "bool",
+        "id": 1
+       },
+       "warningMask": {
+        "type": "AuditAudienceMask",
+        "id": 2
+       }
+      }
+     },
+     "TextStyle": {
+      "fields": {
+       "color": {
+        "type": "uint32",
+        "id": 1
+       }
+      }
+     },
+     "CommentTextSegment": {
+      "fields": {
+       "text": {
+        "type": "string",
+        "id": 1
+       },
+       "text_style": {
+        "type": "TextStyle",
+        "id": 2
+       }
+      }
+     },
+     "CommentIconSegment": {
+      "fields": {
+       "res_pack_id": {
+        "type": "string",
+        "id": 1
+       },
+       "icon_name": {
+        "type": "string",
+        "id": 2
+       },
+       "text": {
+        "type": "string",
+        "id": 3
+       },
+       "text_style": {
+        "type": "TextStyle",
+        "id": 4
+       }
+      }
+     },
+     "CommentGiftSegment": {
+      "fields": {
+       "gift_id": {
+        "type": "uint32",
+        "id": 1
+       }
+      }
+     },
+     "CommentImageSegment": {
+      "fields": {
+       "url": {
+        "rule": "repeated",
+        "type": "PicUrl",
+        "id": 1
+       },
+       "width": {
+        "type": "unit32",
+        "id": 2
+       },
+       "height": {
+        "type": "unit32",
+        "id": 3
+       }
+      }
+     },
+     "CommentRichTextSegment": {
+      "fields": {
+       "text_segment": {
+        "type": "CommentTextSegment",
+        "id": 1
+       },
+       "icon_segment": {
+        "type": "CommentIconSegment",
+        "id": 2
+       },
+       "gift_segment": {
+        "type": "CommentGiftSegment",
+        "id": 3
+       },
+       "image_segment": {
+        "type": "CommentImageSegment",
+        "id": 4
+       }
+      }
+     },
+     "CommentRichTextMessage": {
+      "fields": {
+       "id": {
+        "type": "string",
+        "id": 1
+       },
+       "user_id": {
+        "type": "uint64",
+        "id": 2
+       },
+       "server_timestamp": {
+        "type": "uint64",
+        "id": 3
+       },
+       "device_hash": {
+        "type": "string",
+        "id": 4
+       },
+       "segment": {
+        "rule": "repeated",
+        "type": "CommentRichTextSegment",
+        "id": 7
+       }
+      }
+     },
+     "SCCommentZoneRichText": {
+      "fields": {
+       "message": {
+        "rule": "repeated",
+        "type": "CommentRichTextMessage",
+        "id": 1
+       }
+      }
+     },
+     "InteractiveChatBizIdentity": {
+      "fields": {
+       "biz_type": {
+        "type": "uint64",
+        "id": 1
+       },
+       "chat_id": {
+        "type": "string",
+        "id": 2
+       },
+       "biz_id": {
+        "type": "string",
+        "id": 3
+       }
+      }
+     },
+     "InteractiveChatRoomInfo": {
+      "fields": {
+       "bizIdentity": {
+        "type": "uint64",
+        "id": 1
+       },
+       "version": {
+        "type": "uint64",
+        "id": 4
+       }
+      }
+     },
+     "SCInteractiveChatSwitchBiz": {
+      "fields": {
+       "roomInfo": {
+        "type": "InteractiveChatRoomInfo",
+        "id": 1
+       },
+       "timestamp": {
+        "type": "uint64",
+        "id": 4
+       },
+       "version": {
+        "type": "uint64",
+        "id": 5
+       }
+      }
+     },
+     "SCInteractiveChatClosed": {
+      "fields": {
+       "biz_identity": {
+        "type": "InteractiveChatBizIdentity",
+        "id": 1
+       },
+       "user_info": {
+        "type": "UserInfo",
+        "id": 2
+       },
+       "timestamp": {
+        "type": "uint64",
+        "id": 4
+       },
+       "version": {
+        "type": "uint64",
+        "id": 5
+       }
+      }
+     },
+     "SCLiveMultiPkStatistic": {
+      "fields": {
+       "pk_id": {
+        "type": "string",
+        "id": 1
+       },
+       "time": {
+        "type": "uint64",
+        "id": 2
+       },
+       "statistic_version": {
+        "type": "uint64",
+        "id": 7
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "SocketMessage": {
+  "fields": {
+   "payloadType": {
+    "type": "PayloadType",
+    "id": 1
+   },
+   "compressionType": {
+    "type": "CompressionType",
+    "id": 2
+   },
+   "payload": {
+    "type": "bytes",
+    "id": 3
+   }
+  },
+  "nested": {
+   "CompressionType": {
+    "values": {
+     "UNKNOWN": 0,
+     "NONE": 1,
+     "GZIP": 2,
+     "AES": 3
+    }
+   }
+  }
+ },
+ "PayloadType": {
+  "values": {
+   "UNKNOWN": 0,
+   "CS_HEARTBEAT": 1,
+   "CS_ERROR": 3,
+   "CS_PING": 4,
+   "PS_HOST_INFO": 51,
+   "SC_HEARTBEAT_ACK": 101,
+   "SC_ECHO": 102,
+   "SC_ERROR": 103,
+   "SC_PING_ACK": 104,
+   "SC_INFO": 105,
+   "CS_ENTER_ROOM": 200,
+   "CS_USER_PAUSE": 201,
+   "CS_USER_EXIT": 202,
+   "CS_AUTHOR_PUSH_TRAFFIC_ZERO": 203,
+   "CS_HORSE_RACING": 204,
+   "CS_RACE_LOSE": 205,
+   "CS_VOIP_SIGNAL": 206,
+   "SC_ENTER_ROOM_ACK": 300,
+   "SC_AUTHOR_PAUSE": 301,
+   "SC_AUTHOR_RESUME": 302,
+   "SC_AUTHOR_PUSH_TRAFFIC_ZERO": 303,
+   "SC_AUTHOR_HEARTBEAT_MISS": 304,
+   "SC_PIP_STARTED": 305,
+   "SC_PIP_ENDED": 306,
+   "SC_HORSE_RACING_ACK": 307,
+   "SC_VOIP_SIGNAL": 308,
+   "SC_FEED_PUSH": 310,
+   "SC_ASSISTANT_STATUS": 311,
+   "SC_REFRESH_WALLET": 312,
+   "SC_LIVE_CHAT_CALL": 320,
+   "SC_LIVE_CHAT_CALL_ACCEPTED": 321,
+   "SC_LIVE_CHAT_CALL_REJECTED": 322,
+   "SC_LIVE_CHAT_READY": 323,
+   "SC_LIVE_CHAT_GUEST_END": 324,
+   "SC_LIVE_CHAT_ENDED": 325,
+   "SC_RENDERING_MAGIC_FACE_DISABLE": 326,
+   "SC_RENDERING_MAGIC_FACE_ENABLE": 327,
+   "SC_RED_PACK_FEED": 330,
+   "SC_LIVE_WATCHING_LIST": 340,
+   "SC_LIVE_QUIZ_QUESTION_ASKED": 350,
+   "SC_LIVE_QUIZ_QUESTION_REVIEWED": 351,
+   "SC_LIVE_QUIZ_SYNC": 352,
+   "SC_LIVE_QUIZ_ENDED": 353,
+   "SC_LIVE_QUIZ_WINNERS": 354,
+   "SC_SUSPECTED_VIOLATION": 355,
+   "SC_SHOP_OPENED": 360,
+   "SC_SHOP_CLOSED": 361,
+   "SC_GUESS_OPENED": 370,
+   "SC_GUESS_CLOSED": 371,
+   "SC_PK_INVITATION": 380,
+   "SC_PK_STATISTIC": 381,
+   "SC_RIDDLE_OPENED": 390,
+   "SC_RIDDLE_CLOESED": 391,
+   "SC_RIDE_CHANGED": 412,
+   "SC_BET_CHANGED": 441,
+   "SC_BET_CLOSED": 442,
+   "SC_LIVE_SPECIAL_ACCOUNT_CONFIG_STATE": 645,
+   "SC_LIVE_WARNING_MASK_STATUS_CHANGED_AUDIENCE": 758,
+   "SC_COMMENT_ZONE_RICH_TEXT": 829,
+   "SC_INTERACTIVE_CHAT_CLOSED": 776
+  }
+ },
+ "CSHeartbeat": {
+  "fields": {
+   "timestamp": {
+    "type": "uint64",
+    "id": 1
+   }
+  }
+ },
+ "SCHeartbeatAck": {
+  "fields": {
+   "timestamp": {
+    "type": "uint64",
+    "id": 1
+   },
+   "clientTimestamp": {
+    "type": "uint64",
+    "id": 2
+   }
+  }
+ },
+ "SCError": {
+  "fields": {
+   "code": {
+    "type": "uint32",
+    "id": 1
+   },
+   "msg": {
+    "type": "string",
+    "id": 2
+   },
+   "subCode": {
+    "type": "uint32",
+    "id": 3
+   }
+  }
+ },
+ "SCInfo": {
+  "fields": {
+   "code": {
+    "type": "uint32",
+    "id": 1
+   },
+   "msg": {
+    "type": "string",
+    "id": 2
+   }
+  }
+ },
+ "CSError": {
+  "fields": {
+   "code": {
+    "type": "uint32",
+    "id": 1
+   }
+  }
+ },
+ "CSPing": {
+  "fields": {
+   "echoData": {
+    "type": "string",
+    "id": 1
+   },
+   "clientId": {
+    "type": "ClientId",
+    "id": 2
+   },
+   "deviceId": {
+    "type": "string",
+    "id": 3
+   },
+   "appVer": {
+    "type": "string",
+    "id": 4
+   }
+  }
+ },
+ "SCPingAck": {
+  "fields": {
+   "echoData": {
+    "type": "string",
+    "id": 1
+   }
+  }
+ },
+ "SCEcho": {
+  "fields": {
+   "content": {
+    "type": "string",
+    "id": 1
+   }
+  }
+ },
+ "PSHostInfo": {
+  "fields": {
+   "ip": {
+    "type": "string",
+    "id": 1
+   },
+   "port": {
+    "type": "int32",
+    "id": 2
+   }
+  }
+ },
+ "PicUrl": {
+  "fields": {
+   "cdn": {
+    "type": "string",
+    "id": 1
+   },
+   "url": {
+    "type": "string",
+    "id": 2
+   },
+   "urlPattern": {
+    "type": "string",
+    "id": 3
+   },
+   "ip": {
+    "type": "string",
+    "id": 4
+   }
+  }
+ },
+ "UserInfo": {
+  "fields": {
+   "userId": {
+    "type": "uint64",
+    "id": 1
+   },
+   "userName": {
+    "type": "string",
+    "id": 2
+   },
+   "userGender": {
+    "type": "string",
+    "id": 3
+   },
+   "userText": {
+    "type": "string",
+    "id": 4
+   },
+   "headUrls": {
+    "rule": "repeated",
+    "type": "PicUrl",
+    "id": 5
+   },
+   "verified": {
+    "type": "bool",
+    "id": 6
+   },
+   "sUserId": {
+    "type": "string",
+    "id": 7
+   },
+   "httpsHeadUrls": {
+    "rule": "repeated",
+    "type": "PicUrl",
+    "id": 8
+   },
+   "kwaiId": {
+    "type": "string",
+    "id": 9
+   }
+  }
+ },
+ "ClientId": {
+  "values": {
+   "NONE": 0,
+   "IPHONE": 1,
+   "ANDROID": 2,
+   "WEB": 3,
+   "PC": 6,
+   "IPHONE_LIVE_MATE": 8,
+   "ANDROID_LIVE_MATE": 9
+  }
+ }
+}

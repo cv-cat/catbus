@@ -50,6 +50,8 @@
 - xianyu `user get`：只支持 me；查询他人规划中
 - taobao `user get`：me 规划中
 - jd `user get`：只支持 me
+- kuaishou `user likes`：只支持 me
+- kuaishou `user followers / following`：只支持 me
 - `user items --sort` 取值：bilibili latest / views / collects
 
 ## item
@@ -134,7 +136,7 @@
 | folder list / items | ◐ | ✓ | ✓ | ◐ | ○ | ○ | — | — | — | ○ |
 | folder create / update / delete | ○ | ○ | ◐ | ○ | ○ | — | — | — | — | ○ |
 | series list / items | ○ | ○ | ✓ | ○ | ○ | — | — | — | — | — |
-| history list | ○ | ○ | ○ | ○ | ✓ | ○ | ○ | ○ | ✓ | — |
+| history list | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ✓ | — |
 | topic search | ✓ | ○ | ○ | ○ | ○ | ○ | — | — | — | — |
 | poi search | ✓ | ○ | ✓ | — | ○ | ○ | — | — | — | — |
 
@@ -148,9 +150,8 @@
 | live categories | ✓ | ○ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — |
 | live listen | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — |
 | live history | ○ | ○ | ◐ | ✓ | ○ | ○ | — | ○ | — | — |
-| live send | ◐ | ◐ | ◐ | ✓ | ◐ | ○ | — | ○ | — | — |
-| live like | ○ | ✓ | ✓ | ○ | ◐ | ○ | — | ○ | — | — |
-| live rank | ○ | ✓ | ✓ | ○ | ○ | ○ | — | ○ | — | — |
+| live send | ◐ | ◐ | ◐ | ✓ | ○ | ○ | — | ○ | — | — |
+| live like / rank | ○ | ✓ | ✓ | ○ | ○ | ○ | — | ○ | — | — |
 | live gifts | ✓ | ○ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — |
 | live products | ✓ | ✓ | ○ | — | ○ | ○ | — | ○ | — | — |
 | live media | ○ | ○ | ○ | ✓ | ○ | ○ | — | ○ | — | — |
@@ -160,7 +161,6 @@
 - xhs `live send`：--gift 规划中
 - douyin `live send`：--gift 规划中
 - tiktok `live send`：--gift 规划中
-- kuaishou `live send`：--gift 规划中
 - `live start --category`：bilibili
 
 ## 平台扩展

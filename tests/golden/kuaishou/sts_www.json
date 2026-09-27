@@ -1,0 +1,270 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://id.kuaishou.com/pass/kuaishou/login/passToken?callback=https%3A%2F%2Fwww.kuaishou.com%2Frest%2Finfra%2Fsts%3FfollowUrl%3Dhttps%253A%252F%252Fpassport.kuaishou.com%252Fpc%252Faccount%252FpassToken%252Fresult%253Fsuccessful%253Dtrue%2526id%253DSSO_1790000000123%2526for%253DpassTokenSuccess%26failUrl%3Dhttps%253A%252F%252Fpassport.kuaishou.com%252Fpc%252Faccount%252FpassToken%252Fresult%253Fsuccessful%253Dfalse%2526id%253DSSO_1790000000123%2526for%253DpassTokenSuccess%26setRootDomain%3Dfalse&__loginPage=https%3A%2F%2Fpassport.kuaishou.com%2Fpc%2Faccount%2FpassToken%2Fresult%3Fsuccessful%3Dfalse%26id%3DSSO_1790000000123%26for%3DpullTokenFail&sid=kuaishou.server.webday7",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-dest",
+          "iframe"
+        ],
+        [
+          "referer",
+          "https://www.kuaishou.com/"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ]
+      ],
+      "cookies": [
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "did",
+          "web_0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "didv",
+          "1789990000000"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ],
+        [
+          "wid",
+          "12345678901234567"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "kuaishou.server.webday7_st",
+          "fake-www-st"
+        ],
+        [
+          "kuaishou.server.webday7_ph",
+          "fake-www-ph"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "passToken",
+          "fake-pass-token"
+        ],
+        [
+          "ktrace-context",
+          "fake|trace"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwfv1",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://www.kuaishou.com/rest/infra/sts?followUrl=https%3A%2F%2Fpassport.kuaishou.com%2Fpc%2Faccount%2FpassToken%2Fresult%3Fsuccessful%3Dtrue%26id%3DSSO_1790000000123%26for%3DpassTokenSuccess&failUrl=https%3A%2F%2Fpassport.kuaishou.com%2Fpc%2Faccount%2FpassToken%2Fresult%3Fsuccessful%3Dfalse%26id%3DSSO_1790000000123%26for%3DpassTokenSuccess&setRootDomain=false&authToken=fake-sts-at&sid=kuaishou.server.webday7",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-dest",
+          "iframe"
+        ],
+        [
+          "referer",
+          "https://www.kuaishou.com/"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ]
+      ],
+      "cookies": [
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "did",
+          "web_0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "didv",
+          "1789990000000"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ],
+        [
+          "wid",
+          "12345678901234567"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "kuaishou.server.webday7_st",
+          "fake-www-st"
+        ],
+        [
+          "kuaishou.server.webday7_ph",
+          "fake-www-ph"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "passToken",
+          "fake-pass-token"
+        ],
+        [
+          "ktrace-context",
+          "fake|trace"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwfv1",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 302,
+      "headers": {
+        "location": "https://www.kuaishou.com/rest/infra/sts?followUrl=https%3A%2F%2Fpassport.kuaishou.com%2Fpc%2Faccount%2FpassToken%2Fresult%3Fsuccessful%3Dtrue%26id%3DSSO_1790000000123%26for%3DpassTokenSuccess&failUrl=https%3A%2F%2Fpassport.kuaishou.com%2Fpc%2Faccount%2FpassToken%2Fresult%3Fsuccessful%3Dfalse%26id%3DSSO_1790000000123%26for%3DpassTokenSuccess&setRootDomain=false&authToken=fake-sts-at&sid=kuaishou.server.webday7"
+      },
+      "body": ""
+    },
+    {
+      "status": 302,
+      "headers": {
+        "set-cookie": [
+          "kuaishou.server.webday7_st=fake-www-st; Path=/",
+          "kuaishou.server.webday7_ph=fake-www-ph; Path=/",
+          "userId=10001; Path=/"
+        ],
+        "location": "https://passport.kuaishou.com/pc/account/passToken/result"
+      },
+      "body": ""
+    }
+  ],
+  "result": {
+    "kuaishou.server.webday7_st": "fake-www-st",
+    "kuaishou.server.webday7_ph": "fake-www-ph",
+    "userId": "10001"
+  },
+  "error": null
+}

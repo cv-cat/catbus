@@ -1,0 +1,286 @@
+{
+  "input": {
+    "user": "3xfakeuser00001"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://www.kuaishou.com/rest/v/collect/list?__NS_hxfalcon=HUDR_sFnX-DtsGUFXsbDPT3TMP-sk0is6A6ZH7E4jlryNsQCuNZZRdSj1s8iIQL_CzYl1qEaCKXZ1Qul4A0B9srS50qlqmo1ekhckPk6DAhrslMP3hB67Z7lgc3p-2cIjWWAFDvwSRQLu6-_7QxYIzhKdDXvJ7k1ZiNdT-bUlhQif$HE_120d95f0f22235099df958a6a63897b4cd585959595886c1f5e34f842aed7ae24355f958c20f6783220f67b159&caver=2",
+      "headers": [
+        [
+          "referer",
+          "https://www.kuaishou.com/profile/3xfakeuser00001"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "kww",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://www.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "kpf",
+          "PC_WEB"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "did",
+          "web_0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "wid",
+          "12345678901234567"
+        ],
+        [
+          "didv",
+          "1789990000000"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "kuaishou.server.webday7_st",
+          "fake-www-st"
+        ],
+        [
+          "kuaishou.server.webday7_ph",
+          "fake-www-ph"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "ktrace-context",
+          "fake|trace"
+        ],
+        [
+          "kpn",
+          "KUAISHOU_VISION"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "kwfv1",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ]
+      ],
+      "body": "{\"userId\":\"3xfakeuser00001\",\"pcursor\":\"cur1\",\"page\":\"collect\"}",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": 1,
+        "pcursor": "no_more",
+        "searchSessionId": "sess",
+        "feeds": [
+          {
+            "type": 1,
+            "photo": {
+              "id": "3xfakephoto0001",
+              "duration": 16000,
+              "caption": "测试作品 #话题",
+              "likeCount": "1.2万",
+              "realLikeCount": 12345,
+              "coverUrl": "https://p1.a.yximgs.com/cover.jpg",
+              "photoUrl": "https://v1.kwaicdn.com/b.mp4",
+              "liked": false,
+              "timestamp": 1789990000000,
+              "expTag": "x",
+              "llsid": "1",
+              "viewCount": "82.1万",
+              "videoRatio": 0.56,
+              "stereoType": 0,
+              "musicBlocked": null,
+              "riskTagContent": null,
+              "riskTagUrl": null,
+              "manifest": {
+                "mediaType": 2,
+                "businessType": 2,
+                "version": "1.0.0",
+                "adaptationSet": [
+                  {
+                    "id": 1,
+                    "duration": 16000,
+                    "representation": [
+                      {
+                        "id": 1,
+                        "url": "https://v1.kwaicdn.com/low.mp4",
+                        "width": 540,
+                        "height": 960,
+                        "maxBitrate": 1000
+                      },
+                      {
+                        "id": 2,
+                        "url": "https://v1.kwaicdn.com/high.mp4",
+                        "width": 720,
+                        "height": 1280,
+                        "maxBitrate": 3000
+                      }
+                    ]
+                  }
+                ]
+              },
+              "manifestH265": null,
+              "photoH265Url": null,
+              "coronaCropManifest": null,
+              "coronaCropManifestH265": null,
+              "croppedPhotoH265Url": null,
+              "croppedPhotoUrl": null,
+              "videoResource": null,
+              "commentCount": 7
+            },
+            "author": {
+              "id": "3xfakeuser00001",
+              "name": "作者",
+              "following": false,
+              "headerUrl": "https://p1.a.yximgs.com/head.jpg",
+              "livingInfo": null,
+              "verifiedDetail": null
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "result": {
+    "result": 1,
+    "pcursor": "no_more",
+    "searchSessionId": "sess",
+    "feeds": [
+      {
+        "type": 1,
+        "photo": {
+          "id": "3xfakephoto0001",
+          "duration": 16000,
+          "caption": "测试作品 #话题",
+          "likeCount": "1.2万",
+          "realLikeCount": 12345,
+          "coverUrl": "https://p1.a.yximgs.com/cover.jpg",
+          "photoUrl": "https://v1.kwaicdn.com/b.mp4",
+          "liked": false,
+          "timestamp": 1789990000000,
+          "expTag": "x",
+          "llsid": "1",
+          "viewCount": "82.1万",
+          "videoRatio": 0.56,
+          "stereoType": 0,
+          "musicBlocked": null,
+          "riskTagContent": null,
+          "riskTagUrl": null,
+          "manifest": {
+            "mediaType": 2,
+            "businessType": 2,
+            "version": "1.0.0",
+            "adaptationSet": [
+              {
+                "id": 1,
+                "duration": 16000,
+                "representation": [
+                  {
+                    "id": 1,
+                    "url": "https://v1.kwaicdn.com/low.mp4",
+                    "width": 540,
+                    "height": 960,
+                    "maxBitrate": 1000
+                  },
+                  {
+                    "id": 2,
+                    "url": "https://v1.kwaicdn.com/high.mp4",
+                    "width": 720,
+                    "height": 1280,
+                    "maxBitrate": 3000
+                  }
+                ]
+              }
+            ]
+          },
+          "manifestH265": null,
+          "photoH265Url": null,
+          "coronaCropManifest": null,
+          "coronaCropManifestH265": null,
+          "croppedPhotoH265Url": null,
+          "croppedPhotoUrl": null,
+          "videoResource": null,
+          "commentCount": 7
+        },
+        "author": {
+          "id": "3xfakeuser00001",
+          "name": "作者",
+          "following": false,
+          "headerUrl": "https://p1.a.yximgs.com/head.jpg",
+          "livingInfo": null,
+          "verifiedDetail": null
+        }
+      }
+    ]
+  },
+  "error": null
+}

@@ -1,0 +1,61 @@
+{
+ "_note": "从 live-app.js 抽的运行时映射；h=payloadType 数字->名字，y=名字->protobuf 类型，E=上行",
+ "number_to_name": {
+  "101": "SC_HEARTBEAT_ACK",
+  "103": "SC_ERROR",
+  "105": "SC_INFO",
+  "111": "SC_WEB_COMMENT_FEED",
+  "112": "SC_WEB_COMMENT_RICH_TEXT_MESSAGE",
+  "300": "SC_ENTER_ROOM_ACK",
+  "310": "SC_FEED_PUSH",
+  "330": "SC_RED_PACK_FEED",
+  "340": "SC_LIVE_WATCHING_LIST",
+  "370": "SC_GUESS_OPENED",
+  "371": "SC_GUESS_CLOSED",
+  "412": "SC_RIDE_CHANGED",
+  "441": "SC_BET_CHANGED",
+  "442": "SC_BET_CLOSED",
+  "645": "SC_LIVE_SPECIAL_ACCOUNT_CONFIG_STATE",
+  "758": "SC_LIVE_WARNING_MASK_STATUS_CHANGED_AUDIENCE",
+  "776": "SC_INTERACTIVE_CHAT_CLOSED",
+  "829": "SC_COMMENT_ZONE_RICH_TEXT",
+  "944": "SC_INTERACTIVE_CHAT_SWITCH_BIZ",
+  "950": "SC_LIVE_MULTI_PK_STATISTIC"
+ },
+ "name_to_type": {
+  "SC_BET_CHANGED": "SCWebBetChanged",
+  "SC_BET_CLOSED": "SCWebBetClosed",
+  "SC_COMMENT_ZONE_RICH_TEXT": "SCCommentZoneRichText",
+  "SC_ENTER_ROOM_ACK": "SCWebEnterRoomAck",
+  "SC_ERROR": "SCWebError",
+  "SC_FEED_PUSH": "SCWebFeedPush",
+  "SC_GUESS_CLOSED": "SCWebGuessClosed",
+  "SC_GUESS_OPENED": "SCWebGuessOpened",
+  "SC_HEARTBEAT_ACK": "SCWebHeartbeatAck",
+  "SC_INFO": "SCInfo",
+  "SC_INTERACTIVE_CHAT_CLOSED": "SCInteractiveChatClosed",
+  "SC_INTERACTIVE_CHAT_SWITCH_BIZ": "SCInteractiveChatSwitchBiz",
+  "SC_LIVE_MULTI_PK_STATISTIC": "SCLiveMultiPkStatistic",
+  "SC_LIVE_SPECIAL_ACCOUNT_CONFIG_STATE": "SCWebLiveSpecialAccountConfigState",
+  "SC_LIVE_WARNING_MASK_STATUS_CHANGED_AUDIENCE": "SCLiveWarningMaskStatusChangedAudience",
+  "SC_LIVE_WATCHING_LIST": "SCWebLiveWatchingUsers",
+  "SC_RED_PACK_FEED": "SCWebCurrentRedPackFeed",
+  "SC_RIDE_CHANGED": "SCWebRideChanged",
+  "SC_WEB_COMMENT_FEED": "WebCommentFeed",
+  "SC_WEB_COMMENT_RICH_TEXT_MESSAGE": "CommentRichTextMessage"
+ },
+ "upstream": {
+  "CS_ENTER_ROOM": [
+   200,
+   "CSWebEnterRoom"
+  ],
+  "CS_HEARTBEAT": [
+   1,
+   "CSWebHeartbeat"
+  ],
+  "CS_USER_EXIT": [
+   202,
+   "CSWebUserExit"
+  ]
+ }
+}

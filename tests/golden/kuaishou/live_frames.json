@@ -1,0 +1,25 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": {
+    "enter": {
+      "base64": "CMgBGh0KDWZha2Utd3MtdG9rZW4SDGZha2VTdHJlYW0wMQ=="
+    },
+    "enter_reconnect": {
+      "base64": "CMgBGh8KDWZha2Utd3MtdG9rZW4SDGZha2VTdHJlYW0wMRgC"
+    },
+    "heartbeat": {
+      "base64": "CAEaBwj72MGijDQ="
+    },
+    "exit": {
+      "base64": "CMoBGgcI+9jBoow0"
+    },
+    "feed": {
+      "base64": "CLYCEAEaWQoGMS4y5LiHKhcKAmMxEgwKAnUxEgbop4LkvJcaAzY2NkIYCgJsMRISCgJ1MhIM54K56LWe55qE5Lq6ShwKAmcxEhIKAnUzEgzpgIHnpLznmoTkurogATgD"
+    }
+  },
+  "error": null
+}
