@@ -1,0 +1,148 @@
+{
+  "input": {
+    "aid": 80433022,
+    "cid": 137649199,
+    "segment": 2
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://api.bilibili.com/x/v2/dm/wbi/web/seg.so?type=1&oid=137649199&pid=80433022&segment_index=2&pull_mode=1&ps=0&pe=120000&web_location=1315873&w_rid=29c24906086c132bd8e5fddf0a7652b5&wts=1790000000",
+      "headers": [
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "origin",
+          "https://www.bilibili.com"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "referer",
+          "https://www.bilibili.com/"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ]
+      ],
+      "cookies": [
+        [
+          "buvid3",
+          "FAKE-BUVID3-0000infoc"
+        ],
+        [
+          "b_nut",
+          "1789990000"
+        ],
+        [
+          "_uuid",
+          "FAKE-UUID-0000infoc"
+        ],
+        [
+          "buvid4",
+          "FAKE-BUVID4-0000"
+        ],
+        [
+          "buvid_fp",
+          "0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "SESSDATA",
+          "fake-sessdata"
+        ],
+        [
+          "bili_jct",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "DedeUserID",
+          "10001"
+        ],
+        [
+          "DedeUserID__ckMd5",
+          "fakeckmd5"
+        ],
+        [
+          "sid",
+          "kba2fqoy"
+        ],
+        [
+          "rpdid",
+          "fake|rpdid"
+        ],
+        [
+          "PVID",
+          "1"
+        ],
+        [
+          "bili_ticket",
+          "fake.ticket"
+        ],
+        [
+          "bili_ticket_expires",
+          "1790259200"
+        ],
+        [
+          "b_lsid",
+          "52151C33_1A0C4506C7B"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "message": "0",
+        "data": {}
+      }
+    }
+  ],
+  "result": {
+    "base64": "eyJjb2RlIjogMCwgIm1lc3NhZ2UiOiAiMCIsICJkYXRhIjoge319"
+  },
+  "error": null
+}

@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { text as readStdin } from 'node:stream/consumers'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { z } from 'zod'
-import { checkAccountName, endpointFlag, getCurrent, GUEST, readCredential, writeCredential } from '../core/auth-store.js'
+import { checkAccountName, endpointFlag, getCurrent, GUEST, newCredential, readCredential, writeCredential } from '../core/auth-store.js'
 import { resolveNetwork } from '../core/config.js'
 import { CatbusError, toCatbusError } from '../core/errors.js'
 import { createLogger, type Logger } from '../core/log.js'
@@ -231,15 +231,31 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
     },
   }
 
-  if (command.stream) {
-    out.format = 'jsonl'
-    await runStream(ctx, handler(ctx) as AsyncIterable<unknown>, controller, out)
-  } else if (command.paged) {
-    await runPaged(platform, ctx, handler, out)
-  } else {
-    out.result(await handler(ctx))
+  const snapshot = JSON.stringify(ctx.credential)
+  try {
+    if (command.stream) {
+      out.format = 'jsonl'
+      await runStream(ctx, handler(ctx) as AsyncIterable<unknown>, controller, out)
+    } else if (command.paged) {
+      await runPaged(platform, ctx, handler, out)
+    } else {
+      out.result(await handler(ctx))
+    }
+  } finally {
+    await persistCredential(ctx.credential, snapshot)
   }
   return 0
+}
+
+/**
+ * 请求中更新过的凭证（Set-Cookie、刷新的 token、新生成的游客设备数据）落盘。
+ * 账号文件已被删除（logout）时不再写回。
+ */
+async function persistCredential(credential: Credential, snapshot: string): Promise<void> {
+  if (JSON.stringify(credential) === snapshot) return
+  const { platform, endpoint, account } = credential
+  if (account !== GUEST && !(await readCredential(platform, endpoint as Endpoint, account).catch(() => null))) return
+  await writeCredential(credential)
 }
 
 /** 选项与参数校验：不适用的选项 → 标准取值 → 位置参数个数 → zod → 跨参数约束。 */
@@ -294,13 +310,16 @@ async function resolveIdentity(
   args: Args,
   g: GlobalFlags,
   log: Logger,
-): Promise<{ account: string | null; credential: Credential | null }> {
+): Promise<{ account: string | null; credential: Credential }> {
   const p = platform.id
   const e = endpointFlag(endpoint)
+  const guest = async () =>
+    (await readCredential(p, endpoint, GUEST).catch(() => null)) ??
+    newCredential({ platform: p, endpoint, account: GUEST, method: 'guest' })
   if (command.resource === 'auth') {
-    const account = g.account != null ? checkAccountName(g.account) : await getCurrent(p, endpoint)
-    const credential = account == null ? null : await readCredential(p, endpoint, account).catch(() => null)
-    return { account, credential }
+    const account = g.account != null ? checkAccountName(g.account, { allowGuest: true }) : await getCurrent(p, endpoint)
+    const credential = account == null || account === GUEST ? null : await readCredential(p, endpoint, account).catch(() => null)
+    return { account: account === GUEST ? null : account, credential: credential ?? (await guest()) }
   }
 
   if (g.account != null && g.account !== GUEST) {
@@ -312,7 +331,7 @@ async function resolveIdentity(
     return { account, credential }
   }
   const current = g.account == null ? await getCurrent(p, endpoint) : null
-  if (current) return { account: current, credential: await readCredential(p, endpoint, current) }
+  if (current) return { account: current, credential: (await readCredential(p, endpoint, current))! }
 
   const login = `catbus ${p} auth login${e}`
   if (command.auth === 'required') throw new CatbusError('AUTH_REQUIRED', `${command.key} 需要登录`, { hint: login })
@@ -322,7 +341,7 @@ async function resolveIdentity(
   if (g.account !== GUEST) {
     log.info(`未登录 ${p} (${endpoint})，本次以游客身份访问，结果可能不完整；很多操作需要登录。登录：${login}`)
   }
-  return { account: GUEST, credential: await readCredential(p, endpoint, GUEST) }
+  return { account: GUEST, credential: await guest() }
 }
 
 /** `--text @file`、`--cookie @file|-`：从文件或 stdin 读取。 */
@@ -381,7 +400,8 @@ async function runStream(ctx: HandlerContext, iterable: AsyncIterable<unknown>, 
     if (timer) clearTimeout(timer)
     process.off('SIGINT', stop)
     controller.abort()
-    await it.return?.()
+    // 生成器可能正卡在 await 上，return() 要等它恢复才会完成；不等它，免得进程挂住
+    void Promise.resolve(it.return?.()).catch(() => {})
   }
   out.result(undefined, { streamed: true })
 }

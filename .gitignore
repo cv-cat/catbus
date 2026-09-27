@@ -5,3 +5,4 @@ coverage/
 *.tgz
 packages/assets-jd/models/
 .claude/settings.local.json
+.golden/

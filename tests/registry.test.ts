@@ -30,8 +30,20 @@ describe('注册表', () => {
     }
   })
 
-  it('M1：除 core 的 auth list / use / logout 外，全部命令都是 planned', () => {
-    for (const p of PLATFORMS) {
+  /** 已经移植完的平台：上游有的（✓ / ◐）都有实现，○ 的都没有。移植完一个平台就加进来。 */
+  const PORTED = ['bilibili']
+
+  it('已移植的平台：✓ / ◐ 的命令都已实现，○ 的都是 planned', () => {
+    for (const p of PLATFORMS.filter((x) => PORTED.includes(x.id))) {
+      for (const c of web(p).commands.values()) {
+        const expected = c.upstream === 'none' ? 'planned' : 'implemented'
+        expect([p.id, c.key, c.status]).toEqual([p.id, c.key, expected])
+      }
+    }
+  })
+
+  it('未移植的平台：除 core 的 auth list / use / logout 外都是 planned', () => {
+    for (const p of PLATFORMS.filter((x) => !PORTED.includes(x.id))) {
       for (const c of web(p).commands.values()) {
         const core = ['auth list', 'auth use', 'auth logout'].includes(c.key)
         expect([p.id, c.key, c.status]).toEqual([p.id, c.key, core ? 'implemented' : 'planned'])

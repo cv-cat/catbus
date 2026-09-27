@@ -50,6 +50,7 @@
 - xianyu `user get`：只支持 me；查询他人规划中
 - taobao `user get`：me 规划中
 - jd `user get`：只支持 me
+- `user items --sort` 取值：bilibili latest / views / collects
 
 ## item
 
@@ -66,6 +67,8 @@
 | item publish | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | — | — | ✓ |
 | item delete | ○ | ○ | ○ | ✓ | ○ | ○ | ○ | — | — | ✓ |
 | item categories | — | — | — | ✓ | — | — | ○ | — | — | — |
+
+- `item search --sort` 取值：bilibili general / views / latest / collects
 
 ## product 与商品评价
 
@@ -154,6 +157,7 @@
 - douyin `live send`：--gift 规划中
 - tiktok `live send`：--gift 规划中
 - kuaishou `live send`：--gift 规划中
+- `live start --category`：bilibili
 
 ## 平台扩展
 

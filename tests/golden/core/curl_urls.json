@@ -1,0 +1,65 @@
+{
+  "input": null,
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": {
+    "cases": [
+      [
+        "https://api.example.com/x/y?a=1&b=2",
+        [
+          [
+            "b",
+            3
+          ],
+          [
+            "c",
+            "x y"
+          ],
+          [
+            "d",
+            true
+          ]
+        ]
+      ],
+      [
+        "https://api.example.com/p",
+        [
+          [
+            "k",
+            "中文"
+          ],
+          [
+            "k",
+            "v2"
+          ],
+          [
+            "e",
+            ""
+          ]
+        ]
+      ],
+      [
+        "https://api.example.com/p?q=%E4%B8%AD",
+        [
+          [
+            "z",
+            "!'()*"
+          ]
+        ]
+      ],
+      [
+        "https://api.example.com/a|b",
+        []
+      ]
+    ],
+    "urls": [
+      "https://api.example.com/x/y?a=1&b=3&c=x+y&d=true",
+      "https://api.example.com/p?k=%E4%B8%AD%E6%96%87&k=v2&e=",
+      "https://api.example.com/p?q=%E4%B8%AD&z=%21%27%28%29%2A",
+      "https://api.example.com/a|b"
+    ]
+  },
+  "error": null
+}

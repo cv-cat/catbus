@@ -769,11 +769,17 @@ wreq-js 默认会读 `HTTP(S)_PROXY` 环境变量和 Windows 系统代理。为�
 ### 7.5 移植与对拍测试
 
 - **移植**：上游 Python 的请求构造、签名、解析逻辑都重写成 TS。行为以上游为准：同样的输入，产出同样的请求（URL、query、header、body、签名）。
-- **对拍数据**：用 `scripts/golden/<p>/*.py` 生成。
-  - 在开发机上用 Python 3.13 + uv 运行 `references/` 里的上游代码，例如 `uv run --with-requirements references/<repo>/requirements.txt ...`。
-  - 固定时间、随机数和设备输入。
-  - 输出到 `tests/golden/<p>/`。**只能用假凭证。**
-- **对拍测试**：vitest 断言 TS 的输出和对拍数据一致。请求构造和签名都必须有对拍测试。
+- **对拍数据**：用 `scripts/golden/<p>/gen.py` 生成，框架是 `scripts/golden/catbus_golden.py`。
+  - 在开发机上用 Python 3.13 + uv 建一个不进 git 的虚拟环境 `.golden/<p>/`（`uv venv .golden/<p> --python 3.13`，再装上游的依赖），运行 `references/` 里的上游代码。
+  - 框架替换了 Python 的 `random` / `secrets` / `uuid` / `os.urandom` / `time`，并截获 curl_cffi 与 requests 的请求（不联网，按用例给的响应回复）；上游起的 node 子进程通过 `NODE_OPTIONS` 预加载 `node_determinism.cjs`，固定 `Math.random` 与 `Date`。
+  - 输出到 `tests/golden/<p>/<case>.json`。**只能用假凭证。**
+- **对拍测试**：`tests/<p>.test.ts` 用 `tests/golden.ts` 的 `replay()` 在同样的随机数与时钟下运行 TS 实现，`expectRequests()` 逐字节比较请求（URL、header 顺序、cookie、body）。请求构造和签名都必须有对拍测试。
+- **平台实现的约定**（参考实现是 `src/platforms/bilibili/web/`）：
+  - 文件：`client.ts`（会话：设备初始化、签名密钥、带重试的请求、业务码 → 错误）、`api.ts`（一个函数对应一个上游方法，字段与顺序照抄）、`commands.ts`（命令 handler）、`normalize.ts`（原始对象 → 6.2 的类型，挂上原始对象供 `--raw`）、`resolve.ts`（参数归一化）。
+  - 随机数和当前时间只经 `core/rand.ts`，等待用 `rand.sleep`；与 Python 对应的编码（`urlencode`、`quote`、`json.dumps`）用 `core/py.ts`；需要精确键序的 JSON 用 Map。
+  - HTTP 用 `core/http.ts` 的 `HttpClient`（`toolkit.httpClient(ctx)`），请求头按上游顺序显式给出；cookie 在凭证的 cookie 罐里，Set-Cookie 自动写回，命令结束时由 core 落盘。
+  - 签名 JS 复制到 `static/<p>/`，用 `core/vm.ts` 的 `loadScript` / `callScript` 执行。
+  - 业务错误映射到 6.4 的错误码：登录墙 → `toolkit.authError`，风控 → `RISK_CONTROL`，其余 → `UPSTREAM`（原始错误码放 `detail`）。
 - **上游基线**：`src/platforms/<p>/UPSTREAM` 记录上游仓库地址和 commit。
 - **上游更新时**：
   1. 用 `git -C references/<repo> log <commit>..` 查看变更；

@@ -1,0 +1,258 @@
+{
+  "input": {
+    "room": 21452505,
+    "msg": "直播弹幕"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://api.live.bilibili.com/msg/send?web_location=444.8&w_rid=6bb6342037b980e66ace8acb5096eee6&wts=1790000000",
+      "headers": [
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "origin",
+          "https://live.bilibili.com"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "referer",
+          "https://live.bilibili.com/21452505"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ]
+      ],
+      "cookies": [
+        [
+          "buvid3",
+          "FAKE-BUVID3-0000infoc"
+        ],
+        [
+          "b_nut",
+          "1789990000"
+        ],
+        [
+          "_uuid",
+          "FAKE-UUID-0000infoc"
+        ],
+        [
+          "buvid4",
+          "FAKE-BUVID4-0000"
+        ],
+        [
+          "buvid_fp",
+          "0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "SESSDATA",
+          "fake-sessdata"
+        ],
+        [
+          "bili_jct",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "DedeUserID",
+          "10001"
+        ],
+        [
+          "DedeUserID__ckMd5",
+          "fakeckmd5"
+        ],
+        [
+          "sid",
+          "kba2fqoy"
+        ],
+        [
+          "rpdid",
+          "fake|rpdid"
+        ],
+        [
+          "PVID",
+          "1"
+        ],
+        [
+          "bili_ticket",
+          "fake.ticket"
+        ],
+        [
+          "bili_ticket_expires",
+          "1790259200"
+        ],
+        [
+          "b_lsid",
+          "52151C33_1A0C4506C7B"
+        ]
+      ],
+      "body": null,
+      "multipart": [
+        {
+          "name": "bubble",
+          "filename": null,
+          "contentType": null,
+          "data": "0"
+        },
+        {
+          "name": "msg",
+          "filename": null,
+          "contentType": null,
+          "data": "直播弹幕"
+        },
+        {
+          "name": "color",
+          "filename": null,
+          "contentType": null,
+          "data": "16777215"
+        },
+        {
+          "name": "mode",
+          "filename": null,
+          "contentType": null,
+          "data": "1"
+        },
+        {
+          "name": "room_type",
+          "filename": null,
+          "contentType": null,
+          "data": "0"
+        },
+        {
+          "name": "jumpfrom",
+          "filename": null,
+          "contentType": null,
+          "data": "0"
+        },
+        {
+          "name": "reply_mid",
+          "filename": null,
+          "contentType": null,
+          "data": "0"
+        },
+        {
+          "name": "reply_attr",
+          "filename": null,
+          "contentType": null,
+          "data": "0"
+        },
+        {
+          "name": "replay_dmid",
+          "filename": null,
+          "contentType": null,
+          "data": null
+        },
+        {
+          "name": "statistics",
+          "filename": null,
+          "contentType": null,
+          "data": "{\"appId\":100,\"platform\":5}"
+        },
+        {
+          "name": "reply_type",
+          "filename": null,
+          "contentType": null,
+          "data": "0"
+        },
+        {
+          "name": "reply_uname",
+          "filename": null,
+          "contentType": null,
+          "data": null
+        },
+        {
+          "name": "data_extend",
+          "filename": null,
+          "contentType": null,
+          "data": "{\"trackid\":\"-99998\"}"
+        },
+        {
+          "name": "fontsize",
+          "filename": null,
+          "contentType": null,
+          "data": "25"
+        },
+        {
+          "name": "rnd",
+          "filename": null,
+          "contentType": null,
+          "data": "1790000000"
+        },
+        {
+          "name": "roomid",
+          "filename": null,
+          "contentType": null,
+          "data": "21452505"
+        },
+        {
+          "name": "csrf",
+          "filename": null,
+          "contentType": null,
+          "data": "fakecsrf0123456789abcdef01234567"
+        },
+        {
+          "name": "csrf_token",
+          "filename": null,
+          "contentType": null,
+          "data": "fakecsrf0123456789abcdef01234567"
+        }
+      ]
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "message": "0",
+        "data": {}
+      }
+    }
+  ],
+  "result": {
+    "code": 0,
+    "message": "0",
+    "data": {}
+  },
+  "error": null
+}

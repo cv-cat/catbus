@@ -51,14 +51,16 @@
   "dependencies": {
     "@cv-cat/catbus-assets-jd": "0.1.0",
     "@napi-rs/canvas": "^1.0.9",
-    "catbus-cli": "file:",
     "onnxruntime-web": "^1.30.0",
+    "protobufjs": "^8.8.0",
+    "qrcode": "^1.5.4",
     "smol-toml": "^1.9.0",
     "wreq-js": "^3.2.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^22.20.4",
+    "@types/qrcode": "^1.5.6",
     "typescript": "^7.0.2",
     "vitest": "^5.0.2"
   }

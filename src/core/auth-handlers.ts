@@ -36,6 +36,14 @@ export async function logout(ctx: HandlerContext) {
   const account = checkAccountName(ctx.account)
   const found = (await listAccounts(p, ctx.endpoint)).find((a) => a.account === account)
   if (!found) throw new CatbusError('USAGE', `账号 ${account} 不存在`, { hint })
+  const ep = ctx.platform.endpoints[ctx.endpoint]
+  if (ep !== 'planned' && ep.logout && found.user) {
+    try {
+      await (await ep.logout())(ctx)
+    } catch (err) {
+      ctx.log.warn(`服务端登出失败，只删除本地凭证：${(err as Error).message}`)
+    }
+  }
   await deleteCredential(p, ctx.endpoint, account)
   if (found.current) await setCurrent(p, ctx.endpoint, null)
   return { ...found, current: false }

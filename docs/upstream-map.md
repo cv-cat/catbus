@@ -25,8 +25,8 @@
 
 | 上游 Python | catbus |
 |---|---|
-| `curl_cffi`、`requests` | wreq-js 或 impit（M1 选定） |
-| `websockets` | HTTP 库自带的 WebSocket，否则 `ws` |
+| `curl_cffi`、`requests` | wreq-js（`core/http.ts`） |
+| `websockets`、`websocket-client` | wreq-js 的 WebSocket（`core/stream.ts`） |
 | `protobuf` + pb2 | protobufjs |
 | `blackboxprotobuf`（无 schema 解码） | protobufjs 的 Reader |
 | `onnxruntime` | onnxruntime-web |

@@ -25,8 +25,11 @@ export interface HandlerContext {
   options: Options
   /** 账号名，游客为 `guest`。auth 命令没有 -a、也没有当前账号时为 null。 */
   account: string | null
-  /** 当前身份的凭证；游客时为 guest.json（可能还没生成）。 */
-  credential: Credential | null
+  /**
+   * 当前身份的凭证；游客时为 guest.json，还没有时是一份空的游客凭证。
+   * 平台在上面补设备数据、更新 cookie 后，由 core 在命令结束时落盘。
+   */
+  credential: Credential
   /** 分页命令本次要取的页，第一页为 `--cursor` 或 null。 */
   cursor: string | null
   raw: boolean
@@ -60,6 +63,8 @@ export interface LoginDecl {
 
 export interface EndpointDecl {
   login: LoginDecl
+  /** 服务端登出：`auth logout` 删除本地凭证前调用（AGENTS 5.3）。 */
+  logout?: HandlerLoader
   /** 词表里的命令可以只写 `'full' | 'partial' | 'none'`；矩阵里 — 的命令不写。 */
   commands: Record<string, Upstream | CommandDecl>
 }
@@ -90,6 +95,7 @@ export interface Command extends CommandSpec {
 
 export interface AvailableEndpoint {
   login: LoginDecl
+  logout?: HandlerLoader
   commands: Map<string, Command>
 }
 
@@ -109,7 +115,7 @@ export function definePlatform(decl: PlatformDecl): Platform {
   const endpoints = {} as Platform['endpoints']
   for (const endpoint of ENDPOINTS) {
     const e = decl.endpoints[endpoint]
-    endpoints[endpoint] = e === 'planned' ? 'planned' : { login: e.login, commands: resolveCommands(decl, e) }
+    endpoints[endpoint] = e === 'planned' ? 'planned' : { login: e.login, logout: e.logout, commands: resolveCommands(decl, e) }
   }
   return {
     id: decl.id,

@@ -1,0 +1,571 @@
+{
+  "input": {
+    "bvid": "BV1GJ411x7h7"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://api.bilibili.com/x/frontend/finger/spi",
+      "headers": [
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "origin",
+          "https://www.bilibili.com"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "referer",
+          "https://www.bilibili.com/"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ]
+      ],
+      "cookies": [],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://api.bilibili.com/bapis/bilibili.api.ticket.v1.Ticket/GenWebTicket?key_id=ec02&hexsign=b68b32cfa1761ec0a21ff6c79fc1fd7dda6db754ce003c5e5ecb75f3b6092f94&context%5Bts%5D=1790000000&csrf=",
+      "headers": [
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "origin",
+          "https://www.bilibili.com"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "referer",
+          "https://www.bilibili.com/"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ]
+      ],
+      "cookies": [
+        [
+          "buvid3",
+          "FAKE-SPI-B3infoc"
+        ],
+        [
+          "b_nut",
+          "1790000000"
+        ],
+        [
+          "_uuid",
+          "A6527CC10-6326-2D44-4C3C-63112ED41F8F12300infoc"
+        ],
+        [
+          "home_feed_column",
+          "5"
+        ],
+        [
+          "buvid4",
+          "FAKE-SPI-B4"
+        ],
+        [
+          "browser_resolution",
+          "2560-1215"
+        ],
+        [
+          "buvid_fp",
+          "ea5ce60c3cb69beed0f5ce0cd08b44a4"
+        ],
+        [
+          "LIVE_BUVID",
+          "AUTO1790000000121157547"
+        ],
+        [
+          "theme-tip-show",
+          "SHOWED"
+        ],
+        [
+          "CURRENT_FNVAL",
+          "4048"
+        ],
+        [
+          "sid",
+          "afc270x6"
+        ],
+        [
+          "PVID",
+          "1"
+        ],
+        [
+          "ogv_device_support_dolby",
+          "0"
+        ],
+        [
+          "ogv_device_support_hdr",
+          "0"
+        ],
+        [
+          "b_lsid",
+          "BAD69C11_1A0C4506C7B"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://api.bilibili.com/x/internal/gaia-gateway/ExClimbWuzhi",
+      "headers": [
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/json;charset=UTF-8"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "origin",
+          "https://www.bilibili.com"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "referer",
+          "https://www.bilibili.com/"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ]
+      ],
+      "cookies": [
+        [
+          "buvid3",
+          "FAKE-SPI-B3infoc"
+        ],
+        [
+          "b_nut",
+          "1790000000"
+        ],
+        [
+          "_uuid",
+          "A6527CC10-6326-2D44-4C3C-63112ED41F8F12300infoc"
+        ],
+        [
+          "home_feed_column",
+          "5"
+        ],
+        [
+          "buvid4",
+          "FAKE-SPI-B4"
+        ],
+        [
+          "browser_resolution",
+          "2560-1215"
+        ],
+        [
+          "buvid_fp",
+          "ea5ce60c3cb69beed0f5ce0cd08b44a4"
+        ],
+        [
+          "LIVE_BUVID",
+          "AUTO1790000000121157547"
+        ],
+        [
+          "theme-tip-show",
+          "SHOWED"
+        ],
+        [
+          "CURRENT_FNVAL",
+          "4048"
+        ],
+        [
+          "sid",
+          "afc270x6"
+        ],
+        [
+          "PVID",
+          "1"
+        ],
+        [
+          "bili_ticket",
+          "fake.guest.ticket"
+        ],
+        [
+          "bili_ticket_expires",
+          "1790259200"
+        ],
+        [
+          "ogv_device_support_dolby",
+          "0"
+        ],
+        [
+          "ogv_device_support_hdr",
+          "0"
+        ],
+        [
+          "b_lsid",
+          "BAD69C11_1A0C4506C7B"
+        ]
+      ],
+      "body": "{\"payload\":\"{\\\"3064\\\":1,\\\"5062\\\":\\\"1790000000123\\\",\\\"03bf\\\":\\\"\\\",\\\"39c8\\\":\\\"333.1193.fp.risk\\\",\\\"34f1\\\":\\\"\\\",\\\"d402\\\":\\\"\\\",\\\"654a\\\":\\\"\\\",\\\"6e7c\\\":\\\"0x0\\\",\\\"3c43\\\":{\\\"2673\\\":0,\\\"5766\\\":24,\\\"6527\\\":0,\\\"7003\\\":1,\\\"807e\\\":1,\\\"b8ce\\\":\\\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36\\\",\\\"641c\\\":0,\\\"07a4\\\":\\\"zh-CN\\\",\\\"1c57\\\":32,\\\"0bd0\\\":20,\\\"748e\\\":[2560,1440],\\\"d61f\\\":[2560,1392],\\\"fc9d\\\":-480,\\\"6aa9\\\":\\\"Asia/Shanghai\\\",\\\"75b8\\\":1,\\\"3b21\\\":1,\\\"8a1c\\\":0,\\\"d52f\\\":\\\"not available\\\",\\\"adca\\\":\\\"Win32\\\",\\\"80c9\\\":[[\\\"PDF Viewer\\\",\\\"Portable Document Format\\\",[[\\\"application/pdf\\\",\\\"pdf\\\"],[\\\"text/pdf\\\",\\\"pdf\\\"]]],[\\\"Chrome PDF Viewer\\\",\\\"Portable Document Format\\\",[[\\\"application/pdf\\\",\\\"pdf\\\"],[\\\"text/pdf\\\",\\\"pdf\\\"]]],[\\\"Chromium PDF Viewer\\\",\\\"Portable Document Format\\\",[[\\\"application/pdf\\\",\\\"pdf\\\"],[\\\"text/pdf\\\",\\\"pdf\\\"]]],[\\\"Microsoft Edge PDF Viewer\\\",\\\"Portable Document Format\\\",[[\\\"application/pdf\\\",\\\"pdf\\\"],[\\\"text/pdf\\\",\\\"pdf\\\"]]],[\\\"WebKit built-in PDF\\\",\\\"Portable Document Format\\\",[[\\\"application/pdf\\\",\\\"pdf\\\"],[\\\"text/pdf\\\",\\\"pdf\\\"]]]],\\\"13ab\\\":\\\"mW9qAAAAAElFTkSuQmCC\\\",\\\"bfe9\\\":\\\"//TgNIfAAAAAZJREFUAwBde+3wgcxEHQAAAABJRU5ErkJggg==\\\",\\\"a3c1\\\":[\\\"extensions:ANGLE_instanced_arrays;EXT_blend_minmax;EXT_clip_control;EXT_color_buffer_half_float;EXT_depth_clamp;EXT_disjoint_timer_query;EXT_float_blend;EXT_frag_depth;EXT_polygon_offset_clamp;EXT_shader_texture_lod;EXT_texture_compression_bptc;EXT_texture_compression_rgtc;EXT_texture_filter_anisotropic;EXT_texture_mirror_clamp_to_edge;EXT_sRGB;KHR_parallel_shader_compile;OES_element_index_uint;OES_fbo_render_mipmap;OES_standard_derivatives;OES_texture_float;OES_texture_float_linear;OES_texture_half_float;OES_texture_half_float_linear;OES_vertex_array_object;WEBGL_blend_func_extended;WEBGL_color_buffer_float;WEBGL_compressed_texture_s3tc;WEBGL_compressed_texture_s3tc_srgb;WEBGL_debug_renderer_info;WEBGL_debug_shaders;WEBGL_depth_texture;WEBGL_draw_buffers;WEBGL_lose_context;WEBGL_multi_draw;WEBGL_polygon_mode\\\",\\\"webgl aliased line width range:[1, 1]\\\",\\\"webgl aliased point size range:[1, 1024]\\\",\\\"webgl alpha bits:8\\\",\\\"webgl antialiasing:yes\\\",\\\"webgl blue bits:8\\\",\\\"webgl depth bits:24\\\",\\\"webgl green bits:8\\\",\\\"webgl max anisotropy:16\\\",\\\"webgl max combined texture image units:32\\\",\\\"webgl max cube map texture size:16384\\\",\\\"webgl max fragment uniform vectors:1024\\\",\\\"webgl max render buffer size:16384\\\",\\\"webgl max texture image units:16\\\",\\\"webgl max texture size:16384\\\",\\\"webgl max varying vectors:30\\\",\\\"webgl max vertex attribs:16\\\",\\\"webgl max vertex texture image units:16\\\",\\\"webgl max vertex uniform vectors:4095\\\",\\\"webgl max viewport dims:[32767, 32767]\\\",\\\"webgl red bits:8\\\",\\\"webgl renderer:WebKit WebGL\\\",\\\"webgl shading language version:WebGL GLSL ES 1.0 (OpenGL ES GLSL ES 1.0 Chromium)\\\",\\\"webgl stencil bits:0\\\",\\\"webgl vendor:WebKit\\\",\\\"webgl version:WebGL 1.0 (OpenGL ES 2.0 Chromium)\\\",\\\"webgl unmasked vendor:Google Inc. (NVIDIA)\\\",\\\"webgl unmasked renderer:ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 Ti (0x00002D04) Direct3D11 vs_5_0 ps_5_0, D3D11)\\\",\\\"webgl vertex shader high float precision:23\\\",\\\"webgl vertex shader high float precision rangeMin:127\\\",\\\"webgl vertex shader high float precision rangeMax:127\\\",\\\"webgl vertex shader medium float precision:23\\\",\\\"webgl vertex shader medium float precision rangeMin:127\\\",\\\"webgl vertex shader medium float precision rangeMax:127\\\",\\\"webgl vertex shader low float precision:23\\\",\\\"webgl vertex shader low float precision rangeMin:127\\\",\\\"webgl vertex shader low float precision rangeMax:127\\\",\\\"webgl fragment shader high float precision:23\\\",\\\"webgl fragment shader high float precision rangeMin:127\\\",\\\"webgl fragment shader high float precision rangeMax:127\\\",\\\"webgl fragment shader medium float precision:23\\\",\\\"webgl fragment shader medium float precision rangeMin:127\\\",\\\"webgl fragment shader medium float precision rangeMax:127\\\",\\\"webgl fragment shader low float precision:23\\\",\\\"webgl fragment shader low float precision rangeMin:127\\\",\\\"webgl fragment shader low float precision rangeMax:127\\\",\\\"webgl vertex shader high int precision:0\\\",\\\"webgl vertex shader high int precision rangeMin:31\\\",\\\"webgl vertex shader high int precision rangeMax:30\\\",\\\"webgl vertex shader medium int precision:0\\\",\\\"webgl vertex shader medium int precision rangeMin:31\\\",\\\"webgl vertex shader medium int precision rangeMax:30\\\",\\\"webgl vertex shader low int precision:0\\\",\\\"webgl vertex shader low int precision rangeMin:31\\\",\\\"webgl vertex shader low int precision rangeMax:30\\\",\\\"webgl fragment shader high int precision:0\\\",\\\"webgl fragment shader high int precision rangeMin:31\\\",\\\"webgl fragment shader high int precision rangeMax:30\\\",\\\"webgl fragment shader medium int precision:0\\\",\\\"webgl fragment shader medium int precision rangeMin:31\\\",\\\"webgl fragment shader medium int precision rangeMax:30\\\",\\\"webgl fragment shader low int precision:0\\\",\\\"webgl fragment shader low int precision rangeMin:31\\\",\\\"webgl fragment shader low int precision rangeMax:30\\\"],\\\"6bc5\\\":\\\"Google Inc. (NVIDIA)~ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 Ti (0x00002D04) Direct3D11 vs_5_0 ps_5_0, D3D11)\\\",\\\"ed31\\\":0,\\\"72bd\\\":0,\\\"097b\\\":0,\\\"52cd\\\":[10,0,0],\\\"a658\\\":[],\\\"d02f\\\":\\\"124.04347527516074\\\"},\\\"54ef\\\":\\\"{}\\\",\\\"8b94\\\":\\\"https%3A%2F%2Fwww.bilibili.com%2F\\\",\\\"df35\\\":\\\"A6527CC10-6326-2D44-4C3C-63112ED41F8F12300infoc\\\",\\\"07a4\\\":\\\"zh-CN\\\",\\\"5f45\\\":null,\\\"db46\\\":0}\"}",
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://api.bilibili.com/x/web-interface/wbi/view?bvid=BV1GJ411x7h7&w_rid=d7a9ee132ecb5b48234607807882aa40&wts=1790000000",
+      "headers": [
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "origin",
+          "https://www.bilibili.com"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "referer",
+          "https://www.bilibili.com/video/BV1GJ411x7h7"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ]
+      ],
+      "cookies": [
+        [
+          "buvid3",
+          "FAKE-SPI-B3infoc"
+        ],
+        [
+          "b_nut",
+          "1790000000"
+        ],
+        [
+          "_uuid",
+          "A6527CC10-6326-2D44-4C3C-63112ED41F8F12300infoc"
+        ],
+        [
+          "home_feed_column",
+          "5"
+        ],
+        [
+          "buvid4",
+          "FAKE-SPI-B4"
+        ],
+        [
+          "browser_resolution",
+          "2560-1215"
+        ],
+        [
+          "buvid_fp",
+          "ea5ce60c3cb69beed0f5ce0cd08b44a4"
+        ],
+        [
+          "LIVE_BUVID",
+          "AUTO1790000000121157547"
+        ],
+        [
+          "theme-tip-show",
+          "SHOWED"
+        ],
+        [
+          "CURRENT_FNVAL",
+          "4048"
+        ],
+        [
+          "sid",
+          "afc270x6"
+        ],
+        [
+          "PVID",
+          "1"
+        ],
+        [
+          "bili_ticket",
+          "fake.guest.ticket"
+        ],
+        [
+          "bili_ticket_expires",
+          "1790259200"
+        ],
+        [
+          "ogv_device_support_dolby",
+          "0"
+        ],
+        [
+          "ogv_device_support_hdr",
+          "0"
+        ],
+        [
+          "b_lsid",
+          "BAD69C11_1A0C4506C7B"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "data": {
+          "b_3": "FAKE-SPI-B3infoc",
+          "b_4": "FAKE-SPI-B4"
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "data": {
+          "ticket": "fake.guest.ticket",
+          "created_at": 1790000000,
+          "ttl": 259200,
+          "nav": {
+            "img": "https://i0.hdslb.com/bfs/wbi/7cd084941338484aae1ad9425b84077c.png",
+            "sub": "https://i0.hdslb.com/bfs/wbi/4932caff0ff746eab6f01bf08b70ac45.png"
+          }
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "message": "0",
+        "data": {}
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "message": "0",
+        "data": {
+          "bvid": "BV1GJ411x7h7",
+          "aid": 80433022,
+          "cid": 137649199,
+          "title": "测试视频",
+          "desc": "简介",
+          "pic": "http://i0.hdslb.com/x.jpg",
+          "pubdate": 1577835803,
+          "duration": 213,
+          "owner": {
+            "mid": 10001,
+            "name": "UP"
+          },
+          "stat": {
+            "view": 1000,
+            "danmaku": 3,
+            "reply": 5,
+            "favorite": 7,
+            "coin": 9,
+            "share": 11,
+            "like": 13
+          },
+          "pages": [
+            {
+              "cid": 137649199,
+              "page": 1,
+              "duration": 213
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "result": {
+    "code": 0,
+    "message": "0",
+    "data": {
+      "bvid": "BV1GJ411x7h7",
+      "aid": 80433022,
+      "cid": 137649199,
+      "title": "测试视频",
+      "desc": "简介",
+      "pic": "http://i0.hdslb.com/x.jpg",
+      "pubdate": 1577835803,
+      "duration": 213,
+      "owner": {
+        "mid": 10001,
+        "name": "UP"
+      },
+      "stat": {
+        "view": 1000,
+        "danmaku": 3,
+        "reply": 5,
+        "favorite": 7,
+        "coin": 9,
+        "share": 11,
+        "like": 13
+      },
+      "pages": [
+        {
+          "cid": 137649199,
+          "page": 1,
+          "duration": 213
+        }
+      ]
+    }
+  },
+  "error": null
+}

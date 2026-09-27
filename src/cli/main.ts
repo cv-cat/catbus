@@ -8,4 +8,11 @@ process.stdout.on('error', (err: NodeJS.ErrnoException) => {
 })
 
 const { run } = await import('./dispatch.js')
-process.exitCode = await run(process.argv.slice(2))
+const { closeTransports } = await import('../core/http.js')
+const code = await run(process.argv.slice(2))
+await closeTransports()
+// 原生连接（长连接的 WebSocket 等）可能还挂着句柄：输出写完后直接退出
+const flush = (stream: NodeJS.WriteStream) => new Promise<void>((resolve) => stream.write('', () => resolve()))
+await flush(process.stdout)
+await flush(process.stderr)
+process.exit(code)
