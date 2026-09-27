@@ -75,7 +75,8 @@ export function loadScript(file: string, globals?: Record<string, unknown>): vm.
 /** 在脚本的 context 里调用一个全局函数。 */
 export function callScript<T = unknown>(file: string, fn: string, args: unknown[], globals?: Record<string, unknown>): T {
   const context = loadScript(file, globals)
-  const f = context[fn]
+  // 顶层 const / let 声明不会挂到全局对象上，按名字在 context 里求值
+  const f = context[fn] ?? (/^[\w$]+$/.test(fn) ? vm.runInContext(`typeof ${fn} === 'undefined' ? undefined : ${fn}`, context) : undefined)
   if (typeof f !== 'function') throw new Error(`${file} 里没有函数 ${fn}`)
   return f(...args) as T
 }

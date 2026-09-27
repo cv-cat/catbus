@@ -233,3 +233,16 @@ describe('HttpClient', () => {
     }
   })
 })
+
+describe('vm.callScript', () => {
+  it('能调用顶层 const 声明的函数', async () => {
+    const { callScript } = await import('../src/core/vm.js')
+    const { writeFileSync } = await import('node:fs')
+    const { join } = await import('node:path')
+    const file = join(process.env.CATBUS_HOME!, 'const.js')
+    writeFileSync(file, 'const add = (a, b) => a + b; function mul(a, b) { return a * b }')
+    expect(callScript(file, 'add', [1, 2])).toBe(3)
+    expect(callScript(file, 'mul', [2, 3])).toBe(6)
+    expect(() => callScript(file, 'nope', [])).toThrow(/没有函数/)
+  })
+})
