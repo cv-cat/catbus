@@ -1,0 +1,129 @@
+{
+  "input": {
+    "url": "https://detail.tmall.com/item.htm?id=806319949537&mi_id=0000vtiP2t7OiKuXSFJ6Os3CycYK4LfNyLsSkxffiJKUvKY&skuId=5652727063890&spm=a21bo.jianhua%2Fa.201876.d12.78632a89Xn5WRG&utparam=%7B%22item_ctr%22%3A0.05020460486412048%2C%22x_object_type%22%3A%22item%22%7D&xxc=home_recommend"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://detail.tmall.com/item.htm?id=806319949537&mi_id=0000vtiP2t7OiKuXSFJ6Os3CycYK4LfNyLsSkxffiJKUvKY&skuId=5652727063890&spm=a21bo.jianhua%2Fa.201876.d12.78632a89Xn5WRG&utparam=%7B%22item_ctr%22%3A0.05020460486412048%2C%22x_object_type%22%3A%22item%22%7D&xxc=home_recommend",
+      "headers": [
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "accept-language",
+          "en"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=0, i"
+        ],
+        [
+          "referer",
+          "https://www.taobao.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "document"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "sec-fetch-user",
+          "?1"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "fakecna"
+        ],
+        [
+          "cookie2",
+          "fakecookie2"
+        ],
+        [
+          "t",
+          "faket"
+        ],
+        [
+          "_tb_token_",
+          "faketbtoken"
+        ],
+        [
+          "unb",
+          "2200000001"
+        ],
+        [
+          "_nk_",
+          "tester"
+        ],
+        [
+          "sgcookie",
+          "fakesg"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790003600000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "text/html"
+      },
+      "body": "<html><script>var g_config = {\"sellerNick\":\"\\u6d4b\\u8bd5\\u5356\\u5bb6\",\"shopName\":\"\\u6d4b\\u8bd5\\u5e97\\u94fa\",\"shopUrl\":\"//shop1.taobao.com\",\"userId\":\"2200000999\"};</script><div class=\"shop\" data-encryptuid=\"FAKEENCRYPTUID0001\"></div></html>"
+    }
+  ],
+  "result": {
+    "uid": "2200000999",
+    "encrypt_uid": "FAKEENCRYPTUID0001"
+  },
+  "error": null
+}

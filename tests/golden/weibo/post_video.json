@@ -1,0 +1,819 @@
+{
+  "input": {
+    "text": "视频正文",
+    "visibility": "public",
+    "topic": [
+      "南京"
+    ],
+    "video": {
+      "base64": "AAAAGGZ0eXBtcDQyZmFrZS12aWRlby1mYWtlLXZpZGVvLWZha2UtdmlkZW8tZmFrZS12aWRlby1mYWtlLXZpZGVvLWZha2UtdmlkZW8tZmFrZS12aWRlby1mYWtlLXZpZGVvLWZha2UtdmlkZW8tZmFrZS12aWRlby1mYWtlLXZpZGVvLWZha2UtdmlkZW8tZmFrZS12aWRlby1mYWtlLXZpZGVvLWZha2UtdmlkZW8tZmFrZS12aWRlby1mYWtlLXZpZGVvLWZha2UtdmlkZW8tZmFrZS12aWRlby1mYWtlLXZpZGVvLQ=="
+    }
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://weibo.com/",
+      "headers": [
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=0, i"
+        ],
+        [
+          "referer",
+          "https://weibo.com/tv/home"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not A(Brand\";v=\"8\", \"Chromium\";v=\"132\", \"Google Chrome\";v=\"132\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "document"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "sec-fetch-user",
+          "?1"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "SCF",
+          "fake-scf"
+        ],
+        [
+          "SUB",
+          "_2A25fakeSUB0000"
+        ],
+        [
+          "SUBP",
+          "0033fakeSUBP"
+        ],
+        [
+          "ALF",
+          "02_1790259200"
+        ],
+        [
+          "WBPSESS",
+          "fake-wbpsess=="
+        ],
+        [
+          "XSRF-TOKEN",
+          "fakeXsrfToken0123"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://fileplatform.api.weibo.com/2/fileplatform/init.json?source=339644097&size=232&name=video.mp4&type=video&client=web&session_id=cfca5946a94f8c0cc3c46a9866e827ea",
+      "headers": [
+        [
+          "Accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "Accept-Language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "Cache-Control",
+          "no-cache"
+        ],
+        [
+          "Connection",
+          "keep-alive"
+        ],
+        [
+          "Content-Type",
+          "multipart/mixed; boundary=2067456weiboPro1790000000"
+        ],
+        [
+          "Origin",
+          "https://weibo.com"
+        ],
+        [
+          "Pragma",
+          "no-cache"
+        ],
+        [
+          "Referer",
+          "https://weibo.com/"
+        ],
+        [
+          "Sec-Fetch-Dest",
+          "empty"
+        ],
+        [
+          "Sec-Fetch-Mode",
+          "cors"
+        ],
+        [
+          "Sec-Fetch-Site",
+          "same-site"
+        ],
+        [
+          "User-Agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not A(Brand\";v=\"8\", \"Chromium\";v=\"132\", \"Google Chrome\";v=\"132\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ]
+      ],
+      "cookies": [
+        [
+          "SCF",
+          "fake-scf"
+        ],
+        [
+          "SUB",
+          "_2A25fakeSUB0000"
+        ],
+        [
+          "SUBP",
+          "0033fakeSUBP"
+        ],
+        [
+          "ALF",
+          "02_1790259200"
+        ],
+        [
+          "WBPSESS",
+          "fake-wbpsess=="
+        ],
+        [
+          "XSRF-TOKEN",
+          "fakeXsrfToken0123"
+        ]
+      ],
+      "body": "--2067456weiboPro1790000000\r\nContent-Disposition: form-data; name=\"biz_file\"\r\n\r\n{\"mediaprops\":\"{\\\"screenshot\\\":1}\"}\r\n--2067456weiboPro1790000000--\r\n",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://up.video.weibocdn.com/2/fileplatform/upload.json?source=339644097&upload_id=fake-upload-id&media_id=5078000000000001&upload_protocol=binary&type=video&client=web&check=f1ffee79927d562b70938bda865f4cd6&index=0&size=232&start_loc=0&count=1",
+      "headers": [
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "content-type",
+          "application/octet-stream"
+        ],
+        [
+          "host",
+          "up.video.weibocdn.com"
+        ],
+        [
+          "origin",
+          "https://weibo.com"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "referer",
+          "https://weibo.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not A(Brand\";v=\"8\", \"Chromium\";v=\"132\", \"Google Chrome\";v=\"132\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+        ],
+        [
+          "x-up-auth",
+          "fake-up-auth"
+        ]
+      ],
+      "cookies": [
+        [
+          "SCF",
+          "fake-scf"
+        ],
+        [
+          "SUB",
+          "_2A25fakeSUB0000"
+        ],
+        [
+          "SUBP",
+          "0033fakeSUBP"
+        ],
+        [
+          "ALF",
+          "02_1790259200"
+        ],
+        [
+          "WBPSESS",
+          "fake-wbpsess=="
+        ],
+        [
+          "XSRF-TOKEN",
+          "fakeXsrfToken0123"
+        ]
+      ],
+      "body": "\u0000\u0000\u0000\u0018ftypmp42fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://fileplatform.api.weibo.com/2/fileplatform/check.json",
+      "headers": [
+        [
+          "Accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "Accept-Language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "Cache-Control",
+          "no-cache"
+        ],
+        [
+          "Connection",
+          "keep-alive"
+        ],
+        [
+          "Content-Type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "Origin",
+          "https://weibo.com"
+        ],
+        [
+          "Pragma",
+          "no-cache"
+        ],
+        [
+          "Referer",
+          "https://weibo.com/"
+        ],
+        [
+          "Sec-Fetch-Dest",
+          "empty"
+        ],
+        [
+          "Sec-Fetch-Mode",
+          "cors"
+        ],
+        [
+          "Sec-Fetch-Site",
+          "same-site"
+        ],
+        [
+          "User-Agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+        ],
+        [
+          "X-Up-Auth",
+          "fake-up-auth"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not A(Brand\";v=\"8\", \"Chromium\";v=\"132\", \"Google Chrome\";v=\"132\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ]
+      ],
+      "cookies": [
+        [
+          "SCF",
+          "fake-scf"
+        ],
+        [
+          "SUB",
+          "_2A25fakeSUB0000"
+        ],
+        [
+          "SUBP",
+          "0033fakeSUBP"
+        ],
+        [
+          "ALF",
+          "02_1790259200"
+        ],
+        [
+          "WBPSESS",
+          "fake-wbpsess=="
+        ],
+        [
+          "XSRF-TOKEN",
+          "fakeXsrfToken0123"
+        ]
+      ],
+      "body": "source=339644097&upload_id=fake-upload-id&media_id=5078000000000001&upload_protocol=binary&count=1&action=finish&size=232&client=web&status=",
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://weibo.com/ajax/multimedia/output?source=339644097&ids=5078000000000001&labels=screenshot",
+      "headers": [
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "referer",
+          "https://weibo.com/upload/channel"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not A(Brand\";v=\"8\", \"Chromium\";v=\"132\", \"Google Chrome\";v=\"132\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "SCF",
+          "fake-scf"
+        ],
+        [
+          "SUB",
+          "_2A25fakeSUB0000"
+        ],
+        [
+          "SUBP",
+          "0033fakeSUBP"
+        ],
+        [
+          "ALF",
+          "02_1790259200"
+        ],
+        [
+          "WBPSESS",
+          "fake-wbpsess=="
+        ],
+        [
+          "XSRF-TOKEN",
+          "fakeXsrfToken0123"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://weibo.com/ajax/multimedia/output?source=339644097&ids=5078000000000001&labels=screenshot",
+      "headers": [
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "referer",
+          "https://weibo.com/upload/channel"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not A(Brand\";v=\"8\", \"Chromium\";v=\"132\", \"Google Chrome\";v=\"132\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "SCF",
+          "fake-scf"
+        ],
+        [
+          "SUB",
+          "_2A25fakeSUB0000"
+        ],
+        [
+          "SUBP",
+          "0033fakeSUBP"
+        ],
+        [
+          "ALF",
+          "02_1790259200"
+        ],
+        [
+          "WBPSESS",
+          "fake-wbpsess=="
+        ],
+        [
+          "XSRF-TOKEN",
+          "fakeXsrfToken0123"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://weibo.com/ajax/statuses/update",
+      "headers": [
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "client-version",
+          "v2.47.25"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "origin",
+          "https://weibo.com"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "referer",
+          "https://weibo.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not A(Brand\";v=\"8\", \"Chromium\";v=\"132\", \"Google Chrome\";v=\"132\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "server-version",
+          "v2025.01.23.1"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+        ],
+        [
+          "x-requested-with",
+          "XMLHttpRequest"
+        ]
+      ],
+      "cookies": [
+        [
+          "SCF",
+          "fake-scf"
+        ],
+        [
+          "SUB",
+          "_2A25fakeSUB0000"
+        ],
+        [
+          "SUBP",
+          "0033fakeSUBP"
+        ],
+        [
+          "ALF",
+          "02_1790259200"
+        ],
+        [
+          "WBPSESS",
+          "fake-wbpsess=="
+        ],
+        [
+          "XSRF-TOKEN",
+          "fakeXsrfToken0123"
+        ]
+      ],
+      "body": "content=%E8%A7%86%E9%A2%91%E6%AD%A3%E6%96%87+%23%E5%8D%97%E4%BA%AC%23+&visible=0&vote=&media=%7B%22titles%22%3A+%5B%7B%22title%22%3A+%22%22%2C+%22default%22%3A+%22true%22%7D%5D%2C+%22covers%22%3A+%5B%7B%22url%22%3A+%22%22%7D%5D%2C+%22free_duration%22%3A+%7B%22start%22%3A+0%2C+%22end%22%3A+30%7D%2C+%22type%22%3A+%22video%22%2C+%22media_id%22%3A+%225078000000000001%22%2C+%22resource%22%3A+%7B%22video_down%22%3A+1%7D%2C+%22homemade%22%3A+%7B%22channel_ids%22%3A+%5B%22%22%5D%2C+%22type%22%3A+0%7D%2C+%22approval_reprint%22%3A+%221%22%7D",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "text/html; charset=utf-8"
+      },
+      "body": "<!DOCTYPE html><html><head><script>try{window.$CONFIG = {\"user\": {\"id\": 10001, \"screen_name\": \"测试昵称\", \"watermark\": {\"nick\": \"测试昵称\"}}};}catch(e){window.$CONFIG = {};}</script></head><body></body></html>"
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "upload_id": "fake-upload-id",
+        "media_id": "5078000000000001",
+        "auth": "fake-up-auth",
+        "strategy": {
+          "chunk_size": 10240
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": true
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": true,
+        "media_id": "5078000000000001"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "ok": 1,
+        "data": {}
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "ok": 1,
+        "data": {
+          "5078000000000001": {
+            "screenshot": []
+          }
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "ok": 1,
+        "data": {
+          "idstr": "5079000000000001",
+          "mid": "5079000000000001",
+          "mblogid": "OwfakeBid",
+          "created_at": "Sat Sep 26 14:08:46 +0800 2026",
+          "text_raw": "测试 & 正文 #雀魂#",
+          "user": {
+            "id": 10001,
+            "idstr": "10001",
+            "screen_name": "测试昵称"
+          },
+          "reposts_count": 0,
+          "comments_count": 0,
+          "attitudes_count": 0,
+          "visible": {
+            "type": 1,
+            "list_id": 0
+          },
+          "pic_ids": [
+            "fakepid1"
+          ],
+          "pic_num": 1,
+          "pic_infos": {
+            "fakepid1": {
+              "pic_id": "fakepid1",
+              "largest": {
+                "url": "https://wx1.sinaimg.cn/large/fakepid1.jpg",
+                "width": 100,
+                "height": 80
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "result": {
+    "ok": 1,
+    "data": {
+      "idstr": "5079000000000001",
+      "mid": "5079000000000001",
+      "mblogid": "OwfakeBid",
+      "created_at": "Sat Sep 26 14:08:46 +0800 2026",
+      "text_raw": "测试 & 正文 #雀魂#",
+      "user": {
+        "id": 10001,
+        "idstr": "10001",
+        "screen_name": "测试昵称"
+      },
+      "reposts_count": 0,
+      "comments_count": 0,
+      "attitudes_count": 0,
+      "visible": {
+        "type": 1,
+        "list_id": 0
+      },
+      "pic_ids": [
+        "fakepid1"
+      ],
+      "pic_num": 1,
+      "pic_infos": {
+        "fakepid1": {
+          "pic_id": "fakepid1",
+          "largest": {
+            "url": "https://wx1.sinaimg.cn/large/fakepid1.jpg",
+            "width": 100,
+            "height": 80
+          }
+        }
+      }
+    }
+  },
+  "error": null
+}

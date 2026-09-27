@@ -1,0 +1,160 @@
+{
+  "input": {
+    "filename": "1.png",
+    "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://stream-upload.taobao.com/api/upload.api?appkey=ampmedia&folderId=0&_input_charset=utf-8&useGtrSessionFilter=false",
+      "headers": [
+        [
+          "Accept",
+          "*/*"
+        ],
+        [
+          "Accept-Language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "Cache-Control",
+          "no-cache"
+        ],
+        [
+          "Connection",
+          "keep-alive"
+        ],
+        [
+          "Origin",
+          "https://market.m.taobao.com"
+        ],
+        [
+          "Pragma",
+          "no-cache"
+        ],
+        [
+          "Referer",
+          "https://market.m.taobao.com/"
+        ],
+        [
+          "Sec-Fetch-Dest",
+          "empty"
+        ],
+        [
+          "Sec-Fetch-Mode",
+          "cors"
+        ],
+        [
+          "Sec-Fetch-Site",
+          "same-site"
+        ],
+        [
+          "User-Agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "fakecna"
+        ],
+        [
+          "cookie2",
+          "fakecookie2"
+        ],
+        [
+          "t",
+          "faket"
+        ],
+        [
+          "_tb_token_",
+          "faketbtoken"
+        ],
+        [
+          "unb",
+          "2200000001"
+        ],
+        [
+          "_nk_",
+          "tester"
+        ],
+        [
+          "sgcookie",
+          "fakesg"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790003600000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc"
+        ]
+      ],
+      "body": null,
+      "multipart": [
+        {
+          "name": "name",
+          "filename": null,
+          "contentType": null,
+          "data": "1.png"
+        },
+        {
+          "name": "ua",
+          "filename": null,
+          "contentType": null,
+          "data": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        },
+        {
+          "name": "file",
+          "filename": "1.png",
+          "contentType": "image/png",
+          "data": {
+            "base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+          }
+        }
+      ]
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "success": true,
+        "status": 0,
+        "object": {
+          "fileId": 12345678901,
+          "url": "https://img.alicdn.com/imgextra/fake.png",
+          "size": 68,
+          "pix": "100x80"
+        }
+      }
+    }
+  ],
+  "result": {
+    "success": true,
+    "status": 0,
+    "object": {
+      "fileId": 12345678901,
+      "url": "https://img.alicdn.com/imgextra/fake.png",
+      "size": 68,
+      "pix": "100x80"
+    }
+  },
+  "error": null
+}

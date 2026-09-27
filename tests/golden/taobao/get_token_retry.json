@@ -1,0 +1,170 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://h5api.m.taobao.com/h5/mtop.taobao.login.token.get.h5/2.0/?jsv=2.7.0&appKey=12574478&t=1790000000000&sign=91805125db1d0f10de5d80d436ddea74&api=mtop.taobao.login.token.get.h5&v=2.0&preventFallback=true&type=jsonp&dataType=jsonp&callback=mtopjsonp3&data=%7B%22domain%22%3A%22cntaobao%22%2C%22deviceId%22%3A%2295416BBF521541C3B3B2B52001DC30E7-1790000000123%22%2C%22locale%22%3A%22zh_CN%22%2C%22imAppKey%22%3A%223ce2dacdc7c0c43ad7bc7f9bc7d7a1b8%22%7D",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "referer",
+          "https://market.m.taobao.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "script"
+        ],
+        [
+          "sec-fetch-mode",
+          "no-cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "oldenc"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://h5api.m.taobao.com/h5/mtop.taobao.login.token.get.h5/2.0/?jsv=2.7.0&appKey=12574478&t=1790000000000&sign=0e36ae7824731452969a01c3b284fab2&api=mtop.taobao.login.token.get.h5&v=2.0&preventFallback=true&type=jsonp&dataType=jsonp&callback=mtopjsonp3&data=%7B%22domain%22%3A%22cntaobao%22%2C%22deviceId%22%3A%2295416BBF521541C3B3B2B52001DC30E7-1790000000123%22%2C%22locale%22%3A%22zh_CN%22%2C%22imAppKey%22%3A%223ce2dacdc7c0c43ad7bc7f9bc7d7a1b8%22%7D",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "referer",
+          "https://market.m.taobao.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "script"
+        ],
+        [
+          "sec-fetch-mode",
+          "no-cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "_m_h5_tk",
+          "fedcba9876543210fedcba9876543210_1790007200000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "newenc"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [
+          "_m_h5_tk=fedcba9876543210fedcba9876543210_1790007200000;Path=/;Domain=taobao.com;Max-Age=86400",
+          "_m_h5_tk_enc=newenc;Path=/;Domain=taobao.com;Max-Age=86400"
+        ]
+      },
+      "body": " mtopjsonp3({\"api\":\"mtop.taobao.login.token.get.h5\",\"data\":{},\"ret\":[\"FAIL_SYS_TOKEN_EXOIRED::令牌过期\"],\"v\":\"2.0\"})"
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": " mtopjsonp3({\"api\":\"mtop.taobao.login.token.get.h5\",\"data\":{\"result\":{\"accessToken\":\"fake-access-token\",\"refreshToken\":\"fake-refresh\"}},\"ret\":[\"SUCCESS::调用成功\"],\"v\":\"2.0\"})"
+    }
+  ],
+  "result": {
+    "api": "mtop.taobao.login.token.get.h5",
+    "data": {
+      "result": {
+        "accessToken": "fake-access-token",
+        "refreshToken": "fake-refresh"
+      }
+    },
+    "ret": [
+      "SUCCESS::调用成功"
+    ],
+    "v": "2.0"
+  },
+  "error": null
+}

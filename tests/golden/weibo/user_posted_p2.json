@@ -1,0 +1,208 @@
+{
+  "input": {
+    "uid": "1669879400",
+    "page": "2",
+    "since_id": "4937540924966431kp2"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://weibo.com/ajax/statuses/mymblog?uid=1669879400&page=2&feature=0&since_id=4937540924966431kp2",
+      "headers": [
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "client-version",
+          "v2.46.7"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "referer",
+          "https://weibo.com/u/5266778656"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"128\", \"Not;A=Brand\";v=\"24\", \"Microsoft Edge\";v=\"128\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "server-version",
+          "v2024.08.30.1"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0"
+        ],
+        [
+          "x-requested-with",
+          "XMLHttpRequest"
+        ],
+        [
+          "x-xsrf-token",
+          "fakeXsrfToken0123"
+        ]
+      ],
+      "cookies": [
+        [
+          "SCF",
+          "fake-scf"
+        ],
+        [
+          "SUB",
+          "_2A25fakeSUB0000"
+        ],
+        [
+          "SUBP",
+          "0033fakeSUBP"
+        ],
+        [
+          "ALF",
+          "02_1790259200"
+        ],
+        [
+          "WBPSESS",
+          "fake-wbpsess=="
+        ],
+        [
+          "XSRF-TOKEN",
+          "fakeXsrfToken0123"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "ok": 1,
+        "data": {
+          "since_id": "4937540924966431kp2",
+          "list": [
+            {
+              "idstr": "5079000000000001",
+              "mid": "5079000000000001",
+              "mblogid": "OwfakeBid",
+              "created_at": "Sat Sep 26 14:08:46 +0800 2026",
+              "text_raw": "测试 & 正文 #雀魂#",
+              "user": {
+                "id": 10001,
+                "idstr": "10001",
+                "screen_name": "测试昵称"
+              },
+              "reposts_count": 0,
+              "comments_count": 0,
+              "attitudes_count": 0,
+              "visible": {
+                "type": 1,
+                "list_id": 0
+              },
+              "pic_ids": [
+                "fakepid1"
+              ],
+              "pic_num": 1,
+              "pic_infos": {
+                "fakepid1": {
+                  "pic_id": "fakepid1",
+                  "largest": {
+                    "url": "https://wx1.sinaimg.cn/large/fakepid1.jpg",
+                    "width": 100,
+                    "height": 80
+                  }
+                }
+              }
+            }
+          ],
+          "total": 1931
+        }
+      }
+    }
+  ],
+  "result": [
+    true,
+    "成功",
+    {
+      "ok": 1,
+      "data": {
+        "since_id": "4937540924966431kp2",
+        "list": [
+          {
+            "idstr": "5079000000000001",
+            "mid": "5079000000000001",
+            "mblogid": "OwfakeBid",
+            "created_at": "Sat Sep 26 14:08:46 +0800 2026",
+            "text_raw": "测试 & 正文 #雀魂#",
+            "user": {
+              "id": 10001,
+              "idstr": "10001",
+              "screen_name": "测试昵称"
+            },
+            "reposts_count": 0,
+            "comments_count": 0,
+            "attitudes_count": 0,
+            "visible": {
+              "type": 1,
+              "list_id": 0
+            },
+            "pic_ids": [
+              "fakepid1"
+            ],
+            "pic_num": 1,
+            "pic_infos": {
+              "fakepid1": {
+                "pic_id": "fakepid1",
+                "largest": {
+                  "url": "https://wx1.sinaimg.cn/large/fakepid1.jpg",
+                  "width": 100,
+                  "height": 80
+                }
+              }
+            }
+          }
+        ],
+        "total": 1931
+      }
+    }
+  ],
+  "error": null
+}

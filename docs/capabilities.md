@@ -68,6 +68,7 @@
 | item delete | ○ | ○ | ○ | ✓ | ○ | ○ | ○ | — | — | ✓ |
 | item categories | — | — | — | ✓ | — | — | ○ | — | — | — |
 
+- weibo `item search`：只能取第一页
 - `item search --sort` 取值：bilibili general / views / latest / collects
 
 ## product 与商品评价
@@ -92,6 +93,7 @@
 
 - xhs `comment list`：--product 规划中
 - kuaishou `comment list`：--product 规划中
+- weibo `comment list`：只有一级评论
 - `comment list --product`：xhs、douyin、tiktok、kuaishou
 
 ## feed 与 keyword

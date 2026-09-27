@@ -1,0 +1,122 @@
+{
+  "input": {
+    "size": 232
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://fileplatform.api.weibo.com/2/fileplatform/check.json",
+      "headers": [
+        [
+          "Accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "Accept-Language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "Cache-Control",
+          "no-cache"
+        ],
+        [
+          "Connection",
+          "keep-alive"
+        ],
+        [
+          "Content-Type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "Origin",
+          "https://weibo.com"
+        ],
+        [
+          "Pragma",
+          "no-cache"
+        ],
+        [
+          "Referer",
+          "https://weibo.com/"
+        ],
+        [
+          "Sec-Fetch-Dest",
+          "empty"
+        ],
+        [
+          "Sec-Fetch-Mode",
+          "cors"
+        ],
+        [
+          "Sec-Fetch-Site",
+          "same-site"
+        ],
+        [
+          "User-Agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+        ],
+        [
+          "X-Up-Auth",
+          "fake-up-auth"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not A(Brand\";v=\"8\", \"Chromium\";v=\"132\", \"Google Chrome\";v=\"132\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ]
+      ],
+      "cookies": [
+        [
+          "SCF",
+          "fake-scf"
+        ],
+        [
+          "SUB",
+          "_2A25fakeSUB0000"
+        ],
+        [
+          "SUBP",
+          "0033fakeSUBP"
+        ],
+        [
+          "ALF",
+          "02_1790259200"
+        ],
+        [
+          "WBPSESS",
+          "fake-wbpsess=="
+        ],
+        [
+          "XSRF-TOKEN",
+          "fakeXsrfToken0123"
+        ]
+      ],
+      "body": "source=339644097&upload_id=fake-upload-id&media_id=5078000000000001&upload_protocol=binary&count=1&action=finish&size=232&client=web&status=",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": true,
+        "media_id": "5078000000000001"
+      }
+    }
+  ],
+  "result": {
+    "result": true,
+    "media_id": "5078000000000001"
+  },
+  "error": null
+}

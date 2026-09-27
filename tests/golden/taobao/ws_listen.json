@@ -1,0 +1,224 @@
+{
+  "input": {
+    "pushes": [
+      "gQGIAYEBszIyMDAwMDA5OTlAY250YW9iYW8C2gAoMjIwMDAwMDAwMS4xLTIyMDAwMDA5OTkuMSMxMTAwMUBjbnRhb2JhbwOxMzQwMDAwMDAwMDAwMS5QTk0EAAXPAAABoMRQbisGggEBAoEBtei/meS4qui/mOaciei0p+WQl++8nwcBCoGrc2VuZGVyX25pY2u0Y250YW9iYW/mtYvor5XljZblrrY=",
+      "gQGIAYEBszIyMDAwMDAwMDFAY250YW9iYW8C2gAoMjIwMDAwMDAwMS4xLTIyMDAwMDA5OTkuMSMxMTAwMUBjbnRhb2JhbwOxMzQwMDAwMDAwMDAwMi5QTk0EAAXPAAABoMRQbisGggEBAoEBrOiHquW3seWPkeeahAcBCoGrc2VuZGVyX25pY2uuY250YW9iYW90ZXN0ZXI="
+    ]
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://h5api.m.taobao.com/h5/mtop.taobao.login.token.get.h5/2.0/?jsv=2.7.0&appKey=12574478&t=1790000000000&sign=91805125db1d0f10de5d80d436ddea74&api=mtop.taobao.login.token.get.h5&v=2.0&preventFallback=true&type=jsonp&dataType=jsonp&callback=mtopjsonp3&data=%7B%22domain%22%3A%22cntaobao%22%2C%22deviceId%22%3A%2295416BBF521541C3B3B2B52001DC30E7-1790000000123%22%2C%22locale%22%3A%22zh_CN%22%2C%22imAppKey%22%3A%223ce2dacdc7c0c43ad7bc7f9bc7d7a1b8%22%7D",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "referer",
+          "https://market.m.taobao.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "script"
+        ],
+        [
+          "sec-fetch-mode",
+          "no-cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "fakecna"
+        ],
+        [
+          "cookie2",
+          "fakecookie2"
+        ],
+        [
+          "t",
+          "faket"
+        ],
+        [
+          "_tb_token_",
+          "faketbtoken"
+        ],
+        [
+          "unb",
+          "2200000001"
+        ],
+        [
+          "_nk_",
+          "tester"
+        ],
+        [
+          "sgcookie",
+          "fakesg"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790003600000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": " mtopjsonp3({\"api\":\"mtop.taobao.login.token.get.h5\",\"data\":{\"result\":{\"accessToken\":\"fake-access-token\",\"refreshToken\":\"fake-refresh\"}},\"ret\":[\"SUCCESS::调用成功\"],\"v\":\"2.0\"})"
+    }
+  ],
+  "result": {
+    "url": "wss://wss-cntaobao.dingtalk.com/",
+    "headers": [
+      [
+        "Cookie",
+        "cna=fakecna; cookie2=fakecookie2; t=faket; _tb_token_=faketbtoken; unb=2200000001; _nk_=tester; sgcookie=fakesg; _m_h5_tk=0123456789abcdef0123456789abcdef_1790003600000; _m_h5_tk_enc=fakeenc"
+      ],
+      [
+        "Host",
+        "wss-cntaobao.dingtalk.com"
+      ],
+      [
+        "Connection",
+        "Upgrade"
+      ],
+      [
+        "Pragma",
+        "no-cache"
+      ],
+      [
+        "Cache-Control",
+        "no-cache"
+      ],
+      [
+        "User-Agent",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+      ],
+      [
+        "Origin",
+        "https://www.cntaobao.com"
+      ],
+      [
+        "Accept-Encoding",
+        "gzip, deflate, br, zstd"
+      ],
+      [
+        "Accept-Language",
+        "zh-CN,zh;q=0.9"
+      ]
+    ],
+    "sent": [
+      "{\"lwp\": \"/reg\", \"headers\": {\"cache-header\": \"app-key token ua wv\", \"app-key\": \"3ce2dacdc7c0c43ad7bc7f9bc7d7a1b8\", \"token\": \"fake-access-token\", \"ua\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 DingTalk(2.1.5) OS(Windows/10) Browser(Chrome/146.0.0.0) DingWeb/2.1.5 IMPaaS DingWeb/2.1.5\", \"dt\": \"j\", \"wv\": \"im:3,au:3,sy:6\", \"sync\": \"0,0;0;0;\", \"did\": \"95416BBF521541C3B3B2B52001DC30E7-1790000000123\", \"mid\": \"5811790000000123 0\"}}",
+      "{\"lwp\": \"/r/SyncStatus/ackDiff\", \"headers\": {\"mid\": \"5811790000000123 0\"}, \"body\": [{\"pipeline\": \"sync\", \"tooLong2Tag\": \"PNM,1\", \"channel\": \"sync\", \"topic\": \"sync\", \"highPts\": 0, \"pts\": 1790000000123000, \"seq\": 0, \"timestamp\": 1790000000123}]}",
+      "{\"lwp\": \"/!\", \"headers\": {\"mid\": \"5811790000000123 0\"}}",
+      "{\"code\": 200, \"headers\": {\"mid\": \"status-mid\", \"sid\": \"s0\"}}",
+      "{\"code\": 200, \"headers\": {\"mid\": \"push-0\", \"sid\": \"s1\", \"app-key\": \"k\", \"ua\": \"u\", \"dt\": \"j\"}}",
+      "{\"lwp\": \"/r/MessageSend/sendByReceiverScope\", \"headers\": {\"mid\": \"5811790000000123 0\"}, \"body\": [{\"cid\": \"2200000001.1-2200000999.1#11001@cntaobao\", \"uuid\": \"_s_1790000000123_1\", \"conversationType\": 1, \"redPointPolicy\": 0, \"extension\": {\"senderBizDomain\": \"taobao\", \"receiverBizDomain\": \"taobao\", \"sender_nick\": \"cntaobaotester\"}, \"content\": {\"contentType\": 1, \"text\": {\"extension\": {\"sender_nick\": \"cntaobaotester\"}, \"content\": \"cntaobao\\u6d4b\\u8bd5\\u5356\\u5bb6 \\u8bf4\\u4e86: \\u8fd9\\u4e2a\\u8fd8\\u6709\\u8d27\\u5417\\uff1f\"}}, \"ctx\": {\"senderBizDomain\": \"taobao\", \"receiverBizDomain\": \"taobao\"}}, {\"actualReceivers\": [\"2200000001@cntaobao\", \"2200000999@cntaobao\"]}]}",
+      "{\"code\": 200, \"headers\": {\"mid\": \"push-1\", \"sid\": \"s2\"}}"
+    ],
+    "server": [
+      {
+        "after": 3,
+        "data": "{\"lwp\": \"/s/para\", \"headers\": {\"mid\": \"status-mid\", \"sid\": \"s0\"}, \"body\": {\"syncPushPackage\": {\"data\": [{\"data\": \"{\\\"redReminder\\\":\\\"x\\\"}\"}]}}}"
+      },
+      {
+        "after": 4,
+        "data": "{\"lwp\": \"/s/para\", \"headers\": {\"mid\": \"push-0\", \"sid\": \"s1\", \"app-key\": \"k\", \"ua\": \"u\", \"dt\": \"j\"}, \"body\": {\"syncPushPackage\": {\"data\": [{\"data\": \"gQGIAYEBszIyMDAwMDA5OTlAY250YW9iYW8C2gAoMjIwMDAwMDAwMS4xLTIyMDAwMDA5OTkuMSMxMTAwMUBjbnRhb2JhbwOxMzQwMDAwMDAwMDAwMS5QTk0EAAXPAAABoMRQbisGggEBAoEBtei/meS4qui/mOaciei0p+WQl++8nwcBCoGrc2VuZGVyX25pY2u0Y250YW9iYW/mtYvor5XljZblrrY=\"}]}}}"
+      },
+      {
+        "after": 6,
+        "data": "{\"lwp\": \"/s/para\", \"headers\": {\"mid\": \"push-1\", \"sid\": \"s2\"}, \"body\": {\"syncPushPackage\": {\"data\": [{\"data\": \"gQGIAYEBszIyMDAwMDAwMDFAY250YW9iYW8C2gAoMjIwMDAwMDAwMS4xLTIyMDAwMDA5OTkuMSMxMTAwMUBjbnRhb2JhbwOxMzQwMDAwMDAwMDAwMi5QTk0EAAXPAAABoMRQbisGggEBAoEBrOiHquW3seWPkeeahAcBCoGrc2VuZGVyX25pY2uuY250YW9iYW90ZXN0ZXI=\"}]}}}"
+      }
+    ],
+    "result": {
+      "decoded": [
+        {
+          "1": {
+            "1": {
+              "1": "2200000999@cntaobao"
+            },
+            "2": "2200000001.1-2200000999.1#11001@cntaobao",
+            "3": "3400000000001.PNM",
+            "4": 0,
+            "5": "1790000000555",
+            "6": {
+              "1": 1,
+              "2": {
+                "1": "这个还有货吗？"
+              }
+            },
+            "7": 1,
+            "10": {
+              "sender_nick": "cntaobao测试卖家"
+            }
+          }
+        },
+        {
+          "1": {
+            "1": {
+              "1": "2200000001@cntaobao"
+            },
+            "2": "2200000001.1-2200000999.1#11001@cntaobao",
+            "3": "3400000000002.PNM",
+            "4": 0,
+            "5": "1790000000555",
+            "6": {
+              "1": 1,
+              "2": {
+                "1": "自己发的"
+              }
+            },
+            "7": 1,
+            "10": {
+              "sender_nick": "cntaobaotester"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "error": null
+}

@@ -70,7 +70,8 @@ export class CookieJar {
     const host = new URL(url).hostname
     for (const header of headers) {
       const parsed = parseSetCookie(header, host)
-      if (!parsed) continue
+      // Domain 属性必须覆盖当前主机（RFC 6265 5.3），否则丢弃
+      if (!parsed || !domainMatch(host, parsed.domain)) continue
       const { name, value, domain, path, expires } = parsed
       if (expires != null && expires <= nowSeconds()) {
         const i = this.cookies.findIndex((c) => c.name === name && c.domain === domain && c.path === path)

@@ -1,0 +1,222 @@
+{
+  "input": {
+    "query": "猫",
+    "page": 2
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://m.weibo.cn/api/container/getIndex?containerid=100103type%3D1%26q%3D%E7%8C%AB&page_type=searchall&page=2",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "X-XSRF-TOKEN",
+          "a1d843"
+        ],
+        [
+          "Referer",
+          "https://m.weibo.cn/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"130\", \"Microsoft Edge\";v=\"130\", \"Not?A_Brand\";v=\"99\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "MWeibo-Pwa",
+          "1"
+        ],
+        [
+          "X-Requested-With",
+          "XMLHttpRequest"
+        ],
+        [
+          "User-Agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0"
+        ],
+        [
+          "Accept",
+          "application/json, text/plain, */*"
+        ]
+      ],
+      "cookies": [],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "ok": 1,
+        "data": {
+          "cardlistInfo": {
+            "page": 2,
+            "total": 1000
+          },
+          "cards": [
+            {
+              "card_type": 9,
+              "mblog": {
+                "id": "5073209014095008",
+                "mid": "5073209014095008",
+                "bid": "OuIv3hbiw",
+                "created_at": "Fri Aug 30 23:12:27 +0800 2024",
+                "text": "好艰难呐~<br />第二行 <span class=\"url-icon\"><img alt=\"[老师好]\" src=\"https://face.t.sinajs.cn/x.png\" /></span> &amp; 结束",
+                "user": {
+                  "id": 5266778656,
+                  "screen_name": "雪菜"
+                },
+                "reposts_count": 1,
+                "comments_count": 10,
+                "attitudes_count": 8,
+                "pic_num": 1,
+                "pics": [
+                  {
+                    "pid": "fakepid0",
+                    "url": "https://wx4.sinaimg.cn/orj360/fakepid0.jpg",
+                    "large": {
+                      "url": "https://wx4.sinaimg.cn/mw2000/fakepid0.jpg",
+                      "geo": {
+                        "width": "1079",
+                        "height": "442"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "card_type": 11,
+              "card_group": [
+                {
+                  "card_type": 9,
+                  "mblog": {
+                    "id": "5073209014095009",
+                    "mid": "5073209014095009",
+                    "bid": "OuIv3hbiX",
+                    "created_at": "Fri Aug 30 23:12:27 +0800 2024",
+                    "text": "好艰难呐~<br />第二行 <span class=\"url-icon\"><img alt=\"[老师好]\" src=\"https://face.t.sinajs.cn/x.png\" /></span> &amp; 结束",
+                    "user": {
+                      "id": 5266778656,
+                      "screen_name": "雪菜"
+                    },
+                    "reposts_count": 1,
+                    "comments_count": 10,
+                    "attitudes_count": 8,
+                    "pic_num": 1,
+                    "pics": [
+                      {
+                        "pid": "fakepid0",
+                        "url": "https://wx4.sinaimg.cn/orj360/fakepid0.jpg",
+                        "large": {
+                          "url": "https://wx4.sinaimg.cn/mw2000/fakepid0.jpg",
+                          "geo": {
+                            "width": "1079",
+                            "height": "442"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "result": [
+    true,
+    "成功",
+    {
+      "ok": 1,
+      "data": {
+        "cardlistInfo": {
+          "page": 2,
+          "total": 1000
+        },
+        "cards": [
+          {
+            "card_type": 9,
+            "mblog": {
+              "id": "5073209014095008",
+              "mid": "5073209014095008",
+              "bid": "OuIv3hbiw",
+              "created_at": "Fri Aug 30 23:12:27 +0800 2024",
+              "text": "好艰难呐~<br />第二行 <span class=\"url-icon\"><img alt=\"[老师好]\" src=\"https://face.t.sinajs.cn/x.png\" /></span> &amp; 结束",
+              "user": {
+                "id": 5266778656,
+                "screen_name": "雪菜"
+              },
+              "reposts_count": 1,
+              "comments_count": 10,
+              "attitudes_count": 8,
+              "pic_num": 1,
+              "pics": [
+                {
+                  "pid": "fakepid0",
+                  "url": "https://wx4.sinaimg.cn/orj360/fakepid0.jpg",
+                  "large": {
+                    "url": "https://wx4.sinaimg.cn/mw2000/fakepid0.jpg",
+                    "geo": {
+                      "width": "1079",
+                      "height": "442"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "card_type": 11,
+            "card_group": [
+              {
+                "card_type": 9,
+                "mblog": {
+                  "id": "5073209014095009",
+                  "mid": "5073209014095009",
+                  "bid": "OuIv3hbiX",
+                  "created_at": "Fri Aug 30 23:12:27 +0800 2024",
+                  "text": "好艰难呐~<br />第二行 <span class=\"url-icon\"><img alt=\"[老师好]\" src=\"https://face.t.sinajs.cn/x.png\" /></span> &amp; 结束",
+                  "user": {
+                    "id": 5266778656,
+                    "screen_name": "雪菜"
+                  },
+                  "reposts_count": 1,
+                  "comments_count": 10,
+                  "attitudes_count": 8,
+                  "pic_num": 1,
+                  "pics": [
+                    {
+                      "pid": "fakepid0",
+                      "url": "https://wx4.sinaimg.cn/orj360/fakepid0.jpg",
+                      "large": {
+                        "url": "https://wx4.sinaimg.cn/mw2000/fakepid0.jpg",
+                        "geo": {
+                          "width": "1079",
+                          "height": "442"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "error": null
+}

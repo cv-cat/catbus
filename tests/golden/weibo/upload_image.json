@@ -1,0 +1,132 @@
+{
+  "input": {
+    "uid": "10001",
+    "nick": "测试昵称",
+    "image": {
+      "base64": "/9j/4AABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v9mYWtlLWpwZWctMQ=="
+    }
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://picupload.weibo.com/interface/upload.php?file_source=1&cs=538125916&ent=miniblog&appid=339644097&uid=10001&raw_md5=aacd151d6d71f554d2b8dda54898b946&ori=1&mpos=1&nick=%E6%B5%8B%E8%AF%95%E6%98%B5%E7%A7%B0&pri=0&request_id=1790000000123&file_size=271",
+      "headers": [
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "content-type",
+          "application/octet-stream"
+        ],
+        [
+          "origin",
+          "https://weibo.com"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "referer",
+          "https://weibo.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not A(Brand\";v=\"8\", \"Chromium\";v=\"132\", \"Google Chrome\";v=\"132\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "SCF",
+          "fake-scf"
+        ],
+        [
+          "SUB",
+          "_2A25fakeSUB0000"
+        ],
+        [
+          "SUBP",
+          "0033fakeSUBP"
+        ],
+        [
+          "ALF",
+          "02_1790259200"
+        ],
+        [
+          "WBPSESS",
+          "fake-wbpsess=="
+        ],
+        [
+          "XSRF-TOKEN",
+          "fakeXsrfToken0123"
+        ]
+      ],
+      "body": {
+        "base64": "/9j/4AABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v9mYWtlLWpwZWctMQ=="
+      },
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "ret": true,
+        "pic": {
+          "pid": "fakepid1",
+          "width": 100,
+          "height": 80
+        }
+      }
+    }
+  ],
+  "result": {
+    "ret": true,
+    "pic": {
+      "pid": "fakepid1",
+      "width": 100,
+      "height": 80
+    }
+  },
+  "error": null
+}

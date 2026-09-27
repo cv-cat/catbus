@@ -1,0 +1,130 @@
+{
+  "input": {
+    "video": {
+      "base64": "AAAAGGZ0eXBtcDQyZmFrZS12aWRlby1mYWtlLXZpZGVvLWZha2UtdmlkZW8tZmFrZS12aWRlby1mYWtlLXZpZGVvLWZha2UtdmlkZW8tZmFrZS12aWRlby1mYWtlLXZpZGVvLWZha2UtdmlkZW8tZmFrZS12aWRlby1mYWtlLXZpZGVvLWZha2UtdmlkZW8tZmFrZS12aWRlby1mYWtlLXZpZGVvLWZha2UtdmlkZW8tZmFrZS12aWRlby1mYWtlLXZpZGVvLWZha2UtdmlkZW8tZmFrZS12aWRlby1mYWtlLXZpZGVvLQ=="
+    }
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://up.video.weibocdn.com/2/fileplatform/upload.json?source=339644097&upload_id=fake-upload-id&media_id=5078000000000001&upload_protocol=binary&type=video&client=web&check=f1ffee79927d562b70938bda865f4cd6&index=0&size=232&start_loc=0&count=1",
+      "headers": [
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "content-type",
+          "application/octet-stream"
+        ],
+        [
+          "host",
+          "up.video.weibocdn.com"
+        ],
+        [
+          "origin",
+          "https://weibo.com"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "referer",
+          "https://weibo.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not A(Brand\";v=\"8\", \"Chromium\";v=\"132\", \"Google Chrome\";v=\"132\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+        ],
+        [
+          "x-up-auth",
+          "fake-up-auth"
+        ]
+      ],
+      "cookies": [
+        [
+          "SCF",
+          "fake-scf"
+        ],
+        [
+          "SUB",
+          "_2A25fakeSUB0000"
+        ],
+        [
+          "SUBP",
+          "0033fakeSUBP"
+        ],
+        [
+          "ALF",
+          "02_1790259200"
+        ],
+        [
+          "WBPSESS",
+          "fake-wbpsess=="
+        ],
+        [
+          "XSRF-TOKEN",
+          "fakeXsrfToken0123"
+        ]
+      ],
+      "body": "\u0000\u0000\u0000\u0018ftypmp42fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-fake-video-",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": true
+      }
+    }
+  ],
+  "result": {
+    "result": true
+  },
+  "error": null
+}

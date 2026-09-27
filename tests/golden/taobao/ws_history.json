@@ -1,0 +1,188 @@
+{
+  "input": {
+    "cid": "2200000001.1-2200000999.1#11001"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://h5api.m.taobao.com/h5/mtop.taobao.login.token.get.h5/2.0/?jsv=2.7.0&appKey=12574478&t=1790000000000&sign=91805125db1d0f10de5d80d436ddea74&api=mtop.taobao.login.token.get.h5&v=2.0&preventFallback=true&type=jsonp&dataType=jsonp&callback=mtopjsonp3&data=%7B%22domain%22%3A%22cntaobao%22%2C%22deviceId%22%3A%2295416BBF521541C3B3B2B52001DC30E7-1790000000123%22%2C%22locale%22%3A%22zh_CN%22%2C%22imAppKey%22%3A%223ce2dacdc7c0c43ad7bc7f9bc7d7a1b8%22%7D",
+      "headers": [
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "referer",
+          "https://market.m.taobao.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "script"
+        ],
+        [
+          "sec-fetch-mode",
+          "no-cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "fakecna"
+        ],
+        [
+          "cookie2",
+          "fakecookie2"
+        ],
+        [
+          "t",
+          "faket"
+        ],
+        [
+          "_tb_token_",
+          "faketbtoken"
+        ],
+        [
+          "unb",
+          "2200000001"
+        ],
+        [
+          "_nk_",
+          "tester"
+        ],
+        [
+          "sgcookie",
+          "fakesg"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790003600000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": " mtopjsonp3({\"api\":\"mtop.taobao.login.token.get.h5\",\"data\":{\"result\":{\"accessToken\":\"fake-access-token\",\"refreshToken\":\"fake-refresh\"}},\"ret\":[\"SUCCESS::调用成功\"],\"v\":\"2.0\"})"
+    }
+  ],
+  "result": {
+    "url": "wss://wss-cntaobao.dingtalk.com/",
+    "headers": [
+      [
+        "Cookie",
+        "cna=fakecna; cookie2=fakecookie2; t=faket; _tb_token_=faketbtoken; unb=2200000001; _nk_=tester; sgcookie=fakesg; _m_h5_tk=0123456789abcdef0123456789abcdef_1790003600000; _m_h5_tk_enc=fakeenc"
+      ],
+      [
+        "Host",
+        "wss-cntaobao.dingtalk.com"
+      ],
+      [
+        "Connection",
+        "Upgrade"
+      ],
+      [
+        "Pragma",
+        "no-cache"
+      ],
+      [
+        "Cache-Control",
+        "no-cache"
+      ],
+      [
+        "User-Agent",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+      ],
+      [
+        "Origin",
+        "https://www.cntaobao.com"
+      ],
+      [
+        "Accept-Encoding",
+        "gzip, deflate, br, zstd"
+      ],
+      [
+        "Accept-Language",
+        "zh-CN,zh;q=0.9"
+      ]
+    ],
+    "sent": [
+      "{\"lwp\": \"/reg\", \"headers\": {\"cache-header\": \"app-key token ua wv\", \"app-key\": \"3ce2dacdc7c0c43ad7bc7f9bc7d7a1b8\", \"token\": \"fake-access-token\", \"ua\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 DingTalk(2.1.5) OS(Windows/10) Browser(Chrome/146.0.0.0) DingWeb/2.1.5 IMPaaS DingWeb/2.1.5\", \"dt\": \"j\", \"wv\": \"im:3,au:3,sy:6\", \"sync\": \"0,0;0;0;\", \"did\": \"95416BBF521541C3B3B2B52001DC30E7-1790000000123\", \"mid\": \"5811790000000123 0\"}}",
+      "{\"lwp\": \"/r/SyncStatus/ackDiff\", \"headers\": {\"mid\": \"5811790000000123 0\"}, \"body\": [{\"pipeline\": \"sync\", \"tooLong2Tag\": \"PNM,1\", \"channel\": \"sync\", \"topic\": \"sync\", \"highPts\": 0, \"pts\": 1790000000123000, \"seq\": 0, \"timestamp\": 1790000000123}]}",
+      "{\"code\": 200, \"headers\": {\"mid\": \"vulcan-mid\", \"sid\": \"vulcan-sid\"}}",
+      "{\"lwp\": \"/r/MessageManager/listUserMessages\", \"headers\": {\"mid\": \"5811790000000123 0\"}, \"body\": [\"2200000001.1-2200000999.1#11001@cntaobao\", false, 9007199254740991, 20, false]}",
+      "{\"code\": 200, \"headers\": {\"mid\": \"5811790000000123 0\", \"sid\": \"resp-sid\", \"app-key\": \"k\", \"ua\": \"u\", \"dt\": \"j\"}}"
+    ],
+    "server": [
+      {
+        "after": 2,
+        "data": "{\"lwp\": \"/s/vulcan\", \"headers\": {\"mid\": \"vulcan-mid\", \"sid\": \"vulcan-sid\"}}"
+      },
+      {
+        "after": 4,
+        "data": "{\"code\": 200, \"headers\": {\"mid\": \"5811790000000123 0\", \"sid\": \"resp-sid\", \"app-key\": \"k\", \"ua\": \"u\", \"dt\": \"j\"}, \"body\": {\"hasMore\": 0, \"nextCursor\": 1789990000000, \"userMessageModels\": [{\"message\": {\"messageId\": \"m2\", \"cid\": \"2200000001.1-2200000999.1#11001@cntaobao\", \"createAt\": 1789990000500, \"sender\": {\"uid\": \"2200000999@cntaobao\"}, \"extension\": {\"sender_nick\": \"cntaobao测试卖家\"}, \"content\": {\"contentType\": 1, \"text\": {\"content\": \"在的\"}}}}, {\"message\": {\"messageId\": \"m1\", \"cid\": \"2200000001.1-2200000999.1#11001@cntaobao\", \"createAt\": 1789990000000, \"sender\": {\"uid\": \"2200000001@cntaobao\"}, \"extension\": {\"sender_nick\": \"cntaobaotester\"}, \"content\": {\"contentType\": 101, \"custom\": {\"type\": 7, \"data\": \"eyJmaWxlSWQiOiAxLCAic2l6ZSI6IDY4LCAidXJsIjogImh0dHBzOi8vaW1nLmFsaWNkbi5jb20vaW1nZXh0cmEvZmFrZS5wbmciLCAid2lkdGgiOiAxMDAsICJoZWlnaHQiOiA4MH0=\"}}}}]}}"
+      }
+    ],
+    "result": [
+      {
+        "send_user_id": "2200000001@cntaobao",
+        "send_user_name": "cntaobaotester",
+        "message": {
+          "base64": "eyJmaWxlSWQiOiAxLCAic2l6ZSI6IDY4LCAidXJsIjogImh0dHBzOi8vaW1nLmFsaWNkbi5jb20vaW1nZXh0cmEvZmFrZS5wbmciLCAid2lkdGgiOiAxMDAsICJoZWlnaHQiOiA4MH0="
+        }
+      },
+      {
+        "send_user_id": "2200000999@cntaobao",
+        "send_user_name": "cntaobao测试卖家",
+        "message": {
+          "contentType": 1,
+          "text": {
+            "content": "在的"
+          }
+        }
+      }
+    ]
+  },
+  "error": null
+}

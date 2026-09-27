@@ -1,0 +1,18 @@
+{
+  "input": {
+    "cid": "2200000001.1-2200000999.1#11001",
+    "peer": "2200000999",
+    "encrypt_uid": "FAKEENCRYPTUID0001"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": [
+    "{\"lwp\": \"/r/SingleChatConversation/create\", \"headers\": {\"mid\": \"5811790000000123 0\"}, \"body\": [{\"pairFirst\": \"2200000001@cntaobao\", \"bizType\": \"11001\", \"ctx\": {\"createConversationCtx\": \"{\\\"encryptUid\\\":\\\"FAKEENCRYPTUID0001\\\"}\", \"selfBizDomain\": \"taobao\"}}]}",
+    "{\"lwp\": \"/r/MessageSend/sendByReceiverScope\", \"headers\": {\"mid\": \"5811790000000123 0\"}, \"body\": [{\"cid\": \"2200000001.1-2200000999.1#11001@cntaobao\", \"uuid\": \"_s_1790000000123_1\", \"conversationType\": 1, \"redPointPolicy\": 0, \"extension\": {\"senderBizDomain\": \"taobao\", \"receiverBizDomain\": \"taobao\", \"sender_nick\": \"cntaobaotester\"}, \"content\": {\"contentType\": 1, \"text\": {\"extension\": {\"sender_nick\": \"cntaobaotester\"}, \"content\": \"\\u4f60\\u597d \\\"quote\\\"\"}}, \"ctx\": {\"senderBizDomain\": \"taobao\", \"receiverBizDomain\": \"taobao\"}}, {\"actualReceivers\": [\"2200000001@cntaobao\", \"2200000999@cntaobao\"]}]}",
+    "{\"lwp\": \"/r/MessageSend/sendByReceiverScope\", \"headers\": {\"mid\": \"5811790000000123 0\"}, \"body\": [{\"cid\": \"2200000001.1-2200000999.1#11001@cntaobao\", \"uuid\": \"_s_1790000000123_1\", \"conversationType\": 1, \"redPointPolicy\": 0, \"extension\": {\"senderBizDomain\": \"taobao\", \"receiverBizDomain\": \"taobao\"}, \"content\": {\"contentType\": 101, \"custom\": {\"type\": 7, \"data\": \"eyJmaWxlSWQiOiAxMjM0NTY3ODkwMSwgInNpemUiOiA2OCwgInVybCI6ICJodHRwczovL2ltZy5hbGljZG4uY29tL2ltZ2V4dHJhL2Zha2UucG5nIiwgIndpZHRoIjogMTAwLCAiaGVpZ2h0IjogODAsICJpc09yaWdpbmFsIjogMSwgInN1ZmZpeCI6ICJwbmcifQ==\"}}, \"ctx\": {\"senderBizDomain\": \"taobao\", \"receiverBizDomain\": \"taobao\"}}, {\"actualReceivers\": [\"2200000001@cntaobao\", \"2200000999@cntaobao\"]}]}",
+    "{\"lwp\": \"/!\", \"headers\": {\"mid\": \"5811790000000123 0\"}}"
+  ],
+  "error": null
+}

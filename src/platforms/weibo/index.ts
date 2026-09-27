@@ -1,5 +1,15 @@
 import { filter } from '../../core/options.js'
-import { definePlatform } from '../../core/registry.js'
+import { type CommandDecl, definePlatform, type Handler, type Upstream } from '../../core/registry.js'
+
+type Commands = typeof import('./web/commands.js')
+
+/** 懒加载 web 端的 handler：只有执行到这条命令时才加载实现。 */
+const h =
+  (name: keyof Commands) =>
+  (): Promise<Handler> =>
+    import('./web/commands.js').then((m) => m[name] as Handler)
+
+const impl = (upstream: Upstream, name: keyof Commands, extra: Partial<CommandDecl> = {}): CommandDecl => ({ upstream, handler: h(name), ...extra })
 
 export default definePlatform({
   id: 'weibo',
@@ -10,12 +20,13 @@ export default definePlatform({
     web: {
       login: { methods: ['cookie'], default: 'cookie' },
       commands: {
-        'auth login': 'full',
-        'auth status': 'full',
+        'auth login': impl('full', 'authLogin'),
+        'auth status': impl('full', 'authStatus'),
 
-        'user get': 'full',
+        'user get': impl('full', 'userGet'),
         'user search': 'none',
-        'user items': 'full',
+        // weibo.com 的 mymblog 对访客返回"请登录后使用"
+        'user items': impl('full', 'userItems', { auth: 'required' }),
         'user likes': 'none',
         'user collects': 'none',
         'user reposts': 'none',
@@ -24,8 +35,8 @@ export default definePlatform({
         'user follow': 'none',
         'user unfollow': 'none',
 
-        'item get': 'full',
-        'item search': 'full',
+        'item get': impl('full', 'itemGet'),
+        'item search': impl('full', 'itemSearch', { note: '只能取第一页' }),
         'item list': 'none',
         'item media': 'none',
         'item download': 'none',
@@ -35,10 +46,10 @@ export default definePlatform({
         'item uncollect': 'none',
         'item repost': 'none',
         'item unrepost': 'none',
-        'item publish': 'full',
+        'item publish': impl('full', 'itemPublish'),
         'item delete': 'none',
 
-        'comment list': 'partial',
+        'comment list': impl('partial', 'commentList', { note: '只有一级评论' }),
         'comment replies': 'none',
         'comment add': 'none',
         'comment delete': 'none',
@@ -77,7 +88,7 @@ export default definePlatform({
         'msg revoke': 'none',
         'msg delete': 'none',
 
-        'media upload': 'full',
+        'media upload': impl('full', 'mediaUpload'),
 
         'folder list': 'none',
         'folder items': 'none',

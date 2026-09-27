@@ -100,6 +100,8 @@ interface SendOptions {
   disableDefaultHeaders: boolean
 }
 
+const REDIRECT_STATUS = new Set([301, 302, 303, 307, 308])
+
 const transports = new Map<string, Promise<Transport>>()
 
 async function transportFor(options: SendOptions): Promise<Transport> {
@@ -251,8 +253,29 @@ export class HttpClient {
     return { method, url, headers, cookies, body, multipart: req.multipart ?? null }
   }
 
-  /** 发送请求。Set-Cookie 自动写回 cookie 罐；网络错误映射成 NETWORK。 */
+  /**
+   * 发送请求。Set-Cookie 自动写回 cookie 罐；网络错误映射成 NETWORK。
+   * 跳转由这里逐跳跟随（最多 10 跳），这样中间跳转设置的 cookie 也会收进 cookie 罐，
+   * 后续跳转按 cookie 罐重新取 cookie。
+   */
   async request(req: HttpRequest): Promise<HttpResponse> {
+    const follow = (req.redirect ?? 'follow') === 'follow'
+    let current = req
+    for (let hop = 0; ; hop++) {
+      const { res, url } = await this.send(current)
+      const location = res.headers.get('location')
+      if (!follow || !location || !REDIRECT_STATUS.has(res.status) || hop >= 10) return res
+      const method = (current.method ?? 'GET').toUpperCase()
+      const toGet = res.status === 303 || ((res.status === 301 || res.status === 302) && method === 'POST')
+      current = { ...current, url: new URL(location, url).toString(), query: undefined }
+      if (toGet) {
+        const { form: _f, json: _j, body: _b, multipart: _m, ...rest } = current
+        current = { ...rest, method: 'GET', headers: headerPairs(rest.headers).filter(([k]) => k.toLowerCase() !== 'content-type') }
+      }
+    }
+  }
+
+  private async send(req: HttpRequest): Promise<{ res: HttpResponse; url: string }> {
     const prepared = this.prepare(req)
     const o = this.options
     const sendOptions: SendOptions = {
@@ -260,7 +283,7 @@ export class HttpClient {
       os: o.os ?? 'windows',
       proxy: o.proxy ?? null,
       timeout: req.timeout ?? o.timeout ?? 30,
-      redirect: req.redirect ?? 'follow',
+      redirect: 'manual',
       disableDefaultHeaders: o.disableDefaultHeaders ?? true,
     }
     // 表单 POST：libcurl 会自己补 content-type，wreq 不会
@@ -274,9 +297,9 @@ export class HttpClient {
     } catch (err) {
       throw toNetworkError(err)
     }
-    this.jar?.applySetCookie(res.url || prepared.url, res.headers.getSetCookie())
+    this.jar?.applySetCookie(prepared.url, res.headers.getSetCookie())
     o.log?.debug(`${res.status} ${prepared.url}`)
-    return res
+    return { res, url: prepared.url }
   }
 
   async text(req: HttpRequest): Promise<string> {

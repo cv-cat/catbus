@@ -208,3 +208,28 @@ describe('vm', () => {
     expect((globalThis as any).sign).toBeUndefined()
   })
 })
+
+describe('HttpClient', () => {
+  it('逐跳跟随跳转：中间跳转的 Set-Cookie 进 cookie 罐，下一跳带上；POST 302 改成 GET', async () => {
+    const { CookieJar } = await import('../src/core/cookies.js')
+    const { HttpClient, mockSender, fakeResponse } = await import('../src/core/http.js')
+    const seen: { method: string; url: string; cookies: [string, string][]; headers: [string, string][] }[] = []
+    const restore = mockSender((p) => {
+      seen.push({ method: p.method, url: p.url, cookies: p.cookies, headers: p.headers })
+      if (seen.length === 1) return fakeResponse('', { status: 302, headers: [['location', '/next?x=1'], ['set-cookie', 'a=1; Domain=example.com; Path=/']] })
+      return fakeResponse('ok', { headers: [['set-cookie', 'evil=1; Domain=other.com']] })
+    })
+    try {
+      const jar = new CookieJar()
+      const res = await new HttpClient({ jar }).request({ method: 'POST', url: 'https://www.example.com/login', form: { u: 'x' } })
+      expect(await res.text()).toBe('ok')
+      expect(seen.map((s) => `${s.method} ${s.url}`)).toEqual(['POST https://www.example.com/login', 'GET https://www.example.com/next?x=1'])
+      expect(seen[1]!.cookies).toEqual([['a', '1']])
+      expect(seen[1]!.headers.some(([k]) => k.toLowerCase() === 'content-type')).toBe(false)
+      // 跨域的 Set-Cookie 被丢弃
+      expect(jar.cookies.map((c) => c.name)).toEqual(['a'])
+    } finally {
+      restore()
+    }
+  })
+})
