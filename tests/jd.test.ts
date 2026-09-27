@@ -156,7 +156,8 @@ const SAME_RESULT: Record<string, (r: any) => unknown> = {
  * 比较前统一两处与实现无关的差异：
  * - 上游的 `https://api.m.jd.com?...` 在 curl 里发出去是 `/?`；wreq-js 需要显式的 `/`。
  * - WebM 指纹里 canvas / webgl 的图像哈希由 @napi-rs/canvas 用本机字体渲染得到，换一台机器（CI）就不同，上游也一样；
- *   这两项和汇总它们的 browser_info 不比较；Math 指纹按 12 位有效数字比较；其余字段照常逐字节比较。
+ *   这两项和汇总它们的 browser_info 不比较；architecture 随 CPU 架构而变，也不比较；Math 指纹按 12 位有效数字比较；
+ *   其余字段照常逐字节比较。
  */
 const MASKS = [/(canvas%20fp%3A)[0-9a-f]{32}/, /^(fp%3A)[0-9a-f]{32}/]
 /** wsgw_getinfo 的正文按字段展开比较，出错时能直接看出是哪个字段。 */
@@ -166,6 +167,8 @@ function expandWebm(body: string): unknown {
   const fields = inner.body as Record<string, unknown>
   for (const [k, v] of Object.entries(fields)) if (typeof v === 'string') fields[k] = MASKS.reduce((x, re) => x.replace(re, '$1<masked>'), v)
   fields.browser_info = '<masked>'
+  // architecture 取自 Infinity - Infinity 得到的 NaN 的符号位：x86 上是 255，ARM 上是 127，随运行测试的机器而变
+  fields.architecture = '<masked>'
   // Math 指纹（如 Math.pow(Math.PI, -100)）在不同 V8 版本 / 系统上可能差 1 ulp，按 12 位有效数字比较
   const math = fields.math as Record<string, number> | undefined
   if (math) for (const k of Object.keys(math)) math[k] = Number(math[k]!.toPrecision(12))
