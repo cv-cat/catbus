@@ -1,0 +1,158 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://www.tiktok.com/top/v1?Action=ApplyUploadInner&Version=2020-11-19&SpaceName=tiktok-ai-frame&FileType=image&IsInner=1&FileSize=10&s=ulkcp0y8lfe&device_platform=web",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "authorization",
+          "AWS4-HMAC-SHA256 Credential=AKFRAME/20260921/ap-singapore-1/vod/aws4_request, SignedHeaders=x-amz-date;x-amz-security-token, Signature=0894651a51a0cf5f3b1d4b333c0bcd5c20587192d6119031611af55fbd755779"
+        ],
+        [
+          "referer",
+          "https://www.tiktok.com/tiktokstudio/upload?from=webapp&lang=zh-Hans&tab=video"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "x-amz-security-token",
+          "STFRAME"
+        ],
+        [
+          "x-amz-date",
+          "20260921T141320Z"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "tt_csrf_token",
+          "fake-csrf-token-0001"
+        ],
+        [
+          "tt_chain_token",
+          "fakechain"
+        ],
+        [
+          "s_v_web_id",
+          "verify_fake0001_AbCdEfGh_IjKl_4MnO_8PqR_StUvWxYz0123"
+        ],
+        [
+          "multi_sids",
+          "7000000000000000001%3Afakesid0001"
+        ],
+        [
+          "sessionid",
+          "fakesession0001"
+        ],
+        [
+          "sid_tt",
+          "fakesession0001"
+        ],
+        [
+          "msToken",
+          "FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV=="
+        ],
+        [
+          "store-country-code",
+          "sg"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "Result": {
+          "InnerUploadAddress": {
+            "UploadNodes": [
+              {
+                "Vid": "v0vid001",
+                "SessionKey": "sessionkey001",
+                "UploadHost": "tos-sg.example.com",
+                "StoreInfos": [
+                  {
+                    "StoreUri": "tos-sg/obj001",
+                    "Auth": "SpaceKey/tos-auth-001"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "result": {
+    "Result": {
+      "InnerUploadAddress": {
+        "UploadNodes": [
+          {
+            "Vid": "v0vid001",
+            "SessionKey": "sessionkey001",
+            "UploadHost": "tos-sg.example.com",
+            "StoreInfos": [
+              {
+                "StoreUri": "tos-sg/obj001",
+                "Auth": "SpaceKey/tos-auth-001"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "error": null
+}

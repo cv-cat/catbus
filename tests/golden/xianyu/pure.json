@@ -1,0 +1,28 @@
+{
+  "input": {
+    "pushes": [
+      "ggGKAYEBsjIyMDAwMDA5OTlAZ29vZmlzaAKzNDcwMDAwMDAwMDFAZ29vZmlzaAOxMzQwMDAwMDAwMDAwMS5QTk0EAAXPAAABoMRQbisGggFlA4UBoAK76L+Y5Zyo5ZCX77yf6IO95L6/5a6c54K55ZCXA6AEAQXaAEN7ImNvbnRlbnRUeXBlIjogMSwgInRleHQiOiB7InRleHQiOiAi6L+Y5Zyo5ZCX77yf6IO95L6/5a6c54K55ZCXIn19BwEIAQkACoSvcmVtaW5kZXJDb250ZW50u+i/mOWcqOWQl++8n+iDveS+v+WunOeCueWQl61yZW1pbmRlclRpdGxlrOa1i+ivleS5sOWutqxzZW5kZXJVc2VySWSqMjIwMDAwMDk5OatyZW1pbmRlclVybNoAU2ZsZWFtYXJrZXQ6Ly9tZXNzYWdlX2NoYXQ/aXRlbUlkPTkwMDAwMDAwMDAwMSZwZWVyVXNlcklkPTIyMDAwMDA5OTkmc2lkPTQ3MDAwMDAwMDAxA4GobmVlZFB1c2ikdHJ1ZQ==",
+      "ggGKAYEBsjIyMDAwMDA5OTlAZ29vZmlzaAKzNDcwMDAwMDAwMDFAZ29vZmlzaAOxMzQwMDAwMDAwMDAwMi5QTk0EAAXPAAABoMRQbisGggFlA4UBoAKoW+WbvueJh10DoAQCBdoAensiY29udGVudFR5cGUiOiAyLCAiaW1hZ2UiOiB7InBpY3MiOiBbeyJ0eXBlIjogMCwgInVybCI6ICJodHRwczovL2ltZy5hbGljZG4uY29tL2Zha2UucG5nIiwgIndpZHRoIjogMTAwLCAiaGVpZ2h0IjogODB9XX19BwEIAQkACoSvcmVtaW5kZXJDb250ZW50qFvlm77niYddrXJlbWluZGVyVGl0bGWs5rWL6K+V5Lmw5a62rHNlbmRlclVzZXJJZKoyMjAwMDAwOTk5q3JlbWluZGVyVXJs2gBTZmxlYW1hcmtldDovL21lc3NhZ2VfY2hhdD9pdGVtSWQ9OTAwMDAwMDAwMDAxJnBlZXJVc2VySWQ9MjIwMDAwMDk5OSZzaWQ9NDcwMDAwMDAwMDEDgahuZWVkUHVzaKR0cnVl",
+      "ggGKAYEBsjIyMDAwMDAwMDFAZ29vZmlzaAKzNDcwMDAwMDAwMDFAZ29vZmlzaAOxMzQwMDAwMDAwMDAwMy5QTk0EAAXPAAABoMRQbisGggFlA4UBoAKs6Ieq5bex5Y+R55qEA6AEAQXaADR7ImNvbnRlbnRUeXBlIjogMSwgInRleHQiOiB7InRleHQiOiAi6Ieq5bex5Y+R55qEIn19BwEIAQkACoSvcmVtaW5kZXJDb250ZW50rOiHquW3seWPkeeahK1yZW1pbmRlclRpdGxlpnRlc3RlcqxzZW5kZXJVc2VySWSqMjIwMDAwMDAwMatyZW1pbmRlclVybNoAU2ZsZWFtYXJrZXQ6Ly9tZXNzYWdlX2NoYXQ/aXRlbUlkPTkwMDAwMDAwMDAwMSZwZWVyVXNlcklkPTIyMDAwMDAwMDEmc2lkPTQ3MDAwMDAwMDAxA4GobmVlZFB1c2ikdHJ1ZQ==",
+      "hAGzNDcwMDAwMDAwMDFAZ29vZmlzaAIBA4KrcmVkUmVtaW5kZXKy562J5b6F5Lmw5a625LuY5qy+sHJlZFJlbWluZGVyU3R5bGWhMQTPAAABoMRQbis="
+    ]
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": {
+    "device_id": "95416BBF-5215-41C3-B3B2-B52001DC30E7-2200000001",
+    "mid": "5811790000000123 0",
+    "uuid": "-17900000001231",
+    "sign": "e5dd388835eab7552aa98e39e195f75b",
+    "decrypt": [
+      "{\"1\":{\"1\":{\"1\":\"2200000999@goofish\"},\"2\":\"47000000001@goofish\",\"3\":\"3400000000001.PNM\",\"4\":0,\"5\":\"1790000000555\",\"6\":{\"1\":101,\"3\":{\"1\":\"\",\"2\":\"还在吗？能便宜点吗\",\"3\":\"\",\"4\":1,\"5\":\"{\\\"contentType\\\": 1, \\\"text\\\": {\\\"text\\\": \\\"还在吗？能便宜点吗\\\"}}\"}},\"7\":1,\"8\":1,\"9\":0,\"10\":{\"reminderContent\":\"还在吗？能便宜点吗\",\"reminderTitle\":\"测试买家\",\"senderUserId\":\"2200000999\",\"reminderUrl\":\"fleamarket://message_chat?itemId=900000000001&peerUserId=2200000999&sid=47000000001\"}},\"3\":{\"needPush\":\"true\"}}",
+      "{\"1\":{\"1\":{\"1\":\"2200000999@goofish\"},\"2\":\"47000000001@goofish\",\"3\":\"3400000000002.PNM\",\"4\":0,\"5\":\"1790000000555\",\"6\":{\"1\":101,\"3\":{\"1\":\"\",\"2\":\"[图片]\",\"3\":\"\",\"4\":2,\"5\":\"{\\\"contentType\\\": 2, \\\"image\\\": {\\\"pics\\\": [{\\\"type\\\": 0, \\\"url\\\": \\\"https://img.alicdn.com/fake.png\\\", \\\"width\\\": 100, \\\"height\\\": 80}]}}\"}},\"7\":1,\"8\":1,\"9\":0,\"10\":{\"reminderContent\":\"[图片]\",\"reminderTitle\":\"测试买家\",\"senderUserId\":\"2200000999\",\"reminderUrl\":\"fleamarket://message_chat?itemId=900000000001&peerUserId=2200000999&sid=47000000001\"}},\"3\":{\"needPush\":\"true\"}}",
+      "{\"1\":{\"1\":{\"1\":\"2200000001@goofish\"},\"2\":\"47000000001@goofish\",\"3\":\"3400000000003.PNM\",\"4\":0,\"5\":\"1790000000555\",\"6\":{\"1\":101,\"3\":{\"1\":\"\",\"2\":\"自己发的\",\"3\":\"\",\"4\":1,\"5\":\"{\\\"contentType\\\": 1, \\\"text\\\": {\\\"text\\\": \\\"自己发的\\\"}}\"}},\"7\":1,\"8\":1,\"9\":0,\"10\":{\"reminderContent\":\"自己发的\",\"reminderTitle\":\"tester\",\"senderUserId\":\"2200000001\",\"reminderUrl\":\"fleamarket://message_chat?itemId=900000000001&peerUserId=2200000001&sid=47000000001\"}},\"3\":{\"needPush\":\"true\"}}",
+      "{\"1\":\"47000000001@goofish\",\"2\":1,\"3\":{\"redReminder\":\"等待买家付款\",\"redReminderStyle\":\"1\"},\"4\":\"1790000000555\"}"
+    ],
+    "tfstk": "gF827Kb9Kq3qR2MHTBbZLeQ9CAbA5NkQQF61sCAGGtX0lrwM4pvRhhtfh5-yILIfn2gBMIQOSvGIR2OvMhtealH5SfAl51zDjHXBMIQTwvMIR2Ombf1xCc7MIablOTXGSNviaQXRENXMINcyZTCGSOvGSbRle1jrSIAgz6sm-bArEkLzRJ6HiTAXGU54d90dUP4G3sSqNIXzSPTyXxj8itmLNOQfH9jPmVC5Yj86i5qgpPfPd_5rDmBlO2wYEMZTXgbda9GfGlEOm_CPdblzXlIle_WIGs1.."
+  },
+  "error": null
+}

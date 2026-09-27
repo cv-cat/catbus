@@ -1,0 +1,142 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://www.tiktok.com/@tiktok",
+      "headers": [
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=0, i"
+        ],
+        [
+          "referer",
+          "https://www.tiktok.com/@tiktok"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "document"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "sec-fetch-user",
+          "?1"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "tt_csrf_token",
+          "fake-csrf-token-0001"
+        ],
+        [
+          "tt_chain_token",
+          "fakechain"
+        ],
+        [
+          "s_v_web_id",
+          "verify_fake0001_AbCdEfGh_IjKl_4MnO_8PqR_StUvWxYz0123"
+        ],
+        [
+          "multi_sids",
+          "7000000000000000001%3Afakesid0001"
+        ],
+        [
+          "sessionid",
+          "fakesession0001"
+        ],
+        [
+          "sid_tt",
+          "fakesession0001"
+        ],
+        [
+          "msToken",
+          "FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV=="
+        ],
+        [
+          "store-country-code",
+          "sg"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "text/html"
+      },
+      "body": "<html><head></head><body><script id=\"__UNIVERSAL_DATA_FOR_REHYDRATION__\" type=\"application/json\">{\"__DEFAULT_SCOPE__\":{\"webapp.user-detail\":{\"statusCode\":0,\"userInfo\":{\"user\":{\"id\":\"107955\",\"uniqueId\":\"tiktok\",\"nickname\":\"TikTok\",\"secUid\":\"MS4wLjABAAAAfakeSecUid0123456789abcdefghijklmnopqrstuvwxyz\",\"signature\":\"hi\",\"avatarLarger\":\"https://p16/a.jpg\"},\"stats\":{\"followerCount\":10,\"followingCount\":1,\"heartCount\":99,\"videoCount\":3}}},\"webapp.a-b\":{}}}</script></body></html>"
+    }
+  ],
+  "result": {
+    "statusCode": 0,
+    "userInfo": {
+      "user": {
+        "id": "107955",
+        "uniqueId": "tiktok",
+        "nickname": "TikTok",
+        "secUid": "MS4wLjABAAAAfakeSecUid0123456789abcdefghijklmnopqrstuvwxyz",
+        "signature": "hi",
+        "avatarLarger": "https://p16/a.jpg"
+      },
+      "stats": {
+        "followerCount": 10,
+        "followingCount": 1,
+        "heartCount": 99,
+        "videoCount": 3
+      }
+    }
+  },
+  "error": null
+}

@@ -1,0 +1,142 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://h5api.m.goofish.com/h5/mtop.taobao.idlemessage.pc.loginuser.get/1.0/?jsv=2.7.2&appKey=34839810&t=1790000000000&v=1.0&type=originaljson&accountSite=xianyu&dataType=json&timeout=20000&api=mtop.taobao.idlemessage.pc.loginuser.get&sessionOption=AutoLoginOnly&spm_cnt=a21ybx.im.0.0&spm_pre=a21ybx.item.want.1.12523da6waCtUp&log_id=12523da6waCtUp&sign=7f627504717cb3fee274240e4d82c5a7",
+      "headers": [
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "accept-language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "origin",
+          "https://www.goofish.com"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "referer",
+          "https://www.goofish.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "fakecna"
+        ],
+        [
+          "cookie2",
+          "fakecookie2"
+        ],
+        [
+          "t",
+          "faket"
+        ],
+        [
+          "_tb_token_",
+          "faketbtoken"
+        ],
+        [
+          "unb",
+          "2200000001"
+        ],
+        [
+          "tracknick",
+          "tester"
+        ],
+        [
+          "sgcookie",
+          "fakesg"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790003600000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc"
+        ]
+      ],
+      "body": "data=%7B%7D",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "api": "mtop.taobao.idlemessage.pc.loginuser.get",
+        "data": {
+          "userId": 2200000001,
+          "nick": "tester"
+        },
+        "ret": [
+          "SUCCESS::调用成功"
+        ],
+        "v": "1.0"
+      }
+    }
+  ],
+  "result": {
+    "api": "mtop.taobao.idlemessage.pc.loginuser.get",
+    "data": {
+      "userId": 2200000001,
+      "nick": "tester"
+    },
+    "ret": [
+      "SUCCESS::调用成功"
+    ],
+    "v": "1.0"
+  },
+  "error": null
+}

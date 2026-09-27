@@ -1,0 +1,138 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://www.tiktok.com/api/v1/video/transcode/result/?aid=1988",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://www.tiktok.com/tiktokstudio/upload?from=webapp&lang=zh-Hans&tab=video"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "content-length",
+          "162"
+        ],
+        [
+          "origin",
+          "https://www.tiktok.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "tt_csrf_token",
+          "fake-csrf-token-0001"
+        ],
+        [
+          "tt_chain_token",
+          "fakechain"
+        ],
+        [
+          "s_v_web_id",
+          "verify_fake0001_AbCdEfGh_IjKl_4MnO_8PqR_StUvWxYz0123"
+        ],
+        [
+          "multi_sids",
+          "7000000000000000001%3Afakesid0001"
+        ],
+        [
+          "sessionid",
+          "fakesession0001"
+        ],
+        [
+          "sid_tt",
+          "fakesession0001"
+        ],
+        [
+          "msToken",
+          "FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV=="
+        ],
+        [
+          "store-country-code",
+          "sg"
+        ]
+      ],
+      "body": "{\"scene\":0,\"video_info\":[{\"file_key\":\"file_1790000000123_000042\",\"video_id\":\"v0vid001\",\"original_width\":720,\"original_height\":1280,\"original_duration_ms\":14000}]}",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "status_code": 0,
+        "transcode_result": [
+          {
+            "transcode_status": 3,
+            "play_url": "https://v.example.com/play.mp4"
+          }
+        ]
+      }
+    }
+  ],
+  "result": {
+    "status_code": 0,
+    "transcode_result": [
+      {
+        "transcode_status": 3,
+        "play_url": "https://v.example.com/play.mp4"
+      }
+    ]
+  },
+  "error": null
+}

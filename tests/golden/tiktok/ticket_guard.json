@@ -1,0 +1,23 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": {
+    "headers": {
+      "tt-ticket-guard-public-key": "BO+IDI74FogXlsGI5XGwGsb3DFJidFba5IZ1jv/Zxj3dXNvBHiSIOhJZgkKpWHW5aohU9kv/msmjOBC4HxVPVOU=",
+      "tt-ticket-guard-web-version": "1",
+      "tt-ticket-guard-version": "2",
+      "tt-ticket-guard-iteration-version": "0"
+    },
+    "client_data": {
+      "ts_sign": "ts.2.fakefakefake",
+      "req_content": "ticket,path,timestamp",
+      "timestamp": 1790000000
+    },
+    "ticket": "fake-ticket-0001",
+    "client_data_encoded": "eyJ0c19zaWduIjoidHMuMi5mYWtlZmFrZWZha2UiLCJyZXFfY29udGVudCI6InRpY2tldCxwYXRoLHRpbWVzdGFtcCIsInJlcV9zaWduIjoiQUFBQSIsInRpbWVzdGFtcCI6MTc5MDAwMDAwMH0="
+  },
+  "error": null
+}

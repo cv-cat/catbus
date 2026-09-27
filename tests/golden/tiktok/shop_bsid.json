@@ -1,0 +1,25 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": {
+    "signed_url": "https://shop.tiktok.com/api/shop/pdp_desktop/get_product_reviews?msToken=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==&X-Bogus=DFSzswVOoXiwbuP9Cf1eaHgfqO0X&_signature=_02B4Z6wo00001dnx0XwAAIDDa8AJAlycLV3Z9dXAABzP2f&X-Tts-Oec-Bsid=9a8c00004e204e20000007c44e22000001a0c4506c7b00000001a77f297c40e7a3f92c7d0b4e8165a3a3a3a3a3a3a4a13b2d92bdae38b3f4a2592eae025026aaaffc1b45c15f993bd2a91b4a8255f8c7541ade908b4d74f6ac8c761f0000000000000000000000f8762cd3a3030050abababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababab",
+    "bsid": "9a8c00004e204e20000007c44e22000001a0c4506c7b00000001a77f297c40e7a3f92c7d0b4e8165a3a3a3a3a3a3a4a13b2d92bdae38b3f4a2592eae025026aaaffc1b45c15f993bd2a91b4a8255f8c7541ade908b4d74f6ac8c761f0000000000000000000000f8762cd3a3030050abababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababab",
+    "length": 382,
+    "pre_sign_lengths": {
+      "msToken": 144,
+      "X-Bogus": 28,
+      "_signature": 47
+    },
+    "pre_sign_url_length": 313,
+    "pre_sign_order": [
+      "msToken",
+      "X-Bogus",
+      "_signature"
+    ],
+    "pre_sign_url": "https://shop.tiktok.com/api/shop/pdp_desktop/get_product_reviews?msToken=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==&X-Bogus=DFSzswVOoXiwbuP9Cf1eaHgfqO0X&_signature=_02B4Z6wo00001dnx0XwAAIDDa8AJAlycLV3Z9dXAABzP2f"
+  },
+  "error": null
+}

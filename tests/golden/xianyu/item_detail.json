@@ -1,0 +1,142 @@
+{
+  "input": {
+    "item": "900000000001"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://h5api.m.goofish.com/h5/mtop.taobao.idle.pc.detail/1.0/?jsv=2.7.2&appKey=34839810&t=1790000000000&sign=4cce3a57552766f1d6dfb167092e0c3b&v=1.0&type=originaljson&accountSite=xianyu&dataType=json&timeout=20000&api=mtop.taobao.idle.pc.detail&sessionOption=AutoLoginOnly&spm_cnt=a21ybx.im.0.0&spm_pre=a21ybx.item.want.1.12523da6waCtUp&log_id=12523da6waCtUp",
+      "headers": [
+        [
+          "Content-Type",
+          "application/x-www-form-urlencoded"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "fakecna"
+        ],
+        [
+          "cookie2",
+          "fakecookie2"
+        ],
+        [
+          "t",
+          "faket"
+        ],
+        [
+          "_tb_token_",
+          "faketbtoken"
+        ],
+        [
+          "unb",
+          "2200000001"
+        ],
+        [
+          "tracknick",
+          "tester"
+        ],
+        [
+          "sgcookie",
+          "fakesg"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790003600000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc"
+        ]
+      ],
+      "body": "data=%7B%22itemId%22%3A%22900000000001%22%7D",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "api": "mtop.taobao.idle.pc.detail",
+        "data": {
+          "itemDO": {
+            "itemId": 900000000001,
+            "title": "九成新机械键盘",
+            "desc": "九成新机械键盘，青轴",
+            "soldPrice": "199.00",
+            "gmtCreate": 1789990000000,
+            "browseCnt": 321,
+            "wantCnt": 12,
+            "collectCnt": 0,
+            "itemStatus": 0,
+            "imageInfos": [
+              {
+                "url": "http://img.alicdn.com/bao/uploaded/fake1.jpg",
+                "widthSize": 800,
+                "heightSize": 600,
+                "major": true
+              },
+              {
+                "url": "http://img.alicdn.com/bao/uploaded/fake2.jpg",
+                "widthSize": 640,
+                "heightSize": 640
+              }
+            ]
+          },
+          "sellerDO": {
+            "sellerId": 2200000999,
+            "nick": "测试卖家",
+            "city": "杭州"
+          }
+        },
+        "ret": [
+          "SUCCESS::调用成功"
+        ],
+        "v": "1.0"
+      }
+    }
+  ],
+  "result": {
+    "api": "mtop.taobao.idle.pc.detail",
+    "data": {
+      "itemDO": {
+        "itemId": 900000000001,
+        "title": "九成新机械键盘",
+        "desc": "九成新机械键盘，青轴",
+        "soldPrice": "199.00",
+        "gmtCreate": 1789990000000,
+        "browseCnt": 321,
+        "wantCnt": 12,
+        "collectCnt": 0,
+        "itemStatus": 0,
+        "imageInfos": [
+          {
+            "url": "http://img.alicdn.com/bao/uploaded/fake1.jpg",
+            "widthSize": 800,
+            "heightSize": 600,
+            "major": true
+          },
+          {
+            "url": "http://img.alicdn.com/bao/uploaded/fake2.jpg",
+            "widthSize": 640,
+            "heightSize": 640
+          }
+        ]
+      },
+      "sellerDO": {
+        "sellerId": 2200000999,
+        "nick": "测试卖家",
+        "city": "杭州"
+      }
+    },
+    "ret": [
+      "SUCCESS::调用成功"
+    ],
+    "v": "1.0"
+  },
+  "error": null
+}

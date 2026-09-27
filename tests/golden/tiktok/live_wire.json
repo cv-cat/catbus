@@ -1,0 +1,150 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": {
+    "response_raw": {
+      "base64": "CkAKEldlYmNhc3RDaGF0TWVzc2FnZRIoEh4IKhoG6KeC5LyXsgIGdmlld2Vy8gIITVM0d0ZBS0UaBuS9oOWlvRgBCjwKEldlYmNhc3RMaWtlTWVzc2FnZRIkEAMYYyoeCCoaBuinguS8l7ICBnZpZXdlcvICCE1TNHdGQUtFGAIKSQoSV2ViY2FzdEdpZnRNZXNzYWdlEjEQlywwAjoeCCoaBuinguS8l7ICBnZpZXdlcvICCE1TNHdGQUtFegoolyyCAQRSb3NlGAMKHAoUV2ViY2FzdE1lbWJlck1lc3NhZ2USAggBGAQSCGN1cnNvci0xGOgHKgVleHQ9MUCQTkgB"
+    },
+    "response": {
+      "events": [
+        {
+          "method": "WebcastChatMessage",
+          "message_id": 1,
+          "type": "chat",
+          "user": {
+            "id": 42,
+            "nickname": "观众",
+            "display_id": "viewer",
+            "sec_uid": "MS4wFAKE"
+          },
+          "text": "你好"
+        },
+        {
+          "method": "WebcastLikeMessage",
+          "message_id": 2,
+          "type": "like",
+          "count": 3,
+          "total": 99,
+          "user": {
+            "id": 42,
+            "nickname": "观众",
+            "display_id": "viewer",
+            "sec_uid": "MS4wFAKE"
+          }
+        },
+        {
+          "method": "WebcastGiftMessage",
+          "message_id": 3,
+          "type": "gift",
+          "gift_id": 5655,
+          "combo_count": 2,
+          "user": {
+            "id": 42,
+            "nickname": "观众",
+            "display_id": "viewer",
+            "sec_uid": "MS4wFAKE"
+          },
+          "gift": {
+            "id": 5655,
+            "name": "Rose"
+          }
+        },
+        {
+          "method": "WebcastMemberMessage",
+          "message_id": 4,
+          "type": "other",
+          "payload_length": 2
+        }
+      ],
+      "cursor": "cursor-1",
+      "internal_ext": "ext=1",
+      "fetch_interval": 1000,
+      "heartbeat_duration": 10000,
+      "need_ack": true,
+      "raw_length": 258
+    },
+    "frame_raw": {
+      "base64": "CAcQCCoVCg1jb21wcmVzc190eXBlEgRnemlwOgNtc2dCuQEfiwgAAAAAAAL/43LgEgpPTUpOLC5xzkgs8U0tLk5MTxXSEJLj0JJie7G86cme6ZuY2MoyU8tTiz4xcfgGm5S7OXq7SrE92bvg6dK9EoxcNnATfDKzU2EmqAgwSyRrETBFgonLE67bPTMNbr+hwHQdAyYrAtqruDSm6zQxsgTlF6dKMHPJcIlAjfJNzU1KLYIZxsTBKMEixJFcWlScX6RrKPGCXYs1taLE1tBhgp8HIwAqD7yLAgEAAA=="
+    },
+    "frame": {
+      "seq_id": 7,
+      "log_id": 8,
+      "payload_type": "msg",
+      "headers": {
+        "compress_type": "gzip"
+      },
+      "response": {
+        "events": [
+          {
+            "method": "WebcastChatMessage",
+            "message_id": 1,
+            "type": "chat",
+            "user": {
+              "id": 42,
+              "nickname": "观众",
+              "display_id": "viewer",
+              "sec_uid": "MS4wFAKE"
+            },
+            "text": "你好"
+          },
+          {
+            "method": "WebcastLikeMessage",
+            "message_id": 2,
+            "type": "like",
+            "count": 3,
+            "total": 99,
+            "user": {
+              "id": 42,
+              "nickname": "观众",
+              "display_id": "viewer",
+              "sec_uid": "MS4wFAKE"
+            }
+          },
+          {
+            "method": "WebcastGiftMessage",
+            "message_id": 3,
+            "type": "gift",
+            "gift_id": 5655,
+            "combo_count": 2,
+            "user": {
+              "id": 42,
+              "nickname": "观众",
+              "display_id": "viewer",
+              "sec_uid": "MS4wFAKE"
+            },
+            "gift": {
+              "id": 5655,
+              "name": "Rose"
+            }
+          },
+          {
+            "method": "WebcastMemberMessage",
+            "message_id": 4,
+            "type": "other",
+            "payload_length": 2
+          }
+        ],
+        "cursor": "cursor-1",
+        "internal_ext": "ext=1",
+        "fetch_interval": 1000,
+        "heartbeat_duration": 10000,
+        "need_ack": true,
+        "raw_length": 258
+      },
+      "payload_length": 258
+    },
+    "heartbeat": {
+      "base64": "MgJwYjoCaGJCCgiBgOjiquqzp2U="
+    },
+    "enter": {
+      "base64": "MgJwYjoNaW1fZW50ZXJfcm9vbUInCIGA6OKq6rOnZSAMKghhdWRpZW5jZTIIY3Vyc29yLTE4AEoBMFAA"
+    },
+    "ack": {
+      "base64": "EAgyAnBiOgNhY2tCBWV4dD0x"
+    }
+  },
+  "error": null
+}

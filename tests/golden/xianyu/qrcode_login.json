@@ -1,0 +1,855 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://log.mmstat.com/eg.js",
+      "headers": [
+        [
+          "User-Agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://h5api.m.goofish.com/h5/mtop.taobao.idlehome.home.webpc.feed/1.0/?jsv=2.7.2&appKey=34839810&t=1790000000123&sign=&v=1.0&type=originaljson&dataType=json&timeout=20000&api=mtop.taobao.idlehome.home.webpc.feed&sessionOption=AutoLoginOnly&spm_cnt=a21ybx.home.0.0",
+      "headers": [
+        [
+          "User-Agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+        ],
+        [
+          "Accept",
+          "application/json"
+        ],
+        [
+          "Accept-Language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "Accept-Encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "Origin",
+          "https://www.goofish.com"
+        ],
+        [
+          "Referer",
+          "https://www.goofish.com/"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "Content-Type",
+          "application/x-www-form-urlencoded"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "FAKECNA0000000000000000"
+        ]
+      ],
+      "body": "data=%7B%7D",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://h5api.m.goofish.com/h5/mtop.gaia.nodejs.gaia.idle.data.gw.v2.index.get/1.0/?jsv=2.7.2&appKey=34839810&t=1790000000123&sign=&v=1.0&type=originaljson&dataType=json&timeout=20000&api=mtop.gaia.nodejs.gaia.idle.data.gw.v2.index.get&sessionOption=AutoLoginOnly&spm_cnt=a21ybx.home.0.0",
+      "headers": [
+        [
+          "User-Agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+        ],
+        [
+          "Accept",
+          "application/json"
+        ],
+        [
+          "Accept-Language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "Accept-Encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "Origin",
+          "https://www.goofish.com"
+        ],
+        [
+          "Referer",
+          "https://www.goofish.com/"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "Content-Type",
+          "application/x-www-form-urlencoded"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "FAKECNA0000000000000000"
+        ],
+        [
+          "mtop_partitioned_detect",
+          "1"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790007200000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc0000"
+        ]
+      ],
+      "body": "data=%7B%7D",
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://passport.goofish.com/mini_login.htm?lang=zh_cn&appName=xianyu&appEntrance=web&styleType=vertical&bizParams=&notLoadSsoView=false&notKeepLogin=false&isMobile=false&qrCodeFirst=false&stie=77&rnd=0.6842814084442211",
+      "headers": [
+        [
+          "User-Agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+        ],
+        [
+          "Accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "Accept-Language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "Accept-Encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "iframe"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "Referer",
+          "https://www.goofish.com/"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "FAKECNA0000000000000000"
+        ],
+        [
+          "mtop_partitioned_detect",
+          "1"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790007200000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc0000"
+        ],
+        [
+          "cookie2",
+          "fakecookie20000"
+        ],
+        [
+          "tfstk",
+          "gF827Kb9Kq3qR2MHTBbZLeQ9CAbA5NkQQF61sCAGGtX0lrwM4pvRhhtfh5-yILIfn2gBMIQOSvGIR2OvMhtealH5SfAl51zDjHXBMIQTwvMIR2Ombf1xCc7MIablOTXGSNviaQXRENXMINcyZTCGSOvGSbRle1jrSIAgz6sm-bArEkLzRJ6HiTAXGU54d90dUP4G3sSqNIXzSPTyXxj8itmLNOQfH9jPmVC5Yj86i5qgpPfPd_5rDmBlO2wYEMZTXgbda9GfGlEOm_CPdblzXlIle_WIGs1.."
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://passport.goofish.com/newlogin/qrcode/generate.do?appName=xianyu&fromSite=77&appEntrance=web&_csrf_token=fake-xsrf-token&umidToken=&hsiz=fakecookie20000&bizParams=taobaoBizLoginFrom%3Dweb%26renderRefer%3Dhttps%253A%2F%2Fwww.goofish.com%2F&mainPage=false&isMobile=false&lang=zh_CN&returnUrl=&umidTag=SERVER",
+      "headers": [
+        [
+          "User-Agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+        ],
+        [
+          "Accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "Accept-Language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "Accept-Encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "Referer",
+          "https://passport.goofish.com/mini_login.htm"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "FAKECNA0000000000000000"
+        ],
+        [
+          "mtop_partitioned_detect",
+          "1"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790007200000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc0000"
+        ],
+        [
+          "cookie2",
+          "fakecookie20000"
+        ],
+        [
+          "tfstk",
+          "gF827Kb9Kq3qR2MHTBbZLeQ9CAbA5NkQQF61sCAGGtX0lrwM4pvRhhtfh5-yILIfn2gBMIQOSvGIR2OvMhtealH5SfAl51zDjHXBMIQTwvMIR2Ombf1xCc7MIablOTXGSNviaQXRENXMINcyZTCGSOvGSbRle1jrSIAgz6sm-bArEkLzRJ6HiTAXGU54d90dUP4G3sSqNIXzSPTyXxj8itmLNOQfH9jPmVC5Yj86i5qgpPfPd_5rDmBlO2wYEMZTXgbda9GfGlEOm_CPdblzXlIle_WIGs1.."
+        ],
+        [
+          "_tb_token_",
+          "faketbtoken"
+        ],
+        [
+          "XSRF-TOKEN",
+          "fake-xsrf-token"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://passport.goofish.com/newlogin/qrcode/query.do?appName=xianyu&fromSite=77",
+      "headers": [
+        [
+          "User-Agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+        ],
+        [
+          "Accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "Accept-Language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "Accept-Encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "Content-Type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "Origin",
+          "https://passport.goofish.com"
+        ],
+        [
+          "Referer",
+          "https://passport.goofish.com/mini_login.htm"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "FAKECNA0000000000000000"
+        ],
+        [
+          "mtop_partitioned_detect",
+          "1"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790007200000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc0000"
+        ],
+        [
+          "cookie2",
+          "fakecookie20000"
+        ],
+        [
+          "tfstk",
+          "gF827Kb9Kq3qR2MHTBbZLeQ9CAbA5NkQQF61sCAGGtX0lrwM4pvRhhtfh5-yILIfn2gBMIQOSvGIR2OvMhtealH5SfAl51zDjHXBMIQTwvMIR2Ombf1xCc7MIablOTXGSNviaQXRENXMINcyZTCGSOvGSbRle1jrSIAgz6sm-bArEkLzRJ6HiTAXGU54d90dUP4G3sSqNIXzSPTyXxj8itmLNOQfH9jPmVC5Yj86i5qgpPfPd_5rDmBlO2wYEMZTXgbda9GfGlEOm_CPdblzXlIle_WIGs1.."
+        ],
+        [
+          "_tb_token_",
+          "faketbtoken"
+        ],
+        [
+          "XSRF-TOKEN",
+          "fake-xsrf-token"
+        ]
+      ],
+      "body": "appName=xianyu&fromSite=77&appEntrance=web&_csrf_token=fake-xsrf-token&umidToken=&hsiz=fakecookie20000&bizParams=taobaoBizLoginFrom%3Dweb%26renderRefer%3Dhttps%253A%2F%2Fwww.goofish.com%2F&mainPage=false&isMobile=false&lang=zh_CN&returnUrl=&umidTag=SERVER&navlanguage=en&navUserAgent=Mozilla%2F5.0+%28Windows+NT+10.0%3B+Win64%3B+x64%29+AppleWebKit%2F537.36+%28KHTML%2C+like+Gecko%29+Chrome%2F147.0.0.0+Safari%2F537.36&navPlatform=Win32&isIframe=true&documentReferer=https%3A%2F%2Fwww.goofish.com%2F&defaultView=sms&deviceId=FAKECNA0000000000000000&t=1790000000123&ck=fakeck",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://passport.goofish.com/login_token/login.do?token=fake-login-token&subFlow=DIALOG_CHECK_LOGIN_RPC&nextCode=0018&bizScene=qrcode&confirm=true",
+      "headers": [
+        [
+          "User-Agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+        ],
+        [
+          "Accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "Accept-Language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "Accept-Encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "Content-Type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "Origin",
+          "https://passport.goofish.com"
+        ],
+        [
+          "Referer",
+          "https://passport.goofish.com/mini_login.htm"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "FAKECNA0000000000000000"
+        ],
+        [
+          "mtop_partitioned_detect",
+          "1"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790007200000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc0000"
+        ],
+        [
+          "cookie2",
+          "fakecookie20000"
+        ],
+        [
+          "tfstk",
+          "gF827Kb9Kq3qR2MHTBbZLeQ9CAbA5NkQQF61sCAGGtX0lrwM4pvRhhtfh5-yILIfn2gBMIQOSvGIR2OvMhtealH5SfAl51zDjHXBMIQTwvMIR2Ombf1xCc7MIablOTXGSNviaQXRENXMINcyZTCGSOvGSbRle1jrSIAgz6sm-bArEkLzRJ6HiTAXGU54d90dUP4G3sSqNIXzSPTyXxj8itmLNOQfH9jPmVC5Yj86i5qgpPfPd_5rDmBlO2wYEMZTXgbda9GfGlEOm_CPdblzXlIle_WIGs1.."
+        ],
+        [
+          "_tb_token_",
+          "faketbtoken"
+        ],
+        [
+          "unb",
+          "2200000001"
+        ],
+        [
+          "tracknick",
+          "tester"
+        ],
+        [
+          "sgcookie",
+          "fakesg"
+        ],
+        [
+          "csg",
+          "fakecsg"
+        ],
+        [
+          "XSRF-TOKEN",
+          "fake-xsrf-token"
+        ]
+      ],
+      "body": "deviceId=FAKECNA0000000000000000",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://h5api.m.goofish.com/h5/mtop.idle.web.user.page.nav/1.0/?jsv=2.7.2&appKey=34839810&t=1790000000123&sign=&v=1.0&type=originaljson&dataType=json&timeout=20000&api=mtop.idle.web.user.page.nav&sessionOption=AutoLoginOnly&spm_cnt=a21ybx.home.0.0",
+      "headers": [
+        [
+          "User-Agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+        ],
+        [
+          "Accept",
+          "application/json"
+        ],
+        [
+          "Accept-Language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "Accept-Encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "Origin",
+          "https://www.goofish.com"
+        ],
+        [
+          "Referer",
+          "https://www.goofish.com/"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "Content-Type",
+          "application/x-www-form-urlencoded"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "FAKECNA0000000000000000"
+        ],
+        [
+          "mtop_partitioned_detect",
+          "1"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790007200000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc0000"
+        ],
+        [
+          "cookie2",
+          "fakecookie2login"
+        ],
+        [
+          "tfstk",
+          "gF827Kb9Kq3qR2MHTBbZLeQ9CAbA5NkQQF61sCAGGtX0lrwM4pvRhhtfh5-yILIfn2gBMIQOSvGIR2OvMhtealH5SfAl51zDjHXBMIQTwvMIR2Ombf1xCc7MIablOTXGSNviaQXRENXMINcyZTCGSOvGSbRle1jrSIAgz6sm-bArEkLzRJ6HiTAXGU54d90dUP4G3sSqNIXzSPTyXxj8itmLNOQfH9jPmVC5Yj86i5qgpPfPd_5rDmBlO2wYEMZTXgbda9GfGlEOm_CPdblzXlIle_WIGs1.."
+        ],
+        [
+          "_tb_token_",
+          "faketbtoken"
+        ],
+        [
+          "unb",
+          "2200000001"
+        ],
+        [
+          "tracknick",
+          "tester"
+        ],
+        [
+          "sgcookie",
+          "fakesg"
+        ],
+        [
+          "csg",
+          "fakecsg"
+        ]
+      ],
+      "body": "data=%7B%7D",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [
+          "cna=FAKECNA0000000000000000; Domain=.mmstat.com; Path=/"
+        ]
+      },
+      "body": "window.goldlog=(window.goldlog||{});"
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [
+          "mtop_partitioned_detect=1; Domain=goofish.com; Path=/",
+          "_m_h5_tk=0123456789abcdef0123456789abcdef_1790007200000; Domain=goofish.com; Path=/",
+          "_m_h5_tk_enc=fakeenc0000; Domain=goofish.com; Path=/"
+        ]
+      },
+      "body": {
+        "api": "mtop.taobao.idlehome.home.webpc.feed",
+        "data": {},
+        "ret": [
+          "FAIL_SYS_TOKEN_EMPTY::令牌为空"
+        ],
+        "v": "1.0"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [
+          "cookie2=fakecookie20000; Domain=goofish.com; Path=/"
+        ]
+      },
+      "body": {
+        "api": "mtop.gaia.nodejs.gaia.idle.data.gw.v2.index.get",
+        "data": {},
+        "ret": [
+          "FAIL_SYS_TOKEN_EMPTY::令牌为空"
+        ],
+        "v": "1.0"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [
+          "XSRF-TOKEN=fake-xsrf-token; Path=/",
+          "_tb_token_=faketbtoken; Domain=goofish.com; Path=/"
+        ]
+      },
+      "body": "<html></html>"
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "content": {
+          "data": {
+            "codeContent": "https://passport.goofish.com/qrcodeCheck.htm?lgToken=fakeLgToken&tbScanOpenType=Notification",
+            "t": 1790000000123,
+            "ck": "fakeck"
+          },
+          "success": true
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [
+          "unb=2200000001; Domain=goofish.com; Path=/",
+          "tracknick=tester; Domain=goofish.com; Path=/",
+          "sgcookie=fakesg; Domain=goofish.com; Path=/",
+          "csg=fakecsg; Domain=goofish.com; Path=/"
+        ]
+      },
+      "body": {
+        "content": {
+          "data": {
+            "qrCodeStatus": "CONFIRMED",
+            "token": "fake-login-token"
+          },
+          "success": true
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [
+          "cookie2=fakecookie2login; Domain=goofish.com; Path=/"
+        ]
+      },
+      "body": {
+        "content": {
+          "success": true
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [
+          "_m_h5_tk=11112222333344445555666677778888_1790007200000; Domain=goofish.com; Path=/"
+        ]
+      },
+      "body": {
+        "api": "mtop.idle.web.user.page.nav",
+        "data": {},
+        "ret": [
+          "FAIL_SYS_TOKEN_EXOIRED::令牌过期"
+        ],
+        "v": "1.0"
+      }
+    }
+  ],
+  "result": {
+    "cookies": [
+      [
+        "XSRF-TOKEN",
+        "fake-xsrf-token",
+        "passport.goofish.com"
+      ],
+      [
+        "_m_h5_tk",
+        "11112222333344445555666677778888_1790007200000",
+        ".goofish.com"
+      ],
+      [
+        "_m_h5_tk_enc",
+        "fakeenc0000",
+        ".goofish.com"
+      ],
+      [
+        "_tb_token_",
+        "faketbtoken",
+        ".goofish.com"
+      ],
+      [
+        "cna",
+        "FAKECNA0000000000000000",
+        ".goofish.com"
+      ],
+      [
+        "cna",
+        "FAKECNA0000000000000000",
+        ".mmstat.com"
+      ],
+      [
+        "cookie2",
+        "fakecookie2login",
+        ".goofish.com"
+      ],
+      [
+        "csg",
+        "fakecsg",
+        ".goofish.com"
+      ],
+      [
+        "mtop_partitioned_detect",
+        "1",
+        ".goofish.com"
+      ],
+      [
+        "sgcookie",
+        "fakesg",
+        ".goofish.com"
+      ],
+      [
+        "tfstk",
+        "gF827Kb9Kq3qR2MHTBbZLeQ9CAbA5NkQQF61sCAGGtX0lrwM4pvRhhtfh5-yILIfn2gBMIQOSvGIR2OvMhtealH5SfAl51zDjHXBMIQTwvMIR2Ombf1xCc7MIablOTXGSNviaQXRENXMINcyZTCGSOvGSbRle1jrSIAgz6sm-bArEkLzRJ6HiTAXGU54d90dUP4G3sSqNIXzSPTyXxj8itmLNOQfH9jPmVC5Yj86i5qgpPfPd_5rDmBlO2wYEMZTXgbda9GfGlEOm_CPdblzXlIle_WIGs1..",
+        ".goofish.com"
+      ],
+      [
+        "tracknick",
+        "tester",
+        ".goofish.com"
+      ],
+      [
+        "unb",
+        "2200000001",
+        ".goofish.com"
+      ]
+    ],
+    "device_id": "95416BBF-5215-41C3-B3B2-B52001DC30E7-2200000001"
+  },
+  "error": null
+}

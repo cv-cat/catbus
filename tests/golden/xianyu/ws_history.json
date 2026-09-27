@@ -1,0 +1,226 @@
+{
+  "input": {
+    "cid": "47000000001"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://h5api.m.goofish.com/h5/mtop.taobao.idlemessage.pc.login.token/1.0/?jsv=2.7.2&appKey=34839810&t=1790000000000&sign=189f259bf97638465098ed0d518fe809&v=1.0&type=originaljson&accountSite=xianyu&dataType=json&timeout=20000&api=mtop.taobao.idlemessage.pc.login.token&sessionOption=AutoLoginOnly&spm_cnt=a21ybx.im.0.0&spm_pre=a21ybx.item.want.1.14ad3da6ALVq3n&log_id=14ad3da6ALVq3n",
+      "headers": [
+        [
+          "Host",
+          "h5api.m.goofish.com"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "origin",
+          "https://www.goofish.com"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "referer",
+          "https://www.goofish.com/"
+        ],
+        [
+          "accept-language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "fakecna"
+        ],
+        [
+          "cookie2",
+          "fakecookie2"
+        ],
+        [
+          "t",
+          "faket"
+        ],
+        [
+          "_tb_token_",
+          "faketbtoken"
+        ],
+        [
+          "unb",
+          "2200000001"
+        ],
+        [
+          "tracknick",
+          "tester"
+        ],
+        [
+          "sgcookie",
+          "fakesg"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790003600000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc"
+        ]
+      ],
+      "body": "data=%7B%22appKey%22%3A%22444e9908a51d1cb236a27862abc769c9%22%2C%22deviceId%22%3A%2295416BBF-5215-41C3-B3B2-B52001DC30E7-2200000001%22%7D",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "api": "mtop.taobao.idlemessage.pc.login.token",
+        "data": {
+          "accessToken": "fake-access-token",
+          "refreshToken": "fake-refresh"
+        },
+        "ret": [
+          "SUCCESS::调用成功"
+        ],
+        "v": "1.0"
+      }
+    }
+  ],
+  "result": {
+    "url": "wss://wss-goofish.dingtalk.com/",
+    "headers": [
+      [
+        "Cookie",
+        "cna=fakecna; cookie2=fakecookie2; t=faket; _tb_token_=faketbtoken; unb=2200000001; tracknick=tester; sgcookie=fakesg; _m_h5_tk=0123456789abcdef0123456789abcdef_1790003600000; _m_h5_tk_enc=fakeenc"
+      ],
+      [
+        "Host",
+        "wss-goofish.dingtalk.com"
+      ],
+      [
+        "Connection",
+        "Upgrade"
+      ],
+      [
+        "Pragma",
+        "no-cache"
+      ],
+      [
+        "Cache-Control",
+        "no-cache"
+      ],
+      [
+        "User-Agent",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+      ],
+      [
+        "Origin",
+        "https://www.goofish.com"
+      ],
+      [
+        "Accept-Encoding",
+        "gzip, deflate, br, zstd"
+      ],
+      [
+        "Accept-Language",
+        "zh-CN,zh;q=0.9"
+      ]
+    ],
+    "sent": [
+      "{\"lwp\": \"/reg\", \"headers\": {\"cache-header\": \"app-key token ua wv\", \"app-key\": \"444e9908a51d1cb236a27862abc769c9\", \"token\": \"fake-access-token\", \"ua\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 DingTalk(2.1.5) OS(Windows/10) Browser(Chrome/133.0.0.0) DingWeb/2.1.5 IMPaaS DingWeb/2.1.5\", \"dt\": \"j\", \"wv\": \"im:3,au:3,sy:6\", \"sync\": \"0,0;0;0;\", \"did\": \"95416BBF-5215-41C3-B3B2-B52001DC30E7-2200000001\", \"mid\": \"5811790000000123 0\"}}",
+      "{\"lwp\": \"/r/SyncStatus/ackDiff\", \"headers\": {\"mid\": \"5811790000000123 0\"}, \"body\": [{\"pipeline\": \"sync\", \"tooLong2Tag\": \"PNM,1\", \"channel\": \"sync\", \"topic\": \"sync\", \"highPts\": 0, \"pts\": 1790000000123000, \"seq\": 0, \"timestamp\": 1790000000123}]}",
+      "{\"code\": 200, \"headers\": {\"mid\": \"vulcan-mid\", \"sid\": \"vulcan-sid\"}}",
+      "{\"lwp\": \"/r/MessageManager/listUserMessages\", \"headers\": {\"mid\": \"5811790000000123 0\"}, \"body\": [\"47000000001@goofish\", false, 9007199254740991, 20, false]}",
+      "{\"code\": 200, \"headers\": {\"mid\": \"5811790000000123 0\", \"sid\": \"resp-sid\", \"app-key\": \"k\", \"ua\": \"u\", \"dt\": \"j\"}}"
+    ],
+    "server": [
+      {
+        "after": 2,
+        "data": "{\"lwp\": \"/s/vulcan\", \"headers\": {\"mid\": \"vulcan-mid\", \"sid\": \"vulcan-sid\"}}"
+      },
+      {
+        "after": 4,
+        "data": "{\"code\": 200, \"headers\": {\"mid\": \"5811790000000123 0\", \"sid\": \"resp-sid\", \"app-key\": \"k\", \"ua\": \"u\", \"dt\": \"j\"}, \"body\": {\"hasMore\": 0, \"nextCursor\": 1789990000000, \"userMessageModels\": [{\"message\": {\"messageId\": \"m3\", \"cid\": \"47000000001@goofish\", \"createAt\": 1789990000900, \"extension\": {\"reminderTitle\": \"测试买家\", \"senderUserId\": \"2200000999\", \"reminderContent\": \"[图片]\"}, \"content\": {\"contentType\": 101, \"custom\": {\"type\": 2, \"data\": \"eyJjb250ZW50VHlwZSI6IDIsICJpbWFnZSI6IHsicGljcyI6IFt7InR5cGUiOiAwLCAidXJsIjogImh0dHBzOi8vaW1nLmFsaWNkbi5jb20vZmFrZS5wbmciLCAid2lkdGgiOiAxMDAsICJoZWlnaHQiOiA4MH1dfX0=\"}}}}, {\"message\": {\"messageId\": \"m2\", \"cid\": \"47000000001@goofish\", \"createAt\": 1789990000500, \"extension\": {\"reminderTitle\": \"测试买家\", \"senderUserId\": \"2200000999\", \"reminderContent\": \"还在吗\"}, \"content\": {\"contentType\": 101, \"custom\": {\"type\": 1, \"data\": \"eyJjb250ZW50VHlwZSI6IDEsICJ0ZXh0IjogeyJ0ZXh0IjogIlx1OGZkOFx1NTcyOFx1NTQxNyJ9fQ==\"}}}}, {\"message\": {\"messageId\": \"m1\", \"cid\": \"47000000001@goofish\", \"createAt\": 1789990000000, \"extension\": {\"reminderTitle\": \"tester\", \"senderUserId\": \"2200000001\", \"reminderContent\": \"在的\"}, \"content\": {\"contentType\": 101, \"custom\": {\"type\": 1, \"data\": \"eyJjb250ZW50VHlwZSI6IDEsICJ0ZXh0IjogeyJ0ZXh0IjogIlx1NTcyOFx1NzY4NCJ9fQ==\"}}}}]}}"
+      }
+    ],
+    "result": [
+      {
+        "send_user_id": "2200000001",
+        "send_user_name": "tester",
+        "message": {
+          "contentType": 1,
+          "text": {
+            "text": "在的"
+          }
+        }
+      },
+      {
+        "send_user_id": "2200000999",
+        "send_user_name": "测试买家",
+        "message": {
+          "contentType": 1,
+          "text": {
+            "text": "还在吗"
+          }
+        }
+      },
+      {
+        "send_user_id": "2200000999",
+        "send_user_name": "测试买家",
+        "message": {
+          "contentType": 2,
+          "image": {
+            "pics": [
+              {
+                "type": 0,
+                "url": "https://img.alicdn.com/fake.png",
+                "width": 100,
+                "height": 80
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "error": null
+}

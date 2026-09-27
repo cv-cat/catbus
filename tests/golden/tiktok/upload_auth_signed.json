@@ -1,0 +1,138 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://www.tiktok.com/api/v1/video/upload/auth/?aid=1988&msToken=FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV==&X-Bogus=DFSzswcuxEUANtrhCf1eaHgfqOMr&X-Gnarly=MkWYt5EkgSAiHmTsRAxTVvgj8IC/zHyh2vDphraDGO2/7ZPNuLcZbcaTO7b8HcZu7l7j-Isn0IrGZrhQHb699Lvv5MoLC92liApGQyRwoUPARfWJJzxQOiFzL/4LzV239WCXgJnzhvTETPYVOTYyb/D8Ym1mwcJjYCDG3Dn1VJioU165XCFC6kHE0NhWFv5rsihmlRpUiUmGigDV1cG-9Jfr9jDiXLgYP7iHKDUjsDHaC0iXfHom20BFSRJmTT-MFtnKOXyyED4L",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://www.tiktok.com/tiktokstudio/upload?from=webapp&tab=video"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "tt_csrf_token",
+          "fake-csrf-token-0001"
+        ],
+        [
+          "tt_chain_token",
+          "fakechain"
+        ],
+        [
+          "s_v_web_id",
+          "verify_fake0001_AbCdEfGh_IjKl_4MnO_8PqR_StUvWxYz0123"
+        ],
+        [
+          "multi_sids",
+          "7000000000000000001%3Afakesid0001"
+        ],
+        [
+          "sessionid",
+          "fakesession0001"
+        ],
+        [
+          "sid_tt",
+          "fakesession0001"
+        ],
+        [
+          "msToken",
+          "FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV=="
+        ],
+        [
+          "store-country-code",
+          "sg"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "video_token_v5": {
+          "access_key_id": "AKVIDEO",
+          "secret_acess_key": "SKVIDEO",
+          "session_token": "STVIDEO",
+          "space_name": "tiktok"
+        },
+        "vframe_token_v5": {
+          "access_key_id": "AKFRAME",
+          "secret_acess_key": "SKFRAME",
+          "session_token": "STFRAME",
+          "space_name": "tiktok-ai-frame"
+        },
+        "status_code": 0
+      }
+    }
+  ],
+  "result": {
+    "video_token_v5": {
+      "access_key_id": "AKVIDEO",
+      "secret_acess_key": "SKVIDEO",
+      "session_token": "STVIDEO",
+      "space_name": "tiktok"
+    },
+    "vframe_token_v5": {
+      "access_key_id": "AKFRAME",
+      "secret_acess_key": "SKFRAME",
+      "session_token": "STFRAME",
+      "space_name": "tiktok-ai-frame"
+    },
+    "status_code": 0
+  },
+  "error": null
+}

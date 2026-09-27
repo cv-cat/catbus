@@ -1,0 +1,166 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://h5api.m.goofish.com/h5/mtop.taobao.idle.local.poi.get/1.0/?jsv=2.7.2&appKey=34839810&t=1790000000000&sign=0958896a993a4aaf4c863f494dbf0bce&v=1.0&type=originaljson&accountSite=xianyu&dataType=json&timeout=20000&api=mtop.taobao.idle.local.poi.get&sessionOption=AutoLoginOnly&spm_cnt=a21ybx.publish.0.0&spm_pre=a21ybx.item.sidebar.1.38262218ame5nr&log_id=38262218ame5nr",
+      "headers": [
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "accept-language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "eagleeye-userdata",
+          "spm-cnt=a21ybx"
+        ],
+        [
+          "origin",
+          "https://www.goofish.com"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "referer",
+          "https://www.goofish.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "fakecna"
+        ],
+        [
+          "cookie2",
+          "fakecookie2"
+        ],
+        [
+          "t",
+          "faket"
+        ],
+        [
+          "_tb_token_",
+          "faketbtoken"
+        ],
+        [
+          "unb",
+          "2200000001"
+        ],
+        [
+          "tracknick",
+          "tester"
+        ],
+        [
+          "sgcookie",
+          "fakesg"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790003600000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc"
+        ]
+      ],
+      "body": "data=%7B%22longitude%22%3A118.78248347393424%2C%22latitude%22%3A31.91629189813543%7D",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "api": "mtop.taobao.idle.local.poi.get",
+        "data": {
+          "commonAddresses": [
+            {
+              "area": "玄武区",
+              "city": "南京",
+              "divisionId": 320102,
+              "longitude": 118.78248,
+              "latitude": 31.91629,
+              "poiId": "B0FFFAKE01",
+              "poi": "测试小区",
+              "prov": "江苏"
+            }
+          ]
+        },
+        "ret": [
+          "SUCCESS::调用成功"
+        ],
+        "v": "1.0"
+      }
+    }
+  ],
+  "result": {
+    "api": "mtop.taobao.idle.local.poi.get",
+    "data": {
+      "commonAddresses": [
+        {
+          "area": "玄武区",
+          "city": "南京",
+          "divisionId": 320102,
+          "longitude": 118.78248,
+          "latitude": 31.91629,
+          "poiId": "B0FFFAKE01",
+          "poi": "测试小区",
+          "prov": "江苏"
+        }
+      ]
+    },
+    "ret": [
+      "SUCCESS::调用成功"
+    ],
+    "v": "1.0"
+  },
+  "error": null
+}

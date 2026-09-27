@@ -1,0 +1,597 @@
+{
+ "nested": {
+  "im_proto": {
+   "nested": {
+    "Frame": {
+     "fields": {
+      "seqid": {
+       "type": "uint64",
+       "id": 1
+      },
+      "logid": {
+       "type": "uint64",
+       "id": 2
+      },
+      "service": {
+       "type": "int32",
+       "id": 3
+      },
+      "method": {
+       "type": "int32",
+       "id": 4
+      },
+      "headers": {
+       "type": "ExtValue",
+       "id": 5,
+       "rule": "repeated"
+      },
+      "payload_encoding": {
+       "type": "string",
+       "id": 6
+      },
+      "payload_type": {
+       "type": "string",
+       "id": 7
+      },
+      "payload": {
+       "type": "bytes",
+       "id": 8
+      }
+     }
+    },
+    "Request": {
+     "fields": {
+      "cmd": {
+       "type": "int32",
+       "id": 1
+      },
+      "sequence_id": {
+       "type": "int64",
+       "id": 2
+      },
+      "sdk_version": {
+       "type": "string",
+       "id": 3
+      },
+      "token": {
+       "type": "string",
+       "id": 4
+      },
+      "refer": {
+       "type": "int32",
+       "id": 5
+      },
+      "inbox_type": {
+       "type": "int32",
+       "id": 6
+      },
+      "build_number": {
+       "type": "string",
+       "id": 7
+      },
+      "body": {
+       "type": "RequestBody",
+       "id": 8
+      },
+      "device_id": {
+       "type": "string",
+       "id": 9
+      },
+      "channel": {
+       "type": "string",
+       "id": 10
+      },
+      "device_platform": {
+       "type": "string",
+       "id": 11
+      },
+      "device_type": {
+       "type": "string",
+       "id": 12
+      },
+      "os_version": {
+       "type": "string",
+       "id": 13
+      },
+      "version_code": {
+       "type": "string",
+       "id": 14
+      },
+      "headers": {
+       "type": "ExtValue",
+       "id": 15,
+       "rule": "repeated"
+      },
+      "config_id": {
+       "type": "int32",
+       "id": 16
+      },
+      "token_info": {
+       "type": "TokenInfo",
+       "id": 17
+      },
+      "auth_type": {
+       "type": "int32",
+       "id": 18
+      },
+      "retry_count": {
+       "type": "int32",
+       "id": 20
+      }
+     }
+    },
+    "RequestBody": {
+     "fields": {
+      "send_message_body": {
+       "type": "SendMessageRequestBody",
+       "id": 100
+      },
+      "mark_conversation_read_body": {
+       "type": "MarkConversationReadRequestBody",
+       "id": 604
+      },
+      "get_stranger_conversation_list_body": {
+       "type": "GetStrangerConversationListRequestBody",
+       "id": 1000
+      }
+     }
+    },
+    "SendMessageRequestBody": {
+     "fields": {
+      "conversation_id": {
+       "type": "string",
+       "id": 1
+      },
+      "conversation_type": {
+       "type": "int32",
+       "id": 2
+      },
+      "conversation_short_id": {
+       "type": "int64",
+       "id": 3
+      },
+      "content": {
+       "type": "string",
+       "id": 4
+      },
+      "ext": {
+       "type": "ExtValue",
+       "id": 5,
+       "rule": "repeated"
+      },
+      "message_type": {
+       "type": "int32",
+       "id": 6
+      },
+      "ticket": {
+       "type": "string",
+       "id": 7
+      },
+      "client_message_id": {
+       "type": "string",
+       "id": 8
+      },
+      "mentioned_users": {
+       "type": "int64",
+       "id": 9,
+       "rule": "repeated"
+      },
+      "ignore_badge_count": {
+       "type": "bool",
+       "id": 10
+      },
+      "client_ext": {
+       "type": "ExtValue",
+       "id": 12,
+       "rule": "repeated"
+      },
+      "scene": {
+       "type": "string",
+       "id": 14
+      },
+      "VisibleUsers": {
+       "type": "int64",
+       "id": 15,
+       "rule": "repeated"
+      },
+      "InvisibleUsers": {
+       "type": "int64",
+       "id": 16,
+       "rule": "repeated"
+      }
+     }
+    },
+    "MarkConversationReadRequestBody": {
+     "fields": {
+      "conversation_id": {
+       "type": "string",
+       "id": 1
+      },
+      "conversation_short_id": {
+       "type": "int64",
+       "id": 2
+      },
+      "conversation_type": {
+       "type": "int32",
+       "id": 3
+      },
+      "read_message_index": {
+       "type": "int64",
+       "id": 4
+      },
+      "conv_unread_count": {
+       "type": "int64",
+       "id": 5
+      },
+      "total_unread_count": {
+       "type": "int64",
+       "id": 6
+      },
+      "read_message_index_v2": {
+       "type": "int64",
+       "id": 7
+      },
+      "read_badge_count": {
+       "type": "int32",
+       "id": 8
+      },
+      "ticket": {
+       "type": "string",
+       "id": 9
+      },
+      "server_message_id": {
+       "type": "int64",
+       "id": 10
+      },
+      "read_badge_count_v2": {
+       "type": "int32",
+       "id": 11
+      }
+     }
+    },
+    "GetStrangerConversationListRequestBody": {
+     "fields": {
+      "cursor": {
+       "type": "int64",
+       "id": 1
+      },
+      "count": {
+       "type": "int64",
+       "id": 2
+      },
+      "show_total_unread": {
+       "type": "bool",
+       "id": 3
+      },
+      "biz_info": {
+       "type": "string",
+       "id": 4
+      }
+     }
+    },
+    "TokenInfo": {
+     "fields": {
+      "mark_id": {
+       "type": "int32",
+       "id": 1
+      },
+      "type": {
+       "type": "int32",
+       "id": 2
+      },
+      "app_id": {
+       "type": "int32",
+       "id": 3
+      },
+      "user_id": {
+       "type": "int64",
+       "id": 4
+      },
+      "timestamp": {
+       "type": "int64",
+       "id": 5
+      },
+      "app_id_without_hook": {
+       "type": "int32",
+       "id": 6
+      },
+      "user_id_without_hook": {
+       "type": "int64",
+       "id": 7
+      }
+     }
+    },
+    "ExtValue": {
+     "fields": {
+      "key": {
+       "type": "string",
+       "id": 1
+      },
+      "value": {
+       "type": "string",
+       "id": 2
+      }
+     }
+    },
+    "Response": {
+     "fields": {
+      "cmd": {
+       "type": "int32",
+       "id": 1
+      },
+      "sequence_id": {
+       "type": "int64",
+       "id": 2
+      },
+      "status_code": {
+       "type": "int32",
+       "id": 3
+      },
+      "error_desc": {
+       "type": "string",
+       "id": 4
+      },
+      "inbox_type": {
+       "type": "int32",
+       "id": 5
+      },
+      "body": {
+       "type": "ResponseBody",
+       "id": 6
+      },
+      "log_id": {
+       "type": "string",
+       "id": 7
+      },
+      "headers": {
+       "type": "ExtValue",
+       "id": 8,
+       "rule": "repeated"
+      },
+      "start_time_stamp": {
+       "type": "int64",
+       "id": 9
+      },
+      "request_arrived_time": {
+       "type": "int64",
+       "id": 10
+      },
+      "server_execution_end_time": {
+       "type": "int64",
+       "id": 11
+      },
+      "retry_count": {
+       "type": "int32",
+       "id": 12
+      },
+      "server_start_time": {
+       "type": "int64",
+       "id": 13
+      }
+     }
+    },
+    "ResponseBody": {
+     "fields": {
+      "send_message_body": {
+       "type": "SendMessageResponseBody",
+       "id": 100
+      },
+      "has_new_message_notify": {
+       "type": "NewMessageNotify",
+       "id": 500
+      }
+     }
+    },
+    "SendMessageResponseBody": {
+     "fields": {
+      "server_message_id": {
+       "type": "int64",
+       "id": 1
+      },
+      "extra_info": {
+       "type": "string",
+       "id": 2
+      },
+      "status": {
+       "type": "int32",
+       "id": 3
+      },
+      "client_message_id": {
+       "type": "string",
+       "id": 4
+      },
+      "check_code": {
+       "type": "int64",
+       "id": 5
+      },
+      "check_message": {
+       "type": "string",
+       "id": 6
+      },
+      "filtered_content": {
+       "type": "string",
+       "id": 7
+      },
+      "is_async_send": {
+       "type": "bool",
+       "id": 8
+      },
+      "new_ticket": {
+       "type": "string",
+       "id": 9
+      },
+      "inboxPageCategory": {
+       "type": "int32",
+       "id": 12
+      },
+      "filter_reason": {
+       "type": "int32",
+       "id": 13
+      }
+     }
+    },
+    "NewMessageNotify": {
+     "fields": {
+      "conversation_id": {
+       "type": "string",
+       "id": 2
+      },
+      "conversation_type": {
+       "type": "int32",
+       "id": 3
+      },
+      "notify_type": {
+       "type": "int32",
+       "id": 4
+      },
+      "message": {
+       "type": "MessageBody",
+       "id": 5
+      },
+      "previous_cursor": {
+       "type": "int64",
+       "id": 6
+      },
+      "next_cursor": {
+       "type": "int64",
+       "id": 7
+      },
+      "index_in_conversation": {
+       "type": "int64",
+       "id": 8
+      },
+      "index_in_conversation_v2": {
+       "type": "int64",
+       "id": 9
+      },
+      "conversation_version": {
+       "type": "int64",
+       "id": 10
+      },
+      "previous_conversation_version": {
+       "type": "int64",
+       "id": 11
+      },
+      "cmd_message_index": {
+       "type": "int64",
+       "id": 12
+      },
+      "badge_count": {
+       "type": "int32",
+       "id": 13
+      },
+      "previous_msg_index_in_conv": {
+       "type": "int64",
+       "id": 16
+      },
+      "readconv_version": {
+       "type": "int64",
+       "id": 17
+      },
+      "pre_readconv_version": {
+       "type": "int64",
+       "id": 18
+      },
+      "push_preview": {
+       "type": "string",
+       "id": 20
+      },
+      "badge_count_v2": {
+       "type": "int32",
+       "id": 21
+      }
+     }
+    },
+    "MessageBody": {
+     "fields": {
+      "conversation_id": {
+       "type": "string",
+       "id": 1
+      },
+      "conversation_type": {
+       "type": "int32",
+       "id": 2
+      },
+      "server_message_id": {
+       "type": "int64",
+       "id": 3
+      },
+      "index_in_conversation": {
+       "type": "int64",
+       "id": 4
+      },
+      "conversation_short_id": {
+       "type": "int64",
+       "id": 5
+      },
+      "message_type": {
+       "type": "int32",
+       "id": 6
+      },
+      "sender": {
+       "type": "int64",
+       "id": 7
+      },
+      "content": {
+       "type": "string",
+       "id": 8
+      },
+      "ext": {
+       "type": "ExtValue",
+       "id": 9,
+       "rule": "repeated"
+      },
+      "create_time": {
+       "type": "int64",
+       "id": 10
+      },
+      "version": {
+       "type": "int64",
+       "id": 11
+      },
+      "status": {
+       "type": "int32",
+       "id": 12
+      },
+      "order_in_conversation": {
+       "type": "int64",
+       "id": 13
+      },
+      "sec_sender": {
+       "type": "string",
+       "id": 14
+      },
+      "index_in_conversation_v2": {
+       "type": "int64",
+       "id": 17
+      },
+      "index_in_conversation_v1": {
+       "type": "int64",
+       "id": 19
+      },
+      "content_pb": {
+       "type": "bytes",
+       "id": 20
+      },
+      "scene": {
+       "type": "string",
+       "id": 21
+      },
+      "conv_rank_update_rule": {
+       "type": "int32",
+       "id": 22
+      },
+      "ttl": {
+       "type": "int64",
+       "id": 23
+      },
+      "pre_conversation_index": {
+       "type": "int64",
+       "id": 25
+      }
+     }
+    }
+   }
+  }
+ }
+}

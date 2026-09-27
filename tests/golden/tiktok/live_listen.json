@@ -1,0 +1,221 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://webcast.tiktok.com/webcast/im/fetch/?version_code=180800&device_platform=web&cookie_enabled=true&screen_width=2560&screen_height=1440&browser_language=zh-CN&browser_platform=Win32&browser_name=Mozilla&browser_version=5.0%20%28Windows%20NT%2010.0%3B%20Win64%3B%20x64%29%20AppleWebKit%2F537.36%20%28KHTML%2C%20like%20Gecko%29%20Chrome%2F153.0.0.0%20Safari%2F537.36&browser_online=true&tz_name=Asia%2FShanghai&ws_direct=1&aid=1988&app_name=tiktok_web&live_id=12&version_code=270000&app_language=zh-Hans&client_enter=1&room_id=7300000000000000456&identity=audience&history_comment_count=6&fetch_rule=1&last_rtt=-1&cursor=0&internal_ext=0&sup_ws_ds_opt=1&resp_content_type=protobuf&did_rule=3&webcast_language=zh-Hans&X-Dynosaur=MJeY9MIQmx7tHwdLCa3U1F0jXJ8/7Ao1gL-kphqa4Go916HVezyCE1TB94Pt9CfOZJnr9AAF5mrvgdMXlGlQfGfkiXS4iyOGmQahdpErHoVsQLLV3nADXLe2g8VGNfYycCU6iFwXIj3CKoHOHDi5zBIAqJoUDxWmA57-sdAOVY2IyAgzPoCueKk4CmRSWXcGA-h1idf/zyDTl7BqP5imwHQwrApFDpHhI26UwDd2iOiHRU0HnU57IFJleWJnwlCNZO/HxIHS9fidAfxsSSnE70CKNfUKVFT0Nhh-51tLyBr65HOjzEhO-9cbvZnCbafdhI8baDzvhjWrkxVpco28K6iX6DB-3a/tCxhnOCut0LOKw-qTTrUkzVPI9KOoSLqPZq9Drok4QlAxjyqWsoBVzYCYu2mW8iENQelF8gmzpsN7SdHS9pOKbh1tRjpAjeZbiVN5-7-z0Mq8r2guPpYNlx/5-fCLcI==&msToken=FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV==&X-Bogus=1&X-Gnarly=MF9LMmscXgKLLPIZlxuMu8cj/0J01E7wtjbok5cxbp5DtoKEFNk8iU3JbuHsykNJfm74m7Ujgxi9O7FE1arh4RN/GKuTN2/D20yrsuA/ugblcm396G15WHc2PS57K76krD5c8xkHdzJkQGJ6T0iE7X2z6EMCWXjvC6ikwpVDDvn32Tf391ShAs5dEUBD7kje7HGvChgg3q5xia6BsC2bfnE7nuDy6tUsv2-wjGLNPbVpEjEZBme9cEpfAwL/n6BjhD6yQD4umSWSnk0Gjr01hn8ocWqhuXxF/IMFHdsVhxts6c0sH/Sd--jjJfaxKxwZKIl94SYRT1aa",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://www.tiktok.com/@host.name/live"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://www.tiktok.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "tt_csrf_token",
+          "fake-csrf-token-0001"
+        ],
+        [
+          "tt_chain_token",
+          "fakechain"
+        ],
+        [
+          "s_v_web_id",
+          "verify_fake0001_AbCdEfGh_IjKl_4MnO_8PqR_StUvWxYz0123"
+        ],
+        [
+          "multi_sids",
+          "7000000000000000001%3Afakesid0001"
+        ],
+        [
+          "sessionid",
+          "fakesession0001"
+        ],
+        [
+          "sid_tt",
+          "fakesession0001"
+        ],
+        [
+          "msToken",
+          "FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV=="
+        ],
+        [
+          "store-country-code",
+          "sg"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "application/protobuf"
+      },
+      "body": {
+        "base64": "CkIKEldlYmNhc3RDaGF0TWVzc2FnZRIqEiAIKhoG6KeC5LyXsgIGdmlld2Vy8gIKTVM0d3ZpZXdlchoG5L2g5aW9GAEKPgoSV2ViY2FzdExpa2VNZXNzYWdlEiYQAxhjKiAIKhoG6KeC5LyXsgIGdmlld2Vy8gIKTVM0d3ZpZXdlchgCCksKEldlYmNhc3RHaWZ0TWVzc2FnZRIzEJcsMAI6IAgqGgbop4LkvJeyAgZ2aWV3ZXLyAgpNUzR3dmlld2VyegoolyyCAQRSb3NlGAMKPAoUV2ViY2FzdE1lbWJlck1lc3NhZ2USIhIgCCoaBuinguS8l7ICBnZpZXdlcvICCk1TNHd2aWV3ZXIYBBIIY3Vyc29yLTEY6AcqBWV4dD0xQJBO"
+      }
+    }
+  ],
+  "result": {
+    "url": "wss://webcast-ws.tiktok.com/webcast/im/ws_proxy/ws_reuse_supplement/?version_code=180800&device_platform=web&cookie_enabled=true&screen_width=2560&screen_height=1440&browser_language=zh-CN&browser_platform=Win32&browser_name=Mozilla&browser_version=5.0%20(Windows%20NT%2010.0;%20Win64;%20x64)%20AppleWebKit/537.36%20(KHTML,%20like%20Gecko)%20Chrome/153.0.0.0%20Safari/537.36&browser_online=true&tz_name=Asia/Shanghai&app_name=tiktok_web&sup_ws_ds_opt=1&update_version_code=2.0.0&compress=gzip&webcast_language=zh-Hans&ws_direct=1&aid=1988&live_id=12&version_code=270000&app_language=zh-Hans&client_enter=1&room_id=7300000000000000456&identity=audience&history_comment_count=6&last_rtt=0&heartbeat_duration=10000&resp_content_type=protobuf&did_rule=3&X-Bogus=WdQo+aLD77QtM2Ur",
+    "origin": "https://www.tiktok.com",
+    "sent": [
+      {
+        "base64": "MgJwYjoCaGJCCgjIg+jiquqzp2U="
+      },
+      {
+        "base64": "MgJwYjoNaW1fZW50ZXJfcm9vbUInCMiD6OKq6rOnZSAMKghhdWRpZW5jZTIIY3Vyc29yLTE4AEoBMFAA"
+      },
+      {
+        "base64": "EAgyAnBiOgNhY2tCBWV4dD0y"
+      }
+    ],
+    "events": [
+      {
+        "method": "WebcastChatMessage",
+        "message_id": 1,
+        "type": "chat",
+        "user": {
+          "id": 42,
+          "nickname": "观众",
+          "display_id": "viewer",
+          "sec_uid": "MS4wviewer"
+        },
+        "text": "你好"
+      },
+      {
+        "method": "WebcastLikeMessage",
+        "message_id": 2,
+        "type": "like",
+        "count": 3,
+        "total": 99,
+        "user": {
+          "id": 42,
+          "nickname": "观众",
+          "display_id": "viewer",
+          "sec_uid": "MS4wviewer"
+        }
+      },
+      {
+        "method": "WebcastGiftMessage",
+        "message_id": 3,
+        "type": "gift",
+        "gift_id": 5655,
+        "combo_count": 2,
+        "user": {
+          "id": 42,
+          "nickname": "观众",
+          "display_id": "viewer",
+          "sec_uid": "MS4wviewer"
+        },
+        "gift": {
+          "id": 5655,
+          "name": "Rose"
+        }
+      },
+      {
+        "method": "WebcastChatMessage",
+        "message_id": 11,
+        "type": "chat",
+        "user": {
+          "id": 42,
+          "nickname": "观众",
+          "display_id": "viewer",
+          "sec_uid": "MS4wviewer"
+        },
+        "text": "你好"
+      },
+      {
+        "method": "WebcastLikeMessage",
+        "message_id": 12,
+        "type": "like",
+        "count": 3,
+        "total": 99,
+        "user": {
+          "id": 42,
+          "nickname": "观众",
+          "display_id": "viewer",
+          "sec_uid": "MS4wviewer"
+        }
+      },
+      {
+        "method": "WebcastGiftMessage",
+        "message_id": 13,
+        "type": "gift",
+        "gift_id": 5655,
+        "combo_count": 2,
+        "user": {
+          "id": 42,
+          "nickname": "观众",
+          "display_id": "viewer",
+          "sec_uid": "MS4wviewer"
+        },
+        "gift": {
+          "id": 5655,
+          "name": "Rose"
+        }
+      }
+    ],
+    "frame": {
+      "base64": "CAcQCCoVCg1jb21wcmVzc190eXBlEgRnemlwOgNtc2dCsQEfiwgAAAAAAAL/43LiEgpPTUpOLC5xzkgs8U0tLk5MTxXSElLg0JJie7G86cme6ZuY2MoyU8tTiz4xcfkGm5RDOFJsT/YueLp0rwQ3lx3cDJ/M7FSYGWoCzBLJWgTNkeDh8obrd89Mg7vBWGC6jgGTFUEDqrg0pus0MbIE5RenSvBy2XCJQA3zTc1NSi2CGadE2EsSfEIcyaVFxflFukZarKkVJbZGHowAw2bC3SIBAAA="
+    }
+  },
+  "error": null
+}

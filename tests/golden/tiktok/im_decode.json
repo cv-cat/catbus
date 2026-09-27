@@ -1,0 +1,43 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": {
+    "frame": {
+      "base64": "CAVCggEI9AMYADJ7oh94KnYKKzA6MTo3MDAwMDAwMDAwMDAwMDAwMDAxOjY5MDAwMDAwMDAwMDAwMDAwMDEYq0YoiYbo4qrqs6dlMAc4gYDIsZOu7uBfQh17ImF3ZVR5cGUiOjAsInRleHQiOiLmjqjpgIEifVDQut+djDRyCE1TNHdwZWVy"
+    },
+    "decoded": {
+      "conversation_id": "0:1:7000000000000000001:6900000000000000001",
+      "conversation_short_id": 7300000000000000777,
+      "server_message_id": 9003,
+      "message_type": 7,
+      "sender": 6900000000000000001,
+      "sec_sender": "MS4wpeer",
+      "text": "推送",
+      "content": {
+        "aweType": 0,
+        "text": "推送"
+      },
+      "create_time": 1789990002000,
+      "frame_seqid": 5
+    },
+    "send_response": {
+      "heartbeat": false,
+      "frame_seqid": 1,
+      "cmd": 100,
+      "sequence_id": 20001,
+      "status_code": 0,
+      "error_desc": "",
+      "message_status": 0,
+      "server_message_id": 7400000000000000001,
+      "check_code": 0,
+      "is_async_send": false
+    },
+    "reply": {
+      "base64": "CAFCHQhkEKGcARgAMhOiBhAIgYCQz7CZhdlmGAAoAEAA"
+    }
+  },
+  "error": null
+}

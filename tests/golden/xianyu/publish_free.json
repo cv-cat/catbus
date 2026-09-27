@@ -1,0 +1,434 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://h5api.m.goofish.com/h5/mtop.taobao.idle.kgraph.property.recommend/2.0/?jsv=2.7.2&appKey=34839810&t=1790000000000&sign=cabc553d66e57b1d76d139c182493513&v=2.0&type=originaljson&accountSite=xianyu&dataType=json&timeout=20000&api=mtop.taobao.idle.kgraph.property.recommend&sessionOption=AutoLoginOnly&spm_cnt=a21ybx.publish.0.0&spm_pre=a21ybx.item.sidebar.1.67321598K9Vgx8&log_id=67321598K9Vgx8",
+      "headers": [
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "accept-language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "origin",
+          "https://www.goofish.com"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "referer",
+          "https://www.goofish.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "fakecna"
+        ],
+        [
+          "cookie2",
+          "fakecookie2"
+        ],
+        [
+          "t",
+          "faket"
+        ],
+        [
+          "_tb_token_",
+          "faketbtoken"
+        ],
+        [
+          "unb",
+          "2200000001"
+        ],
+        [
+          "tracknick",
+          "tester"
+        ],
+        [
+          "sgcookie",
+          "fakesg"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790003600000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc"
+        ]
+      ],
+      "body": "data=%7B%22title%22%3A%22%5Cu5168%5Cu65b0%5Cu672a%5Cu62c6%5Cu5c01%22%2C%22lockCpv%22%3Afalse%2C%22multiSKU%22%3Afalse%2C%22publishScene%22%3A%22mainPublish%22%2C%22scene%22%3A%22newPublishChoice%22%2C%22description%22%3A%22%5Cu5168%5Cu65b0%5Cu672a%5Cu62c6%5Cu5c01%22%2C%22imageInfos%22%3A%5B%5D%2C%22uniqueCode%22%3A%221775905618164677%22%7D",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://h5api.m.goofish.com/h5/mtop.taobao.idle.local.poi.get/1.0/?jsv=2.7.2&appKey=34839810&t=1790000000000&sign=0958896a993a4aaf4c863f494dbf0bce&v=1.0&type=originaljson&accountSite=xianyu&dataType=json&timeout=20000&api=mtop.taobao.idle.local.poi.get&sessionOption=AutoLoginOnly&spm_cnt=a21ybx.publish.0.0&spm_pre=a21ybx.item.sidebar.1.38262218ame5nr&log_id=38262218ame5nr",
+      "headers": [
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "accept-language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "eagleeye-userdata",
+          "spm-cnt=a21ybx"
+        ],
+        [
+          "origin",
+          "https://www.goofish.com"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "referer",
+          "https://www.goofish.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "fakecna"
+        ],
+        [
+          "cookie2",
+          "fakecookie2"
+        ],
+        [
+          "t",
+          "faket"
+        ],
+        [
+          "_tb_token_",
+          "faketbtoken"
+        ],
+        [
+          "unb",
+          "2200000001"
+        ],
+        [
+          "tracknick",
+          "tester"
+        ],
+        [
+          "sgcookie",
+          "fakesg"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790003600000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc"
+        ]
+      ],
+      "body": "data=%7B%22longitude%22%3A118.78248347393424%2C%22latitude%22%3A31.91629189813543%7D",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://h5api.m.goofish.com/h5/mtop.idle.pc.idleitem.publish/1.0/?jsv=2.7.2&appKey=34839810&t=1790000000000&sign=d5a4b00f43aa3d06147e54bad734bdf1&v=1.0&type=originaljson&accountSite=xianyu&dataType=json&timeout=20000&api=mtop.idle.pc.idleitem.publish&sessionOption=AutoLoginOnly&spm_cnt=a21ybx.publish.0.0&spm_pre=a21ybx.home.sidebar.1.46413da6EPl7v5&log_id=46413da6EPl7v5",
+      "headers": [
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "accept-language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "origin",
+          "https://www.goofish.com"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "referer",
+          "https://www.goofish.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "fakecna"
+        ],
+        [
+          "cookie2",
+          "fakecookie2"
+        ],
+        [
+          "t",
+          "faket"
+        ],
+        [
+          "_tb_token_",
+          "faketbtoken"
+        ],
+        [
+          "unb",
+          "2200000001"
+        ],
+        [
+          "tracknick",
+          "tester"
+        ],
+        [
+          "sgcookie",
+          "fakesg"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790003600000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc"
+        ]
+      ],
+      "body": "data=%7B%22freebies%22%3Afalse%2C%22itemTypeStr%22%3A%22b%22%2C%22quantity%22%3A%221%22%2C%22simpleItem%22%3A%22true%22%2C%22imageInfoDOList%22%3A%5B%5D%2C%22itemTextDTO%22%3A%7B%22desc%22%3A%22%5Cu5168%5Cu65b0%5Cu672a%5Cu62c6%5Cu5c01%22%2C%22title%22%3A%22%5Cu5168%5Cu65b0%5Cu672a%5Cu62c6%5Cu5c01%22%2C%22titleDescSeparate%22%3Afalse%7D%2C%22itemLabelExtList%22%3A%5B%7B%22channelCateName%22%3A%22%5Cu673a%5Cu68b0%5Cu952e%5Cu76d8%22%2C%22valueId%22%3Anull%2C%22channelCateId%22%3A%22201456790%22%2C%22valueName%22%3Anull%2C%22tbCatId%22%3A%2250012346%22%2C%22subPropertyId%22%3Anull%2C%22labelType%22%3A%22common%22%2C%22subValueId%22%3Anull%2C%22labelId%22%3Anull%2C%22propertyName%22%3A%22%5Cu5206%5Cu7c7b%22%2C%22isUserClick%22%3A%221%22%2C%22isUserCancel%22%3Anull%2C%22from%22%3A%22newPublishChoice%22%2C%22propertyId%22%3A%22-10000%22%2C%22labelFrom%22%3A%22newPublish%22%2C%22text%22%3A%22%5Cu673a%5Cu68b0%5Cu952e%5Cu76d8%22%2C%22properties%22%3A%22-10000%23%23%5Cu5206%5Cu7c7b%3A201456790%23%23%5Cu673a%5Cu68b0%5Cu952e%5Cu76d8%22%7D%5D%2C%22itemPriceDTO%22%3A%7B%7D%2C%22userRightsProtocols%22%3A%5B%7B%22enable%22%3Afalse%2C%22serviceCode%22%3A%22SKILL_PLAY_NO_MIND%22%7D%5D%2C%22itemPostFeeDTO%22%3A%7B%22canFreeShipping%22%3Atrue%2C%22supportFreight%22%3Atrue%2C%22onlyTakeSelf%22%3Afalse%7D%2C%22itemAddrDTO%22%3A%7B%22area%22%3A%22%5Cu7384%5Cu6b66%5Cu533a%22%2C%22city%22%3A%22%5Cu5357%5Cu4eac%22%2C%22divisionId%22%3A320102%2C%22gps%22%3A%22118.78248%2C31.91629%22%2C%22poiId%22%3A%22B0FFFAKE01%22%2C%22poiName%22%3A%22%5Cu6d4b%5Cu8bd5%5Cu5c0f%5Cu533a%22%2C%22prov%22%3A%22%5Cu6c5f%5Cu82cf%22%7D%2C%22defaultPrice%22%3Atrue%2C%22itemCatDTO%22%3A%7B%22catId%22%3A%2250012346%22%2C%22catName%22%3A%22%5Cu673a%5Cu68b0%5Cu952e%5Cu76d8%22%2C%22channelCatId%22%3A%22201456790%22%2C%22tbCatId%22%3A%2250012346%22%7D%2C%22uniqueCode%22%3A%221775897582791680%22%2C%22sourceId%22%3A%22pcMainPublish%22%2C%22bizcode%22%3A%22pcMainPublish%22%2C%22publishScene%22%3A%22pcMainPublish%22%7D",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "api": "mtop.taobao.idle.kgraph.property.recommend",
+        "data": {
+          "cardList": [
+            {
+              "cardData": {
+                "propertyId": "-10000",
+                "propertyName": "分类",
+                "valuesList": [
+                  {
+                    "catName": "键盘",
+                    "channelCatId": "201456789",
+                    "tbCatId": "50012345",
+                    "isClicked": false
+                  },
+                  {
+                    "catName": "机械键盘",
+                    "channelCatId": "201456790",
+                    "tbCatId": "50012346",
+                    "isClicked": true
+                  },
+                  {
+                    "catName": "其他",
+                    "channelCatId": "201456791",
+                    "tbCatId": "50012347",
+                    "isClicked": true
+                  }
+                ]
+              }
+            },
+            {
+              "cardData": {
+                "propertyId": "20000",
+                "propertyName": "品牌"
+              }
+            }
+          ],
+          "categoryPredictResult": {
+            "catId": 50012346,
+            "catName": "机械键盘",
+            "channelCatId": 201456790,
+            "tbCatId": 50012346
+          }
+        },
+        "ret": [
+          "SUCCESS::调用成功"
+        ],
+        "v": "1.0"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "api": "mtop.taobao.idle.local.poi.get",
+        "data": {
+          "commonAddresses": [
+            {
+              "area": "玄武区",
+              "city": "南京",
+              "divisionId": 320102,
+              "longitude": 118.78248,
+              "latitude": 31.91629,
+              "poiId": "B0FFFAKE01",
+              "poi": "测试小区",
+              "prov": "江苏"
+            }
+          ]
+        },
+        "ret": [
+          "SUCCESS::调用成功"
+        ],
+        "v": "1.0"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "api": "mtop.idle.pc.idleitem.publish",
+        "data": {
+          "itemId": "900000000001"
+        },
+        "ret": [
+          "SUCCESS::调用成功"
+        ],
+        "v": "1.0"
+      }
+    }
+  ],
+  "result": {
+    "api": "mtop.idle.pc.idleitem.publish",
+    "data": {
+      "itemId": "900000000001"
+    },
+    "ret": [
+      "SUCCESS::调用成功"
+    ],
+    "v": "1.0"
+  },
+  "error": null
+}

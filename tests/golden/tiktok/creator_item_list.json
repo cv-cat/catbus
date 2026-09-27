@@ -1,0 +1,136 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://www.tiktok.com/tiktok/creator/manage/item_list/v1/?locale=zh-Hans&aid=1988&priority_region=SG&region=SG&tz_name=Asia%2FShanghai&app_name=tiktok_creator_center&app_language=zh-Hans&device_platform=web_pc&channel=tiktok_web&device_id=7000000000000000001&os=win&screen_width=2560&screen_height=1440&browser_language=zh-CN&browser_platform=Win32&browser_name=Mozilla&browser_version=5.0+%28Windows+NT+10.0%3B+Win64%3B+x64%29+AppleWebKit%2F537.36+%28KHTML%2C+like+Gecko%29+Chrome%2F153.0.0.0+Safari%2F537.36&msToken=FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV==&X-Bogus=DFSzswcunpN1iUrhCf1eaHgfqO0v&X-Gnarly=MkWYt5EkgSAiHmTsRAxTVvgQOiFzL/4LzV239WCXgJnzhvTETPYVOTYyb/D8Ym1mwcJjYCDG3Dn1VJioU165XCCj8IC/zci-O/-u-ENgwOKqnk5WuS1pbcIvJYLNHToM730y-L1e0IrGSmr1HW/A9S/9FQnUI9llyGrIQPGK-JdAIna4kRHWALlE0NhWFv5rsihmlRpUiUmGigDV1cG-9Jfr9jDiXLgYP7iHKDUjsDHaC0iXfHom20BFSRJmTT-MFtnKOXyyED4L",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://www.tiktok.com/tiktokstudio/content"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "agw-js-conv",
+          "str"
+        ],
+        [
+          "tt-csrf-token",
+          "fake-csrf-token-0001"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "content-length",
+          "126"
+        ],
+        [
+          "origin",
+          "https://www.tiktok.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "tt_csrf_token",
+          "fake-csrf-token-0001"
+        ],
+        [
+          "tt_chain_token",
+          "fakechain"
+        ],
+        [
+          "s_v_web_id",
+          "verify_fake0001_AbCdEfGh_IjKl_4MnO_8PqR_StUvWxYz0123"
+        ],
+        [
+          "multi_sids",
+          "7000000000000000001%3Afakesid0001"
+        ],
+        [
+          "sessionid",
+          "fakesession0001"
+        ],
+        [
+          "sid_tt",
+          "fakesession0001"
+        ],
+        [
+          "msToken",
+          "FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV=="
+        ],
+        [
+          "store-country-code",
+          "sg"
+        ]
+      ],
+      "body": "{\"cursor\":50,\"size\":50,\"query\":{\"sort_orders\":[{\"field_name\":\"post_time\",\"order\":2}],\"conditions\":[],\"is_recent_posts\":false}}",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "status_code": 0,
+        "extra": {}
+      }
+    }
+  ],
+  "result": {
+    "status_code": 0,
+    "extra": {}
+  },
+  "error": null
+}

@@ -1,0 +1,160 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://im-api-sg.tiktok.com/v1/message/get_by_conversation",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://www.tiktok.com/"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/x-protobuf"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "content-type",
+          "application/x-protobuf"
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "content-length",
+          "1358"
+        ],
+        [
+          "origin",
+          "https://www.tiktok.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "tt_csrf_token",
+          "fake-csrf-token-0001"
+        ],
+        [
+          "tt_chain_token",
+          "fakechain"
+        ],
+        [
+          "s_v_web_id",
+          "verify_fake0001_AbCdEfGh_IjKl_4MnO_8PqR_StUvWxYz0123"
+        ],
+        [
+          "multi_sids",
+          "7000000000000000001%3Afakesid0001"
+        ],
+        [
+          "sessionid",
+          "fakesession0001"
+        ],
+        [
+          "sid_tt",
+          "fakesession0001"
+        ],
+        [
+          "msToken",
+          "FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV=="
+        ],
+        [
+          "store-country-code",
+          "sg"
+        ]
+      ],
+      "body": {
+        "base64": "CK0CEJFOGgUxLjcuNCIAKAMwADokY2IxYTY5YzpmZWF0L2ltLWNvcmUtc2RrLW9vby1wdXNoLXYyQkLqEj8KKzA6MTo3MDAwMDAwMDAwMDAwMDAwMDAxOjY5MDAwMDAwMDAwMDAwMDAwMDEQARiJhujiquqzp2UgASgAMDJKEzcwMDAwMDAwMDAwMDAwMDAwMDFaA3dlYnoLCgNhaWQSBDE5ODh6FgoIYXBwX25hbWUSCnRpa3Rva193ZWJ6FQoHY2hhbm5lbBIKdGlrdG9rX3dlYnoZCg9kZXZpY2VfcGxhdGZvcm0SBndlYl9wY3ogCglkZXZpY2VfaWQSEzcwMDAwMDAwMDAwMDAwMDAwMDF6DAoGcmVnaW9uEgJTR3oVCg9wcmlvcml0eV9yZWdpb24SAlNHeg0KAm9zEgd3aW5kb3dzejcKB3JlZmVyZXISLGh0dHBzOi8vd3d3LnRpa3Rvay5jb20vbWVzc2FnZXM/bGFuZz16aC1IYW5zejwKDHJvb3RfcmVmZXJlchIsaHR0cHM6Ly93d3cudGlrdG9rLmNvbS9tZXNzYWdlcz9sYW5nPXpoLUhhbnN6FgoOY29va2llX2VuYWJsZWQSBHRydWV6FAoMc2NyZWVuX3dpZHRoEgQyNTYwehUKDXNjcmVlbl9oZWlnaHQSBDE0NDB6GQoQYnJvd3Nlcl9sYW5ndWFnZRIFemgtQ056GQoQYnJvd3Nlcl9wbGF0Zm9ybRIFV2luMzJ6FwoMYnJvd3Nlcl9uYW1lEgdNb3ppbGxhenoKD2Jyb3dzZXJfdmVyc2lvbhJnNS4wIChXaW5kb3dzIE5UIDEwLjA7IFdpbjY0OyB4NjQpIEFwcGxlV2ViS2l0LzUzNy4zNiAoS0hUTUwsIGxpa2UgR2Vja28pIENocm9tZS8xNTMuMC4wLjAgU2FmYXJpLzUzNy4zNnoWCg5icm93c2VyX29ubGluZRIEdHJ1ZXpACgh2ZXJpZnlGcBI0dmVyaWZ5X2Zha2UwMDAxX0FiQ2RFZkdoX0lqS2xfNE1uT184UHFSX1N0VXZXeFl6MDEyM3oXCgxhcHBfbGFuZ3VhZ2USB3poLUhhbnN6GwoQd2ViY2FzdF9sYW5ndWFnZRIHemgtSGFuc3oYCgd0el9uYW1lEg1Bc2lhL1NoYW5naGFpehcKD2lzX3BhZ2VfdmlzaWJsZRIEdHJ1ZXoTCgtmb2N1c19zdGF0ZRIEdHJ1ZXoWCg1pc19mdWxsc2NyZWVuEgVmYWxzZXoQCgtoaXN0b3J5X2xlbhIBNHoVCg11c2VyX2lzX2xvZ2luEgR0cnVleh8KF2RhdGFfY29sbGVjdGlvbl9lbmFibGVkEgR0cnVlehIKCmZyb21fYXBwSUQSBDE5ODh6EQoGbG9jYWxlEgd6aC1IYW5zen0KCnVzZXJfYWdlbnQSb01vemlsbGEvNS4wIChXaW5kb3dzIE5UIDEwLjA7IFdpbjY0OyB4NjQpIEFwcGxlV2ViS2l0LzUzNy4zNiAoS0hUTUwsIGxpa2UgR2Vja28pIENocm9tZS8xNTMuMC4wLjAgU2FmYXJpLzUzNy4zNnqdAQoQV2ViLVNkay1Ncy1Ub2tlbhKIAUZha2VNc1Rva2VuLTAxMjM0NTY3ODlfYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWjAxMjM0NTY3ODlfYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXpBQkNERUZHSElKS0xNTk9QUVJTVFVWPT2AAQc="
+      },
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "application/x-protobuf"
+      },
+      "body": {
+        "base64": "CMsBGAAymwLaDJcCCjkKKzA6MTo3MDAwMDAwMDAwMDAwMDAwMDAxOjY5MDAwMDAwMDAwMDAwMDAwMDEQiYbo4qrqs6dlGAESbgorMDoxOjcwMDAwMDAwMDAwMDAwMDAwMDE6NjkwMDAwMDAwMDAwMDAwMDAwMRABGKlGKImG6OKq6rOnZTAHOIGAyLGTru7gX0IdeyJhd2VUeXBlIjowLCJ0ZXh0Ijoi5L2g5aW9In1QgKvfnYw0EmoKKzA6MTo3MDAwMDAwMDAwMDAwMDAwMDAxOjY5MDAwMDAwMDAwMDAwMDAwMDEQARiqRiiJhujiquqzp2UwBziBgPCdmd2/kmFCGXsiYXdlVHlwZSI6MCwidGV4dCI6ImhpIn1Q6LLfnYw0"
+      }
+    }
+  ],
+  "result": {
+    "raw": {
+      "base64": "CMsBGAAymwLaDJcCCjkKKzA6MTo3MDAwMDAwMDAwMDAwMDAwMDAxOjY5MDAwMDAwMDAwMDAwMDAwMDEQiYbo4qrqs6dlGAESbgorMDoxOjcwMDAwMDAwMDAwMDAwMDAwMDE6NjkwMDAwMDAwMDAwMDAwMDAwMRABGKlGKImG6OKq6rOnZTAHOIGAyLGTru7gX0IdeyJhd2VUeXBlIjowLCJ0ZXh0Ijoi5L2g5aW9In1QgKvfnYw0EmoKKzA6MTo3MDAwMDAwMDAwMDAwMDAwMDAxOjY5MDAwMDAwMDAwMDAwMDAwMDEQARiqRiiJhujiquqzp2UwBziBgPCdmd2/kmFCGXsiYXdlVHlwZSI6MCwidGV4dCI6ImhpIn1Q6LLfnYw0"
+    },
+    "messages": [
+      {
+        "conversation_id": "0:1:7000000000000000001:6900000000000000001",
+        "server_message_id": 9001,
+        "conversation_short_id": 7300000000000000777,
+        "message_type": 7,
+        "sender": 6900000000000000001,
+        "content": {
+          "aweType": 0,
+          "text": "你好"
+        },
+        "text": "你好",
+        "create_time": 1789990000000
+      },
+      {
+        "conversation_id": "0:1:7000000000000000001:6900000000000000001",
+        "server_message_id": 9002,
+        "conversation_short_id": 7300000000000000777,
+        "message_type": 7,
+        "sender": 7000000000000000001,
+        "content": {
+          "aweType": 0,
+          "text": "hi"
+        },
+        "text": "hi",
+        "create_time": 1789990001000
+      }
+    ]
+  },
+  "error": null
+}

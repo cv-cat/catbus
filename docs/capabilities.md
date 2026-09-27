@@ -72,6 +72,9 @@
 
 - weibo `item search`：只能取第一页
 - `item search --sort` 取值：bilibili general / views / latest / collects；x general / latest
+- `item publish --shipping`：xianyu
+- `item publish --postage`：xianyu
+- `item publish --pickup`：xianyu
 
 ## product 与商品评价
 
@@ -103,7 +106,7 @@
 | 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x |
 |---|---|---|---|---|---|---|---|---|---|---|
 | feed list | ◐ | ◐ | ✓ | ◐ | ◐ | ○ | ○ | ○ | ○ | ◐ |
-| feed categories | ✓ | — | ◐ | — | — | — | — | — | — | — |
+| feed categories | ✓ | — | ○ | — | — | — | — | — | — | — |
 | keyword suggest | ○ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ○ |
 | keyword hot | ✓ | ○ | ○ | ○ | ○ | ○ | — | — | ✓ | ○ |
 
@@ -134,11 +137,15 @@
 |---|---|---|---|---|---|---|---|---|---|---|
 | media upload | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ |
 | folder list / items | ◐ | ✓ | ✓ | ◐ | ○ | ○ | — | — | — | ○ |
-| folder create / update / delete | ○ | ○ | ◐ | ○ | ○ | — | — | — | — | ○ |
-| series list / items | ○ | ○ | ✓ | ○ | ○ | — | — | — | — | — |
+| folder create / update | ○ | ○ | ◐ | ○ | ○ | — | — | — | — | ○ |
+| folder delete | ○ | ○ | ○ | ○ | ○ | — | — | — | — | ○ |
+| series list | ○ | ○ | ✓ | ○ | ○ | — | — | — | — | — |
+| series items | ○ | ○ | ○ | ○ | ○ | — | — | — | — | — |
 | history list | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ✓ | — |
 | topic search | ✓ | ○ | ○ | ○ | ○ | ○ | — | — | — | — |
-| poi search | ✓ | ○ | ✓ | — | ○ | ○ | — | — | — | — |
+| poi search | ✓ | ○ | ◐ | — | ○ | ○ | — | — | — | — |
+
+- tiktok `poi search`：在推荐地点里按关键词筛选
 
 ## live
 

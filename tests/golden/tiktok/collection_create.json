@@ -1,0 +1,136 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://www.tiktok.com/api/collection/create/?WebIdLastTime=1790000000&aid=1988&app_language=zh-Hans&app_name=tiktok_web&browser_language=zh-CN&browser_name=Mozilla&browser_online=true&browser_platform=Win32&browser_version=5.0%20%28Windows%20NT%2010.0%3B%20Win64%3B%20x64%29%20AppleWebKit%2F537.36%20%28KHTML%2C%20like%20Gecko%29%20Chrome%2F153.0.0.0%20Safari%2F537.36&channel=tiktok_web&collectionName=%E6%88%91%E7%9A%84%20%E6%94%B6%E8%97%8F&collectionStatus=1&cookie_enabled=true&data_collection_enabled=true&device_id=7000000000000000001&device_platform=web_pc&focus_state=true&from_page=user&history_len=6&is_fullscreen=false&is_page_visible=true&language=zh-Hans&odinId=7000000000000000001&os=windows&priority_region=SG&referer=https%3A%2F%2Fwww.tiktok.com%2F%40tiktok%3Flang%3Dzh-Hans&region=SG&root_referer=&screen_height=1440&screen_width=2560&tz_name=Asia%2FShanghai&user_is_login=true&verifyFp=verify_fake0001_AbCdEfGh_IjKl_4MnO_8PqR_StUvWxYz0123&webcast_language=zh-Hans&X-Dynosaur=MJeY9M/WUx7tHwdLCa3U1F0jXJ8/7Ao1gL-kphqa4Go916HVezyCE1TF62dX3CfOZJnr9AAF5mrvgdMXlGlQfGfkiXS4iyOGmQahddAOVY2IyAgzPoLvaKk7Jd2xNXcGA-h1idf/zyDTl7BqP5imwHQwrApFDpHhI26UwDd2iOiHRU0HnU57IFJleWJnwlCNZO/HxIHSk/PgkfxsSSnE70CKNfUKVFT0Nhh-51tLyBr65HOjzEhO-9cbvZnCbafdhI8baDzvhjWrkwaBSnEaFxJt/PUvawxlxghvP3QEuLIaH9WzMCpPuiOI9KOoSLq5oqJB-oOaoQ/xjyqWooBVzYCYu2mW8iENQelF8gnbnVN70YG6cFgQOiFzL/4LzV239WCXgJnzhvTETPYVOTYyb/D8Ym1mwcJjYCDG3Dn1VJioU165XCFIXQw6USp31-e9pu8Ful-pe8g5xMFtIDw=&msToken=FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV==&X-Bogus=1&X-Gnarly=MF9LMmscXgKLLPIZlxuMu8cj/0J01E7wpTuMW2PGS3i7ue5T5WfJHQ3RVucuiuVKYm4jdGpOgqM9O7FE1arh4RN/GKuTN2/D20yrsuA/ugblcm396G15WHc2PS57K76krD5c8xkHdzJkQGJ6T0iEfnE77X2z6EMCWXjvC6ikwpVDDvn32Tf391ShAs5dEUBD7kje7HGvChgg3q5xia6BsC2bnuDy6tUsv2-wjGLNPbVpEjEZBme9cEpfAwL/n6BjhD6yQD4umSWSnk0Gjr01hn8ocWqhuXxF/IMFHdsVhxts6c0sH/Sd--jjJfaxKxwZKIl94SYRT1aa",
+      "headers": [
+        [
+          "x-cthulhu-csrf",
+          "1"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://www.tiktok.com/@tiktok?lang=zh-Hans"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "tt-csrf-token",
+          "fake-csrf-token-0001"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "content-length",
+          "0"
+        ],
+        [
+          "origin",
+          "https://www.tiktok.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "tt_csrf_token",
+          "fake-csrf-token-0001"
+        ],
+        [
+          "tt_chain_token",
+          "fakechain"
+        ],
+        [
+          "s_v_web_id",
+          "verify_fake0001_AbCdEfGh_IjKl_4MnO_8PqR_StUvWxYz0123"
+        ],
+        [
+          "multi_sids",
+          "7000000000000000001%3Afakesid0001"
+        ],
+        [
+          "sessionid",
+          "fakesession0001"
+        ],
+        [
+          "sid_tt",
+          "fakesession0001"
+        ],
+        [
+          "msToken",
+          "FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV=="
+        ],
+        [
+          "store-country-code",
+          "sg"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "status_code": 0,
+        "extra": {}
+      }
+    }
+  ],
+  "result": {
+    "status_code": 0,
+    "extra": {}
+  },
+  "error": null
+}

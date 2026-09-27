@@ -1,0 +1,18 @@
+{
+  "input": {
+    "cid": "47000000001",
+    "peer": "2200000999",
+    "item": "900000000001"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": [
+    "{\"lwp\": \"/r/SingleChatConversation/create\", \"headers\": {\"mid\": \"5811790000000123 0\"}, \"body\": [{\"pairFirst\": \"2200000999@goofish\", \"pairSecond\": \"2200000001@goofish\", \"bizType\": \"1\", \"extension\": {\"itemId\": \"900000000001\"}, \"ctx\": {\"appVersion\": \"1.0\", \"platform\": \"web\"}}]}",
+    "{\"lwp\": \"/r/MessageSend/sendByReceiverScope\", \"headers\": {\"mid\": \"5811790000000123 0\"}, \"body\": [{\"uuid\": \"-17900000001231\", \"cid\": \"47000000001@goofish\", \"conversationType\": 1, \"content\": {\"contentType\": 101, \"custom\": {\"type\": 1, \"data\": \"eyJjb250ZW50VHlwZSI6IDEsICJ0ZXh0IjogeyJ0ZXh0IjogIlx1NGY2MFx1NTk3ZCBcInF1b3RlXCIifX0=\"}}, \"redPointPolicy\": 0, \"extension\": {\"extJson\": \"{}\"}, \"ctx\": {\"appVersion\": \"1.0\", \"platform\": \"web\"}, \"mtags\": {}, \"msgReadStatusSetting\": 1}, {\"actualReceivers\": [\"2200000999@goofish\", \"2200000001@goofish\"]}]}",
+    "{\"lwp\": \"/r/MessageSend/sendByReceiverScope\", \"headers\": {\"mid\": \"5811790000000123 0\"}, \"body\": [{\"uuid\": \"-17900000001231\", \"cid\": \"47000000001@goofish\", \"conversationType\": 1, \"content\": {\"contentType\": 101, \"custom\": {\"type\": 2, \"data\": \"eyJjb250ZW50VHlwZSI6IDIsICJpbWFnZSI6IHsicGljcyI6IFt7InR5cGUiOiAwLCAidXJsIjogImh0dHBzOi8vaW1nLmFsaWNkbi5jb20vaW1nZXh0cmEvZmFrZS5wbmciLCAid2lkdGgiOiAxMDAsICJoZWlnaHQiOiA4MH1dfX0=\"}}, \"redPointPolicy\": 0, \"extension\": {\"extJson\": \"{}\"}, \"ctx\": {\"appVersion\": \"1.0\", \"platform\": \"web\"}, \"mtags\": {}, \"msgReadStatusSetting\": 1}, {\"actualReceivers\": [\"2200000999@goofish\", \"2200000001@goofish\"]}]}",
+    "{\"lwp\": \"/!\", \"headers\": {\"mid\": \"5811790000000123 0\"}}"
+  ],
+  "error": null
+}

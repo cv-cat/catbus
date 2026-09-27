@@ -1,0 +1,5 @@
+{
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgHy49TFtqeYgBI0Vn\niavN7wEjRWeJq83vASNFZ4mrze+hRANCAATviAyO+BaIF5bBiOVxsBrG9wxSYnRW\n2uSGdY7/2cY93VzbwR4kiDoSWYJCqVh1uWqIVPZL/5rJozgQuB8VT1Tl\n-----END PRIVATE KEY-----\n",
+  "encrypt_ticket": "AAAAAAAAAAAAAAAAi0S827QnmG8XvCSYBUgKWoBXuPjTMJh39/oQHI2V9IU=",
+  "ts_sign": "ts.2.fakefakefake"
+}

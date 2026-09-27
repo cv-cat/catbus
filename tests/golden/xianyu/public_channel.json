@@ -1,0 +1,218 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://h5api.m.goofish.com/h5/mtop.taobao.idle.kgraph.property.recommend/2.0/?jsv=2.7.2&appKey=34839810&t=1790000000000&sign=396f46fc2b180aa720826d49859c27f5&v=2.0&type=originaljson&accountSite=xianyu&dataType=json&timeout=20000&api=mtop.taobao.idle.kgraph.property.recommend&sessionOption=AutoLoginOnly&spm_cnt=a21ybx.publish.0.0&spm_pre=a21ybx.item.sidebar.1.67321598K9Vgx8&log_id=67321598K9Vgx8",
+      "headers": [
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "accept-language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "origin",
+          "https://www.goofish.com"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "referer",
+          "https://www.goofish.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "fakecna"
+        ],
+        [
+          "cookie2",
+          "fakecookie2"
+        ],
+        [
+          "t",
+          "faket"
+        ],
+        [
+          "_tb_token_",
+          "faketbtoken"
+        ],
+        [
+          "unb",
+          "2200000001"
+        ],
+        [
+          "tracknick",
+          "tester"
+        ],
+        [
+          "sgcookie",
+          "fakesg"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790003600000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc"
+        ]
+      ],
+      "body": "data=%7B%22title%22%3A%22%5Cu4e5d%5Cu6210%5Cu65b0%5Cu673a%5Cu68b0%5Cu952e%5Cu76d8%22%2C%22lockCpv%22%3Afalse%2C%22multiSKU%22%3Afalse%2C%22publishScene%22%3A%22mainPublish%22%2C%22scene%22%3A%22newPublishChoice%22%2C%22description%22%3A%22%5Cu4e5d%5Cu6210%5Cu65b0%5Cu673a%5Cu68b0%5Cu952e%5Cu76d8%22%2C%22imageInfos%22%3A%5B%7B%22extraInfo%22%3A%7B%22isH%22%3A%22false%22%2C%22isT%22%3A%22false%22%2C%22raw%22%3A%22false%22%7D%2C%22isQrCode%22%3Afalse%2C%22url%22%3A%22https%3A%2F%2Fimg.alicdn.com%2Fimgextra%2Ffake.png%22%2C%22heightSize%22%3A80%2C%22widthSize%22%3A100%2C%22major%22%3Atrue%2C%22type%22%3A0%2C%22status%22%3A%22done%22%7D%5D%2C%22uniqueCode%22%3A%221775905618164677%22%7D",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "api": "mtop.taobao.idle.kgraph.property.recommend",
+        "data": {
+          "cardList": [
+            {
+              "cardData": {
+                "propertyId": "-10000",
+                "propertyName": "分类",
+                "valuesList": [
+                  {
+                    "catName": "键盘",
+                    "channelCatId": "201456789",
+                    "tbCatId": "50012345",
+                    "isClicked": false
+                  },
+                  {
+                    "catName": "机械键盘",
+                    "channelCatId": "201456790",
+                    "tbCatId": "50012346",
+                    "isClicked": true
+                  },
+                  {
+                    "catName": "其他",
+                    "channelCatId": "201456791",
+                    "tbCatId": "50012347",
+                    "isClicked": true
+                  }
+                ]
+              }
+            },
+            {
+              "cardData": {
+                "propertyId": "20000",
+                "propertyName": "品牌"
+              }
+            }
+          ],
+          "categoryPredictResult": {
+            "catId": 50012346,
+            "catName": "机械键盘",
+            "channelCatId": 201456790,
+            "tbCatId": 50012346
+          }
+        },
+        "ret": [
+          "SUCCESS::调用成功"
+        ],
+        "v": "1.0"
+      }
+    }
+  ],
+  "result": {
+    "api": "mtop.taobao.idle.kgraph.property.recommend",
+    "data": {
+      "cardList": [
+        {
+          "cardData": {
+            "propertyId": "-10000",
+            "propertyName": "分类",
+            "valuesList": [
+              {
+                "catName": "键盘",
+                "channelCatId": "201456789",
+                "tbCatId": "50012345",
+                "isClicked": false
+              },
+              {
+                "catName": "机械键盘",
+                "channelCatId": "201456790",
+                "tbCatId": "50012346",
+                "isClicked": true
+              },
+              {
+                "catName": "其他",
+                "channelCatId": "201456791",
+                "tbCatId": "50012347",
+                "isClicked": true
+              }
+            ]
+          }
+        },
+        {
+          "cardData": {
+            "propertyId": "20000",
+            "propertyName": "品牌"
+          }
+        }
+      ],
+      "categoryPredictResult": {
+        "catId": 50012346,
+        "catName": "机械键盘",
+        "channelCatId": 201456790,
+        "tbCatId": 50012346
+      }
+    },
+    "ret": [
+      "SUCCESS::调用成功"
+    ],
+    "v": "1.0"
+  },
+  "error": null
+}

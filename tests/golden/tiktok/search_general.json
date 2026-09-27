@@ -1,0 +1,116 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://www.tiktok.com/api/search/general/full/?WebIdLastTime=1790000000&aid=1988&app_language=zh-Hans&app_name=tiktok_web&browser_language=zh-CN&browser_name=Mozilla&browser_online=true&browser_platform=Win32&browser_version=5.0%20%28Windows%20NT%2010.0%3B%20Win64%3B%20x64%29%20AppleWebKit%2F537.36%20%28KHTML%2C%20like%20Gecko%29%20Chrome%2F153.0.0.0%20Safari%2F537.36&channel=tiktok_web&client_ab_versions=70508271%2C72437276%2C73720540%2C75360573%2C75657507%2C75843653%2C75878361%2C76074824%2C76122410%2C76179551%2C76403724%2C76499369%2C76626930%2C76651230%2C76669176%2C76713103%2C76740102%2C76792575%2C76805936%2C76813520%2C76815102%2C76826749%2C76839930%2C76840792%2C76887350%2C76889673%2C76907405%2C76933422%2C76945954%2C76950455%2C77005875%2C77011497%2C77014490%2C77056281%2C77064650%2C77071444%2C77093404%2C77120364%2C77141446%2C77150562%2C77155134%2C70138197%2C70156809%2C70405643%2C71057832%2C71200802%2C71381811%2C71803300%2C72360691%2C72408100%2C72854054%2C72892778%2C73171280%2C73208420%2C73989921%2C74276218%2C74844724%2C75330961&cookie_enabled=true&count=12&cursor=0&data_collection_enabled=true&device_id=7000000000000000001&device_platform=web_pc&device_type=web_h265&focus_state=true&from_page=search&history_len=2&is_fullscreen=false&is_non_personalized_search=0&is_page_visible=true&keyword=cat&odinId=7000000000000000001&os=windows&offset=12&priority_region=SG&referer=&region=SG&root_referer=&screen_height=1440&screen_width=2560&tz_name=Asia%2FShanghai&user_is_login=true&verifyFp=verify_fake0001_AbCdEfGh_IjKl_4MnO_8PqR_StUvWxYz0123&web_search_code=%7B%22tiktok%22%3A%7B%22client_params_x%22%3A%7B%22search_engine%22%3A%7B%22ies_mt_user_live_video_card_use_libra%22%3A1%2C%22mt_search_general_user_live_card%22%3A1%7D%7D%2C%22search_server%22%3A%7B%7D%7D%7D&webcast_language=zh-Hans&X-Dynosaur=MJeY9M/1tx7tHwdLCa3U1F0jXJ8/7Ao1gL-kphqa4Go916HVezyCE1TF-1dU6ReOAfHY4SmgLLbo8Iq6zJn2S3Q3JFPHznFHT8r9fTsq2y-fBH7MB0Q2gWnj1Vxl7Ra7ZJnr9AAF5mrvgdMXlGlQfGfkiXS4iyOGmQahddAOVY2IyAgzPo4/eKISRdRL1zcGA-h1idf/zyDTl7BqP5imwHQwrApFDpHhI26UwDd2iOiHRU0HnU57IFJleWJnwlCNZO/HxIHSlqbdpfxsSSnE70CKNfUKVFT0Nhh-51tLyBr65HOjzEhO-9cbvZnCbafdhI8baDzvhjWrkxVpcpUqNxlvwKjbBDxjGa2siOcUuLICH9Sd7-FPaMry9KOoSLqj71VMrAOxNY/xjyqWhqBVzYCYu2mW8iENQelF86VZzpJV3IAAFCM1jkn7vHpbjnZbNZ45-7-s9QqOAEu9FZ==&msToken=FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV==&X-Bogus=1&X-Gnarly=MF9LMmscXgKLLPIZlxuMu8cj/0J01E7wpibX8UHjSFleLojAlzClKQ-WVS5pYIIGxrSqE63KvwK9O7FE1arh4RN/GKuTN2/D20yrsuA/ugblcm396G4Cr7ZRYEpVrflzFHt8obGGNkh7ikADALqNd7wfmGq59f85iIlLGWWh2d1HRFqdpnM5WHc2PS57K76krD5c8xkHdzJkQGJ6T0iEfnE7nuDy6tUsv2-wjGLNPbVpEjEZBme9cEpfAwL/n6BjhD6yQD4umSWSnk0Gjr01hn8ocWqhuXxF/IMFHdsVhxts6c0sH/Sd--jjJfaxKxwZKIl94SYRT1aa",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://www.tiktok.com/search?q=cat&lang=zh-Hans"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "tt_csrf_token",
+          "fake-csrf-token-0001"
+        ],
+        [
+          "tt_chain_token",
+          "fakechain"
+        ],
+        [
+          "s_v_web_id",
+          "verify_fake0001_AbCdEfGh_IjKl_4MnO_8PqR_StUvWxYz0123"
+        ],
+        [
+          "multi_sids",
+          "7000000000000000001%3Afakesid0001"
+        ],
+        [
+          "sessionid",
+          "fakesession0001"
+        ],
+        [
+          "sid_tt",
+          "fakesession0001"
+        ],
+        [
+          "msToken",
+          "FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV=="
+        ],
+        [
+          "store-country-code",
+          "sg"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "status_code": 0,
+        "extra": {}
+      }
+    }
+  ],
+  "result": {
+    "status_code": 0,
+    "extra": {}
+  },
+  "error": null
+}

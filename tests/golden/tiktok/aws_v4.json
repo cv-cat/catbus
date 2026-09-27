@@ -1,0 +1,22 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": [
+    "Action=ApplyUploadInner&FileType=video&SpaceName=tiktok&Version=2020-11-19&Z=a%20b~%2A&business_tag=tiktok_video_submission_web&device_platform=web&s=abcdefghijk",
+    {
+      "authorization": "AWS4-HMAC-SHA256 Credential=AKFAKE/20260921/ap-singapore-1/vod/aws4_request, SignedHeaders=x-amz-date;x-amz-security-token, Signature=8130db7d95849f3167a493328a818f90b641b9cc6b5ebf1b3e8d1143370c78f6",
+      "x-amz-security-token": "STFAKE",
+      "x-amz-date": "20260921T141320Z"
+    },
+    {
+      "authorization": "AWS4-HMAC-SHA256 Credential=AKFAKE/20260921/ap-singapore-1/imagex/aws4_request, SignedHeaders=x-amz-content-sha256;x-amz-date;x-amz-security-token, Signature=849dde3df6a8926955a4c356f7b9446a35b9dccf702802bd412c896b2d4913c3",
+      "x-amz-security-token": "STFAKE",
+      "x-amz-date": "20260921T141320Z",
+      "x-amz-content-sha256": "64f008796ae294bd9768af778d6141d74ea352c56e93c0be29abbaf78798a66f"
+    }
+  ],
+  "error": null
+}

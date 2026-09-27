@@ -1,0 +1,160 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://im-api-sg.tiktok.com/v1/message/get_by_user_combo",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://www.tiktok.com/"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/x-protobuf"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "content-type",
+          "application/x-protobuf"
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "content-length",
+          "1330"
+        ],
+        [
+          "origin",
+          "https://www.tiktok.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "tt_csrf_token",
+          "fake-csrf-token-0001"
+        ],
+        [
+          "tt_chain_token",
+          "fakechain"
+        ],
+        [
+          "s_v_web_id",
+          "verify_fake0001_AbCdEfGh_IjKl_4MnO_8PqR_StUvWxYz0123"
+        ],
+        [
+          "multi_sids",
+          "7000000000000000001%3Afakesid0001"
+        ],
+        [
+          "sessionid",
+          "fakesession0001"
+        ],
+        [
+          "sid_tt",
+          "fakesession0001"
+        ],
+        [
+          "msToken",
+          "FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV=="
+        ],
+        [
+          "store-country-code",
+          "sg"
+        ]
+      ],
+      "body": {
+        "base64": "CMwBEJFOGgUxLjcuNCIAKAMwADokY2IxYTY5YzpmZWF0L2ltLWNvcmUtc2RrLW9vby1wdXNoLXYyQibiDCMKDQgAEICr352MNBgyIAEKCggBEAAYFCABKAEQARjwqMTVBkoTNzAwMDAwMDAwMDAwMDAwMDAwMVoDd2ViegsKA2FpZBIEMTk4OHoWCghhcHBfbmFtZRIKdGlrdG9rX3dlYnoVCgdjaGFubmVsEgp0aWt0b2tfd2ViehkKD2RldmljZV9wbGF0Zm9ybRIGd2ViX3BjeiAKCWRldmljZV9pZBITNzAwMDAwMDAwMDAwMDAwMDAwMXoMCgZyZWdpb24SAlNHehUKD3ByaW9yaXR5X3JlZ2lvbhICU0d6DQoCb3MSB3dpbmRvd3N6NwoHcmVmZXJlchIsaHR0cHM6Ly93d3cudGlrdG9rLmNvbS9tZXNzYWdlcz9sYW5nPXpoLUhhbnN6PAoMcm9vdF9yZWZlcmVyEixodHRwczovL3d3dy50aWt0b2suY29tL21lc3NhZ2VzP2xhbmc9emgtSGFuc3oWCg5jb29raWVfZW5hYmxlZBIEdHJ1ZXoUCgxzY3JlZW5fd2lkdGgSBDI1NjB6FQoNc2NyZWVuX2hlaWdodBIEMTQ0MHoZChBicm93c2VyX2xhbmd1YWdlEgV6aC1DTnoZChBicm93c2VyX3BsYXRmb3JtEgVXaW4zMnoXCgxicm93c2VyX25hbWUSB01vemlsbGF6egoPYnJvd3Nlcl92ZXJzaW9uEmc1LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCkgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzE1My4wLjAuMCBTYWZhcmkvNTM3LjM2ehYKDmJyb3dzZXJfb25saW5lEgR0cnVlekAKCHZlcmlmeUZwEjR2ZXJpZnlfZmFrZTAwMDFfQWJDZEVmR2hfSWpLbF80TW5PXzhQcVJfU3RVdld4WXowMTIzehcKDGFwcF9sYW5ndWFnZRIHemgtSGFuc3obChB3ZWJjYXN0X2xhbmd1YWdlEgd6aC1IYW5zehgKB3R6X25hbWUSDUFzaWEvU2hhbmdoYWl6FwoPaXNfcGFnZV92aXNpYmxlEgR0cnVlehMKC2ZvY3VzX3N0YXRlEgR0cnVlehYKDWlzX2Z1bGxzY3JlZW4SBWZhbHNlehAKC2hpc3RvcnlfbGVuEgE0ehUKDXVzZXJfaXNfbG9naW4SBHRydWV6HwoXZGF0YV9jb2xsZWN0aW9uX2VuYWJsZWQSBHRydWV6EgoKZnJvbV9hcHBJRBIEMTk4OHoRCgZsb2NhbGUSB3poLUhhbnN6fQoKdXNlcl9hZ2VudBJvTW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCkgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzE1My4wLjAuMCBTYWZhcmkvNTM3LjM2ep0BChBXZWItU2RrLU1zLVRva2VuEogBRmFrZU1zVG9rZW4tMDEyMzQ1Njc4OV9hYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaMDEyMzQ1Njc4OV9hYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRUlNUVVY9PYABBw=="
+      },
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "application/x-protobuf"
+      },
+      "body": {
+        "base64": "CMsBGAAymwLaDJcCCjkKKzA6MTo3MDAwMDAwMDAwMDAwMDAwMDAxOjY5MDAwMDAwMDAwMDAwMDAwMDEQiYbo4qrqs6dlGAESbgorMDoxOjcwMDAwMDAwMDAwMDAwMDAwMDE6NjkwMDAwMDAwMDAwMDAwMDAwMRABGKlGKImG6OKq6rOnZTAHOIGAyLGTru7gX0IdeyJhd2VUeXBlIjowLCJ0ZXh0Ijoi5L2g5aW9In1QgKvfnYw0EmoKKzA6MTo3MDAwMDAwMDAwMDAwMDAwMDAxOjY5MDAwMDAwMDAwMDAwMDAwMDEQARiqRiiJhujiquqzp2UwBziBgPCdmd2/kmFCGXsiYXdlVHlwZSI6MCwidGV4dCI6ImhpIn1Q6LLfnYw0"
+      }
+    }
+  ],
+  "result": {
+    "raw": {
+      "base64": "CMsBGAAymwLaDJcCCjkKKzA6MTo3MDAwMDAwMDAwMDAwMDAwMDAxOjY5MDAwMDAwMDAwMDAwMDAwMDEQiYbo4qrqs6dlGAESbgorMDoxOjcwMDAwMDAwMDAwMDAwMDAwMDE6NjkwMDAwMDAwMDAwMDAwMDAwMRABGKlGKImG6OKq6rOnZTAHOIGAyLGTru7gX0IdeyJhd2VUeXBlIjowLCJ0ZXh0Ijoi5L2g5aW9In1QgKvfnYw0EmoKKzA6MTo3MDAwMDAwMDAwMDAwMDAwMDAxOjY5MDAwMDAwMDAwMDAwMDAwMDEQARiqRiiJhujiquqzp2UwBziBgPCdmd2/kmFCGXsiYXdlVHlwZSI6MCwidGV4dCI6ImhpIn1Q6LLfnYw0"
+    },
+    "messages": [
+      {
+        "conversation_id": "0:1:7000000000000000001:6900000000000000001",
+        "server_message_id": 9001,
+        "conversation_short_id": 7300000000000000777,
+        "message_type": 7,
+        "sender": 6900000000000000001,
+        "content": {
+          "aweType": 0,
+          "text": "你好"
+        },
+        "text": "你好",
+        "create_time": 1789990000000
+      },
+      {
+        "conversation_id": "0:1:7000000000000000001:6900000000000000001",
+        "server_message_id": 9002,
+        "conversation_short_id": 7300000000000000777,
+        "message_type": 7,
+        "sender": 7000000000000000001,
+        "content": {
+          "aweType": 0,
+          "text": "hi"
+        },
+        "text": "hi",
+        "create_time": 1789990001000
+      }
+    ]
+  },
+  "error": null
+}
