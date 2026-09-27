@@ -1,0 +1,339 @@
+{
+  "input": {
+    "cookies": "ttwid=1%7Cfake-ttwid%7C1790000000%7Cabcdef; UIFID=fake-uifid-0123456789abcdef; s_v_web_id=verify_fakesvwebid_0000_0000_4000_8000_000000000000; passport_csrf_token=fakecsrf0123456789abcdef01234567; passport_csrf_token_default=fakecsrf0123456789abcdef01234567; odin_tt=fake-odin-tt; sessionid=fake-sessionid; sessionid_ss=fake-sessionid; sid_guard=fake-sid-guard; uid_tt=fake-uid-tt; bd_ticket_guard_client_web_domain=2; bd_ticket_guard_ts_sign_id=ts.2.fakesign",
+    "private_key": "-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABI0VniQq83voAoGCCqGSM49AwEHoUQDQgAE\nn62Erq4Iu+9/AQAU2CzvagneKwz4cbXODE8dE6WaWTQHy0V2nxBw4sJHD+Wxv+YxM8CwzcZOpL83\nkajsKgf9Tw==\n-----END EC PRIVATE KEY-----\n",
+    "server_cert": "pub.BFLG/1tx3mXYPHXTk+JJ7AOJQ3BRXQsimxxiJGgfKlAwtvMjwgwg0CHWEeCHz0gvUpfmE1y+5tOZSDIWTkeebpY=",
+    "ticket": "hash.fake-ticket-0000",
+    "ts_sign": "ts.2.fakesign0123456789abcdef",
+    "client_cert": "pub.ZmFrZS1jbGllbnQtY2VydA==",
+    "dtrait_blob": "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9g",
+    "ms_token": "fake-mstoken-0123456789",
+    "webid": "7400000000000000001",
+    "uid": "97872126662",
+    "aweme_id": "7433523124836060416"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://ttwid.bytedance.com/ttwid/union/register/",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [],
+      "body": "{\"region\": \"cn\", \"aid\": 1768, \"needFid\": false, \"service\": \"www.douyin.com\", \"migrate_info\": {\"ticket\": \"\", \"source\": \"node\"}, \"cbUrlProtocol\": \"https\", \"union\": true}",
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://www.douyin.com/aweme/v1/web/query/user?device_platform=webapp&aid=6383&channel=channel_pc_web&update_version_code=170400&pc_client_type=1&pc_libra_divert=Windows&support_h265=1&support_dash=1&cpu_core_num=20&version_code=170400&version_name=17.4.0&cookie_enabled=true&screen_width=2560&screen_height=1440&browser_language=zh-CN&browser_platform=Win32&browser_name=Chrome&browser_version=151.0.0.0&browser_online=true&engine_name=Blink&engine_version=151.0.0.0&os_name=Windows&os_version=10&device_memory=32&platform=PC&downlink=10&effective_type=4g&round_trip_time=0&publish_video_strategy_type=2&webid=8121157547243010917&msToken=q2YlvEEpsgn0do6xGLSdGlR94kn0FUP0rXPvfU0GhinEsqcTrD4uo3WYkwrgu7GLEpMaCcNSiuoG5tttHy91cdrRFoGg5LD9Y5vOIoTYLLg&verifyFp=verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR&fp=verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR&a_bogus=Ef4RD76jDZAnFd%2FG8KisHValLhIMrsSygFiQbcrlCNw-LqUYouPyzOSJGxL8Yq2SFbphhC1HZDPAYfVcZ4tzpCrpomkDuxvR0GI9900Lg1w6YFvQDHRZCzmLeJeG8YvEu%2FKRJl4U6tQcIx%2F4g1azUQA9CAkisOipOrrSdrUaT9tfg0T9BHFOuNtDEXzb-bI5KD%3D%3D",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not=A?Brand\";v=\"99\", \"Google Chrome\";v=\"151\", \"Chromium\";v=\"151\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/discover"
+        ]
+      ],
+      "cookies": [
+        [
+          "s_v_web_id",
+          "verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR"
+        ],
+        [
+          "ttwid",
+          "1%7Cguest-ttwid%7C1790000000%7C0123"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://mssdk.bytedance.com/web/r/token?ms_appid=6383",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not=A?Brand\";v=\"99\", \"Google Chrome\";v=\"151\", \"Chromium\";v=\"151\""
+        ],
+        [
+          "content-type",
+          "text/plain;charset=UTF-8"
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "origin",
+          "https://www.douyin.com"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "cross-site"
+        ]
+      ],
+      "cookies": [],
+      "body": "{\"magic\":538969122,\"version\":1,\"dataType\":8,\"strData\":\"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\",\"tspFromClient\":1790000000123,\"ulr\":0}",
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://www.douyin.com/aweme/v1/web/aweme/detail/?device_platform=webapp&aid=6383&channel=channel_pc_web&aweme_id=7433523124836060416&request_source=600&origin_type=video_page&update_version_code=170400&pc_client_type=1&pc_libra_divert=Windows&support_h265=1&support_dash=1&cpu_core_num=20&version_code=190500&version_name=19.5.0&cookie_enabled=true&screen_width=2560&screen_height=1440&browser_language=zh-CN&browser_platform=Win32&browser_name=Chrome&browser_version=151.0.0.0&browser_online=true&engine_name=Blink&engine_version=151.0.0.0&os_name=Windows&os_version=10&device_memory=32&platform=PC&downlink=10&effective_type=4g&round_trip_time=50&webid=7400000000000000001&verifyFp=verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR&fp=verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR&msToken=guest-mstoken-from-mssdk&a_bogus=D7s5gFUiYqA5FdFGYcTkH3clFhI%2FrPuyfMToSGnl7xxtyhzbduNyzPSJGxo0bh2SFbBhhe3HgDPlYfdcq07wpHrpwmkDuDJRstIC9hmo81whbMvQLqRpCLmo9JtTWmiEY5oWJAUU1tQcIxA4gZaiUpl9SAki4mvpQrrWdnWaN9eDgF49PqF2uPSdNXFT-Ro5qD%3D%3D&timestamp=1790000000&x-secsdk-web-signature=6d1553df971ac26a1fbf6bf02c73153b",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not=A?Brand\";v=\"99\", \"Google Chrome\";v=\"151\", \"Chromium\";v=\"151\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/video/7433523124836060416"
+        ]
+      ],
+      "cookies": [
+        [
+          "s_v_web_id",
+          "verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR"
+        ],
+        [
+          "ttwid",
+          "1%7Cguest-ttwid%7C1790000000%7C0123"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": "ttwid=1%7Cguest-ttwid%7C1790000000%7C0123; Path=/; Domain=douyin.com"
+      },
+      "body": {
+        "status_code": 0
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "status_code": 0,
+        "id": "7400000000000000001",
+        "user_uid": "97872126662"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "x-ms-token": "guest-mstoken-from-mssdk"
+      },
+      "body": {
+        "code": 0
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "status_code": 0,
+        "aweme_detail": {
+          "aweme_id": "7433523124836060416",
+          "desc": "测试作品 #话题",
+          "create_time": 1735660800,
+          "aweme_type": 0,
+          "author": {
+            "uid": "97872126662",
+            "sec_uid": "MS4wLjABAAAAfakeSecUid0123456789abcdef",
+            "nickname": "作者",
+            "unique_id": "author01"
+          },
+          "statistics": {
+            "digg_count": 12,
+            "comment_count": 3,
+            "collect_count": 4,
+            "share_count": 5,
+            "play_count": 0
+          },
+          "video": {
+            "cover": {
+              "url_list": [
+                "https://p3.douyinpic.com/cover.jpeg"
+              ]
+            },
+            "width": 1080,
+            "height": 1920,
+            "duration": 15000,
+            "play_addr": {
+              "uri": "v0200fg",
+              "url_list": [
+                "https://v3-web.douyinvod.com/play.mp4"
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "result": {
+    "status_code": 0,
+    "aweme_detail": {
+      "aweme_id": "7433523124836060416",
+      "desc": "测试作品 #话题",
+      "create_time": 1735660800,
+      "aweme_type": 0,
+      "author": {
+        "uid": "97872126662",
+        "sec_uid": "MS4wLjABAAAAfakeSecUid0123456789abcdef",
+        "nickname": "作者",
+        "unique_id": "author01"
+      },
+      "statistics": {
+        "digg_count": 12,
+        "comment_count": 3,
+        "collect_count": 4,
+        "share_count": 5,
+        "play_count": 0
+      },
+      "video": {
+        "cover": {
+          "url_list": [
+            "https://p3.douyinpic.com/cover.jpeg"
+          ]
+        },
+        "width": 1080,
+        "height": 1920,
+        "duration": 15000,
+        "play_addr": {
+          "uri": "v0200fg",
+          "url_list": [
+            "https://v3-web.douyinvod.com/play.mp4"
+          ]
+        }
+      }
+    }
+  },
+  "error": null
+}

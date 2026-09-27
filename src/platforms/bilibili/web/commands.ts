@@ -664,6 +664,7 @@ export function liveListen(ctx: Ctx) {
       if (!host) throw new Error('getDanmuInfo 没有返回接入点')
       const socket = await openSocket(`wss://${host.host}:${host.wss_port}/sub`, {
         headers: { 'User-Agent': PROFILE.ua, Origin: 'https://live.bilibili.com', Cookie: cookie },
+        ...(ctx.config.proxy ? { proxy: ctx.config.proxy } : {}),
         signal: ctx.signal,
       })
       const auth = JSON.stringify({ uid: Number(b.mid || 0), roomid: Number(r.roomId), protover: 3, buvid: b.jar.get('buvid3') ?? '', platform: 'web', type: 2, key: info.token })

@@ -1,0 +1,104 @@
+{
+  "input": {
+    "cookies": "ttwid=1%7Cfake-ttwid%7C1790000000%7Cabcdef; UIFID=fake-uifid-0123456789abcdef; s_v_web_id=verify_fakesvwebid_0000_0000_4000_8000_000000000000; passport_csrf_token=fakecsrf0123456789abcdef01234567; passport_csrf_token_default=fakecsrf0123456789abcdef01234567; odin_tt=fake-odin-tt; sessionid=fake-sessionid; sessionid_ss=fake-sessionid; sid_guard=fake-sid-guard; uid_tt=fake-uid-tt; bd_ticket_guard_client_web_domain=2; bd_ticket_guard_ts_sign_id=ts.2.fakesign",
+    "private_key": "-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABI0VniQq83voAoGCCqGSM49AwEHoUQDQgAE\nn62Erq4Iu+9/AQAU2CzvagneKwz4cbXODE8dE6WaWTQHy0V2nxBw4sJHD+Wxv+YxM8CwzcZOpL83\nkajsKgf9Tw==\n-----END EC PRIVATE KEY-----\n",
+    "server_cert": "pub.BFLG/1tx3mXYPHXTk+JJ7AOJQ3BRXQsimxxiJGgfKlAwtvMjwgwg0CHWEeCHz0gvUpfmE1y+5tOZSDIWTkeebpY=",
+    "ticket": "hash.fake-ticket-0000",
+    "ts_sign": "ts.2.fakesign0123456789abcdef",
+    "client_cert": "pub.ZmFrZS1jbGllbnQtY2VydA==",
+    "dtrait_blob": "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9g",
+    "ms_token": "fake-mstoken-0123456789",
+    "webid": "7400000000000000001",
+    "uid": "97872126662"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://mssdk.bytedance.com/web/common?ms_appid=6383&msToken=fake-mstoken-0123456789",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not=A?Brand\";v=\"99\", \"Google Chrome\";v=\"151\", \"Chromium\";v=\"151\""
+        ],
+        [
+          "content-type",
+          "text/plain;charset=UTF-8"
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "origin",
+          "https://www.douyin.com"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "cross-site"
+        ],
+        [
+          "sec-fetch-storage-access",
+          "active"
+        ]
+      ],
+      "cookies": [],
+      "body": "{\"magic\":538969122,\"version\":1,\"dataType\":8,\"strData\":\"f23LnMk+AxujhUMQ64nKZLcOnHJBQRGDRfLssUO+gTkZ1mit64z3Dtks9HPxsadM/sDvl9zrpo16RuEZZ0ph/Jddbptj/bku+YaKJANSqc5NbKIR88Tiu6CfNDbfzeX1rnOOOgjbEbvJ1BxHO8GFNhAYM/xz9xBeupQHXbR96jRMGnX1W5Yx8MvWCyfi5/icyC968D8zuKhCj7yn685umJboxcklAHNyCyzW7Psd9114xEAaF4QCZssQpIQ/I3srDm+V5HzPM5BMBJQbFQDKw86Ypu6ieiPkG3BE2q6fYYpkonmk91kELz2xVwEKe0Pi6GN6o8mKFrMqOtWz6YRvG/5BAOm7BeRvZUyAVFfcSrsx/SGmXD6HjL3QvsyZUraJ+vWeMV3Gw/w5Riy9HOrNQhHEeer++EVYny+Xxelxrhrc4fV7+AncsxdhsuEieXjgxcLPDCXuZmcB2c9AjVWqheARNr0kCOMbtKFZ8rDTuwFPiDBCP+xciA66q2e0ai/2euCchQmanY6IjbJHAQEBsuXgk7opy6PcnMhvNfj4zEKcHhlz+NjMdtrF7Kbr76e85H+RM7a9LyQCOxw5s7nw8uU3r9sfyBm3uZowQ5s+LJYGzuadJzZBXkOmqaQ22vELzwwFxQLHOiskpBflQ5zkRR9su9rcPPl3T7tBEl0bz9ghf1d+\",\"tspFromClient\":1790000000126,\"ulr\":0}",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "x-ms-token": "guest-mstoken-from-mssdk"
+      },
+      "body": {
+        "code": 0
+      }
+    }
+  ],
+  "result": "guest-mstoken-from-mssdk",
+  "error": null
+}

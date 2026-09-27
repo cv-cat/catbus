@@ -1,0 +1,140 @@
+{
+  "input": {
+    "cookies": "ttwid=1%7Cfake-ttwid%7C1790000000%7Cabcdef; UIFID=fake-uifid-0123456789abcdef; s_v_web_id=verify_fakesvwebid_0000_0000_4000_8000_000000000000; passport_csrf_token=fakecsrf0123456789abcdef01234567; passport_csrf_token_default=fakecsrf0123456789abcdef01234567; odin_tt=fake-odin-tt; sessionid=fake-sessionid; sessionid_ss=fake-sessionid; sid_guard=fake-sid-guard; uid_tt=fake-uid-tt; bd_ticket_guard_client_web_domain=2; bd_ticket_guard_ts_sign_id=ts.2.fakesign",
+    "private_key": "-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABI0VniQq83voAoGCCqGSM49AwEHoUQDQgAE\nn62Erq4Iu+9/AQAU2CzvagneKwz4cbXODE8dE6WaWTQHy0V2nxBw4sJHD+Wxv+YxM8CwzcZOpL83\nkajsKgf9Tw==\n-----END EC PRIVATE KEY-----\n",
+    "server_cert": "pub.BFLG/1tx3mXYPHXTk+JJ7AOJQ3BRXQsimxxiJGgfKlAwtvMjwgwg0CHWEeCHz0gvUpfmE1y+5tOZSDIWTkeebpY=",
+    "ticket": "hash.fake-ticket-0000",
+    "ts_sign": "ts.2.fakesign0123456789abcdef",
+    "client_cert": "pub.ZmFrZS1jbGllbnQtY2VydA==",
+    "dtrait_blob": "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9g",
+    "ms_token": "fake-mstoken-0123456789",
+    "webid": "7400000000000000001",
+    "uid": "97872126662",
+    "to_uid": "1234567890"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://imapi.douyin.com/v2/conversation/create",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/x-protobuf"
+        ],
+        [
+          "content-type",
+          "application/x-protobuf"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not=A?Brand\";v=\"99\", \"Google Chrome\";v=\"151\", \"Chromium\";v=\"151\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "UIFID",
+          "fake-uifid-0123456789abcdef"
+        ],
+        [
+          "passport_csrf_token",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "passport_csrf_token_default",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "odin_tt",
+          "fake-odin-tt"
+        ],
+        [
+          "sessionid",
+          "fake-sessionid"
+        ],
+        [
+          "sessionid_ss",
+          "fake-sessionid"
+        ],
+        [
+          "sid_guard",
+          "fake-sid-guard"
+        ],
+        [
+          "uid_tt",
+          "fake-uid-tt"
+        ],
+        [
+          "bd_ticket_guard_client_web_domain",
+          "2"
+        ],
+        [
+          "bd_ticket_guard_ts_sign_id",
+          "ts.2.fakesign"
+        ]
+      ],
+      "body": {
+        "base64": "COEEENZSGgUwLjEuOCgDOhkwZDUwOTM1OmZlYXQvcGMtaW0tZ3JvdXBCQhKKJg8IARIL0oXYzATGxYjN7AJKATBaCWRvdXlpbl9wY3IGMzYwMDAwehAKC3Nlc3Npb25fZGlkEgEwehcKDGJyb3dzZXJfbmFtZRIHTW96aWxsYXoVCg9wcmlvcml0eV9yZWdpb24SAmNuehkKEGJyb3dzZXJfcGxhdGZvcm0SBVdpbjMyen0KCnVzZXJfYWdlbnQSb01vemlsbGEvNS4wIChXaW5kb3dzIE5UIDEwLjA7IFdpbjY0OyB4NjQpIEFwcGxlV2ViS2l0LzUzNy4zNiAoS0hUTUwsIGxpa2UgR2Vja28pIENocm9tZS8xNTEuMC4wLjAgU2FmYXJpLzUzNy4zNnoeCg10aW1lem9uZV9uYW1lEg1Bc2lhL1NoYW5naGFpehkKEGJyb3dzZXJfbGFuZ3VhZ2USBXpoLUNOehQKDHNjcmVlbl93aWR0aBIEMjU2MHoNCghpcy1yZXRyeRIBMHoWCg5jb29raWVfZW5hYmxlZBIEdHJ1ZXoNCghkZXZpY2VJZBIBMHoTCgtzZXNzaW9uX2FpZBIENjM4M3oWCg5icm93c2VyX29ubGluZRIEdHJ1ZXoVCghhcHBfbmFtZRIJZG91eWluX3BjeioKB3JlZmVyZXISH2h0dHBzOi8vd3d3LmRvdXlpbi5jb20vamluZ3h1YW56egoPYnJvd3Nlcl92ZXJzaW9uEmc1LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCkgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzE1MS4wLjAuMCBTYWZhcmkvNTM3LjM2ehUKDXNjcmVlbl9oZWlnaHQSBDE0NDCQAQSqAQpkb3V5aW5fd2VisgEHd2ViX3Nka8oBYE1FVUNJQ3o3OEJuNEViWDJFeUNST25LUTdZc2J2aHc1Sm15OUNlUmZqK1FBNmJIaUFpRUFreC96N3ZoYUc5R0pUMmtDLzdDazBsTVF5Y0dQSlUwbE5hTlpqNnBpUnBJPQ=="
+      },
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "application/x-protobuf"
+      },
+      "body": {
+        "base64": "COEEIgJPSzI/iiY8CjoKGjA6MTo5Nzg3MjEyNjY2MjoxMjM0NTY3ODkwEPuAkM+wmYXZZhgBIhBmYWtlLWNvbnYtdGlja2V0"
+      }
+    }
+  ],
+  "result": [
+    "0:1:97872126662:1234567890",
+    7400000000000000123,
+    "fake-conv-ticket"
+  ],
+  "error": null
+}

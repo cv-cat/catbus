@@ -1,5 +1,15 @@
 import { filter, PRODUCT } from '../../core/options.js'
-import { definePlatform } from '../../core/registry.js'
+import { type CommandDecl, definePlatform, type Handler, type Upstream } from '../../core/registry.js'
+
+type Commands = typeof import('./web/commands.js')
+
+/** 懒加载 web 端的 handler：只有执行到这条命令时才加载实现。 */
+const h =
+  (name: keyof Commands) =>
+  (): Promise<Handler> =>
+    import('./web/commands.js').then((m) => m[name] as Handler)
+
+const impl = (upstream: Upstream, name: keyof Commands, extra: Partial<CommandDecl> = {}): CommandDecl => ({ upstream, handler: h(name), ...extra })
 
 export default definePlatform({
   id: 'douyin',
@@ -10,58 +20,58 @@ export default definePlatform({
     web: {
       login: { methods: ['qrcode', 'sms', 'cookie'], default: 'qrcode' },
       commands: {
-        'auth login': 'full',
-        'auth status': 'full',
+        'auth login': impl('full', 'authLogin'),
+        'auth status': impl('full', 'authStatus'),
 
-        'user get': 'full',
-        'user search': 'full',
-        'user items': 'full',
-        'user likes': 'full',
-        'user collects': 'full',
-        'user followers': 'full',
-        'user following': 'full',
+        'user get': impl('full', 'userGet'),
+        'user search': impl('full', 'userSearch'),
+        'user items': impl('full', 'userItems'),
+        'user likes': impl('full', 'userLikes'),
+        // 上游没有收藏作品列表（get_collect_list 返回的是收藏夹）
+        'user collects': 'none',
+        'user followers': impl('full', 'userFollowers'),
+        'user following': impl('full', 'userFollowing'),
         'user follow': 'none',
         'user unfollow': 'none',
 
-        'item get': 'full',
-        'item search': 'full',
+        'item get': impl('full', 'itemGet'),
+        'item search': impl('full', 'itemSearch'),
         'item related': 'none',
         'item list': 'none',
-        'item media': 'full',
-        'item download': 'full',
-        'item like': 'full',
-        'item unlike': 'full',
-        'item collect': 'full',
-        'item uncollect': 'full',
-        'item publish': 'full',
+        'item media': impl('full', 'itemMedia'),
+        'item download': impl('full', 'itemDownload'),
+        'item like': impl('full', 'itemLike'),
+        'item unlike': impl('full', 'itemUnlike'),
+        'item collect': impl('full', 'itemCollect'),
+        'item uncollect': impl('full', 'itemUncollect'),
+        'item publish': impl('full', 'itemPublish'),
         'item delete': 'none',
 
-        'product get': 'partial',
+        'product get': impl('partial', 'productGet'),
 
-        'comment list': { upstream: 'full', options: { product: PRODUCT } },
-        'comment replies': 'full',
-        'comment add': 'full',
+        'comment list': impl('full', 'commentList', { options: { product: PRODUCT } }),
+        'comment replies': impl('full', 'commentReplies'),
+        'comment add': impl('full', 'commentAdd'),
         'comment delete': 'none',
         'comment like': 'none',
         'comment unlike': 'none',
 
-        'feed list': {
-          upstream: 'partial',
+        'feed list': impl('partial', 'feedList', {
           note: 'hot、following 规划中',
           options: { kind: filter.kind('recommend', 'hot', 'following') },
-        },
+        }),
 
-        'live get': 'full',
+        'live get': impl('full', 'liveGet'),
         'live list': 'none',
-        'live search': 'full',
+        'live search': impl('full', 'liveSearch'),
         'live categories': 'none',
-        'live listen': 'full',
+        'live listen': impl('full', 'liveListen'),
         'live history': 'none',
-        'live send': { upstream: 'partial', note: '--gift 规划中' },
-        'live like': 'full',
-        'live rank': 'full',
+        'live send': impl('partial', 'liveSend', { note: '--gift 规划中' }),
+        'live like': impl('full', 'liveLike'),
+        'live rank': impl('full', 'liveRank'),
         'live gifts': 'none',
-        'live products': 'full',
+        'live products': impl('full', 'liveProducts'),
         'live media': 'none',
         'live replays': 'none',
         'live start': 'none',
@@ -70,21 +80,22 @@ export default definePlatform({
         'keyword suggest': 'none',
         'keyword hot': 'none',
 
-        'notice list': 'full',
+        'notice list': impl('full', 'noticeList'),
         'notice count': 'none',
 
         'msg list': 'none',
         'msg history': 'none',
-        'msg send': 'full',
-        'msg listen': 'full',
+        'msg send': impl('full', 'msgSend'),
+        'msg listen': impl('full', 'msgListen'),
         'msg read': 'none',
         'msg revoke': 'none',
         'msg delete': 'none',
 
-        'media upload': 'full',
+        'media upload': impl('full', 'mediaUpload'),
 
-        'folder list': 'full',
-        'folder items': 'full',
+        'folder list': impl('full', 'folderList'),
+        // 上游没有收藏夹内容接口
+        'folder items': 'none',
         'folder create': 'none',
         'folder update': 'none',
         'folder delete': 'none',

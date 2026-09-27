@@ -41,7 +41,7 @@
 | user search | ✓ | ✓ | ○ | ✓ | ✓ | ○ | — | — | — | ✓ |
 | user items | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | ○ | — | ✓ |
 | user likes | ✓ | ✓ | ○ | — | ✓ | ○ | — | — | — | ○ |
-| user collects | ✓ | ✓ | ✓ | ○ | ✓ | ○ | ○ | ○ | ✓ | ○ |
+| user collects | ✓ | ○ | ✓ | ○ | ✓ | ○ | ○ | ○ | ✓ | ○ |
 | user reposts | — | — | ✓ | — | — | ○ | — | — | — | ○ |
 | user followers / following | ○ | ✓ | ✓ | ○ | ✓ | ○ | — | — | — | ○ |
 | user follow / unfollow | ○ | ○ | ✓ | ○ | ○ | ○ | ○ | — | — | ✓ |
@@ -138,7 +138,8 @@
 | 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x |
 |---|---|---|---|---|---|---|---|---|---|---|
 | media upload | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ |
-| folder list / items | ◐ | ✓ | ✓ | ◐ | ○ | ○ | — | — | — | ○ |
+| folder list | ◐ | ✓ | ✓ | ◐ | ○ | ○ | — | — | — | ○ |
+| folder items | ◐ | ○ | ✓ | ◐ | ○ | ○ | — | — | — | ○ |
 | folder create / update | ○ | ○ | ◐ | ○ | ○ | — | — | — | — | ○ |
 | folder delete | ○ | ○ | ○ | ○ | ○ | — | — | — | — | ○ |
 | series list | ○ | ○ | ✓ | ○ | ○ | — | — | — | — | — |

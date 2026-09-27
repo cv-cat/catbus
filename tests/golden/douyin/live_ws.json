@@ -1,0 +1,362 @@
+{
+  "input": {
+    "cookies": "ttwid=1%7Cfake-ttwid%7C1790000000%7Cabcdef; UIFID=fake-uifid-0123456789abcdef; s_v_web_id=verify_fakesvwebid_0000_0000_4000_8000_000000000000; passport_csrf_token=fakecsrf0123456789abcdef01234567; passport_csrf_token_default=fakecsrf0123456789abcdef01234567; odin_tt=fake-odin-tt; sessionid=fake-sessionid; sessionid_ss=fake-sessionid; sid_guard=fake-sid-guard; uid_tt=fake-uid-tt; bd_ticket_guard_client_web_domain=2; bd_ticket_guard_ts_sign_id=ts.2.fakesign",
+    "private_key": "-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABI0VniQq83voAoGCCqGSM49AwEHoUQDQgAE\nn62Erq4Iu+9/AQAU2CzvagneKwz4cbXODE8dE6WaWTQHy0V2nxBw4sJHD+Wxv+YxM8CwzcZOpL83\nkajsKgf9Tw==\n-----END EC PRIVATE KEY-----\n",
+    "server_cert": "pub.BFLG/1tx3mXYPHXTk+JJ7AOJQ3BRXQsimxxiJGgfKlAwtvMjwgwg0CHWEeCHz0gvUpfmE1y+5tOZSDIWTkeebpY=",
+    "ticket": "hash.fake-ticket-0000",
+    "ts_sign": "ts.2.fakesign0123456789abcdef",
+    "client_cert": "pub.ZmFrZS1jbGllbnQtY2VydA==",
+    "dtrait_blob": "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9g",
+    "ms_token": "fake-mstoken-0123456789",
+    "webid": "7400000000000000001",
+    "uid": "97872126662",
+    "web_rid": "852953608964"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://live.douyin.com/852953608964",
+      "headers": [
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,zh-TW;q=0.8,en;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=0, i"
+        ],
+        [
+          "referer",
+          "https://live.douyin.com/?from_nav=1"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\", \"Google Chrome\";v=\"138\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "UIFID",
+          "fake-uifid-0123456789abcdef"
+        ],
+        [
+          "passport_csrf_token",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "passport_csrf_token_default",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "odin_tt",
+          "fake-odin-tt"
+        ],
+        [
+          "sessionid",
+          "fake-sessionid"
+        ],
+        [
+          "sessionid_ss",
+          "fake-sessionid"
+        ],
+        [
+          "sid_guard",
+          "fake-sid-guard"
+        ],
+        [
+          "uid_tt",
+          "fake-uid-tt"
+        ],
+        [
+          "bd_ticket_guard_client_web_domain",
+          "2"
+        ],
+        [
+          "bd_ticket_guard_ts_sign_id",
+          "ts.2.fakesign"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "HEAD",
+      "url": "https://www.douyin.com/service/2/abtest_config/",
+      "headers": [
+        [
+          "x-secsdk-csrf-request",
+          "1"
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "x-secsdk-csrf-version",
+          "1.2.22"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Clive-ttwid%7C1790000000%7C9999"
+        ],
+        [
+          "UIFID",
+          "fake-uifid-0123456789abcdef"
+        ],
+        [
+          "s_v_web_id",
+          "verify_fakesvwebid_0000_0000_4000_8000_000000000000"
+        ],
+        [
+          "passport_csrf_token",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "passport_csrf_token_default",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "odin_tt",
+          "fake-odin-tt"
+        ],
+        [
+          "sessionid",
+          "fake-sessionid"
+        ],
+        [
+          "sessionid_ss",
+          "fake-sessionid"
+        ],
+        [
+          "sid_guard",
+          "fake-sid-guard"
+        ],
+        [
+          "uid_tt",
+          "fake-uid-tt"
+        ],
+        [
+          "bd_ticket_guard_client_web_domain",
+          "2"
+        ],
+        [
+          "bd_ticket_guard_ts_sign_id",
+          "ts.2.fakesign"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://live.douyin.com/webcast/im/fetch/?resp_content_type=protobuf&did_rule=3&device_id=&app_name=douyin_web&endpoint=live_pc&support_wrds=1&user_unique_id=111222333&identity=audience&need_persist_msg_count=15&insert_task_id=&live_reason=&room_id=7400000000000000000&version_code=180800&last_rtt=0&live_id=1&aid=6383&fetch_rule=1&cursor=&internal_ext=&device_platform=web&cookie_enabled=true&screen_width=2560&screen_height=1440&browser_language=zh-CN&browser_platform=Win32&browser_name=Mozilla&browser_version=5.0+%28Windows+NT+10.0%3B+Win64%3B+x64%29+AppleWebKit%2F537.36+%28KHTML%2C+like+Gecko%29+Chrome%2F151.0.0.0+Safari%2F537.36&browser_online=true&tz_name=Asia%2FShanghai&msToken=fake-mstoken-0123456789&a_bogus=xy0RhtXwYZ8jcVKGucnmC3Clzh6ArsuynMi2bjrKSNPzLZlYouNyzNSraxqCsw9zMbpwhC3HtDUMYEdcqIUT3A9pLmkvuxvR0zAc908L%2F1qhb0vQDqfNCzmL9Jtb8YvEm5oSJAUU1tmc2xA4EZrwUp5yHAkE4OkpKqrSdaUGN9ek6zT9FrqQuNtdxXFb-RI5nD%3D%3D",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded; charset=UTF-8"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not=A?Brand\";v=\"99\", \"Google Chrome\";v=\"151\", \"Chromium\";v=\"151\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "origin",
+          "https://live.douyin.com"
+        ],
+        [
+          "referer",
+          "https://live.douyin.com/852953608964"
+        ],
+        [
+          "x-secsdk-csrf-token",
+          "fakecsrftoken0123456789abcdef"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Clive-ttwid%7C1790000000%7C9999"
+        ],
+        [
+          "UIFID",
+          "fake-uifid-0123456789abcdef"
+        ],
+        [
+          "passport_csrf_token",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "passport_csrf_token_default",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "odin_tt",
+          "fake-odin-tt"
+        ],
+        [
+          "sessionid",
+          "fake-sessionid"
+        ],
+        [
+          "sessionid_ss",
+          "fake-sessionid"
+        ],
+        [
+          "sid_guard",
+          "fake-sid-guard"
+        ],
+        [
+          "uid_tt",
+          "fake-uid-tt"
+        ],
+        [
+          "bd_ticket_guard_client_web_domain",
+          "2"
+        ],
+        [
+          "bd_ticket_guard_ts_sign_id",
+          "ts.2.fakesign"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": "ttwid=1%7Clive-ttwid%7C1790000000%7C9999; Path=/; Domain=douyin.com",
+        "content-type": "text/html"
+      },
+      "body": "<html><head><script nonce=\"n1\">var x = 1;</script><script nonce=\"n2\">self.__pace_f.push([1,\"{\\\"state\\\":{\\\"roomStore\\\":{\\\"roomInfo\\\":{\\\"room\\\":{\\\"id_str\\\":\\\"7400000000000000000\\\",\\\"status\\\":2,\\\"status_str\\\":\\\"2\\\",\\\"title\\\":\\\"测试直播\\\",\\\"user_count_str\\\":\\\"1.2万\\\"},\\\"roomId\\\":\\\"7400000000000000000\\\",\\\"anchor\\\":{\\\"id_str\\\":\\\"98765432100\\\",\\\"sec_uid\\\":\\\"MS4wLjABAAAAfakeSecUid0123456789abcdef\\\",\\\"nickname\\\":\\\"主播\\\"}}},\\\"userStore\\\":{\\\"odin\\\":{\\\"user_unique_id\\\":\\\"111222333\\\"}}}}\"])</script></head></html>"
+    },
+    {
+      "status": 200,
+      "headers": {
+        "X-Ware-Csrf-Token": "0001000000017a,fakecsrftoken0123456789abcdef,86370,success,fakesession0123"
+      },
+      "body": ""
+    },
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "application/protobuf"
+      },
+      "body": {
+        "base64": "Eh90LTE3OTAwMDAwMDAxMjNfci0xX2QtMV91LTFfaC0xKk5pbnRlcm5hbF9zcmM6ZGltfHdzc19wdXNoX3Jvb21faWQ6NzQwMDAwMDAwMDAwMDAwMDAwMHxmZXRjaF90aW1lOjE3OTAwMDAwMDAxMjM="
+      }
+    }
+  ],
+  "result": {
+    "url": "wss://webcast100-ws-web-hl.douyin.com/webcast/im/push/v2/?app_name=douyin_web&version_code=180800&webcast_sdk_version=1.0.15&update_version_code=1.0.15&compress=gzip&device_platform=web&cookie_enabled=true&screen_width=1707&screen_height=960&browser_language=zh-CN&browser_platform=Win32&browser_name=Mozilla&browser_version=5.0+%28Windows+NT+10.0%3B+Win64%3B+x64%29+AppleWebKit%2F537.36+%28KHTML%2C+like+Gecko%29+Chrome%2F151.0.0.0+Safari%2F537.36&browser_online=true&tz_name=Etc%2FGMT-8&cursor=t-1790000000123_r-1_d-1_u-1_h-1&internal_ext=internal_src%3Adim%7Cwss_push_room_id%3A7400000000000000000%7Cfetch_time%3A1790000000123&host=https%3A%2F%2Flive.douyin.com&aid=6383&live_id=1&did_rule=3&endpoint=live_pc&support_wrds=1&user_unique_id=111222333&im_path=%2Fwebcast%2Fim%2Ffetch%2F&identity=audience&need_persist_msg_count=15&insert_task_id=&live_reason=&room_id=7400000000000000000&heartbeatDuration=0&signature=fguLpgUWPGkGJZfS",
+    "header": {
+      "Pragma": "no-cache",
+      "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+      "Upgrade": "websocket",
+      "Cache-Control": "no-cache",
+      "Connection": "Upgrade"
+    },
+    "cookie": "ttwid=1%7Clive-ttwid%7C1790000000%7C9999; UIFID=fake-uifid-0123456789abcdef; s_v_web_id=verify_fakesvwebid_0000_0000_4000_8000_000000000000; passport_csrf_token=fakecsrf0123456789abcdef01234567; passport_csrf_token_default=fakecsrf0123456789abcdef01234567; odin_tt=fake-odin-tt; sessionid=fake-sessionid; sessionid_ss=fake-sessionid; sid_guard=fake-sid-guard; uid_tt=fake-uid-tt; bd_ticket_guard_client_web_domain=2; bd_ticket_guard_ts_sign_id=ts.2.fakesign",
+    "sent": [],
+    "origin": "https://live.douyin.com"
+  },
+  "error": null
+}
