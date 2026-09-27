@@ -158,11 +158,20 @@ const SAME_RESULT: Record<string, (r: any) => unknown> = {
  * - WebM 指纹里 canvas / webgl 的图像哈希由 @napi-rs/canvas 用本机字体渲染得到，换一台机器（CI）就不同，上游也一样；
  *   这两项和汇总它们的 browser_info 不比较，其余字段照常逐字节比较。
  */
-const MASKS = [/(canvas%2520fp%253A)[0-9a-f]{32}/, /(%22webgl%22%3A%22fp%253A)[0-9a-f]{32}/, /(%22browser_info%22%3A%22)[0-9a-f]{32}/]
+const MASKS = [/(canvas%20fp%3A)[0-9a-f]{32}/, /^(fp%3A)[0-9a-f]{32}/]
+/** wsgw_getinfo 的正文按字段展开比较，出错时能直接看出是哪个字段。 */
+function expandWebm(body: string): unknown {
+  const form = Object.fromEntries(new URLSearchParams(body))
+  const inner = JSON.parse(form.body!)
+  const fields = inner.body as Record<string, unknown>
+  for (const [k, v] of Object.entries(fields)) if (typeof v === 'string') fields[k] = MASKS.reduce((x, re) => x.replace(re, '$1<masked>'), v)
+  fields.browser_info = '<masked>'
+  return { ...form, body: inner }
+}
 const normalizeUrl = (r: GoldenRequest): GoldenRequest => ({
   ...r,
   url: r.url.replace(/^(https:\/\/[^/?#]+)(\?|$)/, '$1/$2'),
-  body: typeof r.body === 'string' && r.body.includes('functionId=wsgw_getinfo') ? MASKS.reduce((b, re) => b.replace(re, '$1<masked>'), r.body) : r.body,
+  body: typeof r.body === 'string' && r.body.includes('functionId=wsgw_getinfo') ? (expandWebm(r.body) as string) : r.body,
 })
 
 async function run(c: GoldenCase, fn: () => Promise<unknown>) {
