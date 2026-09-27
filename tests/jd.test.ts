@@ -130,10 +130,18 @@ const CASES: Record<string, () => Promise<unknown>> = {
   },
 }
 
+/** WebM 写进 localStorage 的 canvas / webgl 图像哈希与本机字体有关（见 normalizeUrl 的说明），不比较。 */
+function maskWebmStorage(r: any): any {
+  for (const store of Object.values<Record<string, string>>(r?.local_storage ?? {})) {
+    for (const k of ['__we_m_cv__', '__we_m_gl__', '__we_m_ftk__']) if (k in store) store[k] = '<masked>'
+  }
+  return r
+}
+
 /** 结果也要一致的用例（上游返回值是纯数据）。 */
 const SAME_RESULT: Record<string, (r: any) => unknown> = {
   check_session: (r) => r,
-  search_fresh_webm: (r) => r,
+  search_fresh_webm: (r) => maskWebmStorage(r),
   order_list: (r) => r,
   h5st_token_fetch: (r) => r,
   device_fields: (r) => r,
@@ -144,8 +152,18 @@ const SAME_RESULT: Record<string, (r: any) => unknown> = {
   search_risk: (r) => r,
 }
 
-/** 上游的 `https://api.m.jd.com?...` 在 curl 里发出去是 `/?`；wreq-js 需要显式的 `/`，比较时统一。 */
-const normalizeUrl = (r: GoldenRequest): GoldenRequest => ({ ...r, url: r.url.replace(/^(https:\/\/[^/?#]+)(\?|$)/, '$1/$2') })
+/**
+ * 比较前统一两处与实现无关的差异：
+ * - 上游的 `https://api.m.jd.com?...` 在 curl 里发出去是 `/?`；wreq-js 需要显式的 `/`。
+ * - WebM 指纹里 canvas / webgl 的图像哈希由 @napi-rs/canvas 用本机字体渲染得到，换一台机器（CI）就不同，上游也一样；
+ *   这两项和汇总它们的 browser_info 不比较，其余字段照常逐字节比较。
+ */
+const MASKS = [/(canvas%2520fp%253A)[0-9a-f]{32}/, /(%22webgl%22%3A%22fp%253A)[0-9a-f]{32}/, /(%22browser_info%22%3A%22)[0-9a-f]{32}/]
+const normalizeUrl = (r: GoldenRequest): GoldenRequest => ({
+  ...r,
+  url: r.url.replace(/^(https:\/\/[^/?#]+)(\?|$)/, '$1/$2'),
+  body: typeof r.body === 'string' && r.body.includes('functionId=wsgw_getinfo') ? MASKS.reduce((b, re) => b.replace(re, '$1<masked>'), r.body) : r.body,
+})
 
 async function run(c: GoldenCase, fn: () => Promise<unknown>) {
   vi.useFakeTimers({ toFake: ['Date'] })
@@ -164,7 +182,8 @@ describe('jd 对拍：请求构造与签名', () => {
       const c = loadCase('jd', name)
       const result = await run(c, fn)
       const pick = SAME_RESULT[name]
-      if (pick) expect(pick(JSON.parse(JSON.stringify(result)))).toEqual(name === 'qr_login' ? c.result.cookie : c.result)
+      const expected = name === 'qr_login' ? c.result.cookie : name === 'search_fresh_webm' ? maskWebmStorage(structuredClone(c.result)) : c.result
+      if (pick) expect(pick(JSON.parse(JSON.stringify(result)))).toEqual(expected)
     }, 60_000)
   }
 
