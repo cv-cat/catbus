@@ -1,0 +1,897 @@
+{
+  "input": {
+    "user": "44196397",
+    "cursor": "CURSOR_NEXT"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://x.com/i/api/graphql/Yr8749ieoUptxRqQv766Fw/UserOriginalsTimeline?variables=%7B%22userId%22%3A%2244196397%22%2C%22count%22%3A20%2C%22cursor%22%3A%22CURSOR_NEXT%22%2C%22includePromotedContent%22%3Atrue%2C%22withQuickPromoteEligibilityTweetFields%22%3Atrue%2C%22withVoice%22%3Atrue%7D&features=%7B%22rweb_video_screen_enabled%22%3Afalse%2C%22rweb_cashtags_enabled%22%3Atrue%2C%22profile_label_improvements_pcf_label_in_post_enabled%22%3Atrue%2C%22responsive_web_profile_redirect_enabled%22%3Atrue%2C%22rweb_tipjar_consumption_enabled%22%3Afalse%2C%22verified_phone_label_enabled%22%3Afalse%2C%22creator_subscriptions_tweet_preview_api_enabled%22%3Atrue%2C%22responsive_web_graphql_timeline_navigation_enabled%22%3Atrue%2C%22premium_content_api_read_enabled%22%3Afalse%2C%22communities_web_enable_tweet_community_results_fetch%22%3Atrue%2C%22c9s_tweet_anatomy_moderator_badge_enabled%22%3Atrue%2C%22responsive_web_grok_analyze_button_fetch_trends_enabled%22%3Afalse%2C%22responsive_web_grok_analyze_post_followups_enabled%22%3Atrue%2C%22rweb_cashtags_composer_attachment_enabled%22%3Atrue%2C%22responsive_web_jetfuel_frame%22%3Atrue%2C%22rweb_sports_post_context_enabled%22%3Atrue%2C%22responsive_web_grok_share_attachment_enabled%22%3Atrue%2C%22responsive_web_grok_annotations_enabled%22%3Atrue%2C%22articles_preview_enabled%22%3Atrue%2C%22responsive_web_edit_tweet_api_enabled%22%3Atrue%2C%22rweb_conversational_replies_downvote_enabled%22%3Afalse%2C%22graphql_is_translatable_rweb_tweet_is_translatable_enabled%22%3Atrue%2C%22view_counts_everywhere_api_enabled%22%3Atrue%2C%22longform_notetweets_consumption_enabled%22%3Atrue%2C%22responsive_web_twitter_article_tweet_consumption_enabled%22%3Atrue%2C%22content_disclosure_indicator_enabled%22%3Atrue%2C%22content_disclosure_ai_generated_indicator_enabled%22%3Atrue%2C%22responsive_web_grok_show_grok_translated_post%22%3Atrue%2C%22responsive_web_grok_analysis_button_from_backend%22%3Atrue%2C%22post_ctas_fetch_enabled%22%3Afalse%2C%22freedom_of_speech_not_reach_fetch_enabled%22%3Atrue%2C%22standardized_nudges_misinfo%22%3Atrue%2C%22tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled%22%3Atrue%2C%22longform_notetweets_rich_text_read_enabled%22%3Atrue%2C%22longform_notetweets_inline_media_enabled%22%3Afalse%2C%22responsive_web_nested_quote_preview_enabled%22%3Afalse%2C%22responsive_web_grok_image_annotation_enabled%22%3Atrue%2C%22responsive_web_grok_imagine_annotation_enabled%22%3Atrue%2C%22responsive_web_grok_community_note_auto_translation_is_enabled%22%3Atrue%2C%22responsive_web_enhance_cards_enabled%22%3Afalse%7D&fieldToggles=%7B%22withPayments%22%3Afalse%2C%22withArticlePlainText%22%3Afalse%7D",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-twitter-auth-type",
+          "OAuth2Session"
+        ],
+        [
+          "x-csrf-token",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "x-twitter-client-language",
+          "en"
+        ],
+        [
+          "x-twitter-active-user",
+          "yes"
+        ],
+        [
+          "x-client-transaction-id",
+          "lAjtS0U4bXrmyhfjv13c0x6jv5Pae1rAibByqBjptf6xYSFXipcd0IEu2nAbciJfc4RM9ZJto4WFRl1cgGkoJmwBZCY8lw"
+        ],
+        [
+          "referer",
+          "https://x.com/home"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [
+        [
+          "auth_token",
+          "fakeauthtoken000000000000000000000000000000"
+        ],
+        [
+          "ct0",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "twid",
+          "u%3D10001"
+        ],
+        [
+          "lang",
+          "en"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "data": {
+          "user": {
+            "result": {
+              "__typename": "User",
+              "timeline": {
+                "timeline": {
+                  "instructions": [
+                    {
+                      "type": "TimelineClearCache"
+                    },
+                    {
+                      "type": "TimelinePinEntry",
+                      "entry": {
+                        "entryId": "tweet-1001",
+                        "sortIndex": "1001",
+                        "content": {
+                          "entryType": "TimelineTimelineItem",
+                          "__typename": "TimelineTimelineItem",
+                          "itemContent": {
+                            "itemType": "TimelineTweet",
+                            "__typename": "TimelineTweet",
+                            "tweet_results": {
+                              "result": {
+                                "__typename": "Tweet",
+                                "rest_id": "1001",
+                                "core": {
+                                  "user_results": {
+                                    "result": {
+                                      "__typename": "User",
+                                      "rest_id": "44196397",
+                                      "core": {
+                                        "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+                                        "name": "Elon Musk",
+                                        "screen_name": "elonmusk"
+                                      },
+                                      "avatar": {
+                                        "image_url": "https://pbs.twimg.com/profile_images/1/fake_normal.jpg"
+                                      },
+                                      "profile_bio": {
+                                        "description": "简介 & bio"
+                                      },
+                                      "relationship_counts": {
+                                        "followers": 241701251,
+                                        "following": 1412
+                                      },
+                                      "tweet_counts": {
+                                        "media_tweets": 4724,
+                                        "tweets": 109119
+                                      },
+                                      "action_counts": {
+                                        "favorites_count": 249608
+                                      }
+                                    }
+                                  }
+                                },
+                                "views": {
+                                  "count": "12345",
+                                  "state": "EnabledWithCount"
+                                },
+                                "legacy": {
+                                  "id_str": "1001",
+                                  "full_text": "置顶推文",
+                                  "created_at": "Wed Oct 26 18:45:58 +0000 2022",
+                                  "lang": "zh",
+                                  "favorite_count": 11,
+                                  "reply_count": 22,
+                                  "bookmark_count": 33,
+                                  "retweet_count": 44,
+                                  "quote_count": 55,
+                                  "user_id_str": "44196397"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": "TimelineAddEntries",
+                      "entries": [
+                        {
+                          "entryId": "tweet-1002",
+                          "sortIndex": "1002",
+                          "content": {
+                            "entryType": "TimelineTimelineItem",
+                            "__typename": "TimelineTimelineItem",
+                            "itemContent": {
+                              "itemType": "TimelineTweet",
+                              "__typename": "TimelineTweet",
+                              "tweet_results": {
+                                "result": {
+                                  "__typename": "Tweet",
+                                  "rest_id": "1002",
+                                  "core": {
+                                    "user_results": {
+                                      "result": {
+                                        "__typename": "User",
+                                        "rest_id": "44196397",
+                                        "core": {
+                                          "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+                                          "name": "Elon Musk",
+                                          "screen_name": "elonmusk"
+                                        },
+                                        "avatar": {
+                                          "image_url": "https://pbs.twimg.com/profile_images/1/fake_normal.jpg"
+                                        },
+                                        "profile_bio": {
+                                          "description": "简介 & bio"
+                                        },
+                                        "relationship_counts": {
+                                          "followers": 241701251,
+                                          "following": 1412
+                                        },
+                                        "tweet_counts": {
+                                          "media_tweets": 4724,
+                                          "tweets": 109119
+                                        },
+                                        "action_counts": {
+                                          "favorites_count": 249608
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "views": {
+                                    "count": "12345",
+                                    "state": "EnabledWithCount"
+                                  },
+                                  "legacy": {
+                                    "id_str": "1002",
+                                    "full_text": "带图 https://t.co/x",
+                                    "created_at": "Wed Oct 26 18:45:58 +0000 2022",
+                                    "lang": "zh",
+                                    "favorite_count": 11,
+                                    "reply_count": 22,
+                                    "bookmark_count": 33,
+                                    "retweet_count": 44,
+                                    "quote_count": 55,
+                                    "user_id_str": "44196397",
+                                    "entities": {
+                                      "media": [
+                                        {
+                                          "type": "photo",
+                                          "id_str": "900",
+                                          "media_url_https": "https://pbs.twimg.com/media/fake.jpg",
+                                          "original_info": {
+                                            "width": 1200,
+                                            "height": 800
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "extended_entities": {
+                                      "media": [
+                                        {
+                                          "type": "photo",
+                                          "id_str": "900",
+                                          "media_url_https": "https://pbs.twimg.com/media/fake.jpg",
+                                          "original_info": {
+                                            "width": 1200,
+                                            "height": 800
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "entryId": "tweet-1003",
+                          "sortIndex": "1003",
+                          "content": {
+                            "entryType": "TimelineTimelineItem",
+                            "__typename": "TimelineTimelineItem",
+                            "itemContent": {
+                              "itemType": "TimelineTweet",
+                              "__typename": "TimelineTweet",
+                              "tweet_results": {
+                                "result": {
+                                  "__typename": "TweetWithVisibilityResults",
+                                  "tweet": {
+                                    "__typename": "Tweet",
+                                    "rest_id": "1003",
+                                    "core": {
+                                      "user_results": {
+                                        "result": {
+                                          "__typename": "User",
+                                          "rest_id": "44196397",
+                                          "core": {
+                                            "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+                                            "name": "Elon Musk",
+                                            "screen_name": "elonmusk"
+                                          },
+                                          "avatar": {
+                                            "image_url": "https://pbs.twimg.com/profile_images/1/fake_normal.jpg"
+                                          },
+                                          "profile_bio": {
+                                            "description": "简介 & bio"
+                                          },
+                                          "relationship_counts": {
+                                            "followers": 241701251,
+                                            "following": 1412
+                                          },
+                                          "tweet_counts": {
+                                            "media_tweets": 4724,
+                                            "tweets": 109119
+                                          },
+                                          "action_counts": {
+                                            "favorites_count": 249608
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "views": {
+                                      "count": "12345",
+                                      "state": "EnabledWithCount"
+                                    },
+                                    "legacy": {
+                                      "id_str": "1003",
+                                      "full_text": "带视频",
+                                      "created_at": "Wed Oct 26 18:45:58 +0000 2022",
+                                      "lang": "zh",
+                                      "favorite_count": 11,
+                                      "reply_count": 22,
+                                      "bookmark_count": 33,
+                                      "retweet_count": 44,
+                                      "quote_count": 55,
+                                      "user_id_str": "44196397",
+                                      "entities": {
+                                        "media": [
+                                          {
+                                            "type": "video",
+                                            "id_str": "901",
+                                            "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/901/pu/img/thumb.jpg",
+                                            "original_info": {
+                                              "width": 1920,
+                                              "height": 1080
+                                            },
+                                            "video_info": {
+                                              "duration_millis": 9301,
+                                              "variants": [
+                                                {
+                                                  "content_type": "application/x-mpegURL",
+                                                  "url": "https://video.twimg.com/ext_tw_video/901/pu/pl/x.m3u8"
+                                                },
+                                                {
+                                                  "bitrate": 256000,
+                                                  "content_type": "video/mp4",
+                                                  "url": "https://video.twimg.com/ext_tw_video/901/pu/vid/480x270/low.mp4"
+                                                },
+                                                {
+                                                  "bitrate": 2176000,
+                                                  "content_type": "video/mp4",
+                                                  "url": "https://video.twimg.com/ext_tw_video/901/pu/vid/1280x720/high.mp4"
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      "extended_entities": {
+                                        "media": [
+                                          {
+                                            "type": "video",
+                                            "id_str": "901",
+                                            "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/901/pu/img/thumb.jpg",
+                                            "original_info": {
+                                              "width": 1920,
+                                              "height": 1080
+                                            },
+                                            "video_info": {
+                                              "duration_millis": 9301,
+                                              "variants": [
+                                                {
+                                                  "content_type": "application/x-mpegURL",
+                                                  "url": "https://video.twimg.com/ext_tw_video/901/pu/pl/x.m3u8"
+                                                },
+                                                {
+                                                  "bitrate": 256000,
+                                                  "content_type": "video/mp4",
+                                                  "url": "https://video.twimg.com/ext_tw_video/901/pu/vid/480x270/low.mp4"
+                                                },
+                                                {
+                                                  "bitrate": 2176000,
+                                                  "content_type": "video/mp4",
+                                                  "url": "https://video.twimg.com/ext_tw_video/901/pu/vid/1280x720/high.mp4"
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "entryId": "promoted-tweet-1004",
+                          "sortIndex": "1",
+                          "content": {
+                            "itemContent": {
+                              "tweet_results": {
+                                "result": {
+                                  "__typename": "Tweet",
+                                  "rest_id": "1004",
+                                  "core": {
+                                    "user_results": {
+                                      "result": {
+                                        "__typename": "User",
+                                        "rest_id": "44196397",
+                                        "core": {
+                                          "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+                                          "name": "Elon Musk",
+                                          "screen_name": "elonmusk"
+                                        },
+                                        "avatar": {
+                                          "image_url": "https://pbs.twimg.com/profile_images/1/fake_normal.jpg"
+                                        },
+                                        "profile_bio": {
+                                          "description": "简介 & bio"
+                                        },
+                                        "relationship_counts": {
+                                          "followers": 241701251,
+                                          "following": 1412
+                                        },
+                                        "tweet_counts": {
+                                          "media_tweets": 4724,
+                                          "tweets": 109119
+                                        },
+                                        "action_counts": {
+                                          "favorites_count": 249608
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "views": {
+                                    "count": "12345",
+                                    "state": "EnabledWithCount"
+                                  },
+                                  "legacy": {
+                                    "id_str": "1004",
+                                    "full_text": "广告",
+                                    "created_at": "Wed Oct 26 18:45:58 +0000 2022",
+                                    "lang": "zh",
+                                    "favorite_count": 11,
+                                    "reply_count": 22,
+                                    "bookmark_count": 33,
+                                    "retweet_count": 44,
+                                    "quote_count": 55,
+                                    "user_id_str": "44196397"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "entryId": "cursor-top-CURSOR_TOP",
+                          "sortIndex": "0",
+                          "content": {
+                            "entryType": "TimelineTimelineCursor",
+                            "__typename": "TimelineTimelineCursor",
+                            "value": "CURSOR_TOP",
+                            "cursorType": "Top"
+                          }
+                        },
+                        {
+                          "entryId": "cursor-bottom-CURSOR_NEXT",
+                          "sortIndex": "0",
+                          "content": {
+                            "entryType": "TimelineTimelineCursor",
+                            "__typename": "TimelineTimelineCursor",
+                            "value": "CURSOR_NEXT",
+                            "cursorType": "Bottom"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "result": {
+    "data": {
+      "user": {
+        "result": {
+          "__typename": "User",
+          "timeline": {
+            "timeline": {
+              "instructions": [
+                {
+                  "type": "TimelineClearCache"
+                },
+                {
+                  "type": "TimelinePinEntry",
+                  "entry": {
+                    "entryId": "tweet-1001",
+                    "sortIndex": "1001",
+                    "content": {
+                      "entryType": "TimelineTimelineItem",
+                      "__typename": "TimelineTimelineItem",
+                      "itemContent": {
+                        "itemType": "TimelineTweet",
+                        "__typename": "TimelineTweet",
+                        "tweet_results": {
+                          "result": {
+                            "__typename": "Tweet",
+                            "rest_id": "1001",
+                            "core": {
+                              "user_results": {
+                                "result": {
+                                  "__typename": "User",
+                                  "rest_id": "44196397",
+                                  "core": {
+                                    "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+                                    "name": "Elon Musk",
+                                    "screen_name": "elonmusk"
+                                  },
+                                  "avatar": {
+                                    "image_url": "https://pbs.twimg.com/profile_images/1/fake_normal.jpg"
+                                  },
+                                  "profile_bio": {
+                                    "description": "简介 & bio"
+                                  },
+                                  "relationship_counts": {
+                                    "followers": 241701251,
+                                    "following": 1412
+                                  },
+                                  "tweet_counts": {
+                                    "media_tweets": 4724,
+                                    "tweets": 109119
+                                  },
+                                  "action_counts": {
+                                    "favorites_count": 249608
+                                  }
+                                }
+                              }
+                            },
+                            "views": {
+                              "count": "12345",
+                              "state": "EnabledWithCount"
+                            },
+                            "legacy": {
+                              "id_str": "1001",
+                              "full_text": "置顶推文",
+                              "created_at": "Wed Oct 26 18:45:58 +0000 2022",
+                              "lang": "zh",
+                              "favorite_count": 11,
+                              "reply_count": 22,
+                              "bookmark_count": 33,
+                              "retweet_count": 44,
+                              "quote_count": 55,
+                              "user_id_str": "44196397"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "TimelineAddEntries",
+                  "entries": [
+                    {
+                      "entryId": "tweet-1002",
+                      "sortIndex": "1002",
+                      "content": {
+                        "entryType": "TimelineTimelineItem",
+                        "__typename": "TimelineTimelineItem",
+                        "itemContent": {
+                          "itemType": "TimelineTweet",
+                          "__typename": "TimelineTweet",
+                          "tweet_results": {
+                            "result": {
+                              "__typename": "Tweet",
+                              "rest_id": "1002",
+                              "core": {
+                                "user_results": {
+                                  "result": {
+                                    "__typename": "User",
+                                    "rest_id": "44196397",
+                                    "core": {
+                                      "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+                                      "name": "Elon Musk",
+                                      "screen_name": "elonmusk"
+                                    },
+                                    "avatar": {
+                                      "image_url": "https://pbs.twimg.com/profile_images/1/fake_normal.jpg"
+                                    },
+                                    "profile_bio": {
+                                      "description": "简介 & bio"
+                                    },
+                                    "relationship_counts": {
+                                      "followers": 241701251,
+                                      "following": 1412
+                                    },
+                                    "tweet_counts": {
+                                      "media_tweets": 4724,
+                                      "tweets": 109119
+                                    },
+                                    "action_counts": {
+                                      "favorites_count": 249608
+                                    }
+                                  }
+                                }
+                              },
+                              "views": {
+                                "count": "12345",
+                                "state": "EnabledWithCount"
+                              },
+                              "legacy": {
+                                "id_str": "1002",
+                                "full_text": "带图 https://t.co/x",
+                                "created_at": "Wed Oct 26 18:45:58 +0000 2022",
+                                "lang": "zh",
+                                "favorite_count": 11,
+                                "reply_count": 22,
+                                "bookmark_count": 33,
+                                "retweet_count": 44,
+                                "quote_count": 55,
+                                "user_id_str": "44196397",
+                                "entities": {
+                                  "media": [
+                                    {
+                                      "type": "photo",
+                                      "id_str": "900",
+                                      "media_url_https": "https://pbs.twimg.com/media/fake.jpg",
+                                      "original_info": {
+                                        "width": 1200,
+                                        "height": 800
+                                      }
+                                    }
+                                  ]
+                                },
+                                "extended_entities": {
+                                  "media": [
+                                    {
+                                      "type": "photo",
+                                      "id_str": "900",
+                                      "media_url_https": "https://pbs.twimg.com/media/fake.jpg",
+                                      "original_info": {
+                                        "width": 1200,
+                                        "height": 800
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "entryId": "tweet-1003",
+                      "sortIndex": "1003",
+                      "content": {
+                        "entryType": "TimelineTimelineItem",
+                        "__typename": "TimelineTimelineItem",
+                        "itemContent": {
+                          "itemType": "TimelineTweet",
+                          "__typename": "TimelineTweet",
+                          "tweet_results": {
+                            "result": {
+                              "__typename": "TweetWithVisibilityResults",
+                              "tweet": {
+                                "__typename": "Tweet",
+                                "rest_id": "1003",
+                                "core": {
+                                  "user_results": {
+                                    "result": {
+                                      "__typename": "User",
+                                      "rest_id": "44196397",
+                                      "core": {
+                                        "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+                                        "name": "Elon Musk",
+                                        "screen_name": "elonmusk"
+                                      },
+                                      "avatar": {
+                                        "image_url": "https://pbs.twimg.com/profile_images/1/fake_normal.jpg"
+                                      },
+                                      "profile_bio": {
+                                        "description": "简介 & bio"
+                                      },
+                                      "relationship_counts": {
+                                        "followers": 241701251,
+                                        "following": 1412
+                                      },
+                                      "tweet_counts": {
+                                        "media_tweets": 4724,
+                                        "tweets": 109119
+                                      },
+                                      "action_counts": {
+                                        "favorites_count": 249608
+                                      }
+                                    }
+                                  }
+                                },
+                                "views": {
+                                  "count": "12345",
+                                  "state": "EnabledWithCount"
+                                },
+                                "legacy": {
+                                  "id_str": "1003",
+                                  "full_text": "带视频",
+                                  "created_at": "Wed Oct 26 18:45:58 +0000 2022",
+                                  "lang": "zh",
+                                  "favorite_count": 11,
+                                  "reply_count": 22,
+                                  "bookmark_count": 33,
+                                  "retweet_count": 44,
+                                  "quote_count": 55,
+                                  "user_id_str": "44196397",
+                                  "entities": {
+                                    "media": [
+                                      {
+                                        "type": "video",
+                                        "id_str": "901",
+                                        "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/901/pu/img/thumb.jpg",
+                                        "original_info": {
+                                          "width": 1920,
+                                          "height": 1080
+                                        },
+                                        "video_info": {
+                                          "duration_millis": 9301,
+                                          "variants": [
+                                            {
+                                              "content_type": "application/x-mpegURL",
+                                              "url": "https://video.twimg.com/ext_tw_video/901/pu/pl/x.m3u8"
+                                            },
+                                            {
+                                              "bitrate": 256000,
+                                              "content_type": "video/mp4",
+                                              "url": "https://video.twimg.com/ext_tw_video/901/pu/vid/480x270/low.mp4"
+                                            },
+                                            {
+                                              "bitrate": 2176000,
+                                              "content_type": "video/mp4",
+                                              "url": "https://video.twimg.com/ext_tw_video/901/pu/vid/1280x720/high.mp4"
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  "extended_entities": {
+                                    "media": [
+                                      {
+                                        "type": "video",
+                                        "id_str": "901",
+                                        "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/901/pu/img/thumb.jpg",
+                                        "original_info": {
+                                          "width": 1920,
+                                          "height": 1080
+                                        },
+                                        "video_info": {
+                                          "duration_millis": 9301,
+                                          "variants": [
+                                            {
+                                              "content_type": "application/x-mpegURL",
+                                              "url": "https://video.twimg.com/ext_tw_video/901/pu/pl/x.m3u8"
+                                            },
+                                            {
+                                              "bitrate": 256000,
+                                              "content_type": "video/mp4",
+                                              "url": "https://video.twimg.com/ext_tw_video/901/pu/vid/480x270/low.mp4"
+                                            },
+                                            {
+                                              "bitrate": 2176000,
+                                              "content_type": "video/mp4",
+                                              "url": "https://video.twimg.com/ext_tw_video/901/pu/vid/1280x720/high.mp4"
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "entryId": "promoted-tweet-1004",
+                      "sortIndex": "1",
+                      "content": {
+                        "itemContent": {
+                          "tweet_results": {
+                            "result": {
+                              "__typename": "Tweet",
+                              "rest_id": "1004",
+                              "core": {
+                                "user_results": {
+                                  "result": {
+                                    "__typename": "User",
+                                    "rest_id": "44196397",
+                                    "core": {
+                                      "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+                                      "name": "Elon Musk",
+                                      "screen_name": "elonmusk"
+                                    },
+                                    "avatar": {
+                                      "image_url": "https://pbs.twimg.com/profile_images/1/fake_normal.jpg"
+                                    },
+                                    "profile_bio": {
+                                      "description": "简介 & bio"
+                                    },
+                                    "relationship_counts": {
+                                      "followers": 241701251,
+                                      "following": 1412
+                                    },
+                                    "tweet_counts": {
+                                      "media_tweets": 4724,
+                                      "tweets": 109119
+                                    },
+                                    "action_counts": {
+                                      "favorites_count": 249608
+                                    }
+                                  }
+                                }
+                              },
+                              "views": {
+                                "count": "12345",
+                                "state": "EnabledWithCount"
+                              },
+                              "legacy": {
+                                "id_str": "1004",
+                                "full_text": "广告",
+                                "created_at": "Wed Oct 26 18:45:58 +0000 2022",
+                                "lang": "zh",
+                                "favorite_count": 11,
+                                "reply_count": 22,
+                                "bookmark_count": 33,
+                                "retweet_count": 44,
+                                "quote_count": 55,
+                                "user_id_str": "44196397"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "entryId": "cursor-top-CURSOR_TOP",
+                      "sortIndex": "0",
+                      "content": {
+                        "entryType": "TimelineTimelineCursor",
+                        "__typename": "TimelineTimelineCursor",
+                        "value": "CURSOR_TOP",
+                        "cursorType": "Top"
+                      }
+                    },
+                    {
+                      "entryId": "cursor-bottom-CURSOR_NEXT",
+                      "sortIndex": "0",
+                      "content": {
+                        "entryType": "TimelineTimelineCursor",
+                        "__typename": "TimelineTimelineCursor",
+                        "value": "CURSOR_NEXT",
+                        "cursorType": "Bottom"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "error": null
+}

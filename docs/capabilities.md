@@ -22,7 +22,7 @@
 | sms | ✓ | ✓ |  | ✓ | ✓ |  |  |  | ✓ |  |
 | password |  |  |  | ✓ |  |  |  |  |  | ✓ |
 | cookie | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 默认 | qrcode | qrcode | cookie | qrcode | qrcode | cookie | qrcode | cookie | qrcode | password |
+| 默认 | qrcode | qrcode | cookie | qrcode | qrcode | cookie | qrcode | cookie | qrcode | cookie |
 | 子站点 | creator |  |  |  |  |  |  |  |  |  |
 
 ## auth
@@ -69,7 +69,7 @@
 | item categories | — | — | — | ✓ | — | — | ○ | — | — | — |
 
 - weibo `item search`：只能取第一页
-- `item search --sort` 取值：bilibili general / views / latest / collects
+- `item search --sort` 取值：bilibili general / views / latest / collects；x general / latest
 
 ## product 与商品评价
 
@@ -119,10 +119,12 @@
 | notice list | ✓ | ✓ | ✓ | ○ | ○ | ○ | — | — | — | ○ |
 | notice count | ✓ | ○ | ✓ | ○ | ✓ | ○ | — | — | — | ○ |
 | msg list | ✓ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ✓ |
-| msg history | ✓ | ○ | ✓ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ✓ |
-| msg send | ✓ | ✓ | ◐ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ◐ |
+| msg history | ✓ | ○ | ✓ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ◐ |
+| msg send | ✓ | ✓ | ◐ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ○ |
 | msg listen | ✓ | ✓ | ✓ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ○ |
 | msg read / revoke / delete | ✓ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ |
+
+- x `msg history`：消息端到端加密，只给出占位消息
 
 ## media、folder、series、history、topic、poi
 

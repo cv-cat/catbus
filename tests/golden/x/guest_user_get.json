@@ -1,0 +1,242 @@
+{
+  "input": {
+    "user": "elonmusk"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://api.x.com/1.1/guest/activate.json",
+      "headers": [
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-twitter-active-user",
+          "yes"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded; charset=UTF-8"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://x.com/i/api/graphql/KybxDj9RrADIITXlGG8kpw/UserByScreenName?variables=%7B%22screen_name%22%3A%22elonmusk%22%2C%22withGrokTranslatedBio%22%3Atrue%7D&features=%7B%22hidden_profile_subscriptions_enabled%22%3Atrue%2C%22profile_label_improvements_pcf_label_in_post_enabled%22%3Atrue%2C%22responsive_web_profile_redirect_enabled%22%3Atrue%2C%22rweb_tipjar_consumption_enabled%22%3Afalse%2C%22verified_phone_label_enabled%22%3Afalse%2C%22subscriptions_verification_info_is_identity_verified_enabled%22%3Atrue%2C%22subscriptions_verification_info_verified_since_enabled%22%3Atrue%2C%22highlights_tweets_tab_ui_enabled%22%3Atrue%2C%22responsive_web_twitter_article_notes_tab_enabled%22%3Atrue%2C%22subscriptions_feature_can_gift_premium%22%3Atrue%2C%22creator_subscriptions_tweet_preview_api_enabled%22%3Atrue%2C%22responsive_web_graphql_timeline_navigation_enabled%22%3Atrue%7D&fieldToggles=%7B%22withPayments%22%3Afalse%2C%22withAuxiliaryUserLabels%22%3Atrue%7D",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-csrf-token",
+          "94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "x-twitter-client-language",
+          "zh-cn"
+        ],
+        [
+          "x-twitter-active-user",
+          "yes"
+        ],
+        [
+          "x-client-transaction-id",
+          "OqZD5euWw9RIZLlNEfNyfbANET101fRuJx7cBrZHG1Afz4/5JDmzfi+AdN613Izx3SriWzyXV7vuKanpW52NlByWfDE/OQ"
+        ],
+        [
+          "x-guest-token",
+          "1790000000000000001"
+        ],
+        [
+          "referer",
+          "https://x.com/elonmusk"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [
+        [
+          "ct0",
+          "94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "lang",
+          "zh-CN"
+        ],
+        [
+          "gt",
+          "1790000000000000001"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "guest_token": "1790000000000000001"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "data": {
+          "user": {
+            "result": {
+              "__typename": "User",
+              "rest_id": "44196397",
+              "core": {
+                "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+                "name": "Elon Musk",
+                "screen_name": "elonmusk"
+              },
+              "avatar": {
+                "image_url": "https://pbs.twimg.com/profile_images/1/fake_normal.jpg"
+              },
+              "profile_bio": {
+                "description": "简介 & bio"
+              },
+              "relationship_counts": {
+                "followers": 241701251,
+                "following": 1412
+              },
+              "tweet_counts": {
+                "media_tweets": 4724,
+                "tweets": 109119
+              },
+              "action_counts": {
+                "favorites_count": 249608
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "result": {
+    "data": {
+      "user": {
+        "result": {
+          "__typename": "User",
+          "rest_id": "44196397",
+          "core": {
+            "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+            "name": "Elon Musk",
+            "screen_name": "elonmusk"
+          },
+          "avatar": {
+            "image_url": "https://pbs.twimg.com/profile_images/1/fake_normal.jpg"
+          },
+          "profile_bio": {
+            "description": "简介 & bio"
+          },
+          "relationship_counts": {
+            "followers": 241701251,
+            "following": 1412
+          },
+          "tweet_counts": {
+            "media_tweets": 4724,
+            "tweets": 109119
+          },
+          "action_counts": {
+            "favorites_count": 249608
+          }
+        }
+      }
+    }
+  },
+  "error": null
+}

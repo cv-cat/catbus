@@ -1,0 +1,195 @@
+{
+  "input": {
+    "text": "reply",
+    "reply_to": "20"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://x.com/i/api/graphql/GYdIGqVWfZNho79bQ2XDoA/CreateTweet",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-twitter-auth-type",
+          "OAuth2Session"
+        ],
+        [
+          "x-csrf-token",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "x-twitter-client-language",
+          "en"
+        ],
+        [
+          "x-twitter-active-user",
+          "yes"
+        ],
+        [
+          "x-client-transaction-id",
+          "lAjtS0U4bXrmyhfjv13c0x6jv5Pae1rAibByqBjptf6xYSFXipcd0IEu2nAbciJfc4RM9ZKrCQEIWtdt9L7FLAPmJ7H/lw"
+        ],
+        [
+          "referer",
+          "https://x.com/home"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [
+        [
+          "auth_token",
+          "fakeauthtoken000000000000000000000000000000"
+        ],
+        [
+          "ct0",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "twid",
+          "u%3D10001"
+        ],
+        [
+          "lang",
+          "en"
+        ]
+      ],
+      "body": "{\"variables\":{\"tweet_text\":\"reply\",\"media\":{\"media_entities\":[],\"possibly_sensitive\":false},\"semantic_annotation_ids\":[],\"disallowed_reply_options\":null,\"semantic_annotation_options\":{\"source\":\"UniversalLink\"},\"reply\":{\"in_reply_to_tweet_id\":\"20\",\"exclude_reply_user_ids\":[]}},\"features\":{\"premium_content_api_read_enabled\":false,\"communities_web_enable_tweet_community_results_fetch\":true,\"c9s_tweet_anatomy_moderator_badge_enabled\":true,\"responsive_web_grok_analyze_button_fetch_trends_enabled\":false,\"responsive_web_grok_analyze_post_followups_enabled\":true,\"rweb_cashtags_composer_attachment_enabled\":true,\"responsive_web_jetfuel_frame\":true,\"rweb_sports_post_context_enabled\":true,\"responsive_web_grok_share_attachment_enabled\":true,\"responsive_web_grok_annotations_enabled\":true,\"responsive_web_edit_tweet_api_enabled\":true,\"rweb_conversational_replies_downvote_enabled\":false,\"graphql_is_translatable_rweb_tweet_is_translatable_enabled\":true,\"view_counts_everywhere_api_enabled\":true,\"longform_notetweets_consumption_enabled\":true,\"responsive_web_twitter_article_tweet_consumption_enabled\":true,\"content_disclosure_indicator_enabled\":true,\"content_disclosure_ai_generated_indicator_enabled\":true,\"responsive_web_grok_show_grok_translated_post\":true,\"responsive_web_grok_analysis_button_from_backend\":true,\"post_ctas_fetch_enabled\":false,\"longform_notetweets_rich_text_read_enabled\":true,\"longform_notetweets_inline_media_enabled\":false,\"profile_label_improvements_pcf_label_in_post_enabled\":true,\"responsive_web_profile_redirect_enabled\":true,\"rweb_tipjar_consumption_enabled\":false,\"verified_phone_label_enabled\":false,\"responsive_web_nested_quote_preview_enabled\":false,\"articles_preview_enabled\":true,\"rweb_cashtags_enabled\":true,\"responsive_web_grok_community_note_auto_translation_is_enabled\":true,\"freedom_of_speech_not_reach_fetch_enabled\":true,\"standardized_nudges_misinfo\":true,\"tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled\":true,\"responsive_web_grok_image_annotation_enabled\":true,\"responsive_web_grok_imagine_annotation_enabled\":true,\"responsive_web_graphql_timeline_navigation_enabled\":true},\"queryId\":\"GYdIGqVWfZNho79bQ2XDoA\"}",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "data": {
+          "create_tweet": {
+            "tweet_results": {
+              "result": {
+                "__typename": "Tweet",
+                "rest_id": "3001",
+                "core": {
+                  "user_results": {
+                    "result": {
+                      "__typename": "User",
+                      "rest_id": "10001",
+                      "core": {
+                        "name": "测试账号",
+                        "screen_name": "catbus_test"
+                      }
+                    }
+                  }
+                },
+                "views": {
+                  "count": null,
+                  "state": "EnabledWithCount"
+                },
+                "legacy": {
+                  "id_str": "3001",
+                  "full_text": "hello",
+                  "created_at": "Wed Oct 26 18:45:58 +0000 2022",
+                  "lang": "zh",
+                  "favorite_count": 11,
+                  "reply_count": 22,
+                  "bookmark_count": 33,
+                  "retweet_count": 44,
+                  "quote_count": 55,
+                  "user_id_str": "10001"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "result": {
+    "data": {
+      "create_tweet": {
+        "tweet_results": {
+          "result": {
+            "__typename": "Tweet",
+            "rest_id": "3001",
+            "core": {
+              "user_results": {
+                "result": {
+                  "__typename": "User",
+                  "rest_id": "10001",
+                  "core": {
+                    "name": "测试账号",
+                    "screen_name": "catbus_test"
+                  }
+                }
+              }
+            },
+            "views": {
+              "count": null,
+              "state": "EnabledWithCount"
+            },
+            "legacy": {
+              "id_str": "3001",
+              "full_text": "hello",
+              "created_at": "Wed Oct 26 18:45:58 +0000 2022",
+              "lang": "zh",
+              "favorite_count": 11,
+              "reply_count": 22,
+              "bookmark_count": 33,
+              "retweet_count": 44,
+              "quote_count": 55,
+              "user_id_str": "10001"
+            }
+          }
+        }
+      }
+    }
+  },
+  "error": null
+}

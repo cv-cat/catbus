@@ -1,0 +1,120 @@
+{
+  "input": {
+    "item": "1585341984679469056"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://x.com/i/api/graphql/ZYKSe-w7KEslx3JhSIk5LA/UnfavoriteTweet",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-twitter-auth-type",
+          "OAuth2Session"
+        ],
+        [
+          "x-csrf-token",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "x-twitter-client-language",
+          "en"
+        ],
+        [
+          "x-twitter-active-user",
+          "yes"
+        ],
+        [
+          "x-client-transaction-id",
+          "lAjtS0U4bXrmyhfjv13c0x6jv5Pae1rAibByqBjptf6xYSFXipcd0IEu2nAbciJfc4RM9ZJkzr/R5sSyIF5db6vFbmNslw"
+        ],
+        [
+          "referer",
+          "https://x.com/home"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [
+        [
+          "auth_token",
+          "fakeauthtoken000000000000000000000000000000"
+        ],
+        [
+          "ct0",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "twid",
+          "u%3D10001"
+        ],
+        [
+          "lang",
+          "en"
+        ]
+      ],
+      "body": "{\"variables\":{\"tweet_id\":\"1585341984679469056\"},\"queryId\":\"ZYKSe-w7KEslx3JhSIk5LA\"}",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "data": {}
+      }
+    }
+  ],
+  "result": {
+    "data": {}
+  },
+  "error": null
+}

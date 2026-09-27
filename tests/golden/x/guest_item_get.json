@@ -1,0 +1,418 @@
+{
+  "input": {
+    "item": "https://x.com/elonmusk/status/1585341984679469056"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://api.x.com/1.1/guest/activate.json",
+      "headers": [
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-twitter-active-user",
+          "yes"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded; charset=UTF-8"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://x.com/i/api/graphql/Xl0tsHf4AzflMRjbw9e70A/TweetResultByRestId?variables=%7B%22tweetId%22%3A%221585341984679469056%22%2C%22includePromotedContent%22%3Atrue%2C%22withBirdwatchNotes%22%3Atrue%2C%22withVoice%22%3Atrue%2C%22withCommunity%22%3Atrue%7D&features=%7B%22creator_subscriptions_tweet_preview_api_enabled%22%3Atrue%2C%22premium_content_api_read_enabled%22%3Afalse%2C%22communities_web_enable_tweet_community_results_fetch%22%3Atrue%2C%22c9s_tweet_anatomy_moderator_badge_enabled%22%3Atrue%2C%22responsive_web_grok_analyze_button_fetch_trends_enabled%22%3Afalse%2C%22responsive_web_grok_analyze_post_followups_enabled%22%3Atrue%2C%22rweb_cashtags_composer_attachment_enabled%22%3Atrue%2C%22responsive_web_jetfuel_frame%22%3Atrue%2C%22rweb_sports_post_context_enabled%22%3Atrue%2C%22responsive_web_grok_share_attachment_enabled%22%3Atrue%2C%22responsive_web_grok_annotations_enabled%22%3Atrue%2C%22articles_preview_enabled%22%3Atrue%2C%22responsive_web_edit_tweet_api_enabled%22%3Atrue%2C%22rweb_conversational_replies_downvote_enabled%22%3Afalse%2C%22graphql_is_translatable_rweb_tweet_is_translatable_enabled%22%3Atrue%2C%22view_counts_everywhere_api_enabled%22%3Atrue%2C%22longform_notetweets_consumption_enabled%22%3Atrue%2C%22responsive_web_twitter_article_tweet_consumption_enabled%22%3Atrue%2C%22content_disclosure_indicator_enabled%22%3Atrue%2C%22content_disclosure_ai_generated_indicator_enabled%22%3Atrue%2C%22responsive_web_grok_show_grok_translated_post%22%3Atrue%2C%22responsive_web_grok_analysis_button_from_backend%22%3Atrue%2C%22post_ctas_fetch_enabled%22%3Afalse%2C%22rweb_cashtags_enabled%22%3Atrue%2C%22freedom_of_speech_not_reach_fetch_enabled%22%3Atrue%2C%22standardized_nudges_misinfo%22%3Atrue%2C%22tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled%22%3Atrue%2C%22longform_notetweets_rich_text_read_enabled%22%3Atrue%2C%22longform_notetweets_inline_media_enabled%22%3Afalse%2C%22profile_label_improvements_pcf_label_in_post_enabled%22%3Atrue%2C%22responsive_web_profile_redirect_enabled%22%3Atrue%2C%22rweb_tipjar_consumption_enabled%22%3Afalse%2C%22verified_phone_label_enabled%22%3Afalse%2C%22responsive_web_nested_quote_preview_enabled%22%3Afalse%2C%22responsive_web_grok_image_annotation_enabled%22%3Atrue%2C%22responsive_web_grok_imagine_annotation_enabled%22%3Atrue%2C%22responsive_web_grok_community_note_auto_translation_is_enabled%22%3Atrue%2C%22responsive_web_graphql_timeline_navigation_enabled%22%3Atrue%7D&fieldToggles=%7B%22withArticleRichContentState%22%3Atrue%2C%22withArticlePlainText%22%3Afalse%2C%22withArticleSummaryText%22%3Atrue%2C%22withArticleVoiceOver%22%3Atrue%2C%22withPayments%22%3Afalse%7D",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-csrf-token",
+          "94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "x-twitter-client-language",
+          "zh-cn"
+        ],
+        [
+          "x-twitter-active-user",
+          "yes"
+        ],
+        [
+          "x-client-transaction-id",
+          "OqZD5euWw9RIZLlNEfNyfbANET101fRuJx7cBrZHG1Afz4/5JDmzfi+AdN613Izx3SriWzwIoukXsZwC4xc9NI34pomYOQ"
+        ],
+        [
+          "x-guest-token",
+          "1790000000000000001"
+        ],
+        [
+          "referer",
+          "https://x.com/i/status/1585341984679469056"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [
+        [
+          "ct0",
+          "94514d146fbbb1f352261e5d15c83934"
+        ],
+        [
+          "lang",
+          "zh-CN"
+        ],
+        [
+          "gt",
+          "1790000000000000001"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "guest_token": "1790000000000000001"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "data": {
+          "tweetResult": {
+            "result": {
+              "__typename": "Tweet",
+              "rest_id": "1585341984679469056",
+              "core": {
+                "user_results": {
+                  "result": {
+                    "__typename": "User",
+                    "rest_id": "44196397",
+                    "core": {
+                      "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+                      "name": "Elon Musk",
+                      "screen_name": "elonmusk"
+                    },
+                    "avatar": {
+                      "image_url": "https://pbs.twimg.com/profile_images/1/fake_normal.jpg"
+                    },
+                    "profile_bio": {
+                      "description": "简介 & bio"
+                    },
+                    "relationship_counts": {
+                      "followers": 241701251,
+                      "following": 1412
+                    },
+                    "tweet_counts": {
+                      "media_tweets": 4724,
+                      "tweets": 109119
+                    },
+                    "action_counts": {
+                      "favorites_count": 249608
+                    }
+                  }
+                }
+              },
+              "views": {
+                "count": "12345",
+                "state": "EnabledWithCount"
+              },
+              "legacy": {
+                "id_str": "1585341984679469056",
+                "full_text": "视频推文 https://t.co/v",
+                "created_at": "Wed Oct 26 18:45:58 +0000 2022",
+                "lang": "zh",
+                "favorite_count": 11,
+                "reply_count": 22,
+                "bookmark_count": 33,
+                "retweet_count": 44,
+                "quote_count": 55,
+                "user_id_str": "44196397",
+                "entities": {
+                  "media": [
+                    {
+                      "type": "video",
+                      "id_str": "901",
+                      "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/901/pu/img/thumb.jpg",
+                      "original_info": {
+                        "width": 1920,
+                        "height": 1080
+                      },
+                      "video_info": {
+                        "duration_millis": 9301,
+                        "variants": [
+                          {
+                            "content_type": "application/x-mpegURL",
+                            "url": "https://video.twimg.com/ext_tw_video/901/pu/pl/x.m3u8"
+                          },
+                          {
+                            "bitrate": 256000,
+                            "content_type": "video/mp4",
+                            "url": "https://video.twimg.com/ext_tw_video/901/pu/vid/480x270/low.mp4"
+                          },
+                          {
+                            "bitrate": 2176000,
+                            "content_type": "video/mp4",
+                            "url": "https://video.twimg.com/ext_tw_video/901/pu/vid/1280x720/high.mp4"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                "extended_entities": {
+                  "media": [
+                    {
+                      "type": "video",
+                      "id_str": "901",
+                      "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/901/pu/img/thumb.jpg",
+                      "original_info": {
+                        "width": 1920,
+                        "height": 1080
+                      },
+                      "video_info": {
+                        "duration_millis": 9301,
+                        "variants": [
+                          {
+                            "content_type": "application/x-mpegURL",
+                            "url": "https://video.twimg.com/ext_tw_video/901/pu/pl/x.m3u8"
+                          },
+                          {
+                            "bitrate": 256000,
+                            "content_type": "video/mp4",
+                            "url": "https://video.twimg.com/ext_tw_video/901/pu/vid/480x270/low.mp4"
+                          },
+                          {
+                            "bitrate": 2176000,
+                            "content_type": "video/mp4",
+                            "url": "https://video.twimg.com/ext_tw_video/901/pu/vid/1280x720/high.mp4"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "result": {
+    "data": {
+      "tweetResult": {
+        "result": {
+          "__typename": "Tweet",
+          "rest_id": "1585341984679469056",
+          "core": {
+            "user_results": {
+              "result": {
+                "__typename": "User",
+                "rest_id": "44196397",
+                "core": {
+                  "created_at": "Tue Jun 02 20:12:29 +0000 2009",
+                  "name": "Elon Musk",
+                  "screen_name": "elonmusk"
+                },
+                "avatar": {
+                  "image_url": "https://pbs.twimg.com/profile_images/1/fake_normal.jpg"
+                },
+                "profile_bio": {
+                  "description": "简介 & bio"
+                },
+                "relationship_counts": {
+                  "followers": 241701251,
+                  "following": 1412
+                },
+                "tweet_counts": {
+                  "media_tweets": 4724,
+                  "tweets": 109119
+                },
+                "action_counts": {
+                  "favorites_count": 249608
+                }
+              }
+            }
+          },
+          "views": {
+            "count": "12345",
+            "state": "EnabledWithCount"
+          },
+          "legacy": {
+            "id_str": "1585341984679469056",
+            "full_text": "视频推文 https://t.co/v",
+            "created_at": "Wed Oct 26 18:45:58 +0000 2022",
+            "lang": "zh",
+            "favorite_count": 11,
+            "reply_count": 22,
+            "bookmark_count": 33,
+            "retweet_count": 44,
+            "quote_count": 55,
+            "user_id_str": "44196397",
+            "entities": {
+              "media": [
+                {
+                  "type": "video",
+                  "id_str": "901",
+                  "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/901/pu/img/thumb.jpg",
+                  "original_info": {
+                    "width": 1920,
+                    "height": 1080
+                  },
+                  "video_info": {
+                    "duration_millis": 9301,
+                    "variants": [
+                      {
+                        "content_type": "application/x-mpegURL",
+                        "url": "https://video.twimg.com/ext_tw_video/901/pu/pl/x.m3u8"
+                      },
+                      {
+                        "bitrate": 256000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/901/pu/vid/480x270/low.mp4"
+                      },
+                      {
+                        "bitrate": 2176000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/901/pu/vid/1280x720/high.mp4"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "extended_entities": {
+              "media": [
+                {
+                  "type": "video",
+                  "id_str": "901",
+                  "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/901/pu/img/thumb.jpg",
+                  "original_info": {
+                    "width": 1920,
+                    "height": 1080
+                  },
+                  "video_info": {
+                    "duration_millis": 9301,
+                    "variants": [
+                      {
+                        "content_type": "application/x-mpegURL",
+                        "url": "https://video.twimg.com/ext_tw_video/901/pu/pl/x.m3u8"
+                      },
+                      {
+                        "bitrate": 256000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/901/pu/vid/480x270/low.mp4"
+                      },
+                      {
+                        "bitrate": 2176000,
+                        "content_type": "video/mp4",
+                        "url": "https://video.twimg.com/ext_tw_video/901/pu/vid/1280x720/high.mp4"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "error": null
+}

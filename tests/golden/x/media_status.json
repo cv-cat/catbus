@@ -1,0 +1,124 @@
+{
+  "input": {
+    "media": "1790000000000000100"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://upload.x.com/i/media/upload.json?command=STATUS&media_id=1790000000000000100",
+      "headers": [
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-twitter-auth-type",
+          "OAuth2Session"
+        ],
+        [
+          "referer",
+          "https://x.com/"
+        ],
+        [
+          "x-csrf-token",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "origin",
+          "https://x.com"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [
+        [
+          "auth_token",
+          "fakeauthtoken000000000000000000000000000000"
+        ],
+        [
+          "ct0",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "twid",
+          "u%3D10001"
+        ],
+        [
+          "lang",
+          "en"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "media_id_string": "1790000000000000100",
+        "processing_info": {
+          "state": "in_progress",
+          "check_after_secs": 2,
+          "progress_percent": 40
+        },
+        "video": {
+          "video_type": "video/mp4"
+        }
+      }
+    }
+  ],
+  "result": {
+    "media_id_string": "1790000000000000100",
+    "processing_info": {
+      "state": "in_progress",
+      "check_after_secs": 2,
+      "progress_percent": 40
+    },
+    "video": {
+      "video_type": "video/mp4"
+    }
+  },
+  "error": null
+}
