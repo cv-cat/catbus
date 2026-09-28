@@ -135,6 +135,41 @@ DETAIL = {'data': {'threaded_conversation_with_injections_v2': {'instructions': 
 ]}]}}}
 
 
+def grid_item(tid, result):
+    return {'entryId': f'search-grid-0-tweet-{tid}', 'item': {'itemContent': {
+        'itemType': 'TimelineTweet', '__typename': 'TimelineTweet', 'tweet_results': {'result': result}}}}
+
+
+# 媒体搜索（product=Media）：首页是 search-grid-0 宫格模块，翻页用 TimelineAddToModule 往模块里追加
+SEARCH_MEDIA = {'data': {'search_by_raw_query': {'search_timeline': {'timeline': {'instructions': [
+    {'type': 'TimelineAddEntries', 'entries': [
+        {'entryId': 'search-grid-0', 'sortIndex': '2', 'content': {
+            'entryType': 'TimelineTimelineModule', '__typename': 'TimelineTimelineModule', 'displayType': 'VerticalGrid', 'items': [
+                grid_item('1002', tweet('1002', '带图', media=[PHOTO])),
+                grid_item('1003', {'__typename': 'TweetWithVisibilityResults', 'tweet': tweet('1003', '带视频', media=[VIDEO])}),
+            ]}},
+        cursor_entry('Top', 'MEDIA_TOP'),
+        cursor_entry('Bottom', 'MEDIA_NEXT'),
+    ]},
+]}}}}}
+SEARCH_MEDIA_MORE = {'data': {'search_by_raw_query': {'search_timeline': {'timeline': {'instructions': [
+    {'type': 'TimelineAddToModule', 'moduleEntryId': 'search-grid-0', 'moduleItems': [
+        grid_item('1005', tweet('1005', '又一张图', media=[PHOTO])),
+    ]},
+    {'type': 'TimelineReplaceEntry', 'entry_id_to_replace': 'cursor-bottom-MEDIA_NEXT', 'entry': cursor_entry('Bottom', 'MEDIA_NEXT_2')},
+]}}}}}
+
+# X Chat 收件箱：participants_results 只有 rest_id、没有资料时，用 GetUsersByIdsForXChat 补
+BARE_INBOX = {'data': {'get_initial_chat_page': {'__typename': 'XChatInboxPage', 'items': [
+    {'conversation_detail': {'conversation_id': '10001:20002', 'participants_results': [{'rest_id': '10001'}, {'rest_id': '20002'}]}},
+    {'conversation_detail': {'conversation_id': '10001:30003', 'participants_results': [{'rest_id': '10001'}, {'rest_id': '30003'}]}},
+]}}}
+MEMBERS = {'data': {'get_member_results': {'results': [
+    {'__typename': 'XChatMemberResult', 'id': '20002', 'status': 'Active', 'member_results': {'rest_id': '20002', 'result': PEER}},
+    {'__typename': 'XChatMemberResult', 'id': '30003', 'status': 'Active', 'member_results': {'rest_id': '30003', 'result': {
+        '__typename': 'User', 'rest_id': '30003', 'core': {'name': '第三人', 'screen_name': 'third_user'}}}},
+]}}}
+
 
 def article_payload(key, **extra):
     """ArticleEntity* 的响应：实体里带 rest_id 和 relay 全局 id（base64("ArticleEntity:<rest_id>")）。"""
@@ -186,6 +221,8 @@ def respond(req):
             created['note_tweet'] = {'is_expandable': True, 'note_tweet_results': {'result': {'id': 'Tm90ZVR3ZWV0OjE=', 'text': LONG_TEXT}}}
             return {'data': {'notetweet_create': {'tweet_results': {'result': created}}}}
         return {'data': {'create_tweet': {'tweet_results': {'result': created}}}}
+    if '/SearchTimeline' in url and '"product":"Media"' in (req['body'] or ''):
+        return SEARCH_MEDIA_MORE if '"cursor":' in req['body'] else SEARCH_MEDIA
     if '/ArticleEntityDraftCreate' in url:
         return {'data': {'articleentity_draft_create': {'article_entity_results': {'result': article_payload('x')['data']['x']}}}}
     if '/ArticleEntityUpdateTitle' in url:
@@ -200,6 +237,10 @@ def respond(req):
             'metadata': {'tweet_results': {'result': {'rest_id': '4001'}}}}}}}}
     if '/ArticleEntityDelete' in url:
         return {'data': {'articleentity_delete': 'Done'}}
+    if '/GetUsersByIdsForXChat' in url:
+        return MEMBERS
+    if '/GetInitialXChatPageQuery' in url and state.get('kind') == 'chat_list_members':
+        return BARE_INBOX
     if '/GetInitialXChatPageQuery' in url:
         return {'data': {'get_initial_chat_page': {'__typename': 'XChatInboxPage', 'items': [
             {'conversation_detail': {'conversation_id': '10001:20002', 'participants_results': [
@@ -331,6 +372,15 @@ THREAD = ['第一条', LONG_TEXT, '第三条']
 case('post_thread', L(lambda a: XWriteAPI.post_thread(a, THREAD, images=[[str(tmp / 'photo.png')]])),
      texts=THREAD, filename='photo.png', data=b64(PNG))
 
+# 命令流程：引用推文。--quote 给的是 ID 时先查出推文的链接，再作为 quote_url（attachment_url）发推
+case('post_quote', L(lambda a: [XAPI.get_work_result(a, TWEET_ID),
+                                XWriteAPI.post_tweet(a, 'quote', quote_url=f'https://x.com/elonmusk/status/{TWEET_ID}')[2]]),
+     text='quote', quote=TWEET_ID)
+
+# ---------------------------------------------------------------- 媒体搜索（product=Media）
+case('search_media', L(lambda a: XAPI.search_work(a, 'cat', product='Media')), q='cat')
+case('search_media_cursor', L(lambda a: XAPI.search_work(a, 'cat', cursor='MEDIA_NEXT', product='Media')), q='cat', cursor='MEDIA_NEXT')
+
 # ---------------------------------------------------------------- 文章（Article）
 MARKDOWN = """# 文章标题
 
@@ -383,5 +433,10 @@ case('article_upload_image', L(lambda a: XArticleAPI.upload_image(a, str(tmp / '
 # 命令流程：Markdown → 传正文插图 → 建草稿 → 标题 → 正文 → 传封面 → 设封面 → 发布
 case('post_article', L(lambda a: XArticleAPI.post_article(a, MARKDOWN, cover='photo.png', publish=True, base_dir=str(tmp))),
      markdown=MARKDOWN, filename='photo.png', data=b64(PNG))
+
+# ---------------------------------------------------------------- 私信成员资料
+case('chat_members', L(lambda a: XChatAPI.get_users_by_ids(a, ['20002', '30003'])), ids=['20002', '30003'])
+# 命令流程：收件箱的参与者只有 rest_id 时，再查一次成员资料
+case('chat_list_members', L(lambda a: [XChatAPI.get_initial_chat_page(a), XChatAPI.get_users_by_ids(a, ['20002', '30003'])]))
 
 shutil.rmtree(tmp, ignore_errors=True)

@@ -73,12 +73,13 @@
 | item categories | — | — | — | ✓ | — | — | ○ | — | — | — |
 
 - weibo `item search`：只能取第一页
+- x `item search`：--type video 和 image 都走媒体搜索（结果里图片和视频都有），不能和 --sort latest 一起用
 - jd `item related`：用第一个相关搜索词的搜索结果
 - x `item publish`：正文超过 280 权重时自动按长推发（需要 Premium）；--thread 发 thread
 - bilibili `item delete`：需要人机验证（极验点选），catbus 还不能自动通过，会报 RISK_CONTROL
 - `item get --area`：jd
 - `item search --sort` 取值：xhs general / latest / popular / comments / collects；bilibili general / views / latest / collects；jd general / sales / price_asc / price_desc / comments；x general / latest
-- `item search --type` 取值：xhs all / video / image；bilibili video / article
+- `item search --type` 取值：xhs all / video / image；bilibili video / article；x all / video / image
 - `item search --area`：jd
 - `item related --area`：jd
 - `item collect --folder`：bilibili
@@ -95,6 +96,7 @@
 - `item publish --postage`：xianyu
 - `item publish --pickup`：xianyu
 - `item publish --original-price`：xianyu
+- `item publish --quote`：x
 - `item publish --thread`：x
 
 ## product 与商品评价
@@ -148,12 +150,13 @@
 |---|---|---|---|---|---|---|---|---|---|---|
 | notice list | ✓ | ✓ | ✓ | ○ | ○ | ○ | — | — | — | ○ |
 | notice count | ✓ | ○ | ✓ | ○ | ✓ | ○ | — | — | — | ○ |
-| msg list | ✓ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ✓ |
+| msg list | ✓ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ◐ |
 | msg history | ✓ | ○ | ✓ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ◐ |
 | msg send | ✓ | ✓ | ◐ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ○ |
 | msg listen | ✓ | ✓ | ✓ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ○ |
 | msg read / revoke / delete | ✓ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ |
 
+- x `msg list`：只取收件箱首页（最近 20 个会话），上游没有翻页
 - x `msg history`：消息端到端加密，只给出占位消息
 - xianyu `msg send`：--to 不带 --item 时按上游的默认商品建会话；--to 加 --item 就这件商品联系对方（卖家可以联系买家）
 - `msg send --order`：jd

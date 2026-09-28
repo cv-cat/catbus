@@ -443,6 +443,7 @@ export async function articleUploadImage(x: XClient, data: Uint8Array, filename:
 
 // ================================================================ 私信（XChatAPI）
 
+const MEMBERS_QID = '4zbPmRwsca859ORbYCLyzg'
 const INITIAL_PAGE_QID = 'm1gzpOV8JFOTaFH0Xq7lMQ'
 const CONVERSATION_PAGE_QID = 'GX9ZijkxG8AqRMQVD7hMnQ'
 const DEFAULT_QUERY_SETTINGS = { conversation_event_limit: 200, inbox_conversation_event_limit: 5, inbox_conversation_limit: 20, user_event_limit: 500 }
@@ -479,6 +480,11 @@ export function getInitialChatPage(x: XClient): Promise<any> {
     query_settings: { ...DEFAULT_QUERY_SETTINGS },
     message_pull_version: null,
   })
+}
+
+/** X Chat 成员资料（名字、用户名）。上游 get_users_by_ids（GetUsersByIdsForXChat）。 */
+export function getUsersByIds(x: XClient, userIds: string[]): Promise<any> {
+  return chatQuery(x, `/graphql/${MEMBERS_QID}/GetUsersByIdsForXChat`, { ids: userIds.map(String), with_social_proof: false })
 }
 
 /** 单个会话页（不发送消息）。上游 get_conversation_page。 */

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { filter, PUBLISH } from '../../core/options.js'
+import { filter, PUBLISH, QUOTE } from '../../core/options.js'
 import { type CommandDecl, definePlatform, type Handler, type Upstream } from '../../core/registry.js'
 
 type Commands = typeof import('./web/commands.js')
@@ -37,7 +37,10 @@ export default definePlatform({
         'user unfollow': impl('full', 'userUnfollow'),
 
         'item get': impl('full', 'itemGet'),
-        'item search': impl('full', 'itemSearch', { options: { sort: filter.sort('general', 'latest') } }),
+        'item search': impl('full', 'itemSearch', {
+          note: '--type video 和 image 都走媒体搜索（结果里图片和视频都有），不能和 --sort latest 一起用',
+          options: { sort: filter.sort('general', 'latest'), type: filter.type('all', 'video', 'image') },
+        }),
         'item media': impl('full', 'itemMedia'),
         'item download': impl('full', 'itemDownload'),
         'item like': impl('full', 'itemLike'),
@@ -49,6 +52,7 @@ export default definePlatform({
         'item publish': impl('full', 'itemPublish', {
           note: '正文超过 280 权重时自动按长推发（需要 Premium）；--thread 发 thread',
           options: {
+            quote: QUOTE,
             thread: z.array(z.string()).optional().describe('thread 的后续各条，依次回复上一条'),
           },
         }),
@@ -72,7 +76,7 @@ export default definePlatform({
         'notice list': 'none',
         'notice count': 'none',
 
-        'msg list': impl('full', 'msgList'),
+        'msg list': impl('partial', 'msgList', { note: '只取收件箱首页（最近 20 个会话），上游没有翻页' }),
         'msg history': impl('partial', 'msgHistory', { note: '消息端到端加密，只给出占位消息' }),
         // 上游的 send_message 只是占位
         'msg send': 'none',

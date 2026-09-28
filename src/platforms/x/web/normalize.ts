@@ -142,6 +142,28 @@ export function tweetResults(res: any): any[] {
   return out
 }
 
+/**
+ * 宫格模块里的推文（媒体搜索 product=Media）：首页是 `search-grid-0` 模块的 items，翻页用 TimelineAddToModule
+ * 往模块里追加 moduleItems；模块条目只有 entryId + item，不是顶层 entry，tweetResults 取不到。
+ */
+export function gridResults(res: any): any[] {
+  const out: any[] = []
+  const walk = (node: any): void => {
+    if (Array.isArray(node)) {
+      for (const v of node) walk(v)
+      return
+    }
+    if (!node || typeof node !== 'object') return
+    if (String(node.entryId ?? '').startsWith('search-grid-') && node.item) {
+      const result = node.item.itemContent?.tweet_results?.result
+      if (unwrap(result)?.rest_id) out.push(result)
+    }
+    for (const v of Object.values(node)) walk(v)
+  }
+  walk(res)
+  return out
+}
+
 /** 搜索 People 的用户条目。 */
 export function userResults(res: any): any[] {
   const out: any[] = []
@@ -179,15 +201,41 @@ export function cursorOf(res: any, direction: 'Top' | 'Bottom' = 'Bottom'): stri
 
 // ---------------------------------------------------------------- X Chat
 
-/** 收件箱条目 → Conversation。单聊的 peer 是自己以外的那个参与者；消息是端到端加密的，不解。 */
-export function conversation(entry: any, selfId: string): Conversation {
+/** 会话的其他参与者（自己以外）。participants_results 的条目是 `{rest_id, result?}`，result 才有资料。 */
+function othersOf(entry: any, selfId: string): any[] {
+  const participants: any[] = entry.conversation_detail?.participants_results ?? []
+  return participants.map((p) => p.result ?? p).filter((u) => u?.rest_id && u.rest_id !== selfId)
+}
+
+/** 单聊里对方资料缺名字时，需要查成员资料的 rest_id（群聊不给 peer，不用查）。 */
+export function peersWithoutName(entry: any, selfId: string): string[] {
+  if (entry.conversation_detail?.group_metadata) return []
+  const peer = othersOf(entry, selfId)[0]
+  return peer && !userRef(peer)?.name ? [String(peer.rest_id)] : []
+}
+
+/** GetUsersByIdsForXChat 的结果：rest_id → 用户对象（`get_member_results.results[].member_results.result`）。 */
+export function memberResults(res: any): Map<string, any> {
+  const out = new Map<string, any>()
+  for (const r of res?.data?.get_member_results?.results ?? []) {
+    const u = r?.member_results?.result ?? r?.result
+    if (u?.rest_id) out.set(String(u.rest_id), u)
+  }
+  return out
+}
+
+/**
+ * 收件箱条目 → Conversation。单聊的 peer 是自己以外的那个参与者，资料不全时用成员资料补；
+ * 消息是端到端加密的，不解。
+ */
+export function conversation(entry: any, selfId: string, members: Map<string, any> = new Map()): Conversation {
   const detail = entry.conversation_detail ?? {}
   const group = detail.group_metadata
-  const others = (detail.participants_results ?? []).map((p: any) => p.result ?? p).filter((u: any) => u?.rest_id && u.rest_id !== selfId)
+  const peer = othersOf(entry, selfId)[0]
   return n.conversation(
     {
       id: n.id(detail.conversation_id),
-      peer: group ? null : userRef(others[0]),
+      peer: group || !peer ? null : userRef(userRef(peer)?.name ? peer : (members.get(String(peer.rest_id)) ?? peer)),
       updated_at: n.time(group?.updated_at_msec),
     },
     entry,

@@ -151,11 +151,18 @@ export async function itemGet(ctx: Ctx) {
 
 const SEARCH_PRODUCT: Record<string, string> = { general: 'Top', latest: 'Latest' }
 
+/** `--type video|image` 都走媒体搜索（product=Media，网页的「媒体」标签），结果里图片和视频都有。 */
 export async function itemSearch(ctx: Ctx) {
+  const { sort, type } = ctx.options as { sort?: string; type?: string }
+  const media = type === 'video' || type === 'image'
+  if (media && sort != null && sort !== 'general') {
+    throw new CatbusError('UNSUPPORTED', `X 的媒体搜索不能和 --sort ${sort} 一起用`, { hint: '去掉 --sort，或去掉 --type' })
+  }
   const x = await xclient(ctx)
-  const product = SEARCH_PRODUCT[(ctx.options.sort as string) ?? 'general'] ?? 'Top'
+  const product = media ? 'Media' : (SEARCH_PRODUCT[sort ?? 'general'] ?? 'Top')
   const res = await api.searchWork(x, ctx.args.keyword!, ctx.cursor ?? undefined, product)
-  return timeline(ctx, norm.tweetResults(res).map(norm.item), res)
+  const results = media ? [...norm.tweetResults(res), ...norm.gridResults(res)] : norm.tweetResults(res)
+  return timeline(ctx, results.map(norm.item), res)
 }
 
 export async function itemMedia(ctx: Ctx): Promise<Media[]> {
@@ -196,6 +203,13 @@ const PUBLISH_UNSUPPORTED = ['title', 'cover', 'tag', 'topic', 'mention', 'poi',
 /** thread 两条之间的间隔（上游 post_thread 的 interval），太快容易触发风控。 */
 const THREAD_INTERVAL = 2000
 
+/** `--quote`：链接原样作为 attachment_url（上游 quote_url）；给的是 ID 时先查出推文，用它的链接。 */
+async function quoteUrl(x: XClient, input: string): Promise<string> {
+  const id = parseTweetId(input)
+  if (id !== input.trim()) return input.trim()
+  return norm.item(await tweetOf(x, id)).url!
+}
+
 /**
  * 发推：先传媒体（最多 4 张图，或 1 个视频），再发推。正文超过 280 权重时自动改发长推（CreateNoteTweet）。
  * 带 `--thread` 时接着逐条发，每条回复上一条（上游 post_thread），返回第一条。上游 XWriteAPI.post_tweet。
@@ -219,7 +233,8 @@ export async function itemPublish(ctx: Ctx) {
     const file = await readMedia(x.http, input)
     mediaIds.push((await api.upload(x, file.data, file.filename)).mediaId)
   }
-  const first = api.createdTweet(await api.postTweet(x, text, mediaIds))
+  const quote = o.quote ? await quoteUrl(x, o.quote as string) : undefined
+  const first = api.createdTweet(await api.postTweet(x, text, mediaIds, undefined, quote))
   const posted = [norm.item(first)]
   for (const [i, t] of thread.entries()) {
     await rand.sleep(THREAD_INTERVAL)
@@ -273,12 +288,22 @@ export async function feedList(ctx: Ctx) {
 
 // ================================================================ msg（X Chat）
 
+/**
+ * 收件箱首页。单聊对方的资料缺名字时（参与者只有 rest_id），再用 GetUsersByIdsForXChat 查一次成员资料
+ * （上游 get_users_by_ids，网页进私信页时也发这个）。
+ *
+ * 只取首页：上游 get_initial_chat_page 的 max_local_sequence_id / message_pull_version 是增量同步的
+ * 水位（取某个序号之后的新消息事件），不是翻页游标；翻更早的会话要 GetInboxPageRequestQuery，上游没有。
+ */
 export async function msgList(ctx: Ctx) {
   const x = await xclient(ctx)
   x.requireLogin()
   const page = (await api.getInitialChatPage(x))?.data?.get_initial_chat_page ?? {}
   const self = x.userId
-  return paged((page.items ?? []).map((it: any) => norm.conversation(it, self)), null, false)
+  const items: any[] = page.items ?? []
+  const missing = [...new Set(items.flatMap((it) => norm.peersWithoutName(it, self)))]
+  const members = missing.length ? norm.memberResults(await api.getUsersByIds(x, missing)) : new Map()
+  return paged(items.map((it) => norm.conversation(it, self, members)), null, false)
 }
 
 export async function msgHistory(ctx: Ctx) {

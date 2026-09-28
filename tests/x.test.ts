@@ -82,8 +82,11 @@ const CASES: Record<string, (input: any) => Promise<unknown>> = {
 
   chat_initial: () => logged((x) => api.getInitialChatPage(x)),
   chat_conversation: () => logged((x) => api.getConversationPage(x, '10001:20002')),
+  chat_members: (input) => logged((x) => api.getUsersByIds(x, input.ids)),
 
   create_note_tweet: (input) => logged((x) => api.createNoteTweet(x, input.text, [], input.reply_to, input.quote)),
+  search_media: () => logged((x) => api.searchWork(x, 'cat', undefined, 'Media')),
+  search_media_cursor: () => logged((x) => api.searchWork(x, 'cat', 'MEDIA_NEXT', 'Media')),
 
   article_draft: () => logged((x) => api.articleCreateDraft(x)),
   article_title: (input) => logged((x) => api.articleUpdateTitle(x, input.article, input.title)),
@@ -276,6 +279,18 @@ describe('x 对拍：命令流程', () => {
     ])
   })
 
+  it('msg list：参与者只有 rest_id 时，用 GetUsersByIdsForXChat 补上对方的名字', async () => {
+    const c = loadCase('x', 'chat_list_members')
+    const { requests, result, error } = await replay(c, () => cmd.msgList(loggedCtx()))
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect((result as any).data.map((v: any) => v.peer)).toEqual([
+      { id: '20002', name: 'Peer', url: 'https://x.com/peer_user' },
+      { id: '30003', name: '第三人', url: 'https://x.com/third_user' },
+    ])
+    expect((result as any).page).toEqual({ cursor: null, has_more: false })
+  })
+
   it('item publish：正文超过 280 权重时自动改发长推（CreateNoteTweet），text 取 note_tweet 里的全文', async () => {
     const c = loadCase('x', 'post_long_tweet')
     const ctx = loggedCtx({ platform: 'x', options: { text: c.input.text, visibility: 'public' } })
@@ -283,6 +298,15 @@ describe('x 对拍：命令流程', () => {
     if (error) throw error
     expectRequests(requests, c.requests)
     expect(result).toMatchObject({ id: '3001', kind: 'text', url: 'https://x.com/catbus_test/status/3001', text: c.input.text })
+  })
+
+  it('item publish --quote：给的是 ID 时先查出推文链接，作为 attachment_url 发推', async () => {
+    const c = loadCase('x', 'post_quote')
+    const ctx = loggedCtx({ platform: 'x', options: { text: c.input.text, quote: c.input.quote, visibility: 'public' } })
+    const { requests, result, error } = await replay(c, () => cmd.itemPublish(ctx))
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect(result).toMatchObject({ id: '3001' })
   })
 
   function threadCtx(c: ReturnType<typeof loadCase>) {
@@ -313,6 +337,26 @@ describe('x 对拍：命令流程', () => {
       message: 'thread 第 2 条失败：CreateNoteTweet: Tweet needs to be a bit shorter.',
       detail: { posted: [{ id: '3001', url: 'https://x.com/catbus_test/status/3001' }] },
     })
+  })
+
+  it('item search --type image：媒体搜索（product=Media），推文在 search-grid 宫格模块里；翻页从 TimelineAddToModule 取', async () => {
+    const first = loadCase('x', 'search_media')
+    const ctx = loggedCtx({ platform: 'x', args: { keyword: 'cat' }, options: { type: 'image' } })
+    const r1 = await replay(first, () => cmd.itemSearch(ctx))
+    if (r1.error) throw r1.error
+    expectRequests(r1.requests, first.requests)
+    expect((r1.result as any).data.map((i: any) => [i.id, i.kind])).toEqual([
+      ['1002', 'image'],
+      ['1003', 'video'],
+    ])
+    expect((r1.result as any).page).toEqual({ cursor: 'MEDIA_NEXT', has_more: true })
+
+    const next = loadCase('x', 'search_media_cursor')
+    const r2 = await replay(next, () => cmd.itemSearch({ ...ctx, options: { type: 'video' }, cursor: 'MEDIA_NEXT' }))
+    if (r2.error) throw r2.error
+    expectRequests(r2.requests, next.requests)
+    expect((r2.result as any).data.map((i: any) => i.id)).toEqual(['1005'])
+    expect((r2.result as any).page).toEqual({ cursor: 'MEDIA_NEXT_2', has_more: true })
   })
 
   function articleCtx(c: ReturnType<typeof loadCase>) {
@@ -437,12 +481,20 @@ describe('x 命令与注册表', () => {
     expect(web.commands.get('msg send')!.status).toBe('planned')
   })
 
-  it('扩展命令 article publish / delete；--thread 只挂在 x 的 item publish 上', () => {
+  it('item search：--type video / image 不能和 --sort latest 一起用；--type 只有 all / video / image', async () => {
+    const ctx = loggedCtx({ platform: 'x', args: { keyword: 'cat' }, options: { type: 'video', sort: 'latest' } })
+    await expect(cmd.itemSearch(ctx)).rejects.toMatchObject({ code: 'UNSUPPORTED' })
+    const r = await cli('x', 'item', 'search', 'cat', '--type', 'article')
+    expect([r.code, r.env.error?.code]).toEqual([2, 'UNSUPPORTED'])
+  })
+
+  it('扩展命令 article publish / delete；--quote、--thread 只挂在 x 的 item publish 上', () => {
     const web = xPlatform.endpoints.web
     if (web === 'planned') throw new Error('web 端应当可用')
     expect(web.commands.get('article publish')).toMatchObject({ extension: true, output: '{id url}', status: 'implemented' })
     expect(web.commands.get('article delete')).toMatchObject({ extension: true, output: '{id}', confirm: true })
-    expect(Object.keys(web.commands.get('item publish')!.options)).toEqual(expect.arrayContaining(['thread']))
+    expect(Object.keys(web.commands.get('item publish')!.options)).toEqual(expect.arrayContaining(['quote', 'thread']))
+    expect(web.commands.get('msg list')).toMatchObject({ upstream: 'partial', status: 'implemented' })
   })
 
   it('发推选项：X 不支持的选项报 UNSUPPORTED，图片和视频不能同时带', async () => {
