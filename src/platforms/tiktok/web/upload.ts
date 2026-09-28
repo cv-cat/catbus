@@ -1,5 +1,6 @@
 import { crc32, deflateRawSync } from 'node:zlib'
 import { CatbusError } from '../../../core/errors.js'
+import { mp4VideoTrack } from '../../../core/mp4.js'
 import { compactJson } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { UPLOAD_REFERER } from './api.js'
@@ -847,54 +848,11 @@ export interface VideoMeta {
 
 /** 读 MP4 / MOV 的 moov：视频轨的尺寸（tkhd）、时长（mdhd）、帧率（stts 的样本数 / 时长）。 */
 export function mp4Meta(data: Uint8Array): VideoMeta {
-  const buf = Buffer.from(data.buffer, data.byteOffset, data.byteLength)
-  const boxes = (start: number, end: number): { type: string; start: number; end: number }[] => {
-    const out = []
-    let p = start
-    while (p + 8 <= end) {
-      let size = buf.readUInt32BE(p)
-      const type = buf.toString('latin1', p + 4, p + 8)
-      let header = 8
-      if (size === 1) {
-        size = Number(buf.readBigUInt64BE(p + 8))
-        header = 16
-      } else if (size === 0) size = end - p
-      if (size < header || p + size > end) break
-      out.push({ type, start: p + header, end: p + size })
-      p += size
-    }
-    return out
-  }
-  const moov = boxes(0, buf.length).find((b) => b.type === 'moov')
-  if (!moov) throw new CatbusError('USAGE', '只支持 MP4 / MOV 视频（找不到 moov）')
-  for (const trak of boxes(moov.start, moov.end).filter((b) => b.type === 'trak')) {
-    const inner = boxes(trak.start, trak.end)
-    const mdia = inner.find((b) => b.type === 'mdia')
-    const tkhd = inner.find((b) => b.type === 'tkhd')
-    if (!mdia || !tkhd) continue
-    const mdiaBoxes = boxes(mdia.start, mdia.end)
-    const hdlr = mdiaBoxes.find((b) => b.type === 'hdlr')
-    if (!hdlr || buf.toString('latin1', hdlr.start + 8, hdlr.start + 12) !== 'vide') continue
-    const width = Math.round(buf.readUInt32BE(tkhd.end - 8) / 65536)
-    const height = Math.round(buf.readUInt32BE(tkhd.end - 4) / 65536)
-    const mdhd = mdiaBoxes.find((b) => b.type === 'mdhd')!
-    const v1 = buf[mdhd.start] === 1
-    const timescale = buf.readUInt32BE(mdhd.start + (v1 ? 20 : 12))
-    const duration = v1 ? Number(buf.readBigUInt64BE(mdhd.start + 24)) : buf.readUInt32BE(mdhd.start + 16)
-    let samples = 0
-    const minf = mdiaBoxes.find((b) => b.type === 'minf')
-    const stbl = minf && boxes(minf.start, minf.end).find((b) => b.type === 'stbl')
-    const stts = stbl && boxes(stbl.start, stbl.end).find((b) => b.type === 'stts')
-    if (stts) {
-      const n = buf.readUInt32BE(stts.start + 4)
-      for (let i = 0; i < n; i++) samples += buf.readUInt32BE(stts.start + 8 + i * 8)
-    }
-    const seconds = timescale ? duration / timescale : 0
-    const fps = samples && seconds ? Math.max(1, Math.round(samples / seconds)) : 24
-    if (!(width > 0 && height > 0 && seconds > 0)) break
-    return { width, height, durationMs: Math.max(1, Math.round(seconds * 1000)), fps }
-  }
-  throw new CatbusError('USAGE', '视频里没有可识别的视频轨（尺寸 / 时长）')
+  const t = mp4VideoTrack(data)
+  const seconds = t.timescale ? t.duration / t.timescale : 0
+  const fps = t.sttsSamples && seconds ? Math.max(1, Math.round(t.sttsSamples / seconds)) : 24
+  if (!(t.displayWidth > 0 && t.displayHeight > 0 && seconds > 0)) throw new CatbusError('USAGE', '视频里没有可识别的视频轨（尺寸 / 时长）')
+  return { width: t.displayWidth, height: t.displayHeight, durationMs: Math.max(1, Math.round(seconds * 1000)), fps }
 }
 
 /** 只含一个 deflate 文件的 ZIP（浏览器上传给 tiktok-ai-frame 的 0.jpeg 压缩包）。 */
