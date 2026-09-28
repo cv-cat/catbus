@@ -72,7 +72,8 @@
           ]
         }
       }
-    }
+    },
+    "room_text": "{\"v\":1,\"t\":3,\"m\":\"192e13aa346c48-1a0c4506c7b\",\"b\":{\"d\":{\"a\":0,\"c\":\"sendMessage\",\"biz\":\"room\",\"b\":\"eyJyb29tSWQiOiI1NzA0NDMwMjgzMDY3NTYxNTQiLCJyb29tVHlwZSI6IkxJVkUiLCJjb21tYW5kIjoxLCJjdXN0b21EYXRhIjoie1widHlwZVwiOlwidGV4dFwiLFwicHJpb3JpdHlcIjowLFwicHJvZmlsZVwiOntcIm5pY2tuYW1lXCI6XCJuXCIsXCJhdmF0YXJcIjpcImFcIixcInVzZXJfaWRcIjpcIjVmMDAwMDAwMDAwMDAwMDAwMDAwMDAwMVwiLFwicm9sZVwiOjB9LFwiZGVzY1wiOlwi5Li75pKt5aW9IGhpXCJ9In0=\",\"e\":{},\"s\":\"rrmp.o.l\"}}}"
   },
   "error": null
 }

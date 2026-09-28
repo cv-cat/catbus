@@ -412,6 +412,9 @@ def main():
             'inbound': live_mod.decode_im_one_message(inbound),
             'room': live_mod.decode_room_push(room),
             'room_frame': room,
+            # 直播间长连发弹幕（send_room_text）：command / priority / role 与观看心跳相同
+            'room_text': ws.room_text_frame(room_id='570443028306756154', room_type='LIVE', command=1, nickname='n', avatar='a',
+                                            user_id=USER_ID, content='主播好 hi', priority=0, role=0),
         }
 
     c('rwp_frames', rwp_frames)

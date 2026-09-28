@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import * as api from '../src/platforms/xhs/web/api.js'
 import { Creator, PyFloat, pyJson, pyRound3 } from '../src/platforms/xhs/web/creator.js'
 import * as capi from '../src/platforms/xhs/web/creator-api.js'
@@ -12,6 +12,50 @@ import { deterministic } from '../src/core/rand.js'
 import { RAW } from '../src/core/schemas.js'
 import * as push from '../src/platforms/xhs/web/push.js'
 import { expectRequests, type GoldenRequest, loadCase, makeCtx, normalize, replay } from './golden.js'
+
+/**
+ * RWP 长连的替身：设置了 rwpReply 时 openSocket 不联网，按发出的每一帧回复（rwpReply 返回要推回来的帧）。
+ * 没设置时用真的 openSocket（测试默认禁止联网，不会被用到）。
+ */
+const rwpSent: any[] = []
+let rwpReply: ((frame: any) => any[]) | null = null
+vi.mock('../src/core/stream.js', async (importOriginal) => {
+  const orig = await importOriginal<typeof import('../src/core/stream.js')>()
+  return {
+    ...orig,
+    openSocket: async (url: string, options: any) => {
+      if (!rwpReply) return orig.openSocket(url, options)
+      const reply = rwpReply
+      const queue: string[] = []
+      let wake: (() => void) | null = null
+      let closed = false
+      const poke = () => {
+        const w = wake
+        wake = null
+        w?.()
+      }
+      options?.signal?.addEventListener('abort', () => ((closed = true), poke()), { once: true })
+      return {
+        send: async (d: string) => {
+          const f = JSON.parse(String(d))
+          rwpSent.push(f)
+          queue.push(...reply(f).map((x) => JSON.stringify(x)))
+          poke()
+        },
+        close: () => ((closed = true), poke()),
+        messages: {
+          async *[Symbol.asyncIterator]() {
+            for (;;) {
+              while (queue.length) yield queue.shift()!
+              if (closed) return
+              await new Promise<void>((r) => (wake = r))
+            }
+          },
+        },
+      }
+    },
+  }
+})
 
 /** 与 scripts/golden/xhs/gen.py 相同的假凭证。 */
 const XRAY_SEQ = 1000
@@ -229,6 +273,7 @@ describe('xhs 纯算', () => {
       const chat = push.encodeChatMessage({ mid: 'mid-1', ts: 1790000000123, sender: USER_ID, receiver: OTHER, content: '你好 hi', contentType: 1 })
       expect(Buffer.from(chat).toString('base64')).toBe(r.chat)
       expect(push.imFrame(chat)).toBe(r.im_frame)
+      expect(push.roomTextFrame({ roomId: ROOM, nickname: 'n', avatar: 'a', userId: USER_ID, content: '主播好 hi' })[0]).toBe(r.room_text)
     } finally {
       restore()
     }
@@ -545,6 +590,65 @@ describe('xhs 创作者中心的会话', () => {
     const { requests, error } = await serve(() => undefined, () => cmd.itemPublish({ ...bothCtx(), options: { video: '/tmp/a.mp4', visibility: 'public' } }))
     expect(error).toMatchObject({ code: 'USAGE', message: expect.stringContaining('--cover') })
     expect(requests).toHaveLength(0)
+  })
+})
+
+describe('xhs 直播发弹幕', () => {
+  const route = (send: Reply) => (r: GoldenRequest): Reply => {
+    if (r.url.includes('/room/current_room_info')) return ok({ room_id: ROOM, host_info: { user_id: 'host1', nickname: '主播' } })
+    if (r.url.includes('/interaction/send_comment')) return send
+    if (r.url.includes('/api/sns/web/v2/user/me')) return ok({ user_id: USER_ID, nickname: '测试用户', images: 'https://x/a.jpg' })
+    if (r.url.includes('/api/sns/web/v1/celestial/lt')) return ok({ aLt: 'fake-alt', rLt: 'fake-rlt', expiredTime: 10080 })
+    return security(r)
+  }
+  /** 握手和发弹幕都回 c=0。 */
+  const ack = (f: any) => (f.t === 2 && f.b?.d?.s === 0) || (f.t === 3 && f.b?.d?.biz === 'room') ? [{ v: 1, t: 2, m: f.m, b: { a: { c: 0 } } }] : []
+
+  it('HTTP 成功：不连长连', async () => {
+    rwpSent.length = 0
+    rwpReply = ack
+    try {
+      const { result, error } = await serve(route(ok()), () => cmd.liveSend(pcCtx({ room: ROOM, text: '主播好' })))
+      if (error) throw error
+      expect(result).toEqual({ id: ROOM })
+      expect(rwpSent).toHaveLength(0)
+    } finally {
+      rwpReply = null
+    }
+  })
+
+  it('HTTP 报业务错误：改走直播间长连，发 sendMessage 帧并等到回执', async () => {
+    rwpSent.length = 0
+    rwpReply = ack
+    try {
+      const { requests, result, error } = await serve(route(fail(10086, '当前房间状态不支持')), () => cmd.liveSend(pcCtx({ room: ROOM, text: '主播好' })))
+      if (error) throw error
+      expect(result).toEqual({ id: ROOM })
+      expect(hits(requests, '/interaction/send_comment')).toHaveLength(1)
+      const room = rwpSent.find((f) => f.t === 3 && f.b?.d?.biz === 'room' && f.b?.d?.c === 'sendMessage')
+      const payload = JSON.parse(Buffer.from(room.b.d.b, 'base64').toString('utf8'))
+      expect(payload).toMatchObject({ roomId: ROOM, roomType: 'LIVE', command: 1 })
+      expect(JSON.parse(payload.customData)).toEqual({ type: 'text', priority: 0, profile: { nickname: '测试用户', avatar: 'https://x/a.jpg', user_id: USER_ID, role: 0 }, desc: '主播好' })
+      // 进房间之后才发弹幕
+      expect(rwpSent.findIndex((f) => f.b?.d?.s === 8)).toBeLessThan(rwpSent.indexOf(room))
+    } finally {
+      rwpReply = null
+    }
+  })
+
+  it('长连回执 c≠0：报 UPSTREAM；登录失效之类的错误不改走长连', async () => {
+    rwpSent.length = 0
+    rwpReply = (f) => (f.t === 3 && f.b?.d?.biz === 'room' ? [{ v: 1, t: 2, m: f.m, b: { a: { c: 3100001, m: 'Account has not privilege' } } }] : ack(f))
+    try {
+      const rejected = await serve(route(fail(10086, '当前房间状态不支持')), () => cmd.liveSend(pcCtx({ room: ROOM, text: '主播好' })))
+      expect(rejected.error).toMatchObject({ code: 'UPSTREAM', message: expect.stringContaining('3100001') })
+      rwpSent.length = 0
+      const expired = await serve(route(fail(-100, '登录已过期')), () => cmd.liveSend(pcCtx({ room: ROOM, text: '主播好' })))
+      expect(expired.error).toMatchObject({ code: 'AUTH_EXPIRED' })
+      expect(rwpSent).toHaveLength(0)
+    } finally {
+      rwpReply = null
+    }
   })
 })
 

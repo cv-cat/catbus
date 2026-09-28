@@ -704,13 +704,48 @@ export async function liveProducts(ctx: Ctx) {
   })
 }
 
+/**
+ * 发弹幕。上游有两条通道：HTTP 的 send_comment 和长连的 send_room_text，注释说浏览器「按房间状态」二选一，
+ * 但没有写出判断条件。这里先走 HTTP；HTTP 报业务错误（UPSTREAM）时改走直播间长连。
+ */
 export async function liveSend(ctx: Ctx) {
   if (ctx.options.gift) throw new CatbusError('NOT_IMPLEMENTED', 'xhs 的 live send --gift 尚未实现（上游只发文本弹幕）', { detail: { upstream: 'partial' } })
   return run(ctx, async (p) => {
     const { roomId, d } = await room(p, ctx.args.room!)
-    p.check(await api.liveSendComment(p, roomId, ctx.args.text!, hostOf(d)))
+    try {
+      p.check(await api.liveSendComment(p, roomId, ctx.args.text!, hostOf(d)))
+    } catch (err) {
+      if (!(err instanceof CatbusError && err.code === 'UPSTREAM')) throw err
+      ctx.log.info(`HTTP 发弹幕失败（${err.message}），改走直播间长连`)
+      await sendRoomText(p, roomId, ctx.args.text!)
+    }
     return { id: roomId }
   })
+}
+
+const ROOM_ACK_TIMEOUT = 10_000
+
+/** 长连发弹幕（上游 send_room_text）：连上并进房间，发 sendMessage 帧，等同一个 m 的回执（c=0 为成功）。 */
+async function sendRoomText(p: Pc, roomId: string, text: string): Promise<void> {
+  const me = p.check(await api.userMe(p))
+  const userId = String(me?.user_id ?? p.userId)
+  const controller = new AbortController()
+  const conn = await push.connectPush(p, controller.signal, roomId)
+  const timer = setTimeout(() => controller.abort(), ROOM_ACK_TIMEOUT)
+  try {
+    const [frame, mid] = push.roomTextFrame({ roomId, nickname: String(me?.nickname ?? ''), avatar: String(me?.images ?? me?.imageb ?? ''), userId, content: text })
+    await conn.send(frame)
+    for await (const f of conn.frames) {
+      if (f?.m !== mid) continue
+      const c = f?.b?.a?.c
+      if (c != null && c !== 0) throw new CatbusError('UPSTREAM', `直播间长连拒绝了弹幕：c=${c} ${f?.b?.a?.m ?? ''}`.trim(), { detail: { code: c, message: f?.b?.a?.m } })
+      return
+    }
+    p.ctx.log.warn('直播间长连没有返回发送回执，弹幕可能没有发出去')
+  } finally {
+    clearTimeout(timer)
+    conn.close()
+  }
 }
 
 /** 直播间事件：customData.type → Event.type。 */

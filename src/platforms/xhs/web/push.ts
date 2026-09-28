@@ -1,5 +1,6 @@
 import { constants, createPublicKey, publicEncrypt } from 'node:crypto'
 import { CatbusError } from '../../../core/errors.js'
+import { compactJson } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { openSocket, type Socket } from '../../../core/stream.js'
 import type { Pc } from './client.js'
@@ -230,6 +231,30 @@ export function viewerHeartFrame(roomId: string, profile: { nickname: string; av
   const custom = { type: 'viewer_heart', priority: 0, profile, source: 'web_live', desc: '' }
   const data = { roomId, roomType: 'LIVE', command: 1, customData: JSON.stringify(custom) }
   return envelope(3, messageId(), { d: { a: 0, c: 'liveHeartBeat', biz: 'room', b: b64(JSON.stringify(data)), e: {}, s: 'rrmp.o.l' } })
+}
+
+export interface RoomText {
+  roomId: string
+  nickname: string
+  avatar: string
+  userId: string
+  content: string
+  roomType?: string
+  command?: number
+  priority?: number
+  role?: number
+}
+
+/**
+ * encode_room_text_payload + room_text_frame：直播间文本弹幕（t=3，biz=room，c=sendMessage，a=0，s=rrmp.o.l）。
+ * 上游要求调用方给出 command / priority / role；这里用与观看心跳（viewer_heart）相同的 1 / 0 / 0。
+ * 返回帧和它的 m（服务端的回执带同一个 m）。
+ */
+export function roomTextFrame(t: RoomText): [string, string] {
+  const custom = { type: 'text', priority: t.priority ?? 0, profile: { nickname: t.nickname, avatar: t.avatar, user_id: t.userId, role: t.role ?? 0 }, desc: t.content }
+  const payload = compactJson({ roomId: t.roomId, roomType: t.roomType ?? 'LIVE', command: t.command ?? 1, customData: compactJson(custom) })
+  const m = messageId()
+  return [envelope(3, m, { d: { a: 0, c: 'sendMessage', biz: 'room', b: b64(payload), e: {}, s: 'rrmp.o.l' } }), m]
 }
 
 /** decode_room_push：t=4 帧里 biz=room 的事件（base64 JSON，customData 再解一层）。 */
