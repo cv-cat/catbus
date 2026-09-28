@@ -1,0 +1,15 @@
+{
+  "input": {
+    "cid": "47000000001",
+    "peer": "2200000999"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": [
+    "{\"lwp\": \"/r/SingleChatConversation/create\", \"headers\": {\"mid\": \"5811790000000123 0\"}, \"body\": [{\"pairFirst\": \"2200000999@goofish\", \"pairSecond\": \"2200000001@goofish\", \"bizType\": \"1\", \"extension\": {\"itemId\": \"891198795482\"}, \"ctx\": {\"appVersion\": \"1.0\", \"platform\": \"web\"}}]}",
+    "{\"lwp\": \"/r/MessageSend/sendByReceiverScope\", \"headers\": {\"mid\": \"5811790000000123 0\"}, \"body\": [{\"uuid\": \"-17900000001231\", \"cid\": \"47000000001@goofish\", \"conversationType\": 1, \"content\": {\"contentType\": 101, \"custom\": {\"type\": 1, \"data\": \"eyJjb250ZW50VHlwZSI6IDEsICJ0ZXh0IjogeyJ0ZXh0IjogIlx1NGY2MFx1NTk3ZCJ9fQ==\"}}, \"redPointPolicy\": 0, \"extension\": {\"extJson\": \"{}\"}, \"ctx\": {\"appVersion\": \"1.0\", \"platform\": \"web\"}, \"mtags\": {}, \"msgReadStatusSetting\": 1}, {\"actualReceivers\": [\"2200000999@goofish\", \"2200000001@goofish\"]}]}"
+  ],
+  "error": null
+}

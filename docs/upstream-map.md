@@ -193,7 +193,7 @@
 - **上游凭证来源**：无。
 - **API**
   - `goofish_apis.py` 的 `XianyuApis`：`get_item_info(item_id)`、`public`（发布商品；`price.original_price` → 私有选项 `--original-price`）、`upload_media`、`get_default_location`
-  - 私信：`goofish_live.py` 的 `XianyuLive`（async WebSocket）：`create_chat`、`send_msg`、`list_all_conversations(cid)`（→ `msg history`）
+  - 私信：`goofish_live.py` 的 `XianyuLive`（async WebSocket）：`create_chat`（`item_id` 默认 `891198795482`，→ `msg send --to`；`--to` 加 `--item` 时用指定商品）、`send_msg`、`list_all_conversations(cid)`（→ `msg history`：同一条连接上按 nextCursor 翻页，结果从旧到新）
 - **JS 资产**
   - `static/goofish_js_origin_version_2.js`、`static/goofish_js_version_1.js`、`static/goofish_js_version_2.js`
   - `utils/et_f.js`、`utils/gen_tfstk.js`

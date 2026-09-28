@@ -53,7 +53,9 @@ export default definePlatform({
 
         'msg list': 'none',
         'msg history': impl('full', 'msgHistory'),
-        'msg send': impl('full', 'msgSend'),
+        'msg send': impl('full', 'msgSend', {
+          note: '--to 不带 --item 时按上游的默认商品建会话；--to 加 --item 就这件商品联系对方（卖家可以联系买家）',
+        }),
         'msg listen': impl('full', 'msgListen'),
         'msg read': 'none',
         'msg revoke': 'none',

@@ -77,8 +77,11 @@ export function listFrame(cid: string, cursor: string): Frame {
   return { lwp: '/r/MessageManager/listUserMessages', headers: { mid: generateMid() }, body: [imId(cid), false, BigInt(cursor), 20, false] }
 }
 
+/** create_chat 的 item_id 默认值（上游写死）：只给对方用户、不指定商品时用它建会话。 */
+export const DEFAULT_ITEM_ID = '891198795482'
+
 /** create_chat：按商品和对方建单聊会话（已有时返回原会话）。 */
-export function createChatFrame(myId: string, toId: string, itemId: string): Frame {
+export function createChatFrame(myId: string, toId: string, itemId = DEFAULT_ITEM_ID): Frame {
   return {
     lwp: '/r/SingleChatConversation/create',
     headers: { mid: generateMid() },
@@ -330,6 +333,35 @@ export class Im {
     const w = this.wake
     this.wake = null
     w?.()
+  }
+}
+
+/** listUserMessages 的一页：消息从新到旧。 */
+export interface HistoryPage {
+  models: unknown[]
+  nextCursor: string | null
+  hasMore: boolean
+}
+
+/** 取一页消息记录（上游 list_all_conversations 循环里的一次请求）。游标没往前走时按没有更多处理，免得原地打转。 */
+export async function historyPage(im: Im, cid: string, cursor: string): Promise<HistoryPage> {
+  const body = (await im.request(listFrame(cid, cursor))).body ?? {}
+  const nextCursor = body.nextCursor == null ? null : String(body.nextCursor)
+  const hasMore = Number(body.hasMore) === 1 && nextCursor != null && nextCursor !== cursor
+  return { models: (body.userMessageModels as unknown[]) ?? [], nextCursor, hasMore }
+}
+
+/**
+ * 在同一条连接上按 nextCursor 往更早翻（上游 list_all_conversations：收到一页就接着发下一页的请求），
+ * 直到没有更多；调用方不再需要时提前结束迭代即可。翻页间隔用平台默认值（AGENTS 4.9）。
+ */
+export async function* historyPages(im: Im, cid: string, cursor: string): AsyncGenerator<HistoryPage> {
+  for (;;) {
+    const page = await historyPage(im, cid, cursor)
+    yield page
+    if (!page.hasMore) return
+    cursor = page.nextCursor!
+    await rand.sleep(im.x.ctx.platform.pageInterval, im.x.ctx.signal)
   }
 }
 

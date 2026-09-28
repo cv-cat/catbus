@@ -1,6 +1,6 @@
 """xianyu 的对拍数据：用上游 XianYuApis 的代码构造 HTTP 请求与私信长连的帧（只用假凭证）。
 
-运行：.golden/xianyu/Scripts/python.exe scripts/golden/xianyu/gen.py
+运行：.golden/xianyu/Scripts/python.exe scripts/golden/xianyu/gen.py（macOS / Linux 为 .golden/xianyu/bin/python）
 依赖：uv pip install -r references/XianYuApis/requirements.txt PyExecJS blackboxprotobuf pydantic typing_extensions websockets
 
 补丁（只在本脚本里）：
@@ -442,6 +442,21 @@ def ws_frames():
 case('ws_frames', ws_frames, cid=CID, peer=PEER_ID, item=ITEM_ID)
 
 
+def ws_send_to():
+    """主动向指定用户发消息（README「主动发送」）：create_chat 不给 item_id 时用上游写死的默认商品，再 send_msg."""
+    lv, ws = live(), FakeWs()
+
+    async def run():
+        await lv.create_chat(ws, PEER_ID)
+        await lv.send_msg(ws, CID, PEER_ID, make_text('你好'))
+
+    asyncio.run(run())
+    return ws.sent
+
+
+case('ws_send_to', ws_send_to, cid=CID, peer=PEER_ID)
+
+
 def b64json(v):
     return base64.b64encode(json.dumps(v).encode()).decode()
 
@@ -495,6 +510,36 @@ def ws_history_pages():
 
 
 case('ws_history_pages', ws_history_pages, cid=CID)
+
+
+def text_model(msg_id, sender, nick, created, text):
+    return {'message': {'messageId': msg_id, 'cid': CID + '@goofish', 'createAt': created,
+                        'extension': {'reminderTitle': nick, 'senderUserId': sender, 'reminderContent': text},
+                        'content': {'contentType': 101, 'custom': {'type': 1, 'data': b64json({'contentType': 1, 'text': {'text': text}})}}}}
+
+
+# 三页，从新到旧：第一页只有自己发的消息，第二页是 HISTORY_BODY，第三页是最早的一条
+HISTORY_PAGES = [
+    {'hasMore': 1, 'nextCursor': 1789990002000, 'userMessageModels': [
+        text_model('m6', MY_ID, 'tester', 1789990003000, '明天发货'),
+        text_model('m5', MY_ID, 'tester', 1789990002000, '好的')]},
+    HISTORY_BODY,
+    {'hasMore': 0, 'nextCursor': 1789980000000, 'userMessageModels': [text_model('m0', PEER_ID, '测试买家', 1789980000000, '在吗')]},
+]
+
+
+def ws_history_all():
+    """三页都在同一条连接里翻完（每收到一页就用 nextCursor 发下一页），结果反转成从旧到新."""
+    lv = live()
+    mid = generate_mid()
+    ws = FakeWs([(2, {'lwp': '/s/vulcan', 'headers': {'mid': 'vulcan-mid', 'sid': 'vulcan-sid'}})] +
+                [(4 + 2 * i, {'code': 200, 'headers': {'mid': mid, 'sid': 'resp-sid'}, 'body': body}) for i, body in enumerate(HISTORY_PAGES)])
+    _next_ws[0] = ws
+    result = asyncio.run(lv.list_all_conversations(CID))
+    return ws_result(ws, result)
+
+
+case('ws_history_all', ws_history_all, cid=CID)
 
 
 def ws_listen():

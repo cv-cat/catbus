@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
-import { readCredential } from '../src/core/auth-store.js'
+import { readCredential, writeCredential } from '../src/core/auth-store.js'
 import type { HeaderPairs } from '../src/core/http.js'
 import { time } from '../src/core/normalize.js'
 import { jsonDumps } from '../src/core/py.js'
@@ -15,6 +15,7 @@ import {
   ackDiffFrame,
   createChatFrame,
   createdCid,
+  DEFAULT_ITEM_ID,
   heartbeatFrame,
   type ImSocket,
   listFrame,
@@ -23,7 +24,7 @@ import {
   sendMsgFrame,
 } from '../src/platforms/xianyu/web/im.js'
 import { SESSION_HEADERS } from '../src/platforms/xianyu/web/profile.js'
-import { resolveConversation, resolveItem } from '../src/platforms/xianyu/web/resolve.js'
+import { resolveConversation, resolveItem, resolveUser } from '../src/platforms/xianyu/web/resolve.js'
 import { decrypt, generateDeviceId, generateMid, generateSign, generateUuid, genTfstk } from '../src/platforms/xianyu/web/sign.js'
 import { expectRequests, type GoldenCase, type GoldenRequest, loadCase, makeCtx, replay } from './golden.js'
 import { cli, useTempHome } from './helpers.js'
@@ -67,7 +68,7 @@ interface Script {
 
 /** 按脚本推送的假连接：第 i 帧等客户端发出 after 帧后才推，推完不断开，直到客户端关闭。 */
 function fakeConnect(script: Script[]) {
-  const state = { url: '', headers: [] as HeaderPairs, sent: [] as string[], closed: false }
+  const state = { url: '', headers: [] as HeaderPairs, sent: [] as string[], closed: false, connects: 0 }
   let wake: (() => void) | null = null
   const poke = () => {
     const w = wake
@@ -96,6 +97,7 @@ function fakeConnect(script: Script[]) {
     },
   }
   const restore = mockConnect(async (url, headers) => {
+    state.connects++
     state.url = url
     state.headers = headers
     return socket
@@ -285,20 +287,58 @@ describe('xianyu 对拍：命令流程', () => {
 
     const { data, page } = result as any
     expect(page).toEqual({ cursor: null, has_more: false })
-    // 上游把每页倒序插到最前面（时间正序），catbus 保持接口的顺序（新的在前）
-    const upstream = [...c.result.result].reverse()
+    // 与上游一样从旧到新（接口从新到旧给，上游每条都插到最前面）
+    const upstream = c.result.result
+    expect(data.map((m: any) => m.id)).toEqual(['m1', 'm2', 'm3'])
     expect(data.map((m: any) => m.from.id)).toEqual(upstream.map((u: any) => u.send_user_id))
     expect(data.map((m: any) => m.from.name)).toEqual(upstream.map((u: any) => u.send_user_name))
-    expect(data[0]).toMatchObject({
+    expect(data[2]).toMatchObject({
       id: 'm3',
       conversation_id: CID,
       type: 'image',
       text: null,
-      media: [{ type: 'image', url: upstream[0].message.image.pics[0].url, width: 100, height: 80 }],
+      media: [{ type: 'image', url: upstream[2].message.image.pics[0].url, width: 100, height: 80 }],
     })
     expect(data[1]).toMatchObject({ id: 'm2', type: 'text', text: upstream[1].message.text.text, media: [] })
-    expect(data[2].created_at).toMatch(/^2026-/)
-    expect(data[0][RAW]).toEqual(JSON.parse(c.result.server[1].data).body.userMessageModels[0])
+    expect(data[0].created_at).toMatch(/^2026-/)
+    expect(data[2][RAW]).toEqual(JSON.parse(c.result.server[1].data).body.userMessageModels[0])
+  })
+
+  it('msg history --all：同一条连接上按 nextCursor 翻完三页（只取一次 token、只注册一次），从旧到新', async () => {
+    const c = loadCase('xianyu', 'ws_history_all')
+    const { state, restore } = fakeConnect(c.result.server)
+    const { requests, result, error } = await replay(c, () => msgHistory(ctxOf({ args: { conversation: CID }, options: { all: true } })))
+    restore()
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect(state.sent).toEqual(c.result.sent)
+    expect(state.closed).toBe(true)
+    const { data, page } = result as any
+    expect(page).toEqual({ cursor: null, has_more: false })
+    expect(data.map((m: any) => m.id)).toEqual(['m0', 'm1', 'm2', 'm3', 'm5', 'm6'])
+    expect(data.map((m: any) => m.from.id)).toEqual(c.result.result.map((u: any) => u.send_user_id))
+    expect(data.map((m: any) => m.text ?? m.media[0].url)).toEqual(c.result.result.map((u: any) => u.message.text?.text ?? u.message.image.pics[0].url))
+  })
+
+  it('msg history --limit：翻到够数就停；截在页中间时游标取保留下来最早那条的时间', async () => {
+    const c = loadCase('xianyu', 'ws_history_all')
+    // 第一页 2 条、第二页 3 条：--limit 4 翻两页，保留最新的 4 条
+    const { state, restore } = fakeConnect(c.result.server.slice(0, 3))
+    const { result, error } = await replay(c, () => msgHistory(ctxOf({ args: { conversation: CID }, options: { limit: 4 } })))
+    restore()
+    if (error) throw error
+    expect(state.sent).toEqual(c.result.sent.slice(0, 7))
+    const { data, page } = result as any
+    expect(data.map((m: any) => m.id)).toEqual(['m2', 'm3', 'm5', 'm6'])
+    expect(page).toEqual({ cursor: '1789990000500', has_more: true })
+
+    // 正好翻完整页：游标就是接口的 nextCursor
+    const again = fakeConnect(c.result.server.slice(0, 2))
+    const one = await replay(c, () => msgHistory(ctxOf({ args: { conversation: CID }, options: { limit: 2 } })))
+    again.restore()
+    if (one.error) throw one.error
+    expect((one.result as any).data.map((m: any) => m.id)).toEqual(['m5', 'm6'])
+    expect((one.result as any).page).toEqual({ cursor: '1789990002000', has_more: true })
   })
 
   it('msg history：hasMore 时返回 nextCursor', async () => {
@@ -382,6 +422,88 @@ describe('xianyu 对拍：命令流程', () => {
     expect(result).toMatchObject({ id: '3400000000009.PNM', conversation_id: CID, from: { id: MY_ID, name: 'tester' }, type: 'text', text: '你好 "quote"' })
   })
 
+  it('msg send --to：用上游 create_chat 的默认商品建会话，再发文字（不取商品详情）', async () => {
+    const token = loadCase('xianyu', 'get_token')
+    const init = frames('ws_init')
+    const [create, text] = frames('ws_send_to')
+    expect(JSON.parse(create!).body[0].extension.itemId).toBe(DEFAULT_ITEM_ID)
+    const { state, restore } = fakeConnect([
+      { after: 2, data: jsonDumps({ lwp: '/s/vulcan', headers: { sid: 'v' } }) },
+      { after: 4, data: jsonDumps({ code: 200, headers: { mid: JSON.parse(create!).headers.mid }, body: { singleChatConversation: { cid: `${CID}@goofish` } } }) },
+      { after: 6, data: jsonDumps({ code: 200, headers: { mid: JSON.parse(text!).headers.mid }, body: {} }) },
+    ])
+    const ctx = ctxOf({ args: { text: '你好' }, options: { to: `https://www.goofish.com/personal?userId=${PEER_ID}` } })
+    const { requests, result, error } = await replay(token, () => msgSend(ctx))
+    restore()
+    if (error) throw error
+    expectRequests(requests, token.requests)
+    expect(state.sent.filter((f) => !f.startsWith('{"code"'))).toEqual([...init, create, text])
+    expect(result).toMatchObject({ conversation_id: CID, from: { id: MY_ID }, type: 'text', text: '你好' })
+  })
+
+  it('msg send --to --item：按指定商品建会话（卖家联系买家）', async () => {
+    const token = loadCase('xianyu', 'get_token')
+    const init = frames('ws_init')
+    const [create, text] = frames('ws_frames')
+    const { state, restore } = fakeConnect([
+      { after: 2, data: jsonDumps({ lwp: '/s/vulcan', headers: {} }) },
+      { after: 4, data: jsonDumps({ code: 200, headers: { mid: JSON.parse(create!).headers.mid }, body: { singleChatConversation: { cid: `${CID}@goofish` } } }) },
+      { after: 6, data: jsonDumps({ code: 200, headers: { mid: JSON.parse(text!).headers.mid }, body: { messageId: '3400000000010.PNM' } }) },
+    ])
+    const ctx = ctxOf({ args: { text: '你好 "quote"' }, options: { to: PEER_ID, item: `https://www.goofish.com/item?id=${ITEM_ID}` } })
+    const { requests, result, error } = await replay(token, () => msgSend(ctx))
+    restore()
+    if (error) throw error
+    expectRequests(requests, token.requests)
+    expect(state.sent.filter((f) => !f.startsWith('{"code"'))).toEqual([...init, create, text])
+    expect(result).toMatchObject({ id: '3400000000010.PNM', conversation_id: CID })
+  })
+
+  it('msg send：不能发给自己；自己的商品只给 --item 时提示用 --to', async () => {
+    const token = loadCase('xianyu', 'get_token')
+    for (const to of ['me', MY_ID]) {
+      const { error, requests } = await replay(token, () => msgSend(ctxOf({ args: { text: 'hi' }, options: { to } })))
+      expect(error).toMatchObject({ code: 'USAGE', message: '不能给自己发私信' })
+      expect(requests).toEqual([])
+    }
+    const detail = loadCase('xianyu', 'item_detail')
+    const mine = { ...detail, responses: [{ ...detail.responses[0]!, body: { ...(detail.responses[0]!.body as any), data: { ...(detail.responses[0]!.body as any).data, sellerDO: { sellerId: Number(MY_ID) } } } }] }
+    const { error } = await replay(mine, () => msgSend(ctxOf({ args: { text: 'hi' }, options: { item: ITEM_ID } })))
+    expect(error).toMatchObject({ code: 'USAGE', hint: '联系买家用 --to <买家> --item <商品>' })
+  })
+
+  it('msg send --conversation：最近一页只有自己的消息时，在同一条连接上往前翻找对方', async () => {
+    const token = loadCase('xianyu', 'get_token')
+    const history = loadCase('xianyu', 'ws_history_all')
+    const lists = (history.result.sent as string[]).filter((f) => f.includes('listUserMessages'))
+    const text = frames('ws_send_to')[1]!
+    const { state, restore } = fakeConnect([
+      ...history.result.server.slice(0, 3),
+      { after: 8, data: jsonDumps({ code: 200, headers: { mid: JSON.parse(text).headers.mid }, body: {} }) },
+    ])
+    const { requests, result, error } = await replay(token, () => msgSend(ctxOf({ args: { text: '你好' }, options: { conversation: CID } })))
+    restore()
+    if (error) throw error
+    expectRequests(requests, token.requests)
+    expect(state.sent.filter((f) => !f.startsWith('{"code"'))).toEqual([...frames('ws_init'), lists[0], lists[1], text])
+    expect(result).toMatchObject({ conversation_id: CID, type: 'text', text: '你好' })
+  })
+
+  it('msg send --conversation：整个会话都只有自己的消息时报 USAGE，提示用 --to', async () => {
+    const token = loadCase('xianyu', 'get_token')
+    const history = loadCase('xianyu', 'ws_history_all')
+    const first = JSON.parse(history.result.server[1].data)
+    const { state, restore } = fakeConnect([
+      history.result.server[0],
+      { after: 4, data: jsonDumps({ ...first, body: { ...first.body, hasMore: 0 } }) },
+    ])
+    const { error } = await replay(token, () => msgSend(ctxOf({ args: { text: '你好' }, options: { conversation: CID } })))
+    restore()
+    expect(error).toMatchObject({ code: 'USAGE', hint: '用 --to <对方用户>（可加 --item <商品>）发送' })
+    expect((error as Error).message).toContain('全部消息记录')
+    expect(state.closed).toBe(true)
+  })
+
   it('msg send --conversation --image：先上传，从最近消息里找到对方，再发图片', async () => {
     const upload = loadCase('xianyu', 'upload_media')
     const token = loadCase('xianyu', 'get_token')
@@ -455,6 +577,21 @@ describe('xianyu auth', () => {
     expect(other.env.error.code).toBe('AUTH_REQUIRED')
   })
 
+  it('msg history --limit 经 core 分页：handler 只调一次，只取一次 token、只建一条连接', async () => {
+    await writeCredential(ctxOf().credential)
+    const c = loadCase('xianyu', 'ws_history_all')
+    const { state, restore } = fakeConnect(c.result.server.slice(0, 3))
+    const { result, error } = await replay(c, () => cli('xianyu', 'msg', 'history', CID, '--limit', '4', '-a', 'default'))
+    restore()
+    if (error) throw error
+    const r = result as Awaited<ReturnType<typeof cli>>
+    expect(r.code).toBe(0)
+    expect(r.env.data.map((m: any) => m.id)).toEqual(['m2', 'm3', 'm5', 'm6'])
+    expect(r.env.page).toEqual({ cursor: '1789990000500', has_more: true })
+    expect(state.connects).toBe(1)
+    expect(state.sent).toEqual(c.result.sent.slice(0, 7))
+  })
+
   it('风控：RGV587 → RISK_CONTROL（captcha），退出码 5', async () => {
     const c = loadCase('xianyu', 'item_detail')
     const blocked = { ...c, responses: [{ status: 200, headers: {}, body: { api: 'mtop.taobao.idle.pc.detail', data: { url: 'https://x' }, ret: ['RGV587_ERROR::SM::哎哟喂,被挤爆啦,请稍后重试!'] } }] }
@@ -470,6 +607,16 @@ describe('xianyu 参数与解析', () => {
     expect(await resolveItem(x, `https://www.goofish.com/item?spm=a.b&id=${ITEM_ID}&categoryId=1`)).toBe(ITEM_ID)
     expect(await resolveItem(x, `【闲鱼】https://h5.m.goofish.com/item?itemId=${ITEM_ID} 点击链接直接打开`)).toBe(ITEM_ID)
     await expect(resolveItem(x, 'abc')).rejects.toMatchObject({ code: 'USAGE' })
+  })
+
+  it('用户：纯数字、@goofish、主页链接、分享文本里的主页链接、me', async () => {
+    const x = xOf()
+    expect(await resolveUser(x, PEER_ID)).toBe(PEER_ID)
+    expect(await resolveUser(x, `${PEER_ID}@goofish`)).toBe(PEER_ID)
+    expect(await resolveUser(x, `https://www.goofish.com/personal?userId=${PEER_ID}`)).toBe(PEER_ID)
+    expect(await resolveUser(x, `快来看看 https://h5.m.goofish.com/app/idleFish-F2e/fish-mini-home/pages/personal?userid=${PEER_ID}&spm=a 的主页`)).toBe(PEER_ID)
+    expect(await resolveUser(x, 'me')).toBe(MY_ID)
+    await expect(resolveUser(x, 'abc')).rejects.toMatchObject({ code: 'USAGE' })
   })
 
   it('会话 ID：带不带 @goofish 都行', () => {

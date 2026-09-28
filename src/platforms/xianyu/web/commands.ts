@@ -10,10 +10,10 @@ import { reconnecting } from '../../../core/stream.js'
 import { isGuest, paged } from '../../../core/toolkit.js'
 import * as api from './api.js'
 import { unsignedMtop, Xianyu, xianyu } from './client.js'
-import { createChatFrame, createdCid, FIRST_CURSOR, Im, listFrame, type OutgoingMessage, sendMsgFrame } from './im.js'
+import { createChatFrame, createdCid, FIRST_CURSOR, historyPages, Im, type OutgoingMessage, sendMsgFrame } from './im.js'
 import * as norm from './normalize.js'
 import { COOKIE_DOMAIN, itemUrl } from './profile.js'
-import { resolveConversation, resolveItem } from './resolve.js'
+import { resolveConversation, resolveItem, resolveUser } from './resolve.js'
 import { decrypt } from './sign.js'
 
 type Ctx = HandlerContext
@@ -157,19 +157,42 @@ export async function itemPublish(ctx: Ctx) {
 
 // ================================================================ msg
 
+/**
+ * 消息记录。上游 list_all_conversations 在一条连接上按 nextCursor 一直翻到底；这里也在同一条连接上翻，
+ * 翻到 `--limit` 条或（`--all`）没有更多为止，不让 core 每页重新取 token、建连接、注册。
+ * 接口从新到旧给；取最新的那些条，再像上游一样反转成从旧到新。`page.cursor` 接着往更早翻。
+ */
 export async function msgHistory(ctx: Ctx) {
   const x = await xianyu(ctx)
   x.requireLogin()
   const cid = resolveConversation(ctx.args.conversation!)
   const cursor = ctx.cursor ?? FIRST_CURSOR
   if (!/^\d+$/.test(cursor)) throw new CatbusError('USAGE', `--cursor 不对：${cursor}`, { hint: '用上次输出的 page.cursor' })
+  const { limit, all } = ctx.options as { limit?: number; all?: boolean }
+  // 不带 --limit / --all 时只取一页
+  const want = limit ?? (all ? Infinity : 0)
   const im = await Im.open(x)
   try {
     await im.ready()
-    const res = await im.request(listFrame(cid, cursor))
-    const body = res.body ?? {}
-    const list = ((body.userMessageModels as unknown[]) ?? []).map((m) => norm.historyMessage(m, cid))
-    return paged(list, body.nextCursor, Number(body.hasMore) === 1)
+    let models: any[] = []
+    let next: string | null = null
+    let more = false
+    for await (const page of historyPages(im, cid, cursor)) {
+      models.push(...page.models)
+      next = page.nextCursor
+      more = page.hasMore
+      if (models.length >= want) break
+    }
+    if (want > 0 && models.length > want) {
+      // 截在一页中间：游标是消息的 createAt（往更早翻），从保留下来最早的那条接着翻，被截掉的下次还能取到
+      models = models.slice(0, want)
+      const at = models.at(-1)?.message?.createAt
+      if (at != null) {
+        next = String(at)
+        more = true
+      }
+    }
+    return paged(models.reverse().map((m) => norm.historyMessage(m, cid)), next, more)
   } finally {
     im.close()
   }
@@ -183,38 +206,61 @@ async function uploadImage(x: Xianyu, input: string): Promise<{ media: Media; me
   return { media, message: { type: 'image', image_url: media.url, width: media.width ?? 0, height: media.height ?? 0 } }
 }
 
-/** 已有会话的对方：取最近一页消息，找不是自己发的那条。 */
+/** 找对方时最多往前翻几页（每页 20 条）。 */
+const PEER_PAGES = 10
+
+/**
+ * 已有会话的对方：照上游 list_all_conversations 在同一条连接上往更早翻，找不是自己发的消息；
+ * 自己发的消息带 `extension.receiver` 时也认。都找不到（对方从没回过）就报错，让用户改用 --to。
+ */
 async function peerOf(im: Im, x: Xianyu, cid: string): Promise<string> {
-  const res = await im.request(listFrame(cid, FIRST_CURSOR))
-  for (const model of (res.body?.userMessageModels as unknown[]) ?? []) {
-    const id = norm.historyMessage(model, cid).from?.id
-    if (id && id !== x.myId) return id
+  let pages = 0
+  let more = false
+  for await (const page of historyPages(im, cid, FIRST_CURSOR)) {
+    for (const model of page.models) {
+      const sender = norm.historyMessage(model, cid).from?.id
+      const receiver = (model as any)?.message?.extension?.receiver
+      for (const id of [sender, receiver == null ? null : String(receiver)]) if (id && id !== x.myId) return id
+    }
+    more = page.hasMore
+    if (++pages >= PEER_PAGES) break
   }
-  throw new CatbusError('USAGE', `会话 ${cid} 里找不到对方发的消息，无法确定收信人`, { hint: '联系卖家用 --item <商品>' })
+  const where = more ? `最近 ${pages} 页消息` : '全部消息记录'
+  throw new CatbusError('USAGE', `会话 ${cid} 的${where}里只有你自己发的消息，确定不了收信人`, {
+    hint: '用 --to <对方用户>（可加 --item <商品>）发送',
+  })
+}
+
+/** 要新建（或取回已有）会话的对方与商品；null 表示发到 --conversation 指定的会话。 */
+async function chatTarget(x: Xianyu, o: { to?: string; item?: string }): Promise<{ peer: string; item?: string } | null> {
+  if (o.to != null) {
+    // 主动发给指定用户（上游 create_chat 不给 item_id 时用写死的默认商品）；带 --item 时就这件商品联系，卖家可以借此联系买家
+    const peer = await resolveUser(x, o.to)
+    if (peer === x.myId) throw new CatbusError('USAGE', '不能给自己发私信')
+    return { peer, ...(o.item != null ? { item: await resolveItem(x, o.item) } : {}) }
+  }
+  if (o.item == null) return null
+  // 只给商品：取商品详情拿卖家
+  const id = await resolveItem(x, o.item)
+  const seller = norm.item((await api.itemInfo(x, id)).data).author?.id
+  if (!seller) throw new CatbusError('UPSTREAM', '商品详情里没有卖家 ID')
+  if (seller === x.myId) throw new CatbusError('USAGE', '这是你自己的商品，不能给自己发私信', { hint: '联系买家用 --to <买家> --item <商品>' })
+  return { peer: seller, item: id }
 }
 
 /**
- * 发私信。`--item`：取商品详情拿卖家，建会话（create_chat），再发（send_msg）；
- * `--conversation`：直接发到已有会话。文字和图片都有时依次发送，返回最后一条。
+ * 发私信：
+ * - `--to <user>`：建会话（create_chat，默认商品）再发（send_msg）；加 `--item` 时按这件商品建会话；
+ * - `--item`：取商品详情拿卖家，建会话，再发；
+ * - `--conversation`：发到已有会话，对方从消息记录里找。
+ * 文字和图片都有时依次发送，返回最后一条。
  */
 export async function msgSend(ctx: Ctx): Promise<Message> {
   const x = await xianyu(ctx)
   x.requireLogin()
   const o = ctx.options as { to?: string; conversation?: string; item?: string; image?: string[]; video?: string }
   if (o.video != null) throw new CatbusError('UNSUPPORTED', '闲鱼私信不支持发视频')
-  if (o.to != null) {
-    throw new CatbusError('UNSUPPORTED', '闲鱼的会话挂在商品上，不能只按用户发送', {
-      hint: '联系卖家用 --item <商品>；回复已有会话用 --conversation <会话 ID>',
-    })
-  }
-  let item: { id: string; seller: string } | null = null
-  if (o.item != null) {
-    const id = await resolveItem(x, o.item)
-    const detail = norm.item((await api.itemInfo(x, id)).data)
-    if (!detail.author?.id) throw new CatbusError('UPSTREAM', '商品详情里没有卖家 ID')
-    item = { id, seller: detail.author.id }
-    if (item.seller === x.myId) throw new CatbusError('USAGE', '这是你自己的商品，不能给自己发私信')
-  }
+  const chat = await chatTarget(x, o)
 
   const outgoing: { media: Media[]; message: OutgoingMessage }[] = []
   if (ctx.args.text != null) outgoing.push({ media: [], message: { type: 'text', text: ctx.args.text } })
@@ -228,11 +274,11 @@ export async function msgSend(ctx: Ctx): Promise<Message> {
     await im.ready()
     let cid: string
     let peer: string
-    if (item) {
-      const created = createdCid(await im.request(createChatFrame(x.myId, item.seller, item.id)))
+    if (chat) {
+      const created = createdCid(await im.request(createChatFrame(x.myId, chat.peer, chat.item)))
       if (!created) throw new CatbusError('UPSTREAM', '建立会话失败：响应里没有会话 ID')
       cid = created
-      peer = item.seller
+      peer = chat.peer
     } else {
       cid = resolveConversation(o.conversation!)
       peer = await peerOf(im, x, cid)
