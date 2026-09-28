@@ -18,7 +18,8 @@ jobs:
     needs: ci
     runs-on: ubuntu-latest
     env:
-      # 首次发布用 NPM_TOKEN；在 npm 上配好 trusted publishing 后可以删掉这个 secret，走 OIDC
+      # 首次发布用 NPM_TOKEN；在 npm 上配好 trusted publishing 后可以删掉这个 secret，走 OIDC。
+      # 仓库目前是私有的，npm 只给公开仓库生成 provenance，所以发布时不带 --provenance；仓库公开后再加回来
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v7
@@ -40,7 +41,7 @@ jobs:
           if npm view "@cv-cat/catbus-assets-jd@$version" version >/dev/null 2>&1; then
             echo "@cv-cat/catbus-assets-jd@$version 已发布，跳过"
           else
-            npm publish "./cv-cat-catbus-assets-jd-$version.tgz" --access public --provenance
+            npm publish "./cv-cat-catbus-assets-jd-$version.tgz" --access public
           fi
       - name: publish catbus-cli
-        run: npm publish ./catbus-cli-*.tgz --access public --provenance
+        run: npm publish ./catbus-cli-*.tgz --access public

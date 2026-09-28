@@ -731,6 +731,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 - 发布：推送 `v*` tag 触发 `.github/workflows/release.yml`，先跑完整 CI，再发布 CI 里测过的同一份 tarball。
   - 顺序：先发 assets-jd（该版本还没发布时），再发 `catbus-cli`。
   - 需要仓库 secret `NPM_TOKEN`，对 `catbus-cli` 和 `@cv-cat` org 有发布权限；在 npm 上配好 trusted publishing 后可以改用 OIDC。
+  - 仓库目前是私有的，发布不带 `--provenance`（npm 只给公开仓库生成 provenance）。仓库公开后再加回来。
 - 以后要提供 SDK 时，通过 `package.json` 的 `exports` 暴露，现在不做。
 
 ### 7.3 依赖选型
