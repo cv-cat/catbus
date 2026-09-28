@@ -341,8 +341,8 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 | tiktok | 收藏夹公开 / 私密与加内容、发布互动开关、`item related` 与私信翻页、按房间号操作直播、`live media`、另一组通知 | 移植中 |
 | x | 同步上游新提交（长推、thread、Article 长文）、账号密码登录（castle token）、搜索媒体标签、引用推文、私信翻页与成员资料 | 移植中 |
 | jd | 403 时区分登录失效与风控、订单时间范围、按订单咨询客服、评价条数、收货地区、国际手机号、`msg listen` 其余消息类型、`item related` 改用 diviner | 移植中 |
-| xianyu | 主动给指定用户发私信（`--to`，可配 `--item`）、发布原价、`msg history` 翻页复用长连 | 移植中 |
-| taobao | `msg history` 翻页复用长连 | 移植中 |
+| xianyu | 主动给指定用户发私信（`--to`，可配 `--item`）、发布原价（`--original-price`）、`msg history` 同一条长连翻页并按从旧到新排列 | 已补，待真机验证。`--limit` 截在页中间时的游标取最早一条的 `createAt`（推断） |
+| taobao | `msg history` 同一条长连翻页并按从旧到新排列 | 已补，待真机验证（游标推断同闲鱼） |
 | weibo | 发布「粉丝可见」（新增 `--visibility fans` 标准取值）、`item search` 改标 ◐ | 已补。PC 端详情不移植：weibo.com 是单页应用，上游取的 `$CONFIG` 里没有正文 |
 | core | 翻页游标重复时停止（`--all` 防死循环） | 已补 |
 
