@@ -180,7 +180,10 @@
 - **API**
   - `apis/weibo_apis.py` 的 `WeiboApis`：`get_self_info`、`getUserInfo`、`getUserPosted`、`getWordComments`、`getWorkInfo`、`searchSome`、`get_user_all_posted`
   - `apis/weibo_mobile_apis.py` 的 `WeiboMobileApis`（m.weibo，不需要 cookie）：`getWorkInfo`、`searchSome`。游客走这一路。
-  - `apis/weibo_creator_apis.py` 的 `WeiboCreaterApis.post_weibo`
+  - `apis/weibo_creator_apis.py` 的 `WeiboCreaterApis.post_weibo`。`type`（请求里的 `visible`）：0 公开、1 仅自己、6 朋友圈（互相关注）、10 粉丝，对应 `--visibility public / private / friends / fans`
+- **没有移植的**
+  - `WeiboApis.getWorkInfo(url)`：请求 `weibo.com/<uid>/<mblogid>`，只取页面里的 `window.$CONFIG`。现在的 weibo.com 是单页应用，页面只是一个壳，`$CONFIG` 是全站配置（登录时多一个当前用户 `user`，`get_self_info` 取的就是它），没有微博正文；正文由前端另外请求 `/ajax/statuses/show`，上游没有这个接口。上游自己的 `app.py` 取详情也走 `WeiboMobileApis.getWorkInfo`。
+  - `WeiboApis.searchSome`：只发请求，解析被注释掉，永远返回 None。
 - **JS 资产**：`static/weibo.js` 存在，但 Python 里没有引用，不复制。
 
 ### xianyu — XianYuApis
