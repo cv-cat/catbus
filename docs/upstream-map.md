@@ -146,9 +146,16 @@
 - **上游凭证来源**：仓库根目录的 `session.json`（`utils/session.py` 写入），`cookies.txt` 是兼容镜像。
 - **API**（静态方法，第一个参数为 `auth`）
   - `apis/bili_apis.py` 的 `BiliApi`：`get_nav`、`search_type`、`get_video_info(bvid/aid)`、`get_video_detail`、`get_play_url`、`get_danmaku_seg`、`get_replies(oid)`、`get_user_info(mid)`、`get_user_videos`、`get_all_user_videos`、`get_rcmd_feed`、`get_popular`、`get_subtitle_view`、`report_heartbeat`
-  - `apis/bili_creator_apis.py`：`post_video`、`delete_archive`、`get_my_archives`、`post_dynamic`、`remove_dynamic`、`save_article_draft`、`submit_article`
-  - `apis/bili_interact_apis.py`：`like`、`add_coin`、`favour`、`triple`、`add_reply`、`delete_reply`、`send_danmaku`
-  - `apis/bili_live_apis.py`：`get_room_info`、`send_gift`、`send_danmaku`、`start_live`、`stop_live`
+  - `apis/bili_creator_apis.py`：`post_video`、`submit_archive`（转载来源、同步动态、禁止转载）、`delete_archive`、`get_my_archives`、`post_dynamic`、`remove_dynamic`、`save_article_draft`、`submit_article`、`get_article_draft`、`delete_article_draft`
+  - `apis/bili_interact_apis.py`：`like`、`add_coin(also_like)`、`favour(add_media_ids, del_media_ids)`、`triple`、`add_reply(type_, root, parent)`、`delete_reply(type_)`、`send_danmaku(color, fontsize, mode)`
+  - `apis/bili_live_apis.py`：`get_room_init`、`get_room_by_mid`、`get_room_info`、`send_gift`、`send_danmaku(color, mode, reply_mid, reply_uname)`、`start_live`、`stop_live`
+- **catbus 的对应**（不直观的几处）
+  - `item related` 取 `get_video_detail` 返回的 `Related`；`item search --type article` 是 `search_type(search_type='article')`。
+  - 评论区类型按参数识别：稿件 1、专栏（cv 号）12、动态 17。
+  - 直播间参数传主播时，先用 `get_room_by_mid` 换房间号。
+  - 推荐流翻页时，把上一批的 `av_<aid>`（已关注为 `av_n_<aid>`）作为 `last_showlist` 带上；格式见 bilibili-API-collect，上游只给了参数。
+  - 长连接 `live/server.py`：op 3 的人气值和没有专门映射的 cmd 都输出为 Event `other`。
+  - `delete_archive` 需要极验结果（`validate` / `seccode` / `challenge`），上游没有自动过验证，catbus 的 `item delete` 标 ◐，不带验证时报 `RISK_CONTROL`。
 - **JS 资产**
   - `tools/sc_encrypt_bridge.js`：`apis/bili_gaia_apis.py:662` 调用，做风控指纹的加密上报。
   - 它还需要 `_gt/bili-sc-sdk.js`（`bili_gaia_apis.py:67`）。这是从 CDN 下载的第三方 SDK，上游不入库，多数环境里不存在。缺它时上游只发明文上报，已实证写接口照样成功。
