@@ -60,6 +60,21 @@ export async function videoInfo(b: Bili, bvid: string) {
   return b.get(`${API}/x/web-interface/wbi/view`, { headers: h.get(), query: await b.wbi([['bvid', bvid]]) })
 }
 
+/** 稿件完整信息，含相关推荐 `Related`（上游 get_video_detail）。 */
+export async function videoDetail(b: Bili, bvid: string, page = 1) {
+  const h = headers('GET').referer(`${MAIN}/video/${bvid}`)
+  const params = withLocation(
+    [
+      ['aid', bv2av(bvid)],
+      ['p', page],
+      ['isGaiaAvoided', 'false'],
+      ['platform', 'web'],
+    ],
+    '1315873',
+  )
+  return b.get(`${API}/x/web-interface/wbi/view/detail`, { headers: h.get(), query: await b.wbi(params) })
+}
+
 export async function playerInfo(b: Bili, aid: string | number, cid: string | number) {
   const h = headers('GET').referer(`${MAIN}/`)
   const params = withLocation(
@@ -110,6 +125,7 @@ export async function danmakuSeg(b: Bili, aid: string | number, cid: string | nu
   return b.bytes({ url: `${API}/x/v2/dm/wbi/web/seg.so`, headers: h.get(), query: await b.wbi(params) })
 }
 
+/** 评论区：type 1 视频（oid 为 aid）、12 专栏（cv 号）、17 动态（动态 ID）；mode 3 热门、2 时间。 */
 export async function replies(b: Bili, oid: string | number, type = 1, page = 1, mode = 3) {
   const h = headers('GET').referer(`${MAIN}/`)
   const params: Pairs = [
@@ -273,7 +289,8 @@ export function triple(b: Bili, bvid: string) {
   return b.post(`${API}/x/web-interface/archive/like/triple`, { headers: h.get(), form })
 }
 
-export async function addReply(b: Bili, oid: string, message: string, type = 1, root = 0, parent = 0) {
+/** 发评论；回复楼中楼时 root 为根评论、parent 为被回复的那条，parent 缺省同 root。 */
+export async function addReply(b: Bili, oid: string, message: string, type = 1, root: string | number = '', parent: string | number = '') {
   const h = headers('FORM').referer(`${MAIN}/`)
   const query = await b.wbiDm([])
   const form: Pairs = [
@@ -302,17 +319,25 @@ export function deleteReply(b: Bili, oid: string, rpid: string, type = 1) {
 /** 弹幕的 rnd：会话内自增序号（上游 itertools.count(1)），每条命令从 1 开始。 */
 let dmSeq = 0
 
-export async function sendVideoDanmaku(b: Bili, aid: string, cid: string | number, message: string, progress = 0) {
+export interface DanmakuStyle {
+  /** 十进制颜色，默认白色。 */
+  color?: number
+  fontsize?: number
+  /** 1 滚动、4 底部、5 顶部。 */
+  mode?: number
+}
+
+export async function sendVideoDanmaku(b: Bili, aid: string, cid: string | number, message: string, progress = 0, style: DanmakuStyle = {}) {
   const h = headers('FORM').referer(`${MAIN}/`)
   const query = await b.wbiDm([
     ['web_location', '1315873'],
     ['csrf', b.csrf],
   ])
   const form: Pairs = [
-    ['color', 16777215],
-    ['fontsize', 25],
+    ['color', style.color ?? 16777215],
+    ['fontsize', style.fontsize ?? 25],
     ['pool', 0],
-    ['mode', 1],
+    ['mode', style.mode ?? 1],
     ['type', 1],
     ['oid', cid],
     ['msg', message],
@@ -372,30 +397,39 @@ export function uploadCover(b: Bili, data: Uint8Array, suffix: string) {
 }
 
 export interface ArchiveInput {
+  /** 每项一个分 P。 */
   videos: { filename: string; title?: string; desc?: string; biz_id?: unknown }[]
   title: string
   tid: number
   tag: string
   cover?: string
   desc?: string
+  /** 1 自制、2 转载。 */
+  copyright?: number
+  /** 转载来源，copyright 为 2 时必填。 */
+  source?: string
   private?: boolean
+  /** 同步到动态的文案。 */
+  dynamic?: string
+  /** 1 禁止转载。 */
+  noReprint?: number
 }
 
 export function submitArchive(b: Bili, a: ArchiveInput) {
   const h = headers('POST', { origin: ORIGIN.member, sameOrigin: true }).referer(UPLOAD_PAGE)
   const body = {
-    copyright: 1,
-    source: '',
+    copyright: a.copyright ?? 1,
+    source: a.source ?? '',
     cover: a.cover ?? '',
     title: a.title,
     tid: a.tid,
     tag: a.tag,
     desc: a.desc ?? '',
     desc_format_id: 0,
-    dynamic: '',
+    dynamic: a.dynamic ?? '',
     recreate: -1,
     interactive: 0,
-    no_reprint: 1,
+    no_reprint: a.noReprint ?? 1,
     subtitle: { open: 0, lan: '' },
     videos: a.videos.map((v) => ({ filename: v.filename, title: v.title || a.title, desc: v.desc ?? '', cid: v.biz_id ?? null })),
     human_type2: 0,
@@ -419,12 +453,14 @@ export function submitArchive(b: Bili, a: ArchiveInput) {
   })
 }
 
-export function deleteArchive(b: Bili, aid: string) {
+/** 撤稿。平台要求先过极验，不带验证结果固定返回 340022（上游 delete_archive）。 */
+export function deleteArchive(b: Bili, aid: string, gt?: { validate: string; seccode?: string; challenge?: string }) {
   const h = headers('FORM', { origin: ORIGIN.member, sameOrigin: true }).referer('https://member.bilibili.com/platform/upload-manager/article')
   const form: Pairs = [
     ['aid', aid],
     ['csrf', b.csrf],
   ]
+  if (gt?.validate) form.push(['validate', gt.validate], ['seccode', gt.seccode || `${gt.validate}|jordan`], ['challenge', gt.challenge ?? ''])
   return b.post(`${MEMBER}/x/web/archive/delete`, { headers: h.get(), form })
 }
 
@@ -471,14 +507,25 @@ export function removeDynamic(b: Bili, id: string) {
   return b.post(`${API}/x/dynamic/feed/operate/remove`, { headers: h.get(), query: [['csrf', b.csrf]], json: { dyn_id_str: id } })
 }
 
-function articleForm(b: Bili, title: string, content: string, category: number, bannerUrl: string): Pairs {
+export interface ArticleInput {
+  title: string
+  /** HTML 正文。 */
+  content: string
+  category?: number
+  bannerUrl?: string
+  /** 逗号分隔。 */
+  tags?: string
+  summary?: string
+}
+
+function articleForm(b: Bili, a: ArticleInput): Pairs {
   return [
-    ['title', title],
-    ['content', content],
-    ['summary', ''],
-    ['banner_url', bannerUrl],
-    ['category', category],
-    ['tags', ''],
+    ['title', a.title],
+    ['content', a.content],
+    ['summary', a.summary ?? ''],
+    ['banner_url', a.bannerUrl ?? ''],
+    ['category', a.category ?? 0],
+    ['tags', a.tags ?? ''],
     ['list_id', 0],
     ['reprint', 0],
     ['media_id', 0],
@@ -488,17 +535,32 @@ function articleForm(b: Bili, title: string, content: string, category: number, 
   ]
 }
 
-export function saveArticleDraft(b: Bili, title: string, content: string, category = 0, bannerUrl = '') {
-  const h = headers('FORM').referer('https://member.bilibili.com/read/editor/')
-  return b.post(`${API}/x/article/creative/draft/addupdate`, { headers: h.get(), form: articleForm(b, title, content, category, bannerUrl) })
+const EDITOR = 'https://member.bilibili.com/read/editor/'
+
+/** 保存专栏草稿；传 aid 时更新已有草稿。返回的 aid 是草稿 ID。 */
+export function saveArticleDraft(b: Bili, a: ArticleInput, aid?: string) {
+  const h = headers('FORM').referer(EDITOR)
+  const form = articleForm(b, a)
+  if (aid) form.push(['aid', aid])
+  return b.post(`${API}/x/article/creative/draft/addupdate`, { headers: h.get(), form })
 }
 
-export function submitArticle(b: Bili, aid: string, title: string, content: string, category = 0, bannerUrl = '') {
-  const h = headers('FORM').referer('https://member.bilibili.com/read/editor/')
-  return b.post(`${API}/x/article/creative/article/submit`, {
-    headers: h.get(),
-    form: [['aid', aid], ...articleForm(b, title, content, category, bannerUrl)],
-  })
+export function submitArticle(b: Bili, aid: string, a: ArticleInput) {
+  const h = headers('FORM').referer(EDITOR)
+  return b.post(`${API}/x/article/creative/article/submit`, { headers: h.get(), form: [['aid', aid], ...articleForm(b, a)] })
+}
+
+/** 按 ID 读专栏草稿（上游 get_article_draft）。 */
+export function articleDraft(b: Bili, aid: string) {
+  return b.get(`${API}/x/article/creative/draft/view`, { headers: headers('GET').referer(EDITOR).get(), query: [['aid', aid]] })
+}
+
+export function deleteArticleDraft(b: Bili, aid: string) {
+  const form: Pairs = [
+    ['aid', aid],
+    ['csrf', b.csrf],
+  ]
+  return b.post(`${API}/x/article/creative/draft/delete`, { headers: headers('FORM').referer(EDITOR).get(), form })
 }
 
 // ================================================================ 直播（BiliLiveApi）
@@ -640,24 +702,30 @@ export function sendGift(
   return b.post(`${LIVE_API}${path}`, { headers: h.get(), query })
 }
 
-export async function sendLiveDanmaku(b: Bili, roomId: string | number, msg: string) {
+export interface LiveDanmakuStyle extends DanmakuStyle {
+  /** 回复某位观众。 */
+  replyMid?: string | number
+  replyUname?: string
+}
+
+export async function sendLiveDanmaku(b: Bili, roomId: string | number, msg: string, style: LiveDanmakuStyle = {}) {
   const h = headers('GET', { origin: LIVE }).referer(`${LIVE}/${roomId}`)
   const query = await b.wbi([['web_location', '444.8']])
   const fields: [string, string | number][] = [
     ['bubble', 0],
     ['msg', msg],
-    ['color', 16777215],
-    ['mode', 1],
+    ['color', style.color ?? 16777215],
+    ['mode', style.mode ?? 1],
     ['room_type', 0],
     ['jumpfrom', 0],
-    ['reply_mid', 0],
+    ['reply_mid', style.replyMid ?? 0],
     ['reply_attr', 0],
     ['replay_dmid', ''],
     ['statistics', STATISTICS],
     ['reply_type', 0],
-    ['reply_uname', ''],
+    ['reply_uname', style.replyUname ?? ''],
     ['data_extend', dumps({ trackid: '-99998' })],
-    ['fontsize', 25],
+    ['fontsize', style.fontsize ?? 25],
     ['rnd', rand.nowSeconds()],
     ['roomid', roomId],
     ['csrf', b.csrf],

@@ -53,6 +53,7 @@
 - kuaishou `user likes`：只支持 me
 - kuaishou `user followers / following`：只支持 me
 - `user items --sort` 取值：bilibili latest / views / collects
+- `user items --keyword`：bilibili
 - `user collects --area`：jd
 
 ## item
@@ -61,28 +62,34 @@
 |---|---|---|---|---|---|---|---|---|---|---|
 | item get | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | ✓ | ✓ |
 | item search | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ○ | ○ | ✓ | ✓ |
-| item related | ○ | ○ | ✓ | ○ | ✓ | — | ○ | ○ | ◐ | — |
+| item related | ○ | ○ | ✓ | ✓ | ✓ | — | ○ | ○ | ◐ | — |
 | item list | ✓ | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — |
 | item media / download | ✓ | ✓ | ◐ | ✓ | ✓ | ○ | — | — | — | ✓ |
 | item like / unlike | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — | ✓ |
 | item collect / uncollect | ○ | ✓ | ✓ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ |
 | item repost / unrepost | — | — | ○ | — | — | ○ | — | — | — | ✓ |
 | item publish | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | — | — | ✓ |
-| item delete | ○ | ○ | ○ | ✓ | ○ | ○ | ○ | — | — | ✓ |
+| item delete | ○ | ○ | ○ | ◐ | ○ | ○ | ○ | — | — | ✓ |
 | item categories | — | — | — | ✓ | — | — | ○ | — | — | — |
 
 - weibo `item search`：只能取第一页
 - jd `item related`：用第一个相关搜索词的搜索结果
+- bilibili `item delete`：需要人机验证（极验点选），catbus 还不能自动通过，会报 RISK_CONTROL
 - `item get --area`：jd
 - `item search --sort` 取值：xhs general / latest / popular / comments / collects；bilibili general / views / latest / collects；jd general / sales / price_asc / price_desc / comments；x general / latest
-- `item search --type` 取值：xhs all / video / image
+- `item search --type` 取值：xhs all / video / image；bilibili video / article
 - `item search --area`：jd
 - `item related --area`：jd
+- `item collect --folder`：bilibili
+- `item uncollect --folder`：bilibili
 - `item publish --allow-comment`：tiktok
 - `item publish --allow-duet`：tiktok
 - `item publish --allow-stitch`：tiktok
 - `item publish --allow-content-reuse`：tiktok
 - `item publish --allow-ai-remix`：tiktok
+- `item publish --source`：bilibili
+- `item publish --dynamic`：bilibili
+- `item publish --allow-reprint`：bilibili
 - `item publish --shipping`：xianyu
 - `item publish --postage`：xianyu
 - `item publish --pickup`：xianyu
@@ -113,6 +120,8 @@
 - weibo `comment list`：只有一级评论
 - jd `comment list`：只有第一页；--limit N 在一次请求里取 N 条
 - `comment list --product`：xhs、douyin、tiktok、kuaishou
+- `comment list --sort` 取值：bilibili popular / latest
+- `comment add --root`：bilibili
 
 ## feed 与 keyword
 
@@ -190,6 +199,10 @@
 - tiktok `live send`：--gift 规划中
 - tiktok `live media`：上游没有解析拉流地址：取自 /api-live/user/room 的 liveRoom.streamData，或 room/enter 的 stream_url
 - `live list --category`：xhs
+- `live send --color`：bilibili
+- `live send --font-size`：bilibili
+- `live send --position`：bilibili
+- `live send --reply-user`：bilibili
 - `live start --category`：bilibili
 
 ## 平台扩展
@@ -199,5 +212,5 @@
 | 平台 | 命令 |
 |---|---|
 | tiktok | `folder add` ✓ |
-| bilibili | `item coin` ✓ · `item triple` ✓ · `item subtitles` ✓ · `danmaku list` ✓ · `danmaku send` ✓ · `dynamic publish` ✓ · `dynamic delete` ✓ · `article publish` ✓ |
+| bilibili | `item coin` ✓ · `item triple` ✓ · `item subtitles` ✓ · `danmaku list` ✓ · `danmaku send` ✓ · `dynamic publish` ✓ · `dynamic delete` ✓ · `article publish` ✓ · `draft get` ✓ · `draft delete` ✓ |
 | jd | `order list` ✓ · `cart count` ✓ · `coupon list` ✓ |

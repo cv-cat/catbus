@@ -6,6 +6,7 @@ import type { Comment, Event, Item, ItemStatus, Live, User, UserRef } from '../.
 export const videoUrl = (bvid: string) => `https://www.bilibili.com/video/${bvid}`
 export const spaceUrl = (mid: unknown) => `https://space.bilibili.com/${mid}`
 export const liveUrl = (room: unknown) => `https://live.bilibili.com/${room}`
+export const articleUrl = (cvid: unknown) => `https://www.bilibili.com/read/cv${cvid}`
 
 const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'", '#x27': "'", nbsp: ' ' }
 
@@ -66,6 +67,41 @@ export function searchVideo(v: any): Item {
       created_at: n.time(v.pubdate),
       cover: n.url(v.pic),
       stats: { views: n.count(v.play), likes: n.count(v.like), comments: n.count(v.review), collects: n.count(v.favorites) },
+    },
+    v,
+  )
+}
+
+/** 专栏搜索结果（search_type=article）。id 用 `cv<id>`，可以直接传给 comment list。 */
+export function searchArticle(v: any): Item {
+  return n.item(
+    {
+      id: `cv${v.id}`,
+      kind: 'article',
+      url: articleUrl(v.id),
+      title: plain(v.title),
+      text: plain(v.desc),
+      author: ref(v.mid, null),
+      created_at: n.time(v.pub_time),
+      cover: n.url(v.image_urls?.[0]),
+      stats: { views: n.count(v.view), likes: n.count(v.like), comments: n.count(v.reply) },
+    },
+    v,
+  )
+}
+
+/** 专栏草稿（article/creative/draft/view 的 data）。 */
+export function articleDraft(v: any, id: string, mid: string): Item {
+  return n.item(
+    {
+      id: n.id(v.id ?? v.aid ?? id),
+      kind: 'article',
+      title: n.str(v.title),
+      text: n.str(v.content),
+      author: ref(v.author?.mid ?? mid, v.author?.name),
+      created_at: n.time(v.ctime ?? v.mtime),
+      cover: n.url(v.banner_url || v.image_urls?.[0]),
+      status: 'draft',
     },
     v,
   )
@@ -214,10 +250,31 @@ export function searchLive(v: any): Live {
   )
 }
 
-/** 直播弹幕长连的业务消息 → Event；不关心的消息返回 null。 */
-export function liveEvent(msg: any): Event | null {
-  const cmd = String(msg?.cmd ?? '').split(':')[0]
-  const d = msg.data ?? {}
+/** 没有专门映射的 cmd：能读出内容的给内容，其余给 cmd 名（上游 live/server.py 的 on('*') 兜底）。 */
+function otherText(cmd: string, d: any): string {
+  switch (cmd) {
+    case 'WATCHED_CHANGE':
+      return n.str(d.text_large) ?? cmd
+    case 'ROOM_CHANGE':
+      return d.title ? `直播间标题：${d.title}` : cmd
+    case 'LIVE':
+      return '开播'
+    case 'PREPARING':
+      return '下播'
+    default:
+      return cmd || 'UNKNOWN'
+  }
+}
+
+/** 弹幕长连的心跳回复（op 3）：人气值（上游 live/server.py 的 popularity）。 */
+export function popularityEvent(value: number): Event {
+  return n.event({ type: 'other', text: `人气值 ${value}` }, { op: 3, popularity: value })
+}
+
+/** 直播弹幕长连的业务消息 → Event：弹幕、礼物、进场、关注、点赞，其余 cmd 为 other。 */
+export function liveEvent(msg: any): Event {
+  const cmd = String(msg?.cmd ?? '').split(':')[0]!
+  const d = msg?.data ?? {}
   switch (cmd) {
     case 'DANMU_MSG': {
       const info = msg.info ?? []
@@ -234,8 +291,13 @@ export function liveEvent(msg: any): Event | null {
       return n.event({ type: d.msg_type === 2 ? 'follow' : 'enter', time: n.time(d.timestamp) ?? undefined, user: ref(d.uid, d.uname) }, msg)
     case 'LIKE_INFO_V3_CLICK':
       return n.event({ type: 'like', user: ref(d.uid, d.uname) }, msg)
+    case 'GUARD_BUY':
+      return n.event(
+        { type: 'gift', time: n.time(d.start_time) ?? undefined, user: ref(d.uid, d.username), gift: { name: String(d.gift_name ?? ''), count: Number(d.num ?? 1) } },
+        msg,
+      )
     default:
-      return null
+      return n.event({ type: 'other', time: n.time(d.timestamp) ?? undefined, user: d.uid ? ref(d.uid, d.uname) : null, text: otherText(cmd, d) }, msg)
   }
 }
 

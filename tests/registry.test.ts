@@ -59,7 +59,8 @@ describe('注册表', () => {
       douyin: [],
       tiktok: ['folder add'],
       bilibili: [
-        'article publish', 'danmaku list', 'danmaku send', 'dynamic delete', 'dynamic publish', 'item coin', 'item subtitles', 'item triple',
+        'article publish', 'danmaku list', 'danmaku send', 'draft delete', 'draft get', 'dynamic delete', 'dynamic publish', 'item coin', 'item subtitles',
+        'item triple',
       ],
       kuaishou: [],
       weibo: [],
@@ -86,7 +87,7 @@ describe('注册表', () => {
       for (const c of web(p).commands.values()) if (c.confirm) confirm.add(p.id === 'bilibili' && c.extension ? `bilibili ${c.key}` : c.key)
     }
     expect([...confirm].sort()).toEqual([
-      'bilibili dynamic delete', 'bilibili item coin', 'bilibili item triple',
+      'bilibili draft delete', 'bilibili dynamic delete', 'bilibili item coin', 'bilibili item triple',
       'comment delete', 'folder delete', 'item delete', 'live send', 'msg delete', 'msg revoke',
     ])
     const send = VOCAB['live send']!.confirm as (o: object) => boolean
