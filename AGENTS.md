@@ -256,6 +256,16 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | xianyu | `item publish [--shipping free\|distance\|fixed\|none]` | 私有选项：运费方式，默认 `free` 包邮；`distance` 按距离计费，`fixed` 一口价，`none` 无需邮寄 | Item |
 | xianyu | `item publish [--postage <金额>]` | 私有选项：一口价运费（元），配合 `--shipping fixed` | Item |
 | xianyu | `item publish [--pickup]` | 私有选项：支持自提 | Item |
+| douyin | `item search <kw> [--length short\|medium\|long] [--range all\|seen\|unseen\|following]` | 私有选项：视频时长（1 分钟内 / 1–5 分钟 / 5 分钟以上）、搜索范围（不限 / 看过 / 没看过 / 关注的人）。`--type video` 走视频频道搜索 | Item[] |
+| douyin | `user search <kw> [--fans 0_1k\|1k_1w\|1w_10w\|10w_100w\|100w_] [--user-type common\|enterprise\|personal]` | 私有选项：粉丝数区间、用户类型（普通 / 企业 / 个人认证） | User[] |
+| douyin | `item publish [--poi-name <名称>] [--series <合集 id>] [--hotspot <热点词>] [--no-download]` | 私有选项：地点名称（配合 `--poi`）、加入合集、关联热点、不允许下载 | Item |
+| douyin | `item collect <item> --folder <id>`、`item uncollect <item> --folder <id>` | 私有选项：收藏后移进某个收藏夹 / 从某个收藏夹移出（仍保留收藏） | `{id}` |
+| douyin | `msg send [--file <path>] [--share <item\|user\|url>]` | 私有选项：发文件（≤10MB）、分享作品 / 用户名片 / 网页卡片 | Message |
+| douyin | `live rank <room> [--ranking contribution\|thousand]` | 私有选项：榜单，默认贡献榜，`thousand` 为千票榜 | Rank[] |
+| douyin | `live like <room> [--count N]` | 私有选项：一次点赞的次数 | `{id}` |
+| douyin | `comment list <product> --product [--label <标签名或 id>]` | 私有选项：商品评价按标签筛选（好评 / 差评 / 有图等） | Comment[] |
+| douyin | `notice list [--group all\|fans\|mention\|comment\|like\|danmaku]` | 私有选项：通知分组，不带时为默认分组 | Notice[] |
+| douyin | `auth login --method sms --sso` | 私有选项：短信登录改走 `login.douyin.com` 页的 SSO 链 | Account |
 | jd | `order list` | 订单 | Order[] |
 | jd | `order list [--range 3m\|this_year\|<年份>]` | 私有选项：订单的时间范围。`3m` 近三个月（默认），`this_year` 今年内，`2025` 这样的四位年份表示那一年 | Order[] |
 | jd | `cart count` | 购物车数量 | `{count}` |
