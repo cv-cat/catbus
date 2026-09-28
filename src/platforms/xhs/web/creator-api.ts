@@ -1,9 +1,12 @@
 import { CookieJar } from '../../../core/cookies.js'
 import { CatbusError } from '../../../core/errors.js'
+import { mp4AvgFrameRate, mp4VideoTrack } from '../../../core/mp4.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import { authError, scope } from '../../../core/toolkit.js'
-import { cspl, Creator } from './creator.js'
+import { isAuthFailure } from './client.js'
+import { cspl, Creator, PyFloat, pyRound3 } from './creator.js'
+import { imageSize } from './image.js'
 import { generateA1, generateWebId } from './login.js'
 import { creatorProfileData, creatorRapFingerprint, generateWebsectiga, rapParam, uploadSignature, urlSign } from './js.js'
 import { AS, COOKIE_DOMAIN, CREATOR, CREATOR_ORDER, CREATOR_REFERENCE, CUSTOMER, EDITH, type Headers, LOGIN_LANG, navigationHeaders, orderedHeaders, ROS_UPLOAD, UA, WEB } from './profile.js'
@@ -85,6 +88,7 @@ export async function uploadPermit(c: Creator, mediaType: 'image' | 'video'): Pr
     }
     break
   }
+  if (isAuthFailure(last)) throw authError(c.ctx, String(last?.msg ?? last?.message ?? '') || undefined)
   throw new CatbusError('UPSTREAM', String(last?.msg ?? last?.message ?? '获取上传许可失败'), { detail: { code: last?.code } })
 }
 
@@ -128,6 +132,76 @@ export function queryTranscode(c: Creator, videoId: string) {
   })
 }
 
+/** upload_media(image)：上传图片，宽高按上游 get_file_info（宽大于两倍高时，高按宽的一半报）。 */
+export async function uploadImage(c: Creator, data: Uint8Array, name = '图片'): Promise<ImageInfo> {
+  const size = imageSize(data)
+  if (!size) throw new CatbusError('USAGE', `无法识别的图片：${name}`)
+  const up = await uploadMedia(c, data, 'image')
+  const height = size.width > 2 * size.height ? Math.floor(size.width / 2) : size.height
+  return { fileId: up.fileId, width: size.width, height, size: data.length, mimeType: 'image/png' }
+}
+
+/**
+ * extract_video_cover_and_metadata 的元数据部分。上游用 opencv 打开视频：帧率是 ffmpeg 的 avg_frame_rate，
+ * 帧数是 stsz 的样本数，宽高是编码尺寸（旋转 90° / 270° 时对调），时长 = int(帧数 / 帧率 × 1000)。
+ * 这里读 MP4 的盒子得到同样的值；读不出来（不是 MP4 / MOV）时返回 null。
+ */
+export function videoMetadata(video: Uint8Array): VideoMeta | null {
+  let t
+  try {
+    t = mp4VideoTrack(video)
+  } catch {
+    return null
+  }
+  const fps = mp4AvgFrameRate(t)
+  let width = t.codedWidth || t.displayWidth
+  let height = t.codedHeight || t.displayHeight
+  if (t.rotation % 180 !== 0) [width, height] = [height, width]
+  const duration = fps ? Math.trunc((t.sampleCount / fps) * 1000) : 0
+  return {
+    video: {
+      bitrate: null,
+      colour_primaries: 'BT.709',
+      duration,
+      format: 'AVC',
+      frame_rate: fps ? new PyFloat(pyRound3(fps)) : 0,
+      height,
+      matrix_coefficients: 'BT.709',
+      rotation: 0,
+      transfer_characteristics: 'BT.709',
+      width,
+    },
+    audio: { bitrate: null, channels: 2, duration, format: 'AAC', sampling_rate: 48000 },
+  }
+}
+
+/** 读不出元数据时的占位（时长、帧率为 0，宽高取封面）：平台转码后自己补全。 */
+function emptyVideoMeta(width: number, height: number): VideoMeta {
+  return {
+    video: { bitrate: null, colour_primaries: 'BT.709', duration: 0, format: 'AVC', frame_rate: 0, height, matrix_coefficients: 'BT.709', rotation: 0, transfer_characteristics: 'BT.709', width },
+    audio: { bitrate: null, channels: 2, duration: 0, format: 'AAC', sampling_rate: 48000 },
+  }
+}
+
+/**
+ * post_note 的视频部分：元数据 → 上传视频 → 上传封面 → 轮询转码 → get_post_note_video_data。
+ * 上游用 opencv 截首帧当封面；catbus 不带视频解码器，封面由调用方给。
+ */
+export async function videoNoteData(c: Creator, note: NoteCommon, video: Uint8Array, cover: Uint8Array): Promise<Record<string, any>> {
+  const meta = videoMetadata(video)
+  if (!meta) c.ctx.log.warn('读不出视频的时长、宽高、帧率（只支持 MP4 / MOV），按 0 上报，由平台转码后补全')
+  const up = await uploadMedia(c, video, 'video')
+  const coverInfo = await uploadImage(c, cover, '封面')
+  for (let i = 0; i < 20; i++) {
+    const r = await queryTranscode(c, up.videoId!)
+    const d = r?.data ?? {}
+    if (!r?.success || d.hasFirstFrame === true || d.has_first_frame === true || d.firstFrameFileId || d.first_frame_file_id || [2, 'success', 'SUCCESS'].includes(d.status) || !Object.keys(d).length) break
+    if (i === 19) throw new CatbusError('UPSTREAM', '视频转码超时：轮询 20 次仍未完成')
+    await rand.sleep(3000, c.ctx.signal)
+  }
+  return videoData(note, up.fileId, coverInfo, meta ?? emptyVideoMeta(coverInfo.width, coverInfo.height))
+}
+
 /** encryption：图片文件加密（www 域）。 */
 export function fileEncryption(c: Creator, fileId: string) {
   return c.request(cspl('/web_api/sns/v5/creator/file/encryption', { file_id: fileId, type: 'image', ts: String(rand.now()), sign: urlSign(fileId) }), '', 'GET', { target: WEB })
@@ -152,7 +226,7 @@ export interface VideoMeta {
   audio: Record<string, unknown>
 }
 
-interface NoteCommon {
+export interface NoteCommon {
   title: string
   desc: string
   postTime: number | null
@@ -200,7 +274,7 @@ export function imageNoteData(n: NoteCommon, images: ImageInfo[]): Record<string
 }
 
 /** get_post_note_video_data。 */
-export function videoNoteData(n: NoteCommon, videoFileId: string, cover: ImageInfo, meta: VideoMeta): Record<string, any> {
+export function videoData(n: NoteCommon, videoFileId: string, cover: ImageInfo, meta: VideoMeta): Record<string, any> {
   const duration = Number(meta.video.duration ?? 0)
   const vid = `spectrum/${videoFileId}`
   const cid = `spectrum/${cover.fileId}`
@@ -230,7 +304,7 @@ export function videoNoteData(n: NoteCommon, videoFileId: string, cover: ImageIn
       segments: {
         count: 1,
         need_slice: false,
-        items: [{ mute: 0, speed: 1, start: 0, duration: Math.round((duration / 1000) * 1000) / 1000, transcoded: 0, media_source: 1, original_metadata: { video: meta.video, audio: meta.audio } }],
+        items: [{ mute: 0, speed: 1, start: 0, duration: new PyFloat(pyRound3(duration / 1000)), transcoded: 0, media_source: 1, original_metadata: { video: meta.video, audio: meta.audio } }],
       },
       entrance: 'web',
     },

@@ -29,6 +29,38 @@ export const PUBLISH_COOKIE_ORDER = [
 /** Creator 的 splice_str：query 值里的 `:` 不转义。 */
 export const cspl = (api: string, params: Record<string, Scalar>) => `${api}?${urlencode(Object.entries(params).map(([k, v]) => [k, v ?? ''] as [string, Scalar]), { safe: ':' })}`
 
+/**
+ * Python 的 float。请求体由 Python 的 json.dumps 写出，整数值写成 `25.0`；签名 JS 拿到的是 JSON 解析后的对象，
+ * JSON.stringify 写成 `25`。toJSON 让签名侧照 JS 写，pyJson 让请求体照 Python 写。
+ */
+export class PyFloat {
+  constructor(readonly value: number) {}
+  toJSON(): number {
+    return this.value
+  }
+}
+
+const floatRepr = (x: number) => (Number.isInteger(x) ? `${x}.0` : String(x))
+
+/** 与 compactJson 相同，PyFloat 按 Python 的 float 写。 */
+export function pyJson(v: unknown): string {
+  if (v instanceof PyFloat) return floatRepr(v.value)
+  if (Array.isArray(v)) return `[${v.map(pyJson).join(',')}]`
+  if (v && typeof v === 'object' && !(v instanceof Map)) return `{${Object.entries(v).map(([k, x]) => `${compactJson(k)}:${pyJson(x)}`).join(',')}}`
+  return compactJson(v)
+}
+
+/** Python 的 round(x, 3)：按精确值四舍五入，恰好一半时取偶数（只有 x × 16 为奇数时才会恰好一半）。 */
+export function pyRound3(x: number): number {
+  const q = x * 16
+  if (Number.isInteger(q) && q % 2 !== 0) {
+    const v = x * 1000
+    const f = Math.floor(v)
+    return (f % 2 === 0 ? f : f + 1) / 1000
+  }
+  return Number(x.toFixed(3))
+}
+
 export interface CreatorSignOptions {
   tier?: string
   b1Profile?: string
@@ -162,7 +194,7 @@ export class Creator extends Session {
     headers['x-s'] = r.xs
     headers['x-t'] = String(r.xt)
     headers['x-s-common'] = r.xs_common
-    const body = data === '' || data == null ? '' : typeof data === 'string' ? data : compactJson(data)
+    const body = data === '' || data == null ? '' : typeof data === 'string' ? data : pyJson(data)
     return { headers, body }
   }
 

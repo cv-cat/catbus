@@ -31,6 +31,7 @@
 | `blackboxprotobuf`（无 schema 解码） | protobufjs 的 Reader |
 | `onnxruntime` | onnxruntime-web |
 | `opencv`、`scikit-image`、`scipy`、`numpy` | @techstark/opencv-js，其余手工移植 |
+| `opencv` 的视频探测（`cv2.VideoCapture` 取帧率、帧数、宽高） | `core/mp4.ts` 读 MP4 / MOV 的盒子（xhs、tiktok）；截帧要解码，不做 |
 | `Pillow` | @napi-rs/canvas |
 | `ddddocr` | 移植到 onnxruntime-web 上 |
 | `pydantic` | zod |
@@ -85,8 +86,9 @@
 - **上游凭证来源**：`.env` 的 `COOKIES`。
 - **API**（实例方法）
   - `apis/xhs_pc_apis.py` 的 `XHS_Apis`：`get_note_info(url)`、`get_user_info`、`get_user_me`、`get_user_all_notes`、`get_user_all_like_note_info`、`get_user_all_collect_note_info`、`search_note`、`search_some_note`、`search_user`、`get_note_all_comment`、`get_homefeed_recommend`、`get_unread_message`、`get_all_metions`、`get_note_no_water_video/img`
-  - `apis/xhs_creator_apis.py` 的 `XHS_Creator_Apis`：`post_note`、`upload_media`、`get_all_posted_notes`
+  - `apis/xhs_creator_apis.py` 的 `XHS_Creator_Apis`：`post_note`、`upload_media`、`get_all_posted_notes`。视频的时长、宽高、帧率上游用 opencv（`extract_video_cover_and_metadata`），catbus 读 MP4 盒子算出同样的值；首帧封面要解码，catbus 不做，视频发布要 `--cover`
   - 直播：`apis/xhs_live.py`
+  - 创作者中心的登录态由主站会话桥接（`xhs_utils/xhs_auth.py` 的 `XHSUnifiedAuth.creator_auth` → `XHSCreatorAuth.from_pc_auth`）：catbus 存进 `creator` scope 复用，失效时自动重新桥接一次
   - 蒲公英 `apis/xhs_pugongying_apis.py`、千帆 `apis/xhs_qianfan_apis.py`：不移植（AGENTS 4.12）
 - **JS 资产**（npm 依赖 `crypto-js`）
   - `xhs_utils/xhs_core/js/`：`sign.js`、`xs_common.js`、`b1.js`、`mns.js`、`websectiga_cli.js`、`websectiga_env.js`，以及 mns keystream 的 JSON

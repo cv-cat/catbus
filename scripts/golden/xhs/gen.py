@@ -13,12 +13,16 @@
   build_pc_live_headers 必然抛错（所有直播 HTTP 接口都不可用）。这里在排序前去掉它（catbus 同样处理）。
 - 上游 JS 的 crypto.randomBytes（x-rap-param 的 mask / xorKey / nonce / 填充，webSsk 的 x6/x7 随机数）
   由 crypto_determinism.cjs 改为从已固定的 Math.random 取值，catbus 的签名 vm 做同样替换。
+
+测试视频（VIDEOS）在启动时用 opencv 写出（mp4v），再改 moov 里的 stts / tkhd / mdhd 造出不规则帧时长、旋转等情形；
+视频字节记在用例里（input 或 result），TS 侧直接读，不需要重新生成。
 """
 
 import base64
 import json
 import os
 import secrets
+import struct
 import subprocess
 import sys
 from pathlib import Path
@@ -343,6 +347,16 @@ def main():
     c('creator_transcode', creator(lambda a: a.query_transcode('vid1')))
     c('creator_encryption', creator(lambda a: a.encryption('fid1')))
     c('creator_post_note', creator(lambda a: a.post_note({'title': '标题', 'desc': '正文', 'media_type': 'image', 'images': [PNG], 'type': 1})))
+    # 视频发布：opencv 取元数据、截首帧当封面 → 上传视频 → 上传封面 → 转码查询 → 发布（25 帧 / 25fps：帧率 25.0、时长 1.0 秒）
+    c('creator_post_video', creator(lambda a: a.post_note({'title': '标题', 'desc': '正文', 'media_type': 'video', 'video': VIDEOS['25fps'], 'type': 1})),
+      video=base64.b64encode(VIDEOS['25fps']).decode())
+
+    # 视频元数据（extract_video_cover_and_metadata 的 opencv 部分）：各种帧率、stts、旋转
+    def video_metadata():
+        return [{'name': k, 'video': base64.b64encode(v).decode(), 'metadata': XHS_Creator_Apis.extract_video_cover_and_metadata(None, v)[1]}
+                for k, v in VIDEOS.items()]
+
+    c('video_metadata', video_metadata)
 
     def creator_login():
         api = XHSCreatorLoginApi()
@@ -408,6 +422,99 @@ NO_WATER_URLS = [
 ]
 # 3x2 PNG（上游 get_file_info 用 opencv 解出宽高）
 PNG = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAIAAAASFvFNAAAAEElEQVR4nGP4z8AAQQxwFgBB0gX7h/C5SAAAAABJRU5ErkJggg==')
+
+
+# ---------------------------------------------------------------- 测试视频（opencv 写 mp4v，再改 moov 里的盒子）
+_CONTAINERS = {b'moov', b'trak', b'mdia', b'minf', b'stbl', b'edts', b'dinf'}
+
+
+def _boxes(d, start=0, end=None):
+    end = len(d) if end is None else end
+    out, p = [], start
+    while p + 8 <= end:
+        size, typ = struct.unpack('>I4s', d[p:p + 8])
+        if size < 8:
+            break
+        out.append([typ, _boxes(d, p + 8, p + size) if typ in _CONTAINERS else bytes(d[p + 8:p + size])])
+        p += size
+    return out
+
+
+def _build(boxes):
+    out = b''
+    for typ, body in boxes:
+        payload = _build(body) if isinstance(body, list) else body
+        out += struct.pack('>I4s', 8 + len(payload), typ) + payload
+    return out
+
+
+def _patch(d, path, fn):
+    """改一个盒子的内容（moov 在 mdat 之后，改大小不影响 stco 偏移）."""
+    boxes = _boxes(d)
+    node = boxes
+    for i, name in enumerate(path):
+        box = next(b for b in node if b[0] == name)
+        if i == len(path) - 1:
+            box[1] = fn(box[1])
+        node = box[1]
+    return _build(boxes)
+
+
+def _video(fps, frames, w, h):
+    import cv2
+    import numpy as np
+    path = os.path.join(tempfile.gettempdir(), f'catbus_golden_{w}x{h}_{fps}_{frames}.mp4')
+    writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
+    for i in range(frames):
+        writer.write(np.full((h, w, 3), (i * 20) % 255, np.uint8))
+    writer.release()
+    with open(path, 'rb') as f:
+        data = f.read()
+    os.remove(path)
+    return data
+
+
+STBL = [b'moov', b'trak', b'mdia', b'minf', b'stbl']
+TKHD = [b'moov', b'trak', b'tkhd']
+MDHD = [b'moov', b'trak', b'mdia', b'mdhd']
+
+
+def _stts(entries):
+    return lambda _: struct.pack('>II', 0, len(entries)) + b''.join(struct.pack('>II', n, dl) for n, dl in entries)
+
+
+def _rotate(a, b, c, d):
+    def fn(body):
+        body = bytearray(body)
+        m = len(body) - 8 - 36
+        body[m:m + 36] = struct.pack('>9i', a, b, 0, c, d, 0, 0, 0, 1 << 30)
+        return bytes(body)
+    return fn
+
+
+def _timescale(ts):
+    def fn(body):
+        body = bytearray(body)
+        body[12:16] = struct.pack('>I', ts)
+        return bytes(body)
+    return fn
+
+
+def _videos():
+    base = _video(25, 25, 32, 24)
+    return {
+        '25fps': base,
+        '29.97fps': _video(29.97, 10, 16, 16),
+        # 最后一帧时长不同：avg_frame_rate = 12800 × 10 / (9 × 512 + 1024)
+        'irregular_stts': _patch(_video(25, 10, 32, 24), STBL + [b'stts'], _stts([(9, 512), (1, 1024)])),
+        'rotate_90': _patch(_video(30, 12, 32, 16), TKHD, _rotate(0, 65536, -65536, 0)),
+        'rotate_180': _patch(_video(30, 12, 32, 16), TKHD, _rotate(-65536, 0, 0, -65536)),
+        # 帧率 12832 × 16 / 8192 = 25.0625：round(x, 3) 恰好一半，Python 取偶数 25.062
+        'round_half_even': _patch(_video(25, 16, 32, 24), MDHD, _timescale(12832)),
+    }
+
+
+VIDEOS = _videos()
 
 
 if __name__ == '__main__':

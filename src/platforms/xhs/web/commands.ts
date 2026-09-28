@@ -8,10 +8,10 @@ import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { AuthStatus, Category, Credential, Event, Media, Message, Notice, NoticeCount } from '../../../core/schemas.js'
 import { reconnecting } from '../../../core/stream.js'
-import { isGuest, paged } from '../../../core/toolkit.js'
+import { authError, isGuest, paged } from '../../../core/toolkit.js'
 import { GUEST } from '../../../core/auth-store.js'
 import * as api from './api.js'
-import { Pc } from './client.js'
+import { isAuthFailure, Pc } from './client.js'
 import { Creator } from './creator.js'
 import * as capi from './creator-api.js'
 import { CreatorLogin } from './creator-api.js'
@@ -59,20 +59,42 @@ async function run<T>(ctx: Ctx, fn: (p: Pc) => Promise<T>): Promise<T> {
   }
 }
 
-/** 创作者中心还没初始化、主站已登录时，用主站登录态换取（上游 XHSUnifiedAuth 的懒初始化）。 */
-function needsCreatorBridge(ctx: Ctx): boolean {
-  if (isGuest(ctx) || ctx.credential.scopes.creator?.cookies.length) return false
+/** 主站已登录（有 web_session），可以用来换取创作者中心的登录态。 */
+function canBridge(ctx: Ctx): boolean {
+  if (isGuest(ctx)) return false
   return (ctx.credential.scopes.main?.cookies ?? []).some((c) => c.name === 'web_session' && c.value)
 }
 
+/**
+ * 创作者中心的会话。上游 XHSUnifiedAuth.creator_auth 每个进程都从主站会话重新桥接（XHSCreatorAuth.from_pc_auth）；
+ * catbus 把桥接结果存在 creator scope 里复用：
+ * - creator scope 为空、主站已登录：先桥接；
+ * - creator scope 已有 cookie，但创作者接口报登录失效：用主站登录态重新桥接一次，再重试。
+ *   主站本身也失效时，桥接的 user/info 验收会报 AUTH_EXPIRED，照常报错。
+ */
 async function creator<T>(ctx: Ctx, fn: (c: Creator) => Promise<T>): Promise<T> {
   let c: Creator
-  if (needsCreatorBridge(ctx)) {
+  const bridged = canBridge(ctx) && !ctx.credential.scopes.creator?.cookies.length
+  if (bridged) {
     ctx.log.info('第一次使用创作者中心：用主站的登录态初始化，不需要再扫码')
     c = await capi.creatorFromPc(ctx)
   } else c = new Creator(ctx)
   c.requireScope()
   try {
+    return await fn(c)
+  } catch (err) {
+    const expired = err instanceof CatbusError && (err.code === 'AUTH_REQUIRED' || err.code === 'AUTH_EXPIRED')
+    if (!expired || bridged || !canBridge(ctx)) throw err
+    ctx.log.info('创作者中心的登录态失效了：用主站的登录态重新初始化')
+    const saved = ctx.credential.scopes.creator
+    try {
+      c = await capi.creatorFromPc(ctx)
+    } catch (bridgeErr) {
+      // 桥接没成功：creator scope 还原成原来的，和 finally 里保存的签名状态对得上
+      if (saved) ctx.credential.scopes.creator = saved
+      throw bridgeErr
+    }
+    c.requireScope()
     return await fn(c)
   } finally {
     c.save()
@@ -368,29 +390,16 @@ export async function itemDownload(ctx: Ctx) {
   })
 }
 
-/** 上游 extract_video_cover_and_metadata 用 opencv 解视频；这里不解码，时长、宽高由平台转码后补全。 */
-function videoMeta(width = 0, height = 0): capi.VideoMeta {
-  return {
-    video: { bitrate: null, colour_primaries: 'BT.709', duration: 0, format: 'AVC', frame_rate: 0, height, matrix_coefficients: 'BT.709', rotation: 0, transfer_characteristics: 'BT.709', width },
-    audio: { bitrate: null, channels: 2, duration: 0, format: 'AAC', sampling_rate: 48000 },
-  }
-}
-
-async function uploadImage(c: Creator, file: LocalMedia): Promise<capi.ImageInfo> {
-  const size = imageSize(file.data)
-  if (!size) throw new CatbusError('USAGE', `无法识别的图片：${file.filename}`)
-  const up = await capi.uploadMedia(c, file.data, 'image')
-  // 上游 get_file_info：宽大于两倍高时，高按宽的一半报
-  const height = size.width > 2 * size.height ? Math.floor(size.width / 2) : size.height
-  return { fileId: up.fileId, width: size.width, height, size: file.data.length, mimeType: 'image/png' }
-}
+const uploadImage = (c: Creator, file: LocalMedia) => capi.uploadImage(c, file.data, file.filename)
 
 export async function itemPublish(ctx: Ctx) {
+  const o = ctx.options as Record<string, any>
+  if (!o.image?.length && !o.video) throw new CatbusError('USAGE', '小红书发布需要 --image 或 --video', { hint: 'catbus xhs item publish --title <标题> --text <正文> --image <图片>' })
+  if (o.image?.length && o.video) throw new CatbusError('USAGE', '--image 和 --video 只能用一个')
+  if (o.visibility === 'friends') throw new CatbusError('UNSUPPORTED', '小红书发布不支持 --visibility friends', { hint: '可选：public、private' })
+  // 上游用 opencv 截视频首帧当封面；catbus 不带视频解码器，封面要自己给
+  if (o.video && !o.cover) throw new CatbusError('USAGE', '小红书视频发布需要 --cover（catbus 不解码视频，截不了首帧）', { hint: 'catbus xhs item publish --video a.mp4 --cover a.jpg --title <标题>' })
   return creator(ctx, async (c) => {
-    const o = ctx.options as Record<string, any>
-    if (!o.image?.length && !o.video) throw new CatbusError('USAGE', '小红书发布需要 --image 或 --video', { hint: 'catbus xhs item publish --title <标题> --text <正文> --image <图片>' })
-    if (o.image?.length && o.video) throw new CatbusError('USAGE', '--image 和 --video 只能用一个')
-    if (o.visibility === 'friends') throw new CatbusError('UNSUPPORTED', '小红书发布不支持 --visibility friends', { hint: '可选：public、private' })
     const postTime = o.schedule ? Date.parse(o.schedule) : null
     let postLoc: Record<string, unknown> | null = null
     if (o.poi) {
@@ -403,16 +412,9 @@ export async function itemPublish(ctx: Ctx) {
     let data: Record<string, any>
     if (o.video) {
       const video = await readMedia(c.http, o.video)
-      const up = await capi.uploadMedia(c, video.data, 'video')
-      if (!o.cover) throw new CatbusError('USAGE', '小红书视频发布需要 --cover（上游用 opencv 截首帧，catbus 不解码视频）')
-      const cover = await uploadImage(c, await readMedia(c.http, o.cover))
-      for (let i = 0; i < 20; i++) {
-        const r = await capi.queryTranscode(c, up.videoId!)
-        const d = r?.data ?? {}
-        if (!r?.success || d.hasFirstFrame || d.has_first_frame || d.firstFrameFileId || d.first_frame_file_id || [2, 'success', 'SUCCESS'].includes(d.status) || !Object.keys(d).length) break
-        await rand.sleep(3000, ctx.signal)
-      }
-      data = capi.videoNoteData(note, up.fileId, cover, videoMeta(cover.width, cover.height))
+      const cover = await readMedia(c.http, o.cover)
+      if (!imageSize(cover.data)) throw new CatbusError('USAGE', `无法识别的图片：${cover.filename}`)
+      data = await capi.videoNoteData(c, note, video.data, cover.data)
     } else {
       const images: capi.ImageInfo[] = []
       for (const input of o.image as string[]) images.push(await uploadImage(c, await readMedia(c.http, input)))
@@ -425,6 +427,7 @@ export async function itemPublish(ctx: Ctx) {
       data.common.desc += ` #${t.name}[话题]# `
     }
     const body = await capi.postNote(c, data)
+    if (!body?.success && isAuthFailure(body)) throw authError(ctx, String(body?.msg ?? body?.message ?? '') || undefined)
     if (!body?.success) throw new CatbusError('UPSTREAM', String(body?.msg ?? body?.message ?? '发布失败'), { detail: { code: body?.code, result: body?.result } })
     const id = String(body?.data?.id ?? body?.data?.note_id ?? '')
     return n.item({ id, kind: o.video ? 'video' : 'image', url: id ? norm.noteUrl(id) : null, title: o.title ?? null, text: o.text ?? null, status: 'reviewing' }, body)

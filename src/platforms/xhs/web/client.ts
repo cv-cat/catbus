@@ -316,7 +316,7 @@ export class Session {
     if (body?.success !== false && (body?.code === undefined || body.code === 0 || body.code === 1000)) return body?.data
     const code = body.code
     const message = String(body.msg ?? (body as any).message ?? '')
-    if (code === -100 || code === -101 || code === -104 || /登录|未登录|login/i.test(message)) throw authError(this.ctx, message || undefined)
+    if (isAuthFailure(body)) throw authError(this.ctx, message || undefined)
     if (code === 300012 || code === 300013 || code === 300015 || code === 461 || code === 471 || /验证|captcha/i.test(message)) {
       throw new CatbusError('RISK_CONTROL', `小红书风控：${message || code}`, { detail: { kind: 'captcha', code, message } })
     }
@@ -325,6 +325,12 @@ export class Session {
     }
     throw new CatbusError('UPSTREAM', message || `小红书返回错误 ${code}`, { detail: { code, message } })
   }
+}
+
+/** 登录墙 / 登录失效的业务响应：-100 / -101 / -104，或提示里说要登录。 */
+export function isAuthFailure(body: any): boolean {
+  const code = body?.code
+  return code === -100 || code === -101 || code === -104 || /登录|未登录|login/i.test(String(body?.msg ?? body?.message ?? ''))
 }
 
 /**
