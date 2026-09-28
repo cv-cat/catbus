@@ -228,6 +228,8 @@ for (const platform of PLATFORMS) {
         if (env.error?.code === 'RISK_CONTROL') ctx.skip(`平台风控：${env.error.message}`)
         // 默认参数落在注册表 note 里写明「规划中」的取值上（例如快手的 feed list --kind recommend）
         if (env.error?.code === 'NOT_IMPLEMENTED') ctx.skip(env.error.message)
+        // 注册表 note 里写明的限制（例如 jd 的 user get 只支持 me），传入的参数不在支持范围
+        if (env.error?.code === 'UNSUPPORTED' && cmd.note) ctx.skip(`${env.error.message}（${cmd.note}）`)
 
         expect(env.ok, `${JSON.stringify(env.error)}`).toBe(true)
         expect(env.platform).toBe(p)
