@@ -5,6 +5,7 @@ import * as capi from '../src/platforms/xhs/web/creator-api.js'
 import { CreatorLogin } from '../src/platforms/xhs/web/creator-api.js'
 import { Pc, resetXraySeq } from '../src/platforms/xhs/web/client.js'
 import * as login from '../src/platforms/xhs/web/login.js'
+import * as norm from '../src/platforms/xhs/web/normalize.js'
 import { Pgy } from '../src/platforms/xhs/web/pgy.js'
 import { EDITH } from '../src/platforms/xhs/web/profile.js'
 import { deterministic } from '../src/core/rand.js'
@@ -241,5 +242,13 @@ describe('xhs 纯算', () => {
       'https://sns-webpic-qc.xhscdn.com/202609/abc/1040g008xyz!nd_dft',
     ]
     expect(urls.map(api.noWaterImage)).toEqual(loadCase('xhs', 'pc_no_water_img').result)
+  })
+
+  it('视频地址：新版 Web 的编码名混淆成 EF4 / EF5，按 h264 → EF4 → h265 → EF5 → 其余的顺序取第一个有地址的流', () => {
+    const video = (stream: any) =>
+      norm.note({ id: 'n1', note_card: { note_id: 'n1', type: 'video', video: { media: { video_id: 1, stream } } } }).media[0]?.url
+    expect(video({ EF5: [{ master_url: 'https://v/h265' }], EF4: [{ master_url: 'https://v/h264' }] })).toBe('https://v/h264')
+    expect(video({ h264: [], EF4: [{ master_url: '', backup_urls: ['https://v/backup'] }] })).toBe('https://v/backup')
+    expect(video({ EF9: [{ url: 'https://v/other' }] })).toBe('https://v/other')
   })
 })

@@ -35,11 +35,17 @@ function imageUrl(img: any): string | null {
   return n.url(list.find((x: any) => x.image_scene === 'WB_DFT')?.url ?? list[1]?.url ?? list[0]?.url ?? img?.url_default ?? img?.url)
 }
 
-/** 上游 handle_note_info 的视频地址：h264 master_url，否则 origin_video_key 拼 sns-video-bd。 */
+/** 编码的优先顺序：新版 Web 把编码名混淆成 EF4（h264）/ EF5（h265）等，优先兼容性最好的 h264，其余编码排在后面。 */
+const CODECS = ['h264', 'EF4', 'h265', 'EF5']
+
+const streamUrl = (s: any): string | undefined => s?.master_url || s?.url || s?.backup_urls?.[0] || undefined
+
+/** 上游 handle_note_info 的视频地址：按编码优先顺序取第一个有地址的流，否则 origin_video_key 拼 sns-video-bd。 */
 function videoMedia(v: any): Media | null {
   const stream = v?.media?.stream ?? {}
-  const s = [...(stream.h264 ?? []), ...(stream.h265 ?? []), ...(stream.av1 ?? [])][0]
-  const url = s?.master_url ?? s?.url ?? (v?.consumer?.origin_video_key ? `https://sns-video-bd.xhscdn.com/${v.consumer.origin_video_key}` : null)
+  const codecs = [...CODECS, ...Object.keys(stream).filter((k) => !CODECS.includes(k))]
+  const s = codecs.flatMap((c) => (Array.isArray(stream[c]) ? stream[c] : [])).find(streamUrl)
+  const url = streamUrl(s) ?? (v?.consumer?.origin_video_key ? `https://sns-video-bd.xhscdn.com/${v.consumer.origin_video_key}` : null)
   if (!url) return null
   return n.media({ id: n.idOrNull(v?.media?.video_id), type: 'video', url: n.url(url)!, width: s?.width ?? null, height: s?.height ?? null, duration: n.seconds(v?.capa?.duration ?? (s?.duration ? s.duration / 1000 : null)) }, v)
 }
