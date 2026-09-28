@@ -59,8 +59,18 @@ async function run<T>(ctx: Ctx, fn: (p: Pc) => Promise<T>): Promise<T> {
   }
 }
 
+/** 创作者中心还没初始化、主站已登录时，用主站登录态换取（上游 XHSUnifiedAuth 的懒初始化）。 */
+function needsCreatorBridge(ctx: Ctx): boolean {
+  if (isGuest(ctx) || ctx.credential.scopes.creator?.cookies.length) return false
+  return (ctx.credential.scopes.main?.cookies ?? []).some((c) => c.name === 'web_session' && c.value)
+}
+
 async function creator<T>(ctx: Ctx, fn: (c: Creator) => Promise<T>): Promise<T> {
-  const c = new Creator(ctx)
+  let c: Creator
+  if (needsCreatorBridge(ctx)) {
+    ctx.log.info('第一次使用创作者中心：用主站的登录态初始化，不需要再扫码')
+    c = await capi.creatorFromPc(ctx)
+  } else c = new Creator(ctx)
   c.requireScope()
   try {
     return await fn(c)

@@ -1,9 +1,12 @@
+import { CookieJar } from '../../../core/cookies.js'
 import { CatbusError } from '../../../core/errors.js'
 import * as rand from '../../../core/rand.js'
+import type { HandlerContext } from '../../../core/registry.js'
+import { authError, scope } from '../../../core/toolkit.js'
 import { cspl, Creator } from './creator.js'
 import { generateA1, generateWebId } from './login.js'
 import { creatorProfileData, creatorRapFingerprint, generateWebsectiga, rapParam, uploadSignature, urlSign } from './js.js'
-import { AS, CREATOR, CREATOR_ORDER, CREATOR_REFERENCE, CUSTOMER, EDITH, type Headers, LOGIN_LANG, navigationHeaders, orderedHeaders, ROS_UPLOAD, UA, WEB } from './profile.js'
+import { AS, COOKIE_DOMAIN, CREATOR, CREATOR_ORDER, CREATOR_REFERENCE, CUSTOMER, EDITH, type Headers, LOGIN_LANG, navigationHeaders, orderedHeaders, ROS_UPLOAD, UA, WEB } from './profile.js'
 
 /**
  * 上游 apis/xhs_creator_apis.py（XHS_Creator_Apis）与 apis/xhs_creator_login_apis.py（XHSCreatorLoginApi）。
@@ -315,12 +318,30 @@ export class CreatorLogin {
     const webId = generateWebId(a1)
     for (const [k, v] of Object.entries({ ets: String(ts), webBuild: CREATOR_REFERENCE.release.webBuild, xsecappid: 'ugc', loadts: String(ts + rand.randint(50, 200)), a1, webId })) c.setCookie(k, v)
     c.sync()
-    const h: Headers = { 'user-agent': UA, accept: 'application/json, text/plain, */*', 'accept-language': LOGIN_LANG, 'sec-fetch-dest': 'empty', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site', referer: `${CREATOR}/`, priority: 'u=1, i', origin: CREATOR, 'content-type': 'application/json' }
-    await post(c, `${AS}/api/p/pj`, h, 'honeypot', '{"callFrom":"ugc"}')
+    await this.honeypot()
   }
 
-  /** 上游 _finish_security_bootstrap：redcaptcha → ds 程序 → sbtsource（都是 0201/nop），然后安装 DS。 */
-  async bootstrap(): Promise<void> {
+  /** 上游 _fetch_honeypot：launcher 的 honeypot 请求，不签名，响应不用。 */
+  async honeypot(): Promise<void> {
+    const h: Headers = { 'user-agent': UA, accept: 'application/json, text/plain, */*', 'accept-language': LOGIN_LANG, 'sec-fetch-dest': 'empty', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site', referer: `${CREATOR}/`, priority: 'u=1, i', origin: CREATOR, 'content-type': 'application/json' }
+    await post(this.c, `${AS}/api/p/pj`, h, 'honeypot', '{"callFrom":"ugc"}')
+  }
+
+  /**
+   * 上游 bootstrap_publish_navigation：带着主站会话加载一次发布页。响应会换出创作者中心自己的 HttpOnly 会话 cookie
+   * （customer-sso-sid、access-token-creator 等），没有这一步，之后的上传许可接口会被边缘网关拒绝（406）。
+   */
+  async publishNavigation(path = '/publish/publish?source=official'): Promise<void> {
+    const c = this.c
+    const res = await c.send({ url: CREATOR + path, headers: orderedHeaders(navigationHeaders('same-site'), CREATOR_ORDER.navigation, loginCookies(c, CREATOR), { optional: ['cookie'] }) })
+    if (res.status >= 400) throw new CatbusError('UPSTREAM', `创作者中心发布页加载失败（HTTP ${res.status}）`, { detail: { status: res.status } })
+  }
+
+  /**
+   * 上游 _finish_security_bootstrap：redcaptcha → ds 程序 → sbtsource（都是 0201/nop）。
+   * activate 为 false 时先不安装 DS：主站会话桥接过来的，还要在 0201 上发一次 user/info。
+   */
+  async bootstrap(activate = true): Promise<void> {
     const c = this.c
     const rc = await signed(c, '/api/redcaptcha/v2/getconfig', {}, 'POST', { trace: true, authorization: false, tier: '0201', b1Profile: 'login', dslPairValue: loadtsUndefined(c) })
     await post(c, `${EDITH}/api/redcaptcha/v2/getconfig`, rc.headers, 'redcaptcha', rc.body, true)
@@ -340,6 +361,18 @@ export class CreatorLogin {
 
     const sbt = await signed(c, '/api/sec/v1/sbtsource', { callFrom: 'creator-platform', appId: 'ugc' }, 'POST', { tier: '0201', b1Profile: 'login', dslPairValue: loadtsUndefined(c) })
     await post(c, `${AS}/api/sec/v1/sbtsource`, sbt.headers, 'security', sbt.body, true)
+    if (activate) await this.activate()
+  }
+
+  /** 上游 _activate_security：安装服务端 DS 程序，之后的请求进入 0101/a1。已装好时跳过。 */
+  async activate(): Promise<void> {
+    const c = this.c
+    if (c.state.securityReady && c.state.dsl && c.state.dsProgram) return
+    if (!this.pendingDsl || !this.pendingProgram) {
+      const b = await c.dsBundle()
+      this.pendingDsl ||= b.dsl
+      this.pendingProgram ||= b.program
+    }
     c.state.activateSecurity(this.pendingDsl, this.pendingProgram)
   }
 
@@ -437,12 +470,84 @@ export class CreatorLogin {
     if (!body?.success) throw new CatbusError('AUTH_REQUIRED', String(body?.msg ?? body?.message ?? '手机号登录失败'))
   }
 
-  /** 上游 XHSCreatorLoginApi.get_user_info：登录页的 user/info 验收。 */
-  async userInfo(): Promise<any> {
+  /**
+   * 上游 XHSCreatorLoginApi.get_user_info：登录页的 user/info 验收。
+   * 主站会话桥接时在发布页上发，仍在 0201/nop（mnsProfile 为 null，DSL 那半还没有）。
+   */
+  async userInfo(o: { tier?: string; mnsProfile?: string | null; dslPairValue?: string; referer?: string } = {}): Promise<any> {
     const c = this.c
-    const s = await signed(c, '/api/galaxy/user/info', '', 'GET', { referer: `${CREATOR}/login`, site: 'same-origin', trace: true, includeOrigin: false, tier: '0101', mnsProfile: 'login_ready', b1Profile: 'login' })
+    const s = await signed(c, '/api/galaxy/user/info', '', 'GET', {
+      referer: o.referer ?? `${CREATOR}/login`,
+      site: 'same-origin',
+      trace: true,
+      includeOrigin: false,
+      tier: o.tier ?? '0101',
+      ...(o.mnsProfile === null ? {} : { mnsProfile: o.mnsProfile ?? 'login_ready' }),
+      b1Profile: 'login',
+      ...(o.dslPairValue ? { dslPairValue: o.dslPairValue } : {}),
+    })
     s.headers['content-type'] = 'application/json;charset=UTF-8'
     const body = await jsonOf(await get(c, `${CREATOR}/api/galaxy/user/info`, s.headers, 'loginUserInfo'))
     return body?.success ? (body.data ?? {}) : null
   }
+}
+
+// ================================================================ 主站会话 → 创作者中心（上游 XHSCreatorAuth.from_pc_auth）
+
+/**
+ * 从主站带过去的 cookie。主站的 webBuild / xsecappid / loadts 是主站页面的，换成创作者中心的；
+ * 主站 cookie 若是从已打开的发布页复制的，会带着创作者中心的 HttpOnly 会话 cookie，一并保留。
+ */
+const SHARED_FROM_PC = new Set([
+  'abRequestId', 'ets', 'a1', 'webId', 'unread', 'gid', 'web_session', 'id_token', 'x-rednote-datactry', 'x-rednote-holderctry',
+  'websectiga', 'sec_poison_id', '_gray_did', 'customer-sso-sid', 'x-user-id-creator.xiaohongshu.com', 'customerClientId',
+  'access-token-creator.xiaohongshu.com', 'galaxy_creator_session_id', 'galaxy.creator.beaker.session.id',
+])
+
+/**
+ * 用主站的登录态初始化创作者中心，不再单独扫码（AGENTS 5.3）。浏览器从主站点「发布笔记」时就是这样：
+ * 发布页导航换出创作者中心的会话 cookie，然后创作者中心跑自己的安全初始化（0201 批次 → user/info → 安装 DS）。
+ * 结果写进凭证的 creator scope 和 device.creator，之后的创作者命令直接复用。
+ */
+export async function creatorFromPc(ctx: HandlerContext): Promise<Creator> {
+  const main = scope(ctx.credential, 'main').cookies
+  const cookies = new CookieJar((ctx.credential.scopes.creator = { cookies: [], tokens: {} }).cookies)
+  // 各子域的 acw_tc（host-only）照浏览器的 cookie 罐一起带过去，发送时排在共享 cookie 前面
+  for (const k of main) if (k.name === 'acw_tc' && !k.domain.startsWith('.')) cookies.cookies.push({ ...k })
+  const seen = new Set<string>()
+  for (const k of main) {
+    if (!SHARED_FROM_PC.has(k.name) || !k.value || seen.has(k.name)) continue
+    seen.add(k.name)
+    cookies.set(k.name, k.value, COOKIE_DOMAIN)
+  }
+  if (!seen.has('_gray_did')) cookies.set('_gray_did', rand.uuid4(), COOKIE_DOMAIN)
+  cookies.set('webBuild', CREATOR_REFERENCE.release.webBuild, COOKIE_DOMAIN)
+  cookies.set('xsecappid', 'ugc', COOKIE_DOMAIN)
+  cookies.set('loadts', String(rand.now()), COOKIE_DOMAIN)
+  delete ctx.credential.device.creator
+
+  const c = new Creator(ctx)
+  // 主站的 websectiga / gid 会让签名状态以为安全初始化已完成；创作者中心还要装自己的 DS 程序
+  c.state.securityReady = false
+  c.state.dsl = ''
+  c.state.dsProgram = ''
+  const l = new CreatorLogin(c)
+  await l.publishNavigation()
+  await l.honeypot()
+  await l.bootstrap(false)
+  const info = await l.userInfo({
+    tier: '0201',
+    mnsProfile: null,
+    dslPairValue: `${c.state.loadts};undefined`,
+    referer: `${CREATOR}/publish/publish?source=official`,
+  })
+  if (!info) throw authError(ctx, '创作者中心不认主站的登录态，请重新登录')
+  await l.activate()
+  try {
+    l.require()
+  } catch {
+    await l.completeSecurity()
+  }
+  c.save()
+  return c
 }

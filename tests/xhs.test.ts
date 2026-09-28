@@ -65,6 +65,14 @@ const CASES: Record<string, () => Promise<unknown>> = {
     await login.webprofile(p)
     return p.shared()
   },
+  creator_from_pc: async () => {
+    resetXraySeq(XRAY_SEQ)
+    const ctx = ctxWith(PC_COOKIES)
+    // gen.py 先建了 XHSPcAuth（消耗一次 tab 设备 ID 的 uuid4），再桥接
+    new Pc(ctx)
+    const c = await capi.creatorFromPc(ctx)
+    return c.shared()
+  },
   login_qrcode: async () => {
     const p = await anonymous()
     const qr = await login.qrcodeCreate(p)

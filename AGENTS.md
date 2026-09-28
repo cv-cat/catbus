@@ -465,7 +465,7 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie] [--scope
 
 - **验证码**：上游能自动过的就自动过，过不了报 `RISK_CONTROL`（`detail.kind = captcha`），退出码 5。
 - **子站点**（创作者中心、直播、IM 等）：
-  - 能自动换取的凭证，登录时一并获取；
+  - 能自动换取的凭证，登录时或第一次用到时自动获取，不需要用户再登录一次（例如 xhs 的创作者中心：用主站登录态换取）；
   - 需要单独登录的，用 `--scope <name>` 登录，各平台可用的 scope 在注册表里声明；
   - 命令缺少所需 scope 时，报 `AUTH_REQUIRED`，`hint` 带上 `--scope`。
 - **`auth status`**：在线校验，返回 AuthStatus。未登录或已失效时返回 `logged_in: false`，不报错。

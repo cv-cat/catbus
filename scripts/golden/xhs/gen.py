@@ -356,6 +356,13 @@ def main():
 
     c('creator_login', creator_login)
 
+    # 主站会话 → 创作者中心（XHSUnifiedAuth 的懒初始化，不再扫码）
+    def creator_from_pc():
+        auth = creator_auth_mod.XHSCreatorAuth.from_pc_auth(pc_auth())
+        return auth.profile.cookie_map
+
+    c('creator_from_pc', creator_from_pc)
+
     # ---------------------------------------------------------------- RWP 长连的帧与 IM protobuf（纯算）
     def rwp_frames():
         auth = pc_auth()
