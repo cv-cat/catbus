@@ -1,0 +1,151 @@
+{
+  "input": {
+    "keyword": "专栏 写作",
+    "order": "pubdate",
+    "page": 2,
+    "type": "article"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://api.bilibili.com/x/web-interface/wbi/search/type?__refresh__=true&_extra=&ad_resource=5654&category_id=&context=&dynamic_offset=24&from_source=&from_spmid=333.337&gaia_vtoken=&highlight=1&keyword=%E4%B8%93%E6%A0%8F+%E5%86%99%E4%BD%9C&order=pubdate&page=2&page_size=42&platform=pc&qv_id=eG9Jla226PLd1TrT7g88zKvqJiql5c1V&search_type=article&single_column=0&source_tag=3&web_location=1430654&w_rid=e1c3c91208a3e27436b82aa722e3d65a&wts=1790000000",
+      "headers": [
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "origin",
+          "https://search.bilibili.com"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "referer",
+          "https://search.bilibili.com/all?keyword=%E4%B8%93%E6%A0%8F%20%E5%86%99%E4%BD%9C"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ]
+      ],
+      "cookies": [
+        [
+          "buvid3",
+          "FAKE-BUVID3-0000infoc"
+        ],
+        [
+          "b_nut",
+          "1789990000"
+        ],
+        [
+          "_uuid",
+          "FAKE-UUID-0000infoc"
+        ],
+        [
+          "buvid4",
+          "FAKE-BUVID4-0000"
+        ],
+        [
+          "buvid_fp",
+          "0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "SESSDATA",
+          "fake-sessdata"
+        ],
+        [
+          "bili_jct",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "DedeUserID",
+          "10001"
+        ],
+        [
+          "DedeUserID__ckMd5",
+          "fakeckmd5"
+        ],
+        [
+          "sid",
+          "kba2fqoy"
+        ],
+        [
+          "rpdid",
+          "fake|rpdid"
+        ],
+        [
+          "PVID",
+          "1"
+        ],
+        [
+          "bili_ticket",
+          "fake.ticket"
+        ],
+        [
+          "bili_ticket_expires",
+          "1790259200"
+        ],
+        [
+          "b_lsid",
+          "52151C33_1A0C4506C7B"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "message": "0",
+        "data": {}
+      }
+    }
+  ],
+  "result": {
+    "code": 0,
+    "message": "0",
+    "data": {}
+  },
+  "error": null
+}

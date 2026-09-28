@@ -1,0 +1,206 @@
+{
+  "input": {
+    "bvid": "BV1GJ411x7h7"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://api.bilibili.com/x/web-interface/wbi/view/detail?aid=80433022&p=1&isGaiaAvoided=false&platform=web&web_location=1315873&w_rid=bee20a76777bfcdd030b4f744834db32&wts=1790000000",
+      "headers": [
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "origin",
+          "https://www.bilibili.com"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "referer",
+          "https://www.bilibili.com/video/BV1GJ411x7h7"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ]
+      ],
+      "cookies": [
+        [
+          "buvid3",
+          "FAKE-BUVID3-0000infoc"
+        ],
+        [
+          "b_nut",
+          "1789990000"
+        ],
+        [
+          "_uuid",
+          "FAKE-UUID-0000infoc"
+        ],
+        [
+          "buvid4",
+          "FAKE-BUVID4-0000"
+        ],
+        [
+          "buvid_fp",
+          "0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "SESSDATA",
+          "fake-sessdata"
+        ],
+        [
+          "bili_jct",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "DedeUserID",
+          "10001"
+        ],
+        [
+          "DedeUserID__ckMd5",
+          "fakeckmd5"
+        ],
+        [
+          "sid",
+          "kba2fqoy"
+        ],
+        [
+          "rpdid",
+          "fake|rpdid"
+        ],
+        [
+          "PVID",
+          "1"
+        ],
+        [
+          "bili_ticket",
+          "fake.ticket"
+        ],
+        [
+          "bili_ticket_expires",
+          "1790259200"
+        ],
+        [
+          "b_lsid",
+          "52151C33_1A0C4506C7B"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "message": "0",
+        "data": {
+          "bvid": "BV1GJ411x7h7",
+          "aid": 80433022,
+          "cid": 137649199,
+          "title": "测试视频",
+          "desc": "简介",
+          "pic": "http://i0.hdslb.com/x.jpg",
+          "pubdate": 1577835803,
+          "duration": 213,
+          "owner": {
+            "mid": 10001,
+            "name": "UP"
+          },
+          "stat": {
+            "view": 1000,
+            "danmaku": 3,
+            "reply": 5,
+            "favorite": 7,
+            "coin": 9,
+            "share": 11,
+            "like": 13
+          },
+          "pages": [
+            {
+              "cid": 137649199,
+              "page": 1,
+              "duration": 213
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "result": {
+    "code": 0,
+    "message": "0",
+    "data": {
+      "bvid": "BV1GJ411x7h7",
+      "aid": 80433022,
+      "cid": 137649199,
+      "title": "测试视频",
+      "desc": "简介",
+      "pic": "http://i0.hdslb.com/x.jpg",
+      "pubdate": 1577835803,
+      "duration": 213,
+      "owner": {
+        "mid": 10001,
+        "name": "UP"
+      },
+      "stat": {
+        "view": 1000,
+        "danmaku": 3,
+        "reply": 5,
+        "favorite": 7,
+        "coin": 9,
+        "share": 11,
+        "like": 13
+      },
+      "pages": [
+        {
+          "cid": 137649199,
+          "page": 1,
+          "duration": 213
+        }
+      ]
+    }
+  },
+  "error": null
+}

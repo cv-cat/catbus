@@ -78,12 +78,18 @@ def logged(fn):
 
 case('search_video', logged(lambda a: BiliApi.search_type(a, '编程 入门', 'click', 2, 'video')), keyword='编程 入门', order='click', page=2, type='video')
 case('search_user', logged(lambda a: BiliApi.search_type(a, 'bilibili', 'totalrank', 1, 'bili_user')), keyword='bilibili', type='bili_user')
+case('search_article', logged(lambda a: BiliApi.search_type(a, '专栏 写作', 'pubdate', 2, 'article')), keyword='专栏 写作', order='pubdate', page=2, type='article')
 case('video_info_nav', lambda: BiliApi.get_video_info(BiliAuth.from_cookie(COOKIES, fill_device=False), bvid=BVID), bvid=BVID)
+case('video_detail', logged(lambda a: BiliApi.get_video_detail(a, bvid=BVID)), bvid=BVID)
 case('user_info', logged(lambda a: BiliApi.get_user_info(a, '2')), mid='2')
 case('user_videos', logged(lambda a: BiliApi.get_user_videos(a, '2', page=3, order='click')), mid='2', page=3, order='click')
+case('user_videos_keyword', logged(lambda a: BiliApi.get_user_videos(a, '2', keyword='教程 入门')), mid='2', keyword='教程 入门')
 case('replies_p1', logged(lambda a: BiliApi.get_replies(a, 80433022)), oid=80433022, page=1)
 case('replies_p2', logged(lambda a: BiliApi.get_replies(a, 80433022, page=2)), oid=80433022, page=2)
+case('replies_article_latest', logged(lambda a: BiliApi.get_replies(a, 12345, type_=12, mode=2)), oid=12345, type=12, mode=2)
+case('replies_dynamic_p2', logged(lambda a: BiliApi.get_replies(a, '987654321098765432', type_=17, page=2)), oid='987654321098765432', type=17, page=2)
 case('rcmd_feed', logged(lambda a: BiliApi.get_rcmd_feed(a, fresh_idx=2)), fresh_idx=2)
+case('rcmd_feed_showlist', logged(lambda a: BiliApi.get_rcmd_feed(a, fresh_idx=3, last_showlist='av_113,av_114')), fresh_idx=3, last_showlist='av_113,av_114')
 case('popular', logged(lambda a: BiliApi.get_popular(a, page=3)), page=3)
 case('play_url', logged(lambda a: BiliApi.get_play_url(a, BVID, 137649199)), bvid=BVID, cid=137649199)
 case('player_info', logged(lambda a: BiliApi.get_player_info(a, 80433022, 137649199)), aid=80433022, cid=137649199)
@@ -93,25 +99,42 @@ case('nav', logged(lambda a: BiliApi.get_nav(a)))
 case('like', logged(lambda a: BiliInteractApi.like(a, BVID, True)), bvid=BVID, like=True)
 case('unlike', logged(lambda a: BiliInteractApi.like(a, BVID, False)), bvid=BVID, like=False)
 case('coin', logged(lambda a: BiliInteractApi.add_coin(a, BVID, 2)), bvid=BVID, num=2)
+case('coin_like', logged(lambda a: BiliInteractApi.add_coin(a, BVID, 1, also_like=True)), bvid=BVID, num=1, also_like=True)
 case('favour_add', logged(lambda a: BiliInteractApi.favour(a, 80433022, add_media_ids='123')), aid='80433022', add='123')
 case('favour_del', logged(lambda a: BiliInteractApi.favour(a, 80433022, del_media_ids='123,456')), aid='80433022', dele='123,456')
 case('fav_folders', logged(lambda a: BiliInteractApi.get_fav_folders(a)))
 case('triple', logged(lambda a: BiliInteractApi.triple(a, BVID)), bvid=BVID)
 case('reply_add', logged(lambda a: BiliInteractApi.add_reply(a, 80433022, '好看！ & ok')), oid='80433022', message='好看！ & ok')
 case('reply_add_sub', logged(lambda a: BiliInteractApi.add_reply(a, 80433022, '回复', root=555, parent=555)), oid='80433022', message='回复', root=555)
+case('reply_add_nested', logged(lambda a: BiliInteractApi.add_reply(a, 80433022, '楼中楼', root=555, parent=666)), oid='80433022', message='楼中楼', root=555, parent=666)
+case('reply_add_article', logged(lambda a: BiliInteractApi.add_reply(a, 12345, '专栏评论', type_=12)), oid='12345', message='专栏评论', type=12)
 case('reply_delete', logged(lambda a: BiliInteractApi.delete_reply(a, 80433022, 555)), oid='80433022', rpid='555')
+case('reply_delete_dynamic', logged(lambda a: BiliInteractApi.delete_reply(a, '987654321098765432', 777, type_=17)), oid='987654321098765432', rpid='777', type=17)
 case('video_danmaku', logged(lambda a: BiliInteractApi.send_danmaku(a, 80433022, 137649199, '弹幕', progress=12500)),
      aid='80433022', cid=137649199, message='弹幕', progress=12500)
+# 与上一条共用会话内的 rnd 序号（第 2 条）
+case('video_danmaku_style', logged(lambda a: BiliInteractApi.send_danmaku(a, 80433022, 137649199, '顶部红字', progress=1000, color=16711680, fontsize=18, mode=5)),
+     aid='80433022', cid=137649199, message='顶部红字', progress=1000, color=16711680, fontsize=18, mode=5)
 
 case('archive_pre', logged(lambda a: BiliCreatorApi.get_archive_pre(a)))
 case('my_archives', logged(lambda a: BiliCreatorApi.get_my_archives(a, page=2)), page=2)
 case('submit_archive', logged(lambda a: BiliCreatorApi.submit_archive(
     a, [{'filename': 'n230101abc', 'biz_id': 999}], title='标题', tid=17, tag='a,b', cover='https://x/c.jpg', desc='描述', private=False)))
+case('submit_archive_repost', logged(lambda a: BiliCreatorApi.submit_archive(
+    a, [{'filename': 'n230101abc', 'biz_id': 999}, {'filename': 'n230101def', 'title': 'P2', 'biz_id': 1000}], title='标题', tid=17, tag='a',
+    copyright_=2, source='https://example.com/v', private=False, dynamic='同步到动态', no_reprint=0)))
 case('delete_archive', logged(lambda a: BiliCreatorApi.delete_archive(a, 80433022)), aid='80433022')
+case('delete_archive_validate', logged(lambda a: BiliCreatorApi.delete_archive(a, 80433022, validate='va', challenge='ch')), aid='80433022', validate='va', challenge='ch')
 case('remove_dynamic', logged(lambda a: BiliCreatorApi.remove_dynamic(a, '987654321')), id='987654321')
 case('post_dynamic', logged(lambda a: BiliCreatorApi.post_dynamic(a, '动态正文')), text='动态正文')
 case('article_draft', logged(lambda a: BiliCreatorApi.save_article_draft(a, '专栏', '<p>正文</p>', category=2)), title='专栏', content='<p>正文</p>', category=2)
 case('article_submit', logged(lambda a: BiliCreatorApi.submit_article(a, 777, '专栏', '<p>正文</p>', category=2)), aid='777', title='专栏', content='<p>正文</p>', category=2)
+case('article_draft_full', logged(lambda a: BiliCreatorApi.save_article_draft(a, '专栏', '<p>正文</p>', category=2, tags='a,b', summary='摘要', aid=777)),
+     title='专栏', content='<p>正文</p>', category=2, tags='a,b', summary='摘要', aid='777')
+case('article_submit_full', logged(lambda a: BiliCreatorApi.submit_article(a, 777, '专栏', '<p>正文</p>', category=2, tags='a,b', summary='摘要')),
+     aid='777', title='专栏', content='<p>正文</p>', category=2, tags='a,b', summary='摘要')
+case('article_draft_view', logged(lambda a: BiliCreatorApi.get_article_draft(a, 777)), aid='777')
+case('article_draft_delete', logged(lambda a: BiliCreatorApi.delete_article_draft(a, 777)), aid='777')
 
 case('room_init', logged(lambda a: BiliLiveApi.get_room_init(a, 6)), room='6')
 case('room_by_mid', logged(lambda a: BiliLiveApi.get_room_by_mid(a, 10001)), mid='10001')
@@ -127,6 +150,8 @@ case('send_gift_gold', logged(lambda a: BiliLiveApi.send_gift(a, 21452505, 10002
 case('send_gift_bag', logged(lambda a: BiliLiveApi.send_gift(a, 21452505, 10002, 1, gift_num=1, bag_id=555)),
      room=21452505, ruid=10002, gift=1, num=1, bag=555)
 case('live_danmaku', logged(lambda a: BiliLiveApi.send_danmaku(a, 21452505, '直播弹幕')), room=21452505, msg='直播弹幕')
+case('live_danmaku_style', logged(lambda a: BiliLiveApi.send_danmaku(a, 21452505, '回复你', color=65280, fontsize=18, mode=4, reply_mid=10003, reply_uname='观众')),
+     room=21452505, msg='回复你', color=65280, fontsize=18, mode=4, reply_mid=10003, reply_uname='观众')
 case('start_live', logged(lambda a: BiliLiveApi.start_live(a, 21452505, 86)), room=21452505, area=86)
 case('stop_live', logged(lambda a: BiliLiveApi.stop_live(a, 21452505)), room=21452505)
 
