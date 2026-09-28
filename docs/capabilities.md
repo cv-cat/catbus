@@ -50,6 +50,7 @@
 - xianyu `user get`：只支持 me；查询他人规划中
 - taobao `user get`：me 规划中
 - jd `user get`：只支持 me
+- douyin `user likes`：需要 UIFID cookie：扫码 / 短信登录拿不到，用浏览器 cookie 导入
 - kuaishou `user likes`：只支持 me
 - kuaishou `user followers / following`：只支持 me
 - `user items --sort` 取值：bilibili latest / views / collects

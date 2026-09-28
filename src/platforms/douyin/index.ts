@@ -26,7 +26,7 @@ export default definePlatform({
         'user get': impl('full', 'userGet'),
         'user search': impl('full', 'userSearch'),
         'user items': impl('full', 'userItems'),
-        'user likes': impl('full', 'userLikes'),
+        'user likes': impl('full', 'userLikes', { note: '需要 UIFID cookie：扫码 / 短信登录拿不到，用浏览器 cookie 导入' }),
         // 上游没有收藏作品列表（get_collect_list 返回的是收藏夹）
         'user collects': 'none',
         'user followers': impl('full', 'userFollowers'),

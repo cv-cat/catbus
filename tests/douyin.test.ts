@@ -301,3 +301,17 @@ describe('douyin 对拍：长连接', () => {
     expect(msg).toMatchObject({ id: '7400000000000000777', conversation_id: CONV_ID, from: { id: '1234567890' }, type: 'text', text: '你好呀' })
   })
 })
+
+describe('douyin 归一化（真实响应的结构）', () => {
+  it('通知类型按通知体的字段判断：comment → 评论，digg → 点赞，interactive_notice → 系统', async () => {
+    const norm = await import('../src/platforms/douyin/web/normalize.js')
+    const user = { uid: '1', sec_uid: SEC_UID, nickname: '粉丝' }
+    const aweme = { aweme_id: '7600000000000000001' }
+    const comment = norm.notice({ nid_str: '1', type: 31, create_time: 1790399397, comment: { comment: { text: '好看', user }, aweme } })
+    expect(comment).toMatchObject({ type: 'comment', user: { id: SEC_UID, name: '粉丝' }, target: { id: aweme.aweme_id }, text: '好看' })
+    const like = norm.notice({ nid_str: '2', type: 41, create_time: 1790399397, digg: { from_user: [user], aweme, content: '赞了你的作品' } })
+    expect(like).toMatchObject({ type: 'like', user: { id: SEC_UID }, target: { id: aweme.aweme_id }, text: '赞了你的作品' })
+    const other = norm.notice({ nid_str: '3', type: 9009, create_time: 1790399397, aweme_id: '0', interactive_notice: { content: '推荐了你的图文', from_user: [user] } })
+    expect(other).toMatchObject({ type: 'system', user: { id: SEC_UID }, target: null, text: '推荐了你的图文' })
+  })
+})

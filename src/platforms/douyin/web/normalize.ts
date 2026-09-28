@@ -219,18 +219,29 @@ export function productDetail(body: any, promotionId: string): Item {
 }
 
 /** 通知（notice_list_v2 项）。 */
+/**
+ * 通知类型按通知体带的字段判断：数字 type 随版本变（实测 2026-09：31 评论、41 点赞、9009 互动），
+ * 而 401 / 601 / 2 / 3 是请求时 notice_group 的分组号，不是单条通知的 type。
+ */
+function noticeKind(v: any): Notice['type'] {
+  if (v.follow) return 'follow'
+  if (v.digg) return 'like'
+  if (v.at ?? v.mention) return 'mention'
+  if (v.comment) return 'comment'
+  return 'system'
+}
+
 export function notice(v: any): Notice {
-  const type = v.type
-  const kind: Notice['type'] = type === 31 || type === 3 ? 'like' : type === 33 || type === 401 ? 'follow' : type === 45 || type === 601 ? 'mention' : type === 2 || type === 1 ? 'comment' : 'system'
-  const u = v.from_user?.[0] ?? v.user ?? v.comment?.comment?.user ?? v.digg?.from_user?.[0] ?? v.follow?.from_user ?? null
+  const u = v.from_user?.[0] ?? v.user ?? v.comment?.comment?.user ?? v.digg?.from_user?.[0] ?? v.follow?.from_user ?? v.interactive_notice?.from_user?.[0] ?? null
   const aweme = v.comment?.aweme ?? v.digg?.aweme ?? v.aweme ?? null
+  const awemeId = aweme?.aweme_id ?? (v.aweme_id && v.aweme_id !== '0' ? v.aweme_id : null)
   return n.notice(
     {
       id: n.id(v.nid_str ?? v.nid),
-      type: kind,
+      type: noticeKind(v),
       user: u ? authorRef(u) : null,
-      target: aweme?.aweme_id ? { id: n.id(aweme.aweme_id), url: itemUrl(aweme.aweme_id) } : null,
-      text: n.str(v.comment?.comment?.text ?? v.content ?? v.text),
+      target: awemeId ? { id: n.id(awemeId), url: itemUrl(awemeId) } : null,
+      text: n.str(v.comment?.comment?.text ?? v.digg?.content ?? v.interactive_notice?.content ?? v.general_notice?.content ?? v.content ?? v.text),
       created_at: n.time(v.create_time),
     },
     v,

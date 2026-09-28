@@ -146,12 +146,15 @@ function alwaysEmpty(data: unknown): string[] {
   const walk = (o: Obj, prefix: string) => {
     for (const [k, v] of Object.entries(o)) {
       const path = prefix + k
-      if (v != null && typeof v === 'object' && !Array.isArray(v) && k !== 'data') walk(v, path + '.')
-      else paths.set(path, (paths.get(path) ?? true) && (v == null || (Array.isArray(v) && !v.length)))
+      const empty = v == null || (Array.isArray(v) && !v.length)
+      paths.set(path, (paths.get(path) ?? true) && empty)
+      if (!empty && typeof v === 'object' && !Array.isArray(v)) walk(v, path + '.')
     }
   }
   for (const o of list) walk(o, '')
-  return [...paths].filter(([, empty]) => empty).map(([path]) => path)
+  // 父对象本身为空时只报父对象，不再列出它的子字段
+  const empties = [...paths].filter(([, empty]) => empty).map(([path]) => path)
+  return empties.filter((path) => !empties.some((parent) => path.startsWith(parent + '.')))
 }
 
 interface Entry {
