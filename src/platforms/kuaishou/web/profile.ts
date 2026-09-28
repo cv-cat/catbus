@@ -215,6 +215,8 @@ export const SEQUENCES: Record<string, string[]> = {
   live_room_current_login_bootstrap: [...LIVE_ONLY, 'kwssectoken', 'kwscode', 'kuaishou.live.web_st', 'kwfv1'],
   live_room_authenticated: [...LIVE_CP, 'kwpsecproductname', ...WEB, 'kwssectoken', 'kwscode', 'kwfv1'],
   live_room_current_authenticated: [...LIVE_ONLY, 'kwfv1', ...WEB, 'kwssectoken', 'kwscode'],
+  // 验证码 iframe：第一个 kwpsecproductname 是 iframe 路径下的 verification-captcha，第二个是父页的产品
+  captcha: ['did', 'wid', 'kwpsecproductname', 'didv', 'bUserId', ...Q],
 }
 SEQUENCES.www_refreshed = SEQUENCES.www_initial!
 SEQUENCES.www_security_refreshed = SEQUENCES.www_initial!

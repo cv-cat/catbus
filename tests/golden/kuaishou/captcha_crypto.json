@@ -1,0 +1,14 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": {
+    "qs": "captchaSn=Cg1fake%20sn%2F%2B%3D&bgDisWidth=686&relativeX=131&trajectory=1.5%7C30.12%7C0%2C131%7C29.9%7C12&gpuInfo=%7B%22glRenderer%22%3A%22WebKit%20WebGL%22%2C%22glVendor%22%3A%22WebKit%22%2C%22unmaskRenderer%22%3A%22ANGLE%20%28NVIDIA%2C%20NVIDIA%20GeForce%20RTX%205060%20Ti%20%280x00002D04%29%20Direct3D11%20vs_5_0%20ps_5_0%2C%20D3D11%29%22%2C%22unmaskVendor%22%3A%22Google%20Inc.%20%28NVIDIA%29%22%7D&flag=true&off=false&zh=%E4%B8%AD%E6%96%87%EF%BC%81%28x%29*~%27",
+    "param": "3sCt3iAAAAAAAAAAAAAAAwEQBjoIdCECN8S0y9EBAABEDYcfnH++Zl0UHFj9k4eEmh4M40ihXM0jwi1w6B2L2VzUU7afoJYrSqcACY7pwUaD+JKJDqnBpWbIKMrIqoSSmYJNo1QBFMvcnQwYEbAMSeLo5PvOsdfv35r8xgJZ7brOpBfe1u4//MEJNKfYslKTXEQe6bDB1t1AVf+2/JaTnJHo6nzdHqiIMs+HsYJLrFbLE//pTrIEi79YyQ0CLLyeDO26n488krdcTvvXSxLAstoEoSn7nWwmj9xV6RL8nt/Oya+j3/3EV678dZ62l5yrMktF0vwsPssBelloHyw43X0c7+e1n5CzpfIB+b3yAeqyqbS6s7fyCQ+4ApXVjq/e2gWM5LPHP80DBv0JFMDJ/6eF1u8tlvvG/2bcwtcG7z3XDugPJbwNHoml1ppVq/zxyk/YnMKC75HJgZ72Lu6i6aPG4AfJ/q/a1XqN1H/X3ZrEpverKertpDrdzKabn5eOVKVIlVnJi+rJ/rwpqkH8lLnUwIOQumqsw25zjBLor10b1x99Y2+fJ6TTzQrazf8KRA3aiZOYm4+JmyqaP4ipq4JZkrK8fOqzkQLeKA3Li0XCfrjeIZH5i+/aK/jWqYnZvX7BxxZcyUajGNXfudn41ZI=",
+    "raw": "3sCt3iAAAAAAAAAAAAAAAwEQBjoIdCECsrTf6wcAAAAK65YJnCrf",
+    "roundtrip": "hello, \u0016L"
+  },
+  "error": null
+}

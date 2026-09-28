@@ -8,13 +8,17 @@
   直接跑会被当成 ES module，这里经 run_cjs.cjs 按 CommonJS 执行；并预加载 vm_determinism.cjs，
   让预言机内部 vm.createContext 出来的 context 也用固定的 Math.random / Date。
 - 进程级签名器单例（ks_util）与 gdfp 预检缓存每个用例重置：一个用例对应浏览器的一次页面加载。
-- FakeResponse 补上 http_version（gdfp 会检查协商协议）。
+- FakeResponse 补上 http_version（gdfp 会检查协商协议）：默认 HTTP/1.1，gdfp manMachine 的响应按用例给 HTTP/2。
+- 响应体可以是 bytes（滑块的背景图、滑块图），记录成 {base64}。
+- random.gauss 的缓存（_inst.gauss_next）每个用例清空，与 TS 侧 rand.gauss 在 deterministic() 里清空对应。
 """
 
 import base64
 import hashlib
+import io
 import json
 import os
+import random
 import subprocess as _subprocess
 import sys
 import tempfile
@@ -31,6 +35,25 @@ RUN_CJS = (HERE / 'run_cjs.cjs').as_posix()
 out = g.setup('kuaishou', 'KuaiShou-Spider')
 os.environ['NODE_OPTIONS'] += f' --require "{(HERE / "vm_determinism.cjs").as_posix()}"'
 g.FakeResponse.http_version = 2  # CurlHttpVersion.V1_1
+
+
+def _respond_ks(req):
+    """catbus_golden._respond 的变体：bytes 响应体记录成 {base64}；spec 里可以带 http_version。"""
+    g._captured.append(req)
+    spec = g._responder[0](req)
+    if not (isinstance(spec, dict) and 'body' in spec and set(spec) <= {'status', 'headers', 'body', 'http_version'}):
+        spec = {'status': 200, 'headers': {}, 'body': spec}
+    version = spec.get('http_version')
+    spec = {'status': spec.get('status', 200), 'headers': spec.get('headers') or {}, 'body': spec['body']}
+    body = spec['body']
+    g._responses.append({**spec, 'body': {'base64': base64.b64encode(body).decode()} if isinstance(body, (bytes, bytearray)) else body})
+    resp = g.FakeResponse(req['url'], spec['status'], spec['headers'], body)
+    if version is not None:
+        resp.http_version = version
+    return resp
+
+
+g._respond = _respond_ks
 
 
 def _run(args, **kwargs):
@@ -224,6 +247,7 @@ def respond(req):
 
 def reset():
     """一个用例 = 浏览器的一次页面加载：签名器与 gdfp 预检缓存都从头开始."""
+    random._inst.gauss_next = None
     ks_util.reset_hxfalcon_session()
     ks_util.reset_sig3_session()
     cache = getattr(shared_session(), webweapon_boot.PREFLIGHT_CACHE_ATTR, None)
@@ -399,3 +423,195 @@ def _guest_feed():
 
 
 case('guest_feed_hot', _guest_feed)
+
+
+# ================================================================ 滑块验证码（utils/captcha*.py、gdfp_manmachine.py、captcha_crypto.py）
+import numpy as np  # noqa: E402
+from PIL import Image  # noqa: E402
+
+from utils import captcha as C  # noqa: E402
+from utils import captcha_fp  # noqa: E402
+from utils import gdfp_manmachine as GM  # noqa: E402
+from utils.sign import captcha_crypto  # noqa: E402
+
+CAP_W, CAP_H, PIECE = 200, 96, 44
+GAP_X, GAP_Y = 131, 30
+IFRAME = ('https://captcha.zt.kuaishou.com/iframe/index.html?captchaSession=Cg1fake%2Bsession%3D%3D&type=1'
+          '&configUrl=https%3A%2F%2Fcaptcha.zt.kuaishou.com%2Frest%2Fzt%2Fcaptcha%2Fsliding%2Fconfig'
+          '&bizName=ANTICRAWL_COMMON&displayType=1')
+CAPTCHA_HOST = 'https://captcha.zt.kuaishou.com'
+CAPTCHA_CONFIG = {
+    'result': 1, 'captchaSn': 'fake-captcha-sn-0001',
+    'bgPicUrl': f'{CAPTCHA_HOST}/rest/zt/captcha/sliding/bgPic', 'cutPicUrl': f'{CAPTCHA_HOST}/rest/zt/captcha/sliding/cutPic',
+    'bgPicWidth': CAP_W, 'bgPicHeight': CAP_H, 'cutPicWidth': 52, 'cutPicHeight': CAP_H, 'disX': 4, 'disY': GAP_Y,
+    'verifyUrl': f'{CAPTCHA_HOST}/rest/zt/captcha/sliding/verify', 'verifyUrl2': f'{CAPTCHA_HOST}/rest/zt/captcha/sliding/kSecretApiVerify',
+    'refSes': 'fake-ref-ses',
+}
+
+
+def _png(arr, mode):
+    buf = io.BytesIO()
+    Image.fromarray(arr, mode).save(buf, 'PNG')
+    return buf.getvalue()
+
+
+def _texture():
+    """确定性的圆斑（LCG，不用 random）：边缘多且不周期重复，模板匹配有唯一的最优位置."""
+    yy, xx = np.mgrid[0:CAP_H, 0:CAP_W]
+    img = np.zeros((CAP_H, CAP_W, 3), np.int32)
+    img[...] = (70, 90, 110)
+    state = [12345]
+
+    def nxt():
+        state[0] = (state[0] * 1103515245 + 12345) & 0x7FFFFFFF
+        return state[0]
+    for _ in range(90):
+        cx, cy, r = nxt() % CAP_W, nxt() % CAP_H, 3 + nxt() % 9
+        color = (nxt() % 256, nxt() % 256, nxt() % 256)
+        img[(xx - cx) ** 2 + (yy - cy) ** 2 <= r * r] = color
+    return img.astype(np.uint8)
+
+
+def _piece_alpha():
+    """拼图块：方块 + 上、右两个凸起；外圈一像素 alpha=128（抗锯齿，检验 alpha > 32 的阈值）."""
+    yy, xx = np.mgrid[0:PIECE, 0:PIECE].astype(np.float64)
+    core = (((xx >= 5) & (xx < 36) & (yy >= 9) & (yy < 40))
+            | ((xx - 20) ** 2 + (yy - 9) ** 2 <= 36) | ((xx - 36) ** 2 + (yy - 25) ** 2 <= 25))
+    ring = np.zeros_like(core)
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            ring |= np.roll(np.roll(core, dy, 0), dx, 1)
+    a = np.where(core, 255, 0).astype(np.uint8)
+    a[ring & ~core] = 128
+    return a
+
+
+def _pair_match():
+    """背景：缺口处压暗、描白边；滑块：缺口处的原图抠出来，与背景同高."""
+    bg = _texture()
+    a = _piece_alpha()
+    piece = np.zeros((PIECE, PIECE, 4), np.uint8)
+    piece[..., :3] = np.where(a[..., None] > 0, bg[GAP_Y:GAP_Y + PIECE, GAP_X:GAP_X + PIECE], 0)
+    piece[..., 3] = a
+    sub = bg[GAP_Y:GAP_Y + PIECE, GAP_X:GAP_X + PIECE]
+    sub[a > 0] = (sub[a > 0] * 0.7).astype(np.uint8)
+    sub[a == 128] = 235
+    cut = np.zeros((CAP_H, 52, 4), np.uint8)
+    cut[GAP_Y:GAP_Y + PIECE, 4:4 + PIECE] = piece
+    return _png(bg, 'RGB'), _png(cut, 'RGBA')
+
+
+def _pair_fallback():
+    """匹配不上（纯色滑块，掩码内没有边缘）：走“逐列亮度突变”的退路，突变在 x=150."""
+    yy, xx = np.mgrid[0:CAP_H, 0:CAP_W].astype(np.float64)
+    base = np.where(xx >= 150, 90 + 0.2 * xx - 70, 90 + 0.2 * xx)
+    bg = np.clip(np.stack([base, base + 5, base + 10], -1), 0, 255).astype(np.uint8)
+    disc = (xx[:PIECE, :PIECE] - 22) ** 2 + (yy[:PIECE, :PIECE] - 22) ** 2 <= 256
+    piece = np.zeros((PIECE, PIECE, 4), np.uint8)
+    piece[disc] = (200, 40, 90, 255)
+    cut = np.zeros((CAP_H, 52, 4), np.uint8)
+    cut[20:20 + PIECE, 4:4 + PIECE] = piece
+    return _png(bg, 'RGB'), _png(cut, 'RGBA')
+
+
+BG_PNG, CUT_PNG = _pair_match()
+BG2_PNG, CUT2_PNG = _pair_fallback()
+b64 = lambda b: base64.b64encode(b).decode()  # noqa: E731
+
+REST_RISK = {'result': 400002, 'data': {'result': 400002, 'url': IFRAME}}
+GQL_RISK = {'errors': [{'message': 'Need captcha', 'locations': [], 'path': ['visionVideoDetail']}], 'data': {'captcha': {'url': IFRAME}}}
+
+
+def captcha_responder(trigger, risk, verify_ok=True):
+    """第一次命中 trigger 的业务请求回滑块挑战；验证码与 gdfp manMachine 的请求按真实形状回复."""
+    state = {'risk': False}
+
+    def reply(req):
+        u = urllib.parse.urlsplit(req['url'])
+        if u.netloc == 'captcha.zt.kuaishou.com':
+            if u.path.endswith('/sliding/config'):
+                return CAPTCHA_CONFIG
+            if u.path.endswith('/bgPic'):
+                return {'status': 200, 'headers': {'content-type': 'image/png'}, 'body': BG_PNG}
+            if u.path.endswith('/cutPic'):
+                return {'status': 200, 'headers': {'content-type': 'image/png'}, 'body': CUT_PNG}
+            if u.path.endswith('/kSecretApiVerify'):
+                return {'result': 1, 'error_msg': ''} if verify_ok else {'result': 350014, 'error_msg': 'anti check err'}
+        if u.netloc == 'gdfp.gifshow.com' and u.path in ('/s/u/v', '/n/a/b'):
+            body = GM.MAN_MACHINE_INIT_RESPONSE if u.path == '/s/u/v' else GM.REPORT_RESPONSE
+            return {'status': 200, 'headers': {'content-type': 'application/json;charset=UTF-8'}, 'body': body.decode(), 'http_version': 3}
+        if not state['risk'] and trigger(req):
+            state['risk'] = True
+            return risk
+        return respond(req)
+    return reply
+
+
+def captcha_case(name, fn, trigger, risk, verify_ok=True, **input):
+    def run():
+        reset()
+        return fn()
+    g.case(out, name, run, input=input, respond=captcha_responder(trigger, risk, verify_ok))
+
+
+def _py_float():
+    xs = [0.125, 0.375, 2.675, 1.005, -0.004, -0.125, 100.345, 1e-07, 123.455, 0.5, 1.5, 2.5, -2.5, 0.015, 0.025,
+          1234.5678, 131 - 2.2, 131 - 1.1, 131 - 0.4, 30 + 0.35, 5e-324, 1e300]
+    reprs = [1e-05, 1e16, 123.0, 0.1 + 0.2, -0.0, 1.5e-07, 12345678901234567.0, 0.0001, 9999999999999998.0,
+             30 + round(-0.004, 2), 0 + round(-0.004, 2), 1.0, 1e22, 2.5e-05, -1.2, 128.8]
+    gauss = [random.gauss(0, 0.8) for _ in range(7)]
+    return {'xs': xs, 'round2': [str(round(x, 2)) for x in xs], 'round1': [str(round(x, 1)) for x in xs],
+            'round0': [str(round(x, 0)) for x in xs], 'reprs': reprs, 'repr': [str(v) for v in reprs],
+            'gauss': gauss, 'gauss_round': [str(round(v, 2)) for v in gauss]}
+
+
+def _captcha_crypto():
+    payload = {'captchaSn': 'Cg1fake sn/+=', 'bgDisWidth': 686, 'relativeX': 131, 'trajectory': '1.5|30.12|0,131|29.9|12',
+               'gpuInfo': captcha_fp.gpu_info_json(), 'flag': True, 'off': False, 'none': None, 'zh': "中文！(x)*~'"}
+    return {'qs': captcha_crypto.qs_stringify(payload), 'param': captcha_crypto.verify_param(payload),
+            'raw': b64(captcha_crypto.encrypt('中文abc\U0001F600')),
+            'roundtrip': captcha_crypto.decrypt(captcha_crypto.encrypt('hello, 世界'))}
+
+
+def _trajectory():
+    first = C.build_trajectory(131, start_y=GAP_Y)
+    return {'first': C.format_trajectory(first), 'points': first,
+            'float': C.format_trajectory(C.build_trajectory(1.0, start_y=0)),
+            'short': C.format_trajectory(C.build_trajectory(7, start_y=12))}
+
+
+GDFP_COOKIES = {'did': DID, 'wid': '12345678901234567', 'kwpsecproductname': 'kuaishou-vision', 'didv': '1789990000000',
+                'bUserId': '20001', 'kwssectoken': SECTOKEN, 'kwscode': KWSCODE, 'kwfv1': KWFV1}
+
+
+def _gdfp_payloads():
+    common = dict(did=DID, user_id='', cookies=GDFP_COOKIES, parent_url='https://www.kuaishou.com/new-reco', iframe_url=IFRAME,
+                  ua=C.UA, identity='11111111-2222-4333-8444-555555555555', begin_ms=g.NOW_MS,
+                  session_id='66666666-7777-4888-9999-000000000000', script_urls=[KWF_WWW, KWS_URL])
+    core = GM.build_core_payload(now_ms=g.NOW_MS + 300, **common)
+    whole = GM.build_whole_payload(now_ms=g.NOW_MS + 1300, **common)
+    return {'sign': GM.sign_for(1786887567), 'url': GM.build_url('/s/u/v', extra='&type=SDK_INIT'), 'init': GM.build_init_body(DID),
+            'core': GM.encode_body(core), 'whole': GM.encode_body(whole),
+            'init_config': GM.parse_init_response(json.loads(GM.MAN_MACHINE_INIT_RESPONSE))}
+
+
+case('py_float', _py_float)
+case('captcha_crypto', _captcha_crypto)
+case('captcha_trajectory', _trajectory)
+case('captcha_fp', lambda: [captcha_fp.gpu_info_json(), captcha_fp.captcha_extra_param_json(did=DID),
+                            captcha_fp.captcha_extra_param_json(did=DID, now_ms=1790000000999)])
+case('gdfp_payloads', _gdfp_payloads)
+case('captcha_gap', lambda: [C.find_gap_x(BG_PNG, CUT_PNG), C.find_gap_x(BG2_PNG, CUT2_PNG)],
+     match=[b64(BG_PNG), b64(CUT_PNG)], fallback=[b64(BG2_PNG), b64(CUT2_PNG)])
+
+_is_comment = lambda req: urllib.parse.urlsplit(req['url']).path == '/rest/v/photo/comment/list'  # noqa: E731
+_is_detail = lambda req: (urllib.parse.urlsplit(req['url']).path == '/graphql'  # noqa: E731
+                          and json.loads(req['body'])['operationName'] == 'visionVideoDetail')
+
+# REST：comment/list 撞上 400002 → 验证码 iframe 的 webweapon 引导 → config → 两张图 → gdfp 三个请求 → verify → 重发
+captcha_case('captcha_comment_list', lambda: KuaishouAPI.get_comment_list(logged(), PHOTO, 'cur1'), _is_comment, REST_RISK, photo=PHOTO)
+# GraphQL：visionVideoDetail 的 errors + data.captcha.url，重发前重新序列化详情页的 Cookie 线序
+captcha_case('captcha_video_detail', lambda: KuaishouAPI.get_video_detail(logged(), PHOTO), _is_detail, GQL_RISK, photo=PHOTO)
+# verify 没通过：不重发，原样返回风控响应
+captcha_case('captcha_verify_fail', lambda: KuaishouAPI.get_comment_list(logged(), PHOTO, 'cur1'), _is_comment, REST_RISK,
+             verify_ok=False, photo=PHOTO)

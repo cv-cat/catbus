@@ -18,6 +18,7 @@ import {
   RECO_REFERER,
   WWW,
 } from './profile.js'
+import { graphqlRiskAsRest, isRisk, passCaptcha } from './captcha.js'
 import { type LiveContext, reportFingerprint, Session } from './session.js'
 import {
   axiosQuery,
@@ -165,25 +166,32 @@ export class Ks {
       params.push(['__NS_hxfalcon', this.falcon.sign(buildSignInput(api, {}, body, 'application/json', { omitEmptyBody: true }))], ['caver', CAVER])
     }
     const data = body == null ? undefined : compactJson(body)
-    const cookie = await this.s.cookieHeader(o.cookieProfile ?? 'www')
+    const site = o.cookieProfile ?? 'www'
     const query = axiosQuery(params)
-    const res = await this.send({ method: 'POST', url: `${WWW}${api}${query ? '?' + query : ''}`, headers: h.get(), cookie, body: data })
-    const result = await this.json(res)
+    const url = `${WWW}${api}${query ? '?' + query : ''}`
+    const post = async () => this.json(await this.send({ method: 'POST', url, headers: h.get(), cookie: await this.s.cookieHeader(site), body: data }))
+    let result = await post()
+    // 撞上滑块风控就过一次验证码；验证可能轮换短期票据，重发前重新序列化同一条 Cookie 线序
+    if (!o.forceSign && isRisk(result) && (await passCaptcha(this, result, referer))) result = await post()
     if (api === '/rest/v/profile/feed' && this.s.wwwPhase !== 'relogin') this.s.wwwPhase = 'refreshed'
     return result
   }
 
-  /** KuaishouAPI._get：只有 profile/get。 */
+  /** KuaishouAPI._get：只有 profile/get。撞上滑块同 wwwPost。 */
   async wwwGet(api: string, o: { referer?: string } = {}): Promise<Json> {
+    const referer = o.referer ?? RECO_REFERER
     const h = buildHeaders('GET')
-    h.set('referer', o.referer ?? RECO_REFERER)
+    h.set('referer', referer)
     const kww = await this.s.kww()
     if (kww) h.set('kww', kww)
     const params: [string, unknown][] = []
     if (needSign(api)) params.push(['__NS_hxfalcon', this.falcon.sign(buildSignInput(api, {}, null, 'application/json', { omitEmptyBody: true }))], ['caver', CAVER])
-    const cookie = await this.s.cookieHeader('www')
     const query = axiosQuery(params)
-    return this.json(await this.send({ method: 'GET', url: `${WWW}${api}${query ? '?' + query : ''}`, headers: h.get(), cookie }))
+    const url = `${WWW}${api}${query ? '?' + query : ''}`
+    const get = async () => this.json(await this.send({ method: 'GET', url, headers: h.get(), cookie: await this.s.cookieHeader('www') }))
+    let result = await get()
+    if (isRisk(result) && (await passCaptcha(this, result, referer))) result = await get()
+    return result
   }
 
   /** KuaishouAPI.graphql：POST /graphql，不签名；短视频详情页按 operation 选 Cookie 线序。 */
@@ -206,8 +214,10 @@ export class Ks {
       else if (shape === 'visionConfigQuery()') site = 'www_graphql_detail_refreshed'
       else site = 'www_graphql_detail_initial'
     }
-    const cookie = await this.s.cookieHeader(site)
-    const result = await this.json(await this.send({ method: 'POST', url: `${WWW}/graphql`, headers: h.get(), cookie, body: data }))
+    const post = async () => this.json(await this.send({ method: 'POST', url: `${WWW}/graphql`, headers: h.get(), cookie: await this.s.cookieHeader(site), body: data }))
+    let result = await post()
+    // GraphQL 侧（评论、详情）同样会撞风控：挑战改成 REST 的形状交给同一个求解器
+    if (isRisk(result) && (await passCaptcha(this, graphqlRiskAsRest(result), referer))) result = await post()
     checkGraphql(this.ctx, result)
     return result
   }
@@ -435,12 +445,15 @@ export function liveContext(referer: string): LiveContext {
   return 'profile'
 }
 
-/** 滑块风控：REST `data.result == 400002`，GraphQL `errors` + `data.captcha.url`。 */
+/**
+ * 滑块风控：REST `data.result == 400002`，GraphQL `errors` + `data.captcha.url`。
+ * www 的 REST / GraphQL 已经自动过过一次（见 captcha.ts），走到这里说明没过，或者是不自动过的站点（直播、创作者中心）。
+ */
 function riskOf(body: Json): CatbusError | null {
+  if (!isRisk(body)) return null
   const data = body?.data ?? {}
-  const url = data?.result === 400002 ? data.url : body?.errors && data?.captcha?.url ? data.captcha.url : null
-  if (!url) return null
-  return new CatbusError('RISK_CONTROL', '快手要求滑块验证（风控）。登录后重试，或稍后再试', { detail: { kind: 'captcha', url } })
+  const url = data.result === 400002 ? data.url : data.captcha?.url
+  return new CatbusError('RISK_CONTROL', '快手要求滑块验证（风控）：自动验证没有通过（直播、创作者中心的接口不自动验证），稍后再试', { detail: { kind: 'captcha', url } })
 }
 
 function checkGraphql(ctx: HandlerContext, body: Json): void {

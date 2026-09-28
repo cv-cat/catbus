@@ -7,6 +7,7 @@ import {
   GDFP,
   HREF_CP,
   HREF_WWW,
+  PRODUCT_CAPTCHA,
   PRODUCT_CP,
   PRODUCT_LIVE,
   PRODUCT_WWW,
@@ -236,6 +237,14 @@ export class KwwSigner {
 
 export type LiveContext = 'home' | 'room' | 'profile'
 
+/** 验证码 iframe 的上下文：页面 kww、Cookie 线序、gdfp 能看到的 cookie、iframe 执行过的 webweapon 脚本。 */
+export interface CaptchaContext {
+  kww: string
+  cookies: [string, string][]
+  cookieHeader: string
+  scriptUrls: string[]
+}
+
 /** passToken / Set-Cookie / 正文里下发的票据：按顺序合并进 cookie。 */
 export type Issued = [string, string][]
 
@@ -354,6 +363,8 @@ export class Session {
     else if (profile === 'www_graphql_detail') profile = 'www_graphql_detail_initial'
     else if (profile === 'cp_creator') profile = this.cpPhase === 'refreshed' ? 'cp_creator_refreshed' : this.cpPhase === 'warmed' ? 'cp_creator_warmed' : 'cp_creator_initial'
     else if (profile === 'www_graphql') profile = this.wwwPhase !== 'initial' && this.wwwPhase !== 'relogin' ? 'www_graphql_refreshed' : 'www_graphql_initial'
+    // 验证码 iframe 的 config / 图片 / verify 用同一条 Cookie 线序，只有请求头不同
+    else if (['captcha_config', 'captcha_image', 'captcha_verify'].includes(profile)) profile = 'captcha'
 
     const values = RAW_VALUE_PROFILES.has(profile) ? new Map(this.cookies) : await this.current()
     const sequence = SEQUENCES[profile] ?? SEQUENCES.www_initial!
@@ -365,6 +376,8 @@ export class Session {
       if (value == null || value === '') continue
       const n = (occurrences.get(key) ?? 0) + 1
       occurrences.set(key, n)
+      // iframe 在自己的路径下写了 verification-captcha，与父页（www）的产品 cookie 并存
+      if (profile === 'captcha' && key === 'kwpsecproductname') value = n === 1 ? PRODUCT_CAPTCHA : this.cookie('kwpsecproductname') || PRODUCT_WWW
       if (stale && STALE_PAIR_PROFILES.has(profile) && (key === 'kwssectoken' || key === 'kwscode') && n % 2 === 1) {
         value = key === 'kwssectoken' ? stale[2] : stale[3]
       }
@@ -458,6 +471,52 @@ export class Session {
     const snapshot = previous.href === HREF_CP ? previous.kwwSnapshot : this.kwfv1 || this.cookie('kwfv1')
     this.signer = new KwwSigner(this.t, this.kwfv1, HREF_CP, this.did, product, this.cookie('kwscode'), this.cookie('kwssectoken'), snapshot, this.kwfcv1)
     this.kwwSnapshot = snapshot
+  }
+
+  /**
+   * prepare_captcha_context：验证码 iframe 自己起一个 webweapon 实例（产品名 verification-captcha），
+   * 把当前 kwfv1 冻结成 iframe 的 kww，按 /s/w/c 下发的 fpUrl / signUrl 现算新票据，覆盖根域的 kwfv1 / kws*。
+   * 父页已冻结的 kww 保留；产品 cookie 与父页的并存（Cookie 线序 `captcha`）。
+   */
+  async prepareCaptchaContext(iframeUrl: string): Promise<CaptchaContext> {
+    const fail = (message: string) => new CatbusError('UPSTREAM', message, { detail: { kind: 'captcha' } })
+    if (!iframeUrl.startsWith('https://captcha.zt.kuaishou.com/iframe/')) throw fail('验证码 iframe 地址不是 captcha.zt.kuaishou.com')
+    const snapshot = (await this.current()).get('kwfv1') ?? ''
+    if (!snapshot) throw fail('验证码 iframe 初始化前缺少当前 kwfv1')
+    // iframe 拿到新的 secToken 并执行下发的 signUrl，即使父页的票据还有效
+    const signer = new KwwSigner(this.t, snapshot, iframeUrl, this.did, PRODUCT_CAPTCHA, '', '', snapshot, '')
+    const issued = await signer.cookies()
+    if (issued.kwpsecproductname !== PRODUCT_CAPTCHA) throw fail('验证码 webweapon 的产品名漂移')
+    if (issued.kwssectoken.length !== 88) throw fail('验证码 webweapon 的 secToken 长度异常')
+    if (!/^[0-9a-f]{64}$/.test(issued.kwscode)) throw fail('验证码 signUrl 没有产出 64 位小写 hex 的 kwscode')
+    this.update([
+      ['kwfv1', issued.kwfv1],
+      ['kwssectoken', issued.kwssectoken],
+      ['kwscode', issued.kwscode],
+    ])
+    await this.current()
+    const line = await this.cookieHeader('captcha')
+    const pairs = line.split('; ').map((part) => {
+      const i = part.indexOf('=')
+      return [part.slice(0, i), part.slice(i + 1)] as [string, string]
+    })
+    if (pairs.map(([k]) => k).join() !== SEQUENCES.captcha!.join()) throw fail(`验证码 Cookie 字段缺失或顺序不对：${pairs.map(([k]) => k).join(', ')}`)
+    const group = (name: string) => pairs.filter(([k]) => k === name).map(([, v]) => v)
+    if (group('kwpsecproductname').join() !== `${PRODUCT_CAPTCHA},${PRODUCT_WWW}`) throw fail('验证码的两个产品 cookie 值或顺序不对')
+    const kwfv1 = group('kwfv1')
+    if (group('kwssectoken')[0]?.length !== 88 || group('kwscode')[0]?.length !== 64 || kwfv1.length !== 1 || ![174, 218].includes(kwfv1[0]!.length)) {
+      throw fail('验证码 webweapon cookie 长度偏离官方脚本输出')
+    }
+    // gdfp 的 document.cookie 解析把重复的产品名收拢成后一个值（位置取第一个），其余只含验证码路径可见的 cookie
+    const telemetry = new Map<string, string>()
+    for (const [k, v] of pairs) telemetry.set(k, v)
+    const cfg = signer.config
+    return {
+      kww: await signer.sign(),
+      cookies: [...telemetry],
+      cookieHeader: line,
+      scriptUrls: [cfg?.fpUrl, cfg?.signUrl].filter((u): u is string => Boolean(u)),
+    }
   }
 
   advanceLive(context: LiveContext, phase: string): void {

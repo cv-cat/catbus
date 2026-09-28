@@ -184,6 +184,11 @@
   - `ks_apis/kuaishou_api.py` 的 `KuaishouAPI`：`get_feed_hot`、`get_work_info`、`get_video_detail`、`get_comment_list`、`get_all_comment`、`get_sub_comment_list`、`get_profile`、`get_profile_feed`、`get_user_all_work`、`search_feed`、`search_user`、`get_relation`、`get_liked_list`、`get_collect_list`、`get_history_list`、`graphql`
   - 直播：`ks_apis/live_api.py` 的 `KuaishouLiveAPI`；弹幕：`ks_apis/live_ws.py` 的 `LiveDanmakuClient`
   - 发布：`ks_apis/publish_api.py` 的 `KuaishouPublishAPI`
+- **滑块验证码**：`KuaishouAPI._post` / `_get` / `graphql` 遇到 400002（GraphQL 是 `errors` + `data.captcha.url`）时调 `_pass_captcha` 过一次滑块，再重新序列化同一条 Cookie 线序重发。
+  - `builder/auth.py` 的 `prepare_captcha_context`：验证码 iframe 以 `verification-captcha` 产品名单独引导 webweapon，Cookie 线序 `captcha`（`kwpsecproductname` 出现两次）
+  - `utils/captcha.py`：`find_gap_x`（cv2 边缘图 + 带掩码的模板匹配，catbus 用 @techstark/opencv-js）、`build_trajectory`、`SlidingCaptcha`
+  - `utils/captcha_fp.py`（`gpuInfo` / `captchaExtraParam`）、`utils/gdfp_manmachine.py`（SDK_INIT → core / whole `/n/a/b`）、`utils/sign/captcha_crypto.py`（三路 LFSR + 32 字节头）
+  - 对应 catbus 的 `web/captcha.ts`、`gap.ts`、`captcha-fp.ts`、`gdfp.ts`、`captcha-crypto.ts`
 - **JS 与 proto 资产**
   - `reverse/bundles/weapon/`：21 个 JS（kwf，以及 kws-0 到 kws-19）
   - `reverse/js/cp-kwf.js`
