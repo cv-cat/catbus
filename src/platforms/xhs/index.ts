@@ -36,7 +36,11 @@ export default definePlatform({
 
         'item get': impl('full', 'itemGet'),
         'item search': impl('full', 'itemSearch', {
-          options: { sort: filter.sort('general', 'latest', 'popular', 'comments', 'collects'), type: filter.type('all', 'video', 'image') },
+          options: {
+            sort: filter.sort('general', 'latest', 'popular', 'comments', 'collects'),
+            type: filter.type('all', 'video', 'image'),
+            time: filter.time('all', 'day', 'week', 'half_year'),
+          },
         }),
         'item related': 'none',
         'item list': impl('full', 'itemList'),
@@ -76,7 +80,7 @@ export default definePlatform({
         'live start': 'none',
         'live stop': 'none',
 
-        'keyword suggest': 'none',
+        'keyword suggest': impl('full', 'keywordSuggest'),
         'keyword hot': impl('full', 'keywordHot'),
 
         'notice list': impl('full', 'noticeList'),

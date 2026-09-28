@@ -84,25 +84,41 @@ export function homefeed(p: Pc, category: string, cursorScore: string, refreshTy
 
 export const SORT_TYPES = ['general', 'time_descending', 'popularity_descending', 'comment_descending', 'collect_descending']
 
-/** search_note（不带 filters 的浏览器默认形态）。 */
-export function searchNotes(p: Pc, keyword: string, page = 1, sort = 'general', noteType = 0, sid?: string) {
-  return p.request(
-    '/api/sns/web/v2/search/notes',
-    {
-      keyword,
-      page,
-      page_size: 20,
-      search_id: sid ?? searchId(),
-      sort,
-      note_type: noteType,
-      ext_flags: [],
-      geo: '',
-      image_formats: IMAGE_FORMATS,
-      session_id: rand.uuid4(),
-    },
-    'POST',
-    { origin: SO },
-  )
+const NOTE_TYPE_TAGS = ['不限', '视频笔记', '普通笔记']
+const NOTE_TIME_TAGS = ['不限', '一天内', '一周内', '半年内']
+
+/**
+ * search_note。noteTime（0 不限、1 一天内、2 一周内、3 半年内）非 0 时，上游在请求体末尾加 filters
+ * （浏览器默认搜索不带 filters）；note_range / pos_distance 不暴露，固定为「不限」。
+ */
+export function searchNotes(p: Pc, keyword: string, page = 1, sort = 'general', noteType = 0, sid?: string, noteTime = 0) {
+  const data: Record<string, unknown> = {
+    keyword,
+    page,
+    page_size: 20,
+    search_id: sid ?? searchId(),
+    sort,
+    note_type: noteType,
+    ext_flags: [],
+    geo: '',
+    image_formats: IMAGE_FORMATS,
+    session_id: rand.uuid4(),
+  }
+  if (noteTime) {
+    data.filters = [
+      { tags: [sort], type: 'sort_type' },
+      { tags: [NOTE_TYPE_TAGS[noteType] ?? '不限'], type: 'filter_note_type' },
+      { tags: [NOTE_TIME_TAGS[noteTime] ?? '不限'], type: 'filter_note_time' },
+      { tags: ['不限'], type: 'filter_note_range' },
+      { tags: ['不限'], type: 'filter_pos_distance' },
+    ]
+  }
+  return p.request('/api/sns/web/v2/search/notes', data, 'POST', { origin: SO })
+}
+
+/** get_search_keyword：搜索联想词（keyword 只由 urlencode 编码一次）。 */
+export function searchKeyword(p: Pc, word: string) {
+  return p.request(splice('/api/sns/web/v1/search/recommend', { keyword: word }))
 }
 
 /** search_user。 */

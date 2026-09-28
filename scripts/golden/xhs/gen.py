@@ -321,6 +321,12 @@ def main():
     c('pc_boards', pc(lambda a: a.get_user_board(other, page=2)))
     c('pc_note_video', lambda: XHS_Apis.get_note_no_water_video(NOTE_ID))
     c('pc_no_water_img', lambda: [XHS_Apis.get_note_no_water_img(u)[2] for u in NO_WATER_URLS])
+    c('pc_search_keyword', pc(lambda a: a.get_search_keyword('咖啡 拿铁')))
+    # note_time 非 0 时请求体末尾带 filters：一天内 + 普通笔记 + 最新；半年内 + 不限 + 综合
+    c('pc_search_notes_time', pc(lambda a: [
+        a.search_note('咖啡', 1, 1, 2, 1, search_id='2fixedsearchid'),
+        a.search_note('咖啡', 2, 0, 0, 3, search_id='2fixedsearchid'),
+    ]))
 
     # ---------------------------------------------------------------- 直播 / 私信（XHSLiveAPI）
     room = '570443028306756154'

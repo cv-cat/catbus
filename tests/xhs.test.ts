@@ -110,6 +110,11 @@ const CASES: Record<string, () => Promise<unknown>> = {
   pc_trending: pc((p) => api.trendingQueries(p)),
   pc_boards: pc((p) => api.userBoards(p, OTHER, 2)),
   pc_note_video: pc((p) => api.noteVideo(p, NOTE_ID)),
+  pc_search_keyword: pc((p) => api.searchKeyword(p, '咖啡 拿铁')),
+  pc_search_notes_time: pc(async (p) => [
+    await api.searchNotes(p, '咖啡', 1, 'time_descending', 2, '2fixedsearchid', 1),
+    await api.searchNotes(p, '咖啡', 2, 'general', 0, '2fixedsearchid', 3),
+  ]),
 
   im_categories_edith: pc((p) => api.liveRequest(p, EDITH, '/api/sns/red/live/web/feed/category')),
   live_room_info: pc((p) => api.liveRoomInfo(p, ROOM, USER_ID)),
@@ -360,6 +365,32 @@ function pcCtx(args: Record<string, string | undefined> = {}, options: Record<st
 }
 
 const hits = (requests: GoldenRequest[], part: string) => requests.filter((r) => r.url.includes(part))
+
+describe('xhs 用户、搜索', () => {
+  it('keyword suggest：sug_items 的 text，空的去掉', async () => {
+    const { requests, result, error } = await serve(
+      (r) => security(r) ?? (r.url.includes('/api/sns/web/v1/search/recommend') ? ok({ sug_items: [{ text: '咖啡拿铁', search_type: 'notes' }, { text: '' }] }) : undefined),
+      () => cmd.keywordSuggest(pcCtx({ prefix: '咖啡' })),
+    )
+    if (error) throw error
+    expect(hits(requests, '/api/sns/web/v1/search/recommend?keyword=%E5%92%96%E5%95%A1')).toHaveLength(1)
+    expect(result).toEqual([{ text: '咖啡拿铁', heat: null }])
+  })
+
+  it('item search --time：day / week / half_year 写进 filters，all 不带 filters', async () => {
+    const route = (r: GoldenRequest) => security(r) ?? (r.url.includes('/search/notes') ? ok({ items: [], has_more: false }) : undefined)
+    const tags = async (time?: string) => {
+      const { requests, error } = await serve(route, () => cmd.itemSearch(pcCtx({ keyword: '咖啡' }, { time, sort: 'latest', type: 'image' })))
+      if (error) throw error
+      return jsonBody(hits(requests, '/api/sns/web/v2/search/notes')[0]!).filters?.map((f: any) => f.tags[0])
+    }
+    expect(await tags('day')).toEqual(['time_descending', '普通笔记', '一天内', '不限', '不限'])
+    expect(await tags('week')).toEqual(['time_descending', '普通笔记', '一周内', '不限', '不限'])
+    expect(await tags('half_year')).toEqual(['time_descending', '普通笔记', '半年内', '不限', '不限'])
+    expect(await tags('all')).toBeUndefined()
+    expect(await tags()).toBeUndefined()
+  })
+})
 
 describe('xhs 创作者中心的会话', () => {
   /** 主站和创作者中心都有登录态。 */

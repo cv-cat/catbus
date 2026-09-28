@@ -336,6 +336,8 @@ export async function itemGet(ctx: Ctx) {
 
 const SORT: Record<string, string> = { general: 'general', latest: 'time_descending', popular: 'popularity_descending', comments: 'comment_descending', collects: 'collect_descending' }
 const TYPE: Record<string, number> = { all: 0, video: 1, image: 2 }
+/** 上游 note_time：0 不限、1 一天内、2 一周内、3 半年内。 */
+const TIME: Record<string, number> = { all: 0, day: 1, week: 2, half_year: 3 }
 
 export async function itemSearch(ctx: Ctx) {
   return run(ctx, async (p) => {
@@ -348,7 +350,8 @@ export async function itemSearch(ctx: Ctx) {
       sid = s || undefined
     }
     sid ??= api.searchId()
-    const d = p.check(await api.searchNotes(p, ctx.args.keyword!, page, SORT[(ctx.options.sort as string) ?? 'general']!, TYPE[(ctx.options.type as string) ?? 'all']!, sid))
+    const o = ctx.options as Record<string, string | undefined>
+    const d = p.check(await api.searchNotes(p, ctx.args.keyword!, page, SORT[o.sort ?? 'general']!, TYPE[o.type ?? 'all']!, sid, TIME[o.time ?? 'all']!))
     const list = (d?.items ?? []).filter((x: any) => x.model_type ? x.model_type === 'note' : true).map(norm.card)
     return paged(list, `${page + 1}:${sid}`, Boolean(d?.has_more))
   })
@@ -482,6 +485,16 @@ export async function feedCategories(ctx: Ctx): Promise<Category[]> {
 }
 
 // ================================================================ keyword / notice
+
+/** 搜索联想词（上游 get_search_keyword，响应的 sug_items）。 */
+export async function keywordSuggest(ctx: Ctx) {
+  return run(ctx, async (p) => {
+    const d = p.check(await api.searchKeyword(p, ctx.args.prefix!))
+    return (d?.sug_items ?? [])
+      .map((x: any) => n.keyword({ text: String(x?.text ?? x?.search_word ?? '') }, x))
+      .filter((k: { text: string }) => k.text)
+  })
+}
 
 export async function keywordHot(ctx: Ctx) {
   return run(ctx, async (p) => {

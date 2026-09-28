@@ -84,7 +84,7 @@
 - `item get --area`：jd
 - `item search --sort` 取值：xhs general / latest / popular / comments / collects；douyin general / popular / latest；bilibili general / views / latest / collects；jd general / sales / price_asc / price_desc / comments；x general / latest
 - `item search --type` 取值：xhs all / video / image；douyin all / video / image；bilibili video / article；x all / video / image
-- `item search --time` 取值：douyin all / day / week / half_year
+- `item search --time` 取值：xhs all / day / week / half_year；douyin all / day / week / half_year
 - `item search --length`：douyin
 - `item search --range`：douyin
 - `item search --area`：jd
@@ -145,7 +145,7 @@
 |---|---|---|---|---|---|---|---|---|---|---|
 | feed list | ◐ | ◐ | ✓ | ◐ | ◐ | ○ | ○ | ○ | ○ | ◐ |
 | feed categories | ✓ | — | ○ | — | — | — | — | — | — | — |
-| keyword suggest | ○ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ○ |
+| keyword suggest | ✓ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ○ |
 | keyword hot | ✓ | ○ | ○ | ○ | ○ | ○ | — | — | ✓ | ○ |
 
 - xhs `feed list`：following 规划中
