@@ -77,11 +77,23 @@ export async function showQrcode(ctx: HandlerContext, content: string, hint = '�
   return png
 }
 
+/** 轮询时最多容忍的连续网络错误次数（含最后一次）。 */
+const POLL_NETWORK_RETRIES = 4
+
 /** 按间隔轮询，直到返回非 undefined 的值；超时报 AUTH_REQUIRED。 */
 export async function poll<T>(fn: () => Promise<T | undefined>, options: { interval?: number; timeout?: number; what?: string } = {}): Promise<T> {
   const deadline = now() + (options.timeout ?? 180_000)
+  // 扫码要等几分钟，期间偶发的网络错误（连接被重置、本机地址暂不可用等）不该让整个登录失败；连续失败才放弃
+  let networkErrors = 0
   for (;;) {
-    const result = await fn()
+    let result: T | undefined
+    try {
+      result = await fn()
+      networkErrors = 0
+    } catch (err) {
+      if (!(err instanceof CatbusError && err.code === 'NETWORK') || ++networkErrors >= POLL_NETWORK_RETRIES) throw err
+      process.stderr.write(`[catbus] 警告：轮询时网络出错，稍后重试（${networkErrors}/${POLL_NETWORK_RETRIES - 1}）：${err.message}\n`)
+    }
     if (result !== undefined) return result
     if (now() >= deadline) throw new CatbusError('AUTH_REQUIRED', `${options.what ?? '登录'}超时`, { hint: '重新执行登录命令' })
     await sleep(options.interval ?? 2000)

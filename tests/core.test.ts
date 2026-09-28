@@ -246,3 +246,21 @@ describe('vm.callScript', () => {
     expect(() => callScript(file, 'nope', [])).toThrow(/没有函数/)
   })
 })
+
+describe('login.poll', () => {
+  it('偶发的网络错误不中断轮询；连续失败才放弃；其他错误照常抛出', async () => {
+    const { poll } = await import('../src/core/login.js')
+    const { CatbusError } = await import('../src/core/errors.js')
+    const net = () => new CatbusError('NETWORK', '网络错误', { detail: { kind: 'connect' } })
+    const err = process.stderr.write
+    process.stderr.write = (() => true) as typeof process.stderr.write
+    try {
+      let n = 0
+      expect(await poll(async () => (++n === 1 ? Promise.reject(net()) : n < 3 ? undefined : 'ok'), { interval: 1 })).toBe('ok')
+      await expect(poll(async () => Promise.reject(net()), { interval: 1 })).rejects.toMatchObject({ code: 'NETWORK' })
+      await expect(poll(async () => Promise.reject(new CatbusError('UPSTREAM', 'x')), { interval: 1 })).rejects.toMatchObject({ code: 'UPSTREAM' })
+    } finally {
+      process.stderr.write = err
+    }
+  })
+})
