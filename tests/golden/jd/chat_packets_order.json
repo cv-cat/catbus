@@ -1,0 +1,147 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": {
+    "url": "wss://ws1-dd.jd.com/?pin=fake_pin_%E6%B5%8B%E8%AF%95&appId=im.customer&aid=FAKEAID0123&clientType=comet&_wid_=94ed5155-4d0a-1427-6fcb-bbcdb182f39e",
+    "packets": [
+      {
+        "from": {
+          "app": "im.customer",
+          "pin": "fake_pin_测试",
+          "clientType": "comet"
+        },
+        "datetime": "2026-09-21 22:13:20",
+        "ver": "4.2",
+        "lang": "zh_CN",
+        "aid": "FAKEAID0123",
+        "type": "client_heartbeat",
+        "to": {
+          "app": "im.customer"
+        },
+        "timestamp": 1790000000123
+      },
+      {
+        "from": {
+          "app": "im.customer",
+          "pin": "fake_pin_测试",
+          "clientType": "comet"
+        },
+        "datetime": "2026-09-21 22:13:20",
+        "ver": "4.2",
+        "lang": "zh_CN",
+        "aid": "FAKEAID0123",
+        "type": "chat_message",
+        "to": {
+          "app": "jd.waiter"
+        },
+        "timestamp": 1790000000123,
+        "id": "52261e5d15c84934bab028bb5a2c0a08",
+        "body": {
+          "content": "顾客fake_pin_测试发起咨询（订单编号：300000000001）",
+          "type": "config",
+          "chatinfo": {
+            "venderId": "1",
+            "ct": "3",
+            "mt": "51",
+            "orderId": "300000000001"
+          },
+          "uniformBizInfo": {},
+          "action": {
+            "code": "cfg.welcome"
+          }
+        }
+      },
+      {
+        "from": {
+          "app": "im.customer",
+          "pin": "fake_pin_测试",
+          "clientType": "comet"
+        },
+        "datetime": "2026-09-21 22:13:20",
+        "ver": "4.2",
+        "lang": "zh_CN",
+        "aid": "FAKEAID0123",
+        "type": "chat_message",
+        "to": {
+          "app": "jd.waiter"
+        },
+        "timestamp": 1790000000123,
+        "id": "1ad3c43508e642e39e43212494c0826b",
+        "body": {
+          "content": "这个订单什么时候发货",
+          "type": "text",
+          "chatinfo": {
+            "venderId": "1",
+            "ct": "3",
+            "mt": "51",
+            "orderId": "300000000001"
+          }
+        }
+      },
+      {
+        "from": {
+          "app": "im.customer",
+          "pin": "fake_pin_测试",
+          "clientType": "comet"
+        },
+        "datetime": "2026-09-21 22:13:20",
+        "ver": "4.2",
+        "lang": "zh_CN",
+        "aid": "FAKEAID0123",
+        "type": "chat_message",
+        "to": {
+          "app": "jd.waiter"
+        },
+        "timestamp": 1790000000123,
+        "id": "bb4b6b58143144edaeb6adde6298c212",
+        "body": {
+          "content": "顾客fake_pin_测试发起咨询（商品编号：100087543376）（订单编号：300000000001）",
+          "type": "config",
+          "chatinfo": {
+            "venderId": "1",
+            "ct": "3",
+            "mt": "51",
+            "pid": "100087543376",
+            "orderId": "300000000001"
+          },
+          "uniformBizInfo": {},
+          "action": {
+            "code": "cfg.welcome"
+          }
+        }
+      },
+      {
+        "from": {
+          "app": "im.customer",
+          "pin": "fake_pin_测试",
+          "clientType": "comet"
+        },
+        "datetime": "2026-09-21 22:13:20",
+        "ver": "4.2",
+        "lang": "zh_CN",
+        "aid": "FAKEAID0123",
+        "type": "chat_message",
+        "to": {
+          "app": "jd.waiter"
+        },
+        "timestamp": 1790000000123,
+        "id": "11a9b2849fd348a4acc9262c4b79259a",
+        "body": {
+          "content": "在吗",
+          "type": "text",
+          "chatinfo": {
+            "venderId": "1",
+            "ct": "3",
+            "mt": "51",
+            "pid": "100087543376",
+            "orderId": "300000000001"
+          }
+        }
+      }
+    ]
+  },
+  "error": null
+}

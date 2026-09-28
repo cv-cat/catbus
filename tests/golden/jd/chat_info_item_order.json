@@ -1,0 +1,152 @@
+{
+  "input": {
+    "vender_id": "1000000",
+    "pid": "100087543376",
+    "order_id": "300000000001"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://api.m.jd.com/client.action?functionId=getChatInfo&appid=wh5&client=wh5&clientVersion=1.0.0&loginType=3&h5st=20260921221323123%3By55v7ij5pyee25j8%3B2b51e%3Btk03wcafe000018nFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAK%3B9246cfded39a06dd2a730421203dfdd8b8f052357db3d50bc100571d973e0b22%3B5.3%3B1790000000123%3BpjbMhjpdBWIfGWVN7WIRCOIO2XYNJrJdJrESJrpjh75f5nof7rof7rofyPYfLDIj3ipjLDrgJ3VbmmHRfmUbZSGjLDIj3nYOJipjLDrg5fojxjJQIeFjLrJp-jJjLDIj7SnQEiVS0ipjLDrgJTFSGmlf2j4T5nleKWVdIaVe5nFeIa4f5L4fHaFfKWFfJrJdJfUT1yVTIipjLDrgJrIjLDIj3XETJrpjh7Jj2z5f9XIOMWlQCS1U2LFjLDIj1ipjLDrgJDlazj3TJe1a3bIRJrJdJ31QHyVT5ipjLDrgJj4f9G1WJrJdJTlPJrpjh7ZMLrJpJbFa-nYYJrJdJfYf2iFjLrpjLDrg3rJdJnYf2iFjLrpjLDrg3nojxjpf6XETJrpjLrJp-LYgLDIj5nYOJipjLrpjh7JjzLFVpaHQ3b4SDipjxjZQ8aFQKiEjLrpjLDrg7rJdJLYOJipjLrpjh7pfLDIj0XETJrpjLrJp-jIfLDIj1XETJrpjLrJp-rojxjZe2iFjLrpjLDrg7rJdJbYOJipjLrpjh7Ze7nojxj5f2iFjLrpjLDrgJTIg6zpfJrJdJnYOJipjLrpjh7pfLDIjAOEjLrpjLDrg2rJdJfkQJrpjLrJp-rojxjpQJrpjLrJp-rojxjpS0ipjLrpjh-kjxjpS9WlOzWFjLrJp-3kjLDLjWthxgVAyMyVR7uWSAmFSJrJdJjoPJrpjLrJpwqJdJrkPJrpjh7Jj3ToNL-oe1zVRUq5d7zpf6rpWdq5P0ulS9G1WJrJdJnVO4ipjLD7N%3Ba37d7572cd9638f818fd0376ef6c34e319281cb4f832e4ee36cb6e543bd18a4b%3Bof7rHGHQ8GlOIyVOF6JQ8G1P5WFW3yVSC61T-bEQGGlQI6ZNHuFT-bVR7qUT&x-api-eid-token=jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://jdcs.jd.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Google Chrome\";v=\"152\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "x-referer-page",
+          "https://jdcs.jd.com/"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded;charset=UTF-8"
+        ],
+        [
+          "x-rp-client",
+          "h5_1.0.0"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://jdcs.jd.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "__jdu",
+          "17899999991231234567890"
+        ],
+        [
+          "__jda",
+          "122270672.17899999991231234567890.1789999999.1789999999.1789999999.1"
+        ],
+        [
+          "__jdc",
+          "122270672"
+        ],
+        [
+          "areaId",
+          "1"
+        ],
+        [
+          "ipLoc-djd",
+          "1-2800-55812-0.1234567890"
+        ],
+        [
+          "3AB9D23F7A4B3C9B",
+          "FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEI"
+        ],
+        [
+          "3AB9D23F7A4B3CSS",
+          "jdd03FAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIDFAKEEIAAAAAFAKEFAKEFAKEAAAAAAFAKEFAKEFAKEFAKX"
+        ],
+        [
+          "thor",
+          "FAKETHOR0123456789ABCDEF"
+        ],
+        [
+          "pin",
+          "fake_pin_%E6%B5%8B%E8%AF%95"
+        ],
+        [
+          "unick",
+          "fake"
+        ],
+        [
+          "shshshfpa",
+          "0f0e0d0c-0b0a-0908-0706-050403020100-1789999999"
+        ],
+        [
+          "shshshfpx",
+          "0f0e0d0c-0b0a-0908-0706-050403020100-1789999999"
+        ],
+        [
+          "shshshfpb",
+          "FAKEshshshfpb"
+        ]
+      ],
+      "body": "body=%7B%22lang%22%3A%22zh_CN%22%2C%22venderId%22%3A%221000000%22%2C%22groupId%22%3A%22%22%2C%22pid%22%3A%22100087543376%22%2C%22ppid%22%3A%22%22%2C%22shopId%22%3A%22%22%2C%22siteId%22%3A-1%2C%22entry%22%3A%22%22%2C%22orderId%22%3A%22300000000001%22%2C%22reqSrc%22%3A%22s_comet%22%2C%22cAppId%22%3A%22%22%2C%22bbtf%22%3A%22%22%2C%22uniformBizInfo%22%3A%7B%7D%2C%22customerAppId%22%3A%22im.customer%22%7D",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "code": 0,
+        "data": {}
+      }
+    }
+  ],
+  "result": {
+    "code": 0,
+    "data": {}
+  },
+  "error": null
+}

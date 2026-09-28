@@ -20,6 +20,17 @@ const area = { area: z.string().regex(/^\d+([_-]\d+){3}$/, '格式为 省_市_�
 /** 订单时间范围（get_order_list 的 date_range）。 */
 const range = { range: z.string().regex(/^(3m|this_year|\d{4})$/, '取值为 3m、this_year 或四位年份').default('3m').describe('时间范围：3m 近三个月、this_year 今年内、2025 等四位年份') }
 
+/** 按订单咨询（get_chat_info / send_hello / send_text 的 order_id）。 */
+const order = { order: z.string().optional().describe('订单号或订单详情页 URL：按订单咨询客服') }
+
+/** msg send：--to / --conversation / --item 至多一个；只有 --order 时联系京东自营客服。 */
+function msgSendCheck(args: Record<string, string | undefined>, o: Record<string, unknown>): string | undefined {
+  const targets = ['to', 'conversation', 'item'].filter((k) => o[k] != null)
+  if (targets.length > 1) return '--to、--conversation、--item 只能用一个'
+  if (!targets.length && o.order == null) return '需要 --conversation、--item 或 --order'
+  if (args.text == null && o.image == null && o.video == null) return '需要 <text>、--image 或 --video'
+}
+
 export default definePlatform({
   id: 'jd',
   name: '京东',
@@ -50,7 +61,7 @@ export default definePlatform({
 
         'msg list': impl('full', 'msgList'),
         'msg history': impl('full', 'msgHistory'),
-        'msg send': impl('full', 'msgSend'),
+        'msg send': impl('full', 'msgSend', { options: order, check: msgSendCheck }),
         'msg listen': impl('full', 'msgListen'),
         'msg read': 'none',
         'msg revoke': 'none',

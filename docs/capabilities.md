@@ -140,6 +140,7 @@
 
 - x `msg history`：消息端到端加密，只给出占位消息
 - xianyu `msg send`：--to 不带 --item 时按上游的默认商品建会话；--to 加 --item 就这件商品联系对方（卖家可以联系买家）
+- `msg send --order`：jd
 
 ## media、folder、series、history、topic、poi
 

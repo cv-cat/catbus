@@ -250,6 +250,44 @@ export function extractText(body: any): string | null {
 
 const MSG_TYPES: Record<string, Message['type']> = { text: 'text', image: 'image', img: 'image', video: 'video', template2: 'card', card: 'card' }
 
+const userOf = (pin: unknown): UserRef | null => (pin ? { id: String(pin), name: String(pin), url: null } : null)
+
+/**
+ * WS 下行帧 → msg listen 输出的消息（JdChatWS._handle 的分支）：
+ * - chat_message / event_message：有可读文本或图片时输出；
+ * - sys_msg（系统消息）、revoke_message（撤回）、chat_session_open / chat_session_close（会话建立 / 结束）：type 为 other，
+ *   text 是上游日志里的那段说明，撤回时带上被撤回的消息 id；
+ * - 心跳、回执、失败等协议帧：不输出（返回 null）。
+ */
+export function chatEvent(p: any): Message | null {
+  if (!p || typeof p !== 'object') return null
+  const body = p.body && typeof p.body === 'object' ? p.body : {}
+  const vender = String(body.chatinfo?.venderId ?? body.venderId ?? '')
+  const other = (text: string | null, from: UserRef | null = null) => n.message({ id: n.id(p.id), conversation_id: vender, from, type: 'other', text, created_at: time(p.timestamp ?? p.datetime) }, p)
+  switch (p.type) {
+    case 'chat_message':
+    case 'event_message': {
+      const m = message(p, vender)
+      return m.text || m.media.length ? m : null
+    }
+    case 'sys_msg':
+      return other(extractText(body))
+    case 'revoke_message': {
+      const text = n.str(body.revokeContentToC) ?? '对方撤回了一条消息'
+      const revoked = n.str(body.revokeMsgId ?? body.msgId ?? body.mid ?? body.id)
+      return other(revoked ? `${text}（被撤回的消息：${revoked}）` : text, userOf(p.from?.pin))
+    }
+    case 'chat_session_open': {
+      const waiter = n.str(body.waiter?.pin)
+      return other(`会话建立：商家 ${vender || '-'}，客服 ${waiter ?? '-'}`, userOf(waiter))
+    }
+    case 'chat_session_close':
+      return other('会话结束')
+    default:
+      return null
+  }
+}
+
 /** 一条咚咚消息（WS 下行帧或 queryLastLogs 的元素）。 */
 export function message(p: any, venderId: string): Message {
   const body = p.body ?? {}

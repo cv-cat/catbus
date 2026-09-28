@@ -61,6 +61,7 @@ function cmdCtx(init: { args?: Record<string, string>; options?: Record<string, 
   return ctx
 }
 
+const ORDER_ID = '300000000001'
 /** 对拍用的收货地区；命令行用 `-` 写法，接口里是 `_`。 */
 const AREA = '2_2830_51810_0'
 const areaCtx = (init: { args?: Record<string, string>; options?: Record<string, unknown> } = {}) => cmdCtx({ ...init, options: { area: AREA.replaceAll('_', '-'), ...init.options } })
@@ -144,6 +145,9 @@ const CASES: Record<string, () => Promise<unknown>> = {
     const result = await api.search(jd, KEYWORD, 1)
     return { result, evtoken: jd.cookie('x-rp-evtoken') }
   },
+  // 按订单咨询：getChatInfo 带 orderId
+  chat_info_order: () => api.chatInfo(chatSession(), '1', '', ORDER_ID),
+  chat_info_item_order: () => api.chatInfo(chatSession(), '1000000', SKU, ORDER_ID),
   // comment list --limit 30 → commentNum 30
   product_comments_30: () => cmd.commentList(cmdCtx({ args: { item: SKU }, options: { limit: 30 } })),
   // --area：显式地区覆盖 ipLoc-djd
@@ -231,24 +235,43 @@ describe('jd 对拍：请求构造与签名', () => {
     }, 60_000)
   }
 
-  it('chat_packets：咚咚 WebSocket 地址与帧', async () => {
-    const c = loadCase('jd', 'chat_packets')
-    const result = (await run(c, async () => {
-      const chat = new ChatClient(chatSession(), '1000000', 'jd.waiter')
-      return { url: chat.url, packets: [chat.heartbeatPacket(), chat.helloPacket(SKU), chat.textPacket('在吗', SKU)] }
-    })) as { url: string; packets: Record<string, unknown>[] }
+  /** 咚咚帧：datetime 是本机时区的本地时间，单独比较。 */
+  async function expectPackets(name: string, build: () => { url: string; packets: Record<string, unknown>[] }) {
+    const c = loadCase('jd', name)
+    const result = (await run(c, async () => build())) as { url: string; packets: Record<string, unknown>[] }
     expect(result.url).toBe(c.result.url)
-    // datetime 是本机时区的本地时间：单独比较
     const local = (() => {
       const d = new Date(c.now)
       const p = (v: number) => String(v).padStart(2, '0')
       return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
     })()
+    expect(result.packets.length).toBe(c.result.packets.length)
     for (const [i, p] of result.packets.entries()) {
       expect(p.datetime).toBe(local)
       expect({ ...p, datetime: null }).toEqual({ ...c.result.packets[i], datetime: null })
     }
-  })
+  }
+
+  it('chat_packets：咚咚 WebSocket 地址与帧', () =>
+    expectPackets('chat_packets', () => {
+      const chat = new ChatClient(chatSession(), '1000000', 'jd.waiter')
+      return { url: chat.url, packets: [chat.heartbeatPacket(), chat.helloPacket(SKU), chat.textPacket('在吗', SKU)] }
+    }))
+
+  it('chat_packets_order：按订单咨询的欢迎语与消息带 orderId', () =>
+    expectPackets('chat_packets_order', () => {
+      const chat = new ChatClient(chatSession(), '1', 'jd.waiter')
+      return {
+        url: chat.url,
+        packets: [
+          chat.heartbeatPacket(),
+          chat.helloPacket('', ORDER_ID),
+          chat.textPacket('这个订单什么时候发货', '', ORDER_ID),
+          chat.helloPacket(SKU, ORDER_ID),
+          chat.textPacket('在吗', SKU, ORDER_ID),
+        ],
+      }
+    }))
 })
 
 describe('jd 403：探测登录态，分清登录失效与限流（diagnose）', () => {
@@ -351,10 +374,56 @@ describe('jd 私有选项', () => {
     }
   })
 
+  it('msg send --order：与 --item / --conversation 之一合用，或单独使用', async () => {
+    const jd = PLATFORMS.find((p) => p.id === 'jd')!
+    const web = jd.endpoints.web as Exclude<typeof jd.endpoints.web, 'planned'>
+    const check = web.commands.get('msg send')!.check!
+    const text = { text: '在吗' }
+    expect(check(text, { order: ORDER_ID })).toBeUndefined()
+    expect(check(text, { order: ORDER_ID, item: SKU })).toBeUndefined()
+    expect(check(text, { order: ORDER_ID, conversation: '1000000' })).toBeUndefined()
+    expect(check(text, { conversation: '1000000' })).toBeUndefined()
+    expect(check(text, {})).toMatch(/--order/)
+    expect(check(text, { item: SKU, conversation: '1000000' })).toMatch(/只能用一个/)
+    expect(check({}, { order: ORDER_ID })).toMatch(/text/)
 
+    expect(cmd.resolveOrderId(ORDER_ID)).toBe(ORDER_ID)
+    expect(cmd.resolveOrderId(`https://details.jd.com/normal/item.action?orderid=${ORDER_ID}`)).toBe(ORDER_ID)
+    expect(() => cmd.resolveOrderId('abc')).toThrow(CatbusError)
+
+    // 只有 --order：京东自营客服（venderId 1），不发请求
+    expect(await cmd.chatTarget(cmdCtx({ options: { order: ORDER_ID } }), session())).toEqual({ venderId: '1', pid: '', orderId: ORDER_ID })
+    expect(await cmd.chatTarget(cmdCtx({ options: { order: ORDER_ID, conversation: '1000000' } }), session())).toEqual({
+      venderId: '1000000',
+      pid: '',
+      orderId: ORDER_ID,
+    })
+    // --item + --order：venderId 取自商品详情（与 product_detail 对拍的请求相同）
+    const c = loadCase('jd', 'product_detail')
+    const detail = { ...c, responses: [{ status: 200, headers: {}, body: { code: 0, shopInfo: { shop: { venderId: 1000000 } } } }] }
+    const ctx = cmdCtx({ options: { order: ORDER_ID, item: SKU } })
+    const target = await run(detail, async () => cmd.chatTarget(ctx, new Jd(ctx)))
+    expect(target).toEqual({ venderId: '1000000', pid: SKU, orderId: ORDER_ID })
+  })
 })
 
 describe('jd 归一化与解析', () => {
+  it('msg listen：系统消息、撤回、会话建立输出为 other；协议帧不输出', () => {
+    const base = { from: { app: 'jd.waiter', pin: 'waiter_1', clientType: 'comet' }, datetime: '2025-08-01 12:00:00', timestamp: 1754020800000, ver: '4.2', lang: 'zh_CN', aid: 'x' }
+    const text = norm.chatEvent({ ...base, id: 'm1', type: 'chat_message', body: { type: 'text', content: '您好', chatinfo: { venderId: '1000000' } } })
+    expect(text).toMatchObject({ id: 'm1', conversation_id: '1000000', type: 'text', text: '您好', from: { id: 'waiter_1' } })
+    const sys = norm.chatEvent({ ...base, id: 's1', type: 'sys_msg', body: { data: { tplData: { title: '客服已接入' } }, chatinfo: { venderId: '1000000' } } })
+    expect(sys).toMatchObject({ id: 's1', conversation_id: '1000000', type: 'other', text: '客服已接入', from: null, created_at: '2025-08-01T12:00:00+08:00' })
+    const revoke = norm.chatEvent({ ...base, id: 'r1', type: 'revoke_message', body: { revokeContentToC: '客服撤回了一条消息', revokeMsgId: 'm0', venderId: '1000000' } })
+    expect(revoke).toMatchObject({ id: 'r1', conversation_id: '1000000', type: 'other', text: '客服撤回了一条消息（被撤回的消息：m0）', from: { id: 'waiter_1' } })
+    expect(norm.chatEvent({ ...base, id: 'r2', type: 'revoke_message', body: {} })?.text).toBe('对方撤回了一条消息')
+    const open = norm.chatEvent({ ...base, id: 'o1', type: 'chat_session_open', body: { venderId: '1000000', waiter: { pin: 'waiter_1' }, code: 1 } })
+    expect(open).toMatchObject({ type: 'other', conversation_id: '1000000', text: '会话建立：商家 1000000，客服 waiter_1', from: { id: 'waiter_1' } })
+    expect(norm.chatEvent({ ...base, id: 'c1', type: 'chat_session_close', body: {} })).toMatchObject({ type: 'other', text: '会话结束' })
+    for (const type of ['client_heartbeat', 'ack', 'chat_message_result', 'failure', 'msg_read_ack']) expect(norm.chatEvent({ ...base, type })).toBeNull()
+    expect(norm.chatEvent({ ...base, type: 'chat_message', body: { type: 'template2', data: {} } })).toBeNull()
+  })
+
   it('订单：金额、时间、商品 SKU', () => {
     const html = readFileSync(new URL('../scripts/golden/jd/order_list.html', import.meta.url), 'utf8')
     const orders = api.parseOrders(html)

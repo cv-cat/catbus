@@ -431,6 +431,36 @@ def chat_packets():
 
 case('chat_packets', chat_packets)
 
+# ---------------------------------------------------------------- 按订单咨询：get_chat_info / send_hello / send_text 带 order_id
+
+ORDER_ID = '300000000001'
+case('chat_info_order', lambda: JdAPI.get_chat_info(chat_logged(), vender_id='1', order_id=ORDER_ID),
+     vender_id='1', order_id=ORDER_ID)
+case('chat_info_item_order', lambda: JdAPI.get_chat_info(chat_logged(), vender_id='1000000', pid=SKU, order_id=ORDER_ID),
+     vender_id='1000000', pid=SKU, order_id=ORDER_ID)
+
+
+def chat_packets_order():
+    auth = chat_logged()
+    ws = JdChatWS(auth, vender_id='1', vender_app='jd.waiter')
+    sent = []
+
+    class FakeSocket:
+        def send(self, text):
+            sent.append(json.loads(text))
+
+    ws.ws = FakeSocket()
+    ws._alive = True
+    ws.send_heartbeat()
+    ws.send_hello(order_id=ORDER_ID)
+    ws.send_text('这个订单什么时候发货', order_id=ORDER_ID)
+    ws.send_hello(pid=SKU, order_id=ORDER_ID)
+    ws.send_text('在吗', pid=SKU, order_id=ORDER_ID)
+    return {'url': ws.url, 'packets': sent}
+
+
+case('chat_packets_order', chat_packets_order)
+
 # ---------------------------------------------------------------- 403 空 body：重签重试后探测登录态（diagnose 的第一步）
 
 

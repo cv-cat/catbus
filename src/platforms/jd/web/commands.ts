@@ -447,39 +447,63 @@ export async function msgHistory(ctx: Ctx) {
 }
 
 /** 商家侧 appId：咚咚消息信封的 to.app（get_vender_app），京东自营是 jd.waiter。 */
-async function venderApp(jd: Jd, venderId: string, pid = ''): Promise<string> {
-  const r = await api.chatInfo(jd, venderId, pid)
+async function venderApp(jd: Jd, venderId: string, pid = '', orderId = ''): Promise<string> {
+  const r = await api.chatInfo(jd, venderId, pid, orderId)
   return String(r?.body?.cache?.vender?.appId || WAITER_APP)
 }
 
-export async function msgSend(ctx: Ctx): Promise<Message> {
+/** 京东自营客服的 venderId（上游 get_chat_info / JdChatWS 的默认值）。 */
+const SELF_VENDER = '1'
+
+/** 订单号：纯数字（order list 输出的 id），或订单详情页 URL 里的 orderid。 */
+export function resolveOrderId(input: string): string {
+  const s = String(input ?? '').trim()
+  if (/^\d{6,}$/.test(s)) return s
+  const m = /[?&]orderid=(\d{6,})/i.exec(s)
+  if (m) return m[1]!
+  throw new CatbusError('USAGE', `无法识别的订单：${input}`, { hint: '传订单号（catbus jd order list 输出的 id），或订单详情页 URL' })
+}
+
+/**
+ * 咨询对象（chat_demo.py 的 VENDER_ID / SKU_ID，加上 get_chat_info 的 order_id）：
+ * --conversation 直接给商家 venderId；--item 从商品详情取 venderId；只有 --order 时是京东自营客服。
+ */
+export async function chatTarget(ctx: Ctx, jd: Jd): Promise<{ venderId: string; pid: string; orderId: string }> {
   const o = ctx.options as Record<string, any>
-  if (o.to) throw new CatbusError('UNSUPPORTED', '京东咚咚只能联系商家客服', { hint: '用 --item <商品> 或 --conversation <商家 venderId>' })
-  if (o.image || o.video) throw new CatbusError('UNSUPPORTED', '京东咚咚暂只支持发文本')
-  const text = ctx.args.text
-  if (!text) throw new CatbusError('USAGE', '需要消息内容')
-  const jd = await chatSession(ctx)
-  let venderId = o.conversation as string | undefined
+  const orderId = o.order != null ? resolveOrderId(o.order) : ''
+  let venderId = (o.conversation as string | undefined) ?? SELF_VENDER
   let pid = ''
   if (o.item) {
     pid = await resolveSku(jd, o.item)
     const d = await api.productDetail(jd, pid)
     await check(jd, d)
-    venderId = n.str(norm.find(d, ['venderId'])) ?? undefined
+    venderId = n.str(norm.find(d, ['venderId'])) ?? ''
     if (!venderId) throw new CatbusError('UPSTREAM', '商品详情里没有商家 venderId')
   }
-  const app = await venderApp(jd, venderId!, pid)
-  const chat = new ChatClient(jd, venderId!, app)
+  return { venderId, pid, orderId }
+}
+
+export async function msgSend(ctx: Ctx): Promise<Message> {
+  const o = ctx.options as Record<string, any>
+  if (o.to) throw new CatbusError('UNSUPPORTED', '京东咚咚只能联系商家客服', { hint: '用 --item <商品>、--conversation <商家 venderId> 或 --order <订单>' })
+  if (o.image || o.video) throw new CatbusError('UNSUPPORTED', '京东咚咚暂只支持发文本')
+  const text = ctx.args.text
+  if (!text) throw new CatbusError('USAGE', '需要消息内容')
+  if (o.order != null) resolveOrderId(o.order)
+  const jd = await chatSession(ctx)
+  const { venderId, pid, orderId } = await chatTarget(ctx, jd)
+  const app = await venderApp(jd, venderId, pid, orderId)
+  const chat = new ChatClient(jd, venderId, app)
   const socket = await chat.connect(ctx.signal)
   try {
     await chat.send(chat.heartbeatPacket())
-    await chat.send(chat.helloPacket(pid))
-    const packet = chat.textPacket(text, pid)
+    await chat.send(chat.helloPacket(pid, orderId))
+    const packet = chat.textPacket(text, pid, orderId)
     await chat.send(packet)
     // 等服务端的 chat_message_result 回执，最多 5 秒
     const ack = await waitFor(socket.messages, (p) => p.type === MsgType.CHAT_MESSAGE_RESULT || p.type === MsgType.FAILURE, 5000)
     if (ack?.type === MsgType.FAILURE) throw new CatbusError('UPSTREAM', `咚咚发送失败：${ack.body?.msg ?? ack.body?.code ?? ''}`, { detail: ack.body ?? null })
-    return norm.message(packet, venderId!)
+    return norm.message(packet, venderId)
   } finally {
     chat.close()
   }
@@ -511,9 +535,8 @@ export function msgListen(ctx: Ctx) {
           for (const p of packets(raw)) {
             ctx.log.debug(`ws ${p?.type}`)
             if (p?.type === MsgType.FAILURE) ctx.log.warn(`咚咚错误 code=${p.body?.code} ${p.body?.msg ?? ''}`)
-            if (p?.type !== MsgType.CHAT_MESSAGE && p?.type !== MsgType.EVENT_MESSAGE) continue
-            const m = norm.message(p, String(p.body?.chatinfo?.venderId ?? ''))
-            if (m.text || m.media.length) yield m
+            const m = norm.chatEvent(p)
+            if (m) yield m
           }
         }
       } finally {

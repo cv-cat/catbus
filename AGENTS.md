@@ -246,6 +246,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | jd | `cart count` | 购物车数量 | `{count}` |
 | jd | `coupon list <item>` | 商品可用优惠券 | Coupon[] |
 | jd | `item get` / `item search` / `item related` / `coupon list` / `cart count` / `history list` / `user collects` `[--area <地区编码>]` | 私有选项：收货地区，影响价格和库存。取值是京东的地区编码 `省_市_区_镇`，用 `_` 或 `-` 分隔，例如 `1_2800_55812_0`；默认取登录态里的 `ipLoc-djd` cookie，没有时为 `1_2800_55812_0` | Item / Item[] / Coupon[] / `{count}` |
+| jd | `msg send <text> --order <订单> [--item <item> \| --conversation <venderId>]` | 私有选项：按订单咨询客服，会话和消息都带上订单号。`<订单>` 是订单号（`order list` 输出的 id），也接受订单详情页 URL。可以和 `--item`、`--conversation` 之一一起用；单独用时联系京东自营客服 | Message |
 
 扩展类型的字段见 6.2。
 

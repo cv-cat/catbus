@@ -10,14 +10,23 @@ import { generateWid } from './util.js'
  * aid 必须在顶层；建连后先心跳再欢迎语；心跳 30 秒一次且不带 id。
  */
 
+/** 咚咚消息类型（MsgType，取自 bundle 模块 5a50 的常量表）。 */
 export const MsgType = {
   CHAT_MESSAGE: 'chat_message',
   CHAT_MESSAGE_RESULT: 'chat_message_result',
   CHAT_SESSION_OPEN: 'chat_session_open',
+  CHAT_SESSION_CLOSE: 'chat_session_close',
+  CHAT_CUSTOMER_LEAVE: 'chat_customer_leave',
   CLIENT_HEARTBEAT: 'client_heartbeat',
   EVENT_MESSAGE: 'event_message',
   SYS_MSG: 'sys_msg',
   FAILURE: 'failure',
+  AUTH: 'auth',
+  AUTH_RESULT: 'auth_result',
+  ACK: 'ack',
+  REVOKE_MESSAGE: 'revoke_message',
+  MSG_READ_ACK: 'msg_read_ack',
+  MSG_RECEIVE_ACK: 'msg_receive_ack',
 } as const
 
 export const HOSTS = ['ws1-dd.jd.com', 'ws0-dd.jd.com', 'ws3-dd.jd.com']
