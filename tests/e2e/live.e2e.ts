@@ -220,6 +220,8 @@ for (const platform of PLATFORMS) {
         }
         // 主站登录已由 auth status 确认；这里的 AUTH_REQUIRED 是子站点（--scope）没登录，跳过
         if (env.error?.code === 'AUTH_REQUIRED') ctx.skip(env.error.message)
+        // 风控（验证码、限流）取决于账号和近期请求，不是代码问题；原始结果已记进报告
+        if (env.error?.code === 'RISK_CONTROL') ctx.skip(`平台风控：${env.error.message}`)
 
         expect(env.ok, `${JSON.stringify(env.error)}`).toBe(true)
         expect(env.platform).toBe(p)
