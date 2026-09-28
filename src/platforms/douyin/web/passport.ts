@@ -48,6 +48,15 @@ const QR_ORDER = [...CHALLENGE_ORDER, 'bd_ticket_guard_client_data_v2', 'sdk_sou
 const QR_REFRESH_ORDER = [
   ...CHALLENGE_ORDER, 'bd_ticket_guard_client_data_v2', 'gulu_source_res', 'download_guide', 'sdk_source_info', 'bit_env', 'passport_auth_mix_state',
 ]
+/** login.douyin.com 手机号 SSO 页的 cookie（上游 PHONE_SSO_COOKIE_ORDER）。 */
+const PHONE_SSO_ORDER = ['passport_csrf_token', 'passport_csrf_token_default', 'MONITOR_WEB_ID', 'biz_trace_id']
+const PHONE_SSO_SDK: [string, string][] = [
+  ['passport_jssdk_version', '3.0.29'],
+  ['passport_jssdk_type', 'normal'],
+  ['aid', '24'],
+  ['language', 'zh'],
+  ['account_sdk_source', 'sso'],
+]
 const TTWID_ORDER = [
   'enter_pc_once', 'UIFID_TEMP', 'odin_tt', 'is_support_rtm_web_ts', 'hevc_supported', 'IsDouyinActive', 'home_can_add_dy_2_desktop',
   'stream_recommend_feed_params', 'strategyABtestKey', 'ttwid', 'is_dash_user', 'biz_trace_id', 'passport_csrf_token', 'passport_csrf_token_default',
@@ -98,13 +107,17 @@ export class Passport {
   private sourceInfo = ''
   qrRefreshReady = false
   smsSentAt: number | null = null
+  /** 短信走 login.douyin.com 的 SSO 链（上游 phone_login_profile = "sso"）。 */
+  sso = false
+  /** SSO 页打开的时刻，account_sdk_source_info 的 timeOrigin（上游 _phone_page_started_ms）。 */
+  ssoPageStartedMs = 0
 
   constructor(readonly d: Douyin) {}
 
   /** 非 TTY 下短信分两步：发码之后把整个页面会话存下来，填验证码时原样恢复（上游要求同一个 auth）。 */
   snapshot(): Record<string, unknown> {
-    const { strict, verifyPortrait, secTs, tSuffix, tCookie, tQuery, sourceInfo, qrRefreshReady, smsSentAt } = this
-    return { strict, verifyPortrait, secTs, tSuffix, tCookie, tQuery, sourceInfo, qrRefreshReady, smsSentAt, credential: structuredClone(this.d.credential) }
+    const { strict, verifyPortrait, secTs, tSuffix, tCookie, tQuery, sourceInfo, qrRefreshReady, smsSentAt, sso, ssoPageStartedMs } = this
+    return { strict, verifyPortrait, secTs, tSuffix, tCookie, tQuery, sourceInfo, qrRefreshReady, smsSentAt, sso, ssoPageStartedMs, credential: structuredClone(this.d.credential) }
   }
 
   restore(state: Record<string, any>): void {
@@ -147,7 +160,7 @@ export class Passport {
     if (host === 'www_ttwid') return this.view(WWW_TTWID_ORDER)
     if (host === 'www_guiding') return this.view(WWW_GUIDING_ORDER)
     if (host === 'www_bootstrap') return this.view(WWW_BOOTSTRAP_ORDER)
-    const order = host === 'sms' || host === 'sms_login' ? SMS_ORDER : LOGIN_ORDER
+    const order = host === 'sms' || host === 'sms_login' ? SMS_ORDER : host === 'phone_sso' ? PHONE_SSO_ORDER : LOGIN_ORDER
     const out = this.view(order)
     for (const [k, v] of this.d.cookies()) {
       if (out.some(([n]) => n === k) || v === '') continue
@@ -845,6 +858,146 @@ export class Passport {
     const err = body.data?.error_code ?? body.error_code
     if (err) throw smsError(body.data ?? body)
     await this.finish(body.data?.redirect_url ?? body.redirect_url)
+  }
+
+  // ---------------------------------------------------------------- 短信：login.douyin.com 的 SSO 链
+
+  /**
+   * 打开 login.douyin.com 手机号页（上游 bootstrap_phone_auth）：文档响应下发两个 passport_csrf_token，
+   * 页面 SDK 再写 MONITOR_WEB_ID；不走扫码 / passport-web 的 bootstrap。上游只在 DY_PHONE_LOGIN_PROFILE=sso 时用它。
+   */
+  async bootstrapSso(): Promise<void> {
+    this.sso = true
+    this.ssoPageStartedMs = rand.now()
+    const res = await this.d.request({
+      url: `${LOGIN}/`,
+      headers: [
+        ['upgrade-insecure-requests', '1'],
+        ['user-agent', PROFILE.ua],
+        ['accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7'],
+        ['accept-language', 'zh-CN,zh;q=0.9'],
+        ['priority', 'u=0, i'],
+        ['sec-fetch-dest', 'document'],
+        ['sec-fetch-mode', 'navigate'],
+        ['sec-fetch-site', 'none'],
+        ['sec-fetch-user', '?1'],
+      ],
+      timeout: 20,
+    })
+    await res.text()
+    if (!this.get('passport_csrf_token')) throw new CatbusError('UPSTREAM', '手机号登录页没有下发 passport_csrf_token')
+    this.setdefault('MONITOR_WEB_ID', rand.uuid4())
+    this.d.device.private_key = generateEcKey()
+  }
+
+  /** SSO 页的 account_sdk_source_info（上游 _phone_sso_source_info：3.0.29 的探针，键名拼写照实录，含 stoargeStatus）。 */
+  private ssoSourceInfo(): string {
+    const g = PROFILE.geo
+    const info = {
+      hardwareConcurrency: Number(PROFILE.cpuCoreNum),
+      webdriver: false,
+      chromedriver: false,
+      shelldriver: false,
+      plugins: 5,
+      permissions: [{ name: 'notifications', state: 'prompt' }],
+      innerHeight: g[1],
+      innerWidth: g[0],
+      outerHeight: g[3],
+      outerWidth: g[2],
+      stoargeStatus: {
+        indexedDB: { idb: 'object', open: 'function', indexedDB: 'object', IDBKeyRange: 'function', openDatabase: 'undefined', isSafari: false, hasFetch: false },
+        localStorage: { isSupportLStorage: true, size: 590, write: true },
+        storageQuotaStatus: { usage: 0, quota: 6442450944, isPrivate: false },
+      },
+      webgl: { vendor: PROFILE.webglVendor, renderer: PROFILE.webglRenderer },
+      notificationPermission: 'default',
+      performance: {
+        timeOrigin: '__TIME_ORIGIN__',
+        usedJSHeapSize: 15073598,
+        navigationTiming: {
+          decodedBodySize: 3745,
+          entryType: 'navigation',
+          initiatorType: 'navigation',
+          name: `${LOGIN}/`,
+          renderBlockingStatus: 'non-blocking',
+          serverTiming: 'inner,cdn-cache,edge,origin',
+          guleStart: 'none',
+          guleDuration: 'none',
+        },
+      },
+      request_host: 'login.douyin.com',
+      request_pathname: '/',
+      browser: {},
+    }
+    const origin = pyFloat(Number((this.ssoPageStartedMs || rand.now()).toFixed(1)))
+    return passportEncrypt(compactJson(info).replace('"__TIME_ORIGIN__"', origin))
+  }
+
+  /** SSO 请求：7 个 query、12 个头，cookie 紧跟 content-type；遇到 gfkadpd 拦截页补 cookie 重试一次（上游 _phone_sso_post）。 */
+  private async ssoPost(url: string, data: [string, string][]): Promise<any> {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (!this.get('biz_trace_id')) this.d.setCookie('biz_trace_id', rand.hex(4))
+      const p = new Params().update(PHONE_SSO_SDK).add('account_sdk_source_info', this.ssoSourceInfo()).add('biz_trace_id', this.get('biz_trace_id')!)
+      const h: [string, string][] = [
+        ['accept', 'application/json, text/javascript'],
+        ['content-type', 'application/x-www-form-urlencoded'],
+        ['cookie', Passport.cookieHeader(this.scoped('phone_sso'))],
+        ['x-tt-passport-csrf-token', this.get('passport_csrf_token') || this.get('passport_csrf_token_default') || ''],
+        ['x-tt-passport-trace-id', this.get('biz_trace_id') || ''],
+        ['referer', `${LOGIN}/`],
+        ['user-agent', PROFILE.ua],
+        ['accept-language', 'zh-CN,zh;q=0.9'],
+        ['origin', LOGIN],
+        ['priority', 'u=1, i'],
+        ['sec-fetch-dest', 'empty'],
+        ['sec-fetch-mode', 'cors'],
+        ['sec-fetch-site', 'same-origin'],
+      ]
+      const res = await this.d.request({ method: 'POST', url, headers: h, query: p.pairs(), body: urlencode(data), timeout: 20 }, { merge: false })
+      await this.absorb(res, { ticket: true })
+      const text = await res.text()
+      if (text.trimStart().startsWith('{')) {
+        try {
+          return JSON.parse(text)
+        } catch {}
+      }
+      if (attempt === 0 && this.solveGfkadpd(text)) continue
+      throw new CatbusError('RISK_CONTROL', `手机号 SSO 接口返回的不是 JSON（多为 gfkadpd 拦截页或页面版本切换，HTTP ${res.status}）`, { detail: { kind: 'blocked', status: res.status } })
+    }
+  }
+
+  /** SSO 发验证码：/send_activation_code/v2/（上游 _send_sms_code_sso）。 */
+  async sendSmsCodeSso(phone: string): Promise<any> {
+    this.sso = true
+    const body = await this.ssoPost(`${LOGIN}/send_activation_code/v2/`, [
+      ['mix_mode', '1'],
+      ['mobile', passportEncrypt(formatPhone(phone))],
+      ['type', '3731'],
+      ['is6Digits', '1'],
+      ['fixed_mix_mode', '1'],
+    ])
+    this.smsSentAt = rand.now()
+    if (body?.error_code) throw smsError(body)
+    if (body?.data?.error_code) throw smsError(body.data)
+    return body
+  }
+
+  /** SSO 验证码登录：/quick_login/v2/，再跟随重定向（上游 _phone_login_sso）。 */
+  async phoneLoginSso(phone: string, code: string): Promise<void> {
+    if (!/^\d{6}$/.test(code.trim())) throw new CatbusError('USAGE', '验证码必须是 6 位数字')
+    if (this.smsSentAt == null) throw new CatbusError('USAGE', 'quick_login 必须复用发验证码时的会话，请先发验证码')
+    const body = await this.ssoPost(`${LOGIN}/quick_login/v2/`, [
+      ['mix_mode', '1'],
+      ['mobile', passportEncrypt(formatPhone(phone))],
+      ['code', passportEncrypt(code.trim())],
+      ['service', 'https://www.toutiao.com'],
+      ['fixed_mix_mode', '1'],
+    ])
+    const err = body?.data?.error_code ?? body?.error_code
+    if (err) throw smsError(body.data ?? body)
+    const redirect = body?.data?.redirect_url ?? body?.redirect_url
+    if (redirect) await this.finish(redirect)
+    if (!this.d.tokens.ticket) this.d.ctx.log.debug('quick_login 没有下发 ticket，写操作需要的 bd-ticket-guard 凭证缺失')
   }
 
   // ---------------------------------------------------------------- 收尾

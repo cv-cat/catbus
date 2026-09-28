@@ -416,6 +416,25 @@ describe('douyin 缺 UIFID 时自动补上', () => {
 })
 
 describe('douyin 对拍：补齐的命令流程', () => {
+  it('短信（SSO）：login.douyin.com 页 → send_activation_code（gfkadpd 拦截页补 cookie 重试）→ quick_login → 跟随重定向', async () => {
+    const c = loadCase('douyin', 'login_sms_sso')
+    const d = new Douyin(makeCtx({ platform: 'douyin', account: 'guest' }))
+    const p = new Passport(d)
+    const { requests, error } = await replayBin(c, async () => {
+      await p.bootstrapSso()
+      await p.sendSmsCodeSso(c.input.phone)
+      await p.phoneLoginSso(c.input.phone, c.input.code)
+    })
+    if (error) throw error
+    expectReqs(requests, c.requests)
+    expect(Object.fromEntries(d.cookies())).toEqual(c.result.cookies)
+    expect(d.tokens).toMatchObject({ ticket: c.result.ticket, ts_sign: c.result.ts_sign })
+    // 非 TTY 两步登录：发码后的会话能原样恢复，并记得走 SSO
+    const restored = new Passport(new Douyin(makeCtx({ platform: 'douyin', account: 'guest' })))
+    restored.restore(p.snapshot() as Record<string, unknown>)
+    expect([restored.sso, restored.ssoPageStartedMs]).toEqual([true, c.now])
+  })
+
   it('item search --type video：视频频道搜索，游标带上 X-Tt-Logid 作为下一页的 search_id', async () => {
     const c = loadCase('douyin', 'search_video')
     const { itemSearch } = await import('../src/platforms/douyin/web/commands.js')

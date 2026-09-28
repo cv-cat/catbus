@@ -100,11 +100,15 @@
   - `builder/auth.py` 的 `DouyinAuth.perepare_auth(cookieStr, web_protect_, keys_)`（方法名原文如此拼写）。
   - 私信签名还需要 `ticket`、`ts_sign`、`client_cert`、`private_key`，以及绑定设备的 `dtrait_blob`。catbus 里放在凭证文件的 `tokens` / `device`。
 - **登录**：`dy_apis/login_api.py` 的 `DYLoginApi`：`qrcode_login`、`send_sms_code`、`phone_login`、`save_credential`、`get_login_auth`。
+  - 短信默认走 passport-web（`/passport/web/send_code`、`sms_login`）；`DY_PHONE_LOGIN_PROFILE=sso` 时改走 `login.douyin.com` 页的 SSO 链（`bootstrap_phone_auth`、`_send_sms_code_sso` → `/send_activation_code/v2/`、`_phone_login_sso` → `/quick_login/v2/`）。上游把它当显式开关，不是失败后的退路；catbus 对应 `auth login --method sms --sso`。
 - **上游凭证来源**：`.env` 的 `DY_COOKIES`、`DY_LIVE_COOKIES`、`DY_TICKET`、`DY_TS_SIGN`、`DY_CLIENT_CERT`、`DY_PRIVATE_KEY`、`DY_DTRAIT_BLOB`。
 - **API**（静态方法，第一个参数为 `auth`）
-  - `dy_apis/douyin_api.py` 的 `DouyinAPI`：`get_work_info(url)`、`get_user_info(user_url)`、`get_user_all_work_info`、`get_work_all_comment`、`search_general_work`、`search_user`、`search_live`、`get_user_favorite`、`get_collect_list`、`get_user_follower_list/following`、`get_notice_list`、`get_feed`、`get_live_info`、`digg`、`publish_comment`、`collect_aweme`、`create_conversation`、`send_msg/image/video`
-  - 商品：`get_live_production` / `get_all_live_production`（直播间商品）、`get_live_production_detail`（→ `product get`）、`get_product_comments`（→ 商品评价，需要 `product_id` 和 `shop_id`）
-  - `dy_apis/douyin_creator_api.py` 的 `DouyinCreatorAPI`：`post_images`、`post_video`
+  - `dy_apis/douyin_api.py` 的 `DouyinAPI`：`get_work_info(url)`、`get_user_info(user_url)`、`get_user_all_work_info`、`get_work_all_comment`、`search_general_work`（筛选只把 `is_filter_search` 置 1，筛选值不进 query）、`search_video_work`（视频频道，筛选值进 query，→ `item search --type video`）、`search_user`（`douyin_user_fans` / `douyin_user_type`）、`search_live`、`get_user_favorite`、`get_collect_list`、`move_collect_aweme` / `remove_collect_aweme`（→ `item collect / uncollect --folder`）、`get_user_follower_list/following`、`get_notice_list`（`notice_group` → `notice list --group`）、`get_feed`、`get_live_info`、`digg`、`publish_comment`、`collect_aweme`、`create_conversation`、`send_msg/image/video/file`、`send_share_aweme/share_photos/share_web/user_card`（→ `msg send --share`）
+  - 直播：`get_live_room_enter`（→ `live get`，其中的 `stream_url` → `live media`）、`get_webcast_detail`（im/fetch，带回的最近 15 条 → `live history`）、`get_live_contribution_rank` / `get_live_thousand_ticket_rank`（→ `live rank --ranking`）、`diggLiveRoom`（`count` → `live like --count`）、`sendMsgInRoom`
+  - 商品：`get_live_production` / `get_all_live_production`（直播间商品）、`get_live_production_detail`（→ `product get`）、`get_product_comments`（→ 商品评价，需要 `product_id` 和 `shop_id`；`tag_id` 来自 `get_product_comment_counter`，→ `--label`）
+  - `dy_apis/douyin_creator_api.py` 的 `DouyinCreatorAPI`：`post_images`、`post_video`（`poi` / `mix_id` / `hot_spot` / `allow_download` / 图集 `cover_index`、`cover_uri`）、`get_preview_video_list`（work_list → `item list`）
+  - `dy_apis/douyin_im_media.py` 的 `DouyinIMMedia`：`upload_image` / `upload_video` / `upload_file`，以及卡片的 `build_share_aweme_content` / `build_share_photos_content` / `build_share_web_content` / `build_user_card_content`
+  - 没有移植：`send_sticker`（表情的 CDN 元数据要调用方给，上游没有取表情列表的接口）、`send_audio`（PC 端没有语音上传协议）、`get_conversation_list`、`get_live_pk_*`（AGENTS 4.12）
 - **JS 与 proto 资产**（无第三方 npm 依赖）
   - `static/{Live,PK,Request,Response}.proto`，旁边是对应的 pb2
   - `utils/acrawler_runtime/`：`ac_vm.js`、`run_ac_node.js`、`browser_window_shape.json`、`canvas_actual_exact.json`

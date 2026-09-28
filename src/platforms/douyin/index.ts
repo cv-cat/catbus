@@ -31,7 +31,9 @@ export default definePlatform({
     web: {
       login: { methods: ['qrcode', 'sms', 'cookie'], default: 'qrcode' },
       commands: {
-        'auth login': impl('full', 'authLogin'),
+        'auth login': impl('full', 'authLogin', {
+          options: { sso: z.boolean().optional().describe('短信登录改走 login.douyin.com 页的 SSO 链（sms）') },
+        }),
         'auth status': impl('full', 'authStatus'),
 
         'user get': impl('full', 'userGet'),

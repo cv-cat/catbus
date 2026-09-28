@@ -1,7 +1,7 @@
 """douyin 对拍数据的第三部分：补齐上游已有、第一轮没移植的能力。由 gen.py 在末尾 exec，共用 gen.py / gen_more.py 的全局变量。
 
 搜索筛选与视频频道、作品管理（work_list）、发布的地点 / 合集 / 热点 / 下载 / 封面、收藏夹移动、私信文件与分享卡片、
-直播千票榜与点赞次数、商品评价的标签、通知分组。
+直播千票榜与点赞次数、商品评价的标签、通知分组、短信登录的 SSO 链。
 """
 
 # ================================================================ 搜索筛选
@@ -104,3 +104,43 @@ case('product_comments_tag', logged(lambda a: DouyinAPI.get_product_comments(a, 
 
 # ================================================================ 通知分组
 case('notices_group', logged(lambda a: DouyinAPI.get_notice_list(a, '0', '0', notice_group='401')))
+
+# ================================================================ 短信登录：login.douyin.com 的 SSO 链（DY_PHONE_LOGIN_PROFILE=sso）
+SSO_CSRF = 'b1c2d3e4f5a60718293a4b5c6d7e8f90'
+GFKADPD_HTML = '<html><script>var e = "2906", t = "33638";document.cookie="gfkadpd="+e+","+t;location.reload()</script></html>'
+
+
+def sso_respond(state):
+    def respond_fn(req):
+        url = req['url']
+        if url == 'https://login.douyin.com/':
+            return {'status': 200, 'headers': {'content-type': 'text/html', 'set-cookie': [
+                f'passport_csrf_token={SSO_CSRF}; Domain=douyin.com; Path=/',
+                f'passport_csrf_token_default={SSO_CSRF}; Domain=douyin.com; Path=/']}, 'body': '<html>login</html>'}
+        if 'send_activation_code' in url:
+            state['send'] = state.get('send', 0) + 1
+            if state['send'] == 1:
+                return {'status': 200, 'headers': {'content-type': 'text/html'}, 'body': GFKADPD_HTML}
+            return {'message': 'success', 'data': {'mobile_ticket': 'fake-sso-mobile-ticket', 'error_code': 0}}
+        if 'quick_login' in url:
+            return {'status': 200, 'headers': {'bd-ticket-guard-server-data': SERVER_DATA,
+                                               'set-cookie': 'sessionid=fake-sso-session; Domain=douyin.com; Path=/'},
+                    'body': {'message': 'success', 'data': {'redirect_url': 'https://www.douyin.com/passport/sso/login/callback/?ticket=sso'}}}
+        if 'login/callback' in url:
+            return {'status': 302, 'headers': {'location': 'https://www.douyin.com/', 'set-cookie': 'sessionid_ss=fake-ss; Domain=douyin.com; Path=/'},
+                    'body': ''}
+        if url == 'https://www.douyin.com/':
+            return {'status': 200, 'headers': {'content-type': 'text/html'}, 'body': '<html></html>'}
+        return respond(req)
+    return respond_fn
+
+
+def sms_sso_flow():
+    api = DYLoginApi()
+    auth = api.bootstrap_phone_auth()
+    api.send_sms_code(auth, '13800000000')
+    api.phone_login(auth, '13800000000', '123456')
+    return {'cookies': dict(auth.cookie), 'ticket': auth.ticket, 'ts_sign': auth.ts_sign}
+
+
+case('login_sms_sso', sms_sso_flow, sso_respond({}), phone='13800000000', code='123456')

@@ -408,18 +408,26 @@ export async function authLogin(ctx: Ctx) {
     await new Passport(d).qrcodeLogin((url) => showQrcode(ctx, url, '请用抖音 App 扫码并确认').then(() => {}))
     return completeLogin(ctx, d)
   }
+  if (ctx.options.sso && method !== 'sms') throw new CatbusError('USAGE', '--sso 只用于 --method sms')
   if (method === 'sms') {
     const d = loginSession(ctx, 'sms')
     const p = new Passport(d)
     return smsLogin(ctx, {
       send: async (phone) => {
-        await p.bootstrap(true)
-        await p.sendSmsCode(phone)
+        // --sso：改走 login.douyin.com 页的 SSO 链（上游 DY_PHONE_LOGIN_PROFILE=sso，是显式开关，不是自动退路）
+        if (ctx.options.sso) {
+          await p.bootstrapSso()
+          await p.sendSmsCodeSso(phone)
+        } else {
+          await p.bootstrap(true)
+          await p.sendSmsCode(phone)
+        }
         return { phone, session: p.snapshot() }
       },
       verify: async (state, code) => {
         if (!p.smsSentAt) p.restore(state.session as Record<string, unknown>)
-        await p.phoneLogin(String(state.phone), code)
+        if (p.sso) await p.phoneLoginSso(String(state.phone), code)
+        else await p.phoneLogin(String(state.phone), code)
         return completeLogin(ctx, d)
       },
     })

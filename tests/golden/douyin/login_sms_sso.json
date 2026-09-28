@@ -1,0 +1,552 @@
+{
+  "input": {
+    "cookies": "ttwid=1%7Cfake-ttwid%7C1790000000%7Cabcdef; UIFID=fake-uifid-0123456789abcdef; s_v_web_id=verify_fakesvwebid_0000_0000_4000_8000_000000000000; passport_csrf_token=fakecsrf0123456789abcdef01234567; passport_csrf_token_default=fakecsrf0123456789abcdef01234567; odin_tt=fake-odin-tt; sessionid=fake-sessionid; sessionid_ss=fake-sessionid; sid_guard=fake-sid-guard; uid_tt=fake-uid-tt; bd_ticket_guard_client_web_domain=2; bd_ticket_guard_ts_sign_id=ts.2.fakesign",
+    "private_key": "-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABI0VniQq83voAoGCCqGSM49AwEHoUQDQgAE\nn62Erq4Iu+9/AQAU2CzvagneKwz4cbXODE8dE6WaWTQHy0V2nxBw4sJHD+Wxv+YxM8CwzcZOpL83\nkajsKgf9Tw==\n-----END EC PRIVATE KEY-----\n",
+    "server_cert": "pub.BFLG/1tx3mXYPHXTk+JJ7AOJQ3BRXQsimxxiJGgfKlAwtvMjwgwg0CHWEeCHz0gvUpfmE1y+5tOZSDIWTkeebpY=",
+    "ticket": "hash.fake-ticket-0000",
+    "ts_sign": "ts.2.fakesign0123456789abcdef",
+    "client_cert": "pub.ZmFrZS1jbGllbnQtY2VydA==",
+    "dtrait_blob": "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9g",
+    "ms_token": "fake-mstoken-0123456789",
+    "webid": "7400000000000000001",
+    "uid": "97872126662",
+    "phone": "13800000000",
+    "code": "123456"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://login.douyin.com/",
+      "headers": [
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "priority",
+          "u=0, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "document"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-site",
+          "none"
+        ],
+        [
+          "sec-fetch-user",
+          "?1"
+        ]
+      ],
+      "cookies": [],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://login.douyin.com/send_activation_code/v2/?passport_jssdk_version=3.0.29&passport_jssdk_type=normal&aid=24&language=zh&account_sdk_source=sso&account_sdk_source_info=7e276d64776172647760466a6b66707777606b667c273f3735292772606761776c736077273f63646976602927666d776a686061776c736077273f63646976602927766d60696961776c736077273f63646976602927756970626c6b76273f302927756077686c76766c6a6b76273f5e7e276b646860273f276b6a716c636c6664716c6a6b762729277671647160273f2775776a68757127785829276c6b6b60774d606c626d71273f3437343029276c6b6b6077526c61716d273f3730333529276a707160774d606c626d71273f34363c3729276a70716077526c61716d273f37303335292776716a64776260567164717076273f7e276c6b61607d60614147273f7e276c6167273f276a676f6066712729276a75606b273f2763706b66716c6a6b2729276c6b61607d60614147273f276a676f6066712729274c41474e607c57646b6260273f2763706b66716c6a6b2729276a75606b4164716467647660273f27706b6160636c6b60612729276c7656646364776c273f636469766029276d6476436071666d273f6364697660782927696a66646956716a77646260273f7e276c76567075756a77714956716a77646260273f717770602927766c7f60273f303c35292772776c7160273f7177706078292776716a7764626054706a7164567164717076273f7e277076646260273f35292774706a7164273f333131373130353c313129276c7655776c73647160273f6364697660787829277260676269273f7e2773606b616a77273f27426a6a626960254c6b662b252d4b534c414c442c27292777606b6160776077273f27444b424940252d4b534c414c4429254b534c414c44254260436a7766602557515d253035333525516c252d357d35353535374135312c25416c77606671364134342573765a305a352575765a305a35292541364134342c277829276b6a716c636c6664716c6a6b556077686c76766c6a6b273f2761606364706971272927756077636a7768646b6660273f7e27716c68604a776c626c6b273f34323c353535353535353437362b352927707660614f564d606475566c7f60273f3430353236303c3d29276b64736c6264716c6a6b516c686c6b62273f7e276160666a616061476a617c566c7f60273f363231302927606b71777c517c7560273f276b64736c6264716c6a6b2729276c6b6c716c64716a77517c7560273f276b64736c6264716c6a6b2729276b646860273f276d717175763f2a2a696a626c6b2b616a707c6c6b2b666a682a27292777606b61607747696a666e6c6b62567164717076273f276b6a6b2867696a666e6c6b62272927766077736077516c686c6b62273f276c6b6b60772966616b286664666d602960616260296a776c626c6b272927627069605671647771273f276b6a6b602729276270696041707764716c6a6b273f276b6a6b602778782927776074706076715a6d6a7671273f27696a626c6b2b616a707c6c6b2b666a68272927776074706076715a7564716d6b646860273f272a27292767776a72766077273f7e7878&biz_trace_id=b6adde62",
+      "headers": [
+        [
+          "accept",
+          "application/json, text/javascript"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "x-tt-passport-csrf-token",
+          "b1c2d3e4f5a60718293a4b5c6d7e8f90"
+        ],
+        [
+          "x-tt-passport-trace-id",
+          "b6adde62"
+        ],
+        [
+          "referer",
+          "https://login.douyin.com/"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "origin",
+          "https://login.douyin.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "passport_csrf_token",
+          "b1c2d3e4f5a60718293a4b5c6d7e8f90"
+        ],
+        [
+          "passport_csrf_token_default",
+          "b1c2d3e4f5a60718293a4b5c6d7e8f90"
+        ],
+        [
+          "MONITOR_WEB_ID",
+          "94514d14-6fbb-41f3-9226-1e5d15c83934"
+        ],
+        [
+          "biz_trace_id",
+          "b6adde62"
+        ]
+      ],
+      "body": "mix_mode=1&mobile=2e3d332534363d3535353535353535&type=3731&is6Digits=1&fixed_mix_mode=1",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://login.douyin.com/send_activation_code/v2/?passport_jssdk_version=3.0.29&passport_jssdk_type=normal&aid=24&language=zh&account_sdk_source=sso&account_sdk_source_info=7e276d64776172647760466a6b66707777606b667c273f3735292772606761776c736077273f63646976602927666d776a686061776c736077273f63646976602927766d60696961776c736077273f63646976602927756970626c6b76273f302927756077686c76766c6a6b76273f5e7e276b646860273f276b6a716c636c6664716c6a6b762729277671647160273f2775776a68757127785829276c6b6b60774d606c626d71273f3437343029276c6b6b6077526c61716d273f3730333529276a707160774d606c626d71273f34363c3729276a70716077526c61716d273f37303335292776716a64776260567164717076273f7e276c6b61607d60614147273f7e276c6167273f276a676f6066712729276a75606b273f2763706b66716c6a6b2729276c6b61607d60614147273f276a676f6066712729274c41474e607c57646b6260273f2763706b66716c6a6b2729276a75606b4164716467647660273f27706b6160636c6b60612729276c7656646364776c273f636469766029276d6476436071666d273f6364697660782927696a66646956716a77646260273f7e276c76567075756a77714956716a77646260273f717770602927766c7f60273f303c35292772776c7160273f7177706078292776716a7764626054706a7164567164717076273f7e277076646260273f35292774706a7164273f333131373130353c313129276c7655776c73647160273f6364697660787829277260676269273f7e2773606b616a77273f27426a6a626960254c6b662b252d4b534c414c442c27292777606b6160776077273f27444b424940252d4b534c414c4429254b534c414c44254260436a7766602557515d253035333525516c252d357d35353535374135312c25416c77606671364134342573765a305a352575765a305a35292541364134342c277829276b6a716c636c6664716c6a6b556077686c76766c6a6b273f2761606364706971272927756077636a7768646b6660273f7e27716c68604a776c626c6b273f34323c353535353535353437362b352927707660614f564d606475566c7f60273f3430353236303c3d29276b64736c6264716c6a6b516c686c6b62273f7e276160666a616061476a617c566c7f60273f363231302927606b71777c517c7560273f276b64736c6264716c6a6b2729276c6b6c716c64716a77517c7560273f276b64736c6264716c6a6b2729276b646860273f276d717175763f2a2a696a626c6b2b616a707c6c6b2b666a682a27292777606b61607747696a666e6c6b62567164717076273f276b6a6b2867696a666e6c6b62272927766077736077516c686c6b62273f276c6b6b60772966616b286664666d602960616260296a776c626c6b272927627069605671647771273f276b6a6b602729276270696041707764716c6a6b273f276b6a6b602778782927776074706076715a6d6a7671273f27696a626c6b2b616a707c6c6b2b666a68272927776074706076715a7564716d6b646860273f272a27292767776a72766077273f7e7878&biz_trace_id=b6adde62",
+      "headers": [
+        [
+          "accept",
+          "application/json, text/javascript"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "x-tt-passport-csrf-token",
+          "b1c2d3e4f5a60718293a4b5c6d7e8f90"
+        ],
+        [
+          "x-tt-passport-trace-id",
+          "b6adde62"
+        ],
+        [
+          "referer",
+          "https://login.douyin.com/"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "origin",
+          "https://login.douyin.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "passport_csrf_token",
+          "b1c2d3e4f5a60718293a4b5c6d7e8f90"
+        ],
+        [
+          "passport_csrf_token_default",
+          "b1c2d3e4f5a60718293a4b5c6d7e8f90"
+        ],
+        [
+          "MONITOR_WEB_ID",
+          "94514d14-6fbb-41f3-9226-1e5d15c83934"
+        ],
+        [
+          "biz_trace_id",
+          "b6adde62"
+        ],
+        [
+          "gfkadpd",
+          "2906,33638"
+        ]
+      ],
+      "body": "mix_mode=1&mobile=2e3d332534363d3535353535353535&type=3731&is6Digits=1&fixed_mix_mode=1",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://login.douyin.com/quick_login/v2/?passport_jssdk_version=3.0.29&passport_jssdk_type=normal&aid=24&language=zh&account_sdk_source=sso&account_sdk_source_info=7e276d64776172647760466a6b66707777606b667c273f3735292772606761776c736077273f63646976602927666d776a686061776c736077273f63646976602927766d60696961776c736077273f63646976602927756970626c6b76273f302927756077686c76766c6a6b76273f5e7e276b646860273f276b6a716c636c6664716c6a6b762729277671647160273f2775776a68757127785829276c6b6b60774d606c626d71273f3437343029276c6b6b6077526c61716d273f3730333529276a707160774d606c626d71273f34363c3729276a70716077526c61716d273f37303335292776716a64776260567164717076273f7e276c6b61607d60614147273f7e276c6167273f276a676f6066712729276a75606b273f2763706b66716c6a6b2729276c6b61607d60614147273f276a676f6066712729274c41474e607c57646b6260273f2763706b66716c6a6b2729276a75606b4164716467647660273f27706b6160636c6b60612729276c7656646364776c273f636469766029276d6476436071666d273f6364697660782927696a66646956716a77646260273f7e276c76567075756a77714956716a77646260273f717770602927766c7f60273f303c35292772776c7160273f7177706078292776716a7764626054706a7164567164717076273f7e277076646260273f35292774706a7164273f333131373130353c313129276c7655776c73647160273f6364697660787829277260676269273f7e2773606b616a77273f27426a6a626960254c6b662b252d4b534c414c442c27292777606b6160776077273f27444b424940252d4b534c414c4429254b534c414c44254260436a7766602557515d253035333525516c252d357d35353535374135312c25416c77606671364134342573765a305a352575765a305a35292541364134342c277829276b6a716c636c6664716c6a6b556077686c76766c6a6b273f2761606364706971272927756077636a7768646b6660273f7e27716c68604a776c626c6b273f34323c353535353535353437362b352927707660614f564d606475566c7f60273f3430353236303c3d29276b64736c6264716c6a6b516c686c6b62273f7e276160666a616061476a617c566c7f60273f363231302927606b71777c517c7560273f276b64736c6264716c6a6b2729276c6b6c716c64716a77517c7560273f276b64736c6264716c6a6b2729276b646860273f276d717175763f2a2a696a626c6b2b616a707c6c6b2b666a682a27292777606b61607747696a666e6c6b62567164717076273f276b6a6b2867696a666e6c6b62272927766077736077516c686c6b62273f276c6b6b60772966616b286664666d602960616260296a776c626c6b272927627069605671647771273f276b6a6b602729276270696041707764716c6a6b273f276b6a6b602778782927776074706076715a6d6a7671273f27696a626c6b2b616a707c6c6b2b666a68272927776074706076715a7564716d6b646860273f272a27292767776a72766077273f7e7878&biz_trace_id=b6adde62",
+      "headers": [
+        [
+          "accept",
+          "application/json, text/javascript"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "x-tt-passport-csrf-token",
+          "b1c2d3e4f5a60718293a4b5c6d7e8f90"
+        ],
+        [
+          "x-tt-passport-trace-id",
+          "b6adde62"
+        ],
+        [
+          "referer",
+          "https://login.douyin.com/"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "origin",
+          "https://login.douyin.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "passport_csrf_token",
+          "b1c2d3e4f5a60718293a4b5c6d7e8f90"
+        ],
+        [
+          "passport_csrf_token_default",
+          "b1c2d3e4f5a60718293a4b5c6d7e8f90"
+        ],
+        [
+          "MONITOR_WEB_ID",
+          "94514d14-6fbb-41f3-9226-1e5d15c83934"
+        ],
+        [
+          "biz_trace_id",
+          "b6adde62"
+        ],
+        [
+          "gfkadpd",
+          "2906,33638"
+        ]
+      ],
+      "body": "mix_mode=1&mobile=2e3d332534363d3535353535353535&code=343736313033&service=https%3A%2F%2Fwww.toutiao.com&fixed_mix_mode=1",
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://www.douyin.com/passport/sso/login/callback/?ticket=sso",
+      "headers": [
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=0, i"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not=A?Brand\";v=\"99\", \"Google Chrome\";v=\"151\", \"Chromium\";v=\"151\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "document"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-site",
+          "none"
+        ],
+        [
+          "sec-fetch-user",
+          "?1"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "passport_csrf_token",
+          "b1c2d3e4f5a60718293a4b5c6d7e8f90"
+        ],
+        [
+          "passport_csrf_token_default",
+          "b1c2d3e4f5a60718293a4b5c6d7e8f90"
+        ],
+        [
+          "biz_trace_id",
+          "b6adde62"
+        ],
+        [
+          "MONITOR_WEB_ID",
+          "94514d14-6fbb-41f3-9226-1e5d15c83934"
+        ],
+        [
+          "gfkadpd",
+          "2906,33638"
+        ],
+        [
+          "sessionid",
+          "fake-sso-session"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://www.douyin.com/",
+      "headers": [
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=0, i"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not=A?Brand\";v=\"99\", \"Google Chrome\";v=\"151\", \"Chromium\";v=\"151\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "document"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-site",
+          "none"
+        ],
+        [
+          "sec-fetch-user",
+          "?1"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "passport_csrf_token",
+          "b1c2d3e4f5a60718293a4b5c6d7e8f90"
+        ],
+        [
+          "passport_csrf_token_default",
+          "b1c2d3e4f5a60718293a4b5c6d7e8f90"
+        ],
+        [
+          "biz_trace_id",
+          "b6adde62"
+        ],
+        [
+          "MONITOR_WEB_ID",
+          "94514d14-6fbb-41f3-9226-1e5d15c83934"
+        ],
+        [
+          "gfkadpd",
+          "2906,33638"
+        ],
+        [
+          "sessionid",
+          "fake-sso-session"
+        ],
+        [
+          "sessionid_ss",
+          "fake-ss"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "set-cookie": [
+          "passport_csrf_token=b1c2d3e4f5a60718293a4b5c6d7e8f90; Domain=douyin.com; Path=/",
+          "passport_csrf_token_default=b1c2d3e4f5a60718293a4b5c6d7e8f90; Domain=douyin.com; Path=/"
+        ]
+      },
+      "body": "<html>login</html>"
+    },
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "text/html"
+      },
+      "body": "<html><script>var e = \"2906\", t = \"33638\";document.cookie=\"gfkadpd=\"+e+\",\"+t;location.reload()</script></html>"
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "message": "success",
+        "data": {
+          "mobile_ticket": "fake-sso-mobile-ticket",
+          "error_code": 0
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "bd-ticket-guard-server-data": "eyJ0aWNrZXQiOiAiaGFzaC5sb2dpbi10aWNrZXQiLCAidHNfc2lnbiI6ICJ0cy4yLmxvZ2luc2lnbiIsICJjbGllbnRfY2VydCI6ICJwdWIubG9naW5jZXJ0IiwgImNyZWF0ZV90aW1lIjogMTc5MDAwMDAwMCwgImxvZ19pZCI6ICJmYWtlIn0=",
+        "set-cookie": "sessionid=fake-sso-session; Domain=douyin.com; Path=/"
+      },
+      "body": {
+        "message": "success",
+        "data": {
+          "redirect_url": "https://www.douyin.com/passport/sso/login/callback/?ticket=sso"
+        }
+      }
+    },
+    {
+      "status": 302,
+      "headers": {
+        "location": "https://www.douyin.com/",
+        "set-cookie": "sessionid_ss=fake-ss; Domain=douyin.com; Path=/"
+      },
+      "body": ""
+    },
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "text/html"
+      },
+      "body": "<html></html>"
+    }
+  ],
+  "result": {
+    "cookies": {
+      "passport_csrf_token": "b1c2d3e4f5a60718293a4b5c6d7e8f90",
+      "passport_csrf_token_default": "b1c2d3e4f5a60718293a4b5c6d7e8f90",
+      "MONITOR_WEB_ID": "94514d14-6fbb-41f3-9226-1e5d15c83934",
+      "biz_trace_id": "b6adde62",
+      "gfkadpd": "2906,33638",
+      "sessionid": "fake-sso-session",
+      "sessionid_ss": "fake-ss"
+    },
+    "ticket": "hash.login-ticket",
+    "ts_sign": "ts.2.loginsign"
+  },
+  "error": null
+}
