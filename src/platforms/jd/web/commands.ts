@@ -214,7 +214,7 @@ async function finishSafe(ctx: Ctx, jd: Jd, page: login.SafePage, method: Record
 async function smsFlow(ctx: Ctx) {
   return smsLogin<SmsSaved>(ctx, {
     send: async (phone) => {
-      const mobile = login.normalizeMobile(phone)
+      const mobile = login.loginMobile(phone)
       const jd = loginSession(ctx, 'sms')
       ctx.log.info('正在初始化手机号登录')
       const sms = await login.startSms(jd)

@@ -504,6 +504,28 @@ case('browse_history_area', lambda: JdAPI.get_browse_history(logged(), page=1, p
 case('follow_products_area', lambda: JdAPI.get_follow_products(logged(), page=1, page_size=20, area=AREA), area=AREA)
 case('search_area', lambda: JdAPI.search(logged(), KEYWORD, page=1, area=AREA), keyword=KEYWORD, area=AREA)
 
+# ---------------------------------------------------------------- 短信登录：国际手机号（normalize_mobile 的 area_code）
+
+MOBILES = [
+    ('13800000000', '0086'), ('+8613800000000', '86'), ('008613800000000', '0086'), ('+86 138-0000-0000', '+86'),
+    ('+85291234567', '852'), ('0085291234567', '00852'), ('+852 9123 4567', '+852'), ('+853 6612 3456', '853'),
+    ('+886912345678', '886'), ('+14155550100', '1'), ('+79161234567', '7'), ('+447911123456', '44'),
+    ('+6591234567', '65'), ('+819012345678', '81'),
+]
+g.case(out, 'normalize_mobile', lambda: [[m, a, jd_sms_login_api.normalize_mobile(m, a)] for m, a in MOBILES])
+
+INTL = jd_sms_login_api.normalize_mobile('+85291234567', '852')
+
+
+def sms_send_intl():
+    auth = fresh_auth()
+    context = JdSmsLoginAPI.start(auth)
+    sent = JdSmsLoginAPI.send_code(context, INTL, 'FAKEVERIFYTOKEN0123456789012345678901')
+    return {'mobile': INTL, 'sent': list(sent[:2])}
+
+
+case('sms_send_intl', sms_send_intl, respond=login_respond, mobile='+85291234567')
+
 # ---------------------------------------------------------------- JCAP 求解器的纯算部分（合成图片）
 
 import cv2  # noqa: E402

@@ -40,7 +40,7 @@ export default definePlatform({
     web: {
       login: { methods: ['qrcode', 'sms', 'cookie'], default: 'qrcode' },
       commands: {
-        'auth login': impl('full', 'authLogin'),
+        'auth login': impl('full', 'authLogin', { note: 'sms 的 --phone 可以带国际前缀，例如 +85291234567' }),
         'auth status': impl('full', 'authStatus'),
 
         'user get': impl('partial', 'userGet', { note: '只支持 me' }),

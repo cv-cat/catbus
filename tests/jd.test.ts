@@ -161,6 +161,14 @@ const CASES: Record<string, () => Promise<unknown>> = {
   browse_history_area: () => cmd.historyList(areaCtx()),
   follow_products_area: () => cmd.userCollects(areaCtx({ args: { user: 'me' } })),
   search_area: () => cmd.itemSearch(areaCtx({ args: { keyword: KEYWORD } })),
+  // 短信登录：+852 的手机号按前缀识别地区码
+  sms_send_intl: async () => {
+    const jd = session(FRESH, { storage: {} })
+    const sms = await login.startSms(jd)
+    const mobile = login.loginMobile('+85291234567')
+    const sent = await login.sendCode(jd, sms, mobile, 'FAKEVERIFYTOKEN0123456789012345678901')
+    return { mobile, sent: [sent.success, sent.message] }
+  },
 }
 
 /** WebM 写进 localStorage 的 canvas / webgl 图像哈希与本机字体有关（见 normalizeUrl 的说明），不比较。 */
@@ -183,6 +191,7 @@ const SAME_RESULT: Record<string, (r: any) => unknown> = {
   sms_login: (r) => r,
   safe_verify: (r) => r,
   search_risk: (r) => r,
+  sms_send_intl: (r) => r,
 }
 
 /**
@@ -272,6 +281,14 @@ describe('jd 对拍：请求构造与签名', () => {
         ],
       }
     }))
+
+  it('normalize_mobile：国家/地区码；--phone 按 + / 00 前缀识别', () => {
+    const c = loadCase('jd', 'normalize_mobile')
+    for (const [mobile, area, expected] of c.result as [string, string, string][]) {
+      expect(login.normalizeMobile(mobile, area), `${mobile} ${area}`).toBe(expected)
+      expect(login.loginMobile(mobile), mobile).toBe(expected)
+    }
+  })
 })
 
 describe('jd 403：探测登录态，分清登录失效与限流（diagnose）', () => {

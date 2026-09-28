@@ -204,6 +204,31 @@ export function normalizeMobile(mobile: string, areaCode = '0086'): string {
   return `+${prefix}${local}`
 }
 
+/** ITU-T E.164 的一位、两位国家/地区码；其余都是三位（国家码是前缀码，按前缀即可切分）。 */
+const CALLING_1 = new Set(['1', '7'])
+const CALLING_2 = new Set(
+  '20 27 30 31 32 33 34 36 39 40 41 43 44 45 46 47 48 49 51 52 53 54 55 56 57 58 60 61 62 63 64 65 66 81 82 84 86 90 91 92 93 94 95 98'.split(' '),
+)
+
+/** `+852…` / `00852…` 开头的号码 → 国家/地区码（`852`）；不带国际前缀时为 null。 */
+export function callingCode(mobile: string): string | null {
+  const m = /^(?:\+|00)(\d+)$/.exec(String(mobile ?? '').replace(/[\s()-]/g, ''))
+  if (!m) return null
+  const d = m[1]!
+  if (CALLING_1.has(d.slice(0, 1))) return d.slice(0, 1)
+  if (CALLING_2.has(d.slice(0, 2))) return d.slice(0, 2)
+  return d.slice(0, 3)
+}
+
+/**
+ * `--phone` → 登录接口里的手机号：带 `+` / `00` 国际前缀时按前缀识别国家/地区码，
+ * 再交给 normalize_mobile（等于上游 login(area_code=<该码>)）；否则按中国大陆（0086）。
+ */
+export function loginMobile(phone: string): string {
+  const code = callingCode(phone)
+  return normalizeMobile(phone, code ? `+${code}` : '0086')
+}
+
 /** passport 的 jQuery AJAX 头（_ajax_headers）。 */
 function ajaxHeaders(ctx: SmsContext, accept = 'application/json, text/javascript, */*; q=0.01', form = false): Header {
   const h = qrValidation(ctx.trace.nextHeaders()).referer(LOGIN_PAGE).set('accept', accept)
