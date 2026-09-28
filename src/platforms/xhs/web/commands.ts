@@ -733,15 +733,20 @@ export function liveListen(ctx: Ctx) {
 
 // ================================================================ msg
 
-function conversationOf(v: any) {
-  const peer = v.user_info ?? v.chat_user ?? {}
+/**
+ * 会话列表的一项：user_id 是当前账号自己，对方是 chat_user_id，对方资料在 info 里。
+ * 会话 id 用 chat_user_id，msg history / revoke / delete 都按它取。
+ */
+export function conversationOf(v: any) {
+  const peer = v.info ?? v.user_info ?? v.chat_user ?? {}
+  const peerId = v.chat_user_id ?? peer.user_id
   return n.conversation(
     {
-      id: String(v.user_id ?? peer.user_id ?? v.chat_id ?? v.id),
-      peer: norm.ref({ user_id: v.user_id ?? peer.user_id, nickname: peer.nickname ?? v.nickname }),
+      id: String(peerId ?? v.chat_id ?? v.id),
+      peer: norm.ref({ user_id: peerId, nickname: peer.nickname ?? peer.user_name ?? v.nickname }),
       unread: n.count(v.unread_count),
       last_message: n.str(push.innerText(v.last_msg_content ?? v.last_message?.content ?? '')),
-      updated_at: n.time(v.last_msg_ts ?? v.update_time),
+      updated_at: n.time(v.last_msg_ts ?? v.last_msg_time ?? v.update_time),
     },
     v,
   )
@@ -756,8 +761,21 @@ export async function msgList(ctx: Ctx) {
   })
 }
 
-function messageOf(v: any, conversation: string, self: string): Message {
-  const type = Number(v.type ?? v.content_type ?? 1)
+const HISTORY_LIMIT = 30
+
+/** 消息类型：顶层没有时在 content 里（content 是一段 JSON 字符串：{content, content_type, ...}）。 */
+function contentType(v: any): number {
+  const top = v.type ?? v.content_type
+  if (top != null) return Number(top)
+  try {
+    return Number(JSON.parse(v.content)?.content_type ?? 1)
+  } catch {
+    return 1
+  }
+}
+
+export function messageOf(v: any, conversation: string, self: string): Message {
+  const type = contentType(v)
   return n.message(
     {
       id: String(v.message_id ?? v.id ?? v.mid),
@@ -774,10 +792,12 @@ function messageOf(v: any, conversation: string, self: string): Message {
 export async function msgHistory(ctx: Ctx) {
   return run(ctx, async (p) => {
     const conv = ctx.args.conversation!
-    const d = p.check(await api.messageHistory(p, conv, Number(ctx.cursor ?? 0) || 0))
-    const list = (d?.message_list ?? d?.messages ?? []).map((m: any) => messageOf(m, conv, p.userId))
-    const lastId = list.length ? Number((d?.message_list ?? d?.messages).at(-1)?.store_id ?? (d?.message_list ?? d?.messages).at(-1)?.id) : null
-    return paged(list, lastId, Boolean(d?.has_more) && lastId != null)
+    const d = p.check(await api.messageHistory(p, conv, Number(ctx.cursor ?? 0) || 0, HISTORY_LIMIT))
+    const raw: any[] = d?.out_message_list ?? d?.message_list ?? d?.messages ?? []
+    const list = raw.map((m) => messageOf(m, conv, p.userId))
+    // 从新到旧排列；响应里没有 has_more，取满一页就认为还有更早的消息
+    const lastId = raw.length ? Number(raw.at(-1).store_id ?? raw.at(-1).id) : null
+    return paged(list, lastId, (Boolean(d?.has_more) || raw.length >= HISTORY_LIMIT) && lastId != null)
   })
 }
 

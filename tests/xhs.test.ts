@@ -8,6 +8,7 @@ import * as login from '../src/platforms/xhs/web/login.js'
 import * as norm from '../src/platforms/xhs/web/normalize.js'
 import { Pgy } from '../src/platforms/xhs/web/pgy.js'
 import { EDITH } from '../src/platforms/xhs/web/profile.js'
+import { fakeResponse, mockSender } from '../src/core/http.js'
 import { deterministic } from '../src/core/rand.js'
 import { RAW } from '../src/core/schemas.js'
 import * as push from '../src/platforms/xhs/web/push.js'
@@ -263,5 +264,58 @@ describe('xhs 登录的风控', () => {
       hint: expect.stringContaining('--method cookie'),
       detail: { kind: 'captcha', status: 471, verify_type: '124', verify_uuid: 'u-1' },
     })
+  })
+})
+
+describe('xhs 蒲公英 / 千帆的权限', () => {
+  it('HTTP 401 与业务码"无登录信息"都报 AUTH_REQUIRED（主站登录没问题，缺的是子站权限），不报 AUTH_EXPIRED', async () => {
+    const restore = mockSender(() => fakeResponse('', { status: 401 }))
+    try {
+      const p = new Pgy(ctxWith(PC_COOKIES))
+      await expect(p.selfInfo()).rejects.toMatchObject({ code: 'AUTH_REQUIRED', hint: expect.stringContaining('蒲公英') })
+      expect(() => p.check({ success: false, code: -1, msg: '无登录信息' } as any)).toThrow(expect.objectContaining({ code: 'AUTH_REQUIRED' }))
+    } finally {
+      restore()
+    }
+  })
+})
+
+describe('xhs 归一化（真实响应的结构）', () => {
+  it('会话列表：user_id 是自己，对方是 chat_user_id，昵称在 info 里', async () => {
+    const { conversationOf } = await import('../src/platforms/xhs/web/commands.js')
+    const raw = {
+      user_id: USER_ID,
+      chat_user_id: OTHER,
+      last_msg_time: 1790180200000,
+      update_time: 1790296687000,
+      last_msg_content: '在吗',
+      info: { nickname: '对方', user_name: '对方', avatar: 'https://sns-avatar-qc.xhscdn.com/avatar/x.jpg' },
+    }
+    expect(conversationOf(raw)).toMatchObject({
+      id: OTHER,
+      peer: { id: OTHER, name: '对方' },
+      last_message: '在吗',
+      updated_at: '2026-09-24T00:16:40+08:00',
+    })
+  })
+
+  it('消息记录：content 是 JSON 字符串，正文与 content_type 都在里面', async () => {
+    const { messageOf } = await import('../src/platforms/xhs/web/commands.js')
+    const raw = (content_type: number, content: string) => ({
+      id: `${OTHER}.${USER_ID}.1eab3fb674f8478`,
+      sender_id: USER_ID,
+      receiver_id: OTHER,
+      created_at: 1790180199513,
+      store_id: 9,
+      content: JSON.stringify({ content, content_type, front_chain: content }),
+    })
+    expect(messageOf(raw(1, '在吗'), OTHER, USER_ID)).toMatchObject({
+      id: `${OTHER}.${USER_ID}.1eab3fb674f8478`,
+      conversation_id: OTHER,
+      from: { id: USER_ID },
+      type: 'text',
+      text: '在吗',
+    })
+    expect(messageOf(raw(2, '[图片]'), OTHER, USER_ID).type).toBe('image')
   })
 })

@@ -1,8 +1,9 @@
 import { CatbusError } from '../../../core/errors.js'
+import { parseJson } from '../../../core/http.js'
 import { jsonDumps, type Pairs, urlencode } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
-import { b3TraceId, Session, type XhsJson } from './client.js'
+import { b3TraceId, checkStatus, Session, type XhsJson } from './client.js'
 import { checkSign, signFull } from './js.js'
 import { PGY, UA } from './profile.js'
 import { PcState } from './state.js'
@@ -16,6 +17,16 @@ import { PcState } from './state.js'
 
 /** 上游 `json.dumps(data, separators=(',', ':'))`：紧凑，非 ASCII 转义。 */
 const dumps = (v: unknown) => jsonDumps(v, { separators: [',', ':'] })
+
+/**
+ * 蒲公英 / 千帆拒绝当前账号（HTTP 401，或业务码"无登录信息"）：主站登录是好的，缺的是这两个站的权限，
+ * 所以报 AUTH_REQUIRED 而不是 AUTH_EXPIRED（重新登录主站没用）。
+ */
+function noAccess(message?: string): CatbusError {
+  return new CatbusError('AUTH_REQUIRED', `蒲公英 / 千帆拒绝了当前账号${message ? `（${message}）` : ''}`, {
+    hint: '需要开通蒲公英（品牌 / 机构）或千帆的账号，并在浏览器里登录过 https://pgy.xiaohongshu.com',
+  })
+}
 
 const PGY_UA_122 = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
 const PGY_TIERS = { '0101': [205], '0201': [208], '0301': [200] } as Record<string, number[]>
@@ -78,7 +89,19 @@ export class Pgy extends Session {
     const all: [string, string][] = [...headers, ...(cookie ? ([['Cookie', cookie]] as [string, string][]) : [])]
     // 上游用 requests：头里没有 content-type 时不补（core/http 按 curl_cffi 的行为会补 application/octet-stream）
     const bare = body !== undefined && !headers.some(([k]) => k.toLowerCase() === 'content-type')
-    return this.json({ method, url, headers: all, ...(body !== undefined ? { body } : {}) }, [], bare)
+    const res = await this.send({ method, url, headers: all, ...(body !== undefined ? { body } : {}) }, [], bare)
+    if (res.status === 401 || res.status === 403) throw noAccess(`HTTP ${res.status}`)
+    checkStatus(res)
+    return parseJson<XhsJson>(res)
+  }
+
+  override check<T>(body: XhsJson<T>): T {
+    try {
+      return super.check(body)
+    } catch (err) {
+      if (err instanceof CatbusError && (err.code === 'AUTH_REQUIRED' || err.code === 'AUTH_EXPIRED')) throw noAccess(err.message)
+      throw err
+    }
   }
 
   // ---------------------------------------------------------------- 蒲公英
