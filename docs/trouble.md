@@ -324,6 +324,7 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 | Spider_XHS | 扫码后 471（verifytype 120）的验证流程 | 2 | 移植验证流程，去掉「改用 cookie」的兜底提示 |
 | Spider_XHS | 评论 461（verifytype 124）的验证码 | 3 | 同上 |
 | BilibiliApis | 弹幕分段去掉 `ps` / `pe` | 4 | 改 `danmakuSeg`，重新生成对拍数据 |
+| BilibiliApis | 极验点选：下载第一张题图时把 B 站会话 cookie 也发给了 static.geetest.com（登录时只是匿名设备 cookie，已登录账号复用时会带出 SESSDATA） | 10 | 移植修正后的请求 |
 
 ## 10. 上游有、catbus 漏移植的（2026-09-28 审计）
 
@@ -335,7 +336,7 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 | kuaishou | `feed list --kind recommend`：上游 `get_feed_hot` 就是推荐流，catbus 错标成上游没有 | 移植中 |
 | kuaishou | 服务端登出；发布后刷新发布状态；直播礼物全量 | 移植中 |
 | xhs | `keyword suggest`、`item search --time`、`user following`（me）、群聊会话与记录、视频发布元数据、创作者会话失效自动重新桥接、直播弹幕长连通道、`msg read` 匹配会话的 bug | 移植中 |
-| bilibili | 极验点选题自动识别（短信 / 密码登录降级时用；含人工兜底页面） | 移植中 |
+| bilibili | 极验点选题自动识别（短信 / 密码登录降级时用；含人工兜底页面） | 已补，待真机验证通过率。模型在新包 `@cv-cat/catbus-assets-ocr`（ddddocr 1.6.1，MIT，25.5 MB），发布顺序在 catbus-cli 之前 |
 | bilibili | `item related`、专栏搜索、专栏 / 动态评论与按时间排序、楼中楼 root / parent、收藏到指定收藏夹、投币同时点赞、投稿字段、专栏标签 / 摘要 / 草稿、弹幕样式、按用户查直播间、直播全部事件与人气值等 | 移植中 |
 | douyin | 搜索筛选（排序 / 时间 / 类型等）、`item list`、发布参数（poi、话题、@、封面、合集等）、收藏夹移动、私信文件与分享卡片、`live history` / `live media`、千票榜、商品评价排序、通知分组、短信 SSO 备用链 | 移植中 |
 | tiktok | 收藏夹公开 / 私密与加内容、发布互动开关、`item related` 与私信翻页、按房间号操作直播、`live media`、另一组通知 | 移植中 |
