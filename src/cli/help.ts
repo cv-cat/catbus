@@ -28,7 +28,7 @@ function table(rows: string[][], indent = '  '): string {
 }
 
 const GLOBAL_OPTIONS = [
-  ['-a, --account <name>', '使用哪个账号；guest 表示游客'],
+  ['-a, --account <name>', '使用哪个账号'],
   ['-e, --endpoint <端>', 'web | app | pc，默认 web'],
   ['-o, --output <格式>', 'json | jsonl，默认 json'],
   ['    --raw', '用平台原始对象代替归一化对象'],

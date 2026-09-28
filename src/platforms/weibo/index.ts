@@ -25,8 +25,7 @@ export default definePlatform({
 
         'user get': impl('full', 'userGet'),
         'user search': 'none',
-        // weibo.com 的 mymblog 对访客返回"请登录后使用"
-        'user items': impl('full', 'userItems', { auth: 'required' }),
+        'user items': impl('full', 'userItems'),
         'user likes': 'none',
         'user collects': 'none',
         'user reposts': 'none',

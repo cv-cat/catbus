@@ -24,8 +24,7 @@ export default definePlatform({
         'auth status': impl('full', 'authStatus'),
 
         'user get': impl('full', 'userGet'),
-        // 搜索、评论区、推荐流在未登录时 X 直接返回 404
-        'user search': impl('full', 'userSearch', { auth: 'required' }),
+        'user search': impl('full', 'userSearch'),
         'user items': impl('full', 'userItems'),
         'user likes': 'none',
         'user collects': 'none',
@@ -36,7 +35,7 @@ export default definePlatform({
         'user unfollow': impl('full', 'userUnfollow'),
 
         'item get': impl('full', 'itemGet'),
-        'item search': impl('full', 'itemSearch', { auth: 'required', options: { sort: filter.sort('general', 'latest') } }),
+        'item search': impl('full', 'itemSearch', { options: { sort: filter.sort('general', 'latest') } }),
         'item media': impl('full', 'itemMedia'),
         'item download': impl('full', 'itemDownload'),
         'item like': impl('full', 'itemLike'),
@@ -48,7 +47,7 @@ export default definePlatform({
         'item publish': impl('full', 'itemPublish'),
         'item delete': impl('full', 'itemDelete'),
 
-        'comment list': impl('full', 'commentList', { auth: 'required' }),
+        'comment list': impl('full', 'commentList'),
         'comment replies': 'none',
         'comment add': impl('full', 'commentAdd'),
         'comment delete': impl('full', 'commentDelete'),
@@ -57,7 +56,6 @@ export default definePlatform({
 
         'feed list': impl('partial', 'feedList', {
           note: 'following 规划中',
-          auth: 'required',
           options: { kind: filter.kind('recommend', 'following') },
         }),
 

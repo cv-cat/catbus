@@ -39,7 +39,7 @@ describe('全局命令', () => {
       endpoint: 'web',
       resource: 'feed',
       action: 'list',
-      auth: 'optional',
+      auth: 'required',
       status: 'implemented',
       upstream: 'partial',
       note: 'following 规划中',
@@ -107,7 +107,7 @@ describe('帮助', () => {
     expect(cmd.stdout).toContain('用法: catbus xhs item get <item>')
     expect(cmd.stdout).toContain('端:   web ✓ · app ○ planned · pc ○ planned')
     expect((await cli('xhs', 'item', 'like', '--help')).stdout).toContain('端:   web ○ planned · app ○ planned · pc ○ planned')
-    expect(cmd.stdout).toContain('登录: 可选')
+    expect(cmd.stdout).toContain('登录: 需要')
   })
 
   it('-h 输出已到达的最深层级', async () => {
@@ -162,7 +162,8 @@ describe('命令判定', () => {
     expect(hot.env.error.code).toBe('UNSUPPORTED')
     expect(hot.env.error.hint).toBe('可选：recommend、following')
     expect((await cli('xhs', 'feed', 'list', '--kind', 'nope')).env.error.code).toBe('USAGE')
-    expect((await cli('xhs', 'feed', 'list', '--kind', 'following')).code).toBe(4)
+    // 取值通过校验后进入身份检查：web 端不支持游客，需要登录
+    expect((await cli('xhs', 'feed', 'list', '--kind', 'following')).env.error.code).toBe('AUTH_REQUIRED')
   })
 
   it('参数与选项校验先于 NOT_IMPLEMENTED', async () => {

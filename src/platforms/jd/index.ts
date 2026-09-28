@@ -56,7 +56,7 @@ export default definePlatform({
           upstream: 'full',
           summary: '商品可用的优惠券',
           args: [{ name: 'item', summary: '商品 SKU：ID 或 URL' }],
-          auth: 'optional',
+          auth: 'required',
           output: 'Coupon[]',
           handler: h('couponList'),
         },

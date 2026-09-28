@@ -73,17 +73,17 @@ export default definePlatform({
         'feed list': impl('partial', 'feedList', { note: 'following 规划中', options: { kind: filter.kind('recommend', 'following'), category: CATEGORY } }),
         'feed categories': impl('full', 'feedCategories'),
 
-        'live get': impl('full', 'liveGet', { auth: 'required' }),
+        'live get': impl('full', 'liveGet'),
         'live list': impl('full', 'liveList', { options: { category: CATEGORY } }),
         'live search': 'none',
         'live categories': impl('full', 'liveCategories'),
-        'live listen': impl('full', 'liveListen', { auth: 'required' }),
+        'live listen': impl('full', 'liveListen'),
         'live history': 'none',
         'live send': impl('partial', 'liveSend', { note: '--gift 规划中' }),
         'live like': 'none',
         'live rank': 'none',
-        'live gifts': impl('full', 'liveGifts', { auth: 'required' }),
-        'live products': impl('full', 'liveProducts', { auth: 'required' }),
+        'live gifts': impl('full', 'liveGifts'),
+        'live products': impl('full', 'liveProducts'),
         'live media': 'none',
         'live start': 'none',
         'live stop': 'none',
@@ -115,8 +115,8 @@ export default definePlatform({
         'series items': 'none',
 
         'history list': 'none',
-        'topic search': impl('full', 'topicSearch', { auth: 'required' }),
-        'poi search': impl('full', 'poiSearch', { auth: 'required' }),
+        'topic search': impl('full', 'topicSearch'),
+        'poi search': impl('full', 'poiSearch'),
 
         // 蒲公英达人（AGENTS 4.7）
         'kol categories': biz('蒲公英达人分类', [], 'Category[]', 'kolCategories'),

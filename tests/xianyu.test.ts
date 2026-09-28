@@ -443,12 +443,12 @@ describe('xianyu auth', () => {
     expect((result as any).code).toBe(3)
   })
 
-  it('游客 auth status：不联网，logged_in 为 false；user get 他人规划中', async () => {
+  it('游客 auth status：不联网，logged_in 为 false；未登录时 user get 报 AUTH_REQUIRED', async () => {
     const r = await cli('xianyu', 'auth', 'status')
     expect(r.env.data).toEqual({ logged_in: false, user: null, method: null, expires_at: null })
     const other = await cli('xianyu', 'user', 'get', PEER_ID)
-    expect(other.code).toBe(4)
-    expect(other.env.error.code).toBe('NOT_IMPLEMENTED')
+    expect(other.code).toBe(3)
+    expect(other.env.error.code).toBe('AUTH_REQUIRED')
   })
 
   it('风控：RGV587 → RISK_CONTROL（captcha），退出码 5', async () => {

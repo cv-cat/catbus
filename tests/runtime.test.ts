@@ -19,6 +19,8 @@ vi.mock('../src/platforms/index.js', async (importOriginal) => {
     endpoints: {
       web: {
         login: { methods: ['cookie'], default: 'cookie' },
+        // 演示游客态（真实平台的 web 端都不支持，留给 app / pc 端）
+        guest: true,
         commands: {
           'user get': {
             upstream: 'full',

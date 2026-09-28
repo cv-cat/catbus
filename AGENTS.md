@@ -15,7 +15,7 @@
   - 必须支持全部目标系统（见 7.2）。
 - 以 **npm 包**分发，不发 PyPI。安装体积不是约束，优先保证开箱即用。
 - 上游目前只有 **web 端**接口。规范为 **app 端**、**pc 端**预留位置，例如 `catbus xianyu item get <id> -e app`。
-- 登录态统一保存在 `~/.catbus/`，**按 平台 × 端 × 账号** 隔离，支持游客态。
+- 登录态统一保存在 `~/.catbus/`，**按 平台 × 端 × 账号** 隔离。web 端不登录几乎看不到内容，所以都需要登录；游客态留给 app / pc 端。
 - 输出对人和对 Agent 都友好：stdout 只输出 JSON，字段跨平台统一。
 - **同义同名**：含义相同的能力在所有平台上用同一个命令、同一组参数、同一种输出结构。例如商品一律叫 `item`，搜索一律叫 `search`。
 - 将来的非 JS 上游（Go / Java……）通过 provider 协议接入（见 7.8）。
@@ -418,14 +418,15 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 
 身份按以下优先级选择：`-a <name>` > `_current` > 游客。
 
-- `-a guest` 强制使用游客身份。
+- `-a guest` 强制使用游客身份（只在支持游客态的端上有意义）。
 - `-a` 指定的账号不存在时，报 `AUTH_REQUIRED`，`hint` 为 `catbus <p> auth login -a <name>`。
 
-**游客态**：很多平台匿名访问也需要设备 cookie 或 token，例如 xhs 的 `a1`、抖音的 `ttwid`、B 站的 `buvid`、X 的 guest token。
-- catbus 自动生成这些数据，缓存到 `guest.json`，过期后重新生成。
-- 各平台的生成方式见 upstream-map。
+**游客态只在声明了 `guest: true` 的端上存在**（见 7.6）。
+- **web 端都不支持游客态**：各平台的 web 端不登录几乎看不到内容，所以 web 端除 `auth` 命令外全部需要登录，未登录时直接报 `AUTH_REQUIRED` 并提示登录命令。游客态主要留给 app 端。
+- 支持游客态的端上，很多平台匿名访问也需要设备 cookie 或 token（例如 xhs 的 `a1`、抖音的 `ttwid`、B 站的 `buvid`、X 的 guest token）。catbus 自动生成这些数据，缓存到 `guest.json`，过期后重新生成；各平台的生成方式见 upstream-map。
+- 登录流程本身仍会先生成这些设备数据（很多平台的登录接口要求先有设备 cookie），这与游客态无关。
 
-每个命令在注册表里标注 `auth: required | optional`：
+每个命令在注册表里标注 `auth: required | optional`；不支持游客态的端上一律是 `required`：
 
 | 情况 | 行为 |
 |---|---|
@@ -826,6 +827,7 @@ export default definePlatform({
 - 命令的值可以是 `'full' | 'partial' | 'none'` 的简写，也可以是对象。
 - 矩阵里 — 的命令不写。
 - `auth list` / `use` / `logout` 由 core 自动注册。
+- 端的字段：`login`（登录方式与子站点）、`logout?`（服务端登出）、`guest?`（是否支持游客态，默认 false）、`commands`。`guest` 为 false 时，除 `auth` 外的命令一律按 `auth: required` 处理，声明 `optional` 会在启动时报错。web 端都不设 `guest`。
 
 命令的字段：
 
@@ -834,7 +836,7 @@ export default definePlatform({
 | `summary` | 一句话说明 |
 | `args` | 位置参数 |
 | `options` | 私有选项和筛选取值，用 zod 声明 |
-| `auth` | `required` / `optional` |
+| `auth` | `required` / `optional`；只在 `guest: true` 的端上可以是 `optional` |
 | `confirm?` | 是否需要危险操作确认 |
 | `stream?` | 是否长连接 |
 | `paged?` | 是否分页 |

@@ -117,8 +117,8 @@ export default definePlatform({
           handler: h('itemCoin'),
         },
         'item triple': { upstream: 'full', summary: '一键三连', args: [item], auth: 'required', confirm: true, output: '{id}', handler: h('itemTriple') },
-        'item subtitles': { upstream: 'full', summary: '字幕', args: [item], auth: 'optional', output: 'Subtitle[]', handler: h('itemSubtitles') },
-        'danmaku list': { upstream: 'full', summary: '视频弹幕', args: [item], auth: 'optional', output: 'Danmaku[]', handler: h('danmakuList') },
+        'item subtitles': { upstream: 'full', summary: '字幕', args: [item], auth: 'required', output: 'Subtitle[]', handler: h('itemSubtitles') },
+        'danmaku list': { upstream: 'full', summary: '视频弹幕', args: [item], auth: 'required', output: 'Danmaku[]', handler: h('danmakuList') },
         'danmaku send': {
           upstream: 'full',
           summary: '发视频弹幕',

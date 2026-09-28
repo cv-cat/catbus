@@ -22,8 +22,9 @@ describe('注册表', () => {
     for (const n of names) expect(GLOBAL_COMMANDS).not.toContain(n)
   })
 
-  it('所有平台 web 可用，app / pc 为 planned', () => {
+  it('所有平台 web 可用，app / pc 为 planned；web 端不支持游客态，除 auth 外都需要登录', () => {
     for (const p of PLATFORMS) {
+      for (const c of web(p).commands.values()) if (c.resource !== 'auth') expect([p.id, c.key, c.auth]).toEqual([p.id, c.key, 'required'])
       expect(p.endpoints.web).not.toBe('planned')
       expect(p.endpoints.app).toBe('planned')
       expect(p.endpoints.pc).toBe('planned')
@@ -111,8 +112,10 @@ describe('注册表', () => {
     expect(() => define({ 'auth list': 'full' })).toThrow(/core/)
     expect(() => define({ item: 'full' } as any)).toThrow(/resource action/)
     expect(() =>
-      define({ 'foo bar': { upstream: 'full', summary: 's', args: [], auth: 'optional', output: 'Nope' } }),
+      define({ 'foo bar': { upstream: 'full', summary: 's', args: [], auth: 'required', output: 'Nope' } }),
     ).toThrow(/Nope/)
+    // web 端不支持游客态，不能声明 auth: optional
+    expect(() => define({ 'item get': { upstream: 'full', auth: 'optional' } })).toThrow(/游客/)
   })
 })
 

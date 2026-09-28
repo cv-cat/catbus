@@ -65,6 +65,11 @@ export interface EndpointDecl {
   login: LoginDecl
   /** 服务端登出：`auth logout` 删除本地凭证前调用（AGENTS 5.3）。 */
   logout?: HandlerLoader
+  /**
+   * 该端是否支持游客态（AGENTS 5.2）。默认 false：所有命令都需要登录（auth 命令除外）。
+   * web 端不登录几乎看不到内容，都不支持；游客态留给 app / pc 端。
+   */
+  guest?: boolean
   /** 词表里的命令可以只写 `'full' | 'partial' | 'none'`；矩阵里 — 的命令不写。 */
   commands: Record<string, Upstream | CommandDecl>
 }
@@ -145,6 +150,10 @@ function resolveCommands(decl: PlatformDecl, e: EndpointDecl): Map<string, Comma
       }
     }
     const spec = { ...base, ...d } as CommandSpec & CommandDecl
+    if (!e.guest && parts[0] !== 'auth') {
+      if (d.auth === 'optional') fail(key, '该端不支持游客态，auth 只能是 required')
+      spec.auth = 'required'
+    }
     const options: Record<string, z.ZodType> = { ...(spec.paged ? PAGING : {}), ...base?.options, ...d.options }
     if (key === 'auth login') {
       options.method = z.enum(e.login.methods).default(e.login.default).describe('登录方式')

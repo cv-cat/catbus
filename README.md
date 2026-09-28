@@ -56,7 +56,7 @@ stdout 只输出 JSON，日志和提示在 stderr：
 ## 登录态与配置
 
 - 登录态保存在 `~/.catbus/`（可用 `CATBUS_HOME` 覆盖），按 平台 × 端 × 账号 隔离；`-a <name>` 选择账号，`catbus auth list` 列出全部账号。
-- 未登录时以游客身份访问，并在 stderr 提示登录。
+- web 端不登录几乎看不到内容，所以所有命令都需要先登录：`catbus <platform> auth login`。未登录时命令会报 `AUTH_REQUIRED`（退出码 3）并给出登录命令。
 - 代理：`catbus config set proxy http://127.0.0.1:7890`，或按平台设置 `xhs.proxy`，或单次用 `--proxy`。不读取 `HTTP(S)_PROXY`。
 
 ## 开发
