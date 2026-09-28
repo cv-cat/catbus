@@ -59,7 +59,7 @@
 | 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x |
 |---|---|---|---|---|---|---|---|---|---|---|
 | item get | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | ✓ | ✓ |
-| item search | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ○ | ○ | ✓ | ✓ |
+| item search | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ○ | ○ | ✓ | ✓ |
 | item related | ○ | ○ | ✓ | ○ | ✓ | — | ○ | ○ | ◐ | — |
 | item list | ✓ | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — |
 | item media / download | ✓ | ✓ | ◐ | ✓ | ✓ | ○ | — | — | — | ✓ |

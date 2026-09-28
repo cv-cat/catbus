@@ -35,7 +35,7 @@ export default definePlatform({
         'user unfollow': 'none',
 
         'item get': impl('full', 'itemGet'),
-        'item search': impl('full', 'itemSearch', { note: '只能取第一页' }),
+        'item search': impl('partial', 'itemSearch', { note: '只能取第一页' }),
         'item list': 'none',
         'item media': 'none',
         'item download': 'none',
