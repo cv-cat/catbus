@@ -14,7 +14,7 @@ import * as live from './live.js'
 import * as norm from './normalize.js'
 import { Passport } from './passport.js'
 import { PROFILE, WWW, WWW_ONLY } from './profile.js'
-import { resolveItem, resolveProduct, resolveRoom, resolveUser } from './resolve.js'
+import { resolveItem, resolveProduct, resolveRoom, resolveShare, resolveUser } from './resolve.js'
 
 type Ctx = HandlerContext
 const cursor = (ctx: Ctx, dflt = '0') => ctx.cursor ?? dflt
@@ -166,6 +166,15 @@ export async function itemSearch(ctx: Ctx) {
   const data: any[] = body.data ?? []
   const list = data.filter((x) => x.aweme_info).map((x) => norm.aweme(x.aweme_info))
   return paged(list, Number(offset) + data.length, more(body.has_more) && data.length > 0)
+}
+
+/** 自己的作品（创作者中心的作品预览 work_list），带审核 / 私密 / 定时状态。 */
+export async function itemList(ctx: Ctx) {
+  const d = await douyin(ctx)
+  d.requireLogin()
+  await creator.bootstrap(d)
+  const body = check(ctx, await creator.workList(d, cursor(ctx)))
+  return paged((body.aweme_list ?? []).map(norm.work), body.max_cursor, more(body.has_more))
 }
 
 export async function itemMedia(ctx: Ctx) {
@@ -430,11 +439,32 @@ async function diggItem(ctx: Ctx, type: '1' | '0') {
 export const itemLike = (ctx: Ctx) => diggItem(ctx, '1')
 export const itemUnlike = (ctx: Ctx) => diggItem(ctx, '0')
 
+/** `--folder`：收藏夹 ID 或名字 → (id, name)（移动接口两个都要）。 */
+async function findFolder(ctx: Ctx, d: Douyin, input: string): Promise<{ id: string; name: string }> {
+  const list: any[] = check(ctx, await api.collectList(d)).collects_list ?? []
+  const f = list.find((x) => n.id(x.collects_id_str ?? x.collects_id) === input) ?? list.find((x) => x.collects_name === input)
+  if (!f) throw new CatbusError('USAGE', `没有这个收藏夹：${input}`, { hint: 'catbus douyin folder list' })
+  return { id: n.id(f.collects_id_str ?? f.collects_id), name: String(f.collects_name ?? '') }
+}
+
+/**
+ * 收藏 / 取消收藏。带 `--folder` 时：收藏后移进这个收藏夹（上游 move_collect_aweme，要求先收藏）；
+ * 取消时只从这个收藏夹移出，仍保留收藏（remove_collect_aweme）。
+ */
 async function collectItem(ctx: Ctx, action: '1' | '0') {
   const d = await douyin(ctx)
   d.requireLogin()
   const id = await resolveItem(d, ctx.args.item!)
-  check(ctx, await api.collect(d, id, action))
+  const folder = ctx.options.folder as string | undefined
+  if (!folder) {
+    check(ctx, await api.collect(d, id, action))
+    return { id }
+  }
+  const f = await findFolder(ctx, d, folder)
+  if (action === '1') {
+    check(ctx, await api.collect(d, id, '1'))
+    check(ctx, await api.collectMove(d, id, f.name, f.id))
+  } else check(ctx, await api.collectRemove(d, id, f.name, f.id))
   return { id }
 }
 export const itemCollect = (ctx: Ctx) => collectItem(ctx, '1')
@@ -461,22 +491,46 @@ export async function commentAdd(ctx: Ctx) {
 
 const VISIBILITY: Record<string, number> = { public: 0, private: 1, friends: 2 }
 
+/** 正文：--text 后面接 #话题（--tag / --topic）和 @用户（--mention），按上游说明作为纯文本写进描述。 */
+export function publishDesc(o: Record<string, any>): string {
+  const tags = [...(o.tag ?? []), ...(o.topic ?? [])].map((x: string) => `#${x.replace(/^#/, '')}`)
+  const mentions = (o.mention ?? []).map((x: string) => `@${x.replace(/^@/, '')}`)
+  return [o.text ?? '', ...tags, ...mentions].filter(Boolean).join(' ')
+}
+
 export async function itemPublish(ctx: Ctx) {
   const o = ctx.options as Record<string, any>
-  for (const key of ['tag', 'topic', 'mention', 'poi', 'category', 'price']) {
-    if (o[key] != null) throw new CatbusError('UNSUPPORTED', `douyin 的 item publish 不支持 --${key}`, { hint: '话题可以直接写在 --text 里（#话题）' })
+  for (const key of ['category', 'price']) {
+    if (o[key] != null) throw new CatbusError('UNSUPPORTED', `douyin 的 item publish 不支持 --${key}`)
   }
   const images: string[] = o.image ?? []
   if (!o.video && !images.length) throw new CatbusError('USAGE', '发布需要 --image（图文）或 --video（视频）', { hint: 'catbus douyin item publish --video <文件> --title <标题> --text <描述>' })
   if (o.video && images.length) throw new CatbusError('USAGE', '--image 与 --video 只能二选一')
+  if (o.poiName != null && o.poi == null) throw new CatbusError('USAGE', '--poi-name 要和 --poi <地点 id> 一起用')
+  const cover = o.cover as string | undefined
+  const coverIndex = cover != null && !o.video ? images.indexOf(cover) : -1
+  if (cover != null && !o.video && coverIndex < 0 && !cover.startsWith('tos-')) {
+    throw new CatbusError('USAGE', '图文的 --cover 必须是 --image 里的一张（或已上传的 tos- uri）')
+  }
   const d = await douyin(ctx)
   d.requireLogin()
-  const options = { title: o.title, desc: o.text, visibility: VISIBILITY[o.visibility ?? 'public']!, timing: o.schedule ? Math.floor(Date.parse(o.schedule) / 1000) : undefined }
+  const options: creator.PublishOptions = {
+    title: o.title,
+    desc: publishDesc(o),
+    visibility: VISIBILITY[o.visibility ?? 'public']!,
+    timing: o.schedule ? Math.floor(Date.parse(o.schedule) / 1000) : undefined,
+    allowDownload: !o.noDownload,
+    poi: o.poi != null ? { poi_id: String(o.poi), poi_name: String(o.poiName ?? '') } : undefined,
+    mixId: o.series,
+    hotSpot: o.hotspot != null ? { word: String(o.hotspot) } : undefined,
+  }
   let body
   if (o.video) {
-    const cover = o.cover ? await readMedia(d.http, o.cover) : null
-    body = await creator.postVideo(d, await readMedia(d.http, o.video), cover, options)
+    const coverFile = cover == null ? null : cover.startsWith('tos-') ? cover : await readMedia(d.http, cover)
+    body = await creator.postVideo(d, await readMedia(d.http, o.video), coverFile, options)
   } else {
+    if (coverIndex >= 0) options.coverIndex = coverIndex
+    else if (cover) options.coverUri = cover
     const files = []
     for (const img of images) files.push(await readMedia(d.http, img))
     body = await creator.postImages(d, files, options)
@@ -484,7 +538,7 @@ export async function itemPublish(ctx: Ctx) {
   check(ctx, body)
   if (!body.item_id) throw new CatbusError('UPSTREAM', `发布失败：${body.status_msg ?? ''}`, { detail: { status_code: body.status_code ?? null } })
   const id = n.id(body.item_id)
-  return n.item({ id, kind: o.video ? 'video' : 'image', url: norm.itemUrl(id, !o.video), title: n.str(o.title), text: n.str(o.text), status: 'reviewing' }, body)
+  return n.item({ id, kind: o.video ? 'video' : 'image', url: norm.itemUrl(id, !o.video), title: n.str(o.title), text: n.str(options.desc), status: 'reviewing' }, body)
 }
 
 export async function mediaUpload(ctx: Ctx): Promise<Media> {
@@ -517,7 +571,7 @@ export async function liveLike(ctx: Ctx) {
   const d = await douyin(ctx)
   d.requireLogin()
   const r = await room(d, ctx.args.room!)
-  check(ctx, await api.liveLike(d, r.room_id))
+  check(ctx, await api.liveLike(d, r.room_id, String((ctx.options.count as number | undefined) ?? 1)))
   return { id: r.webRid }
 }
 
@@ -546,6 +600,21 @@ async function conversationFor(ctx: Ctx, d: Douyin) {
   return im.createConversation(d, n.id(u.uid))
 }
 
+/** `--share` 的卡片：作品（视频 type 8 / 图文 type 77，uid 是自己）、用户名片（type 25）、网页（type 26）。 */
+async function shareCard(d: Douyin, input: string): Promise<[number, Record<string, unknown>]> {
+  const target = await resolveShare(d, input)
+  if (target.kind === 'web') return [im.IM_SHARE_WEB, im.shareWebContent(target.url)]
+  if (target.kind === 'user') {
+    const u = await profile(d, target.secUid)
+    return [im.IM_SHARE_USER, im.userCardContent({ uid: n.id(u.uid), secUid: n.id(u.sec_uid), name: String(u.nickname ?? ''), avatar: u.avatar_larger ?? u.avatar_thumb ?? '' })]
+  }
+  const detail = check(d.ctx, await api.workInfo(d, target.id)).aweme_detail
+  if (!detail) throw new CatbusError('UPSTREAM', `作品不存在或不可见：${target.id}`)
+  const uid = await d.uid().catch(() => '')
+  const photos = detail.aweme_type === 68 || (Array.isArray(detail.images) && detail.images.length > 0)
+  return photos ? [im.IM_SHARE_PHOTOS, im.sharePhotosContent(detail, uid)] : [im.IM_SHARE_AWEME, im.shareAwemeContent(detail, uid)]
+}
+
 export async function msgSend(ctx: Ctx) {
   const o = ctx.options as Record<string, any>
   const images: string[] = o.image ?? []
@@ -567,6 +636,16 @@ export async function msgSend(ctx: Ctx) {
       const content = await im.uploadImage(d, await readMedia(d.http, img))
       last = { id: await im.sendMessage(d, conv, im.IM_STORY_PICTURE, content), type: 'image', text: null }
     }
+  }
+  if (o.file) {
+    const file = await readMedia(d.http, o.file)
+    // 上游 _source_name：本地文件取文件名，URL 与字节一律叫 file.bin
+    if (/^https?:\/\//i.test(o.file)) file.filename = 'file.bin'
+    last = { id: await im.sendMessage(d, conv, im.IM_FILE, await im.uploadFile(d, file)), type: 'other', text: file.filename }
+  }
+  if (o.share) {
+    const [type, content] = await shareCard(d, String(o.share))
+    last = { id: await im.sendMessage(d, conv, type, content), type: 'card', text: null }
   }
   return n.message({ id: last!.id, conversation_id: conv.conversationId, from: me, type: last!.type, text: last!.text, created_at: n.time(rand.now()) })
 }

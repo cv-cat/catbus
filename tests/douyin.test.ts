@@ -148,7 +148,54 @@ const CASES: Record<string, Run> = {
   search_video: (c) => logged(c, (d) => api.searchVideo(d, '美食 探店', '0', '16', { sortType: '1', publishTime: '180', filterDuration: '0-1', searchRange: '1' })),
   search_video_p2: (c) => logged(c, (d) => api.searchVideo(d, '美食', '16', '16', { sortType: '0', publishTime: '0', filterDuration: '', searchRange: '0' }, c.input.search_id)),
   search_user_filter: (c) => logged(c, (d) => api.searchUser(d, '巴旦木公主', '0', '25', '1w_10w', 'enterprise_user')),
+  work_list: (c) =>
+    logged(c, async (d) => {
+      await creator.bootstrap(d)
+      return creator.workList(d)
+    }),
+  post_images_extra: (c) =>
+    logged(c, (d) =>
+      creator.postImages(d, [media(PNG), media(PNG)], {
+        title: '标题',
+        desc: '正文 #话题 @好友',
+        visibility: 1,
+        allowDownload: false,
+        timing: 1790086400,
+        coverIndex: 1,
+        poi: POI,
+        mixId: MIX,
+        hotSpot: { word: '热点词' },
+      }),
+    ),
+  post_video_extra: (c) =>
+    logged(c, (d) =>
+      creator.postVideo(d, media(c.input.video), 'tos-cn-i-fake/mycover', {
+        title: '视频标题',
+        desc: '视频描述',
+        visibility: 0,
+        allowDownload: false,
+        poi: POI,
+        mixId: MIX,
+        hotSpot: { word: '热点词' },
+      }),
+    ),
+  collect_move: (c) => logged(c, (d) => api.collectMove(d, AWEME, '我的收藏夹', c.input.folder)),
+  collect_remove: (c) => logged(c, (d) => api.collectRemove(d, AWEME, '我的收藏夹', c.input.folder)),
+  im_send_file: (c) => logged(c, async (d) => im.sendMessage(d, CONV, im.IM_FILE, await im.uploadFile(d, media(c.input.file, 'file.bin')))),
+  im_share_aweme: (c) =>
+    logged(c, async (d) => {
+      const detail = (await api.workInfo(d, AWEME)).aweme_detail
+      return im.sendMessage(d, CONV, im.IM_SHARE_AWEME, im.shareAwemeContent(detail, await d.uid()))
+    }),
+  im_share_photos: (c) =>
+    logged(c, async (d) => {
+      const detail = (await api.workInfo(d, '7433523124836060417')).aweme_detail
+      return im.sendMessage(d, CONV, im.IM_SHARE_PHOTOS, im.sharePhotosContent(detail, await d.uid()))
+    }),
+  im_user_card: (c) => logged(c, (d) => im.sendMessage(d, CONV, im.IM_SHARE_USER, im.userCardContent({ uid: '5550001', secUid: SEC_UID, name: '作者', avatar: c.input.avatar }))),
+  im_share_web: (c) => logged(c, (d) => im.sendMessage(d, CONV, im.IM_SHARE_WEB, im.shareWebContent(c.input.url))),
   live_rank_thousand: (c) => logged(c, (d) => api.liveThousandRank(d, c.input.room_id, c.input.web_rid)),
+  live_like_count: (c) => logged(c, (d) => api.liveLike(d, c.input.room_id, '10')),
   product_comment_counter: (c) => logged(c, (d) => api.productCommentCounter(d, '3622058069401408999', 'fakeShop01')),
   product_comments_tag: (c) => logged(c, (d) => api.productComments(d, '3622058069401408999', 'fakeShop01', '0', '10', '0', '7')),
   notices_group: (c) => logged(c, (d) => api.notices(d, '0', '0', '10', '401')),
@@ -156,6 +203,9 @@ const CASES: Record<string, Run> = {
 
 const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAYAAAC56t6BAAAAEklEQVR4nGNgYGD4z8DAwMAAAAwAAf8v0Mo8AAAAAElFTkSuQmCC'
 const CONV_ID = '0:1:97872126662:1234567890'
+const CONV = { conversationId: CONV_ID, shortId: '7400000000000000123', ticket: 'fake-conv-ticket' }
+const POI = { poi_id: '6601136811511474183', poi_name: '北京·天安门' }
+const MIX = '7400000000000000888'
 
 describe('douyin 对拍：请求构造与签名', () => {
   for (const [name, run] of Object.entries(CASES)) {
@@ -379,6 +429,16 @@ describe('douyin 对拍：补齐的命令流程', () => {
     expect(result.data).toMatchObject([{ id: AWEME, kind: 'video', text: '搜索到的视频' }])
   })
 
+  it('item list：进入创作者中心（页面、oversea、csrf）→ work_list', async () => {
+    const c = loadCase('douyin', 'work_list')
+    const { itemList } = await import('../src/platforms/douyin/web/commands.js')
+    const ctx = loggedCtx(c)
+    const { requests, result, error } = await replay(c, () => itemList(ctx) as Promise<any>)
+    if (error) throw error
+    expectReqs(requests, c.requests)
+    expect(result).toEqual({ data: [], page: { cursor: null, has_more: false } })
+  })
+
   it('搜索筛选的取值映射：综合频道只标记 is_filter_search，--range all 在视频频道是 0', async () => {
     const { searchFilters } = await import('../src/platforms/douyin/web/commands.js')
     expect(searchFilters({}, false)).toEqual({ sortType: '0', publishTime: '0', filterDuration: '', searchRange: '', contentType: '' })
@@ -392,9 +452,68 @@ describe('douyin 对拍：补齐的命令流程', () => {
     expect(searchFilters({ range: 'all', length: 'long' }, true)).toMatchObject({ searchRange: '0', filterDuration: '5-10000', contentType: undefined })
   })
 
+  it('item collect --folder：按名字找到收藏夹，收藏后移进去；uncollect --folder 只移出', async () => {
+    const { itemCollect, itemUncollect } = await import('../src/platforms/douyin/web/commands.js')
+    const c = loadCase('douyin', 'collect_move')
+    const urls: string[] = []
+    const restore = mockSender((p) => {
+      urls.push(`${p.method} ${p.url.split('?')[0]}`)
+      if (p.url.includes('/collects/list/')) return fakeResponse({ status_code: 0, collects_list: [{ collects_id_str: c.input.folder, collects_name: '我的收藏夹' }] })
+      if (p.method === 'HEAD') return fakeResponse('', { headers: [['x-ware-csrf-token', '0001,fakecsrf,86370,success,x']] })
+      if (p.url.includes('get_client_cert')) return fakeResponse({ message: 'success', data: { server_cert: 'x' } })
+      if (p.url.includes('/collects/video/move/')) expect(p.url).toContain(p.url.includes('to_collects_id') ? `to_collects_id=${c.input.folder}` : `from_collects_id=${c.input.folder}`)
+      return fakeResponse({ status_code: 0 })
+    })
+    try {
+      const ctx = loggedCtx(c)
+      ctx.args = { item: AWEME }
+      ctx.options = { folder: '我的收藏夹' }
+      expect(await itemCollect(ctx)).toEqual({ id: AWEME })
+      const moves = urls.filter((u) => u.includes('/collect'))
+      expect(moves).toEqual([
+        'GET https://www.douyin.com/aweme/v1/web/collects/list/',
+        'POST https://www.douyin.com/aweme/v1/web/aweme/collect/',
+        'POST https://www.douyin.com/aweme/v1/web/collects/video/move/',
+      ])
+      urls.length = 0
+      expect(await itemUncollect(ctx)).toEqual({ id: AWEME })
+      expect(urls.filter((u) => u.includes('/collect'))).toEqual(['GET https://www.douyin.com/aweme/v1/web/collects/list/', 'POST https://www.douyin.com/aweme/v1/web/collects/video/move/'])
+      ctx.options = { folder: '不存在' }
+      await expect(itemCollect(ctx)).rejects.toMatchObject({ code: 'USAGE' })
+    } finally {
+      restore()
+    }
+  })
+
+  it('发布正文：--topic / --tag 写成 #话题，--mention 写成 @用户（上游说明：描述里可内嵌纯文本）', async () => {
+    const { publishDesc } = await import('../src/platforms/douyin/web/commands.js')
+    expect(publishDesc({ text: '正文', topic: ['旅行', '#美食'], tag: ['日常'], mention: ['@好友'] })).toBe('正文 #日常 #旅行 #美食 @好友')
+    expect(publishDesc({ topic: ['旅行'] })).toBe('#旅行')
+  })
+
+  it('msg send 的参数约束：--file / --share 也算消息内容', async () => {
+    const { PLATFORMS } = await import('../src/platforms/index.js')
+    const web = PLATFORMS.find((p) => p.id === 'douyin')!.endpoints.web
+    const cmd = (web as any).commands.get('msg send')
+    expect(cmd.check({}, { to: 'u', share: 'x' })).toBeUndefined()
+    expect(cmd.check({}, { to: 'u', file: 'a.pdf' })).toBeUndefined()
+    expect(cmd.check({}, { to: 'u' })).toMatch(/--file 或 --share/)
+    expect(cmd.check({ text: 'hi' }, { to: 'u', conversation: 'c' })).toMatch(/只能用一个/)
+  })
 })
 
 describe('douyin 归一化：补齐的命令', () => {
+  it('item list：定时未发布 → draft，审核中 / 违规 / 私密，其余 published', async () => {
+    const norm = await import('../src/platforms/douyin/web/normalize.js')
+    const base = { aweme_id: '7600000000000000001', desc: '作品', create_time: 1790000000, video: { cover: { url_list: ['https://p3.douyinpic.com/c.jpeg'] } }, statistics: { play_count: 12 } }
+    expect(norm.work({ ...base, timer: { status: 0, public_time: 1790086400 } })).toMatchObject({ id: base.aweme_id, kind: 'video', status: 'draft', stats: { views: 12 } })
+    expect(norm.work({ ...base, status: { in_reviewing: true } }).status).toBe('reviewing')
+    expect(norm.work({ ...base, status: { is_prohibited: true } }).status).toBe('rejected')
+    expect(norm.work({ ...base, status: { private_status: 1 } }).status).toBe('private')
+    expect(norm.work({ ...base, status: { private_status: 0 }, timer: { status: 1 } }).status).toBe('published')
+    expect(norm.work({ ...base, aweme_type: 68, images: [{ url_list: ['https://p3.douyinpic.com/i.jpeg'] }] })).toMatchObject({ kind: 'image', url: `https://www.douyin.com/note/${base.aweme_id}` })
+  })
+
   it('live media：live_core_sdk_data 的各清晰度 flv / hls（带分辨率），再补 flv_pull_url / hls_pull_url_map，去重', async () => {
     const norm = await import('../src/platforms/douyin/web/normalize.js')
     const streamData = { data: { origin: { main: { flv: 'https://pull-flv-l1.douyincdn.com/stage/stream-1_or4.flv', hls: 'https://pull-hls-l1.douyincdn.com/stage/stream-1_or4/index.m3u8', sdk_params: '{"resolution":"1920x1080","vbitrate":6000000}' } } } }

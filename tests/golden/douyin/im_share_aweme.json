@@ -1,0 +1,685 @@
+{
+  "input": {
+    "cookies": "ttwid=1%7Cfake-ttwid%7C1790000000%7Cabcdef; UIFID=fake-uifid-0123456789abcdef; s_v_web_id=verify_fakesvwebid_0000_0000_4000_8000_000000000000; passport_csrf_token=fakecsrf0123456789abcdef01234567; passport_csrf_token_default=fakecsrf0123456789abcdef01234567; odin_tt=fake-odin-tt; sessionid=fake-sessionid; sessionid_ss=fake-sessionid; sid_guard=fake-sid-guard; uid_tt=fake-uid-tt; bd_ticket_guard_client_web_domain=2; bd_ticket_guard_ts_sign_id=ts.2.fakesign",
+    "private_key": "-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABI0VniQq83voAoGCCqGSM49AwEHoUQDQgAE\nn62Erq4Iu+9/AQAU2CzvagneKwz4cbXODE8dE6WaWTQHy0V2nxBw4sJHD+Wxv+YxM8CwzcZOpL83\nkajsKgf9Tw==\n-----END EC PRIVATE KEY-----\n",
+    "server_cert": "pub.BFLG/1tx3mXYPHXTk+JJ7AOJQ3BRXQsimxxiJGgfKlAwtvMjwgwg0CHWEeCHz0gvUpfmE1y+5tOZSDIWTkeebpY=",
+    "ticket": "hash.fake-ticket-0000",
+    "ts_sign": "ts.2.fakesign0123456789abcdef",
+    "client_cert": "pub.ZmFrZS1jbGllbnQtY2VydA==",
+    "dtrait_blob": "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9g",
+    "ms_token": "fake-mstoken-0123456789",
+    "webid": "7400000000000000001",
+    "uid": "97872126662",
+    "detail": {
+      "aweme_id": "7433523124836060416",
+      "desc": "分享的视频 #话题",
+      "aweme_type": 0,
+      "is_aigc": false,
+      "is_live_photo": 0,
+      "author": {
+        "uid": "5550001",
+        "sec_uid": "MS4wLjABAAAAfakeSecUid0123456789abcdef",
+        "nickname": "作者"
+      },
+      "video": {
+        "cover": {
+          "uri": "tos-cn-p-0015/cover",
+          "url_list": [
+            "https://p3.douyinpic.com/cover.jpeg"
+          ],
+          "width": 720,
+          "height": 720
+        },
+        "width": 1080,
+        "height": 1920
+      },
+      "share_info": {
+        "share_url": "https://www.iesdouyin.com/share/video/7433523124836060416/"
+      },
+      "ai_ext": {
+        "k": 1
+      },
+      "profile_uid": "5550001"
+    }
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://www.douyin.com/aweme/v1/web/aweme/detail/?device_platform=webapp&aid=6383&channel=channel_pc_web&aweme_id=7433523124836060416&request_source=600&origin_type=video_page&update_version_code=170400&pc_client_type=1&pc_libra_divert=Windows&support_h265=1&support_dash=1&cpu_core_num=20&version_code=190500&version_name=19.5.0&cookie_enabled=true&screen_width=2560&screen_height=1440&browser_language=zh-CN&browser_platform=Win32&browser_name=Chrome&browser_version=151.0.0.0&browser_online=true&engine_name=Blink&engine_version=151.0.0.0&os_name=Windows&os_version=10&device_memory=32&platform=PC&downlink=10&effective_type=4g&round_trip_time=50&webid=7400000000000000001&uifid=fake-uifid-0123456789abcdef&verifyFp=verify_fakesvwebid_0000_0000_4000_8000_000000000000&fp=verify_fakesvwebid_0000_0000_4000_8000_000000000000&msToken=fake-mstoken-0123456789&a_bogus=xy0RhtXwYZ8jcVKGucisH3Clzh6ArsuyOFi2S9alSOoMLZUGouNyzNSraxoWYw9SMbpwhC3H0DTMYjdcqUtTpC9pLmkvuxvR0zAc908L%2F1qhb0vQDqfNCzmL9Jtb8YvEm5oSJAUU1tmc2xA4EZrwUp5yHAkE4OkpKqrSdaUGN9ek6zT9FrqQuNtdxXFb-RI5Of%3D%3D&timestamp=1790000000&x-secsdk-web-signature=a0df71b6bfa7f810b0151bfaa4d18d3e",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not=A?Brand\";v=\"99\", \"Google Chrome\";v=\"151\", \"Chromium\";v=\"151\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/video/7433523124836060416"
+        ],
+        [
+          "uifid",
+          "fake-uifid-0123456789abcdef"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "UIFID",
+          "fake-uifid-0123456789abcdef"
+        ],
+        [
+          "passport_csrf_token",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "passport_csrf_token_default",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "odin_tt",
+          "fake-odin-tt"
+        ],
+        [
+          "sessionid",
+          "fake-sessionid"
+        ],
+        [
+          "sessionid_ss",
+          "fake-sessionid"
+        ],
+        [
+          "sid_guard",
+          "fake-sid-guard"
+        ],
+        [
+          "uid_tt",
+          "fake-uid-tt"
+        ],
+        [
+          "bd_ticket_guard_client_web_domain",
+          "2"
+        ],
+        [
+          "bd_ticket_guard_ts_sign_id",
+          "ts.2.fakesign"
+        ],
+        [
+          "s_v_web_id",
+          "verify_fakesvwebid_0000_0000_4000_8000_000000000000"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "HEAD",
+      "url": "https://www.douyin.com/service/2/abtest_config/",
+      "headers": [
+        [
+          "x-secsdk-csrf-request",
+          "1"
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "x-secsdk-csrf-version",
+          "1.2.22"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "UIFID",
+          "fake-uifid-0123456789abcdef"
+        ],
+        [
+          "s_v_web_id",
+          "verify_fakesvwebid_0000_0000_4000_8000_000000000000"
+        ],
+        [
+          "passport_csrf_token",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "passport_csrf_token_default",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "odin_tt",
+          "fake-odin-tt"
+        ],
+        [
+          "sessionid",
+          "fake-sessionid"
+        ],
+        [
+          "sessionid_ss",
+          "fake-sessionid"
+        ],
+        [
+          "sid_guard",
+          "fake-sid-guard"
+        ],
+        [
+          "uid_tt",
+          "fake-uid-tt"
+        ],
+        [
+          "bd_ticket_guard_client_web_domain",
+          "2"
+        ],
+        [
+          "bd_ticket_guard_ts_sign_id",
+          "ts.2.fakesign"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://www.douyin.com/passport/ticket_guard/get_client_cert/?aid=6383&is_from_ttaccountsdk=1&msToken=auSaVFMB6Lsq2YlvEEpsgn0do6xGLSdGlR94kn0FUP0rXPvfU0GhinEsqcTrD4uo3WYkwrgu7GLEpMaCcNSiuoG5tttHy91cdrRFoGg5LD9&a_bogus=xv0RgHtwDxARFd%2Ft8OisHVcUohI%2FNB8yJMiORy5USNL-yZlb2uNyzOSJbxoWbw2SMbp0he3H8DPMbfVcNs7wpC9komkfSDJRsTAc9g0oM1q6YMkQLrfpCz0oeJeY8YvE8QKjJA4UItQPIxK4L3riUpA99ApJ4OvpKrrydcWGN9tkg049PHq2uOGdxXzYBb95Jj%3D%3D",
+      "headers": [
+        [
+          "x-tt-session-dtrait",
+          ""
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "x-secsdk-csrf-token",
+          "fakecsrftoken0123456789abcdef"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "origin",
+          "https://www.douyin.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "UIFID",
+          "fake-uifid-0123456789abcdef"
+        ],
+        [
+          "s_v_web_id",
+          "verify_fakesvwebid_0000_0000_4000_8000_000000000000"
+        ],
+        [
+          "passport_csrf_token",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "passport_csrf_token_default",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "odin_tt",
+          "fake-odin-tt"
+        ],
+        [
+          "sessionid",
+          "fake-sessionid"
+        ],
+        [
+          "sessionid_ss",
+          "fake-sessionid"
+        ],
+        [
+          "sid_guard",
+          "fake-sid-guard"
+        ],
+        [
+          "uid_tt",
+          "fake-uid-tt"
+        ],
+        [
+          "bd_ticket_guard_client_web_domain",
+          "2"
+        ],
+        [
+          "bd_ticket_guard_ts_sign_id",
+          "ts.2.fakesign"
+        ]
+      ],
+      "body": "server_data=1,aid=6383",
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://www.douyin.com/passport/safe/get_identity_security_token/?passport_jssdk_version=4.2.3&passport_jssdk_type=lite&is_from_ttaccountsdk=1&aid=6383&language=zh&scene=web_im&auto_retry_req=0&skip_verify=false&identity_token_force_get_tag=0&biz_trace_id=4db600ee&id_token_version=1.2.10&msToken=fake-mstoken-0123456789&a_bogus=Q60fDe6EOoQned%2FGYKiiH-elFhI%2FrT8yHPTdWrIlSNoZyqMGoSPfzPbrrxoUYZoSFSBzheIHMDT%2FbnxcNU7ipCHkqmkkuDiRsGII908L21wXbMvQEHRPCLsLCJtb8YvE8%2FK6J1RlXtQO2dK4L1awUpA99Api4OJpKNrWdaRai9ef6zT9Pqq%2FuxtdEXFGBcI5eE%3D%3D",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/javascript"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not=A?Brand\";v=\"99\", \"Google Chrome\";v=\"151\", \"Chromium\";v=\"151\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/chat?isPopup=1"
+        ],
+        [
+          "x-tt-passport-csrf-token",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "x-tt-passport-trace-id",
+          "4db600ee"
+        ],
+        [
+          "bd-ticket-guard-client-data",
+          "eyJ0c19zaWduIjoidHMuMi5mYWtlc2lnbjAxMjM0NTY3ODlhYmNkZWYiLCJyZXFfY29udGVudCI6InRpY2tldCxwYXRoLHRpbWVzdGFtcCIsInJlcV9zaWduIjoiRW9YWTBkaDlLQ2MxRkxLTExLYTNiVVVEOHFaZDNEZGdFUFZjREUwcmwyQT0iLCJ0aW1lc3RhbXAiOjE3OTAwMDAwMDB9"
+        ],
+        [
+          "bd-ticket-guard-ree-public-key",
+          "BJ+thK6uCLvvfwEAFNgs72oJ3isM+HG1zgxPHROlmlk0B8tFdp8QcOLCRw/lsb/mMTPAsM3GTqS/N5Go7CoH/U8="
+        ],
+        [
+          "bd-ticket-guard-version",
+          "2"
+        ],
+        [
+          "bd-ticket-guard-web-version",
+          "2"
+        ],
+        [
+          "bd-ticket-guard-web-sign-type",
+          "1"
+        ],
+        [
+          "x-tt-session-dtrait",
+          "d0_O6jlmcPL6awBxbqGagKbWsoZmUNAtfwTR/ZVI8x43JBC7oPItIe+sqblJNGI+7qcDXCtbidWY9JKO8rkVAppfH75b5dlWwf0xX9eUgnxCIufCrecDCd699tj+oEHflI6AG79OiI4gl1M/RpYmbj54AYUp8yGODgPY657QtenjNX7Y0yZ2vOhzGH9mT84itpi7XAs90+cHprMZuffmF0vkH+S4UVdOnvPPhnTxGuMdujRW8pZpp6bC0Ahbz54ydanIaNRMaEm6jwjMtfzplOmxw+syS63+2DOY9C8CxKZgWqrRsI4kgXzw/JZ7YXYv7wwvf7wi3g1eCSN8vu7pkK/sw==_FYp7V2PaLUSXuIHcbzIP/3M1XR/kk5g9mglNlDs3D5qvkqoq3kSeAAH6SFN0lcX3P/ErVOmWp/PH4PKHwUGVzx56RLorSdtfoXkgtVjmuk4PTjd+m93FmPitHDY3avsJTqbqK9YiK/jy5efN7oA6w1cKfnL221rj/98K1IAxQzVNlWpWVZkWZAcqVs2kTXx+r+2phvDi33dtzzL4boJgMnY5lFXVe5gwkT8TUST8d5TC47pbVGAGiJFo0wNZaY4qxS7Mgasc7y6tsxttgOHFhEl7dJzIsTM3NxVlIIqm8k5djopaTHMmEHzCUtkcycq6FuknyBGI3/A5Jhi9l69MFI1knRPf02ykrK3XKxg44Ac="
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "UIFID",
+          "fake-uifid-0123456789abcdef"
+        ],
+        [
+          "passport_csrf_token",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "passport_csrf_token_default",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "odin_tt",
+          "fake-odin-tt"
+        ],
+        [
+          "sessionid",
+          "fake-sessionid"
+        ],
+        [
+          "sessionid_ss",
+          "fake-sessionid"
+        ],
+        [
+          "sid_guard",
+          "fake-sid-guard"
+        ],
+        [
+          "uid_tt",
+          "fake-uid-tt"
+        ],
+        [
+          "bd_ticket_guard_client_web_domain",
+          "2"
+        ],
+        [
+          "bd_ticket_guard_ts_sign_id",
+          "ts.2.fakesign"
+        ],
+        [
+          "s_v_web_id",
+          "verify_fakesvwebid_0000_0000_4000_8000_000000000000"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://imapi.douyin.com/v1/message/send?msToken=fake-mstoken-0123456789&a_bogus=Qy4fheXJDZRfOVMbmKTTHVeUoh6%2FrP8y4BiQR9ZltPNayZUTduNfzNGJbxL8Yh9SMSB0he1HZDT%2FYjncZUthpCnkFmpkudvRszI99hmL81whbMvQgrfFCusLeJtTWOiE8QoyJl4l6tQP2dA4DZrsUdl9HAkE4OJpKqrWdr4GO9ekgzG9FHqouOtDYXzYBco5TD%3D%3D&verifyFp=verify_fakesvwebid_0000_0000_4000_8000_000000000000&fp=verify_fakesvwebid_0000_0000_4000_8000_000000000000",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/x-protobuf"
+        ],
+        [
+          "content-type",
+          "application/x-protobuf"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not=A?Brand\";v=\"99\", \"Google Chrome\";v=\"151\", \"Chromium\";v=\"151\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/"
+        ],
+        [
+          "bd-ticket-guard-client-data",
+          "eyJ0c19zaWduIjoidHMuMi5mYWtlc2lnbjAxMjM0NTY3ODlhYmNkZWYiLCJyZXFfY29udGVudCI6InRpY2tldCxwYXRoLHRpbWVzdGFtcCIsInJlcV9zaWduIjoiemRHTmluNlU5UEovT2docDlzVTFHT3FpN1BwNkQ4dDJqUmV1bGQ5RjRTcz0iLCJ0aW1lc3RhbXAiOjE3OTAwMDAwMDB9"
+        ],
+        [
+          "bd-ticket-guard-ree-public-key",
+          "BJ+thK6uCLvvfwEAFNgs72oJ3isM+HG1zgxPHROlmlk0B8tFdp8QcOLCRw/lsb/mMTPAsM3GTqS/N5Go7CoH/U8="
+        ],
+        [
+          "bd-ticket-guard-version",
+          "2"
+        ],
+        [
+          "bd-ticket-guard-web-version",
+          "2"
+        ],
+        [
+          "bd-ticket-guard-web-sign-type",
+          "1"
+        ],
+        [
+          "x-tt-session-dtrait",
+          "d0_O6jlmcPL6awBxbqGagKbWsoZmUNAtfwTR/ZVI8x43JBC7oPItIe+sqblJNGI+7qcDXCtbidWY9JKO8rkVAppfH75b5dlWwf0xX9eUgnxCIufCrecDCd699tj+oEHflI6AG79OiI4gl1M/RpYmbj54AYUp8yGODgPY657QtenjNX7Y0yZ2vOhzGH9mT84itpi7XAs90+cHprMZuffmF0vkH+S4UVdOnvPPhnTxGuMdujRW8pZpp6bC0Ahbz54ydanIaNRMaEm6jwjMtfzplOmxw+syS63+2DOY9C8CxKZgWqrRsI4kgXzw/JZ7YXYv7wwvf7wi3g1eCSN8vu7pkK/sw==_ACnw1DaFFBfT6D9o1ZKgws+VWH7T0BsR4UUr8gswKVamqgrMfNd6vY7HbfWt9ujXhp/wydMg0jWr4OXcs0rpirCLQo9KWGzLKVocUSfC9dDGD0DaegNqReVJ/RZIcFj00Mwgu4ETFpycYjkDen76xC752JnfhsC6+2Iip9kQwEd6NmrsxpZres5Z4omZ5MCWmoM27qvO2m4dnfilQPRjeW/rLXirLLXi/WgGotsRQPkildm6JLBWQ9EMeSd0/yBujE6PHGoYMo5N7wKpb9f+PCpkb4Da094fRfpuED1PqFZ16nG11Qw1F/+Rc30d9ws7"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "UIFID",
+          "fake-uifid-0123456789abcdef"
+        ],
+        [
+          "passport_csrf_token",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "passport_csrf_token_default",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "odin_tt",
+          "fake-odin-tt"
+        ],
+        [
+          "sessionid",
+          "fake-sessionid"
+        ],
+        [
+          "sessionid_ss",
+          "fake-sessionid"
+        ],
+        [
+          "sid_guard",
+          "fake-sid-guard"
+        ],
+        [
+          "uid_tt",
+          "fake-uid-tt"
+        ],
+        [
+          "bd_ticket_guard_client_web_domain",
+          "2"
+        ],
+        [
+          "bd_ticket_guard_ts_sign_id",
+          "ts.2.fakesign"
+        ]
+      ],
+      "body": {
+        "base64": "CGQQx1IaBTAuMS44KAM6GTBkNTA5MzU6ZmVhdC9wYy1pbS1ncm91cEJCsAiiBqwIChowOjE6OTc4NzIxMjY2NjI6MTIzNDU2Nzg5MBABGPuAkM+wmYXZZiLVBnsiYXdlVHlwZSI6ODAwLCJhd2VtZVR5cGUiOjAsImNvbnRlbnRfbmFtZSI6IuS9nOiAhSIsImNvbnRlbnRfdGl0bGUiOiLliIbkuqvnmoTop4bpopEgI+ivnemimCIsImNvbnRlbnRfdGh1bWIiOnsidXJpIjoidG9zLWNuLXAtMDAxNS9jb3ZlciIsInVybF9saXN0IjpbImh0dHBzOi8vcDMuZG91eWlucGljLmNvbS9jb3Zlci5qcGVnIl0sIndpZHRoIjo3MjAsImhlaWdodCI6NzIwfSwiY292ZXJfaGVpZ2h0IjoxOTIwLCJjb3Zlcl91cmwiOnsidXJpIjoidG9zLWNuLXAtMDAxNS9jb3ZlciIsInVybF9saXN0IjpbImh0dHBzOi8vcDMuZG91eWlucGljLmNvbS9jb3Zlci5qcGVnIl0sIndpZHRoIjo3MjAsImhlaWdodCI6NzIwfSwiY292ZXJfd2lkdGgiOjEwODAsIml0ZW1JZCI6Ijc0MzM1MjMxMjQ4MzYwNjA0MTYiLCJzZWNVSUQiOiJNUzR3TGpBQkFBQUFmYWtlU2VjVWlkMDEyMzQ1Njc4OWFiY2RlZiIsInVpZCI6Ijk3ODcyMTI2NjYyIiwic2hhcmVfaWQiOiI5Nzg3MjEyNjY2Ml8xNzkwMDAwMDAwMTIzXzc0MzM1MjMxMjQ4MzYwNjA0MTYiLCJzaGFyZV93aXRoX3RpbWVzdGFtcCI6MCwiaXNfYWlnYyI6ZmFsc2UsImlzX2hvdF9zcG90X3ZpZGVvIjpmYWxzZSwiaXNfbGl2ZV9waG90byI6MCwiaXNfc2xpZGVzIjpmYWxzZSwiaXNfc3RvcnkiOmZhbHNlLCJpc190ZXh0IjowLCJjcmVhdGVfaWQiOiIiLCJzaGFyZV9pbmZvIjp7InNoYXJlX3VybCI6Imh0dHBzOi8vd3d3Lmllc2RvdXlpbi5jb20vc2hhcmUvdmlkZW8vNzQzMzUyMzEyNDgzNjA2MDQxNi8ifSwiYW5jaG9yX2luZm8iOnt9LCJwb2lfdHJhY2tfcGFyYW1zIjp7fSwiYWlfZXh0Ijoie1wia1wiOjF9IiwicHJvZmlsZV91aWQiOiI1NTUwMDAxIn0qEwoRczptZW50aW9uZWRfdXNlcnMqOwoTczpjbGllbnRfbWVzc2FnZV9pZBIkNzgzMDdkYmItOGQ1NC00ZTk3LWEwOGUtZDEzZGRkYjRmOTlmKh4KB3M6c3RpbWUSEzE3OTAwMDAwMDAxMjMuNjI0NzkwCDoQZmFrZS1jb252LXRpY2tldEIkNzgzMDdkYmItOGQ1NC00ZTk3LWEwOGUtZDEzZGRkYjRmOTlmSgEwWglkb3V5aW5fcGNyBjM2MDAwMHoZChBicm93c2VyX2xhbmd1YWdlEgV6aC1DTnoUCgxzY3JlZW5fd2lkdGgSBDI1NjB6FgoOY29va2llX2VuYWJsZWQSBHRydWV6FgoOYnJvd3Nlcl9vbmxpbmUSBHRydWV6FQoNc2NyZWVuX2hlaWdodBIEMTQ0MHoNCghpcy1yZXRyeRIBMHoTCgtzZXNzaW9uX2FpZBIENjM4M3o6ChdpZGVudGl0eV9zZWN1cml0eV90b2tlbhIfeyJ0b2tlbiI6ImZha2UtaWRlbnRpdHktdG9rZW4ifXoNCghkZXZpY2VJZBIBMHp9Cgp1c2VyX2FnZW50Em9Nb3ppbGxhLzUuMCAoV2luZG93cyBOVCAxMC4wOyBXaW42NDsgeDY0KSBBcHBsZVdlYktpdC81MzcuMzYgKEtIVE1MLCBsaWtlIEdlY2tvKSBDaHJvbWUvMTUxLjAuMC4wIFNhZmFyaS81MzcuMzZ6GQoVaWRlbnRpdHlfc2VjdXJpdHlfYWlkEgB6GQoQYnJvd3Nlcl9wbGF0Zm9ybRIFV2luMzJ6KgoHcmVmZXJlchIfaHR0cHM6Ly93d3cuZG91eWluLmNvbS9qaW5neHVhbnoVCg9wcmlvcml0eV9yZWdpb24SAmNuejIKG2lkZW50aXR5X3NlY3VyaXR5X2RldmljZV9pZBITNzQwMDAwMDAwMDAwMDAwOTk5OXoXCgxicm93c2VyX25hbWUSB01vemlsbGF6FQoIYXBwX25hbWUSCWRvdXlpbl9wY3oeCg10aW1lem9uZV9uYW1lEg1Bc2lhL1NoYW5naGFpehAKC3Nlc3Npb25fZGlkEgEwenoKD2Jyb3dzZXJfdmVyc2lvbhJnNS4wIChXaW5kb3dzIE5UIDEwLjA7IFdpbjY0OyB4NjQpIEFwcGxlV2ViS2l0LzUzNy4zNiAoS0hUTUwsIGxpa2UgR2Vja28pIENocm9tZS8xNTEuMC4wLjAgU2FmYXJpLzUzNy4zNpABBKoBCmRvdXlpbl93ZWKyAQd3ZWJfc2Rr"
+      },
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "status_code": 0,
+        "aweme_detail": {
+          "aweme_id": "7433523124836060416",
+          "desc": "分享的视频 #话题",
+          "aweme_type": 0,
+          "is_aigc": false,
+          "is_live_photo": 0,
+          "author": {
+            "uid": "5550001",
+            "sec_uid": "MS4wLjABAAAAfakeSecUid0123456789abcdef",
+            "nickname": "作者"
+          },
+          "video": {
+            "cover": {
+              "uri": "tos-cn-p-0015/cover",
+              "url_list": [
+                "https://p3.douyinpic.com/cover.jpeg"
+              ],
+              "width": 720,
+              "height": 720
+            },
+            "width": 1080,
+            "height": 1920
+          },
+          "share_info": {
+            "share_url": "https://www.iesdouyin.com/share/video/7433523124836060416/"
+          },
+          "ai_ext": {
+            "k": 1
+          },
+          "profile_uid": "5550001"
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "X-Ware-Csrf-Token": "0001000000017a,fakecsrftoken0123456789abcdef,86370,success,fakesession0123"
+      },
+      "body": ""
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "message": "success",
+        "data": {
+          "server_cert": "pub.BFLG/1tx3mXYPHXTk+JJ7AOJQ3BRXQsimxxiJGgfKlAwtvMjwgwg0CHWEeCHz0gvUpfmE1y+5tOZSDIWTkeebpY=",
+          "server_sn": "fake-sn"
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "message": "success",
+        "data": {
+          "identity_security_token": "fake-identity-token",
+          "device_id": "7400000000000009999"
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "application/x-protobuf"
+      },
+      "body": {
+        "base64": "CGQiAk9L"
+      }
+    }
+  ],
+  "result": true,
+  "error": null
+}

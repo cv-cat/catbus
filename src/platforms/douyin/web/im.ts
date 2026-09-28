@@ -1,6 +1,6 @@
 import { CatbusError } from '../../../core/errors.js'
 import type { LocalMedia } from '../../../core/files.js'
-import { compactJson } from '../../../core/py.js'
+import { compactJson, parseQsl, urlencode } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { type Douyin, type DyJson, riskJson } from './client.js'
 import { crc32Hex, ecdsaSign, sigv4, type Sts, VOD_HOST } from './crypto.js'
@@ -22,6 +22,11 @@ const IM_REFERER = `${WWW}/chat?isPopup=1`
 export const IM_TEXT = 7
 export const IM_STORY_PICTURE = 27
 export const IM_STORY_VIDEO = 30
+export const IM_FILE = 6
+export const IM_SHARE_AWEME = 8
+export const IM_SHARE_PHOTOS = 77
+export const IM_SHARE_WEB = 26
+export const IM_SHARE_USER = 25
 
 /** 上游 ProtoBuilder.build_normal_request（proto3 的零值字段不写）。 */
 function normalRequest(cmd: number): Record<string, any> {
@@ -218,7 +223,7 @@ interface Node {
   upload_header: Record<string, string>
 }
 
-async function applyUpload(d: Douyin, sts: ImSts, fileType: string, size: number): Promise<Node> {
+async function applyUpload(d: Douyin, sts: ImSts, fileType: string, size: number, gcm = false): Promise<Node> {
   const query: [string, string | number][] = [
     ['Action', 'ApplyUploadInner'],
     ['Version', VOD_VERSION],
@@ -228,6 +233,7 @@ async function applyUpload(d: Douyin, sts: ImSts, fileType: string, size: number
     ['NeedFallback', 'true'],
     ['FileSize', size],
   ]
+  if (gcm) query.push(['OpenGcmEnc', 'true'])
   const res = await d.plain({ url: `https://${VOD_HOST}/`, headers: gatewayHeaders(sigv4(sts, 'GET', query, '', 'vod')), query })
   const body = JSON.parse(await res.text())
   const node = body.Result?.InnerUploadAddress?.UploadNodes?.[0]
@@ -358,6 +364,220 @@ export async function uploadVideo(d: Douyin, video: LocalMedia, cover: LocalMedi
     width: Number(meta.Width ?? 0) || 0,
     check_pics: coverUri ? [coverUri] : [],
   }
+}
+
+/** 私信文件附件的上限（上游 MAX_IM_FILE_SIZE）。 */
+export const MAX_IM_FILE = 10 * 1024 * 1024
+
+/** 上传一个文件附件并返回 type 6 的 content（上游 upload_file：public_file_config、object 类型、GCM 加密）。 */
+export async function uploadFile(d: Douyin, file: LocalMedia): Promise<Record<string, unknown>> {
+  const userId = await d.uid().catch(() => '')
+  if (file.data.length > MAX_IM_FILE) throw new CatbusError('USAGE', '抖音私信的文件附件不能超过 10MB')
+  const cfg = await uploadConfig(d)
+  const sts = cfg.public_file_config!
+  const node = await applyUpload(d, sts, 'object', file.data.length, true)
+  await uploadSource(d, node, file.data, userId)
+  const item = await commitUpload(d, sts, node)
+  const enc = item.Encryption ?? {}
+  const dot = file.filename.lastIndexOf('.')
+  return {
+    aweType: 15001,
+    name: file.filename,
+    data_size: file.data.length,
+    md5: enc.SourceMd5 || item.SourceMd5 || '',
+    skey: enc.SecretKey || item.SecretKey || '',
+    uri: enc.Uri || item.Uri || '',
+    format: dot > 0 ? file.filename.slice(dot + 1).toLowerCase() : '',
+  }
+}
+
+// ================================================================ 分享卡片（douyin_im_media.py 的 build_*_content）
+
+type Obj = Record<string, any>
+
+/** Python 的真值：None、''、0、False、空列表、空字典为假。 */
+function truthy(v: unknown): boolean {
+  if (v == null || v === '' || v === 0 || v === false) return false
+  if (Array.isArray(v)) return v.length > 0
+  if (typeof v === 'object') return Object.keys(v as object).length > 0
+  return true
+}
+
+/** Python 的 `a or b or c`。 */
+function or(...values: unknown[]): any {
+  for (const v of values) if (truthy(v)) return v
+  return values.at(-1)
+}
+
+const isDict = (v: unknown): v is Obj => v != null && typeof v === 'object' && !Array.isArray(v)
+const pyInt = (v: unknown) => Math.trunc(Number(v)) || 0
+const pyStr = (v: unknown) => (v == null ? '' : String(v))
+
+/** 图片 / 封面值归一成卡片用的 {uri, url_list, width, height}（上游 _url_object）。 */
+export function urlObject(value: unknown, width: unknown = 0, height: unknown = 0): Obj {
+  if (isDict(value)) {
+    const obj: Obj = { ...value }
+    let urls = or(obj.url_list, obj.urlList, obj.urls, [])
+    urls = typeof urls === 'string' ? [urls] : [...urls]
+    const uri = or(obj.uri, obj.url, urls.length ? urls[0] : '')
+    obj.uri = or(uri, '')
+    obj.url_list = urls.length ? urls : truthy(uri) ? [uri] : []
+    if (truthy(width) && !truthy(obj.width)) obj.width = pyInt(width)
+    if (truthy(height) && !truthy(obj.height)) obj.height = pyInt(height)
+    return obj
+  }
+  if (Array.isArray(value)) value = value.length ? value[0] : ''
+  const s = pyStr(value)
+  const obj: Obj = { uri: s, url_list: s ? [s] : [] }
+  if (truthy(width)) obj.width = pyInt(width)
+  if (truthy(height)) obj.height = pyInt(height)
+  return obj
+}
+
+function authorValues(detail: Obj): [string, string, string] {
+  const author: Obj = isDict(or(detail.author, detail.user, {})) ? or(detail.author, detail.user, {}) : {}
+  return [
+    pyStr(or(author.uid, author.user_id, detail.uid, detail.profile_uid, '')),
+    pyStr(or(author.sec_uid, author.sec_user_id, detail.secUID, detail.sec_uid, '')),
+    pyStr(or(author.nickname, author.name, detail.content_name, '')),
+  ]
+}
+
+/** 卡片封面（上游 _detail_cover）：视频取 video.cover，图文取第一张图。 */
+function detailCover(detail: Obj, photos: boolean): [Obj, number, number] {
+  const video: Obj = isDict(detail.video) ? detail.video : {}
+  let value: unknown
+  let width: unknown
+  let height: unknown
+  if (photos) {
+    const images = or(detail.images, detail.image_list, detail.image_infos, [])
+    let first: unknown = Array.isArray(images) ? (images.length ? images[0] : {}) : (images ?? {})
+    if (!isDict(first)) first = { url_list: first }
+    const f = first as Obj
+    value = or(f.display_image, f.cover, f)
+    width = or(f.width, detail.cover_width, 0)
+    height = or(f.height, detail.cover_height, 0)
+  } else {
+    const cover = or(video.cover, video.origin_cover, {})
+    value = or(cover, detail.cover_url, detail.cover, '')
+    width = or(video.width, isDict(cover) ? cover.width : 0, detail.cover_width, 0)
+    height = or(video.height, isDict(cover) ? cover.height : 0, detail.cover_height, 0)
+  }
+  if (!truthy(width) && isDict(value)) width = or(value.width, 0)
+  if (!truthy(height) && isDict(value)) height = or(value.height, 0)
+  return [urlObject(value, width, height), pyInt(or(width, 0)), pyInt(or(height, 0))]
+}
+
+const TRACK_KEYS = ['profile_uid', 'profile_sec_uid', 'scene_type', 'send_source', 'publish_way', 'hot_spot_create_time', 'ecom_share_track_params']
+
+function shareCommon(detail: Obj, uid: string, photos: boolean) {
+  const [authorUid, authorSecUid, authorName] = authorValues(detail)
+  const u = pyStr(or(uid, authorUid, ''))
+  const itemId = pyStr(or(detail.aweme_id, detail.itemId, detail.item_id, ''))
+  const [cover, width, height] = detailCover(detail, photos)
+  const title = pyStr(or(detail.desc, detail.title, detail.content_title, ''))
+  const shareId = u && itemId ? `${u}_${Math.trunc(rand.now())}_${itemId}` : ''
+  let aiExt = or(detail.ai_ext, '{}')
+  if (typeof aiExt === 'object') aiExt = compactJson(aiExt)
+  return { uid: u, secUid: pyStr(or(authorSecUid, '')), name: pyStr(or(authorName, '')), itemId, cover, width, height, title, shareId, aiExt }
+}
+
+function flags(detail: Obj): Obj {
+  return {
+    is_aigc: truthy(detail.is_aigc ?? false),
+    is_hot_spot_video: truthy(detail.is_hot_spot_video ?? false),
+    is_live_photo: pyInt(or(detail.is_live_photo ?? 0, 0)),
+    is_slides: truthy(detail.is_slides ?? false),
+    is_story: truthy(detail.is_story ?? false),
+    is_text: pyInt(or(detail.is_text ?? 0, 0)),
+  }
+}
+
+function withTrack(payload: Obj, detail: Obj): Obj {
+  for (const key of TRACK_KEYS) if (detail[key] != null) payload[key] = detail[key]
+  return payload
+}
+
+/** 视频分享卡片，type 8（上游 build_share_aweme_content，传作品详情；uid 是分享者自己）。 */
+export function shareAwemeContent(detail: Obj, uid: string): Obj {
+  const c = shareCommon(detail, uid, false)
+  return withTrack(
+    {
+      aweType: 800,
+      awemeType: 0,
+      content_name: c.name,
+      content_title: c.title,
+      content_thumb: { ...c.cover },
+      cover_height: c.height,
+      cover_url: { ...c.cover },
+      cover_width: c.width,
+      itemId: c.itemId,
+      secUID: c.secUid,
+      uid: c.uid,
+      share_id: c.shareId,
+      share_with_timestamp: 0,
+      ...flags(detail),
+      create_id: pyStr(or(detail.create_id, '')),
+      share_info: or(detail.share_info, []),
+      anchor_info: or(detail.anchor_info, {}),
+      poi_track_params: or(detail.poi_track_params, {}),
+      ai_ext: c.aiExt,
+    },
+    detail,
+  )
+}
+
+/** 图文分享卡片，type 77（上游 build_share_photos_content）。 */
+export function sharePhotosContent(detail: Obj, uid: string): Obj {
+  const c = shareCommon(detail, uid, true)
+  const images = or(detail.images, detail.image_list, detail.image_infos, [])
+  const imageCount = or(detail.image_count, Array.isArray(images) ? images.length : 0, 1)
+  return withTrack(
+    {
+      aweType: 0,
+      awemeType: 68,
+      content_name: c.name,
+      content_title: c.title,
+      content_thumb: { ...c.cover },
+      cover_height: c.height,
+      cover_url: { ...c.cover },
+      cover_url_v2: { ...c.cover },
+      cover_width: c.width,
+      image_count: pyInt(or(imageCount, 1)),
+      image_index: 0,
+      itemId: c.itemId,
+      secUID: c.secUid,
+      uid: c.uid,
+      share_id: c.shareId,
+      share_with_timestamp: 0,
+      ...flags(detail),
+      share_info: or(detail.share_info, []),
+      anchor_info: or(detail.anchor_info, {}),
+      poi_track_params: or(detail.poi_track_params, {}),
+      ai_ext: c.aiExt,
+    },
+    detail,
+  )
+}
+
+/** 网页卡片，type 26（上游 build_share_web_content）：PC 端只渲染带 pc_iframe_src 的链接，没有就把原链接补进去。 */
+export function shareWebContent(url: string): Obj {
+  let target = url
+  const m = /^([^:/?#]+):\/\/([^/?#]*)([^?#]*)(?:\?([^#]*))?(?:#(.*))?$/.exec(target)
+  if (m) {
+    const query = parseQsl(m[4] ?? '')
+    if (!query.some(([k, v]) => k === 'pc_iframe_src' && v)) {
+      query.push(['pc_iframe_src', target])
+      const q = urlencode(query)
+      target = `${m[1]}://${m[2]}${m[3]}${q ? `?${q}` : ''}${m[5] ? `#${m[5]}` : ''}`
+    }
+  }
+  return { link_url: target, cover_url: '', title: '', desc: '' }
+}
+
+/** 用户名片，type 25（上游 build_user_card_content，content 为空、字段显式给出）。 */
+export function userCardContent(u: { uid: string; secUid: string; name: string; avatar: unknown }): Obj {
+  return { uid: u.uid, secUID: u.secUid, name: u.name, avatar: urlObject(u.avatar), cover_items: [], cover_url: [] }
 }
 
 // ================================================================ 私信长连（douyin_recv_msg.py）

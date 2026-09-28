@@ -1,5 +1,5 @@
 import * as n from '../../../core/normalize.js'
-import type { Comment, Event, Item, Live, Media, Notice, Rank, User, UserRef } from '../../../core/schemas.js'
+import type { Comment, Event, Item, ItemStatus, Live, Media, Notice, Rank, User, UserRef } from '../../../core/schemas.js'
 import { LIVE, WWW } from './profile.js'
 
 /** 抖音原始对象 → 归一化类型（AGENTS 6.2）。用户 id 用 sec_uid：它能直接拼出主页 URL，也是各接口的入参。 */
@@ -77,6 +77,27 @@ export function aweme(v: any): Item {
     },
     v,
   )
+}
+
+/**
+ * 创作者中心作品列表（work_list）里的状态。上游 get_preview_video_list 只用到 timer.status（0 = 定时未发布）、
+ * is_pinned、status_value；审核 / 私密取 aweme 通用的 status 对象。定时未到点的作品 6.2 没有单独取值，按 draft（尚未公开）。
+ */
+export function workStatus(v: any): ItemStatus {
+  const s = v?.status ?? {}
+  if (v?.timer && v.timer.status === 0) return 'draft'
+  if (s.in_reviewing) return 'reviewing'
+  if (s.is_prohibited) return 'rejected'
+  if (Number(s.private_status) === 1 || s.is_private === true || s.self_see === true) return 'private'
+  return 'published'
+}
+
+/** 作品列表（item list）的一条：aweme 结构，加上 status。 */
+export function work(v: any): Item {
+  const it = aweme(v)
+  it.status = workStatus(v)
+  if (!it.cover) it.cover = first(v.video?.optimized_cover) ?? null
+  return it
 }
 
 export function user(u: any): User {

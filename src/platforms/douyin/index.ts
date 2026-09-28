@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { filter, PRODUCT } from '../../core/options.js'
 import { type CommandDecl, definePlatform, type Handler, type Upstream } from '../../core/registry.js'
+import type { Args, Options } from '../../core/vocab.js'
 
 type Commands = typeof import('./web/commands.js')
 
@@ -11,6 +12,15 @@ const h =
     import('./web/commands.js').then((m) => m.withUifid(m[name] as Handler) as Handler)
 
 const impl = (upstream: Upstream, name: keyof Commands, extra: Partial<CommandDecl> = {}): CommandDecl => ({ upstream, handler: h(name), ...extra })
+
+/** 平台私有选项（AGENTS 4.7 的 douyin 行）。 */
+const folder = (summary: string) => ({ folder: z.string().optional().describe(summary) })
+
+/** `msg send`：比词表多了 --file / --share 也算消息内容。 */
+function msgSendCheck(a: Args, o: Options): string | undefined {
+  if (['to', 'conversation', 'item'].filter((k) => o[k] != null).length !== 1) return '--to、--conversation、--item 需要且只能用一个'
+  if (a.text == null && o.image == null && o.video == null && o.file == null && o.share == null) return '需要 <text>、--image、--video、--file 或 --share'
+}
 
 export default definePlatform({
   id: 'douyin',
@@ -52,14 +62,21 @@ export default definePlatform({
           },
         }),
         'item related': 'none',
-        'item list': 'none',
+        'item list': impl('partial', 'itemList', { note: '取发布页的作品预览（work_list）；定时未发布的作品 status 为 draft' }),
         'item media': impl('full', 'itemMedia'),
         'item download': impl('full', 'itemDownload'),
         'item like': impl('full', 'itemLike'),
         'item unlike': impl('full', 'itemUnlike'),
-        'item collect': impl('full', 'itemCollect'),
-        'item uncollect': impl('full', 'itemUncollect'),
-        'item publish': impl('full', 'itemPublish'),
+        'item collect': impl('full', 'itemCollect', { options: folder('收藏后移进这个收藏夹（ID 或名字）') }),
+        'item uncollect': impl('full', 'itemUncollect', { options: folder('只从这个收藏夹移出，仍保留收藏（ID 或名字）') }),
+        'item publish': impl('full', 'itemPublish', {
+          options: {
+            poiName: z.string().optional().describe('地点名称，配合 --poi'),
+            series: z.string().optional().describe('加入合集（合集 ID）'),
+            hotspot: z.string().optional().describe('关联热点（热点词）'),
+            noDownload: z.boolean().optional().describe('不允许别人下载'),
+          },
+        }),
         'item delete': 'none',
 
         'product get': impl('partial', 'productGet'),
@@ -85,7 +102,7 @@ export default definePlatform({
         'live listen': impl('full', 'liveListen'),
         'live history': impl('partial', 'liveHistory', { note: '只有进房时 im/fetch 带回的最近 15 条' }),
         'live send': impl('partial', 'liveSend', { note: '--gift 规划中' }),
-        'live like': impl('full', 'liveLike'),
+        'live like': impl('full', 'liveLike', { options: { count: z.number().int().positive().optional().describe('一次点赞的次数，默认 1') } }),
         'live rank': impl('full', 'liveRank', {
           options: { ranking: z.enum(['contribution', 'thousand']).default('contribution').describe('榜单：贡献榜 / 千票榜') },
         }),
@@ -106,7 +123,13 @@ export default definePlatform({
 
         'msg list': 'none',
         'msg history': 'none',
-        'msg send': impl('full', 'msgSend'),
+        'msg send': impl('full', 'msgSend', {
+          options: {
+            file: z.string().optional().describe('发文件（路径或 URL，≤10MB）'),
+            share: z.string().optional().describe('分享作品 / 用户名片 / 网页卡片（ID 或 URL）'),
+          },
+          check: msgSendCheck,
+        }),
         'msg listen': impl('full', 'msgListen'),
         'msg read': 'none',
         'msg revoke': 'none',

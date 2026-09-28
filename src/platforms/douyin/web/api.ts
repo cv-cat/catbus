@@ -581,6 +581,51 @@ export async function collect(d: Douyin, awemeId: string, action: '1' | '0'): Pr
   return riskJson(res)
 }
 
+/** 收藏夹移动的 query（上游 move / remove_collect_aweme 手写的那组，键按字母序）。 */
+async function collectsMoveParams(d: Douyin, awemeId: string, collectName: string, collectId: string, remove: boolean): Promise<Params> {
+  const p = new Params()
+  p.add('aid', '6383').add('browser_language', 'zh-CN').add('browser_name', PROFILE.browserName).add('browser_online', 'true')
+  p.add('browser_platform', PROFILE.platform).add('browser_version', PROFILE.browserVersion).add('channel', 'channel_pc_web').add('collects_name', collectName)
+  p.add('cookie_enabled', 'true').add('cpu_core_num', PROFILE.cpuCoreNum).add('device_memory', PROFILE.deviceMemory).add('device_platform', 'webapp')
+  p.add('downlink', '10').add('effective_type', '4g').add('engine_name', 'Blink').add('engine_version', PROFILE.engineVersion)
+  if (remove) p.add('from_collects_id', collectId)
+  p.add('item_ids', awemeId).add('item_type', '2')
+  if (!remove) p.add('move_collects_list', collectId)
+  p.add('os_name', 'Windows').add('os_version', PROFILE.osVersion).add('pc_client_type', '1').add('platform', 'PC').add('round_trip_time', '50')
+  p.add('screen_height', PROFILE.screenHeight).add('screen_width', PROFILE.screenWidth)
+  if (!remove) p.add('to_collects_id', collectId).add('update_collects_sort', 'true')
+  p.add('update_version_code', '170400').add('version_code', '170400').add('version_name', '17.4.0')
+  await withWebId(d, p)
+  fp(d, p)
+  await withMsToken(d, p)
+  withABogus(d, p)
+  return p
+}
+
+/** 把已收藏的作品移进某个收藏夹（上游 move_collect_aweme）。 */
+export async function collectMove(d: Douyin, awemeId: string, collectName: string, collectId: string): Promise<DyJson> {
+  const api = '/aweme/v1/web/collects/video/move/'
+  const h = headers('FORM').referer(`${WWW}/?recommend=1`)
+  d.withBdReadonly(h)
+  const dt = d.dtraitHeader(api)
+  if (dt) h.set('x-tt-session-dtrait', dt)
+  await withCsrf(d, h)
+  headerUifid(d, h).set('origin', WWW)
+  const p = await collectsMoveParams(d, awemeId, collectName, collectId, false)
+  return riskJson(await d.request({ method: 'POST', url: WWW + api, headers: h.list(), query: p.pairs() }))
+}
+
+/** 把作品从某个收藏夹移出（上游 remove_collect_aweme，同一个接口）。 */
+export async function collectRemove(d: Douyin, awemeId: string, collectName: string, collectId: string): Promise<DyJson> {
+  const api = '/aweme/v1/web/collects/video/move/'
+  const h = headers('FORM').referer(`${WWW}/user/self?showTab=favorite_collection`)
+  d.withBdReadonly(h)
+  await withCsrf(d, h)
+  headerUifid(d, h).set('origin', WWW)
+  const p = await collectsMoveParams(d, awemeId, collectName, collectId, true)
+  return riskJson(await d.request({ method: 'POST', url: WWW + api, headers: h.list(), query: p.pairs() }))
+}
+
 export async function publishComment(d: Douyin, awemeId: string, text: string, replyId = '', replyToReplyId = ''): Promise<DyJson> {
   const api = '/aweme/v1/web/comment/publish'
   const refer = `${WWW}/video/${awemeId}`

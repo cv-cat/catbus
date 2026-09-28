@@ -65,7 +65,7 @@
 | item get | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | ✓ | ✓ |
 | item search | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ○ | ○ | ✓ | ✓ |
 | item related | ○ | ○ | ✓ | ✓ | ✓ | — | ○ | ○ | ◐ | — |
-| item list | ✓ | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — |
+| item list | ✓ | ◐ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — |
 | item media / download | ✓ | ✓ | ◐ | ✓ | ✓ | ○ | — | — | — | ✓ |
 | item like / unlike | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — | ✓ |
 | item collect / uncollect | ○ | ✓ | ✓ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ |
@@ -78,6 +78,7 @@
 - weibo `item search`：只能取第一页
 - x `item search`：--type video 和 image 都走媒体搜索（结果里图片和视频都有），不能和 --sort latest 一起用
 - jd `item related`：用第一个相关搜索词的搜索结果
+- douyin `item list`：取发布页的作品预览（work_list）；定时未发布的作品 status 为 draft
 - x `item publish`：正文超过 280 权重时自动按长推发（需要 Premium）；--thread 发 thread
 - bilibili `item delete`：需要人机验证（极验点选），catbus 还不能自动通过，会报 RISK_CONTROL
 - `item get --area`：jd
@@ -88,8 +89,12 @@
 - `item search --range`：douyin
 - `item search --area`：jd
 - `item related --area`：jd
-- `item collect --folder`：bilibili
-- `item uncollect --folder`：bilibili
+- `item collect --folder`：douyin、bilibili
+- `item uncollect --folder`：douyin、bilibili
+- `item publish --poi-name`：douyin
+- `item publish --series`：douyin
+- `item publish --hotspot`：douyin
+- `item publish --no-download`：douyin
 - `item publish --allow-comment`：tiktok
 - `item publish --allow-duet`：tiktok
 - `item publish --allow-stitch`：tiktok
@@ -167,6 +172,8 @@
 - x `msg history`：消息端到端加密，只给出占位消息
 - xianyu `msg send`：--to 不带 --item 时按上游的默认商品建会话；--to 加 --item 就这件商品联系对方（卖家可以联系买家）
 - `notice list --group`：douyin
+- `msg send --file`：douyin
+- `msg send --share`：douyin
 - `msg send --order`：jd
 
 ## media、folder、series、history、topic、poi
@@ -218,6 +225,7 @@
 - `live send --font-size`：bilibili
 - `live send --position`：bilibili
 - `live send --reply-user`：bilibili
+- `live like --count`：douyin
 - `live rank --ranking`：douyin
 - `live start --category`：bilibili
 

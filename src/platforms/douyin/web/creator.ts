@@ -411,6 +411,26 @@ export async function mediaUrl(d: Douyin, uri: string): Promise<string> {
   return url
 }
 
+// ---------------------------------------------------------------- 作品管理
+
+/**
+ * 自己的作品列表（上游 get_preview_video_list，发布页的作品预览，接口 /janus/douyin/creator/pc/work_list）：
+ * 实录不带 msToken / a_bogus。上游只取第一页（max_cursor=0），翻页时换成上一页返回的 max_cursor。
+ */
+export async function workList(d: Douyin, maxCursor: string | number = 0): Promise<DyJson> {
+  return creatorApi(d, 'GET', '/janus/douyin/creator/pc/work_list', {
+    initial: [
+      ['scene', 'star_atlas'],
+      ['device_platform', 'android'],
+      ['status', 4],
+      ['count', 18],
+      ['max_cursor', maxCursor],
+    ],
+    msToken: false,
+    sign: false,
+  })
+}
+
 // ---------------------------------------------------------------- 发布
 
 /** 发布前必须齐备的安全素材（上游 _require_publish_security）。 */
@@ -455,11 +475,35 @@ export interface PublishOptions {
   visibility: number
   /** 定时发布的秒级时间戳。 */
   timing?: number
+  /** 允许下载，默认 true。 */
+  allowDownload?: boolean
+  /** 图文：用第几张图作封面（默认 0）。 */
+  coverIndex?: number
+  /** 图文：显式封面 uri，优先于 coverIndex。 */
+  coverUri?: string
+  /** 地点：写进 common.poi_id / poi_name，整个对象放进 anchor.poi。 */
+  poi?: { poi_id: string; poi_name: string }
+  /** 合集 ID。 */
+  mixId?: string
+  /** 关联热点：common.hot_sentence 取它的 word。 */
+  hotSpot?: { word: string }
 }
 
+/** mix_id / poi / hot_sentence 追加到 common 末尾（上游 build_*_create_item 的可选段）。 */
+function withExtras(common: Record<string, unknown>, o: PublishOptions, hotSentence: boolean): void {
+  if (o.mixId) common.mix_id = o.mixId
+  if (o.poi) {
+    common.poi_id = o.poi.poi_id ?? ''
+    common.poi_name = o.poi.poi_name ?? ''
+  }
+  if (hotSentence && o.hotSpot) common.hot_sentence = o.hotSpot.word ?? ''
+}
+
+/** 图文的 create_v2 item（上游 build_image_create_item）。 */
 export function imageItem(images: ImageInfo[], o: PublishOptions, creationId: string): unknown {
   const [text, extra] = textAndExtra(o.title ?? '', o.desc ?? '')
-  const common = {
+  const cover = o.coverUri || images[Math.max(0, Math.min(o.coverIndex ?? 0, images.length - 1))]!.uri
+  const common: Record<string, unknown> = {
     text,
     text_extra: compactJson(extra),
     activity: '[]',
@@ -467,13 +511,14 @@ export function imageItem(images: ImageInfo[], o: PublishOptions, creationId: st
     hashtag_source: '',
     mentions: '[]',
     visibility_type: o.visibility,
-    download: 1,
+    download: o.allowDownload === false ? 0 : 1,
     timing: o.timing ? Math.trunc(o.timing) : -1,
     media_type: 2,
     images: images.map((i) => ({ uri: i.uri, width: i.width, height: i.height })),
     creation_id: creationId,
   }
-  return { item: { common, cover: { poster: images[0]!.uri }, anchor: {} } }
+  withExtras(common, o, true)
+  return { item: { common, cover: { poster: cover }, anchor: o.poi ? { poi: o.poi } : {} } }
 }
 
 /** 封面编辑器状态（上游 build_video_cover_tools_extend_info，没有推荐帧时的默认结构）。 */
@@ -505,10 +550,11 @@ export function coverToolsExtendInfo(posterUri: string): unknown {
   }
 }
 
+/** 视频的 create_v2 item（上游 build_video_create_item，封面编辑器状态用默认结构）。 */
 export function videoItem(info: VideoInfo, posterUri: string, o: PublishOptions, creationId: string): unknown {
   const title = (o.title ?? '').trim()
   const desc = (o.desc ?? '').trim()
-  const common = {
+  const common: Record<string, unknown> = {
     text: title ? `${title} ${desc}` : desc,
     caption: desc,
     item_title: title,
@@ -517,10 +563,10 @@ export function videoItem(info: VideoInfo, posterUri: string, o: PublishOptions,
     challenges: '[]',
     mentions: '[]',
     hashtag_source: '',
-    hot_sentence: '',
+    hot_sentence: o.hotSpot?.word ?? '',
     interaction_stickers: '[]',
     visibility_type: o.visibility,
-    download: 1,
+    download: o.allowDownload === false ? 0 : 1,
     timing: o.timing ? Math.trunc(o.timing) : 0,
     creation_id: creationId,
     media_type: 4,
@@ -528,6 +574,7 @@ export function videoItem(info: VideoInfo, posterUri: string, o: PublishOptions,
     music_source: 0,
     music_id: null,
   }
+  withExtras(common, o, false)
   const chapter = {
     chapter_abstract: '',
     chapter_details: [],
@@ -557,7 +604,7 @@ export function videoItem(info: VideoInfo, posterUri: string, o: PublishOptions,
       mix: {},
       selected_member: { is_selected_member_video: false },
       chapter: { chapter: compactJson(chapter) },
-      anchor: {},
+      anchor: o.poi ? { poi: o.poi } : {},
       sync: { should_sync: false, sync_to_toutiao: 0 },
       open_platform: {},
       assistant: { is_preview: 0, is_post_assistant: 1 },
@@ -633,25 +680,15 @@ async function creatorUid(d: Douyin): Promise<string> {
 }
 
 /**
- * 发布视频（上游 post_video）。给了封面就先传封面；没给封面时用 VOD Snapshot 抽的首帧，
+ * 发布视频（上游 post_video）。给了封面就先传封面（`tos-` 开头的 uri 直接用）；没给封面时用 VOD Snapshot 抽的首帧，
  * 即上游传入 cover_tools_extend_info 时的分支——上游默认的 AI 封面链依赖 OpenCV / PyAV 抽帧，Node 下不做。
  */
-export async function postVideo(d: Douyin, video: LocalMedia, cover: LocalMedia | null, o: PublishOptions): Promise<DyJson> {
+export async function postVideo(d: Douyin, video: LocalMedia, cover: LocalMedia | string | null, o: PublishOptions): Promise<DyJson> {
   requirePublishSecurity(d)
   await bootstrap(d)
   const userId = await creatorUid(d)
   const cid = creationId()
-  await creatorApi(d, 'GET', '/janus/douyin/creator/pc/work_list', {
-    initial: [
-      ['scene', 'star_atlas'],
-      ['device_platform', 'android'],
-      ['status', 4],
-      ['count', 18],
-      ['max_cursor', 0],
-    ],
-    msToken: false,
-    sign: false,
-  })
+  await workList(d)
   ok(await creatorApi(d, 'GET', '/aweme/v1/cover/gen/ref/', { initial: [['creation_id', cid]] }), 'cover/gen/ref')
   const feats = compactJson({ has_ai_metadata: false, is_xing_tu_submit: false, has_marketing_poi: false, item_type: 'video' })
   ok(
@@ -668,6 +705,6 @@ export async function postVideo(d: Douyin, video: LocalMedia, cover: LocalMedia 
   const sts = await uploadAuth(d)
   const info = await uploadVideo(d, sts, video, userId)
   d.ctx.log.info(`视频上传成功 ${info.width}x${info.height} ${info.duration.toFixed(1)}s`)
-  const poster = cover ? (await uploadImage(d, info.commitSts, cover, userId)).uri : info.poster_uri
+  const poster = typeof cover === 'string' ? cover : cover ? (await uploadImage(d, info.commitSts, cover, userId)).uri : info.poster_uri
   return createAweme(d, videoItem(info, poster, o, cid), POST_VIDEO_REFERER)
 }
