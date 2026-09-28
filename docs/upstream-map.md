@@ -230,6 +230,9 @@
   - `get_product_detail(sku)`、`get_product_comments`、`search`、`search_wares`、`get_browse_history`、`get_follow_products`、`get_cart_num`、`check_session`、`diagnose`
   - `get_order_list`（`:1348`，→ 扩展 `order list`）、`get_recommend_coupon(sku)`（`:929`，→ 扩展 `coupon list`）
   - 客服：聊天相关方法，以及 `jd_apis/jd_chat_ws.py` 的 `JdChatWS`
+  - 参数对应：各接口的 `area` → 私有选项 `--area`；`get_order_list(date_range)` 的 `1` / `2` / 年份 → `order list --range 3m|this_year|<年份>`；`get_product_comments(count)` → `comment list --limit`；`get_chat_info` / `send_hello` / `send_text` 的 `order_id` → `msg send --order`；短信登录 `login(area_code)` 的国家码 → 从 `--phone` 的 `+` / `00` 前缀识别
+  - `diagnose`（`:800`）：业务接口重试后仍 403 空 body 时只跑第一步 `check_session`，失效报 `AUTH_EXPIRED`，仍登录报 `RISK_CONTROL`（`rate_limit`）；不再发 hotwords / getCartNum 探针
+  - 没有移植：`get_diviner`（`:942`）的首请求要 `securityToken`，分页变体要「类目 `p`」和 `shopId`，上游注释要求传浏览器抓包值、没有调用处，也没有从详情接口推出 `p` 的方法，所以 `item related` 仍用 relsearch 的相关词搜索
 - **JS 资产**（npm 依赖 `jsdom`、`@napi-rs/canvas`）
   - `static/`：`h5st5_env.js`、`h5st5_lib.js`、`h5st5_server.js`、`pc_tk_lib.js`、`pc_tk_server.js`、`summer_cryptico_runner.js`
   - `static/webm/env/run.js`、`static/webm/run/jdwebm-riskhandle.js`
