@@ -256,14 +256,18 @@ describe('xianyu 对拍：命令流程', () => {
 
   it('item publish：传图 → 推荐类目 → 默认地址 → 提交', async () => {
     const c = loadCase('xianyu', 'publish')
-    const ctx = ctxOf({ options: { text: '九成新机械键盘', image: [pngFile()], price: 199.9, shipping: 'fixed', postage: 12.5, pickup: true } })
-    // 上游的 original_price 是 399，catbus 没有原价选项：只比到提交前
+    const ctx = ctxOf({ options: { text: '九成新机械键盘', image: [pngFile()], price: 199.9, originalPrice: 399, shipping: 'fixed', postage: 12.5, pickup: true } })
     const { requests, result, error } = await replay(c, () => itemPublish(ctx))
     if (error) throw error
-    expectRequests(requests.slice(0, 3), c.requests.slice(0, 3))
+    expectRequests(requests, c.requests)
     const body = JSON.parse(decodeURIComponent(String(requests[3]!.body).slice('data='.length).replaceAll('+', '%20')))
-    expect(body.itemPriceDTO).toEqual({ priceInCent: '19990' })
+    expect(body.itemPriceDTO).toEqual({ priceInCent: '19990', origPriceInCent: '39900' })
     expect(result).toMatchObject({ id: ITEM_ID, kind: 'goods', url: `https://www.goofish.com/item?id=${ITEM_ID}`, text: '九成新机械键盘', price: { amount: 199.9 }, status: 'on_sale' })
+  })
+
+  it('item publish：--original-price 要和 --price 一起用', async () => {
+    const { error } = await replay(loadCase('xianyu', 'publish_free'), () => itemPublish(ctxOf({ options: { text: '全新', originalPrice: 10, shipping: 'free' } })))
+    expect(error).toMatchObject({ code: 'USAGE' })
   })
 
   it('msg history：get_token → 握手 → 注册 → 等 /s/vulcan → 取一页', async () => {

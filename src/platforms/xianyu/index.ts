@@ -41,6 +41,7 @@ export default definePlatform({
             shipping: z.enum(['free', 'distance', 'fixed', 'none']).default('free').describe('运费：free 包邮、distance 按距离计费、fixed 一口价、none 无需邮寄'),
             postage: z.number().nonnegative().optional().describe('一口价运费（元），配合 --shipping fixed'),
             pickup: z.boolean().optional().describe('支持自提'),
+            originalPrice: z.number().positive().optional().describe('原价（元），配合 --price'),
           },
         }),
         'item delete': 'none',

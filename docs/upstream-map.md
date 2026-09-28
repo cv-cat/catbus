@@ -192,7 +192,7 @@
 - **登录**：`goofish_apis.py` 里的函数 `qrcode_login()`。
 - **上游凭证来源**：无。
 - **API**
-  - `goofish_apis.py` 的 `XianyuApis`：`get_item_info(item_id)`、`public`（发布商品）、`upload_media`、`get_default_location`
+  - `goofish_apis.py` 的 `XianyuApis`：`get_item_info(item_id)`、`public`（发布商品；`price.original_price` → 私有选项 `--original-price`）、`upload_media`、`get_default_location`
   - 私信：`goofish_live.py` 的 `XianyuLive`（async WebSocket）：`create_chat`、`send_msg`、`list_all_conversations(cid)`（→ `msg history`）
 - **JS 资产**
   - `static/goofish_js_origin_version_2.js`、`static/goofish_js_version_1.js`、`static/goofish_js_version_2.js`

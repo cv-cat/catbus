@@ -77,6 +77,7 @@
 - `item publish --shipping`：xianyu
 - `item publish --postage`：xianyu
 - `item publish --pickup`：xianyu
+- `item publish --original-price`：xianyu
 
 ## product 与商品评价
 

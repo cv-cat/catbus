@@ -122,13 +122,15 @@ export async function itemPublish(ctx: Ctx) {
   if (o.video) throw new CatbusError('UNSUPPORTED', '闲鱼发布暂不支持 --video，只支持图片')
   if (o.schedule) throw new CatbusError('UNSUPPORTED', '闲鱼发布不支持 --schedule')
   if (o.shipping === 'fixed' && o.postage == null) throw new CatbusError('USAGE', '--shipping fixed 需要 --postage（运费，元）')
+  // 上游不填价格时（price=None）不看原价
+  if (o.originalPrice != null && o.price == null) throw new CatbusError('USAGE', '--original-price 要和 --price 一起用')
   const images = []
   for (const input of (o.image as string[] | undefined) ?? []) {
     const file = await readMedia(x.http, input)
     if (!file.contentType.startsWith('image/')) throw new CatbusError('UNSUPPORTED', `闲鱼只支持上传图片：${input}`)
     images.push(file)
   }
-  const price = o.price != null ? { current: Number(o.price), original: 0 } : null
+  const price = o.price != null ? { current: Number(o.price), original: Number(o.originalPrice ?? 0) } : null
   const res = await api.publish(x, {
     images,
     desc,

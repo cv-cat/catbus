@@ -1,4 +1,4 @@
-import { describeOption, FILTER_VALUES, PAGING } from './options.js'
+import { describeOption, FILTER_VALUES, flagName, PAGING } from './options.js'
 import { type AvailableEndpoint, type Command, type Platform, sortCommands, type Upstream } from './registry.js'
 import { VOCAB } from './vocab.js'
 
@@ -109,9 +109,9 @@ function footnotes(platforms: Platform[], rows: Row[]): string[] {
         const has = commands.filter(([, c]) => option in c.options)
         if (FILTERS.includes(option)) {
           const values = has.map(([p, c]) => `${p.id} ${describeOption(c.options[option]!).values?.join(' / ')}`)
-          lines.push(`- \`${key} --${option}\` 取值：${values.join('；')}`)
+          lines.push(`- \`${key} --${flagName(option)}\` 取值：${values.join('；')}`)
         } else {
-          lines.push(`- \`${key} --${option}\`：${has.map(([p]) => p.id).join('、')}`)
+          lines.push(`- \`${key} --${flagName(option)}\`：${has.map(([p]) => p.id).join('、')}`)
         }
       }
     }
