@@ -229,6 +229,14 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 
 | 平台 | 命令 | 说明 | 输出 |
 |---|---|---|---|
+| tiktok | `folder add <folder> <item>` | 把视频加入收藏夹（一次一个视频）。TikTok 只能把已收藏的视频加进收藏夹 | `{id}`（视频 id） |
+| tiktok | `folder create <name> [--visibility public\|private]` | 私有选项：收藏夹公开 / 私密，沿用 4.9 标准选项 `--visibility` 的名字与取值，不支持 `friends`；默认 `private`（与上游一致） | Folder |
+| tiktok | `folder update <folder> [--name <name>] [--visibility public\|private]` | 私有选项：同上。`--name`、`--visibility` 至少给一个，没给的保持原值 | Folder |
+| tiktok | `item publish [--allow-comment on\|off]` | 私有选项：允许评论，默认 `on` | Item |
+| tiktok | `item publish [--allow-duet on\|off]` | 私有选项：允许合拍（Duet），默认视频 `off`、图文 `on`（照上游） | Item |
+| tiktok | `item publish [--allow-stitch on\|off]` | 私有选项：允许拼接（Stitch），默认视频 `off`、图文 `on`（照上游） | Item |
+| tiktok | `item publish [--allow-content-reuse on\|off]` | 私有选项：允许他人复用内容，默认 `on` | Item |
+| tiktok | `item publish [--allow-ai-remix on\|off]` | 私有选项：允许 AI 改编，默认 `on` | Item |
 | bilibili | `item coin <item> [--count 1\|2]` | 投币 | `{id}` |
 | bilibili | `item triple <item>` | 一键三连 | `{id}` |
 | bilibili | `item subtitles <item>` | 字幕 | Subtitle[] |
