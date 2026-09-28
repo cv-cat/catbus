@@ -23,10 +23,14 @@ const range = { range: z.string().regex(/^(3m|this_year|\d{4})$/, '取值为 3m�
 /** 按订单咨询（get_chat_info / send_hello / send_text 的 order_id）。 */
 const order = { order: z.string().optional().describe('订单号或订单详情页 URL：按订单咨询客服') }
 
-/** msg send：--to / --conversation / --item 至多一个；只有 --order 时联系京东自营客服。 */
+/**
+ * msg send：通用规则（AGENTS 4.8：--conversation 不与其他目标并用，--to 与 --item 可以同时用），
+ * 再加上 --order：可与 --item 或 --conversation 之一合用，只有 --order 时联系京东自营客服。
+ * --to 在 handler 里报 UNSUPPORTED（京东只能联系商家客服）。
+ */
 function msgSendCheck(args: Record<string, string | undefined>, o: Record<string, unknown>): string | undefined {
   const targets = ['to', 'conversation', 'item'].filter((k) => o[k] != null)
-  if (targets.length > 1) return '--to、--conversation、--item 只能用一个'
+  if (targets.length > 1 && targets.includes('conversation')) return '--to、--conversation、--item 需要用一个，只有 --to 与 --item 可以同时用'
   if (!targets.length && o.order == null) return '需要 --conversation、--item 或 --order'
   if (args.text == null && o.image == null && o.video == null) return '需要 <text>、--image 或 --video'
 }

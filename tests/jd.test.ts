@@ -401,7 +401,9 @@ describe('jd 私有选项', () => {
     expect(check(text, { order: ORDER_ID, conversation: '1000000' })).toBeUndefined()
     expect(check(text, { conversation: '1000000' })).toBeUndefined()
     expect(check(text, {})).toMatch(/--order/)
-    expect(check(text, { item: SKU, conversation: '1000000' })).toMatch(/只能用一个/)
+    expect(check(text, { item: SKU, conversation: '1000000' })).toMatch(/只有 --to 与 --item 可以同时用/)
+    // --to 与 --item 按通用规则放行，由 handler 报 UNSUPPORTED（京东只能联系商家客服）
+    expect(check(text, { to: 'u', item: SKU })).toBeUndefined()
     expect(check({}, { order: ORDER_ID })).toMatch(/text/)
 
     expect(cmd.resolveOrderId(ORDER_ID)).toBe(ORDER_ID)
