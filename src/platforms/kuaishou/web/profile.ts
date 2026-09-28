@@ -217,6 +217,11 @@ export const SEQUENCES: Record<string, string[]> = {
   live_room_current_authenticated: [...LIVE_ONLY, 'kwfv1', ...WEB, 'kwssectoken', 'kwscode'],
   // 房间首屏的表情 / 礼物字典（emoji/icon、emoji/allgifts）
   live_room_assets_initial: [...LIVE_HEAD, 'bUserId', 'kuaishou.live.bfb1s', 'userId', ...WEB, 'kwfv1', 'kwssectoken', 'kwscode', 'kwpsecproductname'],
+  // 直播间登出：passport 那一跳只带设备与安全票据；已清理过的会话再登出一次时顺序不同
+  live_logout_passport_authenticated: ['did', 'wid', 'didv', 'bUserId', 'kwfv1', 'kwssectoken', 'kwscode', 'kwpsecproductname'],
+  live_logout_passport_clean: ['did', 'wid', 'didv', 'bUserId', ...Q],
+  live_room_logout_authenticated: [...LIVE_HEAD, 'bUserId', 'kuaishou.live.bfb1s', 'userId', ...WEB, ...Q],
+  live_room_logout_clean: [...LIVE_HEAD, 'bUserId', 'kuaishou.live.bfb1s', ...Q],
   // 视频发布后跳到的作品管理页（仍是上传上下文的 kuaishou-vision 产品）
   cp_post_publish_manage: [...CP_HEAD, 'kwpsecproductname', 'kwssectoken', 'kwscode', 'kwfv1'],
   // 验证码 iframe：第一个 kwpsecproductname 是 iframe 路径下的 verification-captcha，第二个是父页的产品

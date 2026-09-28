@@ -240,6 +240,19 @@ export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
   })
 }
 
+/**
+ * 服务端登出（`auth logout` 删除本地凭证前由 core 调用）：直播页的 passport logout + userLogout。
+ * 直播站票据不全时先用 passToken 补一次（catbus 补充，与 live listen 相同），否则上游拒绝按半清理的状态登出。
+ */
+export async function serverLogout(ctx: Ctx): Promise<void> {
+  await run(ctx, 'live', async (k) => {
+    const has = (name: string) => Boolean(k.s.cookies.get(name))
+    const live = ['kuaishou.live.web_st', 'kuaishou.live.web_ph'].filter(has).length
+    if (has('userId') && live < 2 && has('passToken')) await api.refreshLiveSession(k, api.roomReferer(api.LIVE_LOGOUT_EID))
+    await api.liveLogout(k)
+  })
+}
+
 // ================================================================ user
 
 export async function userGet(ctx: Ctx) {

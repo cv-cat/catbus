@@ -396,6 +396,25 @@ const CASES: Record<string, { run: () => Promise<unknown>; result?: (actual: any
       ])
     },
   },
+  live_logout: {
+    run: async () => {
+      const k = await logged(LIVE)
+      k.s.update([
+        ['kpn', 'GAME_ZONE'],
+        ['client_key', '65890b29'],
+        ['kuaishou.live.bfb1s', 'fake-bfb1s'],
+        ['kuaishou.live.web_st', 'fake-live-st'],
+        ['kuaishou.live.web_ph', 'fake-live-ph'],
+      ])
+      const result = await api.liveLogout(k)
+      return { result, cookies: Object.fromEntries(k.s.cookies) }
+    },
+    result: (a, e) => {
+      expect(a.result).toEqual(e.result)
+      expect(Object.keys(a.cookies)).toEqual(Object.keys(e.cookies))
+      expect(a.cookies).toEqual(e.cookies)
+    },
+  },
   websocket_info: { run: async () => api.websocketInfo(await logged(LIVE), STREAM, ROOM) },
 
   // ---------------------------------------------------------------- 创作者中心

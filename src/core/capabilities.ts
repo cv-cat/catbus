@@ -9,7 +9,7 @@ const SYMBOL: Record<Upstream, string> = { full: '✓', partial: '◐', none: '�
 interface Section {
   title: string
   resources: string[]
-  intro?: string
+  intro?: string | ((platforms: Platform[]) => string)
   outro?: string
 }
 
@@ -17,7 +17,11 @@ const SECTIONS: Section[] = [
   {
     title: 'auth',
     resources: ['auth'],
-    intro: '`login` 见上表。`logout` / `list` / `use` 由 core 实现，所有平台都有；服务端登出只有 bilibili。',
+    intro: (platforms) =>
+      `\`login\` 见上表。\`logout\` / \`list\` / \`use\` 由 core 实现，所有平台都有；服务端登出只有 ${platforms
+        .filter((p) => web(p).logout)
+        .map((p) => p.id)
+        .join('、')}。`,
   },
   { title: 'user', resources: ['user'] },
   { title: 'item', resources: ['item'] },
@@ -153,7 +157,7 @@ export function renderCapabilities(platforms: Platform[]): string {
   for (const s of SECTIONS) {
     const rows = commandRows(platforms, s.resources)
     out.push('', `## ${s.title}`, '')
-    if (s.intro) out.push(s.intro, '')
+    if (s.intro) out.push(typeof s.intro === 'function' ? s.intro(platforms) : s.intro, '')
     out.push(...header('命令', platforms), ...rows.map((r) => row([r.label, ...r.cells])))
     const notes = footnotes(platforms, rows)
     if (notes.length) out.push('', ...notes)

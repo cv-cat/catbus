@@ -418,6 +418,69 @@ export async function emojiAllGifts(ks: Ks, eid: string): Promise<Json> {
   return data
 }
 
+/** 登出只放行上游抓包保留的那个房间页 Referer（上游拒绝外推到别的页面）。 */
+export const LIVE_LOGOUT_EID = '3xtgiecv6inq83i'
+const LIVE_LOGOUT_REFERER = roomReferer(LIVE_LOGOUT_EID)
+const PASSPORT_LOGOUT_BODY = 'sid=kuaishou.live.web&channelType=UNKNOWN&encryptHeaders='
+const LOGOUT_SET_COOKIE = { passport: ['userId', 'userId', 'passToken'], live: ['kuaishou.live.web_st', 'kuaishou.live.web_ph', 'userId'] }
+const LOGOUT_CONTENT_TYPE = { passport: 'application/json;charset=utf-8', live: 'application/json; charset=utf-8' }
+
+/** 登出响应：状态码、content-type、Set-Cookie 删除的名字与顺序；已清理过的会话还要求响应体一致。 */
+async function checkLogout(res: HttpResponse, kind: 'passport' | 'live', requireBody: boolean): Promise<Json> {
+  const text = await res.text()
+  let payload: Json
+  try {
+    payload = JSON.parse(text)
+  } catch {
+    payload = { result: -1, error: text.slice(0, 500) }
+  }
+  const fail = (why: string) => new CatbusError('UPSTREAM', `快手登出（${kind}）${why}`, { detail: { status: res.status, payload } })
+  if (res.status !== 200) throw fail(`HTTP 状态不是 200：${res.status}`)
+  if ((res.headers.get('content-type') ?? '').toLowerCase() !== LOGOUT_CONTENT_TYPE[kind]) throw fail('content-type 与浏览器不一致')
+  const names = res.headers.getSetCookie().flatMap((line) => [...line.matchAll(/(?:^|,\s*)([A-Za-z0-9._-]+)=/g)].map((m) => m[1]!))
+  if (names.join() !== LOGOUT_SET_COOKIE[kind].join()) throw fail(`Set-Cookie 与浏览器不一致：${names.join(', ')}`)
+  if (requireBody && compactJson(payload) !== (kind === 'passport' ? '{"result":1}' : '{"data":{"result":1}}')) throw fail('响应体与浏览器不一致')
+  return payload
+}
+
+/**
+ * logout_session：直播页的“退出登录”——先 `POST id.kuaishou.com/pass/kuaishou/login/logout`，再
+ * `POST /live_api/baseuser/userLogout`。两条请求的请求头与 Cookie 线都是动作之前的快照；每一步按响应删掉
+ * passToken、userId 与直播票据（apply_live_logout）。上游对响应还检查 HTTP/1.1 与 Set-Cookie 的属性，这里不查。
+ */
+export async function liveLogout(ks: Ks): Promise<Json> {
+  const referer = LIVE_LOGOUT_REFERER
+  const present = ['userId', 'kuaishou.live.web_st', 'kuaishou.live.web_ph'].map((k) => Boolean(ks.s.cookies.get(k)))
+  const state = present.every(Boolean) ? 'authenticated' : present.some(Boolean) ? null : 'clean'
+  if (!state) throw new CatbusError('UPSTREAM', '直播站票据不全（只有一部分登录 cookie），无法按浏览器的方式登出', { detail: { present } })
+  const kww = await ks.s.kww()
+  const passportCookie = await ks.s.cookieHeader(`live_logout_passport_${state}`)
+  const liveCookie = await ks.s.cookieHeader(`live_room_logout_${state}`)
+
+  const ph = buildHeaders('POST', 'login_pass_token')
+  ph.set('referer', referer)
+  ph.set('origin', LIVE)
+  ph.set('sec-fetch-site', 'same-site')
+
+  const [trace, span] = ks.s.nextLiveSentry(referer)
+  const lh = buildHeaders('GET', 'live')
+  lh.set('referer', referer)
+  lh.set('origin', LIVE)
+  lh.set('sentry-trace', `${trace}-${span}-0`)
+  lh.set('baggage', 'sentry-environment=prod,sentry-release=ab256f1')
+  lh.set('kww', kww)
+
+  const passport = await checkLogout(
+    await ks.send({ method: 'POST', url: `${ID_HOST}/pass/kuaishou/login/logout`, headers: ph.get(), cookie: passportCookie, body: PASSPORT_LOGOUT_BODY }),
+    'passport',
+    state === 'clean',
+  )
+  ks.s.applyLiveLogout({ passport: true })
+  const live = await checkLogout(await ks.send({ method: 'POST', url: `${LIVE}/live_api/baseuser/userLogout`, headers: lh.get(), cookie: liveCookie, body: '' }), 'live', state === 'clean')
+  ks.s.applyLiveLogout({ live: true })
+  return { result: 1, state, passport, live }
+}
+
 export async function websocketInfo(ks: Ks, liveStreamId: string, eid: string): Promise<Json> {
   const [data] = await ks.live('GET', '/live_api/liveroom/websocketinfo', {
     query: [['liveStreamId', liveStreamId]],

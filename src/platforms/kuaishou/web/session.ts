@@ -519,6 +519,19 @@ export class Session {
     }
   }
 
+  /** apply_live_logout：只删登出响应确认删掉的 cookie；设备标识与 webweapon 票据保留（与 Chrome 一致）。 */
+  applyLiveLogout(o: { passport?: boolean; live?: boolean }): void {
+    if (o.passport) for (const k of ['userId', 'userid', 'passToken']) this.cookies.delete(k)
+    if (o.live) for (const k of ['userId', 'userid', 'kuaishou.live.web_st', 'kuaishou.live.web_ph']) this.cookies.delete(k)
+    this.userId = this.cookie('userId') || this.cookie('userid') || null
+    if (o.live) {
+      this.livePhase.room = 'initial'
+      this.livePhase.home = 'initial'
+      this.liveHomeLoginPayCount = 0
+      this.liveRoomLoginPayCount = 0
+    }
+  }
+
   advanceLive(context: LiveContext, phase: string): void {
     this.livePhase[context] = phase
   }

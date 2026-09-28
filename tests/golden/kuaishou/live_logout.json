@@ -1,0 +1,272 @@
+{
+  "input": {},
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://id.kuaishou.com/pass/kuaishou/login/logout",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "referer",
+          "https://live.kuaishou.com/u/3xtgiecv6inq83i"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://live.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "wid",
+          "12345678901234567"
+        ],
+        [
+          "didv",
+          "1789990000000"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kwfv1",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "kwpsecproductname",
+          "PCLive"
+        ]
+      ],
+      "body": "sid=kuaishou.live.web&channelType=UNKNOWN&encryptHeaders=",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://live.kuaishou.com/live_api/baseuser/userLogout",
+      "headers": [
+        [
+          "sentry-trace",
+          "94514d146fbbb1f352261e5d15c83934-3ab028bb5a2c0a08-0"
+        ],
+        [
+          "referer",
+          "https://live.kuaishou.com/u/3xtgiecv6inq83i"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "kww",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ],
+        [
+          "baggage",
+          "sentry-environment=prod,sentry-release=ab256f1"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://live.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "wid",
+          "12345678901234567"
+        ],
+        [
+          "clientid",
+          "3"
+        ],
+        [
+          "did",
+          "web_0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "client_key",
+          "65890b29"
+        ],
+        [
+          "kpn",
+          "GAME_ZONE"
+        ],
+        [
+          "didv",
+          "1789990000000"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.live.bfb1s",
+          "fake-bfb1s"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "kuaishou.live.web_st",
+          "fake-live-st"
+        ],
+        [
+          "kuaishou.live.web_ph",
+          "fake-live-ph"
+        ],
+        [
+          "kwpsecproductname",
+          "PCLive"
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "kwfv1",
+          "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "application/json;charset=UTF-8",
+        "set-cookie": [
+          "userId=; Path=/; Domain=kuaishou.com; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; SameSite=None",
+          "userId=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; SameSite=None",
+          "passToken=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; SameSite=None"
+        ]
+      },
+      "body": "{\"result\":1}"
+    },
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "set-cookie": [
+          "kuaishou.live.web_st=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly",
+          "kuaishou.live.web_ph=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly",
+          "userId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly"
+        ]
+      },
+      "body": "{\"data\":{\"result\":1}}"
+    }
+  ],
+  "result": {
+    "result": {
+      "result": 1,
+      "state": "authenticated",
+      "passport": {
+        "result": 1
+      },
+      "live": {
+        "data": {
+          "result": 1
+        }
+      }
+    },
+    "cookies": {
+      "kpf": "PC_WEB",
+      "clientid": "3",
+      "did": "web_0123456789abcdef0123456789abcdef",
+      "didv": "1789990000000",
+      "kwpsecproductname": "PCLive",
+      "kwfv1": "PnGU+fakekwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1kwfv1",
+      "kwssectoken": "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake",
+      "kwscode": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "kpn": "GAME_ZONE",
+      "wid": "12345678901234567",
+      "kuaishou.server.webday7_st": "fake-www-st",
+      "kuaishou.server.webday7_ph": "fake-www-ph",
+      "bUserId": "20001",
+      "kuaishou.web.cp.api_st": "fake-cp-st",
+      "kuaishou.web.cp.api_ph": "fake0000-cp00-ph00-0000-000000000000",
+      "ktrace-context": "fake|trace",
+      "client_key": "65890b29",
+      "kuaishou.live.bfb1s": "fake-bfb1s"
+    }
+  },
+  "error": null
+}

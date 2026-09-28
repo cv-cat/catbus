@@ -179,11 +179,13 @@
   - cookie 分三个站点：www、cp（创作者）、live。发布需要 `kuaishou.web.cp.api_st` 和 `kuaishou.web.cp.api_ph`。
 - **登录**：`ks_apis/login_api.py` 的 `KuaishouLoginAPI`：`login_by_qr`、`request_mobile_code`、`login_by_mobile_code`、`sts_login`、`pass_token_login`、`login_browser_session`。
   - `sts_login` / `pass_token_login` 用来换取子站点凭证，登录时一并完成。
+- **服务端登出**：`ks_apis/live_api.py` 的 `logout_session`（passport `login/logout` → `/live_api/baseuser/userLogout`）+ `builder/auth.py` 的 `apply_live_logout`。上游只放行一个写死的房间页 Referer。
 - **上游凭证来源**：`.env` 的 `KS_COOKIES`。
 - **API**
   - `ks_apis/kuaishou_api.py` 的 `KuaishouAPI`：`get_feed_hot`（new-reco 推荐流 → `feed list --kind recommend`）、`get_work_info`、`get_video_detail`、`get_comment_list`、`get_all_comment`、`get_sub_comment_list`、`get_profile`、`get_profile_feed`、`get_user_all_work`、`search_feed`、`search_user`、`get_relation`、`get_liked_list`、`get_collect_list`、`get_history_list`、`graphql`
   - 直播：`ks_apis/live_api.py` 的 `KuaishouLiveAPI`（礼物：`gift_list` 首屏与 `sort_type=0` 的“更多礼物”，`emoji_all_gifts` 完整礼物字典）；弹幕：`ks_apis/live_ws.py` 的 `LiveDanmakuClient`
   - 发布：`ks_apis/publish_api.py` 的 `KuaishouPublishAPI`；发布后 `video_photo_list(query_type=2, post_publish=True)` 取 publishId，`video_publish_refresh` 取发布状态
+  - 不在 `_LIVE_CURRENT_PATHS` 放行名单里的直播接口（`comment_add`、`comment_like`、`profile_like`、`liveroom_status` 等）上游运行时直接拒绝发包，不移植
 - **滑块验证码**：`KuaishouAPI._post` / `_get` / `graphql` 遇到 400002（GraphQL 是 `errors` + `data.captcha.url`）时调 `_pass_captcha` 过一次滑块，再重新序列化同一条 Cookie 线序重发。
   - `builder/auth.py` 的 `prepare_captcha_context`：验证码 iframe 以 `verification-captcha` 产品名单独引导 webweapon，Cookie 线序 `captcha`（`kwpsecproductname` 出现两次）
   - `utils/captcha.py`：`find_gap_x`（cv2 边缘图 + 带掩码的模板匹配，catbus 用 @techstark/opencv-js）、`build_trajectory`、`SlidingCaptcha`

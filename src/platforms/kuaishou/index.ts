@@ -19,6 +19,8 @@ export default definePlatform({
   endpoints: {
     web: {
       login: { methods: ['qrcode', 'sms', 'cookie'], default: 'qrcode' },
+      // 直播页的退出登录：passport logout + userLogout
+      logout: h('serverLogout'),
       commands: {
         'auth login': impl('full', 'authLogin'),
         'auth status': impl('full', 'authStatus'),

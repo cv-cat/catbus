@@ -189,6 +189,12 @@ def respond(req):
         if path == '/pass/kuaishou/login/passToken' and req['method'] == 'GET':
             q = dict(urllib.parse.parse_qsl(urllib.parse.urlsplit(url).query))
             return {'status': 302, 'headers': {'location': q['callback'] + '&authToken=fake-sts-at&sid=' + q['sid']}, 'body': ''}
+        if path == '/pass/kuaishou/login/logout':
+            return {'status': 200, 'headers': {'content-type': 'application/json;charset=UTF-8', 'set-cookie': [
+                'userId=; Path=/; Domain=kuaishou.com; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; SameSite=None',
+                'userId=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; SameSite=None',
+                'passToken=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; SameSite=None']},
+                    'body': '{"result":1}'}
         if path == '/pass/kuaishou/login/passToken':
             return {'status': 200, 'headers': {'set-cookie': ['kuaishou.live.web_st=fake-live-st0; Path=/']},
                     'body': {'result': 1, 'kuaishou.live.web.at': 'fake-live-at', 'kuaishou.live.web_st': 'fake-live-st0', 'userId': 10001}}
@@ -215,6 +221,12 @@ def respond(req):
             return {'data': {'token': 'x', 'gifts': [{'id': 1, 'name': '棒棒糖', 'unitPrice': 1}]}}
         if path == '/live_api/emoji/allgifts':
             return {'data': {'1': {'id': 1, 'name': '棒棒糖', 'unitPrice': 1}, '9': {'id': 9, 'name': '粉丝团灯牌', 'unitPrice': 1}}}
+        if path == '/live_api/baseuser/userLogout':
+            return {'status': 200, 'headers': {'content-type': 'application/json; charset=utf-8', 'set-cookie': [
+                'kuaishou.live.web_st=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly',
+                'kuaishou.live.web_ph=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly',
+                'userId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly']},
+                    'body': '{"data":{"result":1}}'}
         if path == '/live_api/liveroom/websocketinfo':
             return {'data': {'result': 1, 'token': 'fake-ws-token', 'websocketUrls': ['wss://live-ws.example/websocket']}}
         if path == '/live_api/category/classify':
@@ -419,6 +431,21 @@ def _live_gifts():
 
 
 case('live_gifts_flow', _live_gifts, room=ROOM)
+
+
+def _live_logout():
+    """直播页退出登录：passport logout → userLogout，每一步按响应删掉 cookie.
+
+    上游的登出合同要求直播页文档下发的 client_key / kuaishou.live.bfb1s、直播站票据与 GAME_ZONE 的 kpn。
+    """
+    auth = logged(LIVE)
+    auth.update_cookies({'kpn': 'GAME_ZONE', 'client_key': '65890b29', 'kuaishou.live.bfb1s': 'fake-bfb1s',
+                         'kuaishou.live.web_st': 'fake-live-st', 'kuaishou.live.web_ph': 'fake-live-ph'})
+    result = KuaishouLiveAPI.logout_session(auth)
+    return {'result': result, 'cookies': dict(auth._cookie)}
+
+
+case('live_logout', _live_logout)
 
 
 case('websocket_info', lambda: KuaishouLiveAPI.websocket_info(logged(LIVE), STREAM, eid=ROOM), room=ROOM)

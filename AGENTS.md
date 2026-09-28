@@ -506,7 +506,7 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie] [--scope
   - 需要单独登录的，用 `--scope <name>` 登录，各平台可用的 scope 在注册表里声明；
   - 命令缺少所需 scope 时，报 `AUTH_REQUIRED`，`hint` 带上 `--scope`。
 - **`auth status`**：在线校验，返回 AuthStatus。未登录或已失效时返回 `logged_in: false`，不报错。
-- **`auth logout`**：删除本地凭证文件（上游支持服务端登出的，同时调用服务端登出，目前只有 B 站），并清除指向它的 `_current`。
+- **`auth logout`**：删除本地凭证文件（上游支持服务端登出的，同时调用服务端登出，目前有 B 站和快手），并清除指向它的 `_current`。
 - **`auth use <account>`**：设置 `_current`。
 - **`auth list`**：列出本平台、本端的账号。
 - **自动刷新**：会自动刷新的 token（如 B 站的 refresh）和响应里的 Set-Cookie，都会合并回凭证文件并原子写入。
