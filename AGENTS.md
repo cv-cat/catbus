@@ -237,6 +237,10 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | bilibili | `dynamic publish --text [--image]` | 发动态 | `{id url}` |
 | bilibili | `dynamic delete <id>` | 删动态 | `{id}` |
 | bilibili | `article publish --title --text [--cover] [--category]` | 发专栏：先存草稿，再提交 | `{id url}` |
+| xianyu | `item publish [--original-price <金额>]` | 私有选项：原价（元），要和 `--price` 一起用 | Item |
+| xianyu | `item publish [--shipping free\|distance\|fixed\|none]` | 私有选项：运费方式，默认 `free` 包邮；`distance` 按距离计费，`fixed` 一口价，`none` 无需邮寄 | Item |
+| xianyu | `item publish [--postage <金额>]` | 私有选项：一口价运费（元），配合 `--shipping fixed` | Item |
+| xianyu | `item publish [--pickup]` | 私有选项：支持自提 | Item |
 | jd | `order list` | 订单 | Order[] |
 | jd | `cart count` | 购物车数量 | `{count}` |
 | jd | `coupon list <item>` | 商品可用优惠券 | Coupon[] |
@@ -328,7 +332,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | `--category <id>` | 分类 |
 | `--visibility public\|private\|friends\|fans` | 默认 `public`。`friends` 为好友（互相关注）可见，`fans` 为粉丝可见。平台在注册表里声明支持哪些取值，不声明时为 `public` `private` `friends`；平台不支持时报 `UNSUPPORTED`，不是标准值时报 `USAGE` |
 | `--schedule <ISO 时间>` | 定时发布 |
-| `--price <金额>` | 商品价格（闲鱼）。闲鱼另有私有选项 `--original-price <金额>`（原价），以及运费相关的 `--shipping` / `--postage` / `--pickup`，在注册表里声明 |
+| `--price <金额>` | 商品价格（闲鱼） |
 
 本地文件会自动上传，不需要先调 `media upload`。
 
