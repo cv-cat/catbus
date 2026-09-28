@@ -57,6 +57,22 @@ export function find(obj: unknown, keys: string[], depth = 5): any {
 }
 
 /** 找第一个"元素带某些键"的对象数组。 */
+/** 按键名找数组（广度优先）；找不到返回 null。 */
+export function findArrayByKey(obj: unknown, key: string, depth = 6): any[] | null {
+  let level: unknown[] = [obj]
+  for (let d = 0; d <= depth && level.length; d++) {
+    const next: unknown[] = []
+    for (const o of level) {
+      if (!o || typeof o !== 'object') continue
+      const v = (o as Record<string, unknown>)[key]
+      if (!Array.isArray(o) && Array.isArray(v)) return v
+      for (const x of Object.values(o)) if (x && typeof x === 'object') next.push(x)
+    }
+    level = next
+  }
+  return null
+}
+
 export function findList(obj: unknown, keys: string[], depth = 6): any[] {
   let level: unknown[] = [obj]
   for (let d = 0; d <= depth && level.length; d++) {
@@ -115,8 +131,13 @@ export function detail(sku: string, d: any): Item {
 }
 
 /** 商品评价（getLegoWareDetailComment）。 */
+/**
+ * 商品评价（getLegoWareDetailComment）。响应里同时有评价 `commentInfoList` 和问答 `questionList`，
+ * 问答条目也有 `content`，按字段名去猜会拿成问答，所以先按键名取评价列表。
+ */
 export function comments(sku: string, d: any): Comment[] {
-  return findList(d, ['commentData', 'commentId', 'content']).map((c: any) =>
+  const list = findArrayByKey(d, 'commentInfoList') ?? findList(d, ['commentData', 'commentId'])
+  return list.map((c: any) =>
     n.comment(
       {
         id: n.id(c.commentId ?? c.id ?? c.guid),

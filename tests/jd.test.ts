@@ -468,7 +468,13 @@ describe('jd 归一化与解析', () => {
   })
 
   it('评价、优惠券、关注商品按字段名提取', () => {
-    const cs = norm.comments(SKU, { result: { commentInfoList: [{ commentId: 9, userNickName: 'j***n', commentData: '好用', commentDate: '2025-08-01 10:00:00', praiseCnt: '3' }] } })
+    // 真实响应里问答 questionList 排在评价 commentInfoList 前面，问答条目也有 content（2026-09-28 真机）
+    const cs = norm.comments(SKU, {
+      result: {
+        questionList: [{ id: '69405999', content: '能打fps游戏吗', answerList: [] }],
+        commentInfoList: [{ commentId: 9, userNickName: 'j***n', commentData: '好用', commentDate: '2025-08-01 10:00:00', praiseCnt: '3' }],
+      },
+    })
     expect(cs[0]).toMatchObject({ id: '9', item_id: SKU, text: '好用', created_at: '2025-08-01T10:00:00+08:00', stats: { likes: 3, replies: null } })
     const cp = norm.coupons({ couponList: [{ couponId: 'c1', name: '满100减10', discount: 10, quota: 100, beginTime: '2025-08-01 00:00:00', endTime: 1790000000000 }] })
     expect(cp[0]).toMatchObject({ id: 'c1', title: '满100减10', discount: { amount: 10 }, threshold: { amount: 100 }, start_at: '2025-08-01T00:00:00+08:00' })
