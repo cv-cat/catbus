@@ -18,9 +18,10 @@ export default definePlatform({
   item: '推文',
   endpoints: {
     web: {
-      login: { methods: ['password', 'cookie'], default: 'cookie' },
+      // 上游的账密登录依赖 Castle token，不移植：只支持从浏览器导入 cookie
+      login: { methods: ['cookie'], default: 'cookie' },
       commands: {
-        'auth login': impl('full', 'authLogin', { note: '账密登录尚未实现，用 --method cookie' }),
+        'auth login': impl('full', 'authLogin'),
         'auth status': impl('full', 'authStatus'),
 
         'user get': impl('full', 'userGet'),

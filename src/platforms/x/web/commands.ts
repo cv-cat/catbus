@@ -67,14 +67,8 @@ function timeline<T>(ctx: Ctx, list: T[], res: any) {
 
 // ================================================================ auth
 
+/** 只支持 cookie 导入（注册表只声明了 cookie）；上游的账密登录依赖 Castle token，不移植。 */
 export async function authLogin(ctx: Ctx) {
-  const method = ctx.options.method as string
-  if (method !== 'cookie') {
-    throw new CatbusError('NOT_IMPLEMENTED', 'X 的账密登录尚未实现，请从浏览器复制 cookie 登录', {
-      hint: 'catbus x auth login --method cookie --cookie "<cookie>"',
-      detail: { method },
-    })
-  }
   const credential = cookieCredential(ctx, COOKIE_DOMAIN)
   const names = new Set(credential.scopes.main!.cookies.map((c) => c.name))
   if (!names.has('auth_token') || !names.has('ct0')) {

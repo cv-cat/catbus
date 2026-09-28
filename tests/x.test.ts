@@ -284,13 +284,12 @@ describe('x 命令流程：cookie 登录', () => {
 })
 
 describe('x 命令与注册表', () => {
-  it('默认 cookie 登录；账密登录报 NOT_IMPLEMENTED 并提示改用 cookie', async () => {
+  it('只支持 cookie 登录：账密登录不移植，--method password 报 UNSUPPORTED', async () => {
     const web = xPlatform.endpoints.web
     if (web === 'planned') throw new Error('web 端应当可用')
-    expect(web.login).toMatchObject({ methods: ['password', 'cookie'], default: 'cookie' })
-    const err = await cmd.authLogin(makeCtx({ platform: 'x', account: null, options: { method: 'password' } })).catch((e) => e)
-    expect(err).toBeInstanceOf(CatbusError)
-    expect(err).toMatchObject({ code: 'NOT_IMPLEMENTED', exitCode: 4, hint: 'catbus x auth login --method cookie --cookie "<cookie>"' })
+    expect(web.login).toEqual({ methods: ['cookie'], default: 'cookie' })
+    const r = await cli('x', 'auth', 'login', '--method', 'password')
+    expect([r.code, r.env.error?.code]).toEqual([2, 'UNSUPPORTED'])
   })
 
   it('cookie 登录缺 auth_token / ct0 时报 USAGE，不发请求', async () => {

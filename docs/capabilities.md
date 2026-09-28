@@ -20,7 +20,7 @@
 |---|---|---|---|---|---|---|---|---|---|---|
 | qrcode | ✓ | ✓ |  | ✓ | ✓ |  | ✓ |  | ✓ |  |
 | sms | ✓ | ✓ |  | ✓ | ✓ |  |  |  | ✓ |  |
-| password |  |  |  | ✓ |  |  |  |  |  | ✓ |
+| password |  |  |  | ✓ |  |  |  |  |  |  |
 | cookie | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 默认 | qrcode | qrcode | cookie | qrcode | qrcode | cookie | qrcode | cookie | qrcode | cookie |
 | 子站点 | creator |  |  |  |  |  |  |  |  |  |
