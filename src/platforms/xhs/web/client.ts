@@ -307,12 +307,7 @@ export class Session {
 
   async json<T = any>(req: HttpRequest, appendShared: string[] = [], bare = false): Promise<XhsJson<T>> {
     const res = await this.send(req, appendShared, bare)
-    if (res.status === 461 || res.status === 471) {
-      throw new CatbusError('RISK_CONTROL', `小红书触发了验证码（HTTP ${res.status}）`, { detail: { kind: 'captcha', status: res.status } })
-    }
-    if (res.status === 406 || res.status === 429) {
-      throw new CatbusError('RISK_CONTROL', `小红书拒绝了请求（HTTP ${res.status}），请稍后再试`, { detail: { kind: 'rate_limit', status: res.status } })
-    }
+    checkStatus(res)
     return parseJson<XhsJson<T>>(res)
   }
 
@@ -329,6 +324,25 @@ export class Session {
       throw new CatbusError('RISK_CONTROL', `小红书风控：${message || code}`, { detail: { kind: 'blocked', code, message } })
     }
     throw new CatbusError('UPSTREAM', message || `小红书返回错误 ${code}`, { detail: { code, message } })
+  }
+}
+
+/**
+ * 风控状态码（AGENTS 6.4）：461 / 471 要求人机验证（响应体照样是 success，data 为空），406 / 429 是限流。
+ * 响应头里的 verifytype / verifyuuid 放进 detail。
+ */
+export function checkStatus(res: HttpResponse, hint?: string): void {
+  if (res.status === 461 || res.status === 471) {
+    const verify = Object.fromEntries(
+      [['verify_type', 'verifytype'], ['verify_uuid', 'verifyuuid']].flatMap(([key, header]) => {
+        const v = res.headers.get(header!)
+        return v ? [[key, v]] : []
+      }),
+    )
+    throw new CatbusError('RISK_CONTROL', `小红书要求人机验证（HTTP ${res.status}）`, { hint, detail: { kind: 'captcha', status: res.status, ...verify } })
+  }
+  if (res.status === 406 || res.status === 429) {
+    throw new CatbusError('RISK_CONTROL', `小红书拒绝了请求（HTTP ${res.status}），请稍后再试`, { hint, detail: { kind: 'rate_limit', status: res.status } })
   }
 }
 

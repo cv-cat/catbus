@@ -2,7 +2,7 @@ import { CatbusError } from '../../../core/errors.js'
 import { createHash } from 'node:crypto'
 import * as rand from '../../../core/rand.js'
 import { crc32 } from 'node:zlib'
-import { loginOrder, type Pc, secHeaders, splice } from './client.js'
+import { checkStatus, loginOrder, type Pc, secHeaders, splice } from './client.js'
 import { acceptSsk, createHandshake, generateWebsectiga, pcProfileData } from './js.js'
 import { AS, EDITH, type Headers, LOGIN_LANG, navigationHeaders, orderedHeaders, PC_ORDER, PC_REFERENCE, SEM, SEC_CH_UA, UA, WEB, XHR_ACCEPT } from './profile.js'
 import { normalizeEts } from './state.js'
@@ -35,7 +35,11 @@ async function send(p: Pc, method: 'GET' | 'POST', url: string, headers: Headers
   return p.send({ method, url, headers: pairs, ...(o.body !== undefined ? { body: o.body } : {}) }, o.appendShared)
 }
 
+/** 登录接口触发风控时，退回到浏览器登录后导入 cookie。 */
+const COOKIE_HINT = '在浏览器里登录小红书后导入 cookie：catbus xhs auth login --method cookie --cookie "<Cookie>"'
+
 async function jsonOf(res: Awaited<ReturnType<Pc['send']>>): Promise<any> {
+  checkStatus(res, COOKIE_HINT)
   try {
     return JSON.parse(await res.text())
   } catch {

@@ -252,3 +252,16 @@ describe('xhs 纯算', () => {
     expect(video({ EF9: [{ url: 'https://v/other' }] })).toBe('https://v/other')
   })
 })
+
+describe('xhs 登录的风控', () => {
+  it('扫码确认后 qrcode/status 回 471（响应体仍是 success）：报 RISK_CONTROL（captcha），提示改用 cookie 登录', async () => {
+    const c = structuredClone(loadCase('xhs', 'login_qrcode'))
+    c.responses[13] = { status: 471, headers: { verifytype: '124', verifyuuid: 'u-1' }, body: { code: 0, success: true, msg: '成功', data: {} } }
+    const { error } = await replay(c, CASES.login_qrcode!)
+    expect(error).toMatchObject({
+      code: 'RISK_CONTROL',
+      hint: expect.stringContaining('--method cookie'),
+      detail: { kind: 'captcha', status: 471, verify_type: '124', verify_uuid: 'u-1' },
+    })
+  })
+})
