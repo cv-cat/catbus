@@ -22,6 +22,56 @@ export function pyStr(value: Scalar): string {
   return String(value)
 }
 
+/** 有限 double 的精确十进制：|x| = digits / 10^scale。 */
+function exactDecimal(x: number): { digits: bigint; scale: number } {
+  const view = new DataView(new ArrayBuffer(8))
+  view.setFloat64(0, Math.abs(x))
+  const bits = view.getBigUint64(0)
+  const exponent = Number((bits >> 52n) & 0x7ffn)
+  let mantissa = bits & ((1n << 52n) - 1n)
+  let e = -1074
+  if (exponent) {
+    mantissa |= 1n << 52n
+    e = exponent - 1075
+  }
+  if (e >= 0) return { digits: mantissa << BigInt(e), scale: 0 }
+  return { digits: mantissa * 5n ** BigInt(-e), scale: -e }
+}
+
+/**
+ * Python 的 `round(x, ndigits)`（float）：按 x 的精确二进制值舍入到 ndigits 位小数，恰好一半时取偶，
+ * 结果为 0 时保留符号。`Number.prototype.toFixed` 在恰好一半时进位，不能直接用。
+ */
+export function pyRound(x: number, ndigits = 0): number {
+  if (!Number.isFinite(x) || x === 0) return x
+  const { digits, scale } = exactDecimal(x)
+  if (scale <= ndigits) return x
+  const divisor = 10n ** BigInt(scale - ndigits)
+  let q = digits / divisor
+  const twice = (digits % divisor) * 2n
+  if (twice > divisor || (twice === divisor && q % 2n === 1n)) q += 1n
+  const out = Number(`${q}e-${ndigits}`)
+  return x < 0 ? -out : out
+}
+
+/**
+ * Python 的 `str(float)` / `repr(float)`：最短往返表示；整数值带 `.0`；
+ * 小于 1e-4 或不小于 1e16 时用指数形式，指数至少两位（`1e-05`）。
+ */
+export function pyFloatStr(x: number): string {
+  if (Number.isNaN(x)) return 'nan'
+  if (!Number.isFinite(x)) return x > 0 ? 'inf' : '-inf'
+  if (x === 0) return Object.is(x, -0) ? '-0.0' : '0.0'
+  const abs = Math.abs(x)
+  if (abs < 1e-4 || abs >= 1e16) {
+    const [mantissa, exp] = x.toExponential().split('e') as [string, string]
+    const sign = exp.startsWith('-') ? '-' : '+'
+    return `${mantissa}e${sign}${exp.replace(/^[+-]/, '').padStart(2, '0')}`
+  }
+  const s = String(x)
+  return s.includes('.') ? s : `${s}.0`
+}
+
 /** `urllib.parse.quote(s, safe)`，默认 safe 为 `/`。 */
 export function quote(s: string, safe = '/'): string {
   let out = ''

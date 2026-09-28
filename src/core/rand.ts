@@ -38,6 +38,25 @@ export function string(n: number, alphabet: string): string {
   return s
 }
 
+const TWOPI = 2 * Math.PI
+let gaussNext: number | null = null
+
+/**
+ * 对应 `random.gauss(mu, sigma)`：Box-Muller 一次算出两个，第二个缓存到下一次调用（Python 的 `gauss_next`）。
+ * 缓存在 {@link deterministic} 切换时清空。cos / sin / log 用的是 V8 的实现，与 C libm 可能差最后一位。
+ */
+export function gauss(mu = 0, sigma = 1): number {
+  let z = gaussNext
+  gaussNext = null
+  if (z === null) {
+    const x2pi = source() * TWOPI
+    const g2rad = Math.sqrt(-2 * Math.log(1 - source()))
+    z = Math.cos(x2pi) * g2rad
+    gaussNext = Math.sin(x2pi) * g2rad
+  }
+  return mu + z * sigma
+}
+
 /** 对应 `random.sample(population, k)`（部分 Fisher-Yates）。 */
 export function sample<T>(population: ArrayLike<T>, k: number): T[] {
   const pool = Array.from(population)
@@ -113,10 +132,12 @@ export const DEFAULT_NOW = 1790000000123
 export function deterministic(options: { seed?: number; now?: number } = {}): () => void {
   const prev = [source, clock] as const
   source = mulberry32(options.seed ?? DEFAULT_SEED)
+  gaussNext = null
   const fixed = options.now ?? DEFAULT_NOW
   clock = () => fixed
   return () => {
     ;[source, clock] = prev
+    gaussNext = null
   }
 }
 
