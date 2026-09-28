@@ -467,6 +467,11 @@ describe('jd 归一化与解析', () => {
     expect(simpleCookie('q="x\\"y"; Path=/')).toEqual([['q', 'x"y']])
   })
 
+  it('会话列表：chatSessionLog 的条目只有 time（毫秒），没有最后一条消息与未读数（2026-09-28 真机）', () => {
+    const cs = norm.conversations({ data: [{ groupId: 10000002, venderId: '1', venderName: '京东客服', appId: 'jd.waiter', time: 1790598767492 }] })
+    expect(cs[0]).toMatchObject({ id: '1', peer: { id: '1', name: '京东客服' }, last_message: null, unread: null, updated_at: '2026-09-28T20:32:47+08:00' })
+  })
+
   it('评价、优惠券、关注商品按字段名提取', () => {
     // 真实响应里问答 questionList 排在评价 commentInfoList 前面，问答条目也有 content（2026-09-28 真机）
     const cs = norm.comments(SKU, {

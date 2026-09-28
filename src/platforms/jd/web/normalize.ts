@@ -246,7 +246,7 @@ export function conversations(d: any): Conversation[] {
         peer: { id: n.id(s.venderId), name: n.str(s.venderName ?? s.shopName ?? s.name), url: s.shopId ? shopUrl(s.shopId) : null },
         unread: n.count(s.unreadCount ?? s.unread ?? s.unReadNum),
         last_message: n.str(typeof last === 'string' ? last : (last.content ?? last.body?.content)),
-        updated_at: time(s.timestamp ?? s.lastTime ?? last.timestamp ?? last.datetime),
+        updated_at: time(s.timestamp ?? s.lastTime ?? s.time ?? last.timestamp ?? last.datetime),
       },
       s,
     )
