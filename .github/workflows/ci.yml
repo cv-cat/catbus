@@ -28,9 +28,14 @@ jobs:
         with:
           path: packages/assets-jd/models
           key: jd-models-${{ hashFiles('src/platforms/jd/UPSTREAM') }}
+      - uses: actions/cache@v6
+        with:
+          path: packages/assets-ocr/models
+          key: ocr-models-${{ hashFiles('scripts/fetch-ocr-models.mjs') }}
       - run: npm ci
-      # JD 验证码求解器的测试要用 onnx 模型
+      # JD 验证码求解器、B 站极验点选识别的测试要用 onnx 模型
       - run: npm run assets:jd
+      - run: npm run assets:ocr
       - run: npm run typecheck
       - run: npm test
 
@@ -46,10 +51,15 @@ jobs:
         with:
           path: packages/assets-jd/models
           key: jd-models-${{ hashFiles('src/platforms/jd/UPSTREAM') }}
+      - uses: actions/cache@v6
+        with:
+          path: packages/assets-ocr/models
+          key: ocr-models-${{ hashFiles('scripts/fetch-ocr-models.mjs') }}
       - run: npm ci
-      # prepack：catbus-cli 先 build；assets-jd 先取回模型并校验 sha256
+      # prepack：catbus-cli 先 build；assets-jd / assets-ocr 先取回模型并校验 sha256
       - run: npm pack
       - run: npm pack -w packages/assets-jd
+      - run: npm pack -w packages/assets-ocr
       - uses: actions/upload-artifact@v7
         with:
           name: packages
@@ -89,11 +99,11 @@ jobs:
         if: ${{ !matrix.alpine }}
         shell: bash
         run: |
-          npm install -g ./cv-cat-catbus-assets-jd-*.tgz ./catbus-cli-*.tgz
+          npm install -g ./cv-cat-catbus-assets-jd-*.tgz ./cv-cat-catbus-assets-ocr-*.tgz ./catbus-cli-*.tgz
           node scripts/smoke.mjs
       # Alpine 容器里跑不了 JS action（arm64 尤其如此），直接用 docker run
       - name: install & smoke (alpine)
         if: ${{ matrix.alpine }}
         run: >-
           docker run --rm -v "$PWD:/w" -w /w node:${{ matrix.node }}-alpine
-          sh -c 'npm install -g ./cv-cat-catbus-assets-jd-*.tgz ./catbus-cli-*.tgz && node scripts/smoke.mjs'
+          sh -c 'npm install -g ./cv-cat-catbus-assets-jd-*.tgz ./cv-cat-catbus-assets-ocr-*.tgz ./catbus-cli-*.tgz && node scripts/smoke.mjs'

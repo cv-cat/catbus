@@ -84,7 +84,7 @@ describe('全局命令', () => {
 
   it('doctor 的数据结构', async () => {
     const r = await cli('doctor')
-    expect(r.env.data.map((c: any) => c.name)).toEqual(['node', 'home', 'vm', 'http', 'canvas', 'onnx', 'assets-jd'])
+    expect(r.env.data.map((c: any) => c.name)).toEqual(['node', 'home', 'vm', 'http', 'canvas', 'onnx', 'assets-jd', 'assets-ocr'])
     for (const c of r.env.data) expect(c).toEqual({ name: c.name, ok: expect.any(Boolean), message: expect.any(String) })
     expect(r.env.ok).toBe(r.env.data.every((c: any) => c.ok))
     expect(r.code).toBe(r.env.ok ? 0 : 1)

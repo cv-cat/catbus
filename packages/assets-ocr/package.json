@@ -1,0 +1,33 @@
+{
+  "name": "@cv-cat/catbus-assets-ocr",
+  "version": "0.1.0",
+  "description": "catbus 的验证码 OCR 模型：ddddocr 1.6.1 的检测模型、识别模型与字符集",
+  "author": "cv-cat",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cv-cat/catbus.git",
+    "directory": "packages/assets-ocr"
+  },
+  "homepage": "https://github.com/cv-cat/catbus/tree/master/packages/assets-ocr",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "models",
+    "LICENSE-ddddocr"
+  ],
+  "scripts": {
+    "prepack": "node ../../scripts/fetch-ocr-models.mjs"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

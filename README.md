@@ -66,6 +66,7 @@ npm ci
 npm test
 npm run gen:capabilities   # 改了注册表后重新生成 docs/capabilities.md
 npm run assets:jd          # 取回京东验证码模型（@cv-cat/catbus-assets-jd）
+npm run assets:ocr         # 取回验证码 OCR 模型（@cv-cat/catbus-assets-ocr，ddddocr）
 ```
 
 完整规范见 [AGENTS.md](AGENTS.md)。

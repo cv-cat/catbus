@@ -127,5 +127,17 @@ export async function doctor(): Promise<Check[]> {
       }
       return `${name} ${installedVersion(name)}`
     }),
+
+    await check('assets-ocr', async () => {
+      const name = '@cv-cat/catbus-assets-ocr'
+      const { models } = await import('@cv-cat/catbus-assets-ocr').catch(() => {
+        throw new Error(`没有安装 ${name}，请重新安装 catbus-cli`)
+      })
+      for (const file of Object.values(models)) {
+        const s = await stat(file).catch(() => null)
+        if (!s?.size) throw new Error(`模型文件缺失：${file}`)
+      }
+      return `${name} ${installedVersion(name)}`
+    }),
   ]
 }

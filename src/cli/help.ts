@@ -206,7 +206,7 @@ export const GLOBAL_HELP: Record<string, string> = {
   doctor: [
     '用法: catbus doctor',
     '',
-    '逐项检查运行环境：Node 版本、~/.catbus 权限、签名 vm、HTTP 库、canvas、onnx、京东模型包。',
+    '逐项检查运行环境：Node 版本、~/.catbus 权限、签名 vm、HTTP 库、canvas、onnx、京东模型包、OCR 模型包。',
     '有检查项不通过时退出码为 1，data 里仍是完整的检查结果。',
   ].join('\n'),
   auth: [

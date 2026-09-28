@@ -38,7 +38,8 @@
     "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
   },
   "workspaces": [
-    "packages/assets-jd"
+    "packages/assets-jd",
+    "packages/assets-ocr"
   ],
   "scripts": {
     "build": "node scripts/clean.mjs && tsc -p tsconfig.build.json",
@@ -47,10 +48,12 @@
     "test:e2e": "vitest run -c vitest.e2e.config.ts",
     "gen:capabilities": "npm run build && node scripts/gen-capabilities.mjs",
     "prepack": "npm run build",
-    "assets:jd": "node scripts/fetch-jd-models.mjs"
+    "assets:jd": "node scripts/fetch-jd-models.mjs",
+    "assets:ocr": "node scripts/fetch-ocr-models.mjs"
   },
   "dependencies": {
     "@cv-cat/catbus-assets-jd": "0.1.0",
+    "@cv-cat/catbus-assets-ocr": "0.1.0",
     "@napi-rs/canvas": "^1.0.9",
     "@techstark/opencv-js": "^5.0.0-release.1",
     "crypto-js": "^4.2.0",

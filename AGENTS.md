@@ -28,9 +28,9 @@
 | slogan | 上车，开往任何平台 / all aboard, every platform |
 | 命令 | `catbus` |
 | npm 主包 | `catbus-cli`（npm 上的 `catbus` 已被别的库占用） |
-| npm scope | `@cv-cat`，用于 `@cv-cat/catbus-assets-jd` 和将来的 provider 包。`@catbus` 已被占用；`@cv-cat` 由用户注册为 npm org |
+| npm scope | `@cv-cat`，用于 `@cv-cat/catbus-assets-jd`、`@cv-cat/catbus-assets-ocr` 和将来的 provider 包。`@catbus` 已被占用；`@cv-cat` 由用户注册为 npm org |
 | 仓库 | https://github.com/cv-cat/catbus ，默认分支 `master` |
-| 许可证 | MIT（主包和 assets-jd 相同） |
+| 许可证 | MIT（主包、assets-jd、assets-ocr 相同） |
 | 数据目录 | `~/.catbus/`，可用 `CATBUS_HOME` 覆盖 |
 | 环境变量前缀 | `CATBUS_` |
 | Logo | `assets/logo.svg`（图标）、`assets/logo-wordmark.svg`（横版）、`assets/banner.txt`（终端字符画）。猫头就是一个终端窗口：左眼是提示符 `>`，右眼是闪烁的光标 `_`，嘴是 `ω`，配色取自 Catppuccin Mocha |
@@ -354,7 +354,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | 命令 | 输出 |
 |---|---|
 | `catbus platforms [platform]` | 能力矩阵：平台 × 端 × resource.action 及其状态，数据来自注册表 |
-| `catbus doctor` | 逐项检查：Node 版本；原生依赖能否加载（HTTP 库、canvas、onnx）；`@cv-cat/catbus-assets-jd` 是否就位；`~/.catbus` 的权限；签名 vm 能否运行 |
+| `catbus doctor` | 逐项检查：Node 版本；原生依赖能否加载（HTTP 库、canvas、onnx）；`@cv-cat/catbus-assets-jd`、`@cv-cat/catbus-assets-ocr` 是否就位；`~/.catbus` 的权限；签名 vm 能否运行 |
 | `catbus auth list` | 所有平台、所有端下的账号 |
 | `catbus config get\|set\|unset\|list` | 读写 `config.toml`（见 5.5） |
 | `catbus version`（或 `--version`） | 版本、Node 版本、系统与架构 |
@@ -722,10 +722,12 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 |---|---|
 | `catbus-cli` | `dist/`（CLI、core、全部平台）和 `static/`（上游签名 JS 等）。bin 为 `catbus` → `dist/cli/main.js` |
 | `@cv-cat/catbus-assets-jd` | JD 验证码（JCAP）的 onnx 模型，约 81 MB。作为 `catbus-cli` 的普通依赖，精确钉版本 |
+| `@cv-cat/catbus-assets-ocr` | 验证码 OCR 模型：ddddocr 1.6.1 的检测模型 `common_det.onnx`、识别模型 `common_old.onnx` 和字符集，约 34 MB（B 站极验点选在用）。同样是精确钉版本的普通依赖 |
 
-- 拆出 assets-jd 是因为模型很少变。放在主包里的话，每次发版都要上传 81 MB。
-- assets-jd 的源码在 `packages/assets-jd/`，是 npm workspace，开发时直接链接。
+- 拆出 assets-jd / assets-ocr 是因为模型很少变。放在主包里的话，每次发版都要上传 100 多 MB。
+- 两个包的源码在 `packages/assets-jd/`、`packages/assets-ocr/`，是 npm workspace，开发时直接链接。
 - 模型文件不进 git，由 `npm run assets:jd`（`scripts/fetch-jd-models.mjs`）按 `src/platforms/jd/UPSTREAM` 的 commit 取回并校验 sha256：有 `references/JdApis` 时从本地复制，否则从 GitHub 下载。打包 assets-jd 时会自动执行。
+- OCR 模型同样不进 git，由 `npm run assets:ocr`（`scripts/fetch-ocr-models.mjs`）从 PyPI 上固定版本的 ddddocr wheel 里取出，wheel 和每个文件都校验 sha256：本机装过同版本 ddddocr（如 `.golden/<p>` 虚拟环境）时直接复制，否则下载 wheel（也可用 `CATBUS_DDDDOCR_WHEEL` 指定本地 wheel）。打包 assets-ocr 时会自动执行。ddddocr 是 MIT 许可证，包里附带它的原许可证 `LICENSE-ddddocr`。
 - catbus 自己**不做**按系统划分的运行时包。原生依赖（HTTP 库、`@napi-rs/canvas` 等）各自通过 `optionalDependencies` 带上本机的预编译包。
 - `npm i` 之后完全离线可用，npmmirror 可以完整镜像。
 - **目标系统**：
@@ -734,7 +736,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
   - linux-x64、linux-arm64，glibc 和 musl 都要支持。
 - CI 在全部目标系统上跑冒烟测试，musl 用 Alpine。**任何一个目标系统缺预编译包的依赖都不能用。**
 - 发布：推送 `v*` tag 触发 `.github/workflows/release.yml`，先跑完整 CI，再发布 CI 里测过的同一份 tarball。
-  - 顺序：先发 assets-jd（该版本还没发布时），再发 `catbus-cli`。
+  - 顺序：先发 assets-jd、assets-ocr（该版本还没发布时），再发 `catbus-cli`。
   - 需要仓库 secret `NPM_TOKEN`，对 `catbus-cli` 和 `@cv-cat` org 有发布权限；在 npm 上配好 trusted publishing 后可以改用 OIDC。
   - 仓库目前是私有的，发布不带 `--provenance`（npm 只给公开仓库生成 provenance）。仓库公开后再加回来。
 - 以后要提供 SDK 时，通过 `package.json` 的 `exports` 暴露，现在不做。
@@ -754,7 +756,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | onnx 推理 | onnxruntime-web（WASM）。太慢再换 onnxruntime-node |
 | 图像处理 | @techstark/opencv-js |
 | 图片编解码 | @napi-rs/canvas，不用 sharp |
-| 验证码 OCR | 移植 ddddocr：模型跑在 onnxruntime-web 上，可参考 ddddocr-node |
+| 验证码 OCR | 移植 ddddocr：模型跑在 onnxruntime-web 上，可参考 ddddocr-node。模型来自 ddddocr 1.6.1 的 wheel，放在 `@cv-cat/catbus-assets-ocr`（见 7.2） |
 | 签名 JS 的依赖 | jsdom（JD）、crypto-js（XHS）、@napi-rs/canvas（JD、KS） |
 | 校验 | zod |
 | 参数解析 | `node:util` 的 `parseArgs`，加上注册表。不用 CLI 框架 |
@@ -883,11 +885,12 @@ All-In-One/
 │       └── web/                    # web 端实现；app/、pc/ 等真正实现时再建
 ├── static/<p>/                     # 上游签名 JS、proto 等，原样复制
 ├── packages/assets-jd/             # @cv-cat/catbus-assets-jd
+├── packages/assets-ocr/            # @cv-cat/catbus-assets-ocr
 ├── scripts/golden/<p>/             # 调用上游 Python 生成对拍数据
 └── tests/                          # vitest；golden/<p>/ 放对拍数据
 ```
 
-`.gitignore`：`references/`、`node_modules/`、`dist/`，以及 `packages/assets-jd/` 下的模型文件。
+`.gitignore`：`references/`、`node_modules/`、`dist/`，以及 `packages/assets-jd/`、`packages/assets-ocr/` 下的模型文件。
 
 ### 7.8 provider 协议（M4）
 

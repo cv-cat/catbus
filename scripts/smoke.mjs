@@ -49,6 +49,14 @@ check('doctor', () => {
   assert(r.code === 0 && r.env?.ok, r.env?.error?.message ?? r.stdout + r.stderr)
 })
 
+check('模型包（assets-jd、assets-ocr）', () => {
+  const r = catbus('doctor')
+  for (const name of ['assets-jd', 'assets-ocr']) {
+    const c = (r.env?.data ?? []).find((x) => x.name === name)
+    assert(c?.ok, `${name}：${c?.message ?? 'doctor 没有这一项'}`)
+  }
+})
+
 check('platforms', () => {
   const r = catbus('platforms')
   assert(r.code === 0 && r.env?.data?.length === 10, r.stdout + r.stderr)

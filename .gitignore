@@ -4,6 +4,7 @@ dist/
 coverage/
 *.tgz
 packages/assets-jd/models/
+packages/assets-ocr/models/
 .claude/settings.local.json
 .golden/
 .e2e/
