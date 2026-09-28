@@ -27,7 +27,7 @@
 | 5 | 多个 | 部分归一化字段恒为空 | 上游接口不返回 | 不处理（要补需上游加接口） | 字段为 null |
 | 6 | — | 写操作、长连接、部分平台还没测 | 未验证 | 未测（进度见第 6 节） | — |
 | 7 | xhs | 测试笔记删不掉 | xhs `item delete` 上游没有（○） | 待手动删 | — |
-| 8 | kuaishou | 滑块风控（400002）不会自动过，上游会 | **catbus 漏移植** | 待 catbus 移植 | 报 `RISK_CONTROL`（captcha），带滑块页地址 |
+| 8 | kuaishou | 滑块风控（400002）不会自动过，上游会 | catbus 漏移植 | 已补，待真机验证 | 自动过一次滑块后重发原请求；没过仍报 `RISK_CONTROL`（captcha） |
 | 9 | kuaishou | 直播间的主播 id 不能当用户用 | 平台两套 id | 已兜底 | `Live.host` 的链接传给用户命令时报 `USAGE` 并说明 |
 
 ---
@@ -233,7 +233,7 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 
 **现在的处理**：报 `RISK_CONTROL`（captcha），`detail.url` 是滑块页地址。
 
-**状态**：待 catbus 移植。按 AGENTS 7.5 移植，并补对拍；图像处理用 `@napi-rs/canvas` 解码，缺口检测照上游算法重写。真机验证时要先确认上游这条链现在还能过。
+**状态**：已补（2026-09-28），整条链有对拍，缺口识别与上游 cv2 在合成图上一致。待真机验证通过率。直播站、创作者中心的请求不自动过，与上游一致。
 
 ## 4b. 快手：直播间的主播 id 不能当用户用
 
@@ -333,9 +333,9 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 
 | 平台 | 缺口 | 状态 |
 |---|---|---|
-| kuaishou | 滑块自动通过（`_pass_captcha` 整条链：webweapon 验证码引导、缺口识别、轨迹、gdfp 预检、加密提交、重发原请求） | 移植中 |
-| kuaishou | `feed list --kind recommend`：上游 `get_feed_hot` 就是推荐流，catbus 错标成上游没有 | 移植中 |
-| kuaishou | 服务端登出；发布后刷新发布状态；直播礼物全量 | 移植中 |
+| kuaishou | 滑块自动通过（`_pass_captcha` 整条链：webweapon 验证码引导、缺口识别、轨迹、gdfp 预检、加密提交、重发原请求） | 已补，待真机验证 |
+| kuaishou | `feed list --kind recommend`：上游 `get_feed_hot` 就是推荐流，catbus 错标成上游没有 | 已补（`hot` 取值去掉） |
+| kuaishou | 服务端登出；发布后刷新发布状态；直播礼物全量 | 已补，待真机验证（发布状态与礼物字典的响应结构是推断的） |
 | xhs | `keyword suggest`、`item search --time`、`user following`（只支持 me）、群聊会话与记录（id 为 `group:<群id>`）、视频发布填时长 / 宽高 / 帧率（MP4 解析抽到 `core/mp4.ts`）、创作者会话失效自动重新桥接、`live send` HTTP 报业务错误时改走长连、`msg read` 匹配会话的 bug | 已补，待真机验证（关注列表与群聊的字段名参考第三方代码，上游没有样本）。视频自动截首帧当封面不做（需要解码器，`--cover` 仍必填） |
 | bilibili | 极验点选题自动识别（短信 / 密码登录降级时用；含人工兜底页面） | 已补，待真机验证通过率。模型在新包 `@cv-cat/catbus-assets-ocr`（ddddocr 1.6.1，MIT，25.5 MB），发布顺序在 catbus-cli 之前 |
 | bilibili | `item related`、专栏搜索（`--type article`）、专栏 / 动态评论与按时间排序、楼中楼 `--root`、收藏到指定收藏夹（`--folder`）、投币同时点赞（`--like`）、投稿转载 / 动态文案 / 允许转载、专栏标签 / 摘要 / 只存草稿与 `draft get` / `delete`、弹幕样式、直播弹幕回复、按用户查直播间、直播全部事件与人气值、`user items --keyword`、推荐流翻页去重 | 已补，待真机验证（`draft/view`、`Related` 的响应结构与部分直播消息字段按文档写）。`item delete` 改 ◐：撤稿需要人机验证，验证码参数的来源上游没写，还没接上人工兜底 |
