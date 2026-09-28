@@ -340,7 +340,7 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 | bilibili | `item related`、专栏搜索（`--type article`）、专栏 / 动态评论与按时间排序、楼中楼 `--root`、收藏到指定收藏夹（`--folder`）、投币同时点赞（`--like`）、投稿转载 / 动态文案 / 允许转载、专栏标签 / 摘要 / 只存草稿与 `draft get` / `delete`、弹幕样式、直播弹幕回复、按用户查直播间、直播全部事件与人气值、`user items --keyword`、推荐流翻页去重 | 已补，待真机验证（`draft/view`、`Related` 的响应结构与部分直播消息字段按文档写）。`item delete` 改 ◐：撤稿需要人机验证，验证码参数的来源上游没写，还没接上人工兜底 |
 | douyin | 搜索筛选（排序 / 时间 / 类型等）、`item list`、发布参数（poi、话题、@、封面、合集等）、收藏夹移动、私信文件与分享卡片、`live history` / `live media`、千票榜、商品评价排序、通知分组、短信 SSO 备用链 | 移植中 |
 | tiktok | 收藏夹加内容（`folder add`）与公开 / 私密（顺带修了改名会把公开收藏夹变私密的 bug）、发布互动开关（`--allow-*`）、`item related` 与私信翻页、按房间号操作直播、`live media`、系统通知（group 661）并入 `notice list` | 已补，待真机验证。**私信翻页的游标字段位置是按字节 IM 协议推断的，上游没有解析**；`live media` 的流地址结构也是推断的 |
-| x | 同步上游新提交（长推、thread、Article 长文）、账号密码登录（castle token）、搜索媒体标签、引用推文、私信翻页与成员资料 | 移植中 |
+| x | 同步上游 3fe6ea7：长推（超 280 权重自动走 CreateNoteTweet）、`--thread`、`article publish` / `delete`；搜索媒体（`--type video\|image`）、引用（`--quote`，新的通用发布选项）、私信补对方资料 | 已补，待真机验证（长推和文章需要 Premium 账号）。**不做**：账号密码登录（依赖 Castle 反自动化令牌，登录方式只保留 cookie）；`msg list` 翻页（上游没有收件箱翻页接口，只取首页，标 ◐） |
 | jd | 403 时区分登录失效与风控、订单时间范围（`--range`）、按订单咨询客服（`--order`）、评价条数（`--limit` → commentNum）、收货地区（`--area`）、国际手机号、`msg listen` 其余消息类型 | 已补，待真机验证（撤回消息的 id 字段名是推断的；评价条数的服务端上限未知）。`item related` 保持 ◐：diviner 的 `p` 只能从浏览器抓包得到 |
 | xianyu | 主动给指定用户发私信（`--to`，可配 `--item`）、发布原价（`--original-price`）、`msg history` 同一条长连翻页并按从旧到新排列 | 已补，待真机验证。`--limit` 截在页中间时的游标取最早一条的 `createAt`（推断） |
 | taobao | `msg history` 同一条长连翻页并按从旧到新排列 | 已补，待真机验证（游标推断同闲鱼） |
