@@ -52,7 +52,14 @@ export async function resolveUser(ks: Ks, input: string): Promise<string> {
   const s = (await expand(ks, input.trim())).trim()
   if (s === 'me') return selfEid(ks)
   if (/^https?:\/\//i.test(s)) {
-    const m = /\/(?:profile|u)\/([^/?#]+)/.exec(new URL(s).pathname)
+    const url = new URL(s)
+    // 直播间链接里的是直播用的主播 id（快手号），和主页的 eid 是两套，主页接口查不到
+    if (url.hostname === 'live.kuaishou.com') {
+      throw new CatbusError('USAGE', `这是直播间链接，不是用户主页：${input}`, {
+        hint: '直播间里的主播 id 和主页 id 是两套，快手没有互查的接口；请传主页链接 https://www.kuaishou.com/profile/<id>',
+      })
+    }
+    const m = /\/(?:profile|u)\/([^/?#]+)/.exec(url.pathname)
     if (m) return decodeURIComponent(m[1]!)
     throw new CatbusError('USAGE', `无法识别的用户：${input}`, { hint: '传用户 ID（如 3x...）或主页链接 https://www.kuaishou.com/profile/<id>' })
   }

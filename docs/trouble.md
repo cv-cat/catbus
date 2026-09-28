@@ -27,6 +27,8 @@
 | 5 | 多个 | 部分归一化字段恒为空 | 上游接口不返回 | 不处理（要补需上游加接口） | 字段为 null |
 | 6 | — | 写操作、长连接、部分平台还没测 | 未验证 | 未测（进度见第 6 节） | — |
 | 7 | xhs | 测试笔记删不掉 | xhs `item delete` 上游没有（○） | 待手动删 | — |
+| 8 | kuaishou | 滑块风控（400002）不会自动过，上游会 | **catbus 漏移植** | 待 catbus 移植 | 报 `RISK_CONTROL`（captcha），带滑块页地址 |
+| 9 | kuaishou | 直播间的主播 id 不能当用户用 | 平台两套 id | 已兜底 | `Live.host` 的链接传给用户命令时报 `USAGE` 并说明 |
 
 ---
 
@@ -216,6 +218,33 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 
 ---
 
+## 4a. 快手：滑块风控没有自动通过（catbus 漏移植）
+
+**现象**：连续请求作品详情、评论等接口时，快手返回 `result: 400002`，要求过滑块（`captcha.zt.kuaishou.com`，`bizName=ANTICRAWL_COMMON`）。在线测试里命令间隔 1.5 秒时，`item get`、`item media`、`comment list` 都触发了。等 30 秒以上仍未恢复。
+
+**原因**：**上游能自动过这个滑块，catbus 移植时漏了**。上游 `KuaishouAPI._pass_captcha` 在 REST（`_post` / `_get`）和 GraphQL 三处遇到 400002 时自动过一次滑块，然后重发原请求。整条链是：
+1. 拉滑块配置、下载背景图和滑块图；
+2. 找缺口（图像处理，上游用 numpy + Pillow）；
+3. 生成拟人的滑动轨迹；
+4. gdfp manMachine 预检（人机指纹）；
+5. `$encrypt` 加密，提交 `kSecretApiVerify`。
+
+涉及 `utils/captcha.py`、`utils/captcha_fp.py`、`utils/gdfp_manmachine.py`、`utils/sign/captcha_crypto.py`（合计约 1700 行），以及 `builder/auth.py` 的 `prepare_captcha_context`。upstream-map 当初没列这部分，所以漏了。
+
+**现在的处理**：报 `RISK_CONTROL`（captcha），`detail.url` 是滑块页地址。
+
+**状态**：待 catbus 移植。按 AGENTS 7.5 移植，并补对拍；图像处理用 `@napi-rs/canvas` 解码，缺口检测照上游算法重写。真机验证时要先确认上游这条链现在还能过。
+
+## 4b. 快手：直播间的主播 id 不能当用户用
+
+**现象**：`live get` 返回的 `host` 是 `https://live.kuaishou.com/u/<id>`，把它传给 `live replays`、`user get` 等用户命令会失败（「用户不存在」「参数格式错误」）。
+
+**原因**：快手直播用的主播 id（快手号 / principalId）和主页用的 eid 是两套，主页接口查不到直播 id；直播间数据里也没有主页 eid。上游没有互查的接口。这与 AGENTS 4.8「输出对象的 url 可以直接作为下一条命令的参数」不符，但属于平台限制。
+
+**现在的处理**：用户参数传直播间链接时报 `USAGE`，说明两套 id 的区别，提示改传主页链接。
+
+**状态**：已兜底。要彻底解决，需要上游找到直播 id → eid 的接口。
+
 ## 5. 数据缺口：字段恒为空
 
 不影响命令执行，但对应字段一直是 null。都是上游接口本来就不返回，不是归一化漏取。
@@ -227,6 +256,8 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 | douyin | `item get` / `search` / 推荐流 | `title` | 抖音作品只有描述（`desc` → `text`），没有单独的标题 |
 | douyin、xhs | 各列表 | `stats.views` | 公开接口不返回播放量 |
 | xhs | `keyword hot` | `heat` | 热搜接口不给热度值 |
+| kuaishou | `notice count` | 各分类计数 | 接口只返回总数 `unReadCount` |
+| kuaishou | `user get` / `search` | `stats.*` | 资料接口不返回计数 |
 
 可以考虑给 bilibili `user get` 补一个 `relation/stat` 请求，但这是上游没有的能力，要先改上游。
 
@@ -249,7 +280,7 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 | bilibili | 扫码 ✓ | ✓ 21 条通过 | 未测 | `danmaku list` 见第 4 节 |
 | xhs | 扫码 ✗（第 2 节），cookie ✓ | ✓ 27 条通过（含创作者中心） | 发布 ✓（仅自己可见）、上传 ✓；私信未测 | 评论偶发 461，见第 3 节 |
 | douyin | 扫码 ✓ | ✓ 20 条通过 | ✗ 缺 dtrait_blob（第 1 节） | |
-| kuaishou | 扫码 | 进行中 | 未测 | |
+| kuaishou | 扫码 ✓ | ✓ 18 条通过；`item get` / `media` / `comment list` 被滑块风控时跳过（第 4a 节） | 未测 | `feed list` 默认的 recommend 上游没有；hot ✓、following ✓ |
 | xianyu | 扫码 | 未开始 | 未测 | |
 | jd | 扫码 | 未开始 | 未测 | |
 | weibo、taobao、tiktok、x | cookie | 未开始 | 未测 | 需要从浏览器复制 cookie |
@@ -278,6 +309,9 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 - douyin：
   - 通知类型取错：把请求时的分组号当成了通知类型。
   - 缺 `UIFID` 时自动请求推荐流取回再重试。上游 README 要求用户自己复制带 `UIFID` 的 cookie，实际它由推荐流的响应下发。
+- kuaishou：
+  - `item list`：`startTime: 0` 被服务端拒绝（「时间范围不能大于1年」），改为最近 365 天；翻页游标改用 `nextCursor`（原来会把最后一条重复返回、`--all` 死循环）。
+  - 作品管理的列表：图集靠 `showAtlasIcon` 判断，补上作者。
 - core：
   - `auth login` 信封的 `account` 为 null；
   - 二维码 PNG 权限改成 0600。

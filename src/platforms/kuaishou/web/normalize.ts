@@ -208,9 +208,11 @@ export function work(v: any): Item {
   return n.item(
     {
       id,
-      kind: first(v, 'atlasId') || v?.photoType === 1 ? 'image' : 'video',
+      // 作品管理的列表没有 photoType，图集靠 showAtlasIcon 判断
+      kind: first(v, 'atlasId') || v?.photoType === 1 || v?.showAtlasIcon === true ? 'image' : 'video',
       url: first(v, 'workId', 'photoId', 'photoIdStr') ? photoUrl(id) : null,
       text: n.str(first(v, 'caption', 'title')),
+      author: v?.userIdStr ? n.userRef({ id: String(v.userIdStr), name: n.str(v.userName), url: profileUrl(v.userIdStr) }) : null,
       created_at: n.time(first(v, 'publishTime', 'uploadTime', 'createTime')),
       cover: n.url(first(v, 'coverUrl', 'publishCoverUrl', 'cover')),
       stats: {

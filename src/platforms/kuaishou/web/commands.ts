@@ -337,18 +337,23 @@ export async function itemRelated(ctx: Ctx) {
 }
 
 /** 作品管理页的作品列表（创作者中心），带审核状态。 */
+/** 作品管理页的时间范围：服务端拒绝超过一年的范围（「时间范围不能大于1年」），取最近 365 天。 */
+const WORKS_RANGE_MS = 365 * 86_400_000
+const WORKS_PAGE = 20
+
 export async function itemList(ctx: Ctx) {
   return run(ctx, 'cp', async (k) => {
     const now = rand.now()
     const cursor = ctx.cursor ? Number(ctx.cursor) : now
     const r = k.check(
-      await api.videoPhotoList(k, { queryType: '0', cursor, startTime: 0, endTime: now, limit: 20, timeRangeType: 5, keyword: '' }),
+      await api.videoPhotoList(k, { queryType: '0', cursor, startTime: now - WORKS_RANGE_MS, endTime: now, limit: WORKS_PAGE, timeRangeType: 5, keyword: '' }),
       '作品管理',
     )
     const rows: Json[] = r.data?.list ?? []
     const list = rows.map(norm.work)
-    const next = r.data?.cursor ?? r.data?.pcursor ?? rows.at(-1)?.publishTime ?? rows.at(-1)?.uploadTime
-    return paged(list, next, rows.length > 0 && more(next) && r.data?.hasMore !== false)
+    // nextCursor 是本页最后一条的时间减 1 毫秒；一页不满说明没有更早的作品了
+    const next = r.data?.nextCursor
+    return paged(list, next, rows.length >= WORKS_PAGE && more(next))
   })
 }
 

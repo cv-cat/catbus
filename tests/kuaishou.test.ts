@@ -386,3 +386,17 @@ describe('kuaishou 归一化', () => {
     expect(norm.liveRoom(room)).toMatchObject({ id: ROOM, url: `https://live.kuaishou.com/u/${ROOM}`, status: 'live', host: { id: ROOM, name: '主播' }, stats: { viewers: 15000 } })
   })
 })
+
+describe('kuaishou 归一化（真实响应的结构）', () => {
+  it('作品管理的列表：showAtlasIcon 判图集，作者取 userIdStr / userName', async () => {
+    const norm = await import('../src/platforms/kuaishou/web/normalize.js')
+    const row = { workId: '3xfakework0001', title: '', userIdStr: '3xfakeuser0001', userName: '测试用户', uploadTime: 1788067637186, publishStatus: 4, showAtlasIcon: true, playCount: 1 }
+    expect(norm.work(row)).toMatchObject({
+      id: '3xfakework0001',
+      kind: 'image',
+      author: { id: '3xfakeuser0001', name: '测试用户', url: 'https://www.kuaishou.com/profile/3xfakeuser0001' },
+      text: null,
+    })
+    expect(norm.work({ ...row, showAtlasIcon: false }).kind).toBe('video')
+  })
+})
