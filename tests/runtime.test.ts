@@ -37,6 +37,8 @@ vi.mock('../src/platforms/index.js', async (importOriginal) => {
               return { data: [n * 2, n * 2 + 1], page: { cursor: String(n + 1), has_more: n < 2 } }
             }),
           },
+          // 服务端把同一个游标又返回一遍（真实平台遇到过），--all 不能死循环
+          'feed list': { upstream: 'full', handler: h(async () => ({ data: ['x'], page: { cursor: 'same', has_more: true } })) },
           'item delete': { upstream: 'full', handler: h(async (ctx) => ({ id: ctx.args.item })) },
           'item publish': { upstream: 'full', handler: h(async (ctx) => ({ text: ctx.options.text })) },
           'live listen': {
@@ -135,6 +137,12 @@ describe('分页', () => {
     const r = await cli('demo', 'item', 'search', 'kw', '-q')
     expect(r.env.data).toEqual([0, 1])
     expect(r.env.page).toEqual({ cursor: '1', has_more: true })
+  })
+
+  it('--all：游标没有变化时停止翻页，page.has_more 为 false', async () => {
+    const r = await cli('demo', 'feed', 'list', '-q', '--all')
+    expect(r.env.data).toEqual(['x', 'x'])
+    expect(r.env.page).toEqual({ cursor: 'same', has_more: false })
   })
 
   it('--limit 翻到取满 N 条；--all 翻到没有更多；--cursor 继续', async () => {

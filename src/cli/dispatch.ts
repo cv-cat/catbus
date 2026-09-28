@@ -376,6 +376,12 @@ async function runPaged(platform: Platform, ctx: HandlerContext, handler: (ctx: 
     else collected.push(...items)
     page = result.page
     if (target == null || count >= target || !page.has_more || page.cursor == null) break
+    // 服务端把同一个游标又返回一遍：再翻只会重复拿到同一页，停在这里
+    if (page.cursor === cursor) {
+      ctx.log.warn(`翻页游标没有变化（${page.cursor}），停止翻页`)
+      page = { ...page, has_more: false }
+      break
+    }
     cursor = page.cursor
     ctx.log.debug(`翻页：已取 ${count} 条`)
     await sleep(platform.pageInterval)
