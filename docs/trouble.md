@@ -1,24 +1,32 @@
 # 真机验证：未解决的问题
 
-记录 2026-09-28 真机验证中**没能跑通**的命令、原因，以及可选的解决办法。已经修好的问题只在第 8 节列一行。
+记录 2026-09-28 起真机验证中**没能跑通**的命令、原因，以及可选的解决办法。已经修好的问题只在第 8 节列一行。
+
+**分工**：标「待上游」的问题由上游仓库修复；上游修好后，catbus 按 AGENTS 7.5 的流程集成（前移 UPSTREAM、重新生成对拍数据、同步移植），再把状态改成「已集成」。catbus 这边不自行改上游的请求逻辑。
+
+状态的含义：
+- **待上游**：根因在上游（bug，或者缺少能力），catbus 等上游修复后集成；
+- **已兜底**：catbus 这边能做的已经做了（报清楚错误、给出绕行办法），根本问题仍在；
+- **不处理**：平台接口本身不提供，或者属于预期行为；
+- **未测**：还没验证。
 
 验证方式：
 - `npm run test:e2e`：只读命令的在线测试，见 AGENTS 7.5；
 - 手动执行写操作：发布一律用 `--visibility private`；点赞、收藏只对自己的作品做。
 
-已验证的平台：bilibili、xhs、douyin。其余 7 个平台还没登录，见 6.2。
+各平台的验证进度见 6.2。
 
 ## 0. 总览
 
-| # | 平台 | 问题 | 性质 | 现在 catbus 的表现 |
-|---|---|---|---|---|
-| 1 | douyin | 发布、评论、点赞、收藏需要浏览器生成的 `dtrait_blob` | 平台风控 + 上游只能手工提供 | 发布、评论：本地拦下，报 `AUTH_REQUIRED`。点赞、收藏：请求照发，被拒后**登录态被踢下线** |
-| 2 | xhs | 扫码登录，手机确认后服务端要求人机验证（HTTP 471） | 平台风控，上游同样失败 | 报 `RISK_CONTROL`（captcha），提示改用 cookie 导入 |
-| 3 | xhs | 评论接口间歇性要求人机验证（HTTP 461） | 平台风控，概率性 | 报 `RISK_CONTROL`（captcha），过几十秒到几分钟自己恢复 |
-| 4 | bilibili | `danmaku list`：短视频只拿到前 2 分钟的弹幕，超过 6 分钟的视频直接失败 | 上游 bug | ≤ 6 分钟：结果**不完整且不报错**；> 6 分钟：报 `UPSTREAM`（HTTP 404） |
-| 5 | 多个 | 部分归一化字段恒为空 | 上游接口不返回 | 字段为 null |
-| 6 | — | 写操作、长连接、7 个平台还没测 | 未验证 | — |
-| 7 | xhs | 测试笔记删不掉 | xhs `item delete` 上游没有（○） | 需要手动删 |
+| # | 平台 | 问题 | 性质 | 状态 | 现在 catbus 的表现 |
+|---|---|---|---|---|---|
+| 1 | douyin | 发布、评论、点赞、收藏需要浏览器生成的 `dtrait_blob` | 平台风控 + 上游只能手工提供 | 待上游 | 发布、评论：本地拦下，报 `AUTH_REQUIRED`。点赞、收藏：请求照发，被拒后**登录态被踢下线** |
+| 2 | xhs | 扫码登录，手机确认后服务端要求人机验证（HTTP 471） | 平台风控，上游同样失败 | 待上游；catbus 已兜底 | 报 `RISK_CONTROL`（captcha），提示改用 cookie 导入 |
+| 3 | xhs | 评论接口间歇性要求人机验证（HTTP 461） | 平台风控，概率性 | 待上游；catbus 已兜底 | 报 `RISK_CONTROL`（captcha），过几十秒到几分钟自己恢复 |
+| 4 | bilibili | `danmaku list`：短视频只拿到前 2 分钟的弹幕，超过 6 分钟的视频直接失败 | 上游 bug | 待上游 | ≤ 6 分钟：结果**不完整且不报错**；> 6 分钟：报 `UPSTREAM`（HTTP 404） |
+| 5 | 多个 | 部分归一化字段恒为空 | 上游接口不返回 | 不处理（要补需上游加接口） | 字段为 null |
+| 6 | — | 写操作、长连接、部分平台还没测 | 未验证 | 未测（进度见第 6 节） | — |
+| 7 | xhs | 测试笔记删不掉 | xhs `item delete` 上游没有（○） | 待手动删 | — |
 
 ---
 
@@ -204,7 +212,7 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
          }).with_web_location('1315873').with_wbi(auth)
 ```
 
-**待办**：推到 cv-cat/BilibiliApis（要你确认），然后按 AGENTS 7.5 同步：前移 UPSTREAM、重新生成对拍数据、改 `src/platforms/bilibili/web/api.ts` 的 `danmakuSeg`。
+**状态**：待上游。上游修好后 catbus 集成：前移 UPSTREAM、重新生成对拍数据、改 `src/platforms/bilibili/web/api.ts` 的 `danmakuSeg`。
 
 ---
 
@@ -234,14 +242,17 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 | douyin | `item like` / `unlike` / `collect` / `uncollect`（见第 1 节）、`item publish`（见第 1 节）、`comment add`、`msg send` / `listen`、`live send` / `like` / `listen`、`product get`、`item download`、`media upload` | 写操作都卡在 dtrait。`product get` 需要一个真实商品 id |
 | bilibili | 全部写操作：`item like` / `collect` / `coin` / `triple` / `publish`、`comment add`、`danmaku send`、`dynamic publish` / `delete`、`article publish`、`live send` / `start` / `stop`、`media upload`；`live listen`、`item download` | 投币、三连会真的花掉硬币 |
 
-### 6.2 还没验证的平台
+### 6.2 各平台进度
 
-| 平台 | 默认登录方式 | 状态 |
-|---|---|---|
-| kuaishou | 扫码 | 出过一次二维码，扫码超时（没扫），不是 bug |
-| xianyu | 扫码 | 未开始 |
-| jd | 扫码 | 未开始 |
-| weibo、taobao、tiktok、x | cookie | 未开始，需要从浏览器复制 cookie |
+| 平台 | 登录 | 只读命令 | 写操作 | 备注 |
+|---|---|---|---|---|
+| bilibili | 扫码 ✓ | ✓ 21 条通过 | 未测 | `danmaku list` 见第 4 节 |
+| xhs | 扫码 ✗（第 2 节），cookie ✓ | ✓ 27 条通过（含创作者中心） | 发布 ✓（仅自己可见）、上传 ✓；私信未测 | 评论偶发 461，见第 3 节 |
+| douyin | 扫码 ✓ | ✓ 20 条通过 | ✗ 缺 dtrait_blob（第 1 节） | |
+| kuaishou | 扫码 | 进行中 | 未测 | |
+| xianyu | 扫码 | 未开始 | 未测 | |
+| jd | 扫码 | 未开始 | 未测 | |
+| weibo、taobao、tiktok、x | cookie | 未开始 | 未测 | 需要从浏览器复制 cookie |
 
 ---
 
@@ -271,8 +282,16 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
   - `auth login` 信封的 `account` 为 null；
   - 二维码 PNG 权限改成 0600。
 
-## 9. 其他待办
+## 9. 待上游修复后集成
 
-- 上游：BilibiliApis 弹幕修复待推送（第 4 节）；Spider_XHS 的 471 处理（第 2 节）；DouYin_Spider 的 README 可以补上 `DY_DTRAIT_BLOB` 的说明和 `UIFID` 的新结论。
+| 上游仓库 | 内容 | 对应章节 | 集成时 catbus 要做的 |
+|---|---|---|---|
+| DouYin_Spider | `dtrait_blob` 的获取方式（抓取说明，或纯算档案）；README 补上 `DY_DTRAIT_BLOB`、`UIFID` 由推荐流下发 | 1 | 移植新的获取方式；确定是否给点赞 / 收藏 / 私信加本地拦截 |
+| Spider_XHS | 扫码后 471（verifytype 120）的验证流程 | 2 | 移植验证流程，去掉「改用 cookie」的兜底提示 |
+| Spider_XHS | 评论 461（verifytype 124）的验证码 | 3 | 同上 |
+| BilibiliApis | 弹幕分段去掉 `ps` / `pe` | 4 | 改 `danmakuSeg`，重新生成对拍数据 |
+
+## 10. 其他待办
+
 - 首发：仓库还没有 `NPM_TOKEN` secret，npm 上的 `@cv-cat` org 状态未知。
 - 本地提交还没推到 origin。
