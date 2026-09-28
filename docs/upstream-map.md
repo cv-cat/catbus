@@ -150,6 +150,9 @@
   - 它还需要 `_gt/bili-sc-sdk.js`（`bili_gaia_apis.py:67`）。这是从 CDN 下载的第三方 SDK，上游不入库，多数环境里不存在。缺它时上游只发明文上报，已实证写接口照样成功。
   - catbus 的做法：只移植明文上报这一路，不复制 `sc_encrypt_bridge.js`。
 - **验证码**：极验点选，`tools/geetest_solve.py`、`utils/geetest_hybrid.py`、`utils/geetest_metric.py`、`utils/geetest_ocr.py`，依赖 ddddocr、scipy、numpy、Pillow。
+  - catbus 的对应：`web/geetest.ts`（`utils/geetest_w.py` 的 w 加密，`geetest_solve.py` 的 fetch / auto / _post_ajax / _refresh / solve），`web/geetest-vision.ts`（geetest_ocr / geetest_metric / geetest_hybrid，匈牙利算法照抄 scipy 的 rectangular_lsap），`web/ddddocr.ts`（ddddocr 1.6.1 的检测与识别，模型在 `@cv-cat/catbus-assets-ocr`，PIL 的 LANCZOS 与转灰度重写成 TS），`web/geetest-manual.ts`（`tools/geetest_helper.py` 的 serve：自动识别失败时在终端里改为本地页面手动验证）。
+  - RSA 段（PKCS#1 v1.5）的随机填充改从 `core/rand.ts` 取，对拍时 gen.py 把上游的 `rsa_encrypt_key` 换成用框架随机字节的同一套填充。
+  - `geetest_vision.prepare()` 只是把切图落盘给人看，不影响请求，没有移植。
 
 ### kuaishou — KuaiShou-Spider
 
