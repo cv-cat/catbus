@@ -1,4 +1,4 @@
-import { mkdir, readFile, rm } from 'node:fs/promises'
+import { readFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createInterface } from 'node:readline'
 import { text as readStreamText } from 'node:stream/consumers'
@@ -69,10 +69,8 @@ export function cookieCredential(ctx: HandlerContext, defaultDomain: string): Cr
 
 /** 二维码：画到 stderr，同时把 PNG 存到 cache/<p>/qrcode.png。 */
 export async function showQrcode(ctx: HandlerContext, content: string, hint = '请用 App 扫码'): Promise<string> {
-  const dir = cacheDir(ctx.platform.id)
-  await mkdir(dir, { recursive: true, mode: 0o700 })
-  const png = join(dir, 'qrcode.png')
-  await QRCode.toFile(png, content, { margin: 2, scale: 8 })
+  const png = join(cacheDir(ctx.platform.id), 'qrcode.png')
+  await writeFileAtomic(png, await QRCode.toBuffer(content, { margin: 2, scale: 8 }))
   const art = await QRCode.toString(content, { type: 'terminal', small: true })
   process.stderr.write(art + '\n')
   ctx.log.info(`${hint}。二维码图片：${png}`)

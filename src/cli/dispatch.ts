@@ -201,7 +201,8 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
   }
 
   const identity = await resolveIdentity(platform, endpoint, command, args, g, log)
-  out.meta.account = identity.account
+  // auth login 没有当前账号时登录到 default（AGENTS 5.3），信封里写实际登录的账号
+  out.meta.account = identity.account ?? (key === 'auth login' ? 'default' : null)
 
   const needConfirm = typeof command.confirm === 'function' ? command.confirm(options) : command.confirm === true
   if (needConfirm) await confirm(`catbus ${p} ${key} ${argWords.join(' ')}`.trim(), g.yes ?? false)

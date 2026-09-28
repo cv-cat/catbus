@@ -250,6 +250,8 @@ describe('x 命令流程：cookie 登录', () => {
     expectRequests(login.requests, c.requests)
     const r = login.result as CliResult
     expect(r.code).toBe(0)
+    // 没有当前账号时登录到 default，信封的 account 也是它
+    expect(r.env.account).toBe('default')
     expect(r.env.data).toMatchObject({
       platform: 'x',
       endpoint: 'web',

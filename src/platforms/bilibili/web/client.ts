@@ -201,6 +201,21 @@ export class Bili {
     return parseJson<BiliJson<T>>(res)
   }
 
+  /** 请求二进制内容（弹幕 protobuf 等）：HTTP 状态不是 200、或者返回的是 JSON 错误时报错，不把错误页当数据解。 */
+  async bytes(req: HttpRequest): Promise<Uint8Array> {
+    const res = await this.request(req)
+    if (res.status === 412 || res.status === 429) {
+      throw new CatbusError('RISK_CONTROL', `B 站拒绝了请求（HTTP ${res.status}），请稍后再试`, { detail: { kind: 'rate_limit', status: res.status } })
+    }
+    if (res.status !== 200) throw new CatbusError('UPSTREAM', `B 站返回 HTTP ${res.status}`, { detail: { status: res.status } })
+    if ((res.headers.get('content-type') ?? '').includes('json')) {
+      const body = await parseJson<BiliJson>(res)
+      check(this.ctx, body)
+      throw new CatbusError('UPSTREAM', 'B 站返回了 JSON，不是二进制数据', { detail: { code: body?.code } })
+    }
+    return new Uint8Array(await res.arrayBuffer())
+  }
+
   /** 请求并检查业务码，返回 data。raw 为 true 时返回整个 JSON。 */
   async call<T = any>(req: HttpRequest, options: { raw?: boolean } = {}): Promise<T> {
     const body = await this.json<T>(req)

@@ -107,8 +107,7 @@ export async function danmakuSeg(b: Bili, aid: string | number, cid: string | nu
     ],
     '1315873',
   )
-  const res = await b.request({ url: `${API}/x/v2/dm/wbi/web/seg.so`, headers: h.get(), query: await b.wbi(params) })
-  return new Uint8Array(await res.arrayBuffer())
+  return b.bytes({ url: `${API}/x/v2/dm/wbi/web/seg.so`, headers: h.get(), query: await b.wbi(params) })
 }
 
 export async function replies(b: Bili, oid: string | number, type = 1, page = 1, mode = 3) {
