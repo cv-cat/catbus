@@ -18,7 +18,6 @@ export const SEM = 'https://pages.xiaohongshu.com'
 export const CREATOR = 'https://creator.xiaohongshu.com'
 export const CUSTOMER = 'https://customer.xiaohongshu.com'
 export const ROS_UPLOAD = 'https://ros-upload.xiaohongshu.com'
-export const PGY = 'https://pgy.xiaohongshu.com'
 export const PUSH_URL = 'wss://apppush-rws.xiaohongshu.com/rwp'
 export const COOKIE_DOMAIN = '.xiaohongshu.com'
 

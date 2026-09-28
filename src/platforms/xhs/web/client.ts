@@ -207,7 +207,7 @@ export interface XhsJson<T = any> {
 const DSL_TTL = 300_000
 const GETDSS = /function\s+getdss\s*\(\s*\)\s*\{\s*return\s+'(\d+)'/
 
-/** 发请求并按上游规则合并响应 cookie 的基类（PC、Creator、蒲公英共用）。 */
+/** 发请求并按上游规则合并响应 cookie 的基类（PC、Creator 共用）。 */
 export class Session {
   readonly http: HttpClient
   readonly jar: CookieJar

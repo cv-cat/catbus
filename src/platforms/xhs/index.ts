@@ -12,18 +12,6 @@ const h =
 
 const impl = (upstream: Upstream, name: keyof Commands, extra: Partial<CommandDecl> = {}): CommandDecl => ({ upstream, handler: h(name), ...extra })
 
-const kol = { name: 'kol', summary: '达人：ID 或主页 URL' }
-const distributor = { name: 'distributor', summary: '分销达人 ID' }
-const biz = (summary: string, args: CommandDecl['args'], output: string, name: keyof Commands, extra: Partial<CommandDecl> = {}): CommandDecl => ({
-  upstream: 'full',
-  summary,
-  args,
-  output,
-  auth: 'required',
-  handler: h(name),
-  ...extra,
-})
-
 export default definePlatform({
   id: 'xhs',
   name: '小红书',
@@ -117,29 +105,6 @@ export default definePlatform({
         'history list': 'none',
         'topic search': impl('full', 'topicSearch'),
         'poi search': impl('full', 'poiSearch'),
-
-        // 蒲公英达人（AGENTS 4.7）
-        'kol categories': biz('蒲公英达人分类', [], 'Category[]', 'kolCategories'),
-        'kol list': biz('蒲公英达人列表', [], 'Kol[]', 'kolList', { paged: true, options: { category: CATEGORY } }),
-        'kol get': biz('达人详情', [kol], 'Kol', 'kolGet'),
-        'kol fans': biz('达人粉丝数据', [kol], 'Kol', 'kolFans'),
-        'kol items': biz('达人笔记数据', [kol], 'Kol', 'kolItems'),
-        'kol invite': biz('邀约达人合作', [kol], '{id}', 'kolInvite', {
-          options: {
-            productName: z.string().describe('合作的产品名'),
-            start: z.string().describe('期望发布的开始日期，例如 2026-10-01'),
-            end: z.string().describe('期望发布的结束日期'),
-            text: z.string().describe('邀约内容，@file 表示从文件读取'),
-            contact: z.string().describe('联系方式'),
-          },
-        }),
-
-        // 千帆分销达人（AGENTS 4.7）
-        'distributor categories': biz('分销达人分类', [], 'Category[]', 'distributorCategories'),
-        'distributor list': biz('分销达人列表', [], 'Distributor[]', 'distributorList', { paged: true, options: { category: CATEGORY } }),
-        'distributor get': biz('分销达人详情，合并合作信息和店铺', [distributor], 'Distributor', 'distributorGet'),
-        'distributor items': biz('分销达人带货的商品', [distributor], 'Distributor', 'distributorItems'),
-        'distributor fans': biz('分销达人粉丝数据', [distributor], 'Distributor', 'distributorFans'),
       },
     },
     app: 'planned',

@@ -6,9 +6,7 @@ import { CreatorLogin } from '../src/platforms/xhs/web/creator-api.js'
 import { Pc, resetXraySeq } from '../src/platforms/xhs/web/client.js'
 import * as login from '../src/platforms/xhs/web/login.js'
 import * as norm from '../src/platforms/xhs/web/normalize.js'
-import { Pgy } from '../src/platforms/xhs/web/pgy.js'
 import { EDITH } from '../src/platforms/xhs/web/profile.js'
-import { fakeResponse, mockSender } from '../src/core/http.js'
 import { deterministic } from '../src/core/rand.js'
 import { RAW } from '../src/core/schemas.js'
 import * as push from '../src/platforms/xhs/web/push.js'
@@ -30,7 +28,6 @@ const CREATOR_COOKIES =
   'customerClientId=fake-client; access-token-creator.xiaohongshu.com=fake-creator-token; ' +
   'galaxy_creator_session_id=fake-galaxy; galaxy.creator.beaker.session.id=fake-beaker; web_session=fake-web-session; ' +
   `webBuild=1.26.0; xsecappid=ugc; websectiga=${TIGA0}; sec_poison_id=00000000-0000-0000-0000-000000000000; loadts=1789999990123`
-const PGY_COOKIES = `a1=${A1}; webId=0123456789abcdef0123456789abcdef; gid=fake-gid-value; web_session=fake-web-session; access-token-pgy.xiaohongshu.com=fake-pgy-token`
 const NOTE_ID = '6a3b5a0b000000002103ee67'
 const ROOM = '570443028306756154'
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAIAAAASFvFNAAAAEElEQVR4nGP4z8AAQQxwFgBB0gX7h/C5SAAAAABJRU5ErkJggg==', 'base64')
@@ -52,10 +49,6 @@ const pc = <T>(fn: (p: Pc) => Promise<T>) => async () => {
 const creator = <T>(fn: (c: Creator) => Promise<T>) => async () => {
   resetXraySeq(XRAY_SEQ)
   return fn(new Creator(ctxWith(CREATOR_COOKIES, 'creator')))
-}
-const pgy = <T>(fn: (p: Pgy) => Promise<T>) => async () => {
-  resetXraySeq(XRAY_SEQ)
-  return fn(new Pgy(ctxWith(PGY_COOKIES)))
 }
 
 async function anonymous(): Promise<Pc> {
@@ -151,21 +144,6 @@ const CASES: Record<string, () => Promise<unknown>> = {
     return l.userInfo()
   },
 
-  pgy_categories: pgy((p) => p.tagTree()),
-  pgy_kols: pgy((p) => p.kols(2, ['美妆'])),
-  pgy_detail: pgy((p) => p.kolSummary('kol1')),
-  pgy_fans: pgy((p) => p.kolFans('kol1')),
-  pgy_fans_history: pgy((p) => p.kolFansHistory('kol1')),
-  pgy_notes: pgy((p) => p.kolNotes('kol1')),
-  pgy_invite: pgy((p) => p.invite('kol1', { productName: '产品', start: '2026-10-01', end: '2026-10-31', content: '合作', contact: '微信 fake' })),
-  qf_categories: pgy((p) => p.qfTags()),
-  qf_list: pgy((p) => p.qfList(2, ['美妆'], ['彩妆'])),
-  qf_list_all: pgy((p) => p.qfList(1, null, [])),
-  qf_detail: pgy((p) => p.qfOverview('d1')),
-  qf_cooperation: pgy((p) => p.qfCooperation('d1')),
-  qf_shop: pgy((p) => p.qfShop('d1')),
-  qf_items: pgy((p) => p.qfItems('d1')),
-  qf_fans: pgy((p) => p.qfFans('d1')),
 }
 
 describe('xhs 对拍：请求构造与签名', () => {
@@ -264,19 +242,6 @@ describe('xhs 登录的风控', () => {
       hint: expect.stringContaining('--method cookie'),
       detail: { kind: 'captcha', status: 471, verify_type: '124', verify_uuid: 'u-1' },
     })
-  })
-})
-
-describe('xhs 蒲公英 / 千帆的权限', () => {
-  it('HTTP 401 与业务码"无登录信息"都报 AUTH_REQUIRED（主站登录没问题，缺的是子站权限），不报 AUTH_EXPIRED', async () => {
-    const restore = mockSender(() => fakeResponse('', { status: 401 }))
-    try {
-      const p = new Pgy(ctxWith(PC_COOKIES))
-      await expect(p.selfInfo()).rejects.toMatchObject({ code: 'AUTH_REQUIRED', hint: expect.stringContaining('蒲公英') })
-      expect(() => p.check({ success: false, code: -1, msg: '无登录信息' } as any)).toThrow(expect.objectContaining({ code: 'AUTH_REQUIRED' }))
-    } finally {
-      restore()
-    }
   })
 })
 

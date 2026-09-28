@@ -55,10 +55,7 @@ describe('注册表', () => {
   it('扩展命令与 AGENTS 4.7 一致', () => {
     const ext = Object.fromEntries(PLATFORMS.map((p) => [p.id, [...web(p).commands.values()].filter((c) => c.extension).map((c) => c.key).sort()]))
     expect(ext).toEqual({
-      xhs: [
-        'distributor categories', 'distributor fans', 'distributor get', 'distributor items', 'distributor list',
-        'kol categories', 'kol fans', 'kol get', 'kol invite', 'kol items', 'kol list',
-      ],
+      xhs: [],
       douyin: [],
       tiktok: [],
       bilibili: [

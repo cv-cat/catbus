@@ -17,7 +17,6 @@ import * as capi from './creator-api.js'
 import { CreatorLogin } from './creator-api.js'
 import * as login from './login.js'
 import * as norm from './normalize.js'
-import { Pgy } from './pgy.js'
 import { COOKIE_DOMAIN, CREATOR, WEB } from './profile.js'
 import * as push from './push.js'
 import { resolveNote, resolveRoom, resolveUser } from './resolve.js'
@@ -68,12 +67,6 @@ async function creator<T>(ctx: Ctx, fn: (c: Creator) => Promise<T>): Promise<T> 
   } finally {
     c.save()
   }
-}
-
-async function pgy<T>(ctx: Ctx, fn: (p: Pgy) => Promise<T>): Promise<T> {
-  const p = new Pgy(ctx)
-  p.requireLogin()
-  return fn(p)
 }
 
 const cursorPage = (ctx: Ctx) => Number(ctx.cursor ?? 1) || 1
@@ -896,125 +889,6 @@ export async function msgDelete(ctx: Ctx) {
   return run(ctx, async (p) => {
     p.check(await api.deleteMessage(p, [['chat_user_id', ctx.args.conversation!]]))
     return { id: ctx.args.conversation! }
-  })
-}
-
-// ================================================================ 蒲公英（kol，AGENTS 4.7）
-
-const kolId = (input: string) => /\/user\/profile\/([0-9a-f]{24})/i.exec(input)?.[1] ?? /\/blogger-detail\/([0-9a-f]{24})/i.exec(input)?.[1] ?? input.trim()
-
-export async function kolCategories(ctx: Ctx): Promise<Category[]> {
-  return pgy(ctx, async (p) => {
-    const d = p.check(await p.tagTree())
-    return (Array.isArray(d) ? d : []).flatMap((x: any) => [
-      n.category({ id: String(x.taxonomy1Tag), name: String(x.taxonomy1Tag) }, x),
-      ...(x.taxonomy2Tags ?? []).map((t: string) => n.category({ id: String(t), name: String(t), parent_id: String(x.taxonomy1Tag) }, t)),
-    ])
-  })
-}
-
-export async function kolList(ctx: Ctx) {
-  return pgy(ctx, async (p) => {
-    const page = cursorPage(ctx)
-    const category = ctx.options.category as string | undefined
-    const d = p.check(await p.kols(page, category ? category.split(',') : null))
-    const list = (d?.kols ?? []).map((x: any) => norm.kol(x))
-    return paged(list, page + 1, page * 20 < Number(d?.total ?? 0))
-  })
-}
-
-export async function kolGet(ctx: Ctx) {
-  return pgy(ctx, async (p) => {
-    const id = kolId(ctx.args.kol!)
-    const d = p.check(await p.kolSummary(id))
-    return norm.kol({ userId: id, ...d }, d)
-  })
-}
-
-export async function kolFans(ctx: Ctx) {
-  return pgy(ctx, async (p) => {
-    const id = kolId(ctx.args.kol!)
-    const summary = p.check(await p.kolFans(id))
-    const history = p.check(await p.kolFansHistory(id))
-    return norm.kol({ userId: id, ...summary }, { summary, history })
-  })
-}
-
-export async function kolItems(ctx: Ctx) {
-  return pgy(ctx, async (p) => {
-    const id = kolId(ctx.args.kol!)
-    const d = p.check(await p.kolNotes(id))
-    return norm.kol({ userId: id }, d)
-  })
-}
-
-export async function kolInvite(ctx: Ctx) {
-  return pgy(ctx, async (p) => {
-    const o = ctx.options as Record<string, any>
-    const id = kolId(ctx.args.kol!)
-    p.check(await p.invite(id, { productName: o.productName, start: o.start, end: o.end, content: o.text, contact: o.contact }))
-    return { id }
-  })
-}
-
-// ================================================================ 千帆（distributor，AGENTS 4.7）
-
-export async function distributorCategories(ctx: Ctx): Promise<Category[]> {
-  return pgy(ctx, async (p) => {
-    const d = p.check(await p.qfTags())
-    return (d?.distributor_tag_map?.distribution_category ?? []).flatMap((x: any) => [
-      n.category({ id: String(x.first_category), name: String(x.first_category) }, x),
-      ...(x.second_category ?? []).map((s: string) => n.category({ id: `${x.first_category}/${s}`, name: s, parent_id: String(x.first_category) }, s)),
-    ])
-  })
-}
-
-/** --category：逗号分隔的分类 id（`一级` 或 `一级/二级`，取自 distributor categories）。 */
-export async function distributorList(ctx: Ctx) {
-  return pgy(ctx, async (p) => {
-    const page = cursorPage(ctx)
-    const category = ctx.options.category as string | undefined
-    let first: string[] | null = null
-    const second: string[] = []
-    if (category) {
-      const tags = p.check(await p.qfTags())?.distributor_tag_map?.distribution_category ?? []
-      first = []
-      for (const c of category.split(',')) {
-        const [a, b] = c.split('/')
-        if (!first.includes(a!)) first.push(a!)
-        if (b) second.push(b)
-        else second.push(...(tags.find((t: any) => t.first_category === a)?.second_category ?? []))
-      }
-    }
-    const d = p.check(await p.qfList(page, first, second))
-    const list = (d?.list ?? []).map((x: any) => norm.distributor(x))
-    return paged(list, page + 1, page * 20 < Number(d?.total ?? 0))
-  })
-}
-
-export async function distributorGet(ctx: Ctx) {
-  return pgy(ctx, async (p) => {
-    const id = ctx.args.distributor!.trim()
-    const overview = p.check(await p.qfOverview(id))
-    const cooperation = p.check(await p.qfCooperation(id))
-    const shops = p.check(await p.qfShop(id))
-    return norm.distributor({ distributor_id: id, ...overview }, { overview, cooperation, shops })
-  })
-}
-
-export async function distributorItems(ctx: Ctx) {
-  return pgy(ctx, async (p) => {
-    const id = ctx.args.distributor!.trim()
-    const d = p.check(await p.qfItems(id))
-    return norm.distributor({ distributor_id: id }, d)
-  })
-}
-
-export async function distributorFans(ctx: Ctx) {
-  return pgy(ctx, async (p) => {
-    const id = ctx.args.distributor!.trim()
-    const d = p.check(await p.qfFans(id))
-    return norm.distributor({ distributor_id: id }, d)
   })
 }
 

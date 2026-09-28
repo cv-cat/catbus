@@ -182,6 +182,5 @@
 
 | 平台 | 命令 |
 |---|---|
-| xhs | `kol categories` ✓ · `kol list` ✓ · `kol get` ✓ · `kol fans` ✓ · `kol items` ✓ · `kol invite` ✓ · `distributor categories` ✓ · `distributor list` ✓ · `distributor get` ✓ · `distributor items` ✓ · `distributor fans` ✓ |
 | bilibili | `item coin` ✓ · `item triple` ✓ · `item subtitles` ✓ · `danmaku list` ✓ · `danmaku send` ✓ · `dynamic publish` ✓ · `dynamic delete` ✓ · `article publish` ✓ |
 | jd | `order list` ✓ · `cart count` ✓ · `coupon list` ✓ |

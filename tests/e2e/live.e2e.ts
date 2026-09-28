@@ -39,8 +39,6 @@ interface Pool {
   conversations: Obj[]
   folders: Obj[]
   series: Obj[]
-  kols: Obj[]
-  distributors: Obj[]
 }
 
 const ref = (o: Obj): string => o.url ?? o.id
@@ -79,12 +77,6 @@ function argValue(p: string, cmd: Command, name: string, pool: Pool, commentItem
       return first(pool.folders, (x) => x.count > 0)?.id
     case 'series':
       return first(pool.series, (x) => x.count > 0)?.id
-    case 'kol': {
-      const o = pool.kols[0]
-      return o && ref(o)
-    }
-    case 'distributor':
-      return pool.distributors[0]?.id
   }
   return undefined
 }
@@ -104,15 +96,8 @@ function buildArgv(p: string, cmd: Command, pool: Pool): string[] | { missing: s
   return argv
 }
 
-/**
- * 最后跑的子站命令。小红书的蒲公英 / 千帆用另一套指纹请求同一个会话，没开通的账号被拒之后，
- * 主站的评论接口会在一段时间内要求人机验证（461），所以放到主站命令之后。
- */
-const LAST = new Set(['xhs kol', 'xhs distributor'])
-
-/** 执行顺序：auth status → 不依赖别的对象的命令 → 依赖 item / 用户 / 直播间等的命令 → 依赖评论的命令 → 子站命令。 */
-function phase(p: string, cmd: Command): number {
-  if (LAST.has(`${p} ${cmd.resource}`)) return 4
+/** 执行顺序：auth status → 不依赖别的对象的命令 → 依赖 item / 用户 / 直播间等的命令 → 依赖评论的命令。 */
+function phase(cmd: Command): number {
   if (cmd.key === 'auth status') return 0
   const names = cmd.args.filter((a) => !a.optional).map((a) => a.name)
   if (names.includes('comment')) return 3
@@ -148,12 +133,6 @@ function harvest(pool: Pool, cmd: Command, argv: string[], data: unknown): void 
         break
       case 'Series':
         pool.series.push(o)
-        break
-      case 'Kol':
-        pool.kols.push(o)
-        break
-      case 'Distributor':
-        pool.distributors.push(o)
         break
     }
   }
@@ -200,12 +179,12 @@ for (const platform of PLATFORMS) {
   const commands = sortCommands(web.commands.values())
     .filter((c) => c.status === 'implemented' && !c.stream && !SKIP.has(c.key) && READ_ACTIONS.has(c.action))
     .map((c, i) => ({ c, i }))
-    .sort((a, b) => phase(p, a.c) - phase(p, b.c) || a.i - b.i)
+    .sort((a, b) => phase(a.c) - phase(b.c) || a.i - b.i)
     .map((x) => x.c)
 
   describe(p, () => {
     const pool: Pool = {
-      items: [], products: [], users: [], lives: [], comments: [], conversations: [], folders: [], series: [], kols: [], distributors: [],
+      items: [], products: [], users: [], lives: [], comments: [], conversations: [], folders: [], series: [],
     }
     const entries: Entry[] = []
     reports.set(p, entries)
@@ -239,7 +218,7 @@ for (const platform of PLATFORMS) {
             ctx.skip(`没有登录 ${p}`)
           }
         }
-        // 主站登录已由 auth status 确认；这里的 AUTH_REQUIRED 是子站点（--scope、蒲公英 / 千帆）没登录或没开通，跳过
+        // 主站登录已由 auth status 确认；这里的 AUTH_REQUIRED 是子站点（--scope）没登录，跳过
         if (env.error?.code === 'AUTH_REQUIRED') ctx.skip(env.error.message)
 
         expect(env.ok, `${JSON.stringify(env.error)}`).toBe(true)

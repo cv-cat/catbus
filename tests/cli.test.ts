@@ -125,8 +125,8 @@ describe('命令判定', () => {
   })
 
   it('端为 planned 时，该平台的扩展命令也报 NOT_IMPLEMENTED，别的平台的扩展报 UNSUPPORTED', async () => {
-    expect((await cli('xhs', 'kol', 'list', '-e', 'pc')).code).toBe(4)
-    expect((await cli('bilibili', 'kol', 'list', '-e', 'pc')).code).toBe(2)
+    expect((await cli('jd', 'order', 'list', '-e', 'pc')).code).toBe(4)
+    expect((await cli('bilibili', 'order', 'list', '-e', 'pc')).code).toBe(2)
   })
 
   it('○ 的命令报 NOT_IMPLEMENTED，detail 带 upstream', async () => {

@@ -21,7 +21,7 @@ const Media = z.strictObject({
   duration: nnum,
 })
 
-const userFields = {
+const User = z.strictObject({
   id: str,
   name: nstr,
   handle: nstr,
@@ -29,8 +29,7 @@ const userFields = {
   url: nstr,
   bio: nstr,
   stats: z.strictObject({ followers: nint, following: nint, items: nint, likes: nint }),
-}
-const User = z.strictObject(userFields)
+})
 
 const Item = z.strictObject({
   id: str,
@@ -129,20 +128,10 @@ const Coupon = z.strictObject({
   start_at: ntime,
   end_at: ntime,
 })
-const Kol = z.strictObject({
-  ...userFields,
-  gender: nstr,
-  location: nstr,
-  tags: z.array(str),
-  price: z.strictObject({ picture: nnum, video: nnum }),
-  data: z.unknown(),
-})
-const Distributor = z.strictObject({ ...userFields, tags: z.array(str), categories: z.array(str), data: z.unknown() })
 
 export const SHAPES: Record<string, z.ZodType> = {
   User, Item, Comment, Folder, Series: Folder, Category, Keyword, Topic, Poi, Live, Event, Gift, Rank,
-  Conversation, Message, Notice, NoticeCount, Media, AuthStatus, Account, Subtitle, Danmaku, Order, Coupon, Kol,
-  Distributor,
+  Conversation, Message, Notice, NoticeCount, Media, AuthStatus, Account, Subtitle, Danmaku, Order, Coupon,
 }
 
 /** 按注册表的 output（如 `Item[]`、`{count}`）取校验器；内联结构只校验是对象。 */

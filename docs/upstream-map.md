@@ -87,8 +87,7 @@
   - `apis/xhs_pc_apis.py` 的 `XHS_Apis`：`get_note_info(url)`、`get_user_info`、`get_user_me`、`get_user_all_notes`、`get_user_all_like_note_info`、`get_user_all_collect_note_info`、`search_note`、`search_some_note`、`search_user`、`get_note_all_comment`、`get_homefeed_recommend`、`get_unread_message`、`get_all_metions`、`get_note_no_water_video/img`
   - `apis/xhs_creator_apis.py` 的 `XHS_Creator_Apis`：`post_note`、`upload_media`、`get_all_posted_notes`
   - 直播：`apis/xhs_live.py`
-  - 蒲公英（→ 扩展 `kol`）：`apis/xhs_pugongying_apis.py`，`get_all_categories`、`get_user_by_page(contentTag)`、`get_user_detail`、`get_user_fans_detail`、`get_user_fans_history`、`get_user_notes_detail`、`get_self_info`、`send_invite`
-  - 千帆（→ 扩展 `distributor`）：`apis/xhs_qianfan_apis.py`，`get_all_categories`、`get_user_by_page`、`get_user_detail`、`get_user_cooperation`、`get_user_shop`、`get_user_item`、`get_user_fans`
+  - 蒲公英 `apis/xhs_pugongying_apis.py`、千帆 `apis/xhs_qianfan_apis.py`：不移植（AGENTS 4.12）
 - **JS 资产**（npm 依赖 `crypto-js`）
   - `xhs_utils/xhs_core/js/`：`sign.js`、`xs_common.js`、`b1.js`、`mns.js`、`websectiga_cli.js`、`websectiga_env.js`，以及 mns keystream 的 JSON
   - `xhs_utils/xhs_pc/js/`：`sign.js`、`xs_common.js`、`b1.js`、`mns.js`、`rap.js`、`rap_cli.js`、`rap_crypto.js`、`web_ssk.js`、`aes_encrypt.js`、`aes_decrypt.js`、`deflate.js`、`profile.js`，以及模板 / profile 的 JSON

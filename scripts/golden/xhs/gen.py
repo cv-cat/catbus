@@ -51,8 +51,6 @@ from apis.xhs_pc_login_apis import XHSLoginApi  # noqa: E402
 from apis.xhs_creator_apis import XHS_Creator_Apis  # noqa: E402
 from apis.xhs_creator_login_apis import XHSCreatorLoginApi  # noqa: E402
 from apis.xhs_live import XHSLiveAPI  # noqa: E402
-from apis.xhs_pugongying_apis import PuGongYingAPI  # noqa: E402
-from apis.xhs_qianfan_apis import QianFanAPI  # noqa: E402
 
 XRAY_SEQ = 1000
 ROOT = g.ROOT
@@ -75,10 +73,6 @@ CREATOR_COOKIES = (
     'webBuild=1.26.0; xsecappid=ugc; websectiga=0000000000000000000000000000000000000000000000000000000000000000; '
     'sec_poison_id=00000000-0000-0000-0000-000000000000; loadts=1789999990123'
 )
-PGY_COOKIES = {
-    'a1': A1, 'webId': '0123456789abcdef0123456789abcdef', 'gid': 'fake-gid-value',
-    'web_session': 'fake-web-session', 'access-token-pgy.xiaohongshu.com': 'fake-pgy-token',
-}
 
 NOTE_ID = '6a3b5a0b000000002103ee67'
 NOTE_URL = f'https://www.xiaohongshu.com/explore/{NOTE_ID}?xsec_token=FAKEtoken=&xsec_source=pc_feed'
@@ -192,16 +186,6 @@ def respond(req):
         return ok({'session': 'fake-login-session', 'user_id': USER_ID})
     if '/api/sns/web/v1/login/qrcode/status' in url:
         return ok({'code_status': 2, 'login_info': {'session': 'fake-login-session', 'user_id': USER_ID}})
-    if '/api/solar/user/info' in url:
-        return ok({'userId': 'brand-user-1', 'nickName': '品牌'})
-    if '/api/solar/cooperator/blogger/track' in url:
-        return ok({'trackId': 'kolMatch_fake'})
-    if '/api/solar/cooperator/blogger/v2' in url:
-        return ok({'total': 1, 'kols': [{'userId': 'kol1', 'name': '达人'}]})
-    if '/api/draco/distributor-square/distributors-tags' in url:
-        return ok({'distributor_tag_map': {'distribution_category': [{'first_category': '美妆', 'second_category': ['护肤', '彩妆']}]}})
-    if '/api/draco/distributor-square/distributors' in url:
-        return ok({'total': 1, 'list': [{'distributor_id': 'd1'}]})
     if '/api/media/v1/upload/creator/permit' in url:
         return ok({'uploadTempPermits': [{'fileIds': ['spectrum/fake-file-id'], 'token': 'fake-cos-token', 'expireTime': 1790003600123, 'uploadAddr': 'ros-upload.xiaohongshu.com'}]}, )
     if url.startswith('https://ros-upload.xiaohongshu.com/spectrum/'):
@@ -372,23 +356,6 @@ def main():
 
     c('creator_login', creator_login)
 
-    # ---------------------------------------------------------------- 蒲公英 / 千帆
-    c('pgy_categories', lambda: PuGongYingAPI().get_all_categories(PGY_COOKIES))
-    c('pgy_kols', lambda: PuGongYingAPI().get_user_by_page(2, PGY_COOKIES, ['美妆']))
-    c('pgy_detail', lambda: PuGongYingAPI().get_user_detail('kol1', PGY_COOKIES))
-    c('pgy_fans', lambda: PuGongYingAPI().get_user_fans_detail('kol1', PGY_COOKIES))
-    c('pgy_fans_history', lambda: PuGongYingAPI().get_user_fans_history('kol1', PGY_COOKIES))
-    c('pgy_notes', lambda: PuGongYingAPI().get_user_notes_detail('kol1', PGY_COOKIES))
-    c('pgy_invite', lambda: PuGongYingAPI().send_invite('kol1', PGY_COOKIES, '产品', ['2026-10-01', '2026-10-31'], '合作', '微信 fake'))
-    c('qf_categories', lambda: QianFanAPI().get_all_categories(PGY_COOKIES))
-    c('qf_list', lambda: QianFanAPI().get_user_by_page('0(1)', QF_TAGS, 2, PGY_COOKIES))
-    c('qf_list_all', lambda: QianFanAPI().get_user_by_page('-1', [], 1, PGY_COOKIES))
-    c('qf_detail', lambda: QianFanAPI().get_user_detail('d1', PGY_COOKIES))
-    c('qf_cooperation', lambda: QianFanAPI().get_user_cooperation('d1', PGY_COOKIES))
-    c('qf_shop', lambda: QianFanAPI().get_user_shop('d1', PGY_COOKIES))
-    c('qf_items', lambda: QianFanAPI().get_user_item('d1', PGY_COOKIES))
-    c('qf_fans', lambda: QianFanAPI().get_user_fans('d1', PGY_COOKIES))
-
     # ---------------------------------------------------------------- RWP 长连的帧与 IM protobuf（纯算）
     def rwp_frames():
         auth = pc_auth()
@@ -432,7 +399,6 @@ NO_WATER_URLS = [
     'https://sns-img-hw.xhscdn.com/a/b/c.jpg?imageView2',
     'https://sns-webpic-qc.xhscdn.com/202609/abc/1040g008xyz!nd_dft',
 ]
-QF_TAGS = [{'first_category': '美妆', 'second_category': ['护肤', '彩妆']}]
 # 3x2 PNG（上游 get_file_info 用 opencv 解出宽高）
 PNG = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAIAAAASFvFNAAAAEElEQVR4nGP4z8AAQQxwFgBB0gX7h/C5SAAAAABJRU5ErkJggg==')
 

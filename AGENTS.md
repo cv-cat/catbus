@@ -237,8 +237,6 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | bilibili | `dynamic publish --text [--image]` | 发动态 | `{id url}` |
 | bilibili | `dynamic delete <id>` | 删动态 | `{id}` |
 | bilibili | `article publish --title --text [--cover] [--category]` | 发专栏：先存草稿，再提交 | `{id url}` |
-| xhs | `kol list [--category]` / `get` / `fans` / `items` / `categories` / `invite <kol> --product-name --start --end --text --contact` | 蒲公英达人。`invite` 的日期写成 `2026-10-01` | Kol；`invite` 为 `{id}` |
-| xhs | `distributor list [--category]` / `get` / `items` / `fans` / `categories` | 千帆分销达人。`get` 合并详情、合作信息、店铺 | Distributor |
 | jd | `order list` | 订单 | Order[] |
 | jd | `cart count` | 购物车数量 | `{count}` |
 | jd | `coupon list <item>` | 商品可用优惠券 | Coupon[] |
@@ -388,7 +386,8 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - 关系查询；
 - xhs 的 share_code；
 - 抖音的 PK / 连麦 / 评论标签；
-- TikTok 的 story 和收藏夹移动。
+- TikTok 的 story 和收藏夹移动；
+- xhs 的蒲公英（达人）和千帆（分销达人）：只对开通了的品牌 / 机构账号有用，普通账号访问会被拒，被拒后几分钟内主站的评论等接口还会要求人机验证。
 
 如果某条命令内部需要其中的能力（例如心跳），由实现内部调用。
 
@@ -608,8 +607,6 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | Danmaku | `id item_id offset text created_at`，`offset` 为视频内的秒数 |
 | Order | `id status total:Price items:Item[] created_at` |
 | Coupon | `id title discount:Price threshold:Price\|null start_at end_at` |
-| Kol | User 的全部字段，加 `gender location tags:string[] price{picture video} data`。`data` 是该接口返回的统计对象（详情 / 粉丝 / 笔记数据），结构随接口不同 |
-| Distributor | User 的全部字段，加 `tags:string[] categories:string[] data`。`get` 的 `data` 合并了详情、合作信息和店铺 |
 
 **枚举值**：
 
@@ -817,8 +814,8 @@ export default definePlatform({
         'user get': 'full',
         'item get': { upstream: 'full', handler: () => import('./web/item.js').then((m) => m.get) },
         'feed list': { upstream: 'partial', options: { kind: filter.kind('recommend', 'following') } },
-        'kol list': { upstream: 'full', summary: '蒲公英达人列表', args: [], output: 'Kol[]',
-                      auth: 'required', paged: true },                     // 扩展命令：字段写全
+        'order list': { upstream: 'full', summary: '订单列表', args: [], output: 'Order[]',
+                        auth: 'required', paged: true },                   // 扩展命令（示意）：字段写全
       },
     },
     app: 'planned',

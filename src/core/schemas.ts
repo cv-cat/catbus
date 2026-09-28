@@ -216,15 +216,11 @@ export interface Coupon {
   end_at: string | null
 }
 
-/** 蒲公英达人、千帆分销达人：M2 移植时按上游返回，在 User 的字段上追加平台字段（AGENTS 4.7）。 */
-export type Kol = User
-export type Distributor = User
-
 /** 输出类型名，注册表的 `output` 只能用这些（加 `[]` 表示数组），或 `{...}` 形式的内联结构。 */
 export const OUTPUT_TYPES = new Set([
   'User', 'Item', 'Comment', 'Folder', 'Series', 'Category', 'Keyword', 'Topic', 'Poi', 'Live', 'Event', 'Gift',
   'Rank', 'Conversation', 'Message', 'Notice', 'NoticeCount', 'Media', 'AuthStatus', 'Account', 'File', 'Subtitle',
-  'Danmaku', 'Order', 'Coupon', 'Kol', 'Distributor',
+  'Danmaku', 'Order', 'Coupon',
 ])
 
 /** 归一化对象上挂平台原始对象，`--raw` 时用它替换。JSON 序列化会忽略 symbol 键。 */
