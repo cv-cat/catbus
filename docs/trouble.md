@@ -339,7 +339,7 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 | bilibili | 极验点选题自动识别（短信 / 密码登录降级时用；含人工兜底页面） | 已补，待真机验证通过率。模型在新包 `@cv-cat/catbus-assets-ocr`（ddddocr 1.6.1，MIT，25.5 MB），发布顺序在 catbus-cli 之前 |
 | bilibili | `item related`、专栏搜索、专栏 / 动态评论与按时间排序、楼中楼 root / parent、收藏到指定收藏夹、投币同时点赞、投稿字段、专栏标签 / 摘要 / 草稿、弹幕样式、按用户查直播间、直播全部事件与人气值等 | 移植中 |
 | douyin | 搜索筛选（排序 / 时间 / 类型等）、`item list`、发布参数（poi、话题、@、封面、合集等）、收藏夹移动、私信文件与分享卡片、`live history` / `live media`、千票榜、商品评价排序、通知分组、短信 SSO 备用链 | 移植中 |
-| tiktok | 收藏夹公开 / 私密与加内容、发布互动开关、`item related` 与私信翻页、按房间号操作直播、`live media`、另一组通知 | 移植中 |
+| tiktok | 收藏夹加内容（`folder add`）与公开 / 私密（顺带修了改名会把公开收藏夹变私密的 bug）、发布互动开关（`--allow-*`）、`item related` 与私信翻页、按房间号操作直播、`live media`、系统通知（group 661）并入 `notice list` | 已补，待真机验证。**私信翻页的游标字段位置是按字节 IM 协议推断的，上游没有解析**；`live media` 的流地址结构也是推断的 |
 | x | 同步上游新提交（长推、thread、Article 长文）、账号密码登录（castle token）、搜索媒体标签、引用推文、私信翻页与成员资料 | 移植中 |
 | jd | 403 时区分登录失效与风控、订单时间范围（`--range`）、按订单咨询客服（`--order`）、评价条数（`--limit` → commentNum）、收货地区（`--area`）、国际手机号、`msg listen` 其余消息类型 | 已补，待真机验证（撤回消息的 id 字段名是推断的；评价条数的服务端上限未知）。`item related` 保持 ◐：diviner 的 `p` 只能从浏览器抓包得到 |
 | xianyu | 主动给指定用户发私信（`--to`，可配 `--item`）、发布原价（`--original-price`）、`msg history` 同一条长连翻页并按从旧到新排列 | 已补，待真机验证。`--limit` 截在页中间时的游标取最早一条的 `createAt`（推断） |
