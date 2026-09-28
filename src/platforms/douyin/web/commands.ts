@@ -68,6 +68,28 @@ export async function userItems(ctx: Ctx) {
   return paged((body.aweme_list ?? []).map(norm.aweme), body.max_cursor, more(body.has_more))
 }
 
+/**
+ * 缺 UIFID 时自动补上再重试一次：UIFID 由服务端在推荐流的响应里下发（实测 2026-09），扫码 / 短信登录后
+ * 凭证里还没有它，个别接口（如 user likes）会报 "Uifid Not Found"。正常路径不多发请求，与上游一致。
+ */
+export function withUifid(handler: (ctx: Ctx) => unknown): (ctx: Ctx) => unknown {
+  return (ctx: Ctx) => {
+    const result = handler(ctx)
+    // 长连接的 handler 同步返回 AsyncIterable，原样交回
+    if (!(result instanceof Promise)) return result
+    return result.catch(async (err: unknown) => {
+      const reason = err instanceof CatbusError ? (err.detail as { reason?: string } | null)?.reason : undefined
+      if (reason !== 'uifid') throw err
+      const d = await douyin(ctx)
+      if (d.cookie('UIFID')) throw err
+      ctx.log.info('凭证里缺 UIFID，先请求一次推荐流取回，然后重试')
+      await api.feed(d)
+      if (!d.cookie('UIFID')) throw err
+      return handler(ctx)
+    })
+  }
+}
+
 export async function userLikes(ctx: Ctx) {
   const d = await douyin(ctx)
   const secUid = await resolveUser(d, ctx.args.user ?? 'me')

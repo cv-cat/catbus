@@ -315,3 +315,41 @@ describe('douyin 归一化（真实响应的结构）', () => {
     expect(other).toMatchObject({ type: 'system', user: { id: SEC_UID }, target: null, text: '推荐了你的图文' })
   })
 })
+
+describe('douyin 缺 UIFID 时自动补上', () => {
+  it('报 Uifid Not Found 且凭证里没有 UIFID：请求一次推荐流，拿到 Set-Cookie 的 UIFID 后重试', async () => {
+    const { withUifid } = await import('../src/platforms/douyin/web/commands.js')
+    const { CatbusError } = await import('../src/core/errors.js')
+    const ctx = makeCtx({ platform: 'douyin', cookies: 'sessionid=fake; ttwid=fake', cookieDomain: '.douyin.com' })
+    const urls: string[] = []
+    const restore = mockSender((p) => {
+      urls.push(p.url)
+      if (p.url.includes('/aweme/v1/web/tab/feed/') || p.url.includes('/aweme/v1/web/module/feed/')) {
+        return fakeResponse({ status_code: 0, aweme_list: [] }, { headers: [['set-cookie', 'UIFID=fake-uifid; Domain=.douyin.com; Path=/']] })
+      }
+      return fakeResponse({ status_code: 0 })
+    })
+    let calls = 0
+    try {
+      const run = withUifid(async (c) => {
+        calls++
+        if (!c.credential.scopes.main!.cookies.some((k) => k.name === 'UIFID')) throw new CatbusError('RISK_CONTROL', 'Uifid Not Found', { detail: { kind: 'blocked', reason: 'uifid' } })
+        return 'ok'
+      })
+      expect(await run(ctx)).toBe('ok')
+    } finally {
+      restore()
+    }
+    expect(calls).toBe(2)
+    expect(urls.some((u) => u.includes('/feed/'))).toBe(true)
+  })
+
+  it('其他错误原样抛出；长连接的 handler（同步返回 AsyncIterable）原样交回', async () => {
+    const { withUifid } = await import('../src/platforms/douyin/web/commands.js')
+    const { CatbusError } = await import('../src/core/errors.js')
+    const ctx = makeCtx({ platform: 'douyin', cookies: 'sessionid=fake', cookieDomain: '.douyin.com' })
+    await expect(withUifid(async () => Promise.reject(new CatbusError('UPSTREAM', 'x')))(ctx) as Promise<unknown>).rejects.toMatchObject({ code: 'UPSTREAM' })
+    const stream = (async function* () {})()
+    expect(withUifid(() => stream)(ctx)).toBe(stream)
+  })
+})

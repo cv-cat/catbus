@@ -3,11 +3,11 @@ import { type CommandDecl, definePlatform, type Handler, type Upstream } from '.
 
 type Commands = typeof import('./web/commands.js')
 
-/** 懒加载 web 端的 handler：只有执行到这条命令时才加载实现。 */
+/** 懒加载 web 端的 handler：只有执行到这条命令时才加载实现。缺 UIFID 时自动补上重试（commands.withUifid）。 */
 const h =
   (name: keyof Commands) =>
   (): Promise<Handler> =>
-    import('./web/commands.js').then((m) => m[name] as Handler)
+    import('./web/commands.js').then((m) => m.withUifid(m[name] as Handler) as Handler)
 
 const impl = (upstream: Upstream, name: keyof Commands, extra: Partial<CommandDecl> = {}): CommandDecl => ({ upstream, handler: h(name), ...extra })
 
@@ -26,7 +26,7 @@ export default definePlatform({
         'user get': impl('full', 'userGet'),
         'user search': impl('full', 'userSearch'),
         'user items': impl('full', 'userItems'),
-        'user likes': impl('full', 'userLikes', { note: '需要 UIFID cookie：扫码 / 短信登录拿不到，用浏览器 cookie 导入' }),
+        'user likes': impl('full', 'userLikes'),
         // 上游没有收藏作品列表（get_collect_list 返回的是收藏夹）
         'user collects': 'none',
         'user followers': impl('full', 'userFollowers'),

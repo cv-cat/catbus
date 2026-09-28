@@ -368,7 +368,7 @@ export async function riskJson<T = DyJson>(res: HttpResponse): Promise<T> {
   if (/Uifid Not Found/i.test(text)) {
     throw new CatbusError('RISK_CONTROL', '这个接口要求页面脚本写入的 UIFID cookie，游客态和缺 UIFID 的 cookie 都会被拦截', {
       hint: '用浏览器登录后导出 cookie：catbus douyin auth login --method cookie --cookie @<文件>',
-      detail: { kind: 'blocked', status: res.status, body: text.slice(0, 120), logid },
+      detail: { kind: 'blocked', reason: 'uifid', status: res.status, body: text.slice(0, 120), logid },
     })
   }
   throw new CatbusError('UPSTREAM', `接口返回的不是 JSON（HTTP ${res.status}）`, { detail: { status: res.status, body: text.slice(0, 120), logid } })
