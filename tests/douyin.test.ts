@@ -141,6 +141,17 @@ const CASES: Record<string, Run> = {
       const info = await creator.uploadImage(d, sts, media(PNG), '')
       return [info, await creator.mediaUrl(d, info.uri)]
     }),
+
+  // ---------------------------------------------------------------- 第三部分（gen_gap.py）
+  search_general_filter: (c) =>
+    logged(c, (d) => api.searchGeneral(d, '美食', '0', '', { sortType: '2', publishTime: '7', filterDuration: '1-5', searchRange: '3', contentType: '2' })),
+  search_video: (c) => logged(c, (d) => api.searchVideo(d, '美食 探店', '0', '16', { sortType: '1', publishTime: '180', filterDuration: '0-1', searchRange: '1' })),
+  search_video_p2: (c) => logged(c, (d) => api.searchVideo(d, '美食', '16', '16', { sortType: '0', publishTime: '0', filterDuration: '', searchRange: '0' }, c.input.search_id)),
+  search_user_filter: (c) => logged(c, (d) => api.searchUser(d, '巴旦木公主', '0', '25', '1w_10w', 'enterprise_user')),
+  live_rank_thousand: (c) => logged(c, (d) => api.liveThousandRank(d, c.input.room_id, c.input.web_rid)),
+  product_comment_counter: (c) => logged(c, (d) => api.productCommentCounter(d, '3622058069401408999', 'fakeShop01')),
+  product_comments_tag: (c) => logged(c, (d) => api.productComments(d, '3622058069401408999', 'fakeShop01', '0', '10', '0', '7')),
+  notices_group: (c) => logged(c, (d) => api.notices(d, '0', '0', '10', '401')),
 }
 
 const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAYAAAC56t6BAAAAEklEQVR4nGNgYGD4z8DAwMAAAAwAAf8v0Mo8AAAAAElFTkSuQmCC'
@@ -351,5 +362,94 @@ describe('douyin 缺 UIFID 时自动补上', () => {
     await expect(withUifid(async () => Promise.reject(new CatbusError('UPSTREAM', 'x')))(ctx) as Promise<unknown>).rejects.toMatchObject({ code: 'UPSTREAM' })
     const stream = (async function* () {})()
     expect(withUifid(() => stream)(ctx)).toBe(stream)
+  })
+})
+
+describe('douyin 对拍：补齐的命令流程', () => {
+  it('item search --type video：视频频道搜索，游标带上 X-Tt-Logid 作为下一页的 search_id', async () => {
+    const c = loadCase('douyin', 'search_video')
+    const { itemSearch } = await import('../src/platforms/douyin/web/commands.js')
+    const ctx = loggedCtx(c)
+    ctx.args = { keyword: c.input.keyword }
+    ctx.options = { type: 'video', sort: 'popular', time: 'half_year', length: 'short', range: 'seen' }
+    const { requests, result, error } = await replay(c, () => itemSearch(ctx) as Promise<any>)
+    if (error) throw error
+    expectReqs(requests, c.requests)
+    expect(result.page).toEqual({ cursor: `16,${c.result[0]}`, has_more: true })
+    expect(result.data).toMatchObject([{ id: AWEME, kind: 'video', text: '搜索到的视频' }])
+  })
+
+  it('搜索筛选的取值映射：综合频道只标记 is_filter_search，--range all 在视频频道是 0', async () => {
+    const { searchFilters } = await import('../src/platforms/douyin/web/commands.js')
+    expect(searchFilters({}, false)).toEqual({ sortType: '0', publishTime: '0', filterDuration: '', searchRange: '', contentType: '' })
+    expect(searchFilters({ sort: 'latest', time: 'week', length: 'medium', range: 'following', type: 'image' }, false)).toEqual({
+      sortType: '2',
+      publishTime: '7',
+      filterDuration: '1-5',
+      searchRange: '3',
+      contentType: '2',
+    })
+    expect(searchFilters({ range: 'all', length: 'long' }, true)).toMatchObject({ searchRange: '0', filterDuration: '5-10000', contentType: undefined })
+  })
+
+})
+
+describe('douyin 归一化：补齐的命令', () => {
+  it('live media：live_core_sdk_data 的各清晰度 flv / hls（带分辨率），再补 flv_pull_url / hls_pull_url_map，去重', async () => {
+    const norm = await import('../src/platforms/douyin/web/normalize.js')
+    const streamData = { data: { origin: { main: { flv: 'https://pull-flv-l1.douyincdn.com/stage/stream-1_or4.flv', hls: 'https://pull-hls-l1.douyincdn.com/stage/stream-1_or4/index.m3u8', sdk_params: '{"resolution":"1920x1080","vbitrate":6000000}' } } } }
+    const body = {
+      status_code: 0,
+      data: {
+        data: [
+          {
+            status: 2,
+            stream_url: {
+              flv_pull_url: { FULL_HD1: 'https://pull-flv-l1.douyincdn.com/stage/stream-1_or4.flv', SD1: 'https://pull-flv-l1.douyincdn.com/stage/stream-1_ld.flv' },
+              hls_pull_url_map: { SD1: 'https://pull-hls-l1.douyincdn.com/stage/stream-1_ld/index.m3u8' },
+              live_core_sdk_data: { pull_data: { stream_data: JSON.stringify(streamData) } },
+            },
+          },
+        ],
+      },
+    }
+    expect(norm.liveStreams(body).map((m) => [m.id, m.url.split('/').at(-1), m.width, m.height])).toEqual([
+      ['origin.flv', 'stream-1_or4.flv', 1920, 1080],
+      ['origin.hls', 'index.m3u8', 1920, 1080],
+      ['SD1.flv', 'stream-1_ld.flv', null, null],
+      ['SD1.hls', 'index.m3u8', null, null],
+    ])
+    expect(norm.liveStreams({ data: { data: [{ status: 4 }] } })).toEqual([])
+  })
+
+  it('live rank / 千票榜的行、商品评价标签', async () => {
+    const norm = await import('../src/platforms/douyin/web/normalize.js')
+    const rows = norm.rankRows({ data: { list: [{ user: { id_str: '1', sec_uid: SEC_UID, nickname: '榜一' }, score: 1000 }, { user: { id_str: '2', nickname: '榜二' }, rank: 2 }] } })
+    expect(rows.map((r) => [r.rank, r.user.id, r.user.name, r.score])).toEqual([
+      [1, SEC_UID, '榜一', 1000],
+      [2, '2', '榜二', null],
+    ])
+    const labels = norm.commentLabels({ counter_info: { tags: [{ tag_id: 7, tag_name: '好评', count: 120 }, { TagId: '9', TagName: '有图', Count: '3' }] } })
+    expect(labels).toEqual([
+      { id: '7', name: '好评', count: 120 },
+      { id: '9', name: '有图', count: 3 },
+    ])
+  })
+
+  it('live history：im/fetch 的 LiveResponse 里带回的消息转成 Event', () => {
+    const chat = proto.encode('Live', 'ChatMessage', { user: { nickname: '观众A', sec_uid: 'MS4wLjABAAAAviewerA' }, content: '主播好' })
+    const member = proto.encode('Live', 'MemberMessage', { user: { id: 222, nickname: '观众B' } })
+    const raw = proto.encode('Live', 'LiveResponse', {
+      messagesList: [
+        { method: 'WebcastChatMessage', payload: chat },
+        { method: 'WebcastMemberMessage', payload: member },
+        { method: 'WebcastUnknownMessage', payload: chat },
+      ],
+      cursor: 't-1',
+    })
+    expect(live.fetchEvents(raw).map((e) => [e.type, e.user?.name, e.text])).toEqual([
+      ['chat', '观众A', '主播好'],
+      ['enter', '观众B', null],
+    ])
   })
 })

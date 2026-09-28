@@ -53,10 +53,14 @@ export async function userGet(ctx: Ctx): Promise<User> {
   return norm.user(await profile(d, ctx.args.user!))
 }
 
+const USER_TYPE: Record<string, string> = { common: 'common_user', enterprise: 'enterprise_user', personal: 'personal_user' }
+
 export async function userSearch(ctx: Ctx) {
   const d = await douyin(ctx)
   const offset = cursor(ctx)
-  const body = check(ctx, await api.searchUser(d, ctx.args.keyword!, offset))
+  const fans = (ctx.options.fans as string | undefined) ?? ''
+  const userType = USER_TYPE[(ctx.options.userType as string | undefined) ?? ''] ?? ''
+  const body = check(ctx, await api.searchUser(d, ctx.args.keyword!, offset, '25', fans, userType))
   const list = (body.user_list ?? []).map((x: any) => norm.user(x.user_info ?? x))
   return paged(list, Number(offset) + 25, more(body.has_more))
 }
@@ -122,10 +126,43 @@ export async function itemGet(ctx: Ctx): Promise<Item> {
   return norm.aweme(await detail(d, ctx.args.item!))
 }
 
+/** 搜索筛选的标准取值 → 上游参数（AGENTS 4.9 / 4.7）。 */
+const SEARCH_SORT: Record<string, string> = { general: '0', popular: '1', latest: '2' }
+const SEARCH_TIME: Record<string, string> = { all: '0', day: '1', week: '7', half_year: '180' }
+const SEARCH_LENGTH: Record<string, string> = { all: '', short: '0-1', medium: '1-5', long: '5-10000' }
+const SEARCH_RANGE: Record<string, string> = { seen: '1', unseen: '2', following: '3' }
+const VIDEO_PAGE = 16
+
+/** `item search` 的筛选：综合频道（上游 search_general_work）只把 is_filter_search 置 1；`--type video` 走视频频道（search_video_work）。 */
+export function searchFilters(o: Record<string, unknown>, video: boolean): api.SearchFilters {
+  const range = SEARCH_RANGE[o.range as string] ?? ''
+  return {
+    sortType: SEARCH_SORT[(o.sort as string) ?? 'general'] ?? '0',
+    publishTime: SEARCH_TIME[(o.time as string) ?? 'all'] ?? '0',
+    filterDuration: SEARCH_LENGTH[(o.length as string) ?? 'all'] ?? '',
+    searchRange: video ? range || '0' : range,
+    contentType: video ? undefined : o.type === 'image' ? '2' : '',
+  }
+}
+
 export async function itemSearch(ctx: Ctx) {
   const d = await douyin(ctx)
+  const keyword = ctx.args.keyword!
+  if (ctx.options.type === 'video') {
+    // 视频频道：cursor 是「偏移,上一页的 X-Tt-Logid」，翻页时 search_id 带上它（上游 search_some_video_work）
+    const [offset = '0', searchId = ''] = (ctx.cursor ?? '0').split(',')
+    const [next, raw] = await api.searchVideo(d, keyword, offset, String(VIDEO_PAGE), searchFilters(ctx.options, true), searchId)
+    const body = check(ctx, raw)
+    const data: any[] = body.data ?? []
+    const list = data.map((x) => x.aweme_info ?? x).filter((x) => x?.aweme_id).map(norm.aweme)
+    return paged(list, `${Number(offset) + VIDEO_PAGE},${next}`, more(body.has_more) && data.length > 0)
+  }
   const offset = cursor(ctx)
-  const body = check(ctx, await api.searchGeneral(d, ctx.args.keyword!, offset))
+  const f = searchFilters(ctx.options, false)
+  if (f.sortType !== '0' || f.publishTime !== '0' || f.filterDuration || f.searchRange || f.contentType) {
+    ctx.log.info('综合搜索照上游只标记 is_filter_search，筛选值不随请求发出；要按筛选取视频，加 --type video')
+  }
+  const body = check(ctx, await api.searchGeneral(d, keyword, offset, '', f))
   const data: any[] = body.data ?? []
   const list = data.filter((x) => x.aweme_info).map((x) => norm.aweme(x.aweme_info))
   return paged(list, Number(offset) + data.length, more(body.has_more) && data.length > 0)
@@ -154,6 +191,7 @@ export async function commentList(ctx: Ctx) {
   const d = await douyin(ctx)
   const input = ctx.args.item!
   if (ctx.options.product || /jinritemai|haohuo|product_id=|promotion_id=/.test(input)) return productComments(ctx, d, input)
+  if (ctx.options.label != null) throw new CatbusError('USAGE', '--label 只用于商品评价', { hint: 'catbus douyin comment list <商品 url> --product --label <标签>' })
   const id = await resolveItem(d, input)
   const body = check(ctx, await api.comments(d, id, cursor(ctx)))
   const list = (body.comments ?? []).map((c: any) => norm.comment(c, id))
@@ -165,10 +203,20 @@ async function productComments(ctx: Ctx, d: Douyin, input: string) {
   if (!p.productId || !p.shopId) {
     throw new CatbusError('USAGE', '商品评价需要 product_id 和 shop_id', { hint: '传 catbus douyin live products 输出的商品 url（带 id 和 shop_id 参数）' })
   }
-  const body = check(ctx, await api.productComments(d, p.productId, p.shopId, cursor(ctx)))
+  const tagId = ctx.options.label != null ? await productLabel(ctx, d, p.productId, p.shopId, String(ctx.options.label)) : ''
+  const body = check(ctx, await api.productComments(d, p.productId, p.shopId, cursor(ctx), '10', '0', tagId))
   const data = body.data ?? {}
   const list = (data.Comments ?? data.comments ?? []).map((c: any) => norm.productComment(c, p.promotionId))
   return paged(list, data.Cursor ?? data.cursor ?? Number(cursor(ctx)) + list.length, Boolean(data.HasMore ?? data.has_more))
+}
+
+/** `--label`：先取评价的分类计数（comment/counter），按名字或 id 找到 tag_id。 */
+async function productLabel(ctx: Ctx, d: Douyin, productId: string, shopId: string, label: string): Promise<string> {
+  const labels = norm.commentLabels(check(ctx, await api.productCommentCounter(d, productId, shopId)))
+  const hit = labels.find((x) => x.id === label || x.name === label)
+  if (hit) return hit.id
+  if (/^\d+$/.test(label)) return label
+  throw new CatbusError('USAGE', `没有这个评价标签：${label}`, { hint: labels.length ? `可选：${labels.map((x) => x.name).join('、')}` : '这个商品没有返回评价标签' })
 }
 
 export async function commentReplies(ctx: Ctx) {
@@ -193,10 +241,14 @@ export async function feedList(ctx: Ctx) {
   return paged(list, Number(index) + 1, body.has_more == null ? list.length > 0 : more(body.has_more))
 }
 
+/** 通知分组（上游 get_notice_list 的 notice_group）；不带时用上游默认的 960。 */
+const NOTICE_GROUP: Record<string, string> = { all: '700', fans: '401', mention: '601', comment: '2', like: '3', danmaku: '520' }
+
 export async function noticeList(ctx: Ctx) {
   const d = await douyin(ctx)
   const [minTime = '0', maxTime = '0'] = (ctx.cursor ?? '0,0').split(',')
-  const body = check(ctx, await api.notices(d, minTime, maxTime))
+  const group = NOTICE_GROUP[(ctx.options.group as string | undefined) ?? ''] ?? '960'
+  const body = check(ctx, await api.notices(d, minTime, maxTime, '10', group))
   const list = (body.notice_list_v2 ?? body.notice_list ?? []).map(norm.notice)
   return paged(list, `${body.min_time ?? 0},${body.max_time ?? 0}`, more(body.has_more))
 }
@@ -246,13 +298,34 @@ export async function liveSearch(ctx: Ctx) {
   return paged(list, Number(offset) + 15, more(body.has_more))
 }
 
+/** 直播间榜单：默认贡献榜（get_live_contribution_rank），`--ranking thousand` 为千票榜（get_live_thousand_ticket_rank）。 */
 export async function liveRank(ctx: Ctx) {
   const d = await douyin(ctx)
   const r = await room(d, ctx.args.room!)
+  if (ctx.options.ranking === 'thousand') return norm.rankRows(check(ctx, await api.liveThousandRank(d, r.room_id, r.webRid)))
   const body = check(ctx, await api.liveRank(d, r.room_id, r.anchor_id, r.sec_uid, r.webRid))
-  return (body.data?.ranks ?? []).map((x: any, i: number) =>
-    n.rank({ rank: Number(x.rank ?? i + 1), user: norm.authorRef(x.user) ?? { id: n.id(x.user?.id_str), name: n.str(x.user?.nickname), url: null }, score: n.count(x.score) }, x),
-  )
+  return (body.data?.ranks ?? []).map(norm.rankRow)
+}
+
+/** 最近的弹幕：进房时 im/fetch 带回的历史消息（need_persist_msg_count=15），只取聊天。 */
+export async function liveHistory(ctx: Ctx) {
+  const d = await douyin(ctx)
+  const r = await room(d, ctx.args.room!)
+  const bytes = await api.webcastFetch(d, r.user_id, r.room_id, norm.liveUrl(r.webRid))
+  let events
+  try {
+    events = live.fetchEvents(bytes)
+  } catch {
+    throw new CatbusError('UPSTREAM', `im/fetch 返回的不是 protobuf（${bytes.length} 字节），多为登录态失效或被风控`)
+  }
+  return events.filter((e) => e.type === 'chat')
+}
+
+/** 拉流地址：房间资料（room/web/enter）里的 stream_url。 */
+export async function liveMedia(ctx: Ctx) {
+  const d = await douyin(ctx)
+  const webRid = await resolveRoom(d, ctx.args.room!)
+  return norm.liveStreams(check(ctx, await api.liveRoomEnter(d, webRid)))
 }
 
 export async function liveProducts(ctx: Ctx) {

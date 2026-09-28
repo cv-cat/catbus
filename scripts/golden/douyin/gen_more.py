@@ -376,3 +376,7 @@ case('live_ws', live_ws, live_ws_respond, web_rid=WEB_RID)
 case('live_frame', live_frame)
 case('recv_ws', recv_ws)
 case('im_push', im_push)
+
+
+# 第三部分：补齐第一轮没移植的能力
+exec(compile((Path(__file__).parent / "gen_gap.py").read_text(encoding="utf-8"), "gen_gap.py", "exec"))

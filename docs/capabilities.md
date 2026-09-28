@@ -52,6 +52,8 @@
 - jd `user get`：只支持 me
 - kuaishou `user likes`：只支持 me
 - kuaishou `user followers / following`：只支持 me
+- `user search --fans`：douyin
+- `user search --user-type`：douyin
 - `user items --sort` 取值：bilibili latest / views / collects
 - `user items --keyword`：bilibili
 - `user collects --area`：jd
@@ -72,14 +74,18 @@
 | item delete | ○ | ○ | ○ | ◐ | ○ | ○ | ○ | — | — | ✓ |
 | item categories | — | — | — | ✓ | — | — | ○ | — | — | — |
 
+- douyin `item search`：--type video 走视频频道搜索
 - weibo `item search`：只能取第一页
 - x `item search`：--type video 和 image 都走媒体搜索（结果里图片和视频都有），不能和 --sort latest 一起用
 - jd `item related`：用第一个相关搜索词的搜索结果
 - x `item publish`：正文超过 280 权重时自动按长推发（需要 Premium）；--thread 发 thread
 - bilibili `item delete`：需要人机验证（极验点选），catbus 还不能自动通过，会报 RISK_CONTROL
 - `item get --area`：jd
-- `item search --sort` 取值：xhs general / latest / popular / comments / collects；bilibili general / views / latest / collects；jd general / sales / price_asc / price_desc / comments；x general / latest
-- `item search --type` 取值：xhs all / video / image；bilibili video / article；x all / video / image
+- `item search --sort` 取值：xhs general / latest / popular / comments / collects；douyin general / popular / latest；bilibili general / views / latest / collects；jd general / sales / price_asc / price_desc / comments；x general / latest
+- `item search --type` 取值：xhs all / video / image；douyin all / video / image；bilibili video / article；x all / video / image
+- `item search --time` 取值：douyin all / day / week / half_year
+- `item search --length`：douyin
+- `item search --range`：douyin
 - `item search --area`：jd
 - `item related --area`：jd
 - `item collect --folder`：bilibili
@@ -124,6 +130,7 @@
 - weibo `comment list`：只有一级评论
 - jd `comment list`：只有第一页；--limit N 在一次请求里取 N 条
 - `comment list --product`：xhs、douyin、tiktok、kuaishou
+- `comment list --label`：douyin
 - `comment list --sort` 取值：bilibili popular / latest
 - `comment add --root`：bilibili
 
@@ -159,6 +166,7 @@
 - x `msg list`：只取收件箱首页（最近 20 个会话），上游没有翻页
 - x `msg history`：消息端到端加密，只给出占位消息
 - xianyu `msg send`：--to 不带 --item 时按上游的默认商品建会话；--to 加 --item 就这件商品联系对方（卖家可以联系买家）
+- `notice list --group`：douyin
 - `msg send --order`：jd
 
 ## media、folder、series、history、topic、poi
@@ -190,24 +198,27 @@
 | live search | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | ○ | — | — |
 | live categories | ✓ | ○ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — |
 | live listen | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — |
-| live history | ○ | ○ | ◐ | ✓ | ○ | ○ | — | ○ | — | — |
+| live history | ○ | ◐ | ◐ | ✓ | ○ | ○ | — | ○ | — | — |
 | live send | ◐ | ◐ | ◐ | ✓ | ○ | ○ | — | ○ | — | — |
 | live like / rank | ○ | ✓ | ✓ | ○ | ○ | ○ | — | ○ | — | — |
 | live gifts | ✓ | ○ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — |
 | live products | ✓ | ✓ | ○ | — | ○ | ○ | — | ○ | — | — |
-| live media | ○ | ○ | ◐ | ✓ | ○ | ○ | — | ○ | — | — |
+| live media | ○ | ◐ | ◐ | ✓ | ○ | ○ | — | ○ | — | — |
 | live replays | — | ○ | — | ○ | ✓ | ○ | — | ○ | — | — |
 | live start / stop | ○ | ○ | ○ | ✓ | ○ | ○ | — | ○ | — | — |
 
+- douyin `live history`：只有进房时 im/fetch 带回的最近 15 条
 - xhs `live send`：--gift 规划中
 - douyin `live send`：--gift 规划中
 - tiktok `live send`：--gift 规划中
+- douyin `live media`：拉流地址取自房间资料（room/web/enter）
 - tiktok `live media`：上游没有解析拉流地址：取自 /api-live/user/room 的 liveRoom.streamData，或 room/enter 的 stream_url
 - `live list --category`：xhs
 - `live send --color`：bilibili
 - `live send --font-size`：bilibili
 - `live send --position`：bilibili
 - `live send --reply-user`：bilibili
+- `live rank --ranking`：douyin
 - `live start --category`：bilibili
 
 ## 平台扩展

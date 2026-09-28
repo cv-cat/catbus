@@ -1,5 +1,5 @@
 import * as n from '../../../core/normalize.js'
-import type { Comment, Event, Item, Live, Media, Notice, User, UserRef } from '../../../core/schemas.js'
+import type { Comment, Event, Item, Live, Media, Notice, Rank, User, UserRef } from '../../../core/schemas.js'
 import { LIVE, WWW } from './profile.js'
 
 /** 抖音原始对象 → 归一化类型（AGENTS 6.2）。用户 id 用 sec_uid：它能直接拼出主页 URL，也是各接口的入参。 */
@@ -171,6 +171,69 @@ export function roomEnter(body: any, webRid: string): Live {
     },
     body,
   )
+}
+
+/**
+ * room/web/enter 的拉流地址 → Media[]：优先 live_core_sdk_data 里各清晰度的 flv / hls（带分辨率），
+ * 没有时退回 flv_pull_url / hls_pull_url_map。未开播时没有 stream_url，返回空数组。
+ */
+export function liveStreams(body: any): Media[] {
+  const stream = body?.data?.data?.[0]?.stream_url ?? {}
+  const out: Media[] = []
+  const seen = new Set<string>()
+  const push = (id: string, url: unknown, raw: unknown, size?: string) => {
+    const u = n.url(url)
+    if (!u || seen.has(u)) return
+    seen.add(u)
+    const [w, h] = /^(\d+)x(\d+)$/.exec(size ?? '')?.slice(1).map(Number) ?? []
+    out.push(n.media({ id, type: 'video', url: u, width: w ?? null, height: h ?? null }, raw))
+  }
+  let data: any = null
+  try {
+    const raw = stream.live_core_sdk_data?.pull_data?.stream_data
+    data = (typeof raw === 'string' ? JSON.parse(raw) : raw)?.data ?? null
+  } catch {}
+  for (const [quality, v] of Object.entries<any>(data ?? {})) {
+    let params: any = {}
+    try {
+      params = typeof v?.main?.sdk_params === 'string' ? JSON.parse(v.main.sdk_params) : (v?.main?.sdk_params ?? {})
+    } catch {}
+    push(`${quality}.flv`, v?.main?.flv, v, params.resolution)
+    push(`${quality}.hls`, v?.main?.hls, v, params.resolution)
+  }
+  for (const [quality, u] of Object.entries<any>(stream.flv_pull_url ?? {})) push(`${quality}.flv`, u, stream)
+  for (const [quality, u] of Object.entries<any>(stream.hls_pull_url_map ?? {})) push(`${quality}.hls`, u, stream)
+  if (stream.hls_pull_url) push('hls', stream.hls_pull_url, stream)
+  return out
+}
+
+/** 贡献榜 / 千票榜的一行（ranks[] 或 list[]：user、rank、score）。 */
+export function rankRow(x: any, i: number): Rank {
+  const u = x?.user ?? x?.user_info ?? {}
+  const who = authorRef(u) ?? n.userRef({ id: u.id_str ?? u.id, name: u.nickname }) ?? { id: '', name: null, url: null }
+  return n.rank({ rank: Number(x?.rank ?? x?.seat_index ?? i + 1), user: who, score: n.count(x?.score ?? x?.value) }, x)
+}
+
+/** 千票榜的列表字段随版本不同，按常见的几个字段名找。 */
+export function rankRows(body: any): Rank[] {
+  const d = body?.data ?? {}
+  const list: any[] = d.ranks ?? d.list ?? d.seats ?? d.seats_list ?? d.user_list ?? d.rank_list ?? []
+  return list.map(rankRow)
+}
+
+/** 商品评价的标签（comment/counter 的 counter_info）：各种命名里找 (id, name)。 */
+export function commentLabels(body: any): { id: string; name: string; count: number | null }[] {
+  const out: { id: string; name: string; count: number | null }[] = []
+  const visit = (v: any) => {
+    if (Array.isArray(v)) return v.forEach(visit)
+    if (!v || typeof v !== 'object') return
+    const id = v.tag_id ?? v.TagId ?? v.TagID ?? v.id ?? v.Id
+    const name = v.tag_name ?? v.TagName ?? v.name ?? v.Name ?? v.text ?? v.Text
+    if (id != null && name != null && typeof name === 'string') out.push({ id: String(id), name, count: n.count(v.count ?? v.Count ?? v.num ?? v.Num) })
+    for (const x of Object.values(v)) if (x && typeof x === 'object') visit(x)
+  }
+  visit(body?.counter_info ?? body?.data?.counter_info ?? body?.data ?? body)
+  return out
 }
 
 /** 直播间商品（promotions 项）→ Item（kind goods）。url 带上 product_id / shop_id，供 comment list 直接使用。 */

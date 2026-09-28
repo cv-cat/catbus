@@ -326,13 +326,31 @@ export async function userInfo(d: Douyin, secUid: string): Promise<DyJson> {
   return getJson(d, `${WWW}/aweme/v1/web/user/profile/other/`, h, p)
 }
 
-export async function searchGeneral(d: Douyin, keyword: string, offset = '0', searchId = ''): Promise<DyJson> {
+/**
+ * 搜索筛选（上游 search_general_work / search_video_work 的参数）：sort_type 0 综合 / 1 最多点赞 / 2 最新；
+ * publish_time 0 不限 / 1 / 7 / 180 天；filter_duration '' 不限 / 0-1 / 1-5 / 5-10000 分钟；
+ * search_range 不限 / 1 看过 / 2 没看过 / 3 关注的人；content_type（仅综合）'' 不限 / 1 视频 / 2 图文。
+ */
+export interface SearchFilters {
+  sortType?: string
+  publishTime?: string
+  filterDuration?: string
+  searchRange?: string
+  contentType?: string
+}
+
+/**
+ * 综合搜索（上游 search_general_work）。上游只按筛选是否非默认把 is_filter_search 置 1，
+ * 筛选值本身不进 query（fe3eb24 删掉了 filter_selected），这里照抄。
+ */
+export async function searchGeneral(d: Douyin, keyword: string, offset = '0', searchId = '', f: SearchFilters = {}): Promise<DyJson> {
+  const filtered = (f.sortType ?? '0') !== '0' || (f.publishTime ?? '0') !== '0' || Boolean(f.filterDuration || f.searchRange || f.contentType)
   const refer = `${WWW}/search/${quote(keyword)}?aid=${rand.uuid4()}&type=general`
   const h = headerUifid(d, headers('GET').referer(refer))
   const p = new Params()
   p.add('device_platform', 'webapp').add('aid', '6383').add('channel', 'channel_pc_web').add('search_channel', 'aweme_general')
   p.add('enable_history', '1').add('keyword', keyword).add('search_source', 'normal_search').add('query_correct_type', '1')
-  p.add('is_filter_search', '0').add('from_group_id', '').add('disable_rs', '0').add('offset', offset).add('count', '15')
+  p.add('is_filter_search', filtered ? '1' : '0').add('from_group_id', '').add('disable_rs', '0').add('offset', offset).add('count', '15')
   p.add('need_filter_settings', offset === '0' ? '1' : '0').add('list_type', 'single').add('pc_search_top_1_params', '{"enable_ai_search_top_1":1}')
   p.add('search_id', searchId)
   p.update(platformParams('0', '190600', '19.6.0'))
@@ -344,14 +362,42 @@ export async function searchGeneral(d: Douyin, keyword: string, offset = '0', se
   return getJson(d, `${WWW}/aweme/v1/web/general/search/single/`, h, p)
 }
 
-export async function searchUser(d: Douyin, keyword: string, offset = '0', count = '25'): Promise<DyJson> {
+/**
+ * 视频频道搜索（上游 search_video_work）：筛选值都进 query。翻页时带上一页响应头的 X-Tt-Logid 作为 search_id。
+ * 返回 [下一页的 search_id, 原始 JSON]。
+ */
+export async function searchVideo(d: Douyin, keyword: string, offset = '0', count = '16', f: SearchFilters = {}, searchId = ''): Promise<[string, DyJson]> {
+  const refer = `${WWW}/search/${quote(keyword)}?aid=${rand.uuid4()}&type=video`
+  const h = headers('GET').referer(refer)
+  const p = new Params()
+  p.add('device_platform', 'webapp').add('aid', '6383').add('channel', 'channel_pc_web').add('search_channel', 'aweme_video_web')
+  p.add('enable_history', '1').add('sort_type', f.sortType ?? '0').add('publish_time', f.publishTime ?? '0')
+  p.add('filter_duration', f.filterDuration ?? '').add('search_range', f.searchRange ?? '0')
+  p.add('keyword', keyword).add('search_source', 'normal_search').add('query_correct_type', '1').add('is_filter_search', '1')
+  p.add('from_group_id', '').add('offset', offset).add('count', count).add('need_filter_settings', offset === '0' ? '1' : '0')
+  if (searchId) p.add('search_id', searchId)
+  p.add('list_type', 'single').add('pc_search_top_1_params', '')
+  p.update(platformParams('50'))
+  await withWebId(d, p)
+  await withMsToken(d, p)
+  withABogus(d, p)
+  fp(d, p)
+  const res = await d.request({ url: `${WWW}/aweme/v1/web/search/item/`, headers: h.list(), query: p.pairs() })
+  const next = res.headers.get('x-tt-logid') ?? ''
+  return [next, await riskJson(res)]
+}
+
+/** 用户搜索（上游 search_user）。fans：0_1k / 1k_1w / 1w_10w / 10w_100w / 100w_；userType：common_user / enterprise_user / personal_user。 */
+export async function searchUser(d: Douyin, keyword: string, offset = '0', count = '25', fans = '', userType = ''): Promise<DyJson> {
   const refer = `${WWW}/search/${quote(keyword)}?type=user`
   const uifid = d.cookie('UIFID') ?? ''
   const h = headers('GET').referer(refer)
   if (uifid) h.set('uifid', uifid)
+  const hasFilter = Boolean(fans || userType)
   const p = new Params()
   p.add('device_platform', 'webapp').add('aid', '6383').add('channel', 'channel_pc_web').add('search_channel', 'aweme_user_web')
-  p.add('keyword', keyword).add('search_source', 'normal_search').add('query_correct_type', '1').add('is_filter_search', '0')
+  if (hasFilter) p.add('search_filter_value', `{"douyin_user_fans":["${fans}"],"douyin_user_type":["${userType}"]}`)
+  p.add('keyword', keyword).add('search_source', 'normal_search').add('query_correct_type', '1').add('is_filter_search', hasFilter ? '1' : '0')
   p.add('from_group_id', '').add('disable_rs', '0').add('offset', offset).add('count', count).add('need_filter_settings', offset === '0' ? '1' : '0')
   p.add('list_type', 'single').add('pc_search_top_1_params', '{"enable_ai_search_top_1":1}')
   p.update(platformParams('50').slice(3))
@@ -619,14 +665,24 @@ export async function productDetail(d: Douyin, url: string, promotionId: string,
 }
 
 /** 商品评价（上游 get_product_comments）。 */
-export async function productComments(d: Douyin, productId: string, shopId: string, cursor = '0', count = '10'): Promise<DyJson> {
+export async function productComments(d: Douyin, productId: string, shopId: string, cursor = '0', count = '10', sortType = '0', tagId = '', statId = ''): Promise<DyJson> {
   const h = headerUifid(d, headers('GET').referer(`${WWW}/`))
   const p = new Params().add('product_id', productId).add('shop_id', shopId).add('cursor', cursor).add('count', count)
-  p.add('stat_id', '').add('tag_id', '').add('sort_type', '0')
+  p.add('stat_id', statId).add('tag_id', tagId).add('sort_type', sortType)
   await withPlatformAuth(d, p)
   await withMsToken(d, p)
   withABogus(d, p)
   return getJson(d, `${WWW}/aweme/v1/web/ecom/product/comments/`, h, p)
+}
+
+/** 商品评价的分类计数：好评 / 差评 / 有图等标签（上游 get_product_comment_counter）。 */
+export async function productCommentCounter(d: Douyin, productId: string, shopId: string, statId = ''): Promise<DyJson> {
+  const h = headerUifid(d, headers('GET').referer(`${WWW}/`))
+  const p = new Params().add('product_id', productId).add('shop_id', shopId).add('stat_id', statId)
+  await withPlatformAuth(d, p)
+  await withMsToken(d, p)
+  withABogus(d, p)
+  return getJson(d, `${WWW}/aweme/v1/web/ecom/product/comment/counter/`, h, p)
 }
 
 // ================================================================ 直播
@@ -721,6 +777,21 @@ export function liveRank(d: Douyin, roomId: string, anchorId: string, secAnchorI
       ['ignoreToast', 'true'],
       ['rank_type', '30'],
       ['update_scene', null],
+    ],
+    webRid,
+    'web_live',
+  )
+}
+
+/** 直播间千票榜，页面上的「1000 贡献用户」（上游 get_live_thousand_ticket_rank，接口 ranklist/paygrade_seats）。 */
+export function liveThousandRank(d: Douyin, roomId: string, webRid = '', seatsType = '2'): Promise<DyJson> {
+  return liveWeb(
+    d,
+    '/webcast/ranklist/paygrade_seats/',
+    [
+      ['webcast_sdk_version', '2450'],
+      ['room_id', roomId],
+      ['seats_type', seatsType],
     ],
     webRid,
     'web_live',

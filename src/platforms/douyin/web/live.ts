@@ -54,13 +54,8 @@ const LIVE_TYPES: Record<string, string> = {
   WebcastRoomStatsMessage: 'RoomStatsMessage',
 }
 
-/** 一帧推送 → 事件；需要 ack 时返回 ack 帧（上游 on_message）。 */
-export function liveFrame(raw: Uint8Array): { events: Event[]; ack: Uint8Array | null } {
-  const t = proto.type('Live', 'PushFrame')
-  const frame = t.decode(raw) as any
-  if (frame.payloadType === 'hb' || frame.payloadType === 'ack' || !frame.payload?.length) return { events: [], ack: null }
-  const res = proto.decode('Live', 'LiveResponse', proto.inflate(frame.payload))
-  const ack = res.needAck ? t.encode(t.fromObject({ payloadType: 'ack', payload: Buffer.from(String(res.internalExt ?? ''), 'utf8'), logId: frame.logId })).finish() : null
+/** LiveResponse 的 messagesList → Event[]，不关心的消息跳过。 */
+function responseEvents(res: any): Event[] {
   const events: Event[] = []
   for (const item of res.messagesList ?? []) {
     const name = LIVE_TYPES[item.method]
@@ -68,7 +63,22 @@ export function liveFrame(raw: Uint8Array): { events: Event[]; ack: Uint8Array |
     const event = norm.liveEvent(item.method, proto.decode('Live', name, item.payload))
     if (event) events.push(event)
   }
-  return { events, ack }
+  return events
+}
+
+/** 一帧推送 → 事件；需要 ack 时返回 ack 帧（上游 on_message）。 */
+export function liveFrame(raw: Uint8Array): { events: Event[]; ack: Uint8Array | null } {
+  const t = proto.type('Live', 'PushFrame')
+  const frame = t.decode(raw) as any
+  if (frame.payloadType === 'hb' || frame.payloadType === 'ack' || !frame.payload?.length) return { events: [], ack: null }
+  const res = proto.decode('Live', 'LiveResponse', proto.inflate(frame.payload))
+  const ack = res.needAck ? t.encode(t.fromObject({ payloadType: 'ack', payload: Buffer.from(String(res.internalExt ?? ''), 'utf8'), logId: frame.logId })).finish() : null
+  return { events: responseEvents(res), ack }
+}
+
+/** 进房时 im/fetch 的响应（LiveResponse，need_persist_msg_count=15）里带回的最近消息。 */
+export function fetchEvents(raw: Uint8Array): Event[] {
+  return responseEvents(proto.decode('Live', 'LiveResponse', proto.inflate(raw)))
 }
 
 export const heartbeatFrame = () => proto.encode('Live', 'PushFrame', { payloadType: 'hb' })
