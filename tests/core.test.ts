@@ -264,3 +264,27 @@ describe('login.poll', () => {
     }
   })
 })
+
+describe('http：按响应头的 charset 解码', () => {
+  it('charset=gbk 的响应按 GBK 解码（京东 loginservice）；没声明或 UTF-8 时不变', async () => {
+    const { HttpClient, mockSender, fakeResponse } = await import('../src/core/http.js')
+    // 「晨曦」的 GBK 编码
+    const gbk = new Uint8Array([0xb3, 0xbf, 0xea, 0xd8])
+    const bodies: Record<string, [Uint8Array | string, string]> = {
+      'https://a.test/gbk': [Uint8Array.from([...Buffer.from('{"n":"'), ...gbk, ...Buffer.from('"}')]), 'text/json;charset=gbk'],
+      'https://a.test/utf8': ['{"n":"晨曦"}', 'application/json; charset=utf-8'],
+      'https://a.test/none': ['{"n":"晨曦"}', 'application/json'],
+    }
+    const restore = mockSender((p) => {
+      const [body, type] = bodies[p.url]!
+      return fakeResponse(body, { headers: [['content-type', type]], url: p.url })
+    })
+    try {
+      const h = new HttpClient({ timeout: 5 })
+      for (const url of Object.keys(bodies)) expect(await h.json(({ url }) as any), url).toEqual({ n: '晨曦' })
+      expect(await (await h.request({ url: 'https://a.test/gbk' })).clone().text()).toBe('{"n":"晨曦"}')
+    } finally {
+      restore()
+    }
+  })
+})

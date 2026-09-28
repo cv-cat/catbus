@@ -295,7 +295,7 @@ export class HttpClient {
     o.log?.debug(`${prepared.method} ${prepared.url}`)
     let res: HttpResponse
     try {
-      res = await sender(prepared, sendOptions)
+      res = decodeByCharset(await sender(prepared, sendOptions))
     } catch (err) {
       throw toNetworkError(err)
     }
@@ -318,6 +318,34 @@ export class HttpClient {
     const res = await this.request(req)
     return new Uint8Array(await res.arrayBuffer())
   }
+}
+
+const CHARSET = /charset\s*=\s*["']?([\w-]+)/i
+
+/**
+ * 响应头声明了 UTF-8 以外的 charset（京东的 `text/json;charset=gbk` 等）时，text() / json() 按它解码，
+ * 与上游 requests / curl_cffi 的 `resp.text` 一致。没有声明或声明 UTF-8 时不变。
+ */
+function decodeByCharset(res: HttpResponse): HttpResponse {
+  const charset = CHARSET.exec(res.headers.get('content-type') ?? '')?.[1]?.toLowerCase()
+  if (!charset || charset === 'utf-8' || charset === 'utf8') return res
+  let decoder: TextDecoder
+  try {
+    decoder = new TextDecoder(charset)
+  } catch {
+    return res
+  }
+  const wrap = (r: HttpResponse): HttpResponse =>
+    new Proxy(r, {
+      get(target, key) {
+        if (key === 'text') return async () => decoder.decode(await target.arrayBuffer())
+        if (key === 'json') return async () => JSON.parse(decoder.decode(await target.arrayBuffer()))
+        if (key === 'clone') return () => wrap(target.clone())
+        const value = Reflect.get(target, key)
+        return typeof value === 'function' ? value.bind(target) : value
+      },
+    })
+  return wrap(res)
 }
 
 export async function parseJson<T>(res: HttpResponse): Promise<T> {
