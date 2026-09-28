@@ -123,11 +123,13 @@ function decodePng(buf: Uint8Array): Rgba | null {
   return { width, height, data: out }
 }
 
-/** JPEG / WebP 等：@napi-rs/canvas 解码。 */
-function decodeCanvas(buf: Uint8Array): Rgba {
-  const { Image, createCanvas } = require('@napi-rs/canvas')
-  const im = new Image()
-  im.src = Buffer.from(buf)
+/**
+ * JPEG / WebP 等：@napi-rs/canvas 解码。解码是异步的，要等 loadImage 完成再画；
+ * 同步设 `Image.src` 后立刻 drawImage 画出来是全黑的（真实的背景图是 JPEG）。
+ */
+async function decodeCanvas(buf: Uint8Array): Promise<Rgba> {
+  const { loadImage, createCanvas } = require('@napi-rs/canvas')
+  const im = await loadImage(Buffer.from(buf))
   const c = createCanvas(im.width, im.height)
   const ctx = c.getContext('2d')
   ctx.drawImage(im, 0, 0)
@@ -135,8 +137,8 @@ function decodeCanvas(buf: Uint8Array): Rgba {
   return { width: im.width, height: im.height, data: new Uint8Array(d.data.buffer, d.data.byteOffset, d.data.length) }
 }
 
-function decode(buf: Uint8Array): Rgba {
-  const img = decodePng(buf) ?? decodeCanvas(buf)
+async function decode(buf: Uint8Array): Promise<Rgba> {
+  const img = decodePng(buf) ?? (await decodeCanvas(buf))
   if (!img.width || !img.height) throw new Error('无法解码验证码图片')
   return img
 }
@@ -163,8 +165,8 @@ function bgr(img: Rgba, x0 = 0, y0 = 0, w = img.width, h = img.height): Uint8Arr
  */
 export async function findGapX(bgPng: Uint8Array, cutPng: Uint8Array): Promise<number> {
   const cv = await loadCv()
-  const bgImg = decode(bgPng)
-  const cut = decode(cutPng)
+  const bgImg = await decode(bgPng)
+  const cut = await decode(cutPng)
 
   let x0 = Infinity
   let x1 = -1

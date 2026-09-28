@@ -618,3 +618,18 @@ describe('kuaishou 归一化（真实响应的结构）', () => {
     expect(norm.work({ ...row, showAtlasIcon: false }).kind).toBe('video')
   })
 })
+
+describe('kuaishou 滑块缺口：背景图是 JPEG', () => {
+  it('真实下发的背景图是 JPEG：解码要等 loadImage，得到与 PNG 相同的缺口位置（同步解码会画成全黑）', async () => {
+    const { createCanvas, loadImage } = await import('@napi-rs/canvas')
+    const input = loadCase('kuaishou', 'captcha_gap').input
+    const bgPng = Buffer.from(input.match[0], 'base64')
+    const cut = Buffer.from(input.match[1], 'base64')
+    const im = await loadImage(bgPng)
+    const c = createCanvas(im.width, im.height)
+    c.getContext('2d').drawImage(im, 0, 0)
+    const bgJpeg = c.toBuffer('image/jpeg', 95)
+    const expected = await findGapX(bgPng, cut)
+    expect(Math.abs((await findGapX(bgJpeg, cut)) - expected)).toBeLessThanOrEqual(2)
+  })
+})
