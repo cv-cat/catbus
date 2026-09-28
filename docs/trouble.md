@@ -324,6 +324,7 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 | Spider_XHS | 扫码后 471（verifytype 120）的验证流程 | 2 | 移植验证流程，去掉「改用 cookie」的兜底提示 |
 | Spider_XHS | 评论 461（verifytype 124）的验证码 | 3 | 同上 |
 | BilibiliApis | 弹幕分段去掉 `ps` / `pe` | 4 | 改 `danmakuSeg`，重新生成对拍数据 |
+| DouYin_Spider | 综合搜索只发「已筛选」标记、不发筛选值（commit fe3eb24 删掉了），排序 / 时间筛选对综合频道不生效；catbus 照抄并在 stderr 提示改用 `--type video` | 10 | 移植修正后的请求 |
 | BilibiliApis | 极验点选：下载第一张题图时把 B 站会话 cookie 也发给了 static.geetest.com（登录时只是匿名设备 cookie，已登录账号复用时会带出 SESSDATA） | 10 | 移植修正后的请求 |
 
 ## 10. 上游有、catbus 漏移植的（2026-09-28 审计）
@@ -338,7 +339,7 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 | xhs | `keyword suggest`、`item search --time`、`user following`（me）、群聊会话与记录、视频发布元数据、创作者会话失效自动重新桥接、直播弹幕长连通道、`msg read` 匹配会话的 bug | 移植中 |
 | bilibili | 极验点选题自动识别（短信 / 密码登录降级时用；含人工兜底页面） | 已补，待真机验证通过率。模型在新包 `@cv-cat/catbus-assets-ocr`（ddddocr 1.6.1，MIT，25.5 MB），发布顺序在 catbus-cli 之前 |
 | bilibili | `item related`、专栏搜索（`--type article`）、专栏 / 动态评论与按时间排序、楼中楼 `--root`、收藏到指定收藏夹（`--folder`）、投币同时点赞（`--like`）、投稿转载 / 动态文案 / 允许转载、专栏标签 / 摘要 / 只存草稿与 `draft get` / `delete`、弹幕样式、直播弹幕回复、按用户查直播间、直播全部事件与人气值、`user items --keyword`、推荐流翻页去重 | 已补，待真机验证（`draft/view`、`Related` 的响应结构与部分直播消息字段按文档写）。`item delete` 改 ◐：撤稿需要人机验证，验证码参数的来源上游没写，还没接上人工兜底 |
-| douyin | 搜索筛选（排序 / 时间 / 类型等）、`item list`、发布参数（poi、话题、@、封面、合集等）、收藏夹移动、私信文件与分享卡片、`live history` / `live media`、千票榜、商品评价排序、通知分组、短信 SSO 备用链 | 移植中 |
+| douyin | 搜索筛选（`--sort` / `--time` / `--type`，`--type video` 走视频频道；私有 `--length` / `--range`）、用户搜索筛选、`item list`、发布参数（`--poi-name` / `--series` / `--hotspot` / `--no-download` / 图文 `--cover`）、收藏夹移动（`--folder`）、私信 `--file` / `--share`、`live history` / `live media`、千票榜、`live like --count`、商品评价 `--label`、通知 `--group`、短信 `--sso` | 已补，待真机验证（写操作仍受第 1 节 dtrait 限制）。不做：商品评价排序（上游没给取值）、表情包（上游没有表情列表接口） |
 | tiktok | 收藏夹加内容（`folder add`）与公开 / 私密（顺带修了改名会把公开收藏夹变私密的 bug）、发布互动开关（`--allow-*`）、`item related` 与私信翻页、按房间号操作直播、`live media`、系统通知（group 661）并入 `notice list` | 已补，待真机验证。**私信翻页的游标字段位置是按字节 IM 协议推断的，上游没有解析**；`live media` 的流地址结构也是推断的 |
 | x | 同步上游 3fe6ea7：长推（超 280 权重自动走 CreateNoteTweet）、`--thread`、`article publish` / `delete`；搜索媒体（`--type video\|image`）、引用（`--quote`，新的通用发布选项）、私信补对方资料 | 已补，待真机验证（长推和文章需要 Premium 账号）。**不做**：账号密码登录（依赖 Castle 反自动化令牌，登录方式只保留 cookie）；`msg list` 翻页（上游没有收件箱翻页接口，只取首页，标 ◐） |
 | jd | 403 时区分登录失效与风控、订单时间范围（`--range`）、按订单咨询客服（`--order`）、评价条数（`--limit` → commentNum）、收货地区（`--area`）、国际手机号、`msg listen` 其余消息类型 | 已补，待真机验证（撤回消息的 id 字段名是推断的；评价条数的服务端上限未知）。`item related` 保持 ◐：diviner 的 `p` 只能从浏览器抓包得到 |
