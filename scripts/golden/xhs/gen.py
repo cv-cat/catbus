@@ -343,6 +343,9 @@ def main():
     c('im_revoke', live(lambda a: a.revoke_message({'chat_user_id': other, 'message_id': 'm1'})))
     c('im_delete', live(lambda a: a.delete_message({'chat_user_id': other})))
     c('im_following', live(lambda a: a.get_following()))
+    c('im_group_chats', live(lambda a: a.get_group_chats()))
+    # 上游要调用方给出实抓的参数；catbus 按私信记录的同一组游标给出（group_id、last_id、start_id、limit）
+    c('im_group_history', live(lambda a: a.get_group_message_history({'group_id': GROUP_ID, 'last_id': 99, 'start_id': 0, 'limit': 30})))
 
     # ---------------------------------------------------------------- 创作者中心
     c('creator_user_info', creator(lambda a: a.get_user_info()))
@@ -429,6 +432,7 @@ NO_WATER_URLS = [
 ]
 # 3x2 PNG（上游 get_file_info 用 opencv 解出宽高）
 PNG = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAIAAAASFvFNAAAAEElEQVR4nGP4z8AAQQxwFgBB0gX7h/C5SAAAAABJRU5ErkJggg==')
+GROUP_ID = '6612345678901234567'
 
 
 # ---------------------------------------------------------------- 测试视频（opencv 写 mp4v，再改 moov 里的盒子）

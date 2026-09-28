@@ -86,8 +86,8 @@ export default definePlatform({
         'notice list': impl('full', 'noticeList'),
         'notice count': impl('full', 'noticeCount'),
 
-        'msg list': impl('full', 'msgList'),
-        'msg history': impl('full', 'msgHistory'),
+        'msg list': impl('full', 'msgList', { note: '含群聊，群聊会话 id 为 group:<群 id>' }),
+        'msg history': impl('full', 'msgHistory', { note: '单聊传对方 id，群聊传 group:<群 id>' }),
         'msg send': impl('full', 'msgSend'),
         'msg listen': impl('full', 'msgListen'),
         'msg read': impl('full', 'msgRead'),

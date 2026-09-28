@@ -285,6 +285,19 @@ export function messageHistory(p: Pc, chatUserId: string, lastId = 0, limit = 30
   return im(p, `/api/im/web/messages/history?${urlencode([['chat_user_id', chatUserId], ['last_id', lastId], ['start_id', 0], ['limit', limit]])}`)
 }
 
+/** get_group_chats：群聊会话列表（参数与 get_chats 相同）。 */
+export function groupChats(p: Pc, page = 0, limit = 100) {
+  return im(p, `/api/im/web/chats/group?${urlencode([['limit', limit], ['complete', 'true'], ['page', page], ['source', 'pc']])}`)
+}
+
+/**
+ * get_group_message_history：上游要调用方给出实抓的参数（按给出的顺序编码）。这里按私信记录的同一组游标
+ * （group_id、last_id、start_id、limit）给出，last_id 是上一页最早一条的 store_id。
+ */
+export function groupMessageHistory(p: Pc, groupId: string, lastId = 0, limit = 30) {
+  return im(p, `/api/im/web/red/group/messages/history?${urlencode([['group_id', groupId], ['last_id', lastId], ['start_id', 0], ['limit', limit]])}`)
+}
+
 /** get_following：当前账号的关注列表（私信页的「选择联系人」用的接口，只能取自己的）。 */
 export function following(p: Pc, page = 1, size = 200) {
   return im(p, `/api/im/web/users/following/all?${urlencode([['page', page], ['size', size]])}`)

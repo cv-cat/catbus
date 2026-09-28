@@ -6,7 +6,7 @@ import * as n from '../../../core/normalize.js'
 import { parseCookieInput } from '../../../core/cookies.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
-import type { AuthStatus, Category, Credential, Event, Media, Message, Notice, NoticeCount } from '../../../core/schemas.js'
+import type { AuthStatus, Category, Conversation, Credential, Event, Media, Message, Notice, NoticeCount } from '../../../core/schemas.js'
 import { reconnecting } from '../../../core/stream.js'
 import { authError, isGuest, paged } from '../../../core/toolkit.js'
 import { GUEST } from '../../../core/auth-store.js'
@@ -769,30 +769,79 @@ export function liveListen(ctx: Ctx) {
 // ================================================================ msg
 
 /**
- * 会话列表的一项：user_id 是当前账号自己，对方是 chat_user_id，对方资料在 info 里。
- * 会话 id 用 chat_user_id，msg history / revoke / delete 都按它取。
+ * 会话 id：单聊是对方的用户 id（24 位十六进制）；群聊是 `group:<群 id>`。
+ * 两种 id 都能直接传给 msg history；群聊不支持 msg read / revoke / delete / send（上游没有对应的群聊接口）。
  */
+const GROUP_PREFIX = 'group:'
+
+const groupIdOf = (conversation: string): string | null => (conversation.startsWith(GROUP_PREFIX) ? conversation.slice(GROUP_PREFIX.length) || null : null)
+
+function privateOnly(conversation: string, what: string): void {
+  if (conversation.startsWith(GROUP_PREFIX)) throw new CatbusError('UNSUPPORTED', `xhs 的群聊会话不支持${what}`, { hint: '群聊会话只支持 msg list、msg history' })
+}
+
+/** 单聊的会话 id：user_id 是当前账号自己，对方是 chat_user_id（对方资料在 info 里）。 */
+const peerOf = (v: any) => v.info ?? v.user_info ?? v.chat_user ?? {}
+export const chatIdOf = (v: any): string => String(v.chat_user_id ?? peerOf(v).user_id ?? v.chat_id ?? v.id)
+
+const lastMessageOf = (v: any) => n.str(push.innerText(v.last_msg_content ?? v.last_message?.content ?? ''))
+const updatedAtOf = (v: any) => n.time(v.last_msg_ts ?? v.last_msg_time ?? v.update_time)
+
+/** 单聊会话列表的一项（v3/chats 的 chat_list[i]）。 */
 export function conversationOf(v: any) {
-  const peer = v.info ?? v.user_info ?? v.chat_user ?? {}
+  const peer = peerOf(v)
   const peerId = v.chat_user_id ?? peer.user_id
   return n.conversation(
     {
-      id: String(peerId ?? v.chat_id ?? v.id),
+      id: chatIdOf(v),
       peer: norm.ref({ user_id: peerId, nickname: peer.nickname ?? peer.user_name ?? v.nickname }),
       unread: n.count(v.unread_count),
-      last_message: n.str(push.innerText(v.last_msg_content ?? v.last_message?.content ?? '')),
-      updated_at: n.time(v.last_msg_ts ?? v.last_msg_time ?? v.update_time),
+      last_message: lastMessageOf(v),
+      updated_at: updatedAtOf(v),
     },
     v,
   )
 }
 
+/** 群聊的群 id（chats/group 的列表项；字段名按私信列表的习惯兼容几种写法）。 */
+const groupIdOfChat = (v: any) => v?.group_id ?? v?.group_info?.group_id ?? v?.chat_id ?? v?.id
+
+/** 群聊会话列表的一项：没有单个对方，peer 为 null（群名在 --raw 里）。 */
+export function groupConversationOf(v: any) {
+  return n.conversation({ id: `${GROUP_PREFIX}${groupIdOfChat(v)}`, peer: null, unread: n.count(v.unread_count), last_message: lastMessageOf(v), updated_at: updatedAtOf(v) }, v)
+}
+
+const groupList = (d: any): any[] => (Array.isArray(d) ? d : (d?.group_chat_list ?? d?.group_chats ?? d?.chat_list ?? d?.chats ?? d?.groups ?? []))
+
+/**
+ * 会话列表：单聊（get_chats）和群聊（get_group_chats）合在一起，按最后一条消息的时间排。
+ * cursor 是「单聊页码:群聊页码」，没有更多的一方写 -。群聊列表取不到时只列单聊，并在 stderr 提示。
+ */
 export async function msgList(ctx: Ctx) {
   return run(ctx, async (p) => {
-    const page = Number(ctx.cursor ?? 0) || 0
-    const d = p.check(await api.chats(p, page))
-    const list = (d?.chat_list ?? d?.chats ?? []).map(conversationOf)
-    return paged(list, page + 1, Boolean(d?.has_more))
+    const page = (s: string | undefined) => (s == null || s === '-' ? null : Number(s) || 0)
+    const [chatPage, groupPage] = ctx.cursor ? [page(ctx.cursor.split(':')[0]), page(ctx.cursor.split(':')[1])] : [0, 0]
+    const out: Conversation[] = []
+    let nextChat: number | null = null
+    let nextGroup: number | null = null
+    if (chatPage != null) {
+      const d = p.check(await api.chats(p, chatPage))
+      out.push(...(d?.chat_list ?? d?.chats ?? []).map(conversationOf))
+      if (d?.has_more) nextChat = chatPage + 1
+    }
+    if (groupPage != null) {
+      try {
+        const d = p.check(await api.groupChats(p, groupPage))
+        out.push(...groupList(d).filter((v) => groupIdOfChat(v) != null).map(groupConversationOf))
+        if (d?.has_more) nextGroup = groupPage + 1
+      } catch (err) {
+        if (!(err instanceof CatbusError && err.code === 'UPSTREAM')) throw err
+        ctx.log.warn(`群聊列表取不到，只列单聊：${err.message}`)
+      }
+    }
+    out.sort((a, b) => String(b.updated_at ?? '').localeCompare(String(a.updated_at ?? '')))
+    const more = nextChat != null || nextGroup != null
+    return paged(out, `${nextChat ?? '-'}:${nextGroup ?? '-'}`, more)
   })
 }
 
@@ -809,13 +858,19 @@ function contentType(v: any): number {
   }
 }
 
+/**
+ * 一条消息。单聊里没有 sender 时按 is_self 在自己和对方之间取；群聊没有「对方」，取不到发送者时为 null。
+ */
 export function messageOf(v: any, conversation: string, self: string): Message {
   const type = contentType(v)
+  const peer = groupIdOf(conversation) == null ? conversation : null
+  const sender = v.sender_id ?? v.sender ?? (v.is_self ? self : peer)
+  const info = v.sender_info ?? v.user_info ?? {}
   return n.message(
     {
       id: String(v.message_id ?? v.id ?? v.mid),
       conversation_id: conversation,
-      from: norm.ref({ user_id: v.sender_id ?? v.sender ?? (v.is_self ? self : conversation) }),
+      from: norm.ref({ user_id: sender, nickname: info.nickname ?? v.sender_nickname ?? v.nickname }),
       type: type === 1 ? 'text' : type === 2 ? 'image' : type === 4 ? 'video' : type === 3 ? 'card' : 'other',
       text: n.str(push.innerText(v.content ?? '')),
       created_at: n.time(v.created_at ?? v.create_time ?? v.ts),
@@ -824,15 +879,22 @@ export function messageOf(v: any, conversation: string, self: string): Message {
   )
 }
 
+/**
+ * 消息记录：单聊走 get_message_history，群聊（`group:<群 id>`）走 get_group_message_history。
+ * 从新到旧排列；cursor 是这一页最早一条的 store_id（下一页的 last_id）。响应里没有 has_more，取满一页就认为还有更早的消息。
+ */
 export async function msgHistory(ctx: Ctx) {
   return run(ctx, async (p) => {
     const conv = ctx.args.conversation!
-    const d = p.check(await api.messageHistory(p, conv, Number(ctx.cursor ?? 0) || 0, HISTORY_LIMIT))
+    const group = groupIdOf(conv)
+    const lastId = Number(ctx.cursor ?? 0) || 0
+    const d = p.check(group != null ? await api.groupMessageHistory(p, group, lastId, HISTORY_LIMIT) : await api.messageHistory(p, conv, lastId, HISTORY_LIMIT))
     const raw: any[] = d?.out_message_list ?? d?.message_list ?? d?.messages ?? []
     const list = raw.map((m) => messageOf(m, conv, p.userId))
-    // 从新到旧排列；响应里没有 has_more，取满一页就认为还有更早的消息
-    const lastId = raw.length ? Number(raw.at(-1).store_id ?? raw.at(-1).id) : null
-    return paged(list, lastId, (Boolean(d?.has_more) || raw.length >= HISTORY_LIMIT) && lastId != null)
+    const ids = raw.map((m) => Number(m.store_id ?? m.id)).filter(Number.isFinite)
+    const next = ids.length ? Math.min(...ids) : null
+    // 游标不前进（边界那条被重复返回）时到头了
+    return paged(list, next, (Boolean(d?.has_more) || raw.length >= HISTORY_LIMIT) && next != null && next !== lastId)
   })
 }
 
@@ -841,6 +903,7 @@ export async function msgSend(ctx: Ctx): Promise<Message> {
   if (ctx.options.item) throw new CatbusError('UNSUPPORTED', 'xhs 没有商品客服私信', { hint: '用 --to <user> 或 --conversation <id>' })
   const text = ctx.args.text
   if (!text) throw new CatbusError('USAGE', '需要 <text>')
+  if (ctx.options.conversation) privateOnly(String(ctx.options.conversation), '发消息（上游只发单聊私信）')
   return run(ctx, async (p) => {
     if (!p.userId) await p.bootstrap()
     const receiver = ctx.options.to ? (await resolveUser(p, String(ctx.options.to))).id : String(ctx.options.conversation)
@@ -908,11 +971,13 @@ export function msgListen(ctx: Ctx) {
   })()
 }
 
+/** 标记已读：从会话列表里找到这个会话（会话 id 与 msg list 相同，是对方的 chat_user_id），带上它的 store_id 与未读数。 */
 export async function msgRead(ctx: Ctx) {
+  const conv = ctx.args.conversation!
+  privateOnly(conv, '标记已读')
   return run(ctx, async (p) => {
-    const conv = ctx.args.conversation!
     const d = p.check(await api.chats(p))
-    const chat = (d?.chat_list ?? d?.chats ?? []).find((c: any) => String(c.user_id ?? c.chat_id) === conv)
+    const chat = (d?.chat_list ?? d?.chats ?? []).find((c: any) => chatIdOf(c) === conv)
     p.check(
       await api.markRead(p, [{ chat_id: conv, read_store_id: Number(chat?.last_store_id ?? chat?.store_id ?? 0), unread_count: Number(chat?.unread_count ?? 0), type: 1, need_rm_offline: true }]),
     )
@@ -921,6 +986,7 @@ export async function msgRead(ctx: Ctx) {
 }
 
 export async function msgRevoke(ctx: Ctx) {
+  privateOnly(ctx.args.conversation!, '撤回消息')
   return run(ctx, async (p) => {
     p.check(await api.revokeMessage(p, { chat_user_id: ctx.args.conversation!, message_id: ctx.args.message! }))
     return { id: ctx.args.message! }
@@ -928,6 +994,7 @@ export async function msgRevoke(ctx: Ctx) {
 }
 
 export async function msgDelete(ctx: Ctx) {
+  privateOnly(ctx.args.conversation!, '删除会话')
   return run(ctx, async (p) => {
     p.check(await api.deleteMessage(p, [['chat_user_id', ctx.args.conversation!]]))
     return { id: ctx.args.conversation! }

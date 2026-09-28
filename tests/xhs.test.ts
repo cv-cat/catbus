@@ -31,6 +31,7 @@ const CREATOR_COOKIES =
   `webBuild=1.26.0; xsecappid=ugc; websectiga=${TIGA0}; sec_poison_id=00000000-0000-0000-0000-000000000000; loadts=1789999990123`
 const NOTE_ID = '6a3b5a0b000000002103ee67'
 const ROOM = '570443028306756154'
+const GROUP_ID = '6612345678901234567'
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAIAAAASFvFNAAAAEElEQVR4nGP4z8AAQQxwFgBB0gX7h/C5SAAAAABJRU5ErkJggg==', 'base64')
 /** 与 gen.py 的 ACK_BODY 相同：ChatACK{mid=mid-1, messageid=msg-9, ts}。 */
 const ACK = Buffer.concat([Buffer.from([0x0a, 5]), Buffer.from('mid-1'), Buffer.from([0x12, 5]), Buffer.from('msg-9'), Buffer.from([0x18, 0xc8, 0x81, 0xa4, 0xa3, 0x88, 0x34])])
@@ -129,6 +130,8 @@ const CASES: Record<string, () => Promise<unknown>> = {
   im_revoke: pc((p) => api.revokeMessage(p, { chat_user_id: OTHER, message_id: 'm1' })),
   im_delete: pc((p) => api.deleteMessage(p, [['chat_user_id', OTHER]])),
   im_following: pc((p) => api.following(p)),
+  im_group_chats: pc((p) => api.groupChats(p)),
+  im_group_history: pc((p) => api.groupMessageHistory(p, GROUP_ID, 99)),
 
   creator_user_info: creator((c) => capi.userInfo(c)),
   creator_posted: creator(async (c) => [await capi.postedNotes(c, 0), await capi.postedNotes(c, 1, 0, true)]),
@@ -366,6 +369,81 @@ function pcCtx(args: Record<string, string | undefined> = {}, options: Record<st
 }
 
 const hits = (requests: GoldenRequest[], part: string) => requests.filter((r) => r.url.includes(part))
+
+describe('xhs 私信', () => {
+  it('msg read：按会话 id（对方的 chat_user_id）找到会话，带上它的 store_id 与未读数', async () => {
+    const chat = { user_id: USER_ID, chat_user_id: OTHER, last_store_id: 42, unread_count: 3, info: { nickname: '对方' } }
+    const { requests, result, error } = await serve(
+      (r) => security(r) ?? (r.url.includes('/api/im/web/v3/chats') ? ok({ chat_list: [chat] }) : undefined),
+      () => cmd.msgRead(pcCtx({ conversation: OTHER })),
+    )
+    if (error) throw error
+    expect(result).toEqual({ id: OTHER })
+    const read = hits(requests, '/api/im/web/v2/messages/read')
+    expect(read).toHaveLength(1)
+    expect(jsonBody(read[0]!).chat_list).toEqual([{ chat_id: OTHER, read_store_id: 42, unread_count: 3, type: 1, need_rm_offline: true }])
+  })
+
+  it('msg list：单聊与群聊合在一起按时间排，群聊的 id 是 group:<群 id>；群聊列表取不到时只列单聊', async () => {
+    const chat = { user_id: USER_ID, chat_user_id: OTHER, last_msg_ts: 1790000000000, last_msg_content: '在吗', info: { nickname: '对方' } }
+    const group = { group_id: GROUP_ID, group_name: '咖啡群', last_msg_ts: 1790000100000, last_msg_content: '大家好', unread_count: 2 }
+    const route = (groups: Reply) => (r: GoldenRequest) =>
+      security(r) ?? (r.url.includes('/api/im/web/v3/chats') ? ok({ chat_list: [chat], has_more: false }) : r.url.includes('/api/im/web/chats/group') ? groups : undefined)
+    const both = await serve(route(ok({ group_chat_list: [group], has_more: false })), () => cmd.msgList(pcCtx()))
+    if (both.error) throw both.error
+    expect(both.result!.data).toMatchObject([
+      { id: `group:${GROUP_ID}`, peer: null, unread: 2, last_message: '大家好' },
+      { id: OTHER, peer: { id: OTHER, name: '对方' }, last_message: '在吗' },
+    ])
+    expect(both.result!.page).toEqual({ cursor: null, has_more: false })
+    expect(hits(both.requests, '/api/im/web/chats/group?limit=100&complete=true&page=0&source=pc')).toHaveLength(1)
+
+    const onlyChats = await serve(route(fail(500, '服务出错')), () => cmd.msgList(pcCtx()))
+    if (onlyChats.error) throw onlyChats.error
+    expect(onlyChats.result!.data.map((c: any) => c.id)).toEqual([OTHER])
+
+    // 单聊还有下一页、群聊已取完：下一页只取单聊
+    const more = await serve(
+      (r) => security(r) ?? (r.url.includes('/api/im/web/v3/chats') ? ok({ chat_list: [chat], has_more: true }) : r.url.includes('/chats/group') ? ok({ group_chat_list: [] }) : undefined),
+      () => cmd.msgList(pcCtx()),
+    )
+    expect(more.result!.page).toEqual({ cursor: '1:-', has_more: true })
+    const next = pcCtx()
+    next.cursor = '1:-'
+    const second = await serve((r) => security(r) ?? (r.url.includes('/api/im/web/v3/chats') ? ok({ chat_list: [] }) : undefined), () => cmd.msgList(next))
+    expect(hits(second.requests, '/api/im/web/v3/chats?limit=100&complete=true&page=1')).toHaveLength(1)
+    expect(hits(second.requests, '/chats/group')).toHaveLength(0)
+  })
+
+  it('msg history：group:<群 id> 走群聊记录接口，游标是最早一条的 store_id', async () => {
+    const msg = (store_id: number, sender_id: string, text: string) => ({ store_id, sender_id, created_at: 1790000000000 + store_id, content: JSON.stringify({ content: text, content_type: 1 }) })
+    const page = Array.from({ length: 30 }, (_, i) => msg(200 - i, i % 2 ? OTHER : USER_ID, `第 ${i} 条`))
+    const conv = `group:${GROUP_ID}`
+    const { requests, result, error } = await serve(
+      (r) => security(r) ?? (r.url.includes('/api/im/web/red/group/messages/history') ? ok({ out_message_list: page }) : undefined),
+      () => cmd.msgHistory(pcCtx({ conversation: conv })),
+    )
+    if (error) throw error
+    expect(hits(requests, `/api/im/web/red/group/messages/history?group_id=${GROUP_ID}&last_id=0&start_id=0&limit=30`)).toHaveLength(1)
+    expect(result!.data[0]).toMatchObject({ conversation_id: conv, from: { id: USER_ID }, type: 'text', text: '第 0 条' })
+    expect(result!.data[1]).toMatchObject({ from: { id: OTHER } })
+    expect(result!.page).toEqual({ cursor: '171', has_more: true })
+  })
+
+  it('群聊会话不支持 read / revoke / delete / send：报 UNSUPPORTED，不发请求', async () => {
+    const conv = `group:${GROUP_ID}`
+    const { requests } = await serve(
+      () => undefined,
+      async () => {
+        await expect(cmd.msgRead(pcCtx({ conversation: conv }))).rejects.toMatchObject({ code: 'UNSUPPORTED' })
+        await expect(cmd.msgRevoke(pcCtx({ conversation: conv, message: 'm1' }))).rejects.toMatchObject({ code: 'UNSUPPORTED' })
+        await expect(cmd.msgDelete(pcCtx({ conversation: conv }))).rejects.toMatchObject({ code: 'UNSUPPORTED' })
+        await expect(cmd.msgSend(pcCtx({ text: '你好' }, { conversation: conv }))).rejects.toMatchObject({ code: 'UNSUPPORTED' })
+      },
+    )
+    expect(requests).toHaveLength(0)
+  })
+})
 
 describe('xhs 用户、搜索', () => {
   it('user following：只支持自己（me 或自己的 id），别人报 UNSUPPORTED', async () => {

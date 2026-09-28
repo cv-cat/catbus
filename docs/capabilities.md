@@ -171,7 +171,9 @@
 | msg listen | ✓ | ✓ | ✓ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ○ |
 | msg read / revoke / delete | ✓ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ |
 
+- xhs `msg list`：含群聊，群聊会话 id 为 group:<群 id>
 - x `msg list`：只取收件箱首页（最近 20 个会话），上游没有翻页
+- xhs `msg history`：单聊传对方 id，群聊传 group:<群 id>
 - x `msg history`：消息端到端加密，只给出占位消息
 - xianyu `msg send`：--to 不带 --item 时按上游的默认商品建会话；--to 加 --item 就这件商品联系对方（卖家可以联系买家）
 - `notice list --group`：douyin
