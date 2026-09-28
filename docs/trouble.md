@@ -337,7 +337,7 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 | kuaishou | 服务端登出；发布后刷新发布状态；直播礼物全量 | 移植中 |
 | xhs | `keyword suggest`、`item search --time`、`user following`（me）、群聊会话与记录、视频发布元数据、创作者会话失效自动重新桥接、直播弹幕长连通道、`msg read` 匹配会话的 bug | 移植中 |
 | bilibili | 极验点选题自动识别（短信 / 密码登录降级时用；含人工兜底页面） | 已补，待真机验证通过率。模型在新包 `@cv-cat/catbus-assets-ocr`（ddddocr 1.6.1，MIT，25.5 MB），发布顺序在 catbus-cli 之前 |
-| bilibili | `item related`、专栏搜索、专栏 / 动态评论与按时间排序、楼中楼 root / parent、收藏到指定收藏夹、投币同时点赞、投稿字段、专栏标签 / 摘要 / 草稿、弹幕样式、按用户查直播间、直播全部事件与人气值等 | 移植中 |
+| bilibili | `item related`、专栏搜索（`--type article`）、专栏 / 动态评论与按时间排序、楼中楼 `--root`、收藏到指定收藏夹（`--folder`）、投币同时点赞（`--like`）、投稿转载 / 动态文案 / 允许转载、专栏标签 / 摘要 / 只存草稿与 `draft get` / `delete`、弹幕样式、直播弹幕回复、按用户查直播间、直播全部事件与人气值、`user items --keyword`、推荐流翻页去重 | 已补，待真机验证（`draft/view`、`Related` 的响应结构与部分直播消息字段按文档写）。`item delete` 改 ◐：撤稿需要人机验证，验证码参数的来源上游没写，还没接上人工兜底 |
 | douyin | 搜索筛选（排序 / 时间 / 类型等）、`item list`、发布参数（poi、话题、@、封面、合集等）、收藏夹移动、私信文件与分享卡片、`live history` / `live media`、千票榜、商品评价排序、通知分组、短信 SSO 备用链 | 移植中 |
 | tiktok | 收藏夹加内容（`folder add`）与公开 / 私密（顺带修了改名会把公开收藏夹变私密的 bug）、发布互动开关（`--allow-*`）、`item related` 与私信翻页、按房间号操作直播、`live media`、系统通知（group 661）并入 `notice list` | 已补，待真机验证。**私信翻页的游标字段位置是按字节 IM 协议推断的，上游没有解析**；`live media` 的流地址结构也是推断的 |
 | x | 同步上游新提交（长推、thread、Article 长文）、账号密码登录（castle token）、搜索媒体标签、引用推文、私信翻页与成员资料 | 移植中 |
