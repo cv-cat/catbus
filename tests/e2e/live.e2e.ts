@@ -23,7 +23,9 @@ const SKIP = new Set(['auth login', 'auth use', 'auth logout'])
 const NON_EMPTY = new Set(['item search', 'user search', 'feed list', 'keyword hot', 'keyword suggest', 'live list', 'live search'])
 
 const KEYWORD: Record<string, string> = { tiktok: 'cat', x: 'cat', xianyu: '键盘', taobao: '键盘', jd: '键盘' }
-const INTERVAL = 1500
+/** 命令之间的间隔（毫秒）。小红书对连续请求更敏感：1.5 秒间隔下评论接口触发过 461。 */
+const INTERVAL: Record<string, number> = { xhs: 4000 }
+const DEFAULT_INTERVAL = 1500
 
 type Obj = Record<string, any>
 
@@ -102,8 +104,15 @@ function buildArgv(p: string, cmd: Command, pool: Pool): string[] | { missing: s
   return argv
 }
 
-/** 执行顺序：auth status → 不依赖别的对象的命令 → 依赖 item / 用户 / 直播间等的命令 → 依赖评论的命令。 */
-function phase(cmd: Command): number {
+/**
+ * 最后跑的子站命令。小红书的蒲公英 / 千帆用另一套指纹请求同一个会话，没开通的账号被拒之后，
+ * 主站的评论接口会在一段时间内要求人机验证（461），所以放到主站命令之后。
+ */
+const LAST = new Set(['xhs kol', 'xhs distributor'])
+
+/** 执行顺序：auth status → 不依赖别的对象的命令 → 依赖 item / 用户 / 直播间等的命令 → 依赖评论的命令 → 子站命令。 */
+function phase(p: string, cmd: Command): number {
+  if (LAST.has(`${p} ${cmd.resource}`)) return 4
   if (cmd.key === 'auth status') return 0
   const names = cmd.args.filter((a) => !a.optional).map((a) => a.name)
   if (names.includes('comment')) return 3
@@ -191,7 +200,7 @@ for (const platform of PLATFORMS) {
   const commands = sortCommands(web.commands.values())
     .filter((c) => c.status === 'implemented' && !c.stream && !SKIP.has(c.key) && READ_ACTIONS.has(c.action))
     .map((c, i) => ({ c, i }))
-    .sort((a, b) => phase(a.c) - phase(b.c) || a.i - b.i)
+    .sort((a, b) => phase(p, a.c) - phase(p, b.c) || a.i - b.i)
     .map((x) => x.c)
 
   describe(p, () => {
@@ -207,7 +216,7 @@ for (const platform of PLATFORMS) {
         if (!loggedIn) ctx.skip(`没有登录 ${p}`)
         const argv = buildArgv(p, cmd, pool)
         if (!Array.isArray(argv)) ctx.skip(`前面的命令没有拿到 ${argv.missing}`)
-        await sleep(INTERVAL)
+        await sleep(INTERVAL[p] ?? DEFAULT_INTERVAL)
         const r = await cli(p, cmd.resource, cmd.action, ...(argv as string[]), '-q')
         const env = r.env
         expect(env, r.stdout + r.stderr).toBeTruthy()
@@ -230,8 +239,8 @@ for (const platform of PLATFORMS) {
             ctx.skip(`没有登录 ${p}`)
           }
         }
-        // 需要单独登录的子站点（--scope）没登录时跳过
-        if (env.error?.code === 'AUTH_REQUIRED' && String(env.error.hint).includes('--scope')) ctx.skip(env.error.message)
+        // 主站登录已由 auth status 确认；这里的 AUTH_REQUIRED 是子站点（--scope、蒲公英 / 千帆）没登录或没开通，跳过
+        if (env.error?.code === 'AUTH_REQUIRED') ctx.skip(env.error.message)
 
         expect(env.ok, `${JSON.stringify(env.error)}`).toBe(true)
         expect(env.platform).toBe(p)
