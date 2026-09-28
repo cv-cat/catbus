@@ -773,6 +773,210 @@
       ],
       "body": "{\"fileId\":555,\"coverKey\":\"cp_video_upload_cover_0123456789abcdef.jpg\",\"coverTimeStamp\":0,\"caption\":\"\",\"photoStatus\":2,\"coverType\":1,\"coverTitle\":\"\",\"photoType\":0,\"collectionId\":0,\"publishTime\":0,\"longitude\":\"\",\"latitude\":\"\",\"poiId\":0,\"notifyResult\":0,\"domain\":\"\",\"secondDomain\":\"\",\"coverCropped\":false,\"pkCoverKey\":\"\",\"profileCoverKey\":\"\",\"downloadType\":1,\"disableNearbyShow\":false,\"allowSameFrame\":true,\"movieId\":\"\",\"openPrePreview\":false,\"declareInfo\":{\"source\":0,\"platform\":0,\"time\":0,\"location\":\"\",\"sourceId\":0,\"sourceName\":\"\",\"statementId\":0},\"activityIds\":[],\"riseQuality\":false,\"chapters\":null,\"videoComposite\":null,\"useAiCaptionCover\":false,\"useAiCaption\":false,\"isUseIdealTime\":false,\"useAiCover\":false,\"kceInfo\":\"\",\"coverSize\":\"\",\"pkCoverTimeStamp\":-1,\"pkCoverType\":1,\"pkCoverSize\":\"\",\"innerChannel\":0,\"mediaId\":\"12345678901234567890123456\",\"videoInfoMeta\":\"\",\"triggerH265\":false,\"recTagIdList\":[],\"onvideoDuration\":0,\"disallowRecreation\":false,\"previewUrlErrorMessage\":\"\",\"coPublishUser\":[],\"coPublishRole\":0,\"extraInfo\":\"\",\"videoDuration\":16000,\"kuaishou.web.cp.api_ph\":\"fake0000-cp00-ph00-0000-000000000000\"}",
       "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://cp.kuaishou.com/rest/cp/works/v2/video/pc/photo/list?__NS_sig3=5f4f08388f35bc666b020100b6aa7c3bda3e967a1e1e1c1c1312110b",
+      "headers": [
+        [
+          "referer",
+          "https://cp.kuaishou.com/article/manage/video?status=2&from=publish"
+        ],
+        [
+          "x-requested-with",
+          "XMLHttpRequest"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "content-type",
+          "application/json;charset=UTF-8"
+        ],
+        [
+          "returnsetrootdomainloginurl",
+          "true"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://cp.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "wid",
+          "12345678901234567"
+        ],
+        [
+          "didv",
+          "1789990000000"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ],
+        [
+          "kwfv1",
+          "+f8Y+nHMwe0QD8fP0hPfL9PAPI+0bS8/pjwnbf8fGI+9+YG/pDwePAG0GlP0cE8/HIG9r9+9zY+/WI+/HFwezjweP78BQD+BLM8nzYPnrIPfPF+08YPAYD8/bf8eqAweLE+9rh8BcFPerAPfGU8/qMwBGl+ncl80LUP08SGnbDG/SS+e8j8fr7GnHF8fHlwBr9Pf80Gf8Sw/cMPe40P0WIwc=="
+        ]
+      ],
+      "body": "{\"queryType\":\"2\",\"cursor\":1790000000123,\"startTime\":1758464000123,\"endTime\":1790000000123,\"limit\":20,\"timeRangeType\":5,\"keyword\":\"\",\"kuaishou.web.cp.api_ph\":\"fake0000-cp00-ph00-0000-000000000000\"}",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://cp.kuaishou.com/rest/cp/works/v2/video/pc/publish/refresh?__NS_sig3=e2f2b585328801dbd7bfbcbdd5bf6c9b67832bc7a3a3a1a1aeafacb6",
+      "headers": [
+        [
+          "referer",
+          "https://cp.kuaishou.com/article/manage/video?status=2&from=publish"
+        ],
+        [
+          "x-requested-with",
+          "XMLHttpRequest"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "content-type",
+          "application/json;charset=UTF-8"
+        ],
+        [
+          "returnsetrootdomainloginurl",
+          "true"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://cp.kuaishou.com"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "did",
+          "web_0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "wid",
+          "12345678901234567"
+        ],
+        [
+          "didv",
+          "1789990000000"
+        ],
+        [
+          "userId",
+          "10001"
+        ],
+        [
+          "bUserId",
+          "20001"
+        ],
+        [
+          "kuaishou.web.cp.api_st",
+          "fake-cp-st"
+        ],
+        [
+          "kuaishou.web.cp.api_ph",
+          "fake0000-cp00-ph00-0000-000000000000"
+        ],
+        [
+          "kwpsecproductname",
+          "kuaishou-vision"
+        ],
+        [
+          "kwssectoken",
+          "FakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFakeSecTokenFake"
+        ],
+        [
+          "kwscode",
+          "221e9b74fd391ece5b7009f34d24ccb1e330605d70e7fcab17150fd8c6f4f944"
+        ],
+        [
+          "kwfv1",
+          "+f8Y+nHMwe0QD8fP0hPfL9PAPI+0bS8/pjwnbf8fGI+9+YG/pDwePAG0GlP0cE8/HIG9r9+9zY+/WI+/HFwezjweP78BQD+BLM8nzYPnrIPfPF+08YPAYD8/bf8eqAweLE+9rh8BcFPerAPfGU8/qMwBGl+ncl80LUP08SGnbDG/SS+e8j8fr7GnHF8fHlwBr9Pf80Gf8Sw/cMPe40P0WIwc=="
+        ]
+      ],
+      "body": "{\"ids\":[424242],\"kuaishou.web.cp.api_ph\":\"fake0000-cp00-ph00-0000-000000000000\"}",
+      "multipart": null
     }
   ],
   "responses": [
@@ -874,12 +1078,82 @@
         "message": "成功",
         "data": {}
       }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": 1,
+        "data": {
+          "list": [
+            {
+              "publishId": 424242,
+              "workId": null,
+              "publishStatus": 2,
+              "unPublishCoverKey": "cp_video_upload_cover_0123456789abcdef.jpg",
+              "title": "",
+              "userIdStr": "3xfakeself00001",
+              "userName": "测试",
+              "uploadTime": 1790000000000
+            }
+          ]
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "result": 1,
+        "data": {
+          "list": [
+            {
+              "publishId": 424242,
+              "publishStatus": 1,
+              "workId": "3xfakework0002",
+              "publishTime": 1790000000500
+            }
+          ]
+        }
+      }
     }
   ],
   "result": {
-    "result": 1,
-    "message": "成功",
-    "data": {}
+    "submit": {
+      "result": 1,
+      "message": "成功",
+      "data": {}
+    },
+    "list": {
+      "result": 1,
+      "data": {
+        "list": [
+          {
+            "publishId": 424242,
+            "workId": null,
+            "publishStatus": 2,
+            "unPublishCoverKey": "cp_video_upload_cover_0123456789abcdef.jpg",
+            "title": "",
+            "userIdStr": "3xfakeself00001",
+            "userName": "测试",
+            "uploadTime": 1790000000000
+          }
+        ]
+      }
+    },
+    "refresh": {
+      "result": 1,
+      "data": {
+        "list": [
+          {
+            "publishId": 424242,
+            "publishStatus": 1,
+            "workId": "3xfakework0002",
+            "publishTime": 1790000000500
+          }
+        ]
+      }
+    }
   },
   "error": null
 }

@@ -515,7 +515,7 @@ describe('kuaishou 对拍：命令流程', () => {
     expect(result).toMatchObject({ id: '777', kind: 'image', text: '我的图文 #话题', status: 'reviewing', media: [{ type: 'image', url: 'https://p1.a.yximgs.com/atlas-1.png' }] })
   })
 
-  it('视频发布：权限预检 → CP 0.1.1 webweapon（kwfcv1=999）→ upload/pre → 分片上传 → finish → 封面上报 → submit(sig4)', async () => {
+  it('视频发布：权限预检 → CP 0.1.1 webweapon（kwfcv1=999）→ upload/pre → 分片上传 → finish → 封面上报 → submit(sig4) → 发布后管理页 photo/list → publish/refresh', async () => {
     const g = loadCase('kuaishou', 'publish_video_flow')
     const { itemPublish } = await import('../src/platforms/kuaishou/web/commands.js')
     const ctx = makeCtx({ platform: 'kuaishou', options: { video: join(tmp, 'clip.mp4'), visibility: 'private' } })
@@ -533,7 +533,14 @@ describe('kuaishou 对拍：命令流程', () => {
     })
     if (error) throw error
     expectRequests(requests, withoutTransport(g.requests))
-    expect(result).toMatchObject({ id: '555', kind: 'video', status: 'private' })
+    // 作品 id 来自 publish/refresh（发布完成后才有 workId），作者来自管理页的这一行
+    expect(result).toMatchObject({
+      id: '3xfakework0002',
+      kind: 'video',
+      url: 'https://www.kuaishou.com/short-video/3xfakework0002',
+      author: { id: SELF_EID, name: '测试' },
+      status: 'private',
+    })
   })
 
   it('live gifts：直播首页找房间 → 首屏礼物 → “更多礼物”（sortType=0）', async () => {

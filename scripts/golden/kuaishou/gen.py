@@ -238,7 +238,13 @@ def respond(req):
         if path == '/rest/v2/creator/pc/notification/unReadCountV3':
             return {'result': 1, 'data': {'commentCount': 2, 'likeCount': 3}}
         if path == '/rest/cp/works/v2/video/pc/photo/list':
+            if json.loads(req['body'])['queryType'] == '2':
+                # 发布后管理页：本次发布还在处理中，没有 workId，未发布封面是这次 upload/finish 的 coverKey
+                return {'result': 1, 'data': {'list': [{'publishId': 424242, 'workId': None, 'publishStatus': 2, 'unPublishCoverKey': COVER_KEY,
+                                                        'title': '', 'userIdStr': SELF_EID, 'userName': '测试', 'uploadTime': 1790000000000}]}}
             return {'result': 1, 'data': {'list': [{'workId': PHOTO, 'caption': '我的作品', 'publishStatus': 1, 'publishTime': 1789990000000}]}}
+        if path == '/rest/cp/works/v2/video/pc/publish/refresh':
+            return {'result': 1, 'data': {'list': [{'publishId': 424242, 'publishStatus': 1, 'workId': '3xfakework0002', 'publishTime': 1790000000500}]}}
         return {'result': 1, 'message': '成功', 'data': {}}
     # www REST
     if path == '/rest/v/profile/get':
@@ -432,7 +438,18 @@ case('uploader', lambda: [KsUploader('fake-upload-token', [UPLOAD]).resume(),
                           KsUploader('fake-upload-token', [UPLOAD]).upload_fragment(0, PNG, 0, len(PNG)),
                           KsUploader('fake-upload-token', [UPLOAD]).complete(1)])
 case('publish_atlas_flow', lambda: Publish.publish_media_file(logged(), str(IMAGE_PATH), caption='我的图文 #话题', media_type='image', photo_status=1), image='pic.png')
-case('publish_video_flow', lambda: Publish.publish_media_file(logged(), str(VIDEO_PATH), caption='', media_type='video', photo_status=2), video='clip.mp4')
+def _publish_video():
+    """视频发布 + 发布后管理页：photo/list(queryType=2) 拿 publishId，再 publish/refresh 取一次状态."""
+    auth = logged()
+    submit = Publish.publish_media_file(auth, str(VIDEO_PATH), caption='', media_type='video', photo_status=2)
+    now = g.NOW_MS
+    listing = Publish.video_photo_list(auth, '2', now, now - 365 * 86400000, now, 20, 5, '',
+                                       referer=Publish.post_publish_manage_referer, post_publish=True)
+    refresh = Publish.video_publish_refresh(auth)
+    return {'submit': submit, 'list': listing, 'refresh': refresh}
+
+
+case('publish_video_flow', _publish_video, video='clip.mp4')
 
 # ================================================================ 命令流程：游客第一次运行
 def _guest_feed():

@@ -248,3 +248,15 @@ export function giftNames(d: any): [string, string][] {
   else if (d && typeof d === 'object') for (const [id, g] of Object.entries(d)) if (g && typeof g === 'object') push(id, g)
   return out
 }
+
+/**
+ * 发布后管理页的那一行，合并 publish/refresh 里同一个 publishId 的状态。
+ * 作品真正发布出来之前没有 workId，这时 id 是 publishId、url 为空。
+ */
+export function publishedWork(row: any, refresh: any): Item {
+  const id = row?.publishId
+  const d = refresh?.data
+  const rows: any[] = Array.isArray(d) ? d : Array.isArray(d?.list) ? d.list : d && typeof d === 'object' ? Object.values(d) : []
+  const match = rows.find((r) => r && typeof r === 'object' && String(r.publishId ?? r.id) === String(id))
+  return work({ ...row, ...(match ?? {}) })
+}

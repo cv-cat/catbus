@@ -461,8 +461,15 @@ export interface PhotoListQuery {
   keyword: string
 }
 
-/** video_photo_list：作品管理页的作品列表（字段顺序固定）。 */
-export function videoPhotoList(ks: Ks, q: PhotoListQuery): Promise<Json> {
+/** 视频提交后浏览器跳到的作品管理页。 */
+export const POST_PUBLISH_MANAGE_REFERER = `${CP}/article/manage/video?status=2&from=publish`
+const POST_PUBLISH_SITE = 'cp_post_publish_manage'
+
+/**
+ * video_photo_list：作品管理页的作品列表（字段顺序固定）。postPublish 为发布后的管理页：
+ * Referer 是发布后管理页，Cookie 线序保留视频上传上下文的 kuaishou-vision 产品。
+ */
+export function videoPhotoList(ks: Ks, q: PhotoListQuery, o: { postPublish?: boolean } = {}): Promise<Json> {
   return ks.cpPost(
     '/rest/cp/works/v2/video/pc/photo/list',
     {
@@ -474,8 +481,24 @@ export function videoPhotoList(ks: Ks, q: PhotoListQuery): Promise<Json> {
       timeRangeType: q.timeRangeType,
       keyword: q.keyword,
     },
-    CREATOR_AXIOS,
+    o.postPublish ? { ...CREATOR_AXIOS, referer: POST_PUBLISH_MANAGE_REFERER, wireSite: POST_PUBLISH_SITE } : CREATOR_AXIOS,
   )
+}
+
+/**
+ * 发布后管理页 photo/list 的这一行能不能拿去轮询（上游 video_photo_list 的 post_publish 判定）：
+ * 只有一行、还在发布中（publishStatus=2、没有 workId）、未发布封面是本次 upload/finish 的 coverKey、publishId 是正整数。
+ */
+export function publishRefreshId(list: Json, coverKey: string): number | null {
+  const rows: Json[] = list?.result === 1 ? (list.data?.list ?? []) : []
+  const row = rows.length === 1 ? rows[0] : null
+  if (!row || typeof row !== 'object' || row.publishStatus !== 2 || row.workId != null || row.unPublishCoverKey !== coverKey) return null
+  return Number.isInteger(row.publishId) && row.publishId > 0 ? row.publishId : null
+}
+
+/** video_publish_refresh：用本次 photo/list 返回的 publishId 轮询发布状态（body 只有 ids 与 api_ph）。 */
+export function videoPublishRefresh(ks: Ks, ids: number[]): Promise<Json> {
+  return ks.cpPost('/rest/cp/works/v2/video/pc/publish/refresh', { ids }, { ...CREATOR_AXIOS, referer: POST_PUBLISH_MANAGE_REFERER, wireSite: POST_PUBLISH_SITE })
 }
 
 export const UPLOAD_TYPE_VIDEO = 1

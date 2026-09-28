@@ -6,7 +6,7 @@ import { cookieCredential, finishLogin, freshCredential, showQrcode, smsLogin } 
 import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
-import type { AuthStatus, Category, Credential, Gift, Media, NoticeCount } from '../../../core/schemas.js'
+import type { AuthStatus, Category, Credential, Gift, Item, Media, NoticeCount } from '../../../core/schemas.js'
 import { openSocket, reconnecting } from '../../../core/stream.js'
 import { paged } from '../../../core/toolkit.js'
 import * as api from './api.js'
@@ -536,8 +536,30 @@ export async function itemPublish(ctx: Ctx) {
       }),
       '视频发布',
     )
-    return n.item({ id: n.id(info.fileId), kind: 'video', text: text || null, status: o.visibility === 'private' ? 'private' : 'reviewing' }, r)
+    const fallback = n.item({ id: n.id(info.fileId), kind: 'video', text: text || null, status: o.visibility === 'private' ? 'private' : 'reviewing' }, r)
+    const published = await afterVideoPublish(k, String(info.coverKey ?? '')).catch((err) => {
+      k.log.warn(`发布已提交，但取发布状态失败：${(err as Error).message}`)
+      return null
+    })
+    if (!published) return fallback
+    return { ...published, text: published.text ?? fallback.text, status: o.visibility === 'private' ? 'private' : published.status }
   })
+}
+
+/**
+ * 视频提交后浏览器跳到作品管理页（status=2&from=publish）：photo/list 拿到这次发布的 publishId，
+ * 再 publish/refresh 取一次发布状态（上游 video_photo_list(post_publish) + video_publish_refresh）。
+ * 这一行对不上本次上传（不是唯一一行、已有 workId、封面不是这次的）时不轮询，只用列表里的数据。
+ */
+async function afterVideoPublish(k: Ks, coverKey: string): Promise<Item | null> {
+  const now = rand.now()
+  const list = await api.videoPhotoList(k, { queryType: '2', cursor: now, startTime: now - WORKS_RANGE_MS, endTime: now, limit: WORKS_PAGE, timeRangeType: 5, keyword: '' }, { postPublish: true })
+  if (list?.result !== 1) return null
+  const rows: Json[] = list.data?.list ?? []
+  const id = api.publishRefreshId(list, coverKey)
+  if (id == null) return rows.length === 1 && rows[0]?.unPublishCoverKey === coverKey ? norm.work(rows[0]) : null
+  const refresh = await api.videoPublishRefresh(k, [id])
+  return norm.publishedWork(rows[0], refresh?.result === 1 ? refresh : null)
 }
 
 export async function mediaUpload(ctx: Ctx): Promise<Media> {

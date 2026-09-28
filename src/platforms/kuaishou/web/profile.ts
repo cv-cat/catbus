@@ -217,6 +217,8 @@ export const SEQUENCES: Record<string, string[]> = {
   live_room_current_authenticated: [...LIVE_ONLY, 'kwfv1', ...WEB, 'kwssectoken', 'kwscode'],
   // 房间首屏的表情 / 礼物字典（emoji/icon、emoji/allgifts）
   live_room_assets_initial: [...LIVE_HEAD, 'bUserId', 'kuaishou.live.bfb1s', 'userId', ...WEB, 'kwfv1', 'kwssectoken', 'kwscode', 'kwpsecproductname'],
+  // 视频发布后跳到的作品管理页（仍是上传上下文的 kuaishou-vision 产品）
+  cp_post_publish_manage: [...CP_HEAD, 'kwpsecproductname', 'kwssectoken', 'kwscode', 'kwfv1'],
   // 验证码 iframe：第一个 kwpsecproductname 是 iframe 路径下的 verification-captcha，第二个是父页的产品
   captcha: ['did', 'wid', 'kwpsecproductname', 'didv', 'bUserId', ...Q],
 }
@@ -226,7 +228,7 @@ SEQUENCES.www_security_refreshed = SEQUENCES.www_initial!
 /** 取值时直接读原始 cookie 映射、不触发 webweapon 续期的线序（其余都先经 `auth.cookie`）。 */
 export const RAW_VALUE_PROFILES = new Set([
   'www_initial', 'www_graphql_initial', 'www_graphql_subcomment_initial', 'cp_creator_initial', 'cp_creator_warmed', 'cp_creator_refreshed',
-  'live_home_initial', 'live_home_current_initial', 'live_room_initial', 'live_room_assets_initial',
+  'live_home_initial', 'live_home_current_initial', 'live_room_initial', 'live_room_assets_initial', 'cp_post_publish_manage',
 ])
 
 /** 这些线序里奇数次出现的 kwssectoken / kwscode 取上一次轮换前的旧值（真实发生过轮换时）。 */
