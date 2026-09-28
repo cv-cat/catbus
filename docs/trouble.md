@@ -336,7 +336,7 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 | kuaishou | 滑块自动通过（`_pass_captcha` 整条链：webweapon 验证码引导、缺口识别、轨迹、gdfp 预检、加密提交、重发原请求） | 移植中 |
 | kuaishou | `feed list --kind recommend`：上游 `get_feed_hot` 就是推荐流，catbus 错标成上游没有 | 移植中 |
 | kuaishou | 服务端登出；发布后刷新发布状态；直播礼物全量 | 移植中 |
-| xhs | `keyword suggest`、`item search --time`、`user following`（me）、群聊会话与记录、视频发布元数据、创作者会话失效自动重新桥接、直播弹幕长连通道、`msg read` 匹配会话的 bug | 移植中 |
+| xhs | `keyword suggest`、`item search --time`、`user following`（只支持 me）、群聊会话与记录（id 为 `group:<群id>`）、视频发布填时长 / 宽高 / 帧率（MP4 解析抽到 `core/mp4.ts`）、创作者会话失效自动重新桥接、`live send` HTTP 报业务错误时改走长连、`msg read` 匹配会话的 bug | 已补，待真机验证（关注列表与群聊的字段名参考第三方代码，上游没有样本）。视频自动截首帧当封面不做（需要解码器，`--cover` 仍必填） |
 | bilibili | 极验点选题自动识别（短信 / 密码登录降级时用；含人工兜底页面） | 已补，待真机验证通过率。模型在新包 `@cv-cat/catbus-assets-ocr`（ddddocr 1.6.1，MIT，25.5 MB），发布顺序在 catbus-cli 之前 |
 | bilibili | `item related`、专栏搜索（`--type article`）、专栏 / 动态评论与按时间排序、楼中楼 `--root`、收藏到指定收藏夹（`--folder`）、投币同时点赞（`--like`）、投稿转载 / 动态文案 / 允许转载、专栏标签 / 摘要 / 只存草稿与 `draft get` / `delete`、弹幕样式、直播弹幕回复、按用户查直播间、直播全部事件与人气值、`user items --keyword`、推荐流翻页去重 | 已补，待真机验证（`draft/view`、`Related` 的响应结构与部分直播消息字段按文档写）。`item delete` 改 ◐：撤稿需要人机验证，验证码参数的来源上游没写，还没接上人工兜底 |
 | douyin | 搜索筛选（`--sort` / `--time` / `--type`，`--type video` 走视频频道；私有 `--length` / `--range`）、用户搜索筛选、`item list`、发布参数（`--poi-name` / `--series` / `--hotspot` / `--no-download` / 图文 `--cover`）、收藏夹移动（`--folder`）、私信 `--file` / `--share`、`live history` / `live media`、千票榜、`live like --count`、商品评价 `--label`、通知 `--group`、短信 `--sso` | 已补，待真机验证（写操作仍受第 1 节 dtrait 限制）。不做：商品评价排序（上游没给取值）、表情包（上游没有表情列表接口） |
