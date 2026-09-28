@@ -128,6 +128,7 @@ const CASES: Record<string, () => Promise<unknown>> = {
   im_read: pc((p) => api.markRead(p, [{ chat_id: OTHER, read_store_id: 7, unread_count: 1, type: 1, need_rm_offline: true }])),
   im_revoke: pc((p) => api.revokeMessage(p, { chat_user_id: OTHER, message_id: 'm1' })),
   im_delete: pc((p) => api.deleteMessage(p, [['chat_user_id', OTHER]])),
+  im_following: pc((p) => api.following(p)),
 
   creator_user_info: creator((c) => capi.userInfo(c)),
   creator_posted: creator(async (c) => [await capi.postedNotes(c, 0), await capi.postedNotes(c, 1, 0, true)]),
@@ -367,6 +368,20 @@ function pcCtx(args: Record<string, string | undefined> = {}, options: Record<st
 const hits = (requests: GoldenRequest[], part: string) => requests.filter((r) => r.url.includes(part))
 
 describe('xhs 用户、搜索', () => {
+  it('user following：只支持自己（me 或自己的 id），别人报 UNSUPPORTED', async () => {
+    const route = (r: GoldenRequest) => security(r) ?? (r.url.includes('/api/im/web/users/following/all') ? ok({ follow_user_d_t_o_list: [{ user_id: OTHER, nick_name: '对方' }] }) : undefined)
+    for (const user of [undefined, 'me', USER_ID]) {
+      const { requests, result, error } = await serve(route, () => cmd.userFollowing(pcCtx({ user })))
+      if (error) throw error
+      expect(hits(requests, '/api/im/web/users/following/all?page=1&size=200')).toHaveLength(1)
+      expect(result!.data).toMatchObject([{ id: OTHER, name: '对方', url: `https://www.xiaohongshu.com/user/profile/${OTHER}` }])
+      expect(result!.page).toEqual({ cursor: null, has_more: false })
+    }
+    const other = await serve(route, () => cmd.userFollowing(pcCtx({ user: OTHER })))
+    expect(other.error).toMatchObject({ code: 'UNSUPPORTED', hint: 'catbus xhs user following' })
+    expect(hits(other.requests, 'following/all')).toHaveLength(0)
+  })
+
   it('keyword suggest：sug_items 的 text，空的去掉', async () => {
     const { requests, result, error } = await serve(
       (r) => security(r) ?? (r.url.includes('/api/sns/web/v1/search/recommend') ? ok({ sug_items: [{ text: '咖啡拿铁', search_type: 'notes' }, { text: '' }] }) : undefined),

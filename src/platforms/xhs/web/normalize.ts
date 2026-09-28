@@ -147,6 +147,22 @@ export function searchUser(v: any): User {
   )
 }
 
+/** 私信页的关注列表（users/following/all 的 follow_user_d_t_o_list[i]：{user_id, nick_name, ...}）。 */
+export function followingUser(v: any): User {
+  const id = String(v.user_id ?? v.userId ?? v.id)
+  return n.user(
+    {
+      id,
+      name: n.str(v.nick_name ?? v.nickname ?? v.name),
+      handle: n.str(v.red_id),
+      avatar: n.url(v.avatar ?? v.image ?? v.images),
+      url: userUrl(id),
+      bio: n.str(v.desc),
+    },
+    v,
+  )
+}
+
 /** 评论（comment/page 的 comments[i] 与 sub_comments）。 */
 export function comment(v: any, itemId: string, parent: string | null = null): Comment {
   return n.comment(

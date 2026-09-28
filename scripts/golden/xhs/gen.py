@@ -342,6 +342,7 @@ def main():
     c('im_read', live(lambda a: a.mark_messages_read([{'chat_id': other, 'read_store_id': 7, 'unread_count': 1, 'type': 1, 'need_rm_offline': True}])))
     c('im_revoke', live(lambda a: a.revoke_message({'chat_user_id': other, 'message_id': 'm1'})))
     c('im_delete', live(lambda a: a.delete_message({'chat_user_id': other})))
+    c('im_following', live(lambda a: a.get_following()))
 
     # ---------------------------------------------------------------- 创作者中心
     c('creator_user_info', creator(lambda a: a.get_user_info()))

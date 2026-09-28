@@ -320,6 +320,22 @@ export const userItems = notesOf('items')
 export const userLikes = notesOf('likes')
 export const userCollects = notesOf('collects')
 
+const FOLLOWING_SIZE = 200
+
+/** 关注列表：上游只有私信页取当前账号关注列表的接口（get_following），别人的关注列表报 UNSUPPORTED。 */
+export async function userFollowing(ctx: Ctx) {
+  return run(ctx, async (p) => {
+    const who = ctx.args.user ?? 'me'
+    if (who !== 'me' && (await resolveUser(p, who)).id !== p.credential.user?.id) {
+      throw new CatbusError('UNSUPPORTED', 'xhs 只能查看自己的关注列表', { hint: 'catbus xhs user following' })
+    }
+    const page = cursorPage(ctx)
+    const d = p.check(await api.following(p, page, FOLLOWING_SIZE))
+    const raw: any[] = d?.follow_user_d_t_o_list ?? d?.users ?? []
+    return paged(raw.map(norm.followingUser), page + 1, Boolean(d?.has_more) || raw.length >= FOLLOWING_SIZE)
+  })
+}
+
 // ================================================================ item
 
 async function noteDetail(p: Pc, input: string) {

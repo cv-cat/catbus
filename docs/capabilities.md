@@ -43,7 +43,8 @@
 | user likes | ✓ | ✓ | ○ | — | ✓ | ○ | — | — | — | ○ |
 | user collects | ✓ | ○ | ✓ | ○ | ✓ | ○ | ○ | ○ | ✓ | ○ |
 | user reposts | — | — | ✓ | — | — | ○ | — | — | — | ○ |
-| user followers / following | ○ | ✓ | ✓ | ○ | ✓ | ○ | — | — | — | ○ |
+| user followers | ○ | ✓ | ✓ | ○ | ✓ | ○ | — | — | — | ○ |
+| user following | ◐ | ✓ | ✓ | ○ | ✓ | ○ | — | — | — | ○ |
 | user follow / unfollow | ○ | ○ | ✓ | ○ | ○ | ○ | ○ | — | — | ✓ |
 
 - tiktok `user get`：me 部分支持
@@ -51,7 +52,9 @@
 - taobao `user get`：me 规划中
 - jd `user get`：只支持 me
 - kuaishou `user likes`：只支持 me
-- kuaishou `user followers / following`：只支持 me
+- kuaishou `user followers`：只支持 me
+- xhs `user following`：只支持 me
+- kuaishou `user following`：只支持 me
 - `user search --fans`：douyin
 - `user search --user-type`：douyin
 - `user items --sort` 取值：bilibili latest / views / collects

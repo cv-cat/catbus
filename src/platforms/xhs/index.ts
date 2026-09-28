@@ -30,7 +30,7 @@ export default definePlatform({
         'user likes': impl('full', 'userLikes'),
         'user collects': impl('full', 'userCollects'),
         'user followers': 'none',
-        'user following': 'none',
+        'user following': impl('partial', 'userFollowing', { note: '只支持 me' }),
         'user follow': 'none',
         'user unfollow': 'none',
 

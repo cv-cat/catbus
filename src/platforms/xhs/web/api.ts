@@ -285,6 +285,11 @@ export function messageHistory(p: Pc, chatUserId: string, lastId = 0, limit = 30
   return im(p, `/api/im/web/messages/history?${urlencode([['chat_user_id', chatUserId], ['last_id', lastId], ['start_id', 0], ['limit', limit]])}`)
 }
 
+/** get_following：当前账号的关注列表（私信页的「选择联系人」用的接口，只能取自己的）。 */
+export function following(p: Pc, page = 1, size = 200) {
+  return im(p, `/api/im/web/users/following/all?${urlencode([['page', page], ['size', size]])}`)
+}
+
 /** mark_messages_read：chat_list 每项按实抓字段顺序。 */
 export function markRead(p: Pc, chatList: Record<string, unknown>[]) {
   const required = ['chat_id', 'read_store_id', 'unread_count', 'type', 'need_rm_offline']
