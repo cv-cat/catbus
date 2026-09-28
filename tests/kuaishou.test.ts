@@ -433,10 +433,10 @@ function commandCtx(options: Record<string, unknown>, account: string | null = '
 }
 
 describe('kuaishou 对拍：命令流程', () => {
-  it('游客第一次 feed list --kind hot：设备身份 → webweapon 引导 → 指纹上报换 wid → 签名请求', async () => {
+  it('游客第一次 feed list（默认 recommend，即 new-reco 推荐流）：设备身份 → webweapon 引导 → 指纹上报换 wid → 签名请求', async () => {
     const g = loadCase('kuaishou', 'guest_feed_hot')
     const { feedList } = await import('../src/platforms/kuaishou/web/commands.js')
-    const ctx = commandCtx({ kind: 'hot' })
+    const ctx = commandCtx({ kind: 'recommend' })
     const { requests, result, error } = await replay(g, () => feedList(ctx) as Promise<any>)
     if (error) throw error
     expectRequests(requests, g.requests)

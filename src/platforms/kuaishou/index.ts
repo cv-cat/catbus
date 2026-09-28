@@ -55,9 +55,10 @@ export default definePlatform({
         'comment like': 'none',
         'comment unlike': 'none',
 
+        // recommend 是 new-reco 推荐流（上游 get_feed_hot）；快手没有单独的热门流
         'feed list': impl('partial', 'feedList', {
-          note: 'recommend 规划中；hot 部分支持',
-          options: { kind: filter.kind('recommend', 'hot', 'following') },
+          note: 'following 只有首屏',
+          options: { kind: filter.kind('recommend', 'following') },
         }),
 
         'live get': impl('full', 'liveGet'),

@@ -154,9 +154,9 @@
 - xhs `feed list`：following 规划中
 - douyin `feed list`：hot、following 规划中
 - bilibili `feed list`：following 规划中
-- kuaishou `feed list`：recommend 规划中；hot 部分支持
+- kuaishou `feed list`：following 只有首屏
 - x `feed list`：following 规划中
-- `feed list --kind` 取值：xhs recommend / following；douyin recommend / hot / following；tiktok recommend / following；bilibili recommend / hot / following；kuaishou recommend / hot / following；weibo recommend / hot / following；xianyu recommend；taobao recommend；jd recommend；x recommend / following
+- `feed list --kind` 取值：xhs recommend / following；douyin recommend / hot / following；tiktok recommend / following；bilibili recommend / hot / following；kuaishou recommend / following；weibo recommend / hot / following；xianyu recommend；taobao recommend；jd recommend；x recommend / following
 - `feed list --category`：xhs
 
 ## notice 与 msg

@@ -578,9 +578,9 @@ export async function commentReplies(ctx: Ctx) {
 
 // ================================================================ feed
 
+/** recommend 是 new-reco 的推荐流（get_feed_hot，上游 docstring：“获取推荐流（精彩推荐）”）；following 是关注页。 */
 export async function feedList(ctx: Ctx) {
   const kind = (ctx.options.kind as string) ?? 'recommend'
-  if (kind === 'recommend') throw new CatbusError('NOT_IMPLEMENTED', 'kuaishou 的 feed list --kind recommend 尚未实现', { hint: 'catbus kuaishou feed list --kind hot', detail: { upstream: 'none' } })
   return run(ctx, 'www', async (k) => {
     if (kind === 'following') {
       const r = await api.likeData(k)

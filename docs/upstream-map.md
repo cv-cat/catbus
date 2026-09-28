@@ -181,7 +181,7 @@
   - `sts_login` / `pass_token_login` 用来换取子站点凭证，登录时一并完成。
 - **上游凭证来源**：`.env` 的 `KS_COOKIES`。
 - **API**
-  - `ks_apis/kuaishou_api.py` 的 `KuaishouAPI`：`get_feed_hot`、`get_work_info`、`get_video_detail`、`get_comment_list`、`get_all_comment`、`get_sub_comment_list`、`get_profile`、`get_profile_feed`、`get_user_all_work`、`search_feed`、`search_user`、`get_relation`、`get_liked_list`、`get_collect_list`、`get_history_list`、`graphql`
+  - `ks_apis/kuaishou_api.py` 的 `KuaishouAPI`：`get_feed_hot`（new-reco 推荐流 → `feed list --kind recommend`）、`get_work_info`、`get_video_detail`、`get_comment_list`、`get_all_comment`、`get_sub_comment_list`、`get_profile`、`get_profile_feed`、`get_user_all_work`、`search_feed`、`search_user`、`get_relation`、`get_liked_list`、`get_collect_list`、`get_history_list`、`graphql`
   - 直播：`ks_apis/live_api.py` 的 `KuaishouLiveAPI`；弹幕：`ks_apis/live_ws.py` 的 `LiveDanmakuClient`
   - 发布：`ks_apis/publish_api.py` 的 `KuaishouPublishAPI`
 - **滑块验证码**：`KuaishouAPI._post` / `_get` / `graphql` 遇到 400002（GraphQL 是 `errors` + `data.captcha.url`）时调 `_pass_captcha` 过一次滑块，再重新序列化同一条 Cookie 线序重发。
