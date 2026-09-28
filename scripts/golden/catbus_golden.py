@@ -305,7 +305,9 @@ def _respond(req: dict) -> FakeResponse:
     elif not (isinstance(spec, dict) and 'body' in spec and set(spec) <= {'status', 'headers', 'body'}):
         spec = {'status': 200, 'headers': {}, 'body': spec}
     spec = {'status': spec.get('status', 200), 'headers': spec.get('headers') or {}, 'body': spec['body']}
-    _responses.append(spec)
+    # 二进制响应（图片等）记成 {"base64": ...}，tests/golden.ts 按原字节回放
+    body = spec['body']
+    _responses.append({**spec, 'body': {'base64': base64.b64encode(body).decode()}} if isinstance(body, (bytes, bytearray)) else spec)
     return FakeResponse(req['url'], spec['status'], spec['headers'], spec['body'])
 
 

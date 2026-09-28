@@ -55,7 +55,9 @@ export function normalize(p: PreparedRequest): GoldenRequest {
 function toResponse(r: GoldenCase['responses'][number], url: string): HttpResponse {
   const headers: [string, string][] = []
   for (const [k, v] of Object.entries(r.headers)) for (const x of Array.isArray(v) ? v : [v]) headers.push([k, x])
-  const body = typeof r.body === 'string' ? r.body : JSON.stringify(r.body)
+  // 二进制响应在用例里记成 {"base64": ...}（catbus_golden.py 的 _respond）
+  const b64 = r.body && typeof r.body === 'object' && Object.keys(r.body).join() === 'base64' ? (r.body as { base64: string }).base64 : null
+  const body = typeof r.body === 'string' ? r.body : b64 != null ? new Uint8Array(Buffer.from(b64, 'base64')) : JSON.stringify(r.body)
   return fakeResponse(body, { status: r.status, headers, url })
 }
 
