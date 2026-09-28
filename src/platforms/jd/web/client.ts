@@ -439,13 +439,13 @@ export function searchReferer(jd: Jd, keyword = ''): string {
   return SEARCH_REFERER
 }
 
-/** 业务响应里的风控处置 / 登录墙映射成 catbus 的错误。 */
+/**
+ * 业务响应里的风控处置 / 登录墙映射成 catbus 的错误。
+ * 403 空 body 要先探测登录态才能分清是登录失效还是限流（见 commands.ts 的 check），这里只处理能直接判定的情况。
+ */
 export function checkRisk(jd: Jd, res: any): void {
   if (res?.disposal || String(res?.code) === '605') {
     throw new CatbusError('RISK_CONTROL', '京东要求人机验证（605），纯程序验证未通过', { detail: { kind: 'captcha', code: res?.code ?? null } })
-  }
-  if (res?._status === 403) {
-    throw new CatbusError('RISK_CONTROL', '京东拒绝了请求（403），可能被限流或登录态失效', { detail: { kind: 'blocked', status: 403 } })
   }
   if (res?._status === 401 || res?.code === 3 || res?.code === '3') throw authError(jd.ctx)
 }

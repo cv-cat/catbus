@@ -431,6 +431,35 @@ def chat_packets():
 
 case('chat_packets', chat_packets)
 
+# ---------------------------------------------------------------- 403 空 body：重签重试后探测登录态（diagnose 的第一步）
+
+
+def forbidden_respond(alive):
+    def respond(req):
+        if 'loginservice.aspx' in req['url']:
+            if alive:
+                return 'jsonpLogin({"Identity":{"Unick":"fake","Name":"fake_pin_测试","IsAuthenticated":true}})'
+            return 'jsonpLogin({"Identity":{"IsAuthenticated":false}})'
+        return {'status': 403, 'headers': {}, 'body': ''}
+    return respond
+
+
+def diagnose_no_session():
+    auth = logged()
+    res = JdAPI.get_cart_num(auth)
+    return {'res': res, 'diagnose': list(JdAPI.diagnose(auth))}
+
+
+def diagnose_alive():
+    """仍登录时 catbus 只探测登录态，不再像 diagnose 那样继续发 hotwords / getCartNum 探针。"""
+    auth = logged()
+    res = JdAPI.get_cart_num(auth)
+    return {'res': res, 'session': list(JdAPI.check_session(auth))}
+
+
+case('diagnose_no_session', diagnose_no_session, respond=forbidden_respond(False))
+case('diagnose_alive', diagnose_alive, respond=forbidden_respond(True))
+
 # ---------------------------------------------------------------- JCAP 求解器的纯算部分（合成图片）
 
 import cv2  # noqa: E402

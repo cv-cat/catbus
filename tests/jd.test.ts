@@ -1,10 +1,13 @@
 import { readFileSync } from 'node:fs'
 import { models } from '@cv-cat/catbus-assets-jd'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { CatbusError } from '../src/core/errors.js'
+import type { HandlerContext } from '../src/core/registry.js'
 import { RAW } from '../src/core/schemas.js'
 import * as api from '../src/platforms/jd/web/api.js'
 import { ChatClient } from '../src/platforms/jd/web/chat.js'
 import { Jd, simpleCookie } from '../src/platforms/jd/web/client.js'
+import * as cmd from '../src/platforms/jd/web/commands.js'
 import { imdecode, img, loadCv } from '../src/platforms/jd/web/jcap/image.js'
 import { detectLines, fastAtan2 } from '../src/platforms/jd/web/jcap/lsd.js'
 import * as solver from '../src/platforms/jd/web/jcap/solver.js'
@@ -48,6 +51,14 @@ function chatSession() {
 }
 
 const cookiesOf = (jd: Jd) => Object.fromEntries(jd.cookies)
+
+/** 命令 handler 的上下文：与 session() 相同的假凭证、h5st token 与 WebM 有效期。 */
+function cmdCtx(init: { args?: Record<string, string>; options?: Record<string, unknown>; cursor?: string } = {}): HandlerContext {
+  const ctx = makeCtx({ platform: 'jd', account: 'default', cookies: COOKIES, cookieDomain: '.jd.com', ...init })
+  ctx.credential.device.h5st = structuredClone(TOKEN_CACHE)
+  ctx.credential.device.local_storage = structuredClone(WEBM_STORAGE)
+  return ctx
+}
 
 /** 用例名 → TS 侧的等价调用。 */
 const CASES: Record<string, () => Promise<unknown>> = {
@@ -219,6 +230,35 @@ describe('jd 对拍：请求构造与签名', () => {
       expect(p.datetime).toBe(local)
       expect({ ...p, datetime: null }).toEqual({ ...c.result.packets[i], datetime: null })
     }
+  })
+})
+
+describe('jd 403：探测登录态，分清登录失效与限流（diagnose）', () => {
+  afterEach(() => void vi.useRealTimers())
+
+  async function failWith(name: string): Promise<CatbusError> {
+    const c = loadCase('jd', name)
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(c.now)
+    const out = await replay(c, () => cmd.cartCount(cmdCtx()))
+    // 业务接口 3 次 403（重签重试）后，发一次免签名的 check_session
+    expectRequests(out.requests.map(normalizeUrl), c.requests.map(normalizeUrl))
+    expect(out.error).toBeInstanceOf(CatbusError)
+    return out.error as CatbusError
+  }
+
+  it('登录态已失效 → AUTH_EXPIRED，提示重新登录', async () => {
+    const err = await failWith('diagnose_no_session')
+    expect(loadCase('jd', 'diagnose_no_session').result.diagnose[0]).toBe('no_session')
+    expect(err.code).toBe('AUTH_EXPIRED')
+    expect(err.hint).toBe('catbus jd auth login -a default')
+  })
+
+  it('仍登录 → RISK_CONTROL（rate_limit），不再发签名探针', async () => {
+    const err = await failWith('diagnose_alive')
+    expect(loadCase('jd', 'diagnose_alive').result.session[0]).toBe(true)
+    expect(err.code).toBe('RISK_CONTROL')
+    expect(err.detail).toMatchObject({ kind: 'rate_limit', status: 403, session: 'alive' })
   })
 })
 

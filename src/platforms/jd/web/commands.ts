@@ -56,9 +56,31 @@ export async function resolveSku(jd: Jd, input: string): Promise<string> {
 }
 
 /** 业务响应的通用检查：风控、403、登录墙。游客被拒时提示登录。 */
-function check(jd: Jd, res: any): void {
-  if (res?._status === 403 && isGuest(jd.ctx)) throw authError(jd.ctx, '京东拒绝了游客访问（403），请登录后再试')
+async function check(jd: Jd, res: any): Promise<void> {
+  if (res?._status === 403) {
+    if (isGuest(jd.ctx)) throw authError(jd.ctx, '京东拒绝了游客访问（403），请登录后再试')
+    await diagnose403(jd)
+  }
   checkRisk(jd, res)
+}
+
+/**
+ * 业务接口重试后仍是 403 空 body（上游 JdAPI.diagnose 的第一步）：京东对失效的会话不报「未登录」，
+ * 而是直接回 403，所以先用免签名的 passport 接口（check_session）探测登录态。
+ * 登录已失效 → AUTH_EXPIRED；仍登录 → 被限流或被风控标记（diagnose 的 throttled）。
+ * 限流期间不再发签名接口去探测（diagnose 的 getCartNum 探针），免得加重。
+ */
+async function diagnose403(jd: Jd): Promise<never> {
+  let alive: boolean | null = null
+  try {
+    alive = (await api.checkSession(jd)).alive
+  } catch (err) {
+    jd.ctx.log.debug(`登录态探测失败：${(err as Error).message}`)
+  }
+  if (alive === false) throw authError(jd.ctx, `账号 ${jd.ctx.account} 的登录态已失效（京东对失效的会话直接回 403）`)
+  throw new CatbusError('RISK_CONTROL', '京东拒绝了请求（403）：登录态有效，被限流或被风控标记了，等十几分钟到几小时再试', {
+    detail: { kind: 'rate_limit', status: 403, session: alive ? 'alive' : 'unknown' },
+  })
 }
 
 // ================================================================ auth
@@ -261,7 +283,7 @@ export async function userCollects(ctx: Ctx) {
   if (who !== 'me' && who !== jd.pin) throw new CatbusError('UNSUPPORTED', 'jd 只能查看自己关注的商品', { hint: 'catbus jd user collects' })
   const p = page(ctx)
   const d = await api.followProducts(jd, p, PAGE_SIZE)
-  check(jd, d)
+  await check(jd, d)
   const list = norm.listedItems(d)
   return paged(list, p + 1, list.length >= PAGE_SIZE)
 }
@@ -272,7 +294,7 @@ export async function itemGet(ctx: Ctx) {
   const jd = await session(ctx)
   const sku = await resolveSku(jd, ctx.args.item!)
   const d = await api.productDetail(jd, sku)
-  check(jd, d)
+  await check(jd, d)
   return norm.detail(sku, d)
 }
 
@@ -291,7 +313,7 @@ async function searchItems(ctx: Ctx, jd: Jd, keyword: string, sort = '') {
   if (res?._verification && res._verification.code !== 0) {
     throw new CatbusError('RISK_CONTROL', '京东要求人机验证，纯程序验证没有通过', { hint: '稍后重试，或登录后再搜索', detail: { kind: 'captcha', ...res._verification } })
   }
-  check(jd, res)
+  await check(jd, res)
   const data = res?.data ?? {}
   const list = (Array.isArray(data.wareList) ? data.wareList : []).map(norm.ware)
   const total = Number(data.resultCount ?? 0)
@@ -319,7 +341,7 @@ export async function commentList(ctx: Ctx) {
   const jd = await session(ctx)
   const sku = await resolveSku(jd, ctx.args.item!)
   const d = await api.productComments(jd, sku, 10)
-  check(jd, d)
+  await check(jd, d)
   return paged(norm.comments(sku, d), null, false)
 }
 
@@ -328,14 +350,14 @@ export async function commentList(ctx: Ctx) {
 export async function keywordSuggest(ctx: Ctx) {
   const jd = await session(ctx)
   const d = await api.searchRelwords(jd, ctx.args.prefix!)
-  check(jd, d)
+  await check(jd, d)
   return norm.keywordsFromRel(d)
 }
 
 export async function keywordHot(ctx: Ctx) {
   const jd = await session(ctx)
   const d = await api.searchHotwords(jd)
-  check(jd, d)
+  await check(jd, d)
   return norm.keywordsFromHot(d)
 }
 
@@ -345,7 +367,7 @@ export async function historyList(ctx: Ctx) {
   const jd = await loggedSession(ctx)
   const p = page(ctx)
   const d = await api.browseHistory(jd, p, PAGE_SIZE)
-  check(jd, d)
+  await check(jd, d)
   const list = norm.listedItems(d)
   return paged(list, p + 1, list.length >= PAGE_SIZE)
 }
@@ -361,7 +383,7 @@ export async function orderList(ctx: Ctx) {
 export async function cartCount(ctx: Ctx) {
   const jd = await loggedSession(ctx)
   const d = await api.cartNum(jd)
-  check(jd, d)
+  await check(jd, d)
   const count = n.count(norm.find(d, ['cartNum', 'num', 'count']))
   if (count == null) throw new CatbusError('UPSTREAM', '购物车接口没有返回数量', { detail: { code: d?.code ?? null } })
   return { count }
@@ -371,7 +393,7 @@ export async function couponList(ctx: Ctx) {
   const jd = await session(ctx)
   const sku = await resolveSku(jd, ctx.args.item!)
   const d = await api.recommendCoupon(jd, sku)
-  check(jd, d)
+  await check(jd, d)
   return norm.coupons(d)
 }
 
@@ -382,6 +404,7 @@ async function chatSession(ctx: Ctx): Promise<Jd> {
   const jd = await loggedSession(ctx)
   if (!jd.chat.aid) {
     const r = await api.aidInfo(jd)
+    await check(jd, r)
     if (!r?.aid) throw new CatbusError('UPSTREAM', '咚咚没有下发 aid', { detail: { code: r?.code ?? null } })
   }
   return jd
@@ -390,7 +413,7 @@ async function chatSession(ctx: Ctx): Promise<Jd> {
 export async function msgList(ctx: Ctx) {
   const jd = await chatSession(ctx)
   const d = await api.chatSessionLog(jd)
-  check(jd, d)
+  await check(jd, d)
   return paged(norm.conversations(d), null, false)
 }
 
@@ -401,7 +424,7 @@ export async function msgHistory(ctx: Ctx) {
   const venderId = ctx.args.conversation!
   const before = Number(ctx.cursor ?? 0) || 0
   const d = await api.queryLastLogs(jd, venderId, HISTORY_SIZE, before)
-  check(jd, d)
+  await check(jd, d)
   const list = norm.findList(d, ['body', 'mid', 'from']).map((m: any) => norm.message(m, venderId))
   const oldest = list.reduce<number | null>((min, m) => {
     const t = Date.parse(m.created_at ?? '')
@@ -428,7 +451,7 @@ export async function msgSend(ctx: Ctx): Promise<Message> {
   if (o.item) {
     pid = await resolveSku(jd, o.item)
     const d = await api.productDetail(jd, pid)
-    check(jd, d)
+    await check(jd, d)
     venderId = n.str(norm.find(d, ['venderId'])) ?? undefined
     if (!venderId) throw new CatbusError('UPSTREAM', '商品详情里没有商家 venderId')
   }
