@@ -120,7 +120,8 @@ export async function itemSearch(ctx: Ctx) {
   return paged(list, next, next > page && list.length > 0)
 }
 
-const VISIBLE: Record<string, string> = { public: '0', private: '1', friends: '6' }
+/** post_weibo 的 type（请求里的 visible）：0 公开、1 仅自己可见、6 朋友圈可见、10 粉丝可见。 */
+const VISIBLE: Record<string, string> = { public: '0', private: '1', friends: '6', fans: '10' }
 const MAX_IMAGES = 15
 
 /** 上游 post_weibo 的正文：话题追加成 ` #话题# `，地点追加成 ` #地点[地点]#`。 */

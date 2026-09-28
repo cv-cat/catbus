@@ -1,6 +1,6 @@
 """weibo 的对拍数据：用上游 WeiboApis 的代码构造请求（只用假凭证），记录请求序列。
 
-运行：.golden/weibo/Scripts/python scripts/golden/weibo/gen.py
+运行：.golden/weibo/bin/python scripts/golden/weibo/gen.py（Windows：.golden/weibo/Scripts/python）
 依赖：uv pip install requests beautifulsoup4 pandas loguru
 """
 
@@ -136,3 +136,10 @@ case('post_image', lambda: cr.post_weibo({
 case('post_video', lambda: cr.post_weibo({
     'desc': '视频正文', 'location': '', 'type': '0', 'media_type': 'video', 'topics': ['南京'], 'video': VIDEO}, COOKIES),
     text='视频正文', visibility='public', topic=['南京'], video=VIDEO)
+# 纯文字：图文分支、没有图片（pic_id 为 []）。type 6 朋友圈可见、10 粉丝可见
+case('post_text_friends', lambda: cr.post_weibo({
+    'desc': '朋友圈可见', 'location': '', 'type': '6', 'media_type': 'image', 'topics': [], 'images': []}, COOKIES),
+    text='朋友圈可见', visibility='friends')
+case('post_text_fans', lambda: cr.post_weibo({
+    'desc': '粉丝可见', 'location': '', 'type': '10', 'media_type': 'image', 'topics': [], 'images': []}, COOKIES),
+    text='粉丝可见', visibility='fans')

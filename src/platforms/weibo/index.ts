@@ -1,4 +1,4 @@
-import { filter } from '../../core/options.js'
+import { filter, visibility } from '../../core/options.js'
 import { type CommandDecl, definePlatform, type Handler, type Upstream } from '../../core/registry.js'
 
 type Commands = typeof import('./web/commands.js')
@@ -45,7 +45,8 @@ export default definePlatform({
         'item uncollect': 'none',
         'item repost': 'none',
         'item unrepost': 'none',
-        'item publish': impl('full', 'itemPublish'),
+        // post_weibo 的 visible：0 公开、1 仅自己、6 朋友圈（互相关注）、10 粉丝
+        'item publish': impl('full', 'itemPublish', { options: { visibility: visibility('public', 'private', 'friends', 'fans') } }),
         'item delete': 'none',
 
         'comment list': impl('partial', 'commentList', { note: '只有一级评论' }),

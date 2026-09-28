@@ -21,10 +21,13 @@ type FilterValue<N extends FilterName> = (typeof FILTER_VALUES)[N][number]
 export const LOGIN_METHODS = ['qrcode', 'sms', 'password', 'cookie'] as const
 export type LoginMethod = (typeof LOGIN_METHODS)[number]
 
+export const VISIBILITY_VALUES = ['public', 'private', 'friends', 'fans'] as const
+type Visibility = (typeof VISIBILITY_VALUES)[number]
+
 /**
  * 有标准取值的选项。取值是标准值、但平台不支持时报 UNSUPPORTED；不是标准值时报 USAGE。
  */
-export const STANDARD_VALUES: Record<string, readonly string[]> = { ...FILTER_VALUES, method: LOGIN_METHODS }
+export const STANDARD_VALUES: Record<string, readonly string[]> = { ...FILTER_VALUES, method: LOGIN_METHODS, visibility: VISIBILITY_VALUES }
 
 const FILTER_SUMMARY: Record<FilterName, string> = { sort: '排序', type: '类型', time: '时间范围', kind: '流的种类' }
 
@@ -42,6 +45,9 @@ export const filter = {
   kind: (...values: FilterValue<'kind'>[]) => makeFilter('kind', values, 'recommend'),
 }
 
+/** `--visibility` 的取值。平台支持的与默认的 public / private / friends 不同时，在注册表里声明，例如 `visibility('public', 'fans')`。 */
+export const visibility = (...values: Visibility[]) => z.enum(values as [Visibility, ...Visibility[]]).default('public').describe('可见范围')
+
 export const CATEGORY = z.string().optional().describe('分类 id，取值来自对应的 categories 命令')
 
 /** `comment list --product`：传纯 ID 时按商品处理，列出商品评价（AGENTS 4.8）。 */
@@ -58,7 +64,7 @@ export const PUBLISH = {
   mention: z.array(z.string()).optional().describe('@ 的用户'),
   poi: z.string().optional().describe('地点 id'),
   category: CATEGORY,
-  visibility: z.enum(['public', 'private', 'friends']).default('public').describe('可见范围'),
+  visibility: visibility('public', 'private', 'friends'),
   schedule: z.iso.datetime({ offset: true, local: true }).optional().describe('定时发布（ISO 时间）'),
   price: z.number().positive().optional().describe('商品价格（元）'),
 }

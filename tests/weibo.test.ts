@@ -11,6 +11,7 @@ import { plain } from '../src/platforms/weibo/web/normalize.js'
 import { resolveItem } from '../src/platforms/weibo/web/resolve.js'
 import { bidToMid, fileParams, midToBid } from '../src/platforms/weibo/web/sign.js'
 import { expectRequests, type GoldenCase, type GoldenRequest, loadCase, makeCtx, replay } from './golden.js'
+import { cli, useTempHome } from './helpers.js'
 
 /** 与 scripts/golden/weibo/gen.py 相同的假凭证。 */
 const COOKIES = 'SCF=fake-scf; SUB=_2A25fakeSUB0000; SUBP=0033fakeSUBP; ALF=02_1790259200; WBPSESS=fake-wbpsess==; XSRF-TOKEN=fakeXsrfToken0123'
@@ -237,6 +238,20 @@ describe('weibo 对拍：命令流程', () => {
     if (error) throw error
     expectRequests(requests, c.requests)
   })
+
+  for (const [name, visible] of [
+    ['post_text_friends', '6'],
+    ['post_text_fans', '10'],
+  ] as const) {
+    it(`item publish 纯文字 --visibility：${name} 的 visible=${visible}`, async () => {
+      const c = loadCase('weibo', name)
+      const ctx = loggedCtx({ options: { text: c.input.text, visibility: c.input.visibility } })
+      const { requests, error } = await replay(c, () => cmd.itemPublish(ctx))
+      if (error) throw error
+      expectRequests(requests, c.requests)
+      expect(requests[1]!.body).toContain(`&visible=${visible}&`)
+    })
+  }
 })
 
 describe('weibo 行为', () => {
@@ -265,6 +280,25 @@ describe('weibo 行为', () => {
   it('item publish：不支持的选项报 UNSUPPORTED', async () => {
     const ctx = loggedCtx({ options: { text: 'x', title: '标题', visibility: 'public' } })
     await expect(cmd.itemPublish(ctx)).rejects.toMatchObject({ code: 'UNSUPPORTED' })
+  })
+})
+
+describe('--visibility fans（AGENTS 4.9）', () => {
+  useTempHome()
+
+  it('微博接受 fans：通过取值校验，进入登录检查', async () => {
+    const r = await cli('weibo', 'item', 'publish', '--text', 'x', '--visibility', 'fans')
+    expect(r.env.error.code).toBe('AUTH_REQUIRED')
+    expect((await cli('weibo', 'item', 'publish', '--help')).stdout).toContain('public|private|friends|fans')
+  })
+
+  it('没有声明 fans 的平台报 UNSUPPORTED，不是标准值报 USAGE', async () => {
+    for (const p of ['xhs', 'douyin', 'tiktok', 'bilibili', 'kuaishou', 'xianyu', 'x']) {
+      const r = await cli(p, 'item', 'publish', '--text', 'x', '--visibility', 'fans')
+      expect(r.env.error, p).toMatchObject({ code: 'UNSUPPORTED', hint: '可选：public、private、friends' })
+      expect(r.code).toBe(2)
+    }
+    expect((await cli('weibo', 'item', 'publish', '--text', 'x', '--visibility', 'nope')).env.error.code).toBe('USAGE')
   })
 })
 
