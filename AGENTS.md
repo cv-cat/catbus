@@ -237,14 +237,21 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | tiktok | `item publish [--allow-stitch on\|off]` | 私有选项：允许拼接（Stitch），默认视频 `off`、图文 `on`（照上游） | Item |
 | tiktok | `item publish [--allow-content-reuse on\|off]` | 私有选项：允许他人复用内容，默认 `on` | Item |
 | tiktok | `item publish [--allow-ai-remix on\|off]` | 私有选项：允许 AI 改编，默认 `on` | Item |
-| bilibili | `item coin <item> [--count 1\|2]` | 投币 | `{id}` |
+| bilibili | `item coin <item> [--count 1\|2] [--like]` | 投币；`--like` 同时点赞 | `{id}` |
 | bilibili | `item triple <item>` | 一键三连 | `{id}` |
 | bilibili | `item subtitles <item>` | 字幕 | Subtitle[] |
 | bilibili | `danmaku list <item>` | 视频弹幕 | Danmaku[] |
-| bilibili | `danmaku send <item> <text> --offset <秒>` | 发视频弹幕 | `{id}` |
+| bilibili | `danmaku send <item> <text> --offset <秒> [--color] [--font-size] [--position]` | 发视频弹幕。`--color` 为 `#RRGGBB` 或十进制，`--font-size` 默认 25，`--position scroll\|top\|bottom` 默认 `scroll` | `{id}` |
 | bilibili | `dynamic publish --text [--image]` | 发动态 | `{id url}` |
 | bilibili | `dynamic delete <id>` | 删动态 | `{id}` |
-| bilibili | `article publish --title --text [--cover] [--category]` | 发专栏：先存草稿，再提交 | `{id url}` |
+| bilibili | `article publish --title --text [--cover] [--category] [--tag] [--summary] [--draft]` | 发专栏：先存草稿，再提交。`--summary` 为摘要；`--draft` 只存草稿、不提交 | `{id url}` |
+| bilibili | `draft get <id>` | 专栏草稿 | Item（`kind` 为 `article`，`status` 为 `draft`） |
+| bilibili | `draft delete <id>` | 删专栏草稿 | `{id}` |
+| bilibili | `user items <user> [--keyword <词>]` | 私有选项：只看投稿里匹配关键词的 | Item[] |
+| bilibili | `item collect` / `uncollect <item> [--folder <收藏夹 id>]` | 私有选项：收藏进 / 移出指定收藏夹，多个用逗号分隔。不给时收藏进第一个收藏夹，取消时从所有收藏夹移出 | `{id}` |
+| bilibili | `item publish [--source <来源>] [--dynamic <文案>] [--allow-reprint]` | 私有选项：`--source` 表示转载并给出来源，不给为自制；`--dynamic` 为同步到动态的文案；默认禁止转载，`--allow-reprint` 允许 | Item |
+| bilibili | `comment add <item> <text> --reply-to <comment> [--root <comment>]` | 私有选项：回复楼中楼时 `--root` 给根评论、`--reply-to` 给被回复的那条；不给 `--root` 时 `--reply-to` 就是根评论 | Comment |
+| bilibili | `live send <room> <text> [--color] [--font-size] [--position] [--reply-user <user>]` | 私有选项：弹幕样式同 `danmaku send`；`--reply-user` 为回复的观众（UID 或空间链接） | `{id}` |
 | xianyu | `item publish [--original-price <金额>]` | 私有选项：原价（元），要和 `--price` 一起用 | Item |
 | xianyu | `item publish [--shipping free\|distance\|fixed\|none]` | 私有选项：运费方式，默认 `free` 包邮；`distance` 按距离计费，`fixed` 一口价，`none` 无需邮寄 | Item |
 | xianyu | `item publish [--postage <金额>]` | 私有选项：一口价运费（元），配合 `--shipping fixed` | Item |
