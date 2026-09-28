@@ -242,8 +242,10 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | xianyu | `item publish [--postage <金额>]` | 私有选项：一口价运费（元），配合 `--shipping fixed` | Item |
 | xianyu | `item publish [--pickup]` | 私有选项：支持自提 | Item |
 | jd | `order list` | 订单 | Order[] |
+| jd | `order list [--range 3m\|this_year\|<年份>]` | 私有选项：订单的时间范围。`3m` 近三个月（默认），`this_year` 今年内，`2025` 这样的四位年份表示那一年 | Order[] |
 | jd | `cart count` | 购物车数量 | `{count}` |
 | jd | `coupon list <item>` | 商品可用优惠券 | Coupon[] |
+| jd | `item get` / `item search` / `item related` / `coupon list` / `cart count` / `history list` / `user collects` `[--area <地区编码>]` | 私有选项：收货地区，影响价格和库存。取值是京东的地区编码 `省_市_区_镇`，用 `_` 或 `-` 分隔，例如 `1_2800_55812_0`；默认取登录态里的 `ipLoc-djd` cookie，没有时为 `1_2800_55812_0` | Item / Item[] / Coupon[] / `{count}` |
 
 扩展类型的字段见 6.2。
 

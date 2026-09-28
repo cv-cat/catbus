@@ -53,6 +53,7 @@
 - kuaishou `user likes`：只支持 me
 - kuaishou `user followers / following`：只支持 me
 - `user items --sort` 取值：bilibili latest / views / collects
+- `user collects --area`：jd
 
 ## item
 
@@ -72,8 +73,11 @@
 
 - weibo `item search`：只能取第一页
 - jd `item related`：用第一个相关搜索词的搜索结果
+- `item get --area`：jd
 - `item search --sort` 取值：xhs general / latest / popular / comments / collects；bilibili general / views / latest / collects；jd general / sales / price_asc / price_desc / comments；x general / latest
 - `item search --type` 取值：xhs all / video / image
+- `item search --area`：jd
+- `item related --area`：jd
 - `item publish --shipping`：xianyu
 - `item publish --postage`：xianyu
 - `item publish --pickup`：xianyu
@@ -102,7 +106,7 @@
 - xhs `comment list`：--product 规划中
 - kuaishou `comment list`：--product 规划中
 - weibo `comment list`：只有一级评论
-- jd `comment list`：只有第一页
+- jd `comment list`：只有第一页；--limit N 在一次请求里取 N 条
 - `comment list --product`：xhs、douyin、tiktok、kuaishou
 
 ## feed 与 keyword
@@ -153,6 +157,7 @@
 | poi search | ✓ | ○ | ◐ | — | ○ | ○ | — | — | — | — |
 
 - tiktok `poi search`：在推荐地点里按关键词筛选
+- `history list --area`：jd
 
 ## live
 

@@ -460,6 +460,20 @@ def diagnose_alive():
 case('diagnose_no_session', diagnose_no_session, respond=forbidden_respond(False))
 case('diagnose_alive', diagnose_alive, respond=forbidden_respond(True))
 
+# ---------------------------------------------------------------- 评价条数（commentNum）
+
+case('product_comments_30', lambda: JdAPI.get_product_comments(logged(), SKU, count=30), sku=SKU, count=30)
+
+# ---------------------------------------------------------------- 收货地区（显式 area 覆盖 ipLoc-djd）
+
+AREA = '2_2830_51810_0'
+case('product_detail_area', lambda: JdAPI.get_product_detail(logged(), SKU, area=AREA), sku=SKU, area=AREA)
+case('recommend_coupon_area', lambda: JdAPI.get_recommend_coupon(logged(), SKU, area=AREA), sku=SKU, area=AREA)
+case('cart_num_area', lambda: JdAPI.get_cart_num(logged(), area=AREA), area=AREA)
+case('browse_history_area', lambda: JdAPI.get_browse_history(logged(), page=1, page_size=20, area=AREA), area=AREA)
+case('follow_products_area', lambda: JdAPI.get_follow_products(logged(), page=1, page_size=20, area=AREA), area=AREA)
+case('search_area', lambda: JdAPI.search(logged(), KEYWORD, page=1, area=AREA), keyword=KEYWORD, area=AREA)
+
 # ---------------------------------------------------------------- JCAP 求解器的纯算部分（合成图片）
 
 import cv2  # noqa: E402

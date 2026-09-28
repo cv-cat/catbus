@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CatbusError } from '../src/core/errors.js'
 import type { HandlerContext } from '../src/core/registry.js'
 import { RAW } from '../src/core/schemas.js'
+import { PLATFORMS } from '../src/platforms/index.js'
 import * as api from '../src/platforms/jd/web/api.js'
 import { ChatClient } from '../src/platforms/jd/web/chat.js'
 import { Jd, simpleCookie } from '../src/platforms/jd/web/client.js'
@@ -59,6 +60,10 @@ function cmdCtx(init: { args?: Record<string, string>; options?: Record<string, 
   ctx.credential.device.local_storage = structuredClone(WEBM_STORAGE)
   return ctx
 }
+
+/** 对拍用的收货地区；命令行用 `-` 写法，接口里是 `_`。 */
+const AREA = '2_2830_51810_0'
+const areaCtx = (init: { args?: Record<string, string>; options?: Record<string, unknown> } = {}) => cmdCtx({ ...init, options: { area: AREA.replaceAll('_', '-'), ...init.options } })
 
 /** 用例名 → TS 侧的等价调用。 */
 const CASES: Record<string, () => Promise<unknown>> = {
@@ -139,6 +144,19 @@ const CASES: Record<string, () => Promise<unknown>> = {
     const result = await api.search(jd, KEYWORD, 1)
     return { result, evtoken: jd.cookie('x-rp-evtoken') }
   },
+  // comment list --limit 30 → commentNum 30
+  product_comments_30: () => cmd.commentList(cmdCtx({ args: { item: SKU }, options: { limit: 30 } })),
+  // --area：显式地区覆盖 ipLoc-djd
+  product_detail_area: () => cmd.itemGet(areaCtx({ args: { item: SKU } })),
+  recommend_coupon_area: () => cmd.couponList(areaCtx({ args: { item: SKU } })),
+  // 假响应里没有 cartNum：只比较请求
+  cart_num_area: () =>
+    cmd.cartCount(areaCtx()).catch((e) => {
+      if (e.code !== 'UPSTREAM') throw e
+    }),
+  browse_history_area: () => cmd.historyList(areaCtx()),
+  follow_products_area: () => cmd.userCollects(areaCtx({ args: { user: 'me' } })),
+  search_area: () => cmd.itemSearch(areaCtx({ args: { keyword: KEYWORD } })),
 }
 
 /** WebM 写进 localStorage 的 canvas / webgl 图像哈希与本机字体有关（见 normalizeUrl 的说明），不比较。 */
@@ -304,6 +322,36 @@ describe('jd 命令流程', () => {
     ])
     expect(ctx.credential.scopes.main!.cookies.find((x) => x.name === 'x-rp-evtoken')?.value).toBe('FAKEEVTOKEN')
   })
+})
+
+describe('jd 私有选项', () => {
+  afterEach(() => void vi.useRealTimers())
+
+  it('order list --range：3m / this_year / 年份 → 订单中心的 d', async () => {
+    expect([undefined, '3m', 'this_year', '2025'].map(cmd.orderRange)).toEqual(['1', '1', '2', '2025'])
+    // 与上游 get_order_list(page=2, date_range='2025') 的请求一致
+    const c = loadCase('jd', 'order_list')
+    const result = (await run(c, () => cmd.orderList(cmdCtx({ options: { range: '2025' }, cursor: '2' })))) as any
+    expect(result.data.map((o: any) => o.id)).toEqual(c.result.orders.map((o: any) => o.orderId))
+    expect(result.page).toEqual({ cursor: '3', has_more: true })
+  })
+
+  it('--range、--area 的取值校验', () => {
+    const jd = PLATFORMS.find((p) => p.id === 'jd')!
+    const web = jd.endpoints.web as Exclude<typeof jd.endpoints.web, 'planned'>
+    const range = web.commands.get('order list')!.options.range!
+    expect(range.safeParse(undefined).data).toBe('3m')
+    for (const ok of ['3m', 'this_year', '2024']) expect(range.safeParse(ok).success).toBe(true)
+    for (const bad of ['1', '2', 'year', '20245']) expect(range.safeParse(bad).success).toBe(false)
+    const area = web.commands.get('item get')!.options.area!
+    for (const ok of ['1_2800_55812_0', '1-2800-55812-0']) expect(area.safeParse(ok).success).toBe(true)
+    for (const bad of ['1_2800', 'beijing', '1-2800-55812-0.123']) expect(area.safeParse(bad).success).toBe(false)
+    for (const key of ['item search', 'item related', 'coupon list', 'cart count', 'history list', 'user collects']) {
+      expect(web.commands.get(key)!.options.area, key).toBeDefined()
+    }
+  })
+
+
 })
 
 describe('jd 归一化与解析', () => {

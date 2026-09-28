@@ -21,6 +21,9 @@ import { bootstrapCookies, TraceContext } from './util.js'
 type Ctx = HandlerContext
 const page = (ctx: Ctx) => Number(ctx.cursor ?? 1) || 1
 
+/** `--area`：收货地区编码，`-` 写法转成接口里的 `_`；没给时由接口从 ipLoc-djd cookie 取。 */
+const areaOpt = (ctx: Ctx): string | undefined => (ctx.options.area as string | undefined)?.replaceAll('-', '_')
+
 /** 建立会话；游客先补齐游客态（埋点 cookie、设备票据）。 */
 async function session(ctx: Ctx): Promise<Jd> {
   const jd = new Jd(ctx)
@@ -282,7 +285,7 @@ export async function userCollects(ctx: Ctx) {
   const jd = await loggedSession(ctx)
   if (who !== 'me' && who !== jd.pin) throw new CatbusError('UNSUPPORTED', 'jd 只能查看自己关注的商品', { hint: 'catbus jd user collects' })
   const p = page(ctx)
-  const d = await api.followProducts(jd, p, PAGE_SIZE)
+  const d = await api.followProducts(jd, p, PAGE_SIZE, areaOpt(ctx))
   await check(jd, d)
   const list = norm.listedItems(d)
   return paged(list, p + 1, list.length >= PAGE_SIZE)
@@ -293,7 +296,7 @@ export async function userCollects(ctx: Ctx) {
 export async function itemGet(ctx: Ctx) {
   const jd = await session(ctx)
   const sku = await resolveSku(jd, ctx.args.item!)
-  const d = await api.productDetail(jd, sku)
+  const d = await api.productDetail(jd, sku, areaOpt(ctx))
   await check(jd, d)
   return norm.detail(sku, d)
 }
@@ -309,7 +312,7 @@ const SORT: Record<string, string> = {
 
 async function searchItems(ctx: Ctx, jd: Jd, keyword: string, sort = '') {
   const p = page(ctx)
-  const res = await api.search(jd, keyword, p, { sort })
+  const res = await api.search(jd, keyword, p, { sort, area: areaOpt(ctx) })
   if (res?._verification && res._verification.code !== 0) {
     throw new CatbusError('RISK_CONTROL', '京东要求人机验证，纯程序验证没有通过', { hint: '稍后重试，或登录后再搜索', detail: { kind: 'captcha', ...res._verification } })
   }
@@ -337,10 +340,13 @@ export async function itemRelated(ctx: Ctx) {
 
 // ================================================================ comment
 
+/** 商品页一次取的评价条数；`--limit N` 映射到接口的 commentNum，一次请求取 N 条。 */
+const COMMENT_NUM = 10
+
 export async function commentList(ctx: Ctx) {
   const jd = await session(ctx)
   const sku = await resolveSku(jd, ctx.args.item!)
-  const d = await api.productComments(jd, sku, 10)
+  const d = await api.productComments(jd, sku, (ctx.options.limit as number | undefined) ?? COMMENT_NUM)
   await check(jd, d)
   return paged(norm.comments(sku, d), null, false)
 }
@@ -366,23 +372,30 @@ export async function keywordHot(ctx: Ctx) {
 export async function historyList(ctx: Ctx) {
   const jd = await loggedSession(ctx)
   const p = page(ctx)
-  const d = await api.browseHistory(jd, p, PAGE_SIZE)
+  const d = await api.browseHistory(jd, p, PAGE_SIZE, areaOpt(ctx))
   await check(jd, d)
   const list = norm.listedItems(d)
   return paged(list, p + 1, list.length >= PAGE_SIZE)
 }
 
+/** `--range` → 订单中心下拉框的 `d`（get_order_list 的 date_range）：1 近三个月、2 今年内、四位年份为那一年。 */
+export function orderRange(range: string | undefined): string {
+  if (!range || range === '3m') return '1'
+  if (range === 'this_year') return '2'
+  return range
+}
+
 export async function orderList(ctx: Ctx) {
   const jd = await loggedSession(ctx)
   const p = page(ctx)
-  const res = await api.orderList(jd, p)
+  const res = await api.orderList(jd, p, orderRange(ctx.options.range as string | undefined))
   if (res._error) throw authError(ctx, res._error)
   return paged(res.orders.map((o) => norm.order(o, res.skus?.get(o.orderId))), p + 1, res.orders.length > 0)
 }
 
 export async function cartCount(ctx: Ctx) {
   const jd = await loggedSession(ctx)
-  const d = await api.cartNum(jd)
+  const d = await api.cartNum(jd, areaOpt(ctx))
   await check(jd, d)
   const count = n.count(norm.find(d, ['cartNum', 'num', 'count']))
   if (count == null) throw new CatbusError('UPSTREAM', '购物车接口没有返回数量', { detail: { code: d?.code ?? null } })
@@ -392,7 +405,7 @@ export async function cartCount(ctx: Ctx) {
 export async function couponList(ctx: Ctx) {
   const jd = await session(ctx)
   const sku = await resolveSku(jd, ctx.args.item!)
-  const d = await api.recommendCoupon(jd, sku)
+  const d = await api.recommendCoupon(jd, sku, areaOpt(ctx))
   await check(jd, d)
   return norm.coupons(d)
 }
