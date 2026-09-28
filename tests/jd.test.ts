@@ -489,15 +489,32 @@ describe('jd 归一化与解析', () => {
 
 // ================================================================ JCAP 求解器（纯算部分）
 
-const b64png = (s: string) => imdecode(Buffer.from(s, 'base64'), 'color')!
+const b64png = async (s: string) => (await imdecode(Buffer.from(s, 'base64'), 'color'))!
+
+describe('jd JCAP 图片解码', () => {
+  it('JPEG / WebP 与 PNG 解出同样的像素（@napi-rs/canvas 的解码是异步的，没等就会得到全黑）', async () => {
+    const { createCanvas } = await import('@napi-rs/canvas')
+    const c = createCanvas(40, 30)
+    const g = c.getContext('2d')
+    g.fillStyle = '#c08040'
+    g.fillRect(0, 0, 40, 30)
+    const mean = (m: { data: ArrayLike<number> }) => Array.from(m.data).reduce((a, b) => a + b, 0) / m.data.length
+    const png = (await imdecode(c.toBuffer('image/png')))!
+    for (const mime of ['image/jpeg', 'image/webp'] as const) {
+      const m = (await imdecode(c.toBuffer(mime)))!
+      expect([m.width, m.height, m.channels], mime).toEqual([40, 30, 3])
+      expect(Math.abs(mean(m) - mean(png)), mime).toBeLessThan(3)
+    }
+  })
+})
 const f32 = (s: string) => new Float32Array(new Uint8Array(Buffer.from(s, 'base64')).buffer)
 const close = (a: number, b: number, tol: number) => expect(Math.abs(a - b), `${a} vs ${b}`).toBeLessThanOrEqual(tol)
 
 describe('jd JCAP 求解器对拍', () => {
   it('滑块：缺口位置与各项得分', async () => {
     const c = loadCase('jd', 'jcap_slider').result
-    const main = b64png(c.main)
-    const slot = imdecode(Buffer.from(c.slot, 'base64'), 'unchanged')!
+    const main = await b64png(c.main)
+    const slot = (await imdecode(Buffer.from(c.slot, 'base64'), 'unchanged'))!
     const s = await solver.solveSlider(main, slot)
     expect(s).toMatchObject({ retry: c.solution.retry, reason: c.solution.reason, solver: c.solution.solver, offset: c.solution.offset })
     close(s.score!, c.solution.score, 2e-4)
@@ -507,7 +524,7 @@ describe('jd JCAP 求解器对拍', () => {
 
   it('骨架化、最长路径、重采样、可信轨迹', async () => {
     const c = loadCase('jd', 'jcap_skeleton').result
-    const mask = imdecode(Buffer.from(c.mask, 'base64'), 'color')!
+    const mask = (await imdecode(Buffer.from(c.mask, 'base64'), 'color'))!
     const w = mask.width
     const h = mask.height
     const bin = new Uint8Array(w * h).map((_, i) => (mask.data[i * 3]! > 0 ? 1 : 0))
@@ -525,7 +542,7 @@ describe('jd JCAP 求解器对拍', () => {
 
   it('轨迹：LAB 残差、笔画似然、四角几何与打分', async () => {
     const c = loadCase('jd', 'jcap_trace').result
-    const image = b64png(c.image)
+    const image = await b64png(c.image)
     const maps = await solver.traceMaps(image, img(image.width, image.height, 1, f32(c.saliency)))
     close(solver.mean32(maps.residual.data), c.residual_mean, 1e-3)
     close(solver.mean32(maps.stroke!.data), c.stroke_mean, 1e-5)
@@ -548,7 +565,7 @@ describe('jd JCAP 求解器对拍', () => {
 
   it('LSD：OpenCV 5 的直线检测', async () => {
     const c = loadCase('jd', 'jcap_lsd').result
-    const gray = imdecode(Buffer.from(c.image, 'base64'), 'color')!
+    const gray = (await imdecode(Buffer.from(c.image, 'base64'), 'color'))!
     const g1 = img(gray.width, gray.height, 1, new Uint8Array(gray.width * gray.height).map((_, i) => gray.data[i * 3]!))
     const lines = detectLines(await loadCv(), g1)
     expect(lines.length).toBe(c.lines.length)
@@ -559,7 +576,7 @@ describe('jd JCAP 求解器对拍', () => {
 
   it('旋转：方向分类 + 直线轴向', async () => {
     const c = loadCase('jd', 'jcap_rotation').result
-    const s = await solver.solveRotation(b64png(c.image), models.orientation)
+    const s = await solver.solveRotation(await b64png(c.image), models.orientation)
     expect(s.orientationClass).toBe(c.solution.orientationClass)
     close(s.angle as number, c.solution.angle, 0.05)
     close(s.score!, c.solution.score, 2e-3)
@@ -568,7 +585,7 @@ describe('jd JCAP 求解器对拍', () => {
 
   it('点选：U2Net 显著性与带掩码模板匹配', async () => {
     const c = loadCase('jd', 'jcap_click').result
-    const tip = b64png(c.tip)
+    const tip = await b64png(c.tip)
     const sal = await solver.u2netSaliency(tip, models.u2netp)
     close(solver.mean32(sal.data), c.saliency_mean, 1e-3)
     ;[
@@ -576,7 +593,7 @@ describe('jd JCAP 求解器对拍', () => {
       [5, 5],
       [30, 20],
     ].forEach(([y, x], i) => close(sal.data[y! * tip.width + x!]!, c.saliency_sample[i], 2e-3))
-    const s = await solver.solveClick(b64png(c.image), tip, models.u2netp)
+    const s = await solver.solveClick(await b64png(c.image), tip, models.u2netp)
     expect(s.retry).toBe(c.solution.retry)
     close(s.x as number, c.solution.x, 1)
     close(s.y as number, c.solution.y, 1)

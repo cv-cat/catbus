@@ -47,14 +47,14 @@ function options(argv: string[]): Record<string, string> {
 async function solve(argv: string[]): Promise<string> {
   const o = options(argv)
   const tp = Number.parseInt(o.tp!, 10)
-  const image = imdecode(readFileSync(0), 'color')
+  const image = await imdecode(readFileSync(0), 'color')
   if (!image) throw new Error('invalid challenge image')
   let solution: Solution
   if (tp === 2 || tp === 3) {
     const model = o.model
     if (!model) throw new Error('missing saliency model')
     if (tp === 2) {
-      const tip = imdecode(Buffer.from(o['tip-base64'] ?? '', 'base64'), 'color')
+      const tip = await imdecode(Buffer.from(o['tip-base64'] ?? '', 'base64'), 'color')
       if (!tip) throw new Error('invalid tip image')
       solution = await solveClick(image, tip, model)
     } else solution = await solveTrace(image, model)
@@ -63,7 +63,7 @@ async function solve(argv: string[]): Promise<string> {
     if (!model) throw new Error('missing orientation model')
     solution = await solveRotation(image, model)
   } else if (tp === 30) {
-    const slot = imdecode(Buffer.from(o['slot-base64'] ?? '', 'base64'), 'unchanged')
+    const slot = await imdecode(Buffer.from(o['slot-base64'] ?? '', 'base64'), 'unchanged')
     if (!slot) throw new Error('invalid slot image')
     solution = await solveSlider(image, slot)
   } else throw new Error(`unsupported challenge type: ${tp}`)

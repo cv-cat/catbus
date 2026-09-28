@@ -138,10 +138,10 @@ export function decodePng(buf: Uint8Array): Png | null {
 }
 
 /** 其他格式：@napi-rs/canvas 解码。 */
-function decodeCanvas(buf: Uint8Array): Png {
-  const { Image, createCanvas } = require('@napi-rs/canvas')
-  const im = new Image()
-  im.src = Buffer.from(buf)
+/** PNG 以外（JPEG、WebP 等）交给 @napi-rs/canvas 解码。解码是异步的：直接设 `Image.src` 再 drawImage 只会画出全黑。 */
+async function decodeCanvas(buf: Uint8Array): Promise<Png> {
+  const { loadImage, createCanvas } = require('@napi-rs/canvas')
+  const im = await loadImage(Buffer.from(buf))
   const c = createCanvas(im.width, im.height)
   const ctx = c.getContext('2d')
   ctx.drawImage(im, 0, 0)
@@ -152,10 +152,10 @@ function decodeCanvas(buf: Uint8Array): Png {
 /**
  * cv2.imdecode：color 模式输出 BGR；unchanged 模式在有 alpha 时输出 BGRA、否则 BGR。
  */
-export function imdecode(buf: Uint8Array, mode: 'color' | 'unchanged' = 'color'): U8 | null {
+export async function imdecode(buf: Uint8Array, mode: 'color' | 'unchanged' = 'color'): Promise<U8 | null> {
   let png: Png | null
   try {
-    png = decodePng(buf) ?? decodeCanvas(buf)
+    png = decodePng(buf) ?? (await decodeCanvas(buf))
   } catch {
     return null
   }
