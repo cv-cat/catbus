@@ -288,8 +288,8 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 | xhs | 扫码 ✗（第 2 节），cookie ✓ | ✓ 27 条通过（含创作者中心） | 发布 ✓（仅自己可见）、上传 ✓；私信未测 | 评论偶发 461，见第 3 节 |
 | douyin | 扫码 ✓ | ✓ 20 条通过 | ✗ 缺 dtrait_blob（第 1 节） | |
 | kuaishou | 扫码 ✓ | ✓ 18 条通过；`item get` / `media` / `comment list` 被滑块风控时跳过（第 4a 节） | 未测 | `feed list` 默认的 recommend 上游没有；hot ✓、following ✓ |
-| xianyu | 扫码 | 未开始 | 未测 | |
-| jd | 扫码 | 未开始 | 未测 | |
+| xianyu | 扫码 ✓ | ✓ `auth status`、`user get me`、`media upload`（在线测试拿不到商品和会话 id，其余命令需要手动给参数） | 未测：私信会打扰真人，发布会上架真实商品 | `user get me` 的接口只返回 userId |
+| jd | 扫码 ✓ | ✓ 14 条通过 | 未测 | 修了：登录后用户名乱码（响应是 GBK，core 改为按 charset 解码）、`comment list` 取成了问答、会话更新时间。`item get` 与评价接口被 605 / 403 风控拦住（新的 403 探测正确区分了风控与登录失效） |
 | weibo、taobao、tiktok、x | cookie | 未开始 | 未测 | 需要从浏览器复制 cookie |
 
 ---
