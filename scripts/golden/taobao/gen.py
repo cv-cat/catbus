@@ -1,6 +1,6 @@
 """taobao 的对拍数据：用上游 TaoBaoApis 的代码构造 HTTP 请求与私信长连的帧（只用假凭证）。
 
-运行：.golden/taobao/Scripts/python.exe scripts/golden/taobao/gen.py
+运行：.golden/taobao/Scripts/python.exe scripts/golden/taobao/gen.py（macOS / Linux 为 .golden/taobao/bin/python）
 依赖：uv pip install -r references/TaoBaoApis/requirements.txt PyExecJS blackboxprotobuf websockets pydantic typing_extensions
 
 补丁（只在本脚本里）：
@@ -293,6 +293,35 @@ def ws_history_pages():
 
 
 case('ws_history_pages', ws_history_pages, cid=CID)
+
+
+def text_model(msg_id, sender, nick, created, text):
+    return {'message': {'messageId': msg_id, 'cid': CID + '@cntaobao', 'createAt': created, 'sender': {'uid': sender + '@cntaobao'},
+                        'extension': {'sender_nick': 'cntaobao' + nick}, 'content': {'contentType': 1, 'text': {'content': text}}}}
+
+
+# 三页，从新到旧：第一页两条，第二页是 HISTORY_BODY，第三页是最早的一条
+HISTORY_PAGES = [
+    {'hasMore': 1, 'nextCursor': 1789990002000, 'userMessageModels': [
+        text_model('m4', PEER_ID, '测试卖家', 1789990003000, '明天发货'),
+        text_model('m3', MY_ID, 'tester', 1789990002000, '什么时候发货')]},
+    HISTORY_BODY,
+    {'hasMore': 0, 'nextCursor': 1789980000000, 'userMessageModels': [text_model('m0', MY_ID, 'tester', 1789980000000, '在吗')]},
+]
+
+
+def ws_history_all():
+    """三页都在同一条连接里翻完（每收到一页就用 nextCursor 发下一页）."""
+    lv = live()
+    mid = mid_of()
+    ws = FakeWs([(2, {'lwp': '/s/vulcan', 'headers': {'mid': 'vulcan-mid', 'sid': 'vulcan-sid'}})] +
+                [(4 + 2 * i, {'code': 200, 'headers': {'mid': mid, 'sid': 'resp-sid'}, 'body': body}) for i, body in enumerate(HISTORY_PAGES)])
+    _next_ws[0] = ws
+    result = asyncio.run(lv.list_all_conversations(CID))
+    return ws_result(ws, result)
+
+
+case('ws_history_all', ws_history_all, cid=CID)
 
 # ---------------------------------------------------------------- 推送解码
 

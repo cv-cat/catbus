@@ -2,6 +2,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { writeCredential } from '../src/core/auth-store.js'
 import type { HeaderPairs } from '../src/core/http.js'
 import { jsonDumps } from '../src/core/py.js'
 import { deterministic } from '../src/core/rand.js'
@@ -51,7 +52,7 @@ interface Script {
 
 /** 按脚本推送的假连接：第 i 帧等客户端发出 after 帧后才推，推完不断开，直到客户端关闭。 */
 function fakeConnect(script: Script[]) {
-  const state = { url: '', headers: [] as HeaderPairs, sent: [] as string[], closed: false }
+  const state = { url: '', headers: [] as HeaderPairs, sent: [] as string[], closed: false, connects: 0 }
   let wake: (() => void) | null = null
   const poke = () => {
     const w = wake
@@ -80,6 +81,7 @@ function fakeConnect(script: Script[]) {
     },
   }
   const restore = mockConnect(async (url, headers) => {
+    state.connects++
     state.url = url
     state.headers = headers
     return socket
@@ -229,15 +231,63 @@ describe('taobao 对拍：命令流程', () => {
 
     const { data, page } = result as any
     expect(page).toEqual({ cursor: null, has_more: false })
-    // 上游把每页倒序插到最前面（时间正序），catbus 保持接口的顺序（新的在前）
-    const upstream = [...c.result.result].reverse()
+    // 与上游一样从旧到新（接口从新到旧给，上游每条都插到最前面）
+    const upstream = c.result.result
+    expect(data.map((m: any) => m.id)).toEqual(['m1', 'm2'])
     expect(data.map((m: any) => `${m.from.id}@cntaobao`)).toEqual(upstream.map((u: any) => u.send_user_id))
     expect(data.map((m: any) => `cntaobao${m.from.name}`)).toEqual(upstream.map((u: any) => u.send_user_name))
-    expect(data[0]).toMatchObject({ id: 'm2', conversation_id: CID, type: 'text', text: upstream[0].message.text.content, media: [] })
-    const image = JSON.parse(Buffer.from(upstream[1].message.base64, 'base64').toString())
-    expect(data[1]).toMatchObject({ id: 'm1', type: 'image', text: null, media: [{ id: '1', type: 'image', url: image.url, width: image.width, height: image.height }] })
-    expect(data[1].created_at).toMatch(/^2026-/)
-    expect(data[0][RAW]).toEqual(JSON.parse(c.result.server[1].data).body.userMessageModels[0])
+    expect(data[1]).toMatchObject({ id: 'm2', conversation_id: CID, type: 'text', text: upstream[1].message.text.content, media: [] })
+    const image = JSON.parse(Buffer.from(upstream[0].message.base64, 'base64').toString())
+    expect(data[0]).toMatchObject({ id: 'm1', type: 'image', text: null, media: [{ id: '1', type: 'image', url: image.url, width: image.width, height: image.height }] })
+    expect(data[0].created_at).toMatch(/^2026-/)
+    expect(data[1][RAW]).toEqual(JSON.parse(c.result.server[1].data).body.userMessageModels[0])
+  })
+
+  it('msg history --all：同一条连接上按 nextCursor 翻完三页（只取一次 token、只注册一次），从旧到新', async () => {
+    const c = loadCase('taobao', 'ws_history_all')
+    const { state, restore } = fakeConnect(c.result.server)
+    const { requests, result, error } = await replay(c, () => msgHistory(ctxOf({ args: { conversation: CID }, options: { all: true } })))
+    restore()
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect(state.connects).toBe(1)
+    expect(state.sent).toEqual(c.result.sent)
+    expect(state.closed).toBe(true)
+    const { data, page } = result as any
+    expect(page).toEqual({ cursor: null, has_more: false })
+    expect(data.map((m: any) => m.id)).toEqual(['m0', 'm1', 'm2', 'm3', 'm4'])
+    expect(data.map((m: any) => `${m.from.id}@cntaobao`)).toEqual(c.result.result.map((u: any) => u.send_user_id))
+    expect(data.map((m: any) => `cntaobao${m.from.name}`)).toEqual(c.result.result.map((u: any) => u.send_user_name))
+  })
+
+  it('msg history --limit：翻到够数就停；截在页中间时游标取保留下来最早那条的时间', async () => {
+    const c = loadCase('taobao', 'ws_history_all')
+    // 第一页 2 条、第二页 2 条：--limit 3 翻两页，保留最新的 3 条
+    const { state, restore } = fakeConnect(c.result.server.slice(0, 3))
+    const { result, error } = await replay(c, () => msgHistory(ctxOf({ args: { conversation: CID }, options: { limit: 3 } })))
+    restore()
+    if (error) throw error
+    expect(state.sent).toEqual(c.result.sent.slice(0, 7))
+    expect((result as any).data.map((m: any) => m.id)).toEqual(['m2', 'm3', 'm4'])
+    expect((result as any).page).toEqual({ cursor: '1789990000500', has_more: true })
+
+    // 正好翻完整页：游标就是接口的 nextCursor
+    const again = fakeConnect(c.result.server.slice(0, 2))
+    const one = await replay(c, () => msgHistory(ctxOf({ args: { conversation: CID }, options: { limit: 2 } })))
+    again.restore()
+    if (one.error) throw one.error
+    expect((one.result as any).data.map((m: any) => m.id)).toEqual(['m3', 'm4'])
+    expect((one.result as any).page).toEqual({ cursor: '1789990002000', has_more: true })
+  })
+
+  it('msg history：--cursor 不是数字时报 USAGE，不建连接', async () => {
+    const c = loadCase('taobao', 'ws_history')
+    const { state, restore } = fakeConnect([])
+    const { error, requests } = await replay(c, () => msgHistory({ ...ctxOf({ args: { conversation: CID } }), cursor: 'abc' }))
+    restore()
+    expect(error).toMatchObject({ code: 'USAGE' })
+    expect(requests).toEqual([])
+    expect(state.connects).toBe(0)
   })
 
   it('msg history：hasMore 时返回 nextCursor', async () => {
@@ -386,6 +436,21 @@ describe('taobao auth（CLI）', () => {
   it('游客 auth status：不联网，logged_in 为 false', async () => {
     const r = await cli('taobao', 'auth', 'status')
     expect(r.env.data).toEqual({ logged_in: false, user: null, method: null, expires_at: null })
+  })
+
+  it('msg history --limit 经 core 分页：handler 只调一次，只取一次 token、只建一条连接', async () => {
+    await writeCredential(ctxOf().credential)
+    const c = loadCase('taobao', 'ws_history_all')
+    const { state, restore } = fakeConnect(c.result.server.slice(0, 3))
+    const { result, error } = await replay(c, () => cli('taobao', 'msg', 'history', CID, '--limit', '3', '-a', 'default'))
+    restore()
+    if (error) throw error
+    const r = result as Awaited<ReturnType<typeof cli>>
+    expect(r.code).toBe(0)
+    expect(r.env.data.map((m: any) => m.id)).toEqual(['m2', 'm3', 'm4'])
+    expect(r.env.page).toEqual({ cursor: '1789990000500', has_more: true })
+    expect(state.connects).toBe(1)
+    expect(state.sent).toEqual(c.result.sent.slice(0, 7))
   })
 
   it('user get me：规划中', async () => {

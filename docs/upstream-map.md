@@ -208,7 +208,7 @@
 - **上游凭证来源**：无。
 - **API**
   - `taobao_apis.py` 的 `TaobaoApis`：`get_token`、`get_goods_uid_encrypt_uid(goods_url)`（从商品页 HTML 里取卖家 `uid` / `encrypt_uid`，供 `msg send --item` 用）、`upload_media`
-  - 私信：`taobao_live.py` 的 `taobaoLive(cookies_str)`（async WebSocket）：`list_all_conversations(cid)`（→ `msg history`）、`create_chat`、`send_msg`
+  - 私信：`taobao_live.py` 的 `taobaoLive(cookies_str)`（async WebSocket）：`list_all_conversations(cid)`（→ `msg history`：同一条连接上按 nextCursor 翻页，结果从旧到新）、`create_chat`、`send_msg`
   - `utils/taobao_utils.py`：`generate_sign`、`generate_mid`、`generate_uuid`、`generate_device_id`、`decrypt`（实际是 base64 + MessagePack，由上游 JS 解码；import 了 blackboxprotobuf 但没用）、`trans_cookies`
 - **JS 资产**：`static/taobao_js_20260407.js`
 - **注意**

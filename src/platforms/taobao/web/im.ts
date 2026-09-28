@@ -323,6 +323,35 @@ export class Im {
   }
 }
 
+/** listUserMessages 的一页：消息从新到旧。 */
+export interface HistoryPage {
+  models: unknown[]
+  nextCursor: string | null
+  hasMore: boolean
+}
+
+/** 取一页消息记录（上游 list_all_conversations 循环里的一次请求）。游标没往前走时按没有更多处理，免得原地打转。 */
+export async function historyPage(im: Im, cid: string, cursor: string): Promise<HistoryPage> {
+  const body = (await im.request(listFrame(cid, cursor))).body ?? {}
+  const nextCursor = body.nextCursor == null ? null : String(body.nextCursor)
+  const hasMore = Number(body.hasMore) === 1 && nextCursor != null && nextCursor !== cursor
+  return { models: (body.userMessageModels as unknown[]) ?? [], nextCursor, hasMore }
+}
+
+/**
+ * 在同一条连接上按 nextCursor 往更早翻（上游 list_all_conversations：收到一页就接着发下一页的请求），
+ * 直到没有更多；调用方不再需要时提前结束迭代即可。翻页间隔用平台默认值（AGENTS 4.9）。
+ */
+export async function* historyPages(im: Im, cid: string, cursor: string): AsyncGenerator<HistoryPage> {
+  for (;;) {
+    const page = await historyPage(im, cid, cursor)
+    yield page
+    if (!page.hasMore) return
+    cursor = page.nextCursor!
+    await rand.sleep(im.tb.ctx.platform.pageInterval, im.tb.ctx.signal)
+  }
+}
+
 /** 从 SingleChatConversation/create 的响应里取会话 ID。 */
 export function createdCid(res: Frame): string | null {
   const direct = res.body?.singleChatConversation?.cid ?? res.body?.cid
