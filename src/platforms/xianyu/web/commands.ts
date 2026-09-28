@@ -45,6 +45,7 @@ async function qrcodeLogin(ctx: Ctx) {
     async () => {
       const d = await api.qrQuery(x, csrf, cookie2, cna, qr)
       const status = String(d.qrCodeStatus ?? '')
+      if (status !== last) ctx.log.debug(`扫码状态：${status || '（空）'}`, { keys: Object.keys(d), titleMsg: d.titleMsg ?? null })
       if (status !== last && status === 'SCANNED') ctx.log.info('已扫码，请在手机上确认')
       last = status
       if (status === 'CONFIRMED') return String(d.token ?? d.lgToken ?? '')
