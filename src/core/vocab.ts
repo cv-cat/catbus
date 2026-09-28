@@ -53,8 +53,8 @@ function write(summary: string, args: ArgSpec[], output = '{id}', extra: Extra =
   return read(summary, args, output, { auth: 'required', ...extra })
 }
 
-function exactlyOne(options: Options, keys: string[]): boolean {
-  return keys.filter((k) => options[k] != null).length === 1
+function given(options: Options, keys: string[]): string[] {
+  return keys.filter((k) => options[k] != null)
 }
 
 /** 通用词表（AGENTS 4.5、4.8、6.3）。平台只声明与默认不同的部分。 */
@@ -157,7 +157,11 @@ export const VOCAB: Record<string, CommandSpec> = {
       video: PUBLISH.video,
     },
     check: (a, o) => {
-      if (!exactlyOne(o, ['to', 'conversation', 'item'])) return '--to、--conversation、--item 需要且只能用一个'
+      // 三者用一个；只有 --to 与 --item 可以一起用（就某件商品联系某个用户，AGENTS 4.8）
+      const targets = given(o, ['to', 'conversation', 'item'])
+      if (targets.length === 0 || (targets.length > 1 && targets.includes('conversation'))) {
+        return '--to、--conversation、--item 需要用一个，只有 --to 与 --item 可以同时用'
+      }
       if (a.text == null && o.image == null && o.video == null) return '需要 <text>、--image 或 --video'
     },
   }),

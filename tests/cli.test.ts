@@ -174,8 +174,19 @@ describe('命令判定', () => {
     expect((await cli('xhs', 'user', 'search', 'kw', '--limit', '0')).env.error.code).toBe('USAGE')
     expect((await cli('bilibili', 'item', 'coin', 'BV1', '--count', '3')).env.error.code).toBe('USAGE')
     expect((await cli('xhs', 'live', 'send', 'room')).env.error.message).toBe('需要 <text> 或 --gift，二选一')
-    expect((await cli('xhs', 'msg', 'send', 'hi')).env.error.message).toBe('--to、--conversation、--item 需要且只能用一个')
+    expect((await cli('xhs', 'msg', 'send', 'hi')).env.error.message).toBe('--to、--conversation、--item 需要用一个，只有 --to 与 --item 可以同时用')
+    expect((await cli('xhs', 'msg', 'send', 'hi', '--to', 'u', '--conversation', 'c')).env.error.code).toBe('USAGE')
+    expect((await cli('xhs', 'msg', 'send', 'hi', '--item', 'i', '--conversation', 'c')).env.error.code).toBe('USAGE')
     expect((await cli('xhs', 'folder', 'update', 'f1')).env.error.code).toBe('USAGE')
+  })
+
+  it('msg send --to 与 --item 可以同时用；不支持这种组合的平台报 UNSUPPORTED', async () => {
+    // 登录后才进入 handler；这几个平台在 handler 开头就拒绝，不发请求
+    for (const p of ['xhs', 'tiktok', 'jd']) {
+      await writeCredential(newCredential({ platform: p, endpoint: 'web', account: 'work', method: 'cookie' }))
+      const r = await cli(p, 'msg', 'send', 'hi', '--to', 'u', '--item', '1', '-a', 'work')
+      expect(r.env.error.code, p).toBe('UNSUPPORTED')
+    }
   })
 
   it('未知选项、未知平台、未知端、未知输出格式都是 USAGE', async () => {

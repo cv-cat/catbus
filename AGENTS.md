@@ -265,7 +265,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | live | `get` / `listen` / `history` / `like` / `rank` / `gifts` / `products` / `media <room>`；`send <room> <text>`；`send <room> --gift <gift> [--count N]`；`replays <user>`；`list`、`categories`；`search <kw>`；`start` / `stop` |
 | keyword | `suggest <prefix>`、`hot` |
 | notice | `list`、`count` |
-| msg | `list`；`history` / `read` / `delete <conversation>`；`revoke <conversation> <message>`；`send <text> --to <user> \| --conversation <id> \| --item <item>`，可加 `--image` / `--video` |
+| msg | `list`；`history` / `read` / `delete <conversation>`；`revoke <conversation> <message>`；`send <text> --to <user> \| --conversation <id> \| --item <item>`，三者用一个，只有 `--to` 与 `--item` 可以同时用；可加 `--image` / `--video` |
 | media | `upload <file>` |
 | folder | `list [user]`，省略时为 `me`；`items <folder>`；`create <name>`；`update <folder> --name <name>`；`delete <folder>` |
 | series | `list [user]`，省略时为 `me`；`items <series>` |
@@ -276,6 +276,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
   - 传商品 URL 时，自动识别为商品。
   - 传纯 ID 时要加 `--product`，否则按 item 处理。
 - `msg send --item <item>`：对商品卖家 / 客服发消息（闲鱼、淘宝、京东）。
+- `msg send --to <user> --item <item>`：就这件商品给指定用户发消息（闲鱼：卖家主动联系买家）。不支持的平台报 `UNSUPPORTED`。
 
 ### 4.9 选项
 
