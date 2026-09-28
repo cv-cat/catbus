@@ -69,6 +69,12 @@ export const PUBLISH = {
   price: z.number().positive().optional().describe('商品价格（元）'),
 }
 
+/**
+ * `--quote <item>`：发成引用（AGENTS 4.9「发布」）。不放进 PUBLISH：目前只有 x 支持，由 x 在注册表里声明，
+ * 其他平台的 item publish 不接受这个选项。
+ */
+export const QUOTE = z.string().optional().describe('引用一条内容：ID 或 URL')
+
 export const DOWNLOAD = {
   dir: z.string().optional().describe('下载目录，默认当前目录'),
   overwrite: z.boolean().optional().describe('覆盖已有文件，默认跳过'),
@@ -92,6 +98,7 @@ export const STANDARD_OPTIONS: Record<string, z.ZodType> = {
   ...PAGING,
   ...Object.fromEntries(Object.keys(FILTER_VALUES).map((k) => [k, z.string().optional()])),
   ...PUBLISH,
+  quote: QUOTE,
   ...DOWNLOAD,
   ...STREAM,
 }
