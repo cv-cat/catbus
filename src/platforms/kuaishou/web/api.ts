@@ -395,8 +395,26 @@ export async function categoryClassify(ks: Ks, referer = `${LIVE}/`): Promise<Js
   return data
 }
 
-export async function giftList(ks: Ks, liveStreamId: string, eid: string): Promise<Json> {
-  const [data] = await ks.live('GET', '/live_api/emoji/gift-list', { query: [['liveStreamId', liveStreamId]], referer: roomReferer(eid) })
+/**
+ * gift_list：首屏（只有 liveStreamId，带 Sentry，当前阶段的 Cookie 线序）；
+ * 传 sortType 时是点击“更多礼物”（`liveStreamId&sortType=0`，不带 Sentry，authenticated 线序）。
+ */
+export async function giftList(ks: Ks, liveStreamId: string, eid: string, sortType?: number): Promise<Json> {
+  const more = sortType != null
+  const query: [string, unknown][] = [['liveStreamId', liveStreamId]]
+  if (more) query.push(['sortType', sortType])
+  const [data] = await ks.live('GET', '/live_api/emoji/gift-list', {
+    query,
+    referer: roomReferer(eid),
+    sentry: !more,
+    cookieProfile: more ? ks.roomProfile('authenticated') : undefined,
+  })
+  return data
+}
+
+/** emoji_all_gifts：房间首屏的完整礼物字典（`/emoji/allgifts`，带 Sentry，房间资源的 Cookie 线序）。 */
+export async function emojiAllGifts(ks: Ks, eid: string): Promise<Json> {
+  const [data] = await ks.live('GET', '/live_api/emoji/allgifts', { referer: roomReferer(eid), sentry: true, cookieProfile: 'live_room_assets_initial' })
   return data
 }
 

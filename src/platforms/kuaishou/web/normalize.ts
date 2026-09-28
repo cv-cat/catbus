@@ -1,5 +1,5 @@
 import * as n from '../../../core/normalize.js'
-import type { Comment, Item, ItemStatus, Live, Media, User, UserRef } from '../../../core/schemas.js'
+import type { Comment, Gift, Item, ItemStatus, Live, Media, User, UserRef } from '../../../core/schemas.js'
 
 /** 快手原始对象 → 归一化类型（AGENTS 6.2）。字段来源参考上游 utils/data_util.py 的 handle_work_info。 */
 
@@ -226,4 +226,25 @@ export function work(v: any): Item {
     },
     v,
   )
+}
+
+/** 礼物面板的一项（gift-list 的 `gifts[]`）。价格是快币。 */
+export function gift(g: any): Gift {
+  return n.gift({ id: n.id(g.id), name: String(g.name ?? ''), price: g.unitPrice != null ? { amount: Number(g.unitPrice), currency: 'KSCOIN' } : null }, g)
+}
+
+/**
+ * 礼物字典的 `[id, 名字]`：gift-list 是 `{gifts: [...]}`；allgifts 是以礼物 id 为键的对象，
+ * 也兼容数组形式（`gifts` / `list`）。
+ */
+export function giftNames(d: any): [string, string][] {
+  const out: [string, string][] = []
+  const push = (id: unknown, g: any) => {
+    const key = g?.id ?? id
+    if (key != null && key !== '' && g?.name) out.push([String(key), String(g.name)])
+  }
+  const list = Array.isArray(d) ? d : (d?.gifts ?? d?.list)
+  if (Array.isArray(list)) for (const g of list) push(null, g)
+  else if (d && typeof d === 'object') for (const [id, g] of Object.entries(d)) if (g && typeof g === 'object') push(id, g)
+  return out
 }

@@ -209,7 +209,12 @@ def respond(req):
         if path == '/live_api/home/list':
             return {'data': {'list': [{'labelId': 2, 'gameLiveInfo': [{'subLabelId': 0, 'liveInfo': [HOME_ITEM]}]}]}}
         if path == '/live_api/emoji/gift-list':
+            if 'sortType=0' in url:
+                return {'data': {'token': 'x', 'gifts': [{'id': 1, 'name': '棒棒糖', 'unitPrice': 1}, {'id': 2, 'name': '小心心', 'unitPrice': 0},
+                                                         {'id': 3, 'name': '火箭', 'unitPrice': 5000}]}}
             return {'data': {'token': 'x', 'gifts': [{'id': 1, 'name': '棒棒糖', 'unitPrice': 1}]}}
+        if path == '/live_api/emoji/allgifts':
+            return {'data': {'1': {'id': 1, 'name': '棒棒糖', 'unitPrice': 1}, '9': {'id': 9, 'name': '粉丝团灯牌', 'unitPrice': 1}}}
         if path == '/live_api/liveroom/websocketinfo':
             return {'data': {'result': 1, 'token': 'fake-ws-token', 'websocketUrls': ['wss://live-ws.example/websocket']}}
         if path == '/live_api/category/classify':
@@ -395,6 +400,21 @@ case('qrcode_login_flow', _qrcode_login)
 case('home_list', lambda: KuaishouLiveAPI.home_list(logged(LIVE)))
 case('category_classify', lambda: KuaishouLiveAPI.category_classify(logged(LIVE)))
 case('gift_list', lambda: KuaishouLiveAPI.gift_list(logged(LIVE), STREAM, eid=ROOM), room=ROOM)
+case('gift_list_more', lambda: KuaishouLiveAPI.gift_list(logged(LIVE), STREAM, sort_type=0, eid=ROOM), room=ROOM)
+case('emoji_all_gifts', lambda: KuaishouLiveAPI.emoji_all_gifts(logged(LIVE), eid=ROOM), room=ROOM)
+
+
+def _live_gifts():
+    """live gifts 命令：直播首页找房间 → 首屏礼物 → “更多礼物”."""
+    auth = logged(LIVE)
+    KuaishouLiveAPI.home_list(auth)
+    KuaishouLiveAPI.gift_list(auth, STREAM, eid=ROOM)
+    return KuaishouLiveAPI.gift_list(auth, STREAM, sort_type=0, eid=ROOM)
+
+
+case('live_gifts_flow', _live_gifts, room=ROOM)
+
+
 case('websocket_info', lambda: KuaishouLiveAPI.websocket_info(logged(LIVE), STREAM, eid=ROOM), room=ROOM)
 
 # ================================================================ 创作者中心

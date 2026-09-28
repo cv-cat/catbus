@@ -385,6 +385,17 @@ const CASES: Record<string, { run: () => Promise<unknown>; result?: (actual: any
   home_list: { run: async () => api.homeList(await logged(LIVE)) },
   category_classify: { run: async () => api.categoryClassify(await logged(LIVE)) },
   gift_list: { run: async () => api.giftList(await logged(LIVE), STREAM, ROOM) },
+  gift_list_more: { run: async () => api.giftList(await logged(LIVE), STREAM, ROOM, 0), result: (a, e) => expect(a).toEqual(e) },
+  emoji_all_gifts: {
+    run: async () => api.emojiAllGifts(await logged(LIVE), ROOM),
+    result: (a, e) => {
+      expect(a).toEqual(e)
+      expect(norm.giftNames(a.data)).toEqual([
+        ['1', '棒棒糖'],
+        ['9', '粉丝团灯牌'],
+      ])
+    },
+  },
   websocket_info: { run: async () => api.websocketInfo(await logged(LIVE), STREAM, ROOM) },
 
   // ---------------------------------------------------------------- 创作者中心
@@ -525,6 +536,29 @@ describe('kuaishou 对拍：命令流程', () => {
     expect(result).toMatchObject({ id: '555', kind: 'video', status: 'private' })
   })
 
+  it('live gifts：直播首页找房间 → 首屏礼物 → “更多礼物”（sortType=0）', async () => {
+    const g = loadCase('kuaishou', 'live_gifts_flow')
+    const { liveGifts } = await import('../src/platforms/kuaishou/web/commands.js')
+    const ctx = makeCtx({ platform: 'kuaishou', args: { room: ROOM } })
+    const { requests, result, error } = await replay(g, async () => {
+      const init = Ks.prototype.init
+      Ks.prototype.init = function (this: Ks) {
+        return init.call(this, COOKIES)
+      }
+      try {
+        return (await liveGifts(ctx)) as any
+      } finally {
+        Ks.prototype.init = init
+      }
+    })
+    if (error) throw error
+    expectRequests(requests, g.requests)
+    expect(result.map((x: any) => [x.id, x.name, x.price?.amount])).toEqual([
+      ['1', '棒棒糖', 1],
+      ['2', '小心心', 0],
+      ['3', '火箭', 5000],
+    ])
+  })
 })
 
 describe('kuaishou 归一化', () => {

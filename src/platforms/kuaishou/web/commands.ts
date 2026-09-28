@@ -669,8 +669,10 @@ export async function liveGifts(ctx: Ctx): Promise<Gift[]> {
   return run(ctx, 'live', async (k) => {
     const eid = await resolveRoom(k, ctx.args.room!)
     const room = await roomState(k, eid)
-    const d = k.checkLive(await api.giftList(k, String(room.id), eid))
-    return (d.gifts ?? []).map((g: Json) => n.gift({ id: n.id(g.id), name: String(g.name ?? ''), price: g.unitPrice != null ? { amount: Number(g.unitPrice), currency: 'KSCOIN' } : null }, g))
+    // 进房间时的首屏列表，再点开“更多礼物”（sortType=0）取全量
+    const first: Json[] = k.checkLive(await api.giftList(k, String(room.id), eid)).gifts ?? []
+    const all: Json[] = k.checkLive(await api.giftList(k, String(room.id), eid, 0)).gifts ?? []
+    return (all.length ? all : first).map(norm.gift)
   })
 }
 
@@ -711,11 +713,17 @@ export function liveListen(ctx: Ctx) {
       const token = String(info.token ?? '')
       const urls: string[] = info.websocketUrls ?? []
       if (!token || !urls.length) throw new CatbusError('UPSTREAM', 'websocketinfo 没有给 token 或接入地址', { detail: { result: info.result } })
+      // 礼物名：首屏礼物列表 + 房间的完整礼物字典（allgifts，含不在面板上的礼物）
       const gifts = new Map<string, string>()
-      try {
-        for (const g of k.checkLive(await api.giftList(k, liveStreamId, eid)).gifts ?? []) gifts.set(String(g.id), String(g.name))
-      } catch (err) {
-        ctx.log.debug(`礼物列表获取失败：${(err as Error).message}`)
+      for (const [label, load] of [
+        ['礼物列表', () => api.giftList(k, liveStreamId, eid)],
+        ['礼物字典', () => api.emojiAllGifts(k, eid)],
+      ] as const) {
+        try {
+          for (const [id, name] of norm.giftNames(k.checkLive(await load()))) gifts.set(id, name)
+        } catch (err) {
+          ctx.log.debug(`${label}获取失败：${(err as Error).message}`)
+        }
       }
       k.save()
       yield* reconnecting(ctx, async function* (attempt) {
