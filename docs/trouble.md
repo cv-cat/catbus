@@ -27,7 +27,7 @@
 | 5 | 多个 | 部分归一化字段恒为空 | 上游接口不返回 | 不处理（要补需上游加接口） | 字段为 null |
 | 6 | — | 写操作、长连接、部分平台还没测 | 未验证 | 未测（进度见第 6 节） | — |
 | 7 | xhs | 测试笔记删不掉 | xhs `item delete` 上游没有（○） | 待手动删 | — |
-| 8 | kuaishou | 滑块风控（400002）不会自动过，上游会 | catbus 漏移植 | 已补，待真机验证 | 自动过一次滑块后重发原请求；没过仍报 `RISK_CONTROL`（captcha） |
+| 8 | kuaishou | 滑块风控（400002）自动通过：链路已移植，但真机上服务端不认上游的人机指纹（`350014`） | catbus 漏移植（已补）+ 上游指纹失效 | 待上游 | 自动尝试一次，没过报 `RISK_CONTROL`（captcha） |
 | 9 | kuaishou | 直播间的主播 id 不能当用户用 | 平台两套 id | 已兜底 | `Live.host` 的链接传给用户命令时报 `USAGE` 并说明 |
 
 ---
@@ -233,7 +233,14 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 
 **现在的处理**：报 `RISK_CONTROL`（captcha），`detail.url` 是滑块页地址。
 
-**状态**：已补（2026-09-28），整条链有对拍，缺口识别与上游 cv2 在合成图上一致。待真机验证通过率。直播站、创作者中心的请求不自动过，与上游一致。
+**状态**：已补（2026-09-28），整条链有对拍；直播站、创作者中心的请求不自动过，与上游一致。
+
+**真机结果（2026-09-28）：过不了，原因在上游。**
+1. catbus 自己的 bug（已修）：真实下发的背景图是 **JPEG**，解码没等 `loadImage` 完成，画成全黑，缺口位置全错（服务端回 `350002 verify err`）。修好后缺口位置与上游一致（同一张图都是 490）。
+2. 修好后服务端回 **`350014 anti check err`**：答案位置对了，但人机检查不认。用上游 Python 在同一个账号上跑，结果完全一样，所以不是移植问题。多半是上游随包的浏览器指纹（`captcha_fp.py` 的 gpuInfo / captchaExtraParam、gdfp 遥测里的 canvas / WebGL 哈希等，作者 2026-08-16 在自己机器上采的）已经不被接受，或者遥测里还缺什么。
+3. 上游另有一个 bug：`utils/transport.py` 的 `is_http2` 把 curl_cffi 返回的 HTTP/2（`2`）判成不是 HTTP/2，上游的滑块流程在提交答案之前就一定失败（报 `did not negotiate captured HTTP/2`）。catbus 没有移植这项检查，不受影响。
+
+**状态**：待上游。
 
 ## 4b. 快手：直播间的主播 id 不能当用户用
 
@@ -324,6 +331,7 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 | Spider_XHS | 扫码后 471（verifytype 120）的验证流程 | 2 | 移植验证流程，去掉「改用 cookie」的兜底提示 |
 | Spider_XHS | 评论 461（verifytype 124）的验证码 | 3 | 同上 |
 | BilibiliApis | 弹幕分段去掉 `ps` / `pe` | 4 | 改 `danmakuSeg`，重新生成对拍数据 |
+| KuaiShou-Spider | 滑块验证 `350014 anti check err`：随包指纹 / gdfp 遥测不被接受；另 `is_http2` 把 HTTP/2 判错，流程在提交前就失败 | 4a | 同步新的指纹 / 遥测 |
 | DouYin_Spider | 综合搜索只发「已筛选」标记、不发筛选值（commit fe3eb24 删掉了），排序 / 时间筛选对综合频道不生效；catbus 照抄并在 stderr 提示改用 `--type video` | 10 | 移植修正后的请求 |
 | BilibiliApis | 极验点选：下载第一张题图时把 B 站会话 cookie 也发给了 static.geetest.com（登录时只是匿名设备 cookie，已登录账号复用时会带出 SESSDATA） | 10 | 移植修正后的请求 |
 

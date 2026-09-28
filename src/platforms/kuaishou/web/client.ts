@@ -364,7 +364,14 @@ export class Ks {
     if (risk) throw risk
     const code = body?.result
     if (code === 1 || code === undefined) return body
-    if (code === 109 || code === 2) throw authError(this.ctx, `${what}需要登录（result=${code}）`)
+    if (code === 109) throw authError(this.ctx, `${what}需要登录（result=${code}）`)
+    // result=2：上游没有定义。实测（2026-09-28）登录态正常、其他接口可用时，用户搜索在频繁触发滑块后返回 2，按风控处理
+    if (code === 2) {
+      throw new CatbusError('RISK_CONTROL', `${what}被快手限制（result=2），多为风控，稍后再试`, {
+        hint: `catbus ${this.ctx.platform.id} auth status 可确认登录态是否正常`,
+        detail: { kind: 'blocked', result: code },
+      })
+    }
     throw new CatbusError('UPSTREAM', String(body?.error_msg ?? body?.message ?? `${what}返回错误 ${code}`), { detail: { result: code } })
   }
 

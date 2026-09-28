@@ -633,3 +633,11 @@ describe('kuaishou 滑块缺口：背景图是 JPEG', () => {
     expect(Math.abs((await findGapX(bgJpeg, cut)) - expected)).toBeLessThanOrEqual(2)
   })
 })
+
+describe('kuaishou 业务码映射', () => {
+  it('result=109 是需要登录；result=2 按风控处理（实测登录态正常时也会返回）', () => {
+    const k = new Ks(makeCtx({ platform: 'kuaishou', account: 'default' }))
+    expect(() => k.check({ result: 109 }, '搜索')).toThrow(expect.objectContaining({ code: 'AUTH_EXPIRED' }))
+    expect(() => k.check({ result: 2 }, '搜索')).toThrow(expect.objectContaining({ code: 'RISK_CONTROL', detail: { kind: 'blocked', result: 2 } }))
+  })
+})
