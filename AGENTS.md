@@ -793,7 +793,10 @@ wreq-js 默认会读 `HTTP(S)_PROXY` 环境变量和 Windows 系统代理。为�
   2. 同步移植；
   3. 重新生成对拍数据；
   4. 更新 UPSTREAM。
-- **在线测试**：设置 `CATBUS_E2E=1` 才运行，使用开发者本机 `~/.catbus` 里的登录态。
+- **在线测试**：`npm run test:e2e`，用单独的配置 `vitest.e2e.config.ts`，不在 `npm test` 和 CI 里。使用开发者本机 `~/.catbus` 里的登录态，没登录的平台整组跳过；`npm run test:e2e -- -t <platform>` 只跑一个平台。
+  - 只跑只读命令：从注册表枚举每个平台已实现的读取类命令，前面命令返回的对象（item、用户、评论、直播间、会话、收藏夹……）的 `url` 或 `id` 作为后面命令的参数，逐条校验信封和 6.2 的字段结构。写操作、下载、长连接不跑。
+  - 命令之间间隔 1.5 秒，避免触发风控。
+  - 每条命令的信封（列表只留前 3 条）写到 `.e2e/<platform>.json`，不进版本控制，用来检查归一化的字段是否取到了值。
 - **CI**（`.github/workflows/ci.yml`）：只跑离线测试，再加上全部目标系统的冒烟测试（`scripts/smoke.mjs`），冒烟测试包括：
   - 安装包；
   - 运行 `version`、`doctor`、`platforms`；

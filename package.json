@@ -44,6 +44,7 @@
     "build": "node scripts/clean.mjs && tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
+    "test:e2e": "vitest run -c vitest.e2e.config.ts",
     "gen:capabilities": "npm run build && node scripts/gen-capabilities.mjs",
     "prepack": "npm run build",
     "assets:jd": "node scripts/fetch-jd-models.mjs"

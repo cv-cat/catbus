@@ -6,6 +6,7 @@ coverage/
 packages/assets-jd/models/
 .claude/settings.local.json
 .golden/
+.e2e/
 .build/
 __pycache__/
 *.pyc
