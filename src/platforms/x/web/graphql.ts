@@ -32,13 +32,23 @@ function registry(): Registry {
 }
 
 /**
- * 浏览器在各操作上实际发送的 fieldToggles 子集（上游 BROWSER_FIELD_TOGGLES，2026-08-16 实抓）。
+ * 浏览器在各操作上实际发送的 fieldToggles 子集（上游 BROWSER_FIELD_TOGGLES，2026-08-16 / 09-27 实抓）。
  * null 表示浏览器不发 fieldToggles；没登记的操作退回注册表全集。
  */
 const BROWSER_FIELD_TOGGLES: Record<string, Record<string, boolean> | null> = {
   SearchTimeline: null,
   HomeTimeline: null,
   CreateTweet: null,
+  // 长推：body 形态与 CreateTweet 相同，同样不发 fieldToggles
+  CreateNoteTweet: null,
+  // 文章编辑器全链路都不发 fieldToggles，虽然注册表里声明了 withPayments / withAuxiliaryUserLabels
+  ArticleEntityDraftCreate: null,
+  ArticleEntityUpdateTitle: null,
+  ArticleEntityUpdateContent: null,
+  ArticleEntityUpdateCoverMedia: null,
+  ArticleEntityPublish: null,
+  ArticleEntityDelete: null,
+  ArticleEntitiesSlice: null,
   UserByScreenName: { withPayments: false, withAuxiliaryUserLabels: true },
   UserTweets: { withArticlePlainText: false },
   UserOriginalsTimeline: { withPayments: false, withArticlePlainText: false },

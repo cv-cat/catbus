@@ -1,0 +1,1200 @@
+{
+  "input": {
+    "markdown": "# 文章标题\n\n第一段 **粗体** 和 *斜体*，还有 ~~删除线~~ 与 [链接](https://example.com)。\nemoji 👍👨‍👩‍👧 之后的 **BOLD** 仍按码点计 offset\n**粗 *斜*** 嵌套，\\*转义\\*，**[粗链接](https://b.c)**\n\n## 小标题\n- 无序一\n* 无序二\n1. 有序一\n2) 有序二\n> 引用 *斜*\n---\n![图](photo.png)\n```python\nprint(\"hi\")\n```\n最后一行",
+    "filename": "photo.png",
+    "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAGZha2UtcG5n/w=="
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://upload.x.com/i/media/upload.json?command=INIT&total_bytes=43&media_type=image%2Fpng&media_category=tweet_image",
+      "headers": [
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-twitter-auth-type",
+          "OAuth2Session"
+        ],
+        [
+          "referer",
+          "https://x.com/"
+        ],
+        [
+          "x-csrf-token",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "origin",
+          "https://x.com"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [
+        [
+          "auth_token",
+          "fakeauthtoken000000000000000000000000000000"
+        ],
+        [
+          "ct0",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "twid",
+          "u%3D10001"
+        ],
+        [
+          "lang",
+          "en"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://upload.x.com/i/media/upload.json?command=APPEND&media_id=1790000000000000100&segment_index=0",
+      "headers": [
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-twitter-auth-type",
+          "OAuth2Session"
+        ],
+        [
+          "referer",
+          "https://x.com/"
+        ],
+        [
+          "x-csrf-token",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "origin",
+          "https://x.com"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [
+        [
+          "auth_token",
+          "fakeauthtoken000000000000000000000000000000"
+        ],
+        [
+          "ct0",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "twid",
+          "u%3D10001"
+        ],
+        [
+          "lang",
+          "en"
+        ]
+      ],
+      "body": null,
+      "multipart": [
+        {
+          "name": "media",
+          "filename": "blob",
+          "contentType": "application/octet-stream",
+          "data": {
+            "base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAGZha2UtcG5n/w=="
+          }
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "url": "https://upload.x.com/i/media/upload.json?command=FINALIZE&media_id=1790000000000000100&original_md5=5b8c8027024c505a4b33c1a2ae5b26e9",
+      "headers": [
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-twitter-auth-type",
+          "OAuth2Session"
+        ],
+        [
+          "referer",
+          "https://x.com/"
+        ],
+        [
+          "x-csrf-token",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "origin",
+          "https://x.com"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [
+        [
+          "auth_token",
+          "fakeauthtoken000000000000000000000000000000"
+        ],
+        [
+          "ct0",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "twid",
+          "u%3D10001"
+        ],
+        [
+          "lang",
+          "en"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://x.com/i/api/graphql/_rbmb_NKLqKVBr5X_MSoMQ/ArticleEntityDraftCreate",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-twitter-auth-type",
+          "OAuth2Session"
+        ],
+        [
+          "x-csrf-token",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "x-twitter-client-language",
+          "en"
+        ],
+        [
+          "x-twitter-active-user",
+          "yes"
+        ],
+        [
+          "x-client-transaction-id",
+          "1UmsCgR5LDuni1ai/hydkl/i/tKbOhuByPEz6Vmo9L/wIGAWy9ZckcBvmzFaM2MeMsUNtNPFOP7tamfrScp4a28oU+YQ1g"
+        ],
+        [
+          "referer",
+          "https://x.com/compose/articles"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [
+        [
+          "auth_token",
+          "fakeauthtoken000000000000000000000000000000"
+        ],
+        [
+          "ct0",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "twid",
+          "u%3D10001"
+        ],
+        [
+          "lang",
+          "en"
+        ]
+      ],
+      "body": "{\"variables\":{\"content_state\":{\"blocks\":[],\"entity_map\":[]},\"title\":\"\"},\"features\":{\"profile_label_improvements_pcf_label_in_post_enabled\":true,\"responsive_web_profile_redirect_enabled\":true,\"rweb_tipjar_consumption_enabled\":false,\"verified_phone_label_enabled\":false,\"responsive_web_graphql_timeline_navigation_enabled\":true},\"queryId\":\"_rbmb_NKLqKVBr5X_MSoMQ\"}",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://x.com/i/api/graphql/brHFCBTXXg8WOqc7BnXfAw/ArticleEntityUpdateTitle",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-twitter-auth-type",
+          "OAuth2Session"
+        ],
+        [
+          "x-csrf-token",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "x-twitter-client-language",
+          "en"
+        ],
+        [
+          "x-twitter-active-user",
+          "yes"
+        ],
+        [
+          "x-client-transaction-id",
+          "si7LbWMeS1zA7DHFmXv69TiFmbX8XXzmr5ZUjj7Pk9iXRwdxrLE79qcI/FY9VAR5VaJq07Sj3/1OXNpStaYkYmKOqh1msQ"
+        ],
+        [
+          "referer",
+          "https://x.com/compose/articles/edit/1790000000000000200"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [
+        [
+          "auth_token",
+          "fakeauthtoken000000000000000000000000000000"
+        ],
+        [
+          "ct0",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "twid",
+          "u%3D10001"
+        ],
+        [
+          "lang",
+          "en"
+        ]
+      ],
+      "body": "{\"variables\":{\"articleEntityId\":\"1790000000000000200\",\"title\":\"\\u6587\\u7ae0\\u6807\\u9898\"},\"features\":{\"profile_label_improvements_pcf_label_in_post_enabled\":true,\"responsive_web_profile_redirect_enabled\":true,\"rweb_tipjar_consumption_enabled\":false,\"verified_phone_label_enabled\":false,\"responsive_web_graphql_timeline_navigation_enabled\":true},\"queryId\":\"brHFCBTXXg8WOqc7BnXfAw\"}",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://x.com/i/api/graphql/x4Pz2ifYkOD6uSvzxOIUig/ArticleEntityUpdateContent",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-twitter-auth-type",
+          "OAuth2Session"
+        ],
+        [
+          "x-csrf-token",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "x-twitter-client-language",
+          "en"
+        ],
+        [
+          "x-twitter-active-user",
+          "yes"
+        ],
+        [
+          "x-client-transaction-id",
+          "YPwZv7HMmY4SPuMXS6koJ+pXS2cuj640fUSGXOwdQQpFldWjfmPpJHXaLoTvhtarh3C4AWYTnA5ZIkveL3nmeKtXAJBgYw"
+        ],
+        [
+          "referer",
+          "https://x.com/compose/articles/edit/1790000000000000200"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [
+        [
+          "auth_token",
+          "fakeauthtoken000000000000000000000000000000"
+        ],
+        [
+          "ct0",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "twid",
+          "u%3D10001"
+        ],
+        [
+          "lang",
+          "en"
+        ]
+      ],
+      "body": "{\"variables\":{\"content_state\":{\"blocks\":[{\"data\":{},\"text\":\"\\u7b2c\\u4e00\\u6bb5 \\u7c97\\u4f53 \\u548c \\u659c\\u4f53\\uff0c\\u8fd8\\u6709 \\u5220\\u9664\\u7ebf \\u4e0e \\u94fe\\u63a5\\u3002\",\"key\":\"ulkcp\",\"type\":\"unstyled\",\"entity_ranges\":[{\"key\":0,\"offset\":21,\"length\":2}],\"inline_style_ranges\":[{\"length\":2,\"offset\":4,\"style\":\"Bold\"},{\"length\":2,\"offset\":9,\"style\":\"Italic\"},{\"length\":3,\"offset\":15,\"style\":\"Strikethrough\"}]},{\"data\":{},\"text\":\"emoji \\ud83d\\udc4d\\ud83d\\udc68\\u200d\\ud83d\\udc69\\u200d\\ud83d\\udc67 \\u4e4b\\u540e\\u7684 BOLD \\u4ecd\\u6309\\u7801\\u70b9\\u8ba1 offset\",\"key\":\"0y8lf\",\"type\":\"unstyled\",\"entity_ranges\":[],\"inline_style_ranges\":[{\"length\":4,\"offset\":17,\"style\":\"Bold\"}]},{\"data\":{},\"text\":\"\\u7c97 \\u659c \\u5d4c\\u5957\\uff0c*\\u8f6c\\u4e49*\\uff0c\\u7c97\\u94fe\\u63a5\",\"key\":\"end2i\",\"type\":\"unstyled\",\"entity_ranges\":[{\"key\":1,\"offset\":12,\"length\":3}],\"inline_style_ranges\":[{\"length\":3,\"offset\":0,\"style\":\"Bold\"},{\"length\":1,\"offset\":2,\"style\":\"Italic\"},{\"length\":3,\"offset\":12,\"style\":\"Bold\"}]},{\"data\":{},\"text\":\"\\u5c0f\\u6807\\u9898\",\"key\":\"hiyf0\",\"type\":\"header-two\",\"entity_ranges\":[],\"inline_style_ranges\":[]},{\"data\":{},\"text\":\"\\u65e0\\u5e8f\\u4e00\",\"key\":\"mgbbd\",\"type\":\"unordered-list-item\",\"entity_ranges\":[],\"inline_style_ranges\":[]},{\"data\":{},\"text\":\"\\u65e0\\u5e8f\\u4e8c\",\"key\":\"31hb6\",\"type\":\"unordered-list-item\",\"entity_ranges\":[],\"inline_style_ranges\":[]},{\"data\":{},\"text\":\"\\u6709\\u5e8f\\u4e00\",\"key\":\"q5eje\",\"type\":\"ordered-list-item\",\"entity_ranges\":[],\"inline_style_ranges\":[]},{\"data\":{},\"text\":\"\\u6709\\u5e8f\\u4e8c\",\"key\":\"fu1sp\",\"type\":\"ordered-list-item\",\"entity_ranges\":[],\"inline_style_ranges\":[]},{\"data\":{},\"text\":\"\\u5f15\\u7528 \\u659c\",\"key\":\"0kpmc\",\"type\":\"blockquote\",\"entity_ranges\":[],\"inline_style_ranges\":[{\"length\":1,\"offset\":3,\"style\":\"Italic\"}]},{\"data\":{},\"text\":\" \",\"key\":\"ha7gz\",\"type\":\"atomic\",\"entity_ranges\":[{\"key\":2,\"offset\":0,\"length\":1}],\"inline_style_ranges\":[]},{\"data\":{},\"text\":\" \",\"key\":\"fgkrf\",\"type\":\"atomic\",\"entity_ranges\":[{\"key\":3,\"offset\":0,\"length\":1}],\"inline_style_ranges\":[]},{\"data\":{},\"text\":\" \",\"key\":\"vj96v\",\"type\":\"atomic\",\"entity_ranges\":[{\"key\":4,\"offset\":0,\"length\":1}],\"inline_style_ranges\":[]},{\"data\":{},\"text\":\"\\u6700\\u540e\\u4e00\\u884c\",\"key\":\"w3clj\",\"type\":\"unstyled\",\"entity_ranges\":[],\"inline_style_ranges\":[]}],\"entity_map\":[{\"key\":\"0\",\"value\":{\"data\":{\"url\":\"https://example.com\"},\"type\":\"LINK\",\"mutability\":\"Mutable\"}},{\"key\":\"1\",\"value\":{\"data\":{\"url\":\"https://b.c\"},\"type\":\"LINK\",\"mutability\":\"Mutable\"}},{\"key\":\"2\",\"value\":{\"data\":{},\"type\":\"DIVIDER\",\"mutability\":\"Immutable\"}},{\"key\":\"3\",\"value\":{\"data\":{\"entity_key\":\"adde6298-c212-41a9-b284-9fd378a4ecc9\",\"media_items\":[{\"local_media_id\":1,\"media_category\":\"DraftTweetImage\",\"media_id\":\"1790000000000000100\"}]},\"type\":\"MEDIA\",\"mutability\":\"Immutable\"}},{\"key\":\"4\",\"value\":{\"data\":{\"markdown\":\"```python\\nprint(\\\"hi\\\")\\n```\"},\"type\":\"MARKDOWN\",\"mutability\":\"Mutable\"}}]},\"article_entity\":\"1790000000000000200\"},\"features\":{\"profile_label_improvements_pcf_label_in_post_enabled\":true,\"responsive_web_profile_redirect_enabled\":true,\"rweb_tipjar_consumption_enabled\":false,\"verified_phone_label_enabled\":false,\"responsive_web_graphql_timeline_navigation_enabled\":true},\"queryId\":\"x4Pz2ifYkOD6uSvzxOIUig\"}",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://upload.x.com/i/media/upload.json?command=INIT&total_bytes=43&media_type=image%2Fpng&media_category=tweet_image",
+      "headers": [
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-twitter-auth-type",
+          "OAuth2Session"
+        ],
+        [
+          "referer",
+          "https://x.com/"
+        ],
+        [
+          "x-csrf-token",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "origin",
+          "https://x.com"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [
+        [
+          "auth_token",
+          "fakeauthtoken000000000000000000000000000000"
+        ],
+        [
+          "ct0",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "twid",
+          "u%3D10001"
+        ],
+        [
+          "lang",
+          "en"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://upload.x.com/i/media/upload.json?command=APPEND&media_id=1790000000000000100&segment_index=0",
+      "headers": [
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-twitter-auth-type",
+          "OAuth2Session"
+        ],
+        [
+          "referer",
+          "https://x.com/"
+        ],
+        [
+          "x-csrf-token",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "origin",
+          "https://x.com"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [
+        [
+          "auth_token",
+          "fakeauthtoken000000000000000000000000000000"
+        ],
+        [
+          "ct0",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "twid",
+          "u%3D10001"
+        ],
+        [
+          "lang",
+          "en"
+        ]
+      ],
+      "body": null,
+      "multipart": [
+        {
+          "name": "media",
+          "filename": "blob",
+          "contentType": "application/octet-stream",
+          "data": {
+            "base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAGZha2UtcG5n/w=="
+          }
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "url": "https://upload.x.com/i/media/upload.json?command=FINALIZE&media_id=1790000000000000100&original_md5=5b8c8027024c505a4b33c1a2ae5b26e9",
+      "headers": [
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-twitter-auth-type",
+          "OAuth2Session"
+        ],
+        [
+          "referer",
+          "https://x.com/"
+        ],
+        [
+          "x-csrf-token",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "origin",
+          "https://x.com"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [
+        [
+          "auth_token",
+          "fakeauthtoken000000000000000000000000000000"
+        ],
+        [
+          "ct0",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "twid",
+          "u%3D10001"
+        ],
+        [
+          "lang",
+          "en"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://x.com/i/api/graphql/TRcLHwCpNAkBVcxy4FLH1A/ArticleEntityUpdateCoverMedia",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-twitter-auth-type",
+          "OAuth2Session"
+        ],
+        [
+          "x-csrf-token",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "x-twitter-client-language",
+          "en"
+        ],
+        [
+          "x-twitter-active-user",
+          "yes"
+        ],
+        [
+          "x-client-transaction-id",
+          "PqJH4e+Sx9BMYL1JFfd2ebQJFTlw0fBqIxrYArJDH1Qby4v9ID23eiuEcNqx2Ij12S7mXzhmv25C7QdaLPy0SXdVh7/HPQ"
+        ],
+        [
+          "referer",
+          "https://x.com/compose/articles/edit/1790000000000000200"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [
+        [
+          "auth_token",
+          "fakeauthtoken000000000000000000000000000000"
+        ],
+        [
+          "ct0",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "twid",
+          "u%3D10001"
+        ],
+        [
+          "lang",
+          "en"
+        ]
+      ],
+      "body": "{\"variables\":{\"articleEntityId\":\"1790000000000000200\",\"coverMedia\":{\"media_id\":\"1790000000000000100\",\"media_category\":\"DraftTweetImage\"}},\"features\":{\"profile_label_improvements_pcf_label_in_post_enabled\":true,\"responsive_web_profile_redirect_enabled\":true,\"rweb_tipjar_consumption_enabled\":false,\"verified_phone_label_enabled\":false,\"responsive_web_graphql_timeline_navigation_enabled\":true},\"queryId\":\"TRcLHwCpNAkBVcxy4FLH1A\"}",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://x.com/i/api/graphql/872mse3gUSifcgeJBBl4WA/ArticleEntityPublish",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "authorization",
+          "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        ],
+        [
+          "x-twitter-auth-type",
+          "OAuth2Session"
+        ],
+        [
+          "x-csrf-token",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "x-twitter-client-language",
+          "en"
+        ],
+        [
+          "x-twitter-active-user",
+          "yes"
+        ],
+        [
+          "x-client-transaction-id",
+          "wV24HhBtOC+zn0K26giJhkv26saPLg+V3OUn/U284KvkNHQC38JIhdR7jyVOJ3cKJtEZoMfxTH8+vrp2nGzFIZs6uiS2wg"
+        ],
+        [
+          "referer",
+          "https://x.com/compose/articles/edit/1790000000000000200"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ]
+      ],
+      "cookies": [
+        [
+          "auth_token",
+          "fakeauthtoken000000000000000000000000000000"
+        ],
+        [
+          "ct0",
+          "fakect0000000000000000000000000000000000000000"
+        ],
+        [
+          "twid",
+          "u%3D10001"
+        ],
+        [
+          "lang",
+          "en"
+        ]
+      ],
+      "body": "{\"variables\":{\"articleEntityId\":\"1790000000000000200\",\"visibilitySetting\":\"Public\"},\"features\":{\"profile_label_improvements_pcf_label_in_post_enabled\":true,\"responsive_web_profile_redirect_enabled\":true,\"rweb_tipjar_consumption_enabled\":false,\"verified_phone_label_enabled\":false,\"responsive_web_graphql_timeline_navigation_enabled\":true},\"queryId\":\"872mse3gUSifcgeJBBl4WA\"}",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "media_id": 1790000000000000100,
+        "media_id_string": "1790000000000000100",
+        "expires_after_secs": 86399
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": ""
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "media_id_string": "1790000000000000100",
+        "size": 43,
+        "image": {
+          "image_type": "image/png",
+          "w": 1,
+          "h": 1
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "data": {
+          "articleentity_draft_create": {
+            "article_entity_results": {
+              "result": {
+                "rest_id": "1790000000000000200",
+                "id": "QXJ0aWNsZUVudGl0eToxNzkwMDAwMDAwMDAwMDAwMjAw"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "data": {
+          "articleentity_update_title": {
+            "rest_id": "1790000000000000200",
+            "id": "QXJ0aWNsZUVudGl0eToxNzkwMDAwMDAwMDAwMDAwMjAw",
+            "title": "文章标题"
+          }
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "data": {
+          "articleentity_update_content": {
+            "rest_id": "1790000000000000200",
+            "id": "QXJ0aWNsZUVudGl0eToxNzkwMDAwMDAwMDAwMDAwMjAw"
+          }
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "media_id": 1790000000000000100,
+        "media_id_string": "1790000000000000100",
+        "expires_after_secs": 86399
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": ""
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "media_id_string": "1790000000000000100",
+        "size": 43,
+        "image": {
+          "image_type": "image/png",
+          "w": 1,
+          "h": 1
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "data": {
+          "articleentity_update_cover_media": {
+            "rest_id": "1790000000000000200",
+            "id": "QXJ0aWNsZUVudGl0eToxNzkwMDAwMDAwMDAwMDAwMjAw"
+          }
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "data": {
+          "articleentity_publish": {
+            "article_entity_results": {
+              "result": {
+                "rest_id": "1790000000000000200",
+                "lifecycle_state": {
+                  "lifecycle": "Published"
+                },
+                "metadata": {
+                  "tweet_results": {
+                    "result": {
+                      "rest_id": "4001"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "result": [
+    true,
+    "成功",
+    {
+      "article_id": "1790000000000000200",
+      "edit_url": "https://x.com/compose/articles/edit/1790000000000000200",
+      "raw": {
+        "data": {
+          "articleentity_publish": {
+            "article_entity_results": {
+              "result": {
+                "rest_id": "1790000000000000200",
+                "lifecycle_state": {
+                  "lifecycle": "Published"
+                },
+                "metadata": {
+                  "tweet_results": {
+                    "result": {
+                      "rest_id": "4001"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "tweet_id": "4001"
+    }
+  ],
+  "error": null
+}

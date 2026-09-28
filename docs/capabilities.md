@@ -74,6 +74,7 @@
 
 - weibo `item search`：只能取第一页
 - jd `item related`：用第一个相关搜索词的搜索结果
+- x `item publish`：正文超过 280 权重时自动按长推发（需要 Premium）；--thread 发 thread
 - bilibili `item delete`：需要人机验证（极验点选），catbus 还不能自动通过，会报 RISK_CONTROL
 - `item get --area`：jd
 - `item search --sort` 取值：xhs general / latest / popular / comments / collects；bilibili general / views / latest / collects；jd general / sales / price_asc / price_desc / comments；x general / latest
@@ -94,6 +95,7 @@
 - `item publish --postage`：xianyu
 - `item publish --pickup`：xianyu
 - `item publish --original-price`：xianyu
+- `item publish --thread`：x
 
 ## product 与商品评价
 
@@ -214,3 +216,4 @@
 | tiktok | `folder add` ✓ |
 | bilibili | `item coin` ✓ · `item triple` ✓ · `item subtitles` ✓ · `danmaku list` ✓ · `danmaku send` ✓ · `dynamic publish` ✓ · `dynamic delete` ✓ · `article publish` ✓ · `draft get` ✓ · `draft delete` ✓ |
 | jd | `order list` ✓ · `cart count` ✓ · `coupon list` ✓ |
+| x | `article publish` ✓ · `article delete` ✓ |

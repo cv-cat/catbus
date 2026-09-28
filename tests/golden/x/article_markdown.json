@@ -1,0 +1,513 @@
+{
+  "input": {
+    "markdown": "# 文章标题\n\n第一段 **粗体** 和 *斜体*，还有 ~~删除线~~ 与 [链接](https://example.com)。\nemoji 👍👨‍👩‍👧 之后的 **BOLD** 仍按码点计 offset\n**粗 *斜*** 嵌套，\\*转义\\*，**[粗链接](https://b.c)**\n\n## 小标题\n- 无序一\n* 无序二\n1. 有序一\n2) 有序二\n> 引用 *斜*\n---\n![图](photo.png)\n```python\nprint(\"hi\")\n```\n最后一行",
+    "markdown_no_title": "正文第一行\n\n### 三级标题\n+ 加号列表\n***\n~~~\ncode\n~~~",
+    "markdown_edge": "###### 六级标题\r\n**未闭合 *a*b* ~~x~~~~y~~ [**粗**链接](https://e.f/g?h=1) `代码`\r\n10. 十\n>紧贴引用\n![有标题](pic.png \"标题\")\n\u001c　前后空白　\n行内\r回车与 分隔 **a\\*b** *c\\*d* \\[不是链接](x)\n- \n-\n#不是标题\n``` \n未收尾的围栏"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": {
+    "split": [
+      "文章标题",
+      "\n第一段 **粗体** 和 *斜体*，还有 ~~删除线~~ 与 [链接](https://example.com)。\nemoji 👍👨‍👩‍👧 之后的 **BOLD** 仍按码点计 offset\n**粗 *斜*** 嵌套，\\*转义\\*，**[粗链接](https://b.c)**\n\n## 小标题\n- 无序一\n* 无序二\n1. 有序一\n2) 有序二\n> 引用 *斜*\n---\n![图](photo.png)\n```python\nprint(\"hi\")\n```\n最后一行"
+    ],
+    "split_none": [
+      null,
+      "正文第一行\n\n### 三级标题\n+ 加号列表\n***\n~~~\ncode\n~~~"
+    ],
+    "state": {
+      "blocks": [
+        {
+          "data": {},
+          "text": "第一段 粗体 和 斜体，还有 删除线 与 链接。",
+          "key": "ulkcp",
+          "type": "unstyled",
+          "entity_ranges": [
+            {
+              "key": 0,
+              "offset": 21,
+              "length": 2
+            }
+          ],
+          "inline_style_ranges": [
+            {
+              "length": 2,
+              "offset": 4,
+              "style": "Bold"
+            },
+            {
+              "length": 2,
+              "offset": 9,
+              "style": "Italic"
+            },
+            {
+              "length": 3,
+              "offset": 15,
+              "style": "Strikethrough"
+            }
+          ]
+        },
+        {
+          "data": {},
+          "text": "emoji 👍👨‍👩‍👧 之后的 BOLD 仍按码点计 offset",
+          "key": "0y8lf",
+          "type": "unstyled",
+          "entity_ranges": [],
+          "inline_style_ranges": [
+            {
+              "length": 4,
+              "offset": 17,
+              "style": "Bold"
+            }
+          ]
+        },
+        {
+          "data": {},
+          "text": "粗 斜 嵌套，*转义*，粗链接",
+          "key": "end2i",
+          "type": "unstyled",
+          "entity_ranges": [
+            {
+              "key": 1,
+              "offset": 12,
+              "length": 3
+            }
+          ],
+          "inline_style_ranges": [
+            {
+              "length": 3,
+              "offset": 0,
+              "style": "Bold"
+            },
+            {
+              "length": 1,
+              "offset": 2,
+              "style": "Italic"
+            },
+            {
+              "length": 3,
+              "offset": 12,
+              "style": "Bold"
+            }
+          ]
+        },
+        {
+          "data": {},
+          "text": "小标题",
+          "key": "hiyf0",
+          "type": "header-two",
+          "entity_ranges": [],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": "无序一",
+          "key": "mgbbd",
+          "type": "unordered-list-item",
+          "entity_ranges": [],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": "无序二",
+          "key": "31hb6",
+          "type": "unordered-list-item",
+          "entity_ranges": [],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": "有序一",
+          "key": "q5eje",
+          "type": "ordered-list-item",
+          "entity_ranges": [],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": "有序二",
+          "key": "fu1sp",
+          "type": "ordered-list-item",
+          "entity_ranges": [],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": "引用 斜",
+          "key": "0kpmc",
+          "type": "blockquote",
+          "entity_ranges": [],
+          "inline_style_ranges": [
+            {
+              "length": 1,
+              "offset": 3,
+              "style": "Italic"
+            }
+          ]
+        },
+        {
+          "data": {},
+          "text": " ",
+          "key": "ha7gz",
+          "type": "atomic",
+          "entity_ranges": [
+            {
+              "key": 2,
+              "offset": 0,
+              "length": 1
+            }
+          ],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": " ",
+          "key": "fgkrf",
+          "type": "atomic",
+          "entity_ranges": [
+            {
+              "key": 3,
+              "offset": 0,
+              "length": 1
+            }
+          ],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": " ",
+          "key": "vj96v",
+          "type": "atomic",
+          "entity_ranges": [
+            {
+              "key": 4,
+              "offset": 0,
+              "length": 1
+            }
+          ],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": "最后一行",
+          "key": "w3clj",
+          "type": "unstyled",
+          "entity_ranges": [],
+          "inline_style_ranges": []
+        }
+      ],
+      "entity_map": [
+        {
+          "key": "0",
+          "value": {
+            "data": {
+              "url": "https://example.com"
+            },
+            "type": "LINK",
+            "mutability": "Mutable"
+          }
+        },
+        {
+          "key": "1",
+          "value": {
+            "data": {
+              "url": "https://b.c"
+            },
+            "type": "LINK",
+            "mutability": "Mutable"
+          }
+        },
+        {
+          "key": "2",
+          "value": {
+            "data": {},
+            "type": "DIVIDER",
+            "mutability": "Immutable"
+          }
+        },
+        {
+          "key": "3",
+          "value": {
+            "data": {
+              "entity_key": "adde6298-c212-41a9-b284-9fd378a4ecc9",
+              "media_items": [
+                {
+                  "local_media_id": 1,
+                  "media_category": "DraftTweetImage",
+                  "media_id": "9001"
+                }
+              ]
+            },
+            "type": "MEDIA",
+            "mutability": "Immutable"
+          }
+        },
+        {
+          "key": "4",
+          "value": {
+            "data": {
+              "markdown": "```python\nprint(\"hi\")\n```"
+            },
+            "type": "MARKDOWN",
+            "mutability": "Mutable"
+          }
+        }
+      ]
+    },
+    "state_no_title": {
+      "blocks": [
+        {
+          "data": {},
+          "text": "正文第一行",
+          "key": "3zni1",
+          "type": "unstyled",
+          "entity_ranges": [],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": "三级标题",
+          "key": "rl4ft",
+          "type": "header-two",
+          "entity_ranges": [],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": "加号列表",
+          "key": "twczy",
+          "type": "unordered-list-item",
+          "entity_ranges": [],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": " ",
+          "key": "qlzc6",
+          "type": "atomic",
+          "entity_ranges": [
+            {
+              "key": 0,
+              "offset": 0,
+              "length": 1
+            }
+          ],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": " ",
+          "key": "0x5mn",
+          "type": "atomic",
+          "entity_ranges": [
+            {
+              "key": 1,
+              "offset": 0,
+              "length": 1
+            }
+          ],
+          "inline_style_ranges": []
+        }
+      ],
+      "entity_map": [
+        {
+          "key": "0",
+          "value": {
+            "data": {},
+            "type": "DIVIDER",
+            "mutability": "Immutable"
+          }
+        },
+        {
+          "key": "1",
+          "value": {
+            "data": {
+              "markdown": "```\ncode\n```"
+            },
+            "type": "MARKDOWN",
+            "mutability": "Mutable"
+          }
+        }
+      ]
+    },
+    "state_edge": {
+      "blocks": [
+        {
+          "data": {},
+          "text": "六级标题",
+          "key": "u1yu0",
+          "type": "header-two",
+          "entity_ranges": [],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": "**未闭合 ab* xy 粗链接 `代码`",
+          "key": "8dgcx",
+          "type": "unstyled",
+          "entity_ranges": [
+            {
+              "key": 0,
+              "offset": 13,
+              "length": 3
+            }
+          ],
+          "inline_style_ranges": [
+            {
+              "length": 1,
+              "offset": 6,
+              "style": "Italic"
+            },
+            {
+              "length": 2,
+              "offset": 10,
+              "style": "Strikethrough"
+            },
+            {
+              "length": 1,
+              "offset": 13,
+              "style": "Bold"
+            }
+          ]
+        },
+        {
+          "data": {},
+          "text": "十",
+          "key": "hpbqh",
+          "type": "ordered-list-item",
+          "entity_ranges": [],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": "紧贴引用",
+          "key": "kt0wd",
+          "type": "blockquote",
+          "entity_ranges": [],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": " ",
+          "key": "6gc9n",
+          "type": "atomic",
+          "entity_ranges": [
+            {
+              "key": 1,
+              "offset": 0,
+              "length": 1
+            }
+          ],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": "前后空白",
+          "key": "60iex",
+          "type": "unstyled",
+          "entity_ranges": [],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": "行内\r回车与 分隔 a*b c*d [不是链接](x)",
+          "key": "loggu",
+          "type": "unstyled",
+          "entity_ranges": [],
+          "inline_style_ranges": [
+            {
+              "length": 3,
+              "offset": 10,
+              "style": "Bold"
+            },
+            {
+              "length": 3,
+              "offset": 14,
+              "style": "Italic"
+            }
+          ]
+        },
+        {
+          "data": {},
+          "text": "-",
+          "key": "ghxyr",
+          "type": "unstyled",
+          "entity_ranges": [],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": "-",
+          "key": "inq92",
+          "type": "unstyled",
+          "entity_ranges": [],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": "#不是标题",
+          "key": "1jv7v",
+          "type": "unstyled",
+          "entity_ranges": [],
+          "inline_style_ranges": []
+        },
+        {
+          "data": {},
+          "text": " ",
+          "key": "5qbd7",
+          "type": "atomic",
+          "entity_ranges": [
+            {
+              "key": 2,
+              "offset": 0,
+              "length": 1
+            }
+          ],
+          "inline_style_ranges": []
+        }
+      ],
+      "entity_map": [
+        {
+          "key": "0",
+          "value": {
+            "data": {
+              "url": "https://e.f/g?h=1"
+            },
+            "type": "LINK",
+            "mutability": "Mutable"
+          }
+        },
+        {
+          "key": "1",
+          "value": {
+            "data": {
+              "entity_key": "e8b7bab8-1fcc-48d8-b379-b24715a4288f",
+              "media_items": [
+                {
+                  "local_media_id": 1,
+                  "media_category": "DraftTweetImage",
+                  "media_id": "9002"
+                }
+              ]
+            },
+            "type": "MEDIA",
+            "mutability": "Immutable"
+          }
+        },
+        {
+          "key": "2",
+          "value": {
+            "data": {
+              "markdown": "```\n未收尾的围栏\n```"
+            },
+            "type": "MARKDOWN",
+            "mutability": "Mutable"
+          }
+        }
+      ]
+    }
+  },
+  "error": null
+}

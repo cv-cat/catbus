@@ -2,14 +2,16 @@ import { CatbusError } from '../../../core/errors.js'
 import { downloadMedia, readMedia } from '../../../core/files.js'
 import { cookieCredential, finishLogin } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
+import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { AuthStatus, Media } from '../../../core/schemas.js'
 import { authError, paged } from '../../../core/toolkit.js'
 import * as api from './api.js'
+import { markdownToContentState, splitTitle } from './article.js'
 import { isAuthCode, type XClient, xclient } from './client.js'
 import * as norm from './normalize.js'
 import { COOKIE_DOMAIN, PROFILE } from './profile.js'
-import { isUserId, parseTweetId } from './resolve.js'
+import { isUserId, parseArticleId, parseTweetId } from './resolve.js'
 
 type Ctx = HandlerContext
 
@@ -191,8 +193,13 @@ export const itemDelete = (ctx: Ctx) => act(ctx, ctx.args.item!, api.deleteTweet
 
 /** X 发推不支持的发布选项。 */
 const PUBLISH_UNSUPPORTED = ['title', 'cover', 'tag', 'topic', 'mention', 'poi', 'category', 'schedule', 'price'] as const
+/** thread 两条之间的间隔（上游 post_thread 的 interval），太快容易触发风控。 */
+const THREAD_INTERVAL = 2000
 
-/** 发推：先传媒体（最多 4 张图，或 1 个视频），再 CreateTweet。上游 XWriteAPI.post_tweet。 */
+/**
+ * 发推：先传媒体（最多 4 张图，或 1 个视频），再发推。正文超过 280 权重时自动改发长推（CreateNoteTweet）。
+ * 带 `--thread` 时接着逐条发，每条回复上一条（上游 post_thread），返回第一条。上游 XWriteAPI.post_tweet。
+ */
 export async function itemPublish(ctx: Ctx) {
   const o = ctx.options as Record<string, any>
   const bad = PUBLISH_UNSUPPORTED.filter((k) => o[k] != null && !(Array.isArray(o[k]) && !o[k].length))
@@ -203,6 +210,8 @@ export async function itemPublish(ctx: Ctx) {
   if (images.length > 4) throw new CatbusError('USAGE', 'X 的一条推文最多 4 张图片')
   const text: string = o.text ?? ''
   if (!text && !images.length && !o.video) throw new CatbusError('USAGE', '发推需要 --text、--image 或 --video')
+  const thread: string[] = o.thread ?? []
+  if (thread.some((t) => !t.trim())) throw new CatbusError('USAGE', '--thread 的每一条都不能为空')
   const x = await xclient(ctx)
   x.requireLogin()
   const mediaIds: string[] = []
@@ -210,7 +219,22 @@ export async function itemPublish(ctx: Ctx) {
     const file = await readMedia(x.http, input)
     mediaIds.push((await api.upload(x, file.data, file.filename)).mediaId)
   }
-  return norm.item(api.createdTweet(await api.createTweet(x, text, mediaIds)))
+  const first = api.createdTweet(await api.postTweet(x, text, mediaIds))
+  const posted = [norm.item(first)]
+  for (const [i, t] of thread.entries()) {
+    await rand.sleep(THREAD_INTERVAL)
+    try {
+      posted.push(norm.item(api.createdTweet(await api.postTweet(x, t, [], posted.at(-1)!.id))))
+    } catch (err) {
+      const e = err instanceof CatbusError ? err : new CatbusError('ERROR', String((err as Error)?.message ?? err))
+      // 中途失败：前面几条已经发出去了，把它们的 id 放进 detail，方便删除或接着发
+      throw new CatbusError(e.code, `thread 第 ${i + 2} 条失败：${e.message}`, {
+        hint: e.hint,
+        detail: { posted: posted.map((p) => ({ id: p.id, url: p.url })), error: e.detail },
+      })
+    }
+  }
+  return posted[0]
 }
 
 // ================================================================ comment
@@ -284,4 +308,55 @@ export async function mediaUpload(ctx: Ctx): Promise<Media> {
   const { mediaId, mediaType, result } = await api.upload(x, file.data, file.filename)
   const img = result?.image ?? {}
   return n.media({ id: mediaId, type: mediaType.startsWith('video/') ? 'video' : 'image', url: '', width: n.count(img.w), height: n.count(img.h) }, result)
+}
+
+// ================================================================ article（平台扩展，AGENTS 4.7）
+
+const articleUrl = (id: string) => `https://x.com/i/article/${id}`
+
+/** 在 catbus 的错误上补充已建草稿的信息：发布失败时草稿还在，方便到网页上处理或删除。 */
+function withDraft(err: unknown, articleId: string): CatbusError {
+  const e = err instanceof CatbusError ? err : new CatbusError('ERROR', String((err as Error)?.message ?? err))
+  return new CatbusError(e.code, `${e.message}（草稿 ${articleId} 已创建）`, {
+    hint: e.hint ?? `到 ${api.articleEditUrl(articleId)} 查看，或 catbus x article delete ${articleId}`,
+    detail: { article_id: articleId, edit_url: api.articleEditUrl(articleId), error: e.detail },
+  })
+}
+
+/**
+ * 从 Markdown 发文章：传正文插图 → 建草稿 → 标题 → 正文 → 传封面、设封面 → 发布（同时生成一条文章推文）。
+ * 没给 `--title` 时取正文第一行的 `# 标题`。上游 XArticleAPI.post_article（publish=True）。
+ */
+export async function articlePublish(ctx: Ctx) {
+  const o = ctx.options as { title?: string; text: string; cover?: string }
+  let title: string | null | undefined = o.title
+  let body = o.text
+  if (title == null) [title, body] = splitTitle(body)
+  if (!title) throw new CatbusError('USAGE', '文章标题不能为空：传 --title，或让正文第一行是 `# 标题`')
+  const x = await xclient(ctx)
+  x.requireLogin()
+  const upload = async (input: string) => {
+    const file = await readMedia(x.http, input)
+    return api.articleUploadImage(x, file.data, file.filename)
+  }
+  const contentState = await markdownToContentState(body, upload)
+  const articleId = api.extractArticleId(await api.articleCreateDraft(x))
+  try {
+    await api.articleUpdateTitle(x, articleId, title)
+    await api.articleUpdateContent(x, articleId, contentState)
+    if (o.cover) await api.articleUpdateCover(x, articleId, await upload(o.cover))
+    await api.articlePublish(x, articleId)
+  } catch (err) {
+    throw withDraft(err, articleId)
+  }
+  return { id: articleId, url: articleUrl(articleId) }
+}
+
+/** 删文章：草稿或已发布的都可以，已发布的连同文章推文一起删（不可撤销）。上游 XArticleAPI.delete。 */
+export async function articleDelete(ctx: Ctx) {
+  const x = await xclient(ctx)
+  x.requireLogin()
+  const id = parseArticleId(ctx.args.article!)
+  await api.articleDelete(x, id)
+  return { id }
 }

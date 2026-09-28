@@ -104,8 +104,8 @@ export function getViewer(x: XClient) {
 
 // ================================================================ 写接口（XWriteAPI）
 
-/** 发推；replyTo 给出即为回复。上游 create_tweet（CreateTweet）。 */
-export function createTweet(x: XClient, text: string, mediaIds: string[] = [], replyTo?: string, quoteUrl?: string, excludeReplyUserIds: string[] = []) {
+/** CreateTweet / CreateNoteTweet 共用的 variables，两者逐字段相同。上游 _tweet_variables。 */
+function tweetVariables(text: string, mediaIds: string[], replyTo?: string, quoteUrl?: string, excludeReplyUserIds: string[] = []) {
   const entries: [string, unknown][] = [
     ['tweet_text', text],
     ['media', { media_entities: mediaIds.map((id) => ({ media_id: String(id), tagged_users: [] })), possibly_sensitive: false }],
@@ -115,7 +115,74 @@ export function createTweet(x: XClient, text: string, mediaIds: string[] = [], r
   ]
   if (replyTo) entries.push(['reply', { in_reply_to_tweet_id: parseTweetId(replyTo), exclude_reply_user_ids: excludeReplyUserIds }])
   if (quoteUrl) entries.push(['attachment_url', quoteUrl])
-  return x.graphqlPost('CreateTweet', V(entries), { referer: `${X_HOST}/home` })
+  return V(entries)
+}
+
+/** 发推；replyTo 给出即为回复，quoteUrl 给出即为引用。上游 create_tweet（CreateTweet）。 */
+export function createTweet(x: XClient, text: string, mediaIds: string[] = [], replyTo?: string, quoteUrl?: string, excludeReplyUserIds: string[] = []) {
+  // 浏览器打开 compose/post 后，真正提交请求的来源仍是 /home
+  return x.graphqlPost('CreateTweet', tweetVariables(text, mediaIds, replyTo, quoteUrl, excludeReplyUserIds), { referer: `${X_HOST}/home` })
+}
+
+/**
+ * 长推（Premium，权重 > 280）：网页端正文超长时发帖按钮提交的是 CreateNoteTweet，variables 与 CreateTweet 相同。
+ * 非 Premium 账号会被服务端拒绝。上游 create_note_tweet。
+ */
+export function createNoteTweet(x: XClient, text: string, mediaIds: string[] = [], replyTo?: string, quoteUrl?: string, excludeReplyUserIds: string[] = []) {
+  return x.graphqlPost('CreateNoteTweet', tweetVariables(text, mediaIds, replyTo, quoteUrl, excludeReplyUserIds), { referer: `${X_HOST}/home` })
+}
+
+/** 普通推的权重上限（上游 TWEET_WEIGHT_LIMIT）。 */
+export const TWEET_WEIGHT_LIMIT = 280
+const URL_WEIGHT = 23
+const LIGHT_RANGES: [number, number][] = [
+  [0, 4351],
+  [8192, 8205],
+  [8208, 8223],
+  [8242, 8247],
+]
+/** Python `re` 的 `\s`（str.isspace 的全集），与 JS 的 `\s` 不同：多了 0x1c-0x1f、0x85，少了 0xfeff。 */
+const PY_SPACE = '\\t\\n\\v\\f\\r\\x1c-\\x20\\x85\\xa0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000'
+/** 链接：遇到空白、CJK 标点或全角字符即结束（上游 _URL_RE，IGNORECASE）。 */
+const URL_RE = new RegExp(`https?://[^${PY_SPACE}\\u3000-\\u303f\\uff00-\\uffef]+`, 'giu')
+/** emoji 序列里不单独计数的码点：ZWJ、变体选择符、keycap；肤色修饰另判。 */
+const EMOJI_JOINERS = new Set([0x200d, 0xfe0e, 0xfe0f, 0x20e3])
+
+function plainWeight(text: string): number {
+  let weight = 0
+  let joined = false
+  for (const ch of text) {
+    const cp = ch.codePointAt(0)!
+    if (EMOJI_JOINERS.has(cp) || (cp >= 0x1f3fb && cp <= 0x1f3ff)) {
+      // ZWJ 之后紧跟的码点属于同一个 emoji，不再计数
+      joined = cp === 0x200d
+      continue
+    }
+    if (joined) {
+      joined = false
+      continue
+    }
+    weight += LIGHT_RANGES.some(([lo, hi]) => cp >= lo && cp <= hi) ? 1 : 2
+  }
+  return weight
+}
+
+/** 按 twitter-text v3 规则计算推文权重：拉丁和常用标点算 1，其余（CJK、emoji）算 2，链接一律 23。上游 tweet_weight。 */
+export function tweetWeight(text: string): number {
+  const s = text ?? ''
+  let weight = 0
+  let cursor = 0
+  for (const m of s.matchAll(URL_RE)) {
+    weight += plainWeight(s.slice(cursor, m.index)) + URL_WEIGHT
+    cursor = m.index + m[0].length
+  }
+  return weight + plainWeight(s.slice(cursor))
+}
+
+/** 发一条推：权重超过 280 自动改发长推。上游 post_tweet 的 note=None 分支（媒体已传好）。 */
+export function postTweet(x: XClient, text: string, mediaIds: string[] = [], replyTo?: string, quoteUrl?: string) {
+  const create = tweetWeight(text) > TWEET_WEIGHT_LIMIT ? createNoteTweet : createTweet
+  return create(x, text, mediaIds, replyTo, quoteUrl)
 }
 
 /** CreateTweet 响应里的新推文对象（长推文在 notetweet_create 下）。上游 extract_tweet_id 的取值路径。 */
@@ -276,17 +343,102 @@ export async function waitProcessing(x: XClient, mediaId: string, finalizeResult
   return result
 }
 
-/** 完整上传一个文件，返回 media_id 和 FINALIZE / STATUS 的结果。上游 XMediaAPI.upload。 */
-export async function upload(x: XClient, data: Uint8Array, filename: string, mediaCategory?: string): Promise<{ mediaId: string; mediaType: string; result: any }> {
+/**
+ * 完整上传一个文件，返回 media_id 和 FINALIZE / STATUS 的结果。上游 XMediaAPI.upload。
+ * withMetadata 为 false 时 FINALIZE 之后就结束，不登记元数据（文章编辑器的封面 / 插图就是这样）。
+ */
+export async function upload(
+  x: XClient,
+  data: Uint8Array,
+  filename: string,
+  options: { mediaCategory?: string; withMetadata?: boolean } = {},
+): Promise<{ mediaId: string; mediaType: string; result: any }> {
   const mediaType = guessMediaType(filename)
-  const mediaId = await mediaInit(x, data.length, mediaType, mediaCategory)
+  const mediaId = await mediaInit(x, data.length, mediaType, options.mediaCategory)
   for (let index = 0, offset = 0; offset < data.length; index++, offset += CHUNK_SIZE) {
     await mediaAppend(x, mediaId, data.subarray(offset, offset + CHUNK_SIZE), index)
   }
   const finalized = await mediaFinalize(x, mediaId, createHash('md5').update(data).digest('hex'))
   const result = await waitProcessing(x, mediaId, finalized)
-  await mediaMetadataCreate(x, mediaId)
+  if (options.withMetadata !== false) await mediaMetadataCreate(x, mediaId)
   return { mediaId, mediaType, result }
+}
+
+// ================================================================ 文章（XArticleAPI）
+
+const COMPOSE_URL = `${X_HOST}/compose/articles`
+/** 文章草稿的编辑页，也是这组请求的 referer。 */
+export const articleEditUrl = (articleId: string) => `${COMPOSE_URL}/edit/${articleId}`
+
+/** 新建草稿：浏览器点「新建」时发的是空标题 + 空正文。上游 create_draft（ArticleEntityDraftCreate）。 */
+export function articleCreateDraft(x: XClient) {
+  return x.graphqlPost('ArticleEntityDraftCreate', V([['content_state', { blocks: [], entity_map: [] }], ['title', '']]), { referer: COMPOSE_URL })
+}
+
+/**
+ * 从任意 ArticleEntity* 响应里取出文章 rest_id。建草稿的结果包了一层 article_entity_results.result；
+ * `id` 是 relay 全局 id：base64("ArticleEntity:<rest_id>")。上游 extract_article_id。
+ */
+export function extractArticleId(res: any): string {
+  for (const value of Object.values(res?.data ?? {})) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) continue
+    const v = value as any
+    const result = v.article_entity_results?.result ?? v
+    if (result?.rest_id) return String(result.rest_id)
+    if (result?.id) return Buffer.from(String(result.id), 'base64').toString('utf8').split(':').slice(1).join(':')
+  }
+  throw new CatbusError('UPSTREAM', '响应里没有文章 id', { detail: res })
+}
+
+/** 改标题。上游 update_title（ArticleEntityUpdateTitle）。 */
+export function articleUpdateTitle(x: XClient, articleId: string, title: string) {
+  return x.graphqlPost('ArticleEntityUpdateTitle', V([['articleEntityId', String(articleId)], ['title', title]]), { referer: articleEditUrl(articleId) })
+}
+
+/** 整篇覆盖正文；这里文章 id 的键名是 `article_entity`。上游 update_content（ArticleEntityUpdateContent）。 */
+export function articleUpdateContent(x: XClient, articleId: string, contentState: unknown) {
+  return x.graphqlPost('ArticleEntityUpdateContent', V([['content_state', contentState], ['article_entity', String(articleId)]]), {
+    referer: articleEditUrl(articleId),
+  })
+}
+
+/** 文章图片的 media_category（封面和正文插图都是它）。上游 MEDIA_CATEGORY。 */
+export const ARTICLE_MEDIA_CATEGORY = 'DraftTweetImage'
+
+/** 设封面，编辑器建议 5:2。上游 update_cover（ArticleEntityUpdateCoverMedia）。 */
+export function articleUpdateCover(x: XClient, articleId: string, mediaId: string) {
+  return x.graphqlPost(
+    'ArticleEntityUpdateCoverMedia',
+    V([
+      ['articleEntityId', String(articleId)],
+      ['coverMedia', { media_id: String(mediaId), media_category: ARTICLE_MEDIA_CATEGORY }],
+    ]),
+    { referer: articleEditUrl(articleId) },
+  )
+}
+
+/**
+ * 发布草稿，同时生成一条带文章卡片的推文。说明文字（tweetText）为空时浏览器不带这个键；
+ * 谁可以回复默认所有人，也不带 conversationControl。上游 publish（ArticleEntityPublish）。
+ */
+export function articlePublish(x: XClient, articleId: string, visibility = 'Public') {
+  return x.graphqlPost('ArticleEntityPublish', V([['articleEntityId', String(articleId)], ['visibilitySetting', visibility]]), { referer: articleEditUrl(articleId) })
+}
+
+/** 发布响应里那条文章推文的 id。上游 XArticleAPI.extract_tweet_id。 */
+export function articleTweetId(res: any): string | null {
+  const id = res?.data?.articleentity_publish?.article_entity_results?.result?.metadata?.tweet_results?.result?.rest_id
+  return id == null ? null : String(id)
+}
+
+/** 删除草稿或已发布文章（不可撤销），已发布的连同文章推文一起消失。上游 delete（ArticleEntityDelete）。 */
+export function articleDelete(x: XClient, articleId: string) {
+  return x.graphqlPost('ArticleEntityDelete', V([['articleEntityId', String(articleId)]]), { referer: articleEditUrl(articleId) })
+}
+
+/** 文章封面 / 插图上传：与发推同一套分片上传，但不登记元数据。上游 upload_image。 */
+export async function articleUploadImage(x: XClient, data: Uint8Array, filename: string): Promise<string> {
+  return (await upload(x, data, filename, { withMetadata: false })).mediaId
 }
 
 // ================================================================ 私信（XChatAPI）

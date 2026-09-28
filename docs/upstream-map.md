@@ -269,8 +269,13 @@
 - **上游凭证来源**：`.env` 的 `X_COOKIES`、`X_USERNAME`、`X_PASSWORD`、`X_PROXY`，以及 Castle profile 的 `CASTLE_PURE_RL_FILE`、`CASTLE_PURE_ONLY`。
 - **API**（静态方法，第一个参数为 `auth`）
   - `x_apis/x_api.py` 的 `XAPI`：`get_work_info`、`get_work_comments`、`get_all_work_comments`、`search_work`、`get_user_info(user_name)`、`get_user_post_note`、`get_user_all_post_note`、`get_home_timeline`、`get_viewer`
-  - `x_apis/x_write_api.py` 的 `XWriteAPI`：`post_tweet`、`delete_tweet`、`favorite`、`retweet`、`bookmark`、`follow/unfollow`
-  - 媒体上传：`x_apis/x_media_api.py` 的 `XMediaAPI.upload`；私信：`x_apis/x_dm_api.py` 的 `XChatAPI`
+  - `x_apis/x_write_api.py` 的 `XWriteAPI`：`post_tweet`（正文权重超过 280 时走 `create_note_tweet`，即 CreateNoteTweet 长推）、`post_thread`、`delete_tweet`、`favorite`、`retweet`、`bookmark`、`follow/unfollow`
+    - 权重算法在 `utils/x_util.py` 的 `tweet_weight`（twitter-text v3）。
+    - `post_thread` 对应 `item publish --thread`。
+  - `x_apis/x_article_api.py` 的 `XArticleAPI`（文章，Premium 长文）：`create_draft`、`update_title`、`update_content`、`update_cover`、`publish`、`delete`、`list_articles`、`upload_image`，编排入口 `post_article`
+    - 对应扩展命令 `article publish`（`post_article` 的 publish=True）、`article delete`；`list_articles`（草稿 / 已发布列表）没有暴露。
+    - Markdown → Draft.js content_state 在 `utils/article_util.py`，catbus 移植到 `web/article.ts`。
+  - 媒体上传：`x_apis/x_media_api.py` 的 `XMediaAPI.upload`（`with_metadata=False` 时不登记元数据，文章图片用）；私信：`x_apis/x_dm_api.py` 的 `XChatAPI`
 - **JS 资产**（账密登录不移植，Castle 与 ui_metrics 不复制）
   - `static/castle/`：`castle.js`、`castle.umd-BneRArir.js`、`env_core.js`、`rolldown-runtime-XXLRXQBO.js`、`run.js`、`castle_meta.json`、`chromium_zlib.meta.json`
   - `static/ui_metrics.js`

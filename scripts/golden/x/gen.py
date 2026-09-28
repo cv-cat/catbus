@@ -25,7 +25,10 @@ out = g.setup('x', 'XApis')
 import builder.header as header_mod  # noqa: E402
 from builder.auth import XAuth  # noqa: E402
 from utils.transaction import ClientTransaction  # noqa: E402
+from utils.article_util import markdown_to_content_state, split_title  # noqa: E402
+from utils.x_util import tweet_weight  # noqa: E402
 from x_apis.x_api import XAPI, graphql_get  # noqa: E402
+from x_apis.x_article_api import XArticleAPI  # noqa: E402
 from x_apis.x_dm_api import XChatAPI  # noqa: E402
 from x_apis.x_media_api import XMediaAPI  # noqa: E402
 from x_apis.x_write_api import XWriteAPI  # noqa: E402
@@ -48,8 +51,11 @@ TWEET_ID = '1585341984679469056'
 USER_ID = '44196397'
 GUEST_TOKEN = '1790000000000000001'
 MEDIA_ID = '1790000000000000100'
+ARTICLE_ID = '1790000000000000200'
 PNG = bytes.fromhex('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489') + b'\x00fake-png\xff'
 MP4 = b'\x00\x00\x00\x18ftypmp42' + b'fake-video-' * 8
+# 权重 > 280 的正文：141 个汉字（每个算 2），网页端会按 Premium 长推（CreateNoteTweet）发
+LONG_TEXT = '长' * 131 + ' https://example.com/a-very-long-url-that-counts-as-23 ' + '文' * 10
 
 USER = {
     '__typename': 'User', 'rest_id': USER_ID,
@@ -128,6 +134,14 @@ DETAIL = {'data': {'threaded_conversation_with_injections_v2': {'instructions': 
     cursor_entry('Bottom', 'DETAIL_NEXT'),
 ]}]}}}
 
+
+
+def article_payload(key, **extra):
+    """ArticleEntity* 的响应：实体里带 rest_id 和 relay 全局 id（base64("ArticleEntity:<rest_id>")）。"""
+    entity = {'rest_id': ARTICLE_ID, 'id': base64.b64encode(f'ArticleEntity:{ARTICLE_ID}'.encode()).decode(), **extra}
+    return {'data': {key: entity}}
+
+
 state = {'status': 0}
 
 
@@ -162,9 +176,30 @@ def respond(req):
         return USER_TIMELINE
     if '/Viewer' in url:
         return {'data': {'viewer': {'user_results': {'result': ME}}}}
-    if '/CreateTweet' in url:
+    if '/CreateTweet' in url or '/CreateNoteTweet' in url:
+        # 每次发推给一个新 id（3001、3002……），thread 里后一条回复前一条
+        state['tweets'] = state.get('tweets', 0) + 1
+        tid = str(3000 + state['tweets'])
         media = [PHOTO] if 'media_entities":[{' in (req['body'] or '') else None
-        return {'data': {'create_tweet': {'tweet_results': {'result': tweet('3001', 'hello', user=ME, media=media, views=None)}}}}
+        created = tweet(tid, 'hello', user=ME, media=media, views=None)
+        if '/CreateNoteTweet' in url:
+            created['note_tweet'] = {'is_expandable': True, 'note_tweet_results': {'result': {'id': 'Tm90ZVR3ZWV0OjE=', 'text': LONG_TEXT}}}
+            return {'data': {'notetweet_create': {'tweet_results': {'result': created}}}}
+        return {'data': {'create_tweet': {'tweet_results': {'result': created}}}}
+    if '/ArticleEntityDraftCreate' in url:
+        return {'data': {'articleentity_draft_create': {'article_entity_results': {'result': article_payload('x')['data']['x']}}}}
+    if '/ArticleEntityUpdateTitle' in url:
+        return article_payload('articleentity_update_title', title='文章标题')
+    if '/ArticleEntityUpdateContent' in url:
+        return article_payload('articleentity_update_content')
+    if '/ArticleEntityUpdateCoverMedia' in url:
+        return article_payload('articleentity_update_cover_media')
+    if '/ArticleEntityPublish' in url:
+        return {'data': {'articleentity_publish': {'article_entity_results': {'result': {
+            'rest_id': ARTICLE_ID, 'lifecycle_state': {'lifecycle': 'Published'},
+            'metadata': {'tweet_results': {'result': {'rest_id': '4001'}}}}}}}}
+    if '/ArticleEntityDelete' in url:
+        return {'data': {'articleentity_delete': 'Done'}}
     if '/GetInitialXChatPageQuery' in url:
         return {'data': {'get_initial_chat_page': {'__typename': 'XChatInboxPage', 'items': [
             {'conversation_detail': {'conversation_id': '10001:20002', 'participants_results': [
@@ -277,5 +312,76 @@ case('chat_conversation', L(lambda a: XChatAPI.get_conversation_page(a, '10001:2
 # ---------------------------------------------------------------- 命令流程：发推 = 传图 + CreateTweet
 case('post_tweet', L(lambda a: XWriteAPI.post_tweet(a, 'hello', images=[str(tmp / 'photo.png')])[2]),
      text='hello', filename='photo.png', data=b64(PNG))
+
+# ---------------------------------------------------------------- 长推 / thread（上游 3fe6ea7）
+# twitter-text v3 权重：拉丁 1、CJK / emoji 2，链接一律 23；emoji 的 ZWJ / 变体选择符 / 肤色不单独计数
+WEIGHT_TEXTS = [
+    '', 'hello', '你好', 'a' * 280, 'a' * 281, '中' * 140, '中' * 141,
+    '看这个 https://example.com/path?q=1，好的', 'HTTPS://EXAMPLE.COM/A 和 http://t.co/x。',
+    '👍', '👍🏽', '👨\u200d👩\u200d👧', '❤️', '1\ufe0f\u20e3', 'é', '\u2013\u2018\u2032\u2014', '\u3000全角\uff01',
+    'mixed 中文 🎉 text https://a.b/c\u3001next',
+]
+case('tweet_weight', lambda: [tweet_weight(t) for t in WEIGHT_TEXTS], texts=WEIGHT_TEXTS)
+case('create_note_tweet', L(lambda a: XWriteAPI.create_note_tweet(a, LONG_TEXT, reply_to='20', quote_url='https://x.com/a/status/21')),
+     text=LONG_TEXT, reply_to='20', quote='https://x.com/a/status/21')
+# 命令流程：正文超过 280 权重时自动改走 CreateNoteTweet
+case('post_long_tweet', L(lambda a: XWriteAPI.post_tweet(a, LONG_TEXT)[2]), text=LONG_TEXT)
+# 命令流程：thread，第一条带图，第二条超长（自动长推），之后每条回复上一条
+THREAD = ['第一条', LONG_TEXT, '第三条']
+case('post_thread', L(lambda a: XWriteAPI.post_thread(a, THREAD, images=[[str(tmp / 'photo.png')]])),
+     texts=THREAD, filename='photo.png', data=b64(PNG))
+
+# ---------------------------------------------------------------- 文章（Article）
+MARKDOWN = """# 文章标题
+
+第一段 **粗体** 和 *斜体*，还有 ~~删除线~~ 与 [链接](https://example.com)。
+emoji 👍👨\u200d👩\u200d👧 之后的 **BOLD** 仍按码点计 offset
+**粗 *斜*** 嵌套，\\*转义\\*，**[粗链接](https://b.c)**
+
+## 小标题
+- 无序一
+* 无序二
+1. 有序一
+2) 有序二
+> 引用 *斜*
+---
+![图](photo.png)
+```python
+print("hi")
+```
+最后一行"""
+MARKDOWN_NO_TITLE = "正文第一行\n\n### 三级标题\n+ 加号列表\n***\n~~~\ncode\n~~~"
+# 正则边界：未闭合 / 相邻记号、链接里嵌粗体、六级标题、两位数序号、> 后不带空格、带 title 的图片、
+# 行首尾的 Python 空白（\x1c、\u3000）、\r\n 换行、行内的 \r 与 \u2028
+MARKDOWN_EDGE = ('###### 六级标题\r\n**未闭合 *a*b* ~~x~~~~y~~ [**粗**链接](https://e.f/g?h=1) `代码`\r\n'
+                 '10. 十\n>紧贴引用\n![有标题](pic.png "标题")\n\x1c\u3000前后空白\u3000\n'
+                 '行内\r回车与\u2028分隔 **a\\*b** *c\\*d* \\[不是链接](x)\n- \n-\n#不是标题\n``` \n未收尾的围栏')
+MEDIA_IDS = iter(['9001', '9002', '9003'])
+
+
+def content_states():
+    upload = lambda path: next(MEDIA_IDS)  # noqa: E731
+    title, body = split_title(MARKDOWN)
+    return {
+        'split': [title, body],
+        'split_none': list(split_title(MARKDOWN_NO_TITLE)),
+        'state': markdown_to_content_state(body, upload_image=upload),
+        'state_no_title': markdown_to_content_state(MARKDOWN_NO_TITLE),
+        'state_edge': markdown_to_content_state(MARKDOWN_EDGE, upload_image=upload),
+    }
+
+
+case('article_markdown', content_states, markdown=MARKDOWN, markdown_no_title=MARKDOWN_NO_TITLE, markdown_edge=MARKDOWN_EDGE)
+STATE = {'blocks': [{'data': {}, 'text': '正文', 'key': 'abcde', 'type': 'unstyled', 'entity_ranges': [], 'inline_style_ranges': []}], 'entity_map': []}
+case('article_draft', L(lambda a: XArticleAPI.create_draft(a)))
+case('article_title', L(lambda a: XArticleAPI.update_title(a, ARTICLE_ID, '标题 "x" & <b>')), article=ARTICLE_ID, title='标题 "x" & <b>')
+case('article_content', L(lambda a: XArticleAPI.update_content(a, ARTICLE_ID, STATE)), article=ARTICLE_ID, state=STATE)
+case('article_cover', L(lambda a: XArticleAPI.update_cover(a, ARTICLE_ID, MEDIA_ID)), article=ARTICLE_ID, media=MEDIA_ID)
+case('article_publish', L(lambda a: XArticleAPI.publish(a, ARTICLE_ID)), article=ARTICLE_ID)
+case('article_delete', L(lambda a: XArticleAPI.delete(a, ARTICLE_ID)), article=ARTICLE_ID)
+case('article_upload_image', L(lambda a: XArticleAPI.upload_image(a, str(tmp / 'photo.png'))), filename='photo.png', data=b64(PNG))
+# 命令流程：Markdown → 传正文插图 → 建草稿 → 标题 → 正文 → 传封面 → 设封面 → 发布
+case('post_article', L(lambda a: XArticleAPI.post_article(a, MARKDOWN, cover='photo.png', publish=True, base_dir=str(tmp))),
+     markdown=MARKDOWN, filename='photo.png', data=b64(PNG))
 
 shutil.rmtree(tmp, ignore_errors=True)

@@ -67,7 +67,7 @@ describe('注册表', () => {
       xianyu: [],
       taobao: [],
       jd: ['cart count', 'coupon list', 'order list'],
-      x: [],
+      x: ['article delete', 'article publish'],
     })
   })
 
@@ -84,11 +84,11 @@ describe('注册表', () => {
   it('需要确认的命令（AGENTS 4.11）', () => {
     const confirm = new Set<string>()
     for (const p of PLATFORMS) {
-      for (const c of web(p).commands.values()) if (c.confirm) confirm.add(p.id === 'bilibili' && c.extension ? `bilibili ${c.key}` : c.key)
+      for (const c of web(p).commands.values()) if (c.confirm) confirm.add(c.extension ? `${p.id} ${c.key}` : c.key)
     }
     expect([...confirm].sort()).toEqual([
       'bilibili draft delete', 'bilibili dynamic delete', 'bilibili item coin', 'bilibili item triple',
-      'comment delete', 'folder delete', 'item delete', 'live send', 'msg delete', 'msg revoke',
+      'comment delete', 'folder delete', 'item delete', 'live send', 'msg delete', 'msg revoke', 'x article delete',
     ])
     const send = VOCAB['live send']!.confirm as (o: object) => boolean
     expect([send({}), send({ gift: 'g1' })]).toEqual([false, true])

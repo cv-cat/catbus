@@ -9,9 +9,10 @@ import { deterministic } from '../src/core/rand.js'
 import { RAW } from '../src/core/schemas.js'
 import xPlatform from '../src/platforms/x/index.js'
 import * as api from '../src/platforms/x/web/api.js'
+import { markdownToContentState, splitTitle } from '../src/platforms/x/web/article.js'
 import { XClient } from '../src/platforms/x/web/client.js'
 import * as cmd from '../src/platforms/x/web/commands.js'
-import { isUserId, parseScreenName, parseTweetId } from '../src/platforms/x/web/resolve.js'
+import { isUserId, parseArticleId, parseScreenName, parseTweetId } from '../src/platforms/x/web/resolve.js'
 import { transaction } from '../src/platforms/x/web/transaction.js'
 import { expectRequests, loadCase, makeCtx, replay } from './golden.js'
 import { type CliResult, cli, useTempHome } from './helpers.js'
@@ -20,6 +21,7 @@ const COOKIES = 'auth_token=fakeauthtoken000000000000000000000000000000; ct0=fak
 const TWEET_ID = '1585341984679469056'
 const USER_ID = '44196397'
 const MEDIA_ID = '1790000000000000100'
+const ARTICLE_ID = '1790000000000000200'
 
 const loggedCtx = (extra: Parameters<typeof makeCtx>[0] = { platform: 'x' }) => makeCtx({ ...extra, platform: 'x', cookies: COOKIES, cookieDomain: '.x.com' })
 const guestCtx = (extra: Parameters<typeof makeCtx>[0] = { platform: 'x' }) => makeCtx({ ...extra, platform: 'x', account: 'guest' })
@@ -80,6 +82,16 @@ const CASES: Record<string, (input: any) => Promise<unknown>> = {
 
   chat_initial: () => logged((x) => api.getInitialChatPage(x)),
   chat_conversation: () => logged((x) => api.getConversationPage(x, '10001:20002')),
+
+  create_note_tweet: (input) => logged((x) => api.createNoteTweet(x, input.text, [], input.reply_to, input.quote)),
+
+  article_draft: () => logged((x) => api.articleCreateDraft(x)),
+  article_title: (input) => logged((x) => api.articleUpdateTitle(x, input.article, input.title)),
+  article_content: (input) => logged((x) => api.articleUpdateContent(x, input.article, input.state)),
+  article_cover: (input) => logged((x) => api.articleUpdateCover(x, input.article, input.media)),
+  article_publish: (input) => logged((x) => api.articlePublish(x, input.article)),
+  article_delete: (input) => logged((x) => api.articleDelete(x, input.article)),
+  article_upload_image: (input) => logged((x) => api.articleUploadImage(x, bytesOf(input.data), input.filename)),
 }
 
 describe('x 对拍：请求构造与签名', () => {
@@ -89,9 +101,34 @@ describe('x 对拍：请求构造与签名', () => {
       const { requests, result, error } = await replay(c, () => run(c.input))
       if (error) throw error
       expectRequests(requests, c.requests)
-      if (name === 'guest_activate' || name.startsWith('media_upload')) expect(result).toBe(c.result)
+      if (name === 'guest_activate' || name.startsWith('media_upload') || name === 'article_upload_image') expect(result).toBe(c.result)
     })
   }
+
+  it('推文权重：twitter-text v3（拉丁 1、CJK / emoji 2、链接 23，emoji 修饰符不计），与上游 tweet_weight 一致', () => {
+    const c = loadCase('x', 'tweet_weight')
+    expect(c.input.texts.map(api.tweetWeight)).toEqual(c.result)
+    expect(api.tweetWeight('a'.repeat(280))).toBe(api.TWEET_WEIGHT_LIMIT)
+  })
+
+  it('文章正文：Markdown → Draft.js content_state，块 key / 媒体实体 uuid 在同样的随机序列下与上游一致', async () => {
+    const c = loadCase('x', 'article_markdown')
+    const media = ['9001', '9002', '9003'][Symbol.iterator]()
+    const { result, error } = await replay(c, async () => {
+      const [title, body] = splitTitle(c.input.markdown)
+      return {
+        split: [title, body],
+        split_none: splitTitle(c.input.markdown_no_title),
+        state: await markdownToContentState(body, async () => media.next().value!),
+        state_no_title: await markdownToContentState(c.input.markdown_no_title),
+        state_edge: await markdownToContentState(c.input.markdown_edge, async () => media.next().value!),
+      }
+    })
+    if (error) throw error
+    expect(result).toEqual(c.result)
+    // 正文有图片却没有上传方式时报错，不静默丢图
+    await expect(markdownToContentState('![](a.png)')).rejects.toMatchObject({ code: 'USAGE' })
+  })
 
   it('XCTID：固定时间与随机字节时与上游逐字节一致', () => {
     const c = loadCase('x', 'xctid')
@@ -238,6 +275,88 @@ describe('x 对拍：命令流程', () => {
       ['1', '10001:20002', 'other', null, 'CAISBGZha2U='],
     ])
   })
+
+  it('item publish：正文超过 280 权重时自动改发长推（CreateNoteTweet），text 取 note_tweet 里的全文', async () => {
+    const c = loadCase('x', 'post_long_tweet')
+    const ctx = loggedCtx({ platform: 'x', options: { text: c.input.text, visibility: 'public' } })
+    const { requests, result, error } = await replay(c, () => cmd.itemPublish(ctx))
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect(result).toMatchObject({ id: '3001', kind: 'text', url: 'https://x.com/catbus_test/status/3001', text: c.input.text })
+  })
+
+  function threadCtx(c: ReturnType<typeof loadCase>) {
+    const dir = mkdtempSync(join(tmpdir(), 'catbus-x-'))
+    const file = join(dir, c.input.filename)
+    writeFileSync(file, bytesOf(c.input.data))
+    const [text, ...thread] = c.input.texts as string[]
+    return loggedCtx({ platform: 'x', options: { text, image: [file], thread, visibility: 'public' } })
+  }
+
+  it('item publish --thread：第一条带图，之后每条回复上一条，超长的那条自动长推；返回第一条', async () => {
+    const c = loadCase('x', 'post_thread')
+    const { requests, result, error } = await replay(c, () => cmd.itemPublish(threadCtx(c)))
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect(result).toMatchObject({ id: '3001', kind: 'image' })
+    expect(c.result).toEqual([true, '成功', ['3001', '3002', '3003']])
+  })
+
+  it('item publish --thread：中途失败时报错，detail 里给出已发出的各条', async () => {
+    const c = loadCase('x', 'post_thread')
+    const failed = structuredClone(c)
+    failed.responses[5]!.body = { errors: [{ code: 186, message: 'Tweet needs to be a bit shorter.' }] }
+    const { error } = await replay(failed, () => cmd.itemPublish(threadCtx(c)))
+    expect(error).toBeInstanceOf(CatbusError)
+    expect(error).toMatchObject({
+      code: 'UPSTREAM',
+      message: 'thread 第 2 条失败：CreateNoteTweet: Tweet needs to be a bit shorter.',
+      detail: { posted: [{ id: '3001', url: 'https://x.com/catbus_test/status/3001' }] },
+    })
+  })
+
+  function articleCtx(c: ReturnType<typeof loadCase>) {
+    const dir = mkdtempSync(join(tmpdir(), 'catbus-x-'))
+    const file = join(dir, c.input.filename)
+    writeFileSync(file, bytesOf(c.input.data))
+    // 上游按 base_dir 解析正文里的相对路径；catbus 按当前目录解析，这里直接换成绝对路径
+    const text = (c.input.markdown as string).replace('](photo.png)', `](${file})`)
+    return loggedCtx({ platform: 'x', options: { text, cover: file } })
+  }
+
+  it('article publish：传插图 → 建草稿 → 标题（取正文第一行 # 标题）→ 正文 → 传封面、设封面 → 发布', async () => {
+    const c = loadCase('x', 'post_article')
+    const { requests, result, error } = await replay(c, () => cmd.articlePublish(articleCtx(c)))
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect(result).toEqual({ id: ARTICLE_ID, url: `https://x.com/i/article/${ARTICLE_ID}` })
+  })
+
+  it('article publish：草稿建好后失败时，detail 里给出草稿 id，提示删除', async () => {
+    const c = loadCase('x', 'post_article')
+    const failed = structuredClone(c)
+    failed.responses.at(-1)!.body = { errors: [{ code: 399, message: 'Premium required' }] }
+    const { error } = await replay(failed, () => cmd.articlePublish(articleCtx(c)))
+    expect(error).toMatchObject({
+      code: 'UPSTREAM',
+      hint: `到 https://x.com/compose/articles/edit/${ARTICLE_ID} 查看，或 catbus x article delete ${ARTICLE_ID}`,
+      detail: { article_id: ARTICLE_ID },
+    })
+  })
+
+  it('article publish：没有 --title、正文第一行也不是 # 标题时报 USAGE，不发请求', async () => {
+    const ctx = loggedCtx({ platform: 'x', options: { text: '正文\n\n## 小标题' } })
+    await expect(cmd.articlePublish(ctx)).rejects.toMatchObject({ code: 'USAGE' })
+  })
+
+  it('article delete：接受文章链接', async () => {
+    const c = loadCase('x', 'article_delete')
+    const ctx = loggedCtx({ platform: 'x', args: { article: `https://x.com/i/article/${ARTICLE_ID}` } })
+    const { requests, result, error } = await replay(c, () => cmd.articleDelete(ctx))
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect(result).toEqual({ id: ARTICLE_ID })
+  })
 })
 
 describe('x 命令流程：cookie 登录', () => {
@@ -318,6 +437,14 @@ describe('x 命令与注册表', () => {
     expect(web.commands.get('msg send')!.status).toBe('planned')
   })
 
+  it('扩展命令 article publish / delete；--thread 只挂在 x 的 item publish 上', () => {
+    const web = xPlatform.endpoints.web
+    if (web === 'planned') throw new Error('web 端应当可用')
+    expect(web.commands.get('article publish')).toMatchObject({ extension: true, output: '{id url}', status: 'implemented' })
+    expect(web.commands.get('article delete')).toMatchObject({ extension: true, output: '{id}', confirm: true })
+    expect(Object.keys(web.commands.get('item publish')!.options)).toEqual(expect.arrayContaining(['thread']))
+  })
+
   it('发推选项：X 不支持的选项报 UNSUPPORTED，图片和视频不能同时带', async () => {
     await expect(cmd.itemPublish(loggedCtx({ platform: 'x', options: { text: 'a', title: 't', visibility: 'public' } }))).rejects.toMatchObject({ code: 'UNSUPPORTED' })
     await expect(cmd.itemPublish(loggedCtx({ platform: 'x', options: { text: 'a', visibility: 'private' } }))).rejects.toMatchObject({ code: 'UNSUPPORTED' })
@@ -339,5 +466,12 @@ describe('x 参数归一化', () => {
     expect(parseScreenName('elonmusk')).toBe('elonmusk')
     expect(isUserId(USER_ID)).toBe(true)
     expect(isUserId('@123')).toBe(false)
+  })
+
+  it('文章：纯数字、文章链接、编辑页链接', () => {
+    expect(parseArticleId(ARTICLE_ID)).toBe(ARTICLE_ID)
+    expect(parseArticleId(`https://x.com/i/article/${ARTICLE_ID}`)).toBe(ARTICLE_ID)
+    expect(parseArticleId(`https://x.com/compose/articles/edit/${ARTICLE_ID}`)).toBe(ARTICLE_ID)
+    expect(() => parseArticleId(`https://x.com/a/status/${TWEET_ID}`)).toThrow(CatbusError)
   })
 })

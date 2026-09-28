@@ -14,6 +14,17 @@ export function parseTweetId(input: string): string {
   return m[2]!
 }
 
+const ARTICLE_RE = /(?:twitter|x)\.com\/(?:i\/article|compose\/articles\/edit)\/(\d+)/
+
+/** 文章：纯数字 id、文章链接 `x.com/i/article/<id>` 或编辑页 `x.com/compose/articles/edit/<id>`。 */
+export function parseArticleId(input: string): string {
+  const text = (input ?? '').trim()
+  if (/^\d+$/.test(text)) return text
+  const m = ARTICLE_RE.exec(text)
+  if (!m) throw new CatbusError('USAGE', `无法从 ${input} 解析文章 id`, { hint: '传文章 id 或链接 https://x.com/i/article/<id>' })
+  return m[1]!
+}
+
 /** 接受主页链接、@handle 或裸用户名，统一返回小写 screen_name（上游 parse_screen_name）。 */
 export function parseScreenName(input: string): string {
   const text = (input ?? '').trim().replace(/\/+$/, '')

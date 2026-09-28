@@ -1,4 +1,5 @@
-import { filter } from '../../core/options.js'
+import { z } from 'zod'
+import { filter, PUBLISH } from '../../core/options.js'
 import { type CommandDecl, definePlatform, type Handler, type Upstream } from '../../core/registry.js'
 
 type Commands = typeof import('./web/commands.js')
@@ -45,7 +46,12 @@ export default definePlatform({
         'item uncollect': impl('full', 'itemUncollect'),
         'item repost': impl('full', 'itemRepost'),
         'item unrepost': impl('full', 'itemUnrepost'),
-        'item publish': impl('full', 'itemPublish'),
+        'item publish': impl('full', 'itemPublish', {
+          note: '正文超过 280 权重时自动按长推发（需要 Premium）；--thread 发 thread',
+          options: {
+            thread: z.array(z.string()).optional().describe('thread 的后续各条，依次回复上一条'),
+          },
+        }),
         'item delete': impl('full', 'itemDelete'),
 
         'comment list': impl('full', 'commentList'),
@@ -82,6 +88,30 @@ export default definePlatform({
         'folder create': 'none',
         'folder update': 'none',
         'folder delete': 'none',
+
+        // 平台扩展（AGENTS 4.7）
+        'article publish': {
+          upstream: 'full',
+          summary: '发文章（Premium 长文）：建草稿，写标题、正文、封面，再发布',
+          args: [],
+          options: {
+            title: z.string().optional().describe('标题，不给时取正文第一行的 # 标题'),
+            text: z.string().describe('正文（Markdown），@file 表示从文件读取；独占一行的 ![](图片) 会上传成插图'),
+            cover: PUBLISH.cover,
+          },
+          auth: 'required',
+          output: '{id url}',
+          handler: h('articlePublish'),
+        },
+        'article delete': {
+          upstream: 'full',
+          summary: '删文章（草稿或已发布的）',
+          args: [{ name: 'article', summary: '文章：ID 或 URL' }],
+          auth: 'required',
+          confirm: true,
+          output: '{id}',
+          handler: h('articleDelete'),
+        },
       },
     },
     app: 'planned',
