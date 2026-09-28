@@ -5,7 +5,7 @@ import { parseCookieInput } from '../src/core/cookies.js'
 import { fakeResponse, type HttpResponse, mockSender } from '../src/core/http.js'
 import { deterministic } from '../src/core/rand.js'
 import * as n from '../src/core/normalize.js'
-import { RAW } from '../src/core/schemas.js'
+import { type Media, RAW } from '../src/core/schemas.js'
 import * as api from '../src/platforms/tiktok/web/api.js'
 import { hydration, TikTok } from '../src/platforms/tiktok/web/client.js'
 import * as im from '../src/platforms/tiktok/web/im.js'
@@ -13,6 +13,8 @@ import { frontierSign, shopSign } from '../src/platforms/tiktok/web/jsrun.js'
 import * as sign from '../src/platforms/tiktok/web/sign.js'
 import * as up from '../src/platforms/tiktok/web/upload.js'
 import * as wire from '../src/platforms/tiktok/web/wire.js'
+import * as norm from '../src/platforms/tiktok/web/normalize.js'
+import { publishToggles } from '../src/platforms/tiktok/web/commands.js'
 import { type GoldenCase, type GoldenRequest, loadCase, makeCtx, normalize } from './golden.js'
 
 /** WebSocket 替身：记录地址与发出的帧，按顺序回放 `wsFrames` 里预置的帧。 */
@@ -352,6 +354,15 @@ const API_CASES: Record<string, (t: TikTok) => Promise<unknown>> = {
     t.jar.set('oec_lucifer', 'ab'.repeat(80), '.tiktok.com')
     return api.shopReviewPage(t, PRODUCT_URL, '1729384756', 2)
   },
+  collection_create_public: (t) => api.collectionCreate(t, '公开 收藏', api.COLLECTION_STATUS.public),
+  collection_modify_info_public: (t) => api.collectionModifyInfo(t, '7394627756635573022', '新名字', api.COLLECTION_STATUS.public),
+  collection_modify_items: (t) => api.collectionModifyItems(t, '7394627756635573022', AWEME, { referer: VIDEO_URL, profileUrl: 'https://www.tiktok.com/@creator' }),
+  related_items_page: (t) => api.relatedItems(t, AWEME, { cursor: '16', referer: VIDEO_URL }),
+  inbox_notice_list: (t) => api.inboxNoticeList(t, [{ count: 20, is_mark_read: 0, group: 661, max_time: 1789990000, min_time: 0 }]),
+  inbox_notice_list_default: (t) => api.inboxNoticeList(t),
+  message_notice_list: (t) => api.messageNoticeList(t),
+  enter_live_room: (t) => api.enterLiveRoom(t, ROOM),
+  check_live_rooms: (t) => api.checkLiveRooms(t, [ROOM, '7300000000000000457']),
 }
 
 describe('tiktok 对拍：请求构造与签名（TiktokWebAPI 的各个方法）', () => {
@@ -417,6 +428,9 @@ describe('tiktok 对拍：私信', () => {
   const pulls: Record<string, (t: TikTok) => Promise<Uint8Array>> = {
     im_user_init: (t) => im.pullInit(t, 0),
     im_conversation: (t) => im.pullConversation(t, { conversationId: CONV, shortId: '7300000000000000777', type: '1', anchorIndex: '0', direction: 1, limit: 50 }),
+    im_user_init_page: (t) => im.pullInit(t, '1789990000123'),
+    im_conversation_page: (t) =>
+      im.pullConversation(t, { conversationId: CONV, shortId: '7300000000000000777', type: '1', anchorIndex: '1789990000000456', direction: 1, limit: 50 }),
     im_user_combo: (t) =>
       api.postImProtobuf(
         t,
@@ -541,6 +555,30 @@ const UPLOAD_CASES: Record<string, (t: TikTok) => Promise<unknown>> = {
     upload_s: up.uploadRandomS(),
   }),
   post_project: (t) => up.postProject(t, '{"post_common_info":{"creation_id":"ROO_x"}}'),
+  project_bodies_toggles: async () => ({
+    video: up.buildVideoProjectBody({
+      creationId: 'ROO_abcdefghijk012345',
+      videoId: 'v0vid001',
+      text: '文案',
+      coverUri: 'tos-sg/poster001',
+      playUrl: 'https://v.example.com/play.mp4',
+      filename: 'a.mp4',
+      width: 720,
+      height: 1280,
+      durationMs: 14000,
+      fps: 30,
+      visibilityType: 0,
+      ...publishToggles({ allowComment: 'off', allowDuet: 'on', allowStitch: 'on', allowContentReuse: 'off', allowAiRemix: 'off' }),
+    }),
+    photo: up.buildPhotoProjectBody({
+      creationId: 'abcdefghijklmnopqrstu',
+      photos: [{ id: 'file_1790000000123_42', uri: 'tos-sg/img001', width_px: 1080, height_px: 1920 }],
+      text: '图文',
+      title: '标题',
+      visibilityType: 0,
+      ...publishToggles({ allowComment: 'off', allowDuet: 'off', allowStitch: 'off', allowContentReuse: 'off', allowAiRemix: 'on' }),
+    }),
+  }),
 }
 
 describe('tiktok 对拍：Creator Studio 上传与发布（AWS V4、TOS、ImageX、转码、project/post）', () => {
@@ -724,5 +762,280 @@ describe('tiktok 参数归一化与本地媒体处理', () => {
     const { inflateRawSync } = await import('node:zlib')
     const size = Buffer.from(zip).readUInt32LE(18)
     expect(inflateRawSync(zip.subarray(30 + 6, 30 + 6 + size)).toString()).toBe('hello')
+  })
+})
+
+// ================================================================ 补齐的能力：收藏夹、只有房间号的直播间、通知、翻页
+
+const FOLDER = '7394627756635573022'
+
+describe('tiktok 对拍：命令流程（收藏夹、直播间、通知）', () => {
+  it('folder add <收藏夹> <视频 URL>：视频页 → 还没收藏时先收藏 → collection/modify_items', async () => {
+    const c = loadCase('tiktok', 'flow_folder_add')
+    const { folderAdd } = await import('../src/platforms/tiktok/web/commands.js')
+    const ctx = sessionCtx({ platform: 'tiktok', args: { folder: FOLDER, item: VIDEO_URL } })
+    const { requests, result, error } = await replayTt(c, () => folderAdd(ctx))
+    if (error) throw error
+    expectSame(requests, c.requests)
+    expect(result).toEqual({ id: AWEME })
+  })
+
+  it('folder update --name：先查详情保留原来的公开状态（status 3），再 modify_info', async () => {
+    const c = loadCase('tiktok', 'flow_folder_update')
+    const { folderUpdate } = await import('../src/platforms/tiktok/web/commands.js')
+    const ctx = sessionCtx({ platform: 'tiktok', args: { folder: FOLDER }, options: { name: '新名字' } })
+    const { requests, result, error } = await replayTt(c, () => folderUpdate(ctx))
+    if (error) throw error
+    expectSame(requests, c.requests)
+    expect(result).toMatchObject({ id: FOLDER, name: '新名字', count: 5, url: `https://www.tiktok.com/@me_handle/collection/${encodeURIComponent('新名字')}-${FOLDER}` })
+  })
+
+  it('live get <房间号>：check_alive → 在播时进房，归一化成 Live', async () => {
+    const c = loadCase('tiktok', 'flow_live_get_room')
+    const { liveGet } = await import('../src/platforms/tiktok/web/commands.js')
+    const ctx = sessionCtx({ platform: 'tiktok', args: { room: ROOM } })
+    const { requests, result, error } = await replayTt(c, () => liveGet(ctx))
+    if (error) throw error
+    expectSame(requests, c.requests)
+    expect(result).toMatchObject({
+      id: ROOM,
+      url: 'https://www.tiktok.com/@host.name/live',
+      title: '直播中',
+      status: 'live',
+      host: { id: HOST, name: '主播', url: 'https://www.tiktok.com/@host.name' },
+      cover: 'https://p16/cover.jpg',
+      stats: { viewers: 12 },
+    })
+  })
+
+  it('live like <房间号>：进房取主播 → room/like', async () => {
+    const c = loadCase('tiktok', 'flow_live_like_room')
+    const { liveLike } = await import('../src/platforms/tiktok/web/commands.js')
+    const ctx = sessionCtx({ platform: 'tiktok', args: { room: ROOM } })
+    const { requests, result, error } = await replayTt(c, () => liveLike(ctx))
+    if (error) throw error
+    expectSame(requests, c.requests)
+    expect(result).toEqual({ id: ROOM })
+  })
+
+  it('notice list：动态（500）+ 系统通知（661）按时间合并，游标是两组的 max_time', async () => {
+    const c = loadCase('tiktok', 'flow_notice_list')
+    const { noticeList } = await import('../src/platforms/tiktok/web/commands.js')
+    const ctx = sessionCtx({ platform: 'tiktok' })
+    const { requests, result, error } = await replayTt(c, () => noticeList(ctx))
+    if (error) throw error
+    expectSame(requests, c.requests)
+    const r = result as any
+    expect(r.page).toEqual({ cursor: '1789980000:-', has_more: true })
+    expect(r.data).toMatchObject([
+      { id: '7400000000000000201', type: 'system', user: null, target: null, text: '账号更新\n你的账号已完成验证', created_at: n.time(1789988000) },
+      { id: '7400000000000000101', type: 'like', user: { id: '42', name: '观众' }, target: { id: AWEME, url: VIDEO_URL } },
+    ])
+  })
+})
+
+/** 按顺序回复预置响应（字符串或二进制），记录请求。 */
+async function withBodies<T>(bodies: (string | Uint8Array)[], run: () => Promise<T>): Promise<{ result: T; requests: GoldenRequest[] }> {
+  const requests: GoldenRequest[] = []
+  const restoreRand = deterministic()
+  const restore = mockSender((p) => {
+    requests.push(normalize(p))
+    const b = bodies[requests.length - 1] ?? '{}'
+    return fakeResponse(typeof b === 'string' ? b : Buffer.from(b), { url: p.url })
+  })
+  try {
+    return { result: await run(), requests }
+  } finally {
+    restore()
+    restoreRand()
+  }
+}
+
+describe('tiktok 补齐的能力：翻页、参数与解析', () => {
+  const imResponse = (cmd: 203 | 301, body: Uint8Array) =>
+    wire.concat([wire.fieldVarint(1, cmd), wire.fieldVarint(3, 0), wire.fieldMessage(6, wire.fieldMessage(cmd, body))])
+  const CONV = '0:1:7000000000000000001:6900000000000000001'
+  const msg = (sid: number, text: string) =>
+    wire.fieldMessage(
+      1,
+      wire.concat([
+        wire.fieldString(1, CONV),
+        wire.fieldVarint(2, 1),
+        wire.fieldVarint(3, sid),
+        wire.fieldVarint(5, '7300000000000000777'),
+        wire.fieldVarint(6, 7),
+        wire.fieldVarint(7, '6900000000000000001'),
+        wire.fieldString(8, JSON.stringify({ aweType: 0, text })),
+        wire.fieldVarint(10, 1789990000000),
+      ]),
+    )
+
+  it('私信回包的翻页字段：203 取 next_cursor=4 / has_more=5，301 取 next_cursor=2 / has_more=3', () => {
+    const init = imResponse(203, wire.concat([msg(1, 'a'), wire.fieldVarint(3, 111), wire.fieldVarint(4, 1789990000123), wire.fieldVarint(5, 1)]))
+    expect(wire.imPullPage(init, 203)).toEqual({ cursor: '1789990000123', hasMore: true })
+    const last = imResponse(301, wire.concat([msg(1, 'a'), wire.fieldVarint(2, '1789990000000456'), wire.fieldVarint(3, 0)]))
+    expect(wire.imPullPage(last, 301)).toEqual({ cursor: '1789990000000456', hasMore: false })
+    expect(wire.imPullPage(imResponse(301, msg(1, 'a')), 301)).toEqual({ cursor: null, hasMore: false })
+    expect(wire.imPullPage(Uint8Array.from([0xff]), 203)).toEqual({ cursor: null, hasMore: false })
+  })
+
+  it('msg history：anchor_index 用 --cursor，下一页是回包的 next_cursor', async () => {
+    const { msgHistory } = await import('../src/platforms/tiktok/web/commands.js')
+    const ctx = sessionCtx({ platform: 'tiktok', args: { conversation: CONV }, cursor: '1789990000000999' })
+    ctx.credential.extra.im_conversations = { [CONV]: { short_id: '7300000000000000777', type: '1' } }
+    const reply = imResponse(301, wire.concat([msg(9001, '你好'), wire.fieldVarint(2, '1789990000000456'), wire.fieldVarint(3, 1)]))
+    const { result, requests } = await withBodies([reply], async () => msgHistory(ctx))
+    expect(requests.map((r) => r.url)).toEqual(['https://im-api-sg.tiktok.com/v1/message/get_by_conversation'])
+    // 请求体 Request.body(8).301 的 anchor_index（field 5）是 --cursor
+    const sent = wire.decodeWire(B64(requests[0]!.body as any)) as any
+    expect(sent['8']['301']['5']).toBe('1789990000000999')
+    const r = result as any
+    expect(r.page).toEqual({ cursor: '1789990000000456', has_more: true })
+    expect(r.data).toMatchObject([{ id: '9001', conversation_id: CONV, text: '你好' }])
+  })
+
+  it('msg list：只列本页的会话，下一页是 get_by_user_init 回包的 next_cursor', async () => {
+    const { msgList } = await import('../src/platforms/tiktok/web/commands.js')
+    const ctx = sessionCtx({ platform: 'tiktok' })
+    const conv = wire.fieldMessage(2, wire.concat([wire.fieldString(1, CONV), wire.fieldVarint(2, '7300000000000000777'), wire.fieldVarint(3, 1)]))
+    const reply = imResponse(203, wire.concat([msg(9001, '你好'), conv, wire.fieldVarint(4, 1789990000123), wire.fieldVarint(5, 1)]))
+    const { result } = await withBodies([reply], async () => msgList(ctx))
+    const r = result as any
+    expect(r.page).toEqual({ cursor: '1789990000123', has_more: true })
+    expect(r.data).toMatchObject([{ id: CONV, peer: { id: '6900000000000000001' }, last_message: '你好' }])
+    expect(ctx.credential.extra.im_conversations).toMatchObject({ [CONV]: { short_id: '7300000000000000777', type: '1' } })
+  })
+
+  it('item related：下一页用回包的 cursor；缺 hasMore 时按网页端当作还有', async () => {
+    const { itemRelated } = await import('../src/platforms/tiktok/web/commands.js')
+    const item = { id: '7300000000000000999', desc: 'x', author: { id: '1', uniqueId: 'a' } }
+    const ctx = sessionCtx({ platform: 'tiktok', args: { item: VIDEO_URL }, cursor: '16' })
+    const { result, requests } = await withBodies([JSON.stringify({ statusCode: 0, itemList: [item], cursor: '32' })], async () => itemRelated(ctx))
+    expect(new URL(requests[0]!.url).searchParams.get('cursor')).toBe('16')
+    expect((result as any).page).toEqual({ cursor: '32', has_more: true })
+    const done = await withBodies([JSON.stringify({ statusCode: 0, itemList: [item], cursor: '48', hasMore: false })], async () => itemRelated(ctx))
+    expect((done.result as any).page).toEqual({ cursor: null, has_more: false })
+  })
+
+  it('live get <房间号>：check_alive 显示已下播时不进房，直接返回 offline', async () => {
+    const { liveGet } = await import('../src/platforms/tiktok/web/commands.js')
+    const ctx = sessionCtx({ platform: 'tiktok', args: { room: ROOM } })
+    const { result, requests } = await withBodies([JSON.stringify({ status_code: 0, data: [{ alive: false, room_id_str: ROOM }] })], async () => liveGet(ctx))
+    expect(requests.map((r) => new URL(r.url).pathname)).toEqual(['/webcast/room/check_alive/'])
+    expect(result).toMatchObject({ id: ROOM, status: 'offline', host: null })
+  })
+
+  it('live media：/api-live/user/room 的 streamData（pull_data.stream_data）与房间号进房的 stream_url', async () => {
+    const { liveMedia } = await import('../src/platforms/tiktok/web/commands.js')
+    const sdk = (resolution: string) => JSON.stringify({ VCodec: 'h264', vbitrate: 2500000, resolution })
+    const streamData = {
+      pull_data: {
+        options: { default_quality: { sdk_key: 'hd' } },
+        stream_data: JSON.stringify({
+          common: { session_id: 'x' },
+          data: {
+            ao: { main: { flv: 'https://pull-f5.example.com/stage/s_only_audio.flv', hls: '', sdk_params: '{}' } },
+            hd: { main: { flv: 'https://pull-f5.example.com/stage/s_hd.flv', hls: 'https://pull-hls.example.com/stage/s_hd/index.m3u8', sdk_params: sdk('720x1280') } },
+            origin: { main: { flv: 'http://pull-f5.example.com/stage/s.flv', hls: '', cmaf: '', sdk_params: sdk('1080x1920') } },
+          },
+        }),
+      },
+    }
+    const room = { user: { id: HOST, uniqueId: 'host.name', roomId: ROOM, status: 2 }, liveRoom: { status: 2, streamData } }
+    const ctx = sessionCtx({ platform: 'tiktok', args: { room: '@host.name' } })
+    const { result } = await withBodies([JSON.stringify({ statusCode: 0, data: room })], async () => liveMedia(ctx))
+    expect((result as Media[]).map(({ id, type, url, width, height }) => ({ id, type, url, width, height }))).toEqual([
+      { id: 'origin-flv', type: 'video', url: 'https://pull-f5.example.com/stage/s.flv', width: 1080, height: 1920 },
+      { id: 'hd-flv', type: 'video', url: 'https://pull-f5.example.com/stage/s_hd.flv', width: 720, height: 1280 },
+      { id: 'hd-hls', type: 'video', url: 'https://pull-hls.example.com/stage/s_hd/index.m3u8', width: 720, height: 1280 },
+      { id: 'ao-flv', type: 'audio', url: 'https://pull-f5.example.com/stage/s_only_audio.flv', width: null, height: null },
+    ])
+
+    // 只有房间号：进房结果的 stream_url（flv_pull_url / hls_pull_url / rtmp_pull_url）
+    const enter = loadCase('tiktok', 'flow_live_like_room').responses[0]!.body
+    const byId = sessionCtx({ platform: 'tiktok', args: { room: ROOM } })
+    const r2 = await withBodies([JSON.stringify(enter)], async () => liveMedia(byId))
+    expect(r2.requests.map((r) => new URL(r.url).pathname)).toEqual(['/webcast/room/enter/'])
+    expect((r2.result as Media[]).map((m) => [m.id, m.url])).toEqual([
+      ['FULL_HD1-flv', 'https://pull-flv.example.com/stage/stream-1_or4.flv'],
+      ['HD1-flv', 'https://pull-flv.example.com/stage/stream-1_hd.flv'],
+      ['default-hls', 'https://pull-hls.example.com/stage/stream-1/index.m3u8'],
+      ['default-rtmp', 'rtmp://pull-rtmp.example.com/stage/stream-1'],
+    ])
+
+    // streamData 也可能直接是 stream_data（网页端给 webcast 房间用的就是这个形式）
+    expect(norm.liveStreams(streamData.pull_data.stream_data).map((m) => m.id)).toEqual(['origin-flv', 'hd-flv', 'hd-hls', 'ao-flv'])
+    expect(norm.liveStreams({ live_core_sdk_data: streamData }).map((m) => m.id)).toEqual(['origin-flv', 'hd-flv', 'hd-hls', 'ao-flv'])
+    expect(norm.liveStreams(null)).toEqual([])
+
+    // 不在播：没有地址
+    const off = sessionCtx({ platform: 'tiktok', args: { room: '@host.name' } })
+    await expect(withBodies([JSON.stringify({ statusCode: 0, data: { user: { roomId: ROOM, status: 4 }, liveRoom: { status: 4 } } })], async () => liveMedia(off))).rejects.toMatchObject({
+      code: 'UPSTREAM',
+    })
+  })
+
+  it('folder create / update 的 --visibility：public → 3、private → 1，friends 不支持；只改名时详情里没有状态就报错', async () => {
+    const { folderCreate, folderUpdate } = await import('../src/platforms/tiktok/web/commands.js')
+    const create = sessionCtx({ platform: 'tiktok', args: { name: '收藏' }, options: { visibility: 'public' } })
+    const r = await withBodies(['{"statusCode":0}', '{"statusCode":0,"collectionId":"7394627756635573022"}'], async () => folderCreate(create))
+    expect(new URL(r.requests[1]!.url).searchParams.get('collectionStatus')).toBe('3')
+    expect(r.result).toMatchObject({ id: FOLDER, name: '收藏', count: 0 })
+    const dflt = sessionCtx({ platform: 'tiktok', args: { name: '收藏' } })
+    const r2 = await withBodies(['{"statusCode":0}', '{"statusCode":0}'], async () => folderCreate(dflt))
+    expect(new URL(r2.requests[1]!.url).searchParams.get('collectionStatus')).toBe('1')
+    await expect(folderCreate(sessionCtx({ platform: 'tiktok', args: { name: '收藏' }, options: { visibility: 'friends' } }))).rejects.toMatchObject({ code: 'UNSUPPORTED' })
+
+    // 两项都给：不查详情
+    const both = sessionCtx({ platform: 'tiktok', args: { folder: FOLDER }, options: { name: '新', visibility: 'private' } })
+    const r3 = await withBodies(['{"statusCode":0}'], async () => folderUpdate(both))
+    expect(r3.requests.map((x) => new URL(x.url).pathname)).toEqual(['/api/collection/modify_info/'])
+    expect(new URL(r3.requests[0]!.url).searchParams.get('collectionStatus')).toBe('1')
+    // 只改公开状态：名字取详情里的
+    const vis = sessionCtx({ platform: 'tiktok', args: { folder: FOLDER }, options: { visibility: 'public' } })
+    const r4 = await withBodies([JSON.stringify({ statusCode: 0, collectionInfo: { name: '旧名字', status: 1 } }), '{"statusCode":0}'], async () => folderUpdate(vis))
+    const q = new URL(r4.requests[1]!.url).searchParams
+    expect([q.get('collectionName'), q.get('collectionStatus')]).toEqual(['旧名字', '3'])
+    const bad = sessionCtx({ platform: 'tiktok', args: { folder: FOLDER }, options: { name: '新' } })
+    await expect(withBodies([JSON.stringify({ statusCode: 0, collectionInfo: { name: '旧名字' } })], async () => folderUpdate(bad))).rejects.toMatchObject({ code: 'UPSTREAM' })
+  })
+
+  it('folder add：视频已收藏时不再收藏；commitIds 只接受一个 ID', async () => {
+    const { folderAdd } = await import('../src/platforms/tiktok/web/commands.js')
+    const video = page({ 'webapp.video-detail': { statusCode: 0, itemInfo: { itemStruct: { id: AWEME, collected: true, author: { id: '1', uniqueId: 'creator', secUid: SEC } } } } })
+    const ctx = sessionCtx({ platform: 'tiktok', args: { folder: FOLDER, item: VIDEO_URL } })
+    const { requests } = await withBodies([video, '{"statusCode":0}'], async () => folderAdd(ctx))
+    expect(requests.map((r) => new URL(r.url).pathname)).toEqual(['/@creator/video/7300000000000000123', '/api/collection/modify_items/'])
+    const t = await session()
+    expect(() => api.collectionModifyItems(t, FOLDER, ` ${AWEME}`, { referer: VIDEO_URL, profileUrl: 'https://www.tiktok.com/@creator' })).toThrow(/commitIds/)
+  })
+
+  it('notice count：group 661 记为 system，动态的子分组记到对应类型', async () => {
+    const { noticeCount } = await import('../src/platforms/tiktok/web/commands.js')
+    const body = { status_code: 0, notice_count: [{ group: 500, count: 3 }, { group: 661, count: 2 }] }
+    const { result } = await withBodies([JSON.stringify(body)], async () => noticeCount(sessionCtx({ platform: 'tiktok' })))
+    expect(result).toMatchObject({ total: 5, system: 2, comment: null, like: null })
+    const detail = { status_code: 0, notice_count: [{ group: 2, count: 1 }, { group: 505, count: 4 }, { group: 7, count: 1 }] }
+    const r2 = await withBodies([JSON.stringify(detail)], async () => noticeCount(sessionCtx({ platform: 'tiktok' })))
+    expect(r2.result).toMatchObject({ total: 6, comment: 1, like: 4, follow: 1, mention: null, system: null })
+  })
+
+  it('发布的互动开关：on / off → 1 / 0，不给时交给 body 用上游默认值', () => {
+    expect(publishToggles({ allowComment: 'off', allowDuet: 'on' })).toEqual({ allowComment: 0, allowDuet: 1, allowStitch: undefined, allowContentReuse: undefined, allowAiRemix: undefined })
+    const body = JSON.parse(up.buildVideoProjectBody({ creationId: 'c', videoId: 'v', text: '', coverUri: 'u', playUrl: 'p', filename: 'a.mp4', width: 1, height: 1, durationMs: 1, ...publishToggles({}) }))
+    expect(JSON.stringify(body)).toContain('"allow_duet":0,"allow_stitch":0,"allow_comment":1,"allow_content_reuse":1,"allow_ai_remix":1')
+  })
+
+  it('注册表：folder add 扩展、folder update 的 --name 可选、item publish 的 --allow-*', async () => {
+    const tt = (await import('../src/platforms/tiktok/index.js')).default
+    const web = tt.endpoints.web as Exclude<typeof tt.endpoints.web, 'planned'>
+    const add = web.commands.get('folder add')!
+    expect(add).toMatchObject({ extension: true, status: 'implemented', auth: 'required', output: '{id}' })
+    expect(add.args.map((a) => a.name)).toEqual(['folder', 'item'])
+    const update = web.commands.get('folder update')!
+    expect(update.check!({ folder: FOLDER }, {})).toBe('需要 --name 或 --visibility')
+    expect(update.check!({ folder: FOLDER }, { visibility: 'public' })).toBeUndefined()
+    expect(Object.keys(web.commands.get('item publish')!.options)).toEqual(expect.arrayContaining(['allowComment', 'allowDuet', 'allowStitch', 'allowContentReuse', 'allowAiRemix']))
+    expect(web.commands.get('live media')!.status).toBe('implemented')
   })
 })

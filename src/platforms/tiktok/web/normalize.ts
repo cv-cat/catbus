@@ -200,6 +200,53 @@ export function webcastRoom(r: any): Live {
   )
 }
 
+/** 画质的顺序：原画在前，纯音频（ao）在最后。 */
+const QUALITIES = ['origin', 'uhd', 'hd', 'sd', 'ld', 'md', 'ao']
+const PROTOCOLS = ['flv', 'hls', 'cmaf', 'dash', 'lls']
+
+function parseJson(v: unknown): any {
+  if (typeof v !== 'string') return v ?? null
+  try {
+    return JSON.parse(v)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 拉流地址（上游没有解析）。两种来源：
+ * - `pull_data.stream_data`：JSON 串，`data.<画质>.main.{flv,hls,...}`，`sdk_params`（JSON 串）里有 resolution。
+ *   /api-live/user/room 在 `liveRoom.streamData`，webcast 房间对象在 `stream_url.live_core_sdk_data`；
+ * - webcast 房间对象的 `stream_url.flv_pull_url`（画质 → 地址）、`hls_pull_url_map`、`hls_pull_url`、`rtmp_pull_url`。
+ */
+export function liveStreams(source: any): Media[] {
+  const out: Media[] = []
+  const seen = new Set<string>()
+  const push = (id: string, url: unknown, raw: unknown, size?: string) => {
+    const u = n.url(url)
+    if (!u || seen.has(u)) return
+    seen.add(u)
+    const [w, h] = /^(\d+)x(\d+)$/.exec(String(size ?? ''))?.slice(1) ?? []
+    out.push(n.media({ id, type: id.startsWith('ao-') ? 'audio' : 'video', url: u, width: n.count(w), height: n.count(h) }, raw))
+  }
+  // 可能是 {pull_data}、{live_core_sdk_data}，也可能已经是 stream_data 本身（JSON 串或解析后的对象）
+  const pull = source?.pull_data ?? source?.live_core_sdk_data?.pull_data
+  const data = parseJson(pull?.stream_data ?? (typeof source === 'string' || source?.data ? source : null))?.data
+  if (data && typeof data === 'object') {
+    const keys = Object.keys(data).sort((a, b) => (QUALITIES.indexOf(a) + 1 || 99) - (QUALITIES.indexOf(b) + 1 || 99))
+    for (const q of keys) {
+      const main = data[q]?.main ?? {}
+      const size = parseJson(main.sdk_params)?.resolution
+      for (const p of PROTOCOLS) push(`${q}-${p}`, main[p], data[q], size)
+    }
+  }
+  for (const [q, url] of Object.entries(source?.flv_pull_url ?? {})) push(`${q}-flv`, url, source)
+  for (const [q, url] of Object.entries(source?.hls_pull_url_map ?? {})) push(`${q}-hls`, url, source)
+  push('default-hls', source?.hls_pull_url, source)
+  push('default-rtmp', source?.rtmp_pull_url, source)
+  return out
+}
+
 export function gift(g: any): Gift {
   return n.gift({ id: n.id(g.id), name: String(g.name ?? ''), price: g.diamond_count != null ? { amount: Number(g.diamond_count), currency: 'TIKTOK_DIAMOND' } : null }, g)
 }
@@ -233,18 +280,24 @@ export function categories(tabs: any[]): Category[] {
 
 const NOTICE_TYPES: Record<number, Notice['type']> = { 31: 'comment', 45: 'comment', 33: 'follow', 41: 'like', 60: 'like', 62: 'like', 43: 'mention', 44: 'mention' }
 
-export function notice(v: any): Notice {
-  const type = NOTICE_TYPES[Number(v.type)] ?? (v.follow ? 'follow' : v.digg ? 'like' : v.comment ? 'comment' : v.at ? 'mention' : 'system')
-  const body = v.follow ?? v.digg ?? v.comment ?? v.at ?? v.system ?? {}
+/**
+ * 通知：动态（group 500，按 follow / digg / comment / at 分）与系统通知（group 661，`system` 为 true）。
+ * 模板通知（template_notice）的标题在 notice.title_template.title，正文在 notice.content；动态里的转发通知也用模板。
+ */
+export function notice(v: any, system = false): Notice {
+  const template = v.template_notice?.notice
+  const type = system ? 'system' : (NOTICE_TYPES[Number(v.type)] ?? (v.follow ? 'follow' : v.digg ? 'like' : v.comment ? 'comment' : v.at ? 'mention' : 'system'))
+  const body = v.follow ?? v.digg ?? v.comment ?? v.at ?? v.system ?? template ?? {}
   const u = body.from_user?.[0] ?? body.user ?? body.from_user ?? v.from_user ?? {}
   const aweme = body.aweme ?? body.comment?.aweme ?? null
+  const text = template ? [template.title_template?.title, template.content].filter(Boolean).join('\n') : (body.content ?? body.comment?.text ?? body.title ?? v.content)
   return n.notice(
     {
       id: n.id(v.nid_str ?? v.nid),
       type,
       user: ref(u.uid ?? u.id, u.nickname, u.unique_id ?? u.uniqueId),
       target: aweme?.aweme_id ? { id: n.id(aweme.aweme_id), url: itemUrl(aweme.author?.unique_id, aweme.aweme_id) } : null,
-      text: n.str(body.content ?? body.comment?.text ?? body.title ?? v.content),
+      text: n.str(text),
       created_at: n.time(v.create_time),
     },
     v,

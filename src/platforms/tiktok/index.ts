@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { filter, PRODUCT } from '../../core/options.js'
 import { type CommandDecl, definePlatform, type Handler, type Upstream } from '../../core/registry.js'
 
@@ -10,6 +11,19 @@ const h =
     import('./web/commands.js').then((m) => m[name] as Handler)
 
 const impl = (upstream: Upstream, name: keyof Commands, extra: Partial<CommandDecl> = {}): CommandDecl => ({ upstream, handler: h(name), ...extra })
+
+/** 发布的互动开关（AGENTS 4.7）。不给时用上游的默认值，视频与图文不同。 */
+const toggle = (what: string, dflt: string) => z.enum(['on', 'off']).optional().describe(`允许${what}，默认 ${dflt}`)
+const PUBLISH_TOGGLES = {
+  allowComment: toggle('评论', 'on'),
+  allowDuet: toggle('合拍（Duet）', '视频 off、图文 on'),
+  allowStitch: toggle('拼接（Stitch）', '视频 off、图文 on'),
+  allowContentReuse: toggle('他人复用内容', 'on'),
+  allowAiRemix: toggle('AI 改编', 'on'),
+}
+
+/** 收藏夹的公开 / 私密：沿用标准选项 --visibility 的名字与取值，friends 由 handler 报 UNSUPPORTED。 */
+const FOLDER_VISIBILITY = z.enum(['public', 'private', 'friends']).optional().describe('公开或私密（public / private）；新建默认 private，修改时不给则不变')
 
 export default definePlatform({
   id: 'tiktok',
@@ -46,7 +60,7 @@ export default definePlatform({
         'item uncollect': impl('full', 'itemUncollect'),
         'item repost': 'none',
         'item unrepost': 'none',
-        'item publish': impl('full', 'itemPublish'),
+        'item publish': impl('full', 'itemPublish', { options: PUBLISH_TOGGLES }),
         'item delete': 'none',
 
         'product get': impl('full', 'productGet'),
@@ -73,7 +87,7 @@ export default definePlatform({
         'live rank': impl('full', 'liveRank'),
         'live gifts': impl('full', 'liveGifts'),
         'live products': 'none',
-        'live media': 'none',
+        'live media': impl('partial', 'liveMedia', { note: '上游没有解析拉流地址：取自 /api-live/user/room 的 liveRoom.streamData，或 room/enter 的 stream_url' }),
         'live start': 'none',
         'live stop': 'none',
 
@@ -95,10 +109,23 @@ export default definePlatform({
 
         'folder list': impl('full', 'folderList'),
         'folder items': impl('full', 'folderItems'),
-        'folder create': impl('partial', 'folderCreate'),
-        'folder update': impl('partial', 'folderUpdate'),
+        'folder create': impl('full', 'folderCreate', { options: { visibility: FOLDER_VISIBILITY } }),
+        'folder update': impl('full', 'folderUpdate', {
+          options: { name: z.string().optional().describe('新名字'), visibility: FOLDER_VISIBILITY },
+          check: (_a, o) => (o.name == null && o.visibility == null ? '需要 --name 或 --visibility' : undefined),
+        }),
         // 上游没有删除收藏夹的接口
         'folder delete': 'none',
+
+        'folder add': impl('full', 'folderAdd', {
+          summary: '把{item}加入收藏夹（只能加已收藏的{item}）',
+          args: [
+            { name: 'folder', summary: '收藏夹 ID' },
+            { name: 'item', summary: '{item}：ID 或 URL' },
+          ],
+          output: '{id}',
+          auth: 'required',
+        }),
 
         'series list': impl('full', 'seriesList'),
         // 上游只有合集列表，没有合集内容接口

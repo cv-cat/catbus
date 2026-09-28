@@ -14,7 +14,7 @@ import { frontierSign } from './jsrun.js'
 import * as im from './im.js'
 import * as norm from './normalize.js'
 import { COOKIE_DOMAIN, ORIGIN } from './profile.js'
-import { currentUser, isProductInput, parseUser, resolveItem, resolveProduct, resolveRoom, resolveSecUid, resolveUserInfo, userDetail } from './resolve.js'
+import { currentUser, enterRoom, isProductInput, isRoomId, parseUser, resolveItem, resolveProduct, resolveRoom, resolveSecUid, resolveUserInfo, userDetail } from './resolve.js'
 import * as up from './upload.js'
 import * as wire from './wire.js'
 
@@ -163,8 +163,10 @@ export async function itemSearch(ctx: Ctx) {
 export async function itemRelated(ctx: Ctx) {
   const t = await tiktok(ctx)
   const ref = await resolveItem(t, ctx.args.item!)
-  const d = await api.relatedItems(t, ref.id, { referer: ref.handle ? ref.url : undefined })
-  return itemPage(d.itemList, null, false)
+  const d = await api.relatedItems(t, ref.id, { cursor: cursorOf(ctx), referer: ref.handle ? ref.url : undefined })
+  // 网页端把缺省的 hasMore 当作 true，下一页用回包的 cursor
+  const list = (d.itemList ?? []).filter((v: any) => v?.id)
+  return itemPage(list, d.cursor, list.length > 0 && (d.hasMore === undefined || bool(d.hasMore)))
 }
 
 /** 创作者中心的作品（字段名随 Studio 版本变化，取常见的几种）。 */
@@ -248,6 +250,18 @@ export const itemUncollect = (ctx: Ctx) => collect(ctx, false)
 
 const VISIBILITY: Record<string, number> = { public: 0, private: 1, friends: 2 }
 
+/** 发布的互动开关（私有选项 --allow-*）：on → 1、off → 0，不给时交给 body 构造用上游默认值。 */
+export function publishToggles(o: Record<string, any>) {
+  const flag = (v: unknown) => (v == null ? undefined : v === 'on' ? 1 : 0)
+  return {
+    allowComment: flag(o.allowComment),
+    allowDuet: flag(o.allowDuet),
+    allowStitch: flag(o.allowStitch),
+    allowContentReuse: flag(o.allowContentReuse),
+    allowAiRemix: flag(o.allowAiRemix),
+  }
+}
+
 function captionOf(o: Record<string, any>): string {
   const tags = [...(o.tag ?? []), ...(o.topic ?? [])].map((x: string) => `#${x.replace(/^#/, '')}`)
   const mentions = (o.mention ?? []).map((x: string) => `@${x.replace(/^@/, '')}`)
@@ -285,7 +299,7 @@ export async function itemPublish(ctx: Ctx) {
     const poster = await up.uploadMediaBytes(t, cover.png, { fileType: 'image', spaceName: 'tiktok', scene: 'poster', businessTag: 'tiktok_video_cover_web', auth: await up.uploadAuth(t) })
     const coverUri = String(poster.commit?.Result?.Results?.[0]?.Uri ?? '')
     if (!coverUri) throw new CatbusError('UPSTREAM', 'CommitUploadInner 缺少 Result.Results[0].Uri')
-    const body = up.buildVideoProjectBody({ creationId: creation, videoId: uploaded.video_id, text, coverUri, playUrl, filename: video.filename, ...meta, visibilityType })
+    const body = up.buildVideoProjectBody({ creationId: creation, videoId: uploaded.video_id, text, coverUri, playUrl, filename: video.filename, ...meta, visibilityType, ...publishToggles(o) })
     const r = await up.postProject(t, body)
     return published(r, 'video', text, visibilityType)
   }
@@ -302,7 +316,7 @@ export async function itemPublish(ctx: Ctx) {
   const creation = up.photoCreationId()
   const now = rand.now()
   const rows = uploaded.map((u, i) => ({ id: `file_${now + i}_${up.randbelow(1000000)}`, uri: u.uri, width_px: u.width, height_px: u.height }))
-  const body = up.buildPhotoProjectBody({ creationId: creation, photos: rows, text, title: o.title ?? '', visibilityType })
+  const body = up.buildPhotoProjectBody({ creationId: creation, photos: rows, text, title: o.title ?? '', visibilityType, ...publishToggles(o) })
   const r = await up.postProject(t, body, referer)
   return published(r, 'image', text, visibilityType)
 }
@@ -394,11 +408,41 @@ export async function feedList(ctx: Ctx) {
 
 // ================================================================ live
 
+/**
+ * 直播间信息。只给房间号时先查是否在播（上游 check_live_rooms），已下播就不进房，直接返回 offline；
+ * 在播时进房（上游 enter_live_room）取完整的房间对象。
+ */
 export async function liveGet(ctx: Ctx) {
   const t = await tiktok(ctx)
-  const r = await resolveRoom(t, ctx.args.room!, { needHost: true })
+  const input = ctx.args.room!
+  if (isRoomId(input)) {
+    const roomId = input.trim()
+    try {
+      const d = await api.checkLiveRooms(t, roomId)
+      const row = (Array.isArray(d.data) ? d.data : []).find((x: any) => String(x?.room_id_str ?? x?.room_id) === roomId)
+      if (row && row.alive === false) return n.live({ id: roomId, status: 'offline' }, d)
+    } catch (err) {
+      // 只是省一次进房；查不到就直接进房
+      if (err instanceof CatbusError && (err.code === 'AUTH_REQUIRED' || err.code === 'AUTH_EXPIRED')) throw err
+      ctx.log.debug(`check_alive 失败，直接进房：${(err as Error).message}`)
+    }
+    return norm.webcastRoom((await enterRoom(t, roomId)).webcast)
+  }
+  const r = await resolveRoom(t, input, { needHost: true })
   return norm.liveRoom(r.data)
 }
+
+/** 拉流地址：/api-live/user/room 的 liveRoom.streamData，只给房间号时用进房结果的 stream_url。 */
+export async function liveMedia(ctx: Ctx): Promise<Media[]> {
+  const t = await tiktok(ctx)
+  const r = await resolveRoom(t, ctx.args.room!, { needHost: true })
+  const media = r.webcast ? norm.liveStreams(r.webcast.stream_url) : norm.liveStreams(r.data?.liveRoom?.streamData)
+  if (!media.length) throw new CatbusError('UPSTREAM', '没有拉流地址（主播可能没有在直播）', { detail: { room: r.roomId } })
+  return media
+}
+
+/** 发弹幕、点赞的页面：主播的直播页，没有主播用户名时退回直播广场。 */
+const livePage = (r: { handle: string | null }) => norm.liveUrl(r.handle) ?? `${ORIGIN}/live`
 
 export async function liveList(ctx: Ctx) {
   const t = await tiktok(ctx)
@@ -431,7 +475,7 @@ export async function liveSend(ctx: Ctx) {
   const t = await tiktok(ctx)
   t.requireLogin()
   const r = await resolveRoom(t, ctx.args.room!, { needHost: true })
-  await api.postLiveChat(t, r.roomId, ctx.args.text!, { referer: norm.liveUrl(r.handle)! })
+  await api.postLiveChat(t, r.roomId, ctx.args.text!, { referer: livePage(r) })
   return { id: r.roomId }
 }
 
@@ -439,7 +483,7 @@ export async function liveLike(ctx: Ctx) {
   const t = await tiktok(ctx)
   t.requireLogin()
   const r = await resolveRoom(t, ctx.args.room!, { needHost: true })
-  await api.postLiveLike(t, r.hostId!, r.roomId, { referer: norm.liveUrl(r.handle)! })
+  await api.postLiveLike(t, r.hostId!, r.roomId, { referer: livePage(r) })
   return { id: r.roomId }
 }
 
@@ -527,31 +571,74 @@ export async function keywordSuggest(ctx: Ctx) {
 
 // ================================================================ notice
 
+/** 通知分组：500 是动态（赞、评论、@、关注），661 是系统通知（网页收件箱的 System notifications）。 */
+const NOTICE_ACTIVITY = 500
+const NOTICE_SYSTEM = 661
+const DONE = '-'
+
+function noticeGroup(d: any, group: number): any {
+  const lists: any[] = d.notice_lists ?? d.notice_list_v2 ?? []
+  return lists.find((g) => Number(g?.group) === group) ?? lists[0] ?? {}
+}
+
+/**
+ * 动态（notice/multi，group 500）和系统通知（inbox/notice_list，group 661）合在一起，按时间倒序。
+ * 游标是两组各自的 max_time，写成 `<动态>:<系统>`，翻完的一组记作 `-`，不再请求。
+ */
 export async function noticeList(ctx: Ctx) {
   const t = await tiktok(ctx)
   t.requireLogin()
-  const maxTime = cursorOf(ctx)
-  const d = await api.noticeMulti(t, [{ count: 20, is_mark_read: 0, group: 500, max_time: Number(maxTime) || 0, min_time: 0 }])
-  const group = (d.notice_lists ?? d.notice_list_v2 ?? [])[0] ?? {}
-  const list: any[] = group.notice_list ?? []
-  return paged(list.map(norm.notice), group.max_time, bool(group.has_more))
+  const [activity = '0', system = DONE] = (ctx.cursor ?? '0:0').split(':')
+  const raw: { v: any; system: boolean }[] = []
+  const next = { activity: DONE, system: DONE }
+  const group = (n: number, maxTime: string) => [{ count: 20, is_mark_read: 0, group: n, max_time: Number(maxTime) || 0, min_time: 0 }]
+  if (activity !== DONE) {
+    const g = noticeGroup(await api.noticeMulti(t, group(NOTICE_ACTIVITY, activity)), NOTICE_ACTIVITY)
+    raw.push(...(g.notice_list ?? []).map((v: any) => ({ v, system: false })))
+    if (bool(g.has_more) && g.max_time != null) next.activity = String(g.max_time)
+  }
+  if (system !== DONE) {
+    try {
+      const g = noticeGroup(await api.inboxNoticeList(t, group(NOTICE_SYSTEM, system)), NOTICE_SYSTEM)
+      raw.push(...(g.notice_list ?? []).map((v: any) => ({ v, system: true })))
+      if (bool(g.has_more) && g.max_time != null) next.system = String(g.max_time)
+    } catch (err) {
+      // 系统通知取不到时不影响动态通知
+      if (err instanceof CatbusError && (err.code === 'AUTH_REQUIRED' || err.code === 'AUTH_EXPIRED')) throw err
+      ctx.log.warn(`[catbus] TikTok 系统通知获取失败，本次只返回动态通知：${(err as Error).message}`)
+    }
+  }
+  raw.sort((a, b) => (Number(b.v?.create_time) || 0) - (Number(a.v?.create_time) || 0))
+  const more = next.activity !== DONE || next.system !== DONE
+  return paged(raw.map((x) => norm.notice(x.v, x.system)), more ? `${next.activity}:${next.system}` : null, more)
 }
+
+/** notice_count 的分组（网页收件箱的枚举）：661 系统通知，2 评论、3 / 505 赞、6 @、7 关注（500 是动态的合计）。 */
+const COUNT_GROUPS: Record<number, 'system' | 'comment' | 'like' | 'mention' | 'follow'> = { 661: 'system', 2: 'comment', 3: 'like', 505: 'like', 6: 'mention', 7: 'follow' }
 
 export async function noticeCount(ctx: Ctx) {
   const t = await tiktok(ctx)
   t.requireLogin()
   const d = await api.noticeCount(t)
   const groups: any[] = d.notice_count ?? []
-  return n.noticeCount({ total: groups.reduce((s, g) => s + (Number(g.count) || 0), 0) }, d)
+  const parts: Partial<Record<'system' | 'comment' | 'like' | 'mention' | 'follow', number>> = {}
+  for (const g of groups) {
+    const key = COUNT_GROUPS[Number(g.group)]
+    if (key) parts[key] = (parts[key] ?? 0) + (Number(g.count) || 0)
+  }
+  return n.noticeCount({ total: groups.reduce((s, g) => s + (Number(g.count) || 0), 0), ...parts }, d)
 }
 
 // ================================================================ msg
 
-async function initWire(t: TikTok) {
-  const w = wire.decodeWire(await im.pullInit(t))
+function cacheConversations(t: TikTok, w: wire.Wire) {
   const cache = im.convCache(t)
   for (const c of wire.pulledConversations(w)) cache[c.conversation_id] = { short_id: c.conversation_short_id, type: c.conversation_type }
   return w
+}
+
+async function initWire(t: TikTok) {
+  return cacheConversations(t, wire.decodeWire(await im.pullInit(t)))
 }
 
 /** 会话的对方：`0:1:<uid>:<uid>` 里不是自己的那个。 */
@@ -560,16 +647,19 @@ function peerOf(t: TikTok, conversationId: string): string | null {
   return parts.find((p) => p !== t.uid) ?? parts[0] ?? null
 }
 
+/** 会话列表：私信页的 get_by_user_init，下一页用回包的 next_cursor。 */
 export async function msgList(ctx: Ctx) {
   const t = await tiktok(ctx)
   t.requireLogin()
-  const w = await initWire(t)
+  const raw = await im.pullInit(t, cursorOf(ctx))
+  const w = cacheConversations(t, wire.decodeWire(raw))
   const messages = wire.pulledMessages(w)
-  const list = Object.keys(im.convCache(t)).map((id) => {
+  const list = wire.pulledConversations(w).map(({ conversation_id: id }) => {
     const last = messages.filter((m) => m.conversation_id === id).sort((a, b) => Number(b.create_time) - Number(a.create_time))[0]
     return norm.conversation(id, peerOf(t, id), last, { conversation_id: id, ...im.convCache(t)[id] })
   })
-  return paged(list, null, false)
+  const page = wire.imPullPage(raw, 203)
+  return paged(list, page.cursor, page.hasMore)
 }
 
 async function conversationInfo(t: TikTok, id: string): Promise<im.ConvInfo> {
@@ -587,8 +677,9 @@ export async function msgHistory(ctx: Ctx) {
   t.requireLogin()
   const id = ctx.args.conversation!
   const info = await conversationInfo(t, id)
-  const w = wire.decodeWire(await im.pullConversation(t, { conversationId: id, shortId: info.short_id, type: info.type, anchorIndex: cursorOf(ctx) }))
-  return paged(wire.pulledMessages(w).map(norm.pulledMessage), null, false)
+  const raw = await im.pullConversation(t, { conversationId: id, shortId: info.short_id, type: info.type, anchorIndex: cursorOf(ctx) })
+  const page = wire.imPullPage(raw, 301)
+  return paged(wire.pulledMessages(wire.decodeWire(raw)).map(norm.pulledMessage), page.cursor, page.hasMore)
 }
 
 export async function msgSend(ctx: Ctx): Promise<Message> {
@@ -695,22 +786,65 @@ export async function folderItems(ctx: Ctx) {
   return itemPage(d.itemList, d.cursor, d.hasMore)
 }
 
+/** 收藏夹的 --visibility → collectionStatus；没有「仅好友」。 */
+function folderStatus(visibility: unknown): string | undefined {
+  if (visibility == null) return undefined
+  if (visibility === 'friends') throw new CatbusError('UNSUPPORTED', 'TikTok 收藏夹只有公开和私密，不支持 --visibility friends', { hint: '可选：public、private' })
+  return api.COLLECTION_STATUS[visibility as 'public' | 'private']
+}
+
 export async function folderCreate(ctx: Ctx) {
+  const status = folderStatus(ctx.options.visibility) ?? api.COLLECTION_STATUS.private
   const t = await tiktok(ctx)
   t.requireLogin()
   const name = ctx.args.name!
   await api.checkPlaylistName(t, name)
-  const d = await api.collectionCreate(t, name)
+  const d = await api.collectionCreate(t, name, status)
   const c = d.collection ?? d.collectionInfo ?? d
   return n.folder({ id: n.id(c.collectionId ?? c.collection_id ?? d.collectionId), name, count: 0 }, d)
 }
 
+/**
+ * 修改名字或公开状态：modify_info 两个字段都要带，只给了一个时先查收藏夹详情补上另一个的原值
+ * （上游默认 collectionStatus=1，只改名会把公开收藏夹改成私密）。
+ */
 export async function folderUpdate(ctx: Ctx) {
+  let status = folderStatus(ctx.options.visibility)
+  let name = ctx.options.name as string | undefined
   const t = await tiktok(ctx)
   t.requireLogin()
-  const name = ctx.options.name as string
-  const d = await api.collectionModifyInfo(t, ctx.args.folder!, name)
-  return n.folder({ id: ctx.args.folder!, name }, d)
+  const id = ctx.args.folder!
+  let info: any = null
+  if (name == null || status == null) {
+    const d = await api.collectionDetail(t, id)
+    info = d.collectionInfo ?? d.collection ?? {}
+    name ??= info.name != null ? String(info.name) : undefined
+    status ??= info.status != null ? String(info.status) : undefined
+    if (name == null || status == null) {
+      throw new CatbusError('UPSTREAM', '收藏夹详情里没有名字或公开状态，无法只改其中一项', { hint: `同时给出 --name 和 --visibility：catbus tiktok folder update ${id} --name <名字> --visibility private` })
+    }
+  }
+  const d = await api.collectionModifyInfo(t, id, name, status)
+  const owner = info?.userName
+  return n.folder({ id, name, count: info ? n.count(info.total) : null, url: owner ? `${ORIGIN}/@${owner}/collection/${encodeURIComponent(name)}-${id}` : null }, d)
+}
+
+/**
+ * 把视频加入收藏夹（上游 post_collection_modify_items）。TikTok 只能把已收藏的视频放进收藏夹：
+ * 视频页显示还没收藏（itemStruct.collected 为 false）时，先照浏览器的顺序收藏一次。
+ */
+export async function folderAdd(ctx: Ctx) {
+  const t = await tiktok(ctx)
+  t.requireLogin()
+  const s = await itemStruct(t, ctx.args.item!)
+  const id = String(s.id)
+  const handle = s.author?.uniqueId
+  if (!handle) throw new CatbusError('UPSTREAM', '视频页没有作者用户名，无法构造收藏夹写入的页面地址')
+  const page = norm.itemUrl(handle, id)
+  const profile = `${ORIGIN}/@${handle}`
+  if (s.collected === false) await api.itemCollect(t, id, String(s.author?.secUid ?? ''), '1', { referer: page, queryReferer: profile })
+  await api.collectionModifyItems(t, ctx.args.folder!, id, { referer: page, profileUrl: profile })
+  return { id }
 }
 
 export async function seriesList(ctx: Ctx) {

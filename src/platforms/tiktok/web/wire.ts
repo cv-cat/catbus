@@ -548,6 +548,25 @@ export function pulledMessages(wire: Wire): PulledMessage[] {
   return out
 }
 
+/**
+ * 拉取回包的翻页字段（上游不解析）。Response.body（field 6）里按命令号嵌一层：
+ * - 203 MessagesPerUserInitV2ResponseBody：messages=1、conversations=2、per_user_cursor=3、next_cursor=4、has_more=5；
+ * - 301 MessagesInConversationResponseBody：messages=1、next_cursor=2、has_more=3。
+ * 字段号取自字节 IM SDK 的 im_proto（与 static/tiktok/Tiktok_Request.json 同源），没有时当作没有下一页。
+ */
+export function imPullPage(raw: Uint8Array, cmd: 203 | 301): { cursor: string | null; hasMore: boolean } {
+  const [cursorField, moreField] = cmd === 203 ? [4, 5] : [2, 3]
+  try {
+    const body = nested(nested(fields(raw), 6), cmd)
+    const c = first(body, cursorField)
+    const more = first(body, moreField)
+    const cursor = typeof c === 'bigint' ? c.toString() : null
+    return { cursor, hasMore: typeof more === 'bigint' && more !== 0n && cursor != null }
+  } catch {
+    return { cursor: null, hasMore: false }
+  }
+}
+
 export interface PulledConversation {
   conversation_id: string
   conversation_short_id: string

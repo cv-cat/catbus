@@ -123,6 +123,10 @@
   - `get_user_posted(secUid)`、`get_user_info(user_url)`、`get_video_detail(video_url)`、`get_all_comments`、`post_comment`
   - 商城：`get_shop_product_detail`（→ `product get`）、`get_shop_product_reviews` / `get_all_shop_product_reviews`（→ 商品评价）
   - 其他：收藏、关注与粉丝列表、`post_item_digg`、`post_follow_user`、私信（`api/tiktok_chat.py`）、`creator_publish`、`creator_publish_photos`
+  - 收藏夹：`post_collection_create` / `post_collection_modify_info` 的 `collection_status` 是网页 IDL 的 `CollectionStatus`（1 私密、3 公开），上游默认 1；`post_collection_modify_items`（→ `folder add`）只能加入，`commitIds` 一次一个；`post_collection_move_items` 是在收藏夹之间移动（AGENTS 4.12 不提供）；`get_collection_candidate_item_list` 只是网页「加入收藏夹」对话框的候选列表，不单独做命令
+  - 通知：`get_notice_multi` 默认 group 500（动态：赞 / 评论 / @ / 关注），`get_inbox_notice_list` 默认 group 661（网页收件箱的系统通知 All，`template_notice` 结构），都 → `notice list`
+  - 直播：`enter_live_room`、`check_live_rooms` 用于只给房间号的 `live get` / `like` / `rank` / `send` / `media`；拉流地址上游不解析，catbus 读 `liveRoom.streamData` 或房间对象的 `stream_url`
+- **不移植**：`_prepare_creator_media` 里用 ffmpeg 读任意容器、截首帧（catbus 要求 `--cover`，只读 MP4）；`get_following_request_list`；旧版私信 WS；直播页的活动 / 游戏 / podcast 等辅助接口
 - **JS 与 proto 资产**
   - `static/Tiktok_Request_pb2.py`：只有 pb2，没有 .proto。需要从 pb2 里的序列化 descriptor 导出 schema 给 protobufjs。
   - `signing/env/`：`env_core.js`、`sign.js`

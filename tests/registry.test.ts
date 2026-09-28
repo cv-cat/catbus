@@ -57,7 +57,7 @@ describe('注册表', () => {
     expect(ext).toEqual({
       xhs: [],
       douyin: [],
-      tiktok: [],
+      tiktok: ['folder add'],
       bilibili: [
         'article publish', 'danmaku list', 'danmaku send', 'dynamic delete', 'dynamic publish', 'item coin', 'item subtitles', 'item triple',
       ],

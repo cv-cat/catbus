@@ -78,6 +78,11 @@
 - `item search --type` 取值：xhs all / video / image
 - `item search --area`：jd
 - `item related --area`：jd
+- `item publish --allow-comment`：tiktok
+- `item publish --allow-duet`：tiktok
+- `item publish --allow-stitch`：tiktok
+- `item publish --allow-content-reuse`：tiktok
+- `item publish --allow-ai-remix`：tiktok
 - `item publish --shipping`：xianyu
 - `item publish --postage`：xianyu
 - `item publish --pickup`：xianyu
@@ -149,7 +154,7 @@
 | media upload | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ |
 | folder list | ◐ | ✓ | ✓ | ◐ | ○ | ○ | — | — | — | ○ |
 | folder items | ○ | ○ | ✓ | ◐ | ○ | ○ | — | — | — | ○ |
-| folder create / update | ○ | ○ | ◐ | ○ | ○ | — | — | — | — | ○ |
+| folder create / update | ○ | ○ | ✓ | ○ | ○ | — | — | — | — | ○ |
 | folder delete | ○ | ○ | ○ | ○ | ○ | — | — | — | — | ○ |
 | series list | ○ | ○ | ✓ | ○ | ○ | — | — | — | — | — |
 | series items | ○ | ○ | ○ | ○ | ○ | — | — | — | — | — |
@@ -158,6 +163,8 @@
 | poi search | ✓ | ○ | ◐ | — | ○ | ○ | — | — | — | — |
 
 - tiktok `poi search`：在推荐地点里按关键词筛选
+- `folder create --visibility`：tiktok
+- `folder update --visibility`：tiktok
 - `history list --area`：jd
 
 ## live
@@ -174,13 +181,14 @@
 | live like / rank | ○ | ✓ | ✓ | ○ | ○ | ○ | — | ○ | — | — |
 | live gifts | ✓ | ○ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — |
 | live products | ✓ | ✓ | ○ | — | ○ | ○ | — | ○ | — | — |
-| live media | ○ | ○ | ○ | ✓ | ○ | ○ | — | ○ | — | — |
+| live media | ○ | ○ | ◐ | ✓ | ○ | ○ | — | ○ | — | — |
 | live replays | — | ○ | — | ○ | ✓ | ○ | — | ○ | — | — |
 | live start / stop | ○ | ○ | ○ | ✓ | ○ | ○ | — | ○ | — | — |
 
 - xhs `live send`：--gift 规划中
 - douyin `live send`：--gift 规划中
 - tiktok `live send`：--gift 规划中
+- tiktok `live media`：上游没有解析拉流地址：取自 /api-live/user/room 的 liveRoom.streamData，或 room/enter 的 stream_url
 - `live list --category`：xhs
 - `live start --category`：bilibili
 
@@ -190,5 +198,6 @@
 
 | 平台 | 命令 |
 |---|---|
+| tiktok | `folder add` ✓ |
 | bilibili | `item coin` ✓ · `item triple` ✓ · `item subtitles` ✓ · `danmaku list` ✓ · `danmaku send` ✓ · `dynamic publish` ✓ · `dynamic delete` ✓ · `article publish` ✓ |
 | jd | `order list` ✓ · `cart count` ✓ · `coupon list` ✓ |

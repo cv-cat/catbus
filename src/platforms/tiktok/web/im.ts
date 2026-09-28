@@ -5,7 +5,7 @@ import * as rand from '../../../core/rand.js'
 import * as api from './api.js'
 import type { TikTok } from './client.js'
 import { ORIGIN } from './profile.js'
-import { type ImEnvelope, imConversationRequest, imOuterRequest, imSendBody, imSendFrame, imUserInitRequest } from './wire.js'
+import { type ImEnvelope, type IntLike, imConversationRequest, imOuterRequest, imSendBody, imSendFrame, imUserInitRequest } from './wire.js'
 import { frontierSign } from './jsrun.js'
 
 /**
@@ -84,8 +84,8 @@ export function envelope(t: TikTok): ImEnvelope {
   return { sequenceId: nextSequence(t, 'im_sequence_id'), deviceId: t.deviceId, headers: imHeaders(t), configId: config == null ? null : Number(config) }
 }
 
-/** cmd 203：私信页初次拉取（会话与最近消息）。 */
-export async function pullInit(t: TikTok, cursor = 0): Promise<Uint8Array> {
+/** cmd 203：私信页初次拉取（会话与最近消息）。翻页时 cursor 用上一页回包的 next_cursor。 */
+export async function pullInit(t: TikTok, cursor: IntLike = 0): Promise<Uint8Array> {
   return api.postImProtobuf(t, '/v2/message/get_by_user_init', imUserInitRequest(cursor, envelope(t)))
 }
 

@@ -118,15 +118,34 @@ export interface RoomRef {
   roomId: string
   handle: string | null
   hostId: string | null
-  /** /api-live/user/room 的 data；只给了房间号时为 null。 */
+  /** /api-live/user/room 的 data（user + liveRoom）；只给了房间号时为 null。 */
   data: any
+  /** 只给了房间号且需要主播信息时，/webcast/room/enter/ 返回的房间对象（owner、stream_url 等）。 */
+  webcast?: any
 }
 
-/** 直播间：@主播、主播主页或直播间 URL（查 /api-live/user/room 得到房间号）、纯数字房间号。 */
+const ROOM_ID_RE = /^\d{10,21}$/
+
+export const isRoomId = (input: string) => ROOM_ID_RE.test(input.trim())
+
+/** 只有房间号时取主播信息：进房（上游 enter_live_room）拿房间对象里的 owner。 */
+export async function enterRoom(t: TikTok, roomId: string): Promise<RoomRef> {
+  const r = await api.enterLiveRoom(t, roomId)
+  const room = r.data ?? {}
+  const owner = room.owner ?? {}
+  const hostId = owner.id_str ?? room.owner_user_id_str ?? owner.id ?? room.owner_user_id
+  if (!hostId) throw new CatbusError('UPSTREAM', `直播间 ${roomId} 的进房结果里没有主播信息`, { detail: { status: room.status } })
+  return { roomId: String(room.id_str ?? roomId), handle: owner.display_id ?? null, hostId: String(hostId), data: null, webcast: room }
+}
+
+/**
+ * 直播间：@主播、主播主页或直播间 URL（查 /api-live/user/room 得到房间号）、纯数字房间号。
+ * 只给房间号、又需要主播信息（点赞、排行榜、发弹幕、直播间信息）时，先进房取房间对象。
+ */
 export async function resolveRoom(t: TikTok, input: string, o: { needHost?: boolean } = {}): Promise<RoomRef> {
   const s = (await expand(t, input)).trim()
-  if (/^\d{10,21}$/.test(s)) {
-    if (o.needHost) throw new CatbusError('USAGE', '这个操作需要主播信息，请传主播用户名或直播间链接', { hint: '例如 catbus tiktok live get @tiktok' })
+  if (ROOM_ID_RE.test(s)) {
+    if (o.needHost) return enterRoom(t, s)
     return { roomId: s, handle: null, hostId: null, data: null }
   }
   const handle = /tiktok\.com\/@([^/?#]+)/.exec(s)?.[1] ?? /^@?([A-Za-z0-9_.]{1,64})$/.exec(s)?.[1]

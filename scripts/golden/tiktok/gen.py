@@ -338,6 +338,21 @@ api_case('wid', lambda a, au: a.get_wid(auth=au))
 api_case('video_detail', lambda a, au: a.get_video_detail(VIDEO_URL, auth=au))
 api_case('user_info', lambda a, au: a.get_user_info('https://www.tiktok.com/@tiktok', auth=au))
 api_case('shop_product_detail', lambda a, au: a.get_shop_product_detail(PRODUCT_URL, auth=au))
+# 收藏夹：公开（collectionStatus=3）、把视频加入收藏夹
+api_case('collection_create_public', lambda a, au: a.post_collection_create('公开 收藏', collection_status='3', auth=au))
+api_case('collection_modify_info_public', lambda a, au: a.post_collection_modify_info('7394627756635573022', '新名字', collection_status='3', auth=au))
+api_case('collection_modify_items', lambda a, au: a.post_collection_modify_items(
+    '7394627756635573022', AWEME, referer=VIDEO_URL, profile_url='https://www.tiktok.com/@creator', auth=au))
+# 翻页
+api_case('related_items_page', lambda a, au: a.get_related_items(AWEME, cursor='16', auth=au, referer=VIDEO_URL))
+# 系统通知（group 661）：首页与私信页两种上下文
+api_case('inbox_notice_list', lambda a, au: a.get_inbox_notice_list(
+    group_list=[{'count': 20, 'is_mark_read': 0, 'group': 661, 'max_time': 1789990000, 'min_time': 0}], auth=au))
+api_case('inbox_notice_list_default', lambda a, au: a.get_inbox_notice_list(auth=au))
+api_case('message_notice_list', lambda a, au: a.get_message_notice_list(auth=au))
+# 只有房间号时：进房、查是否在播
+api_case('enter_live_room', lambda a, au: a.enter_live_room(ROOM, auth=au))
+api_case('check_live_rooms', lambda a, au: a.check_live_rooms([ROOM, '7300000000000000457'], auth=au))
 
 
 def shop_review_page(a, au):
@@ -511,6 +526,10 @@ def messages_of(a, raw):
 im_case('im_user_init', lambda a, au: messages_of(a, a.get_im_messages_per_user_init(cursor=0, auth=au)))
 im_case('im_conversation', lambda a, au: messages_of(a, a.get_im_messages_by_conversation(
     CONV, 7300000000000000777, 1, 0, 1, 50, auth=au)))
+# 翻页：init 的 cursor、会话的 anchor_index 换成上一页的 next_cursor
+im_case('im_user_init_page', lambda a, au: messages_of(a, a.get_im_messages_per_user_init(cursor=1789990000123, auth=au)))
+im_case('im_conversation_page', lambda a, au: messages_of(a, a.get_im_messages_by_conversation(
+    CONV, 7300000000000000777, 1, 1789990000000456, 1, 50, auth=au)))
 im_case('im_user_combo', lambda a, au: messages_of(a, a.get_im_messages_per_user_combo(
     [{'inbox_type': 0, 'cursor': 1789990000000, 'limit': 50, 'scene': 1}, {'inbox_type': 1, 'cursor': 0, 'limit': 20, 'scene': 1, 'cursor_type': 1}],
     status_adapter_map=1, last_pull_time=1789990000, auth=au)))
@@ -618,6 +637,22 @@ def project_bodies(a, au):
 
 
 upload_case('project_bodies', project_bodies)
+
+
+def project_bodies_toggles(a, au):
+    """发布的互动开关（allow_comment / duet / stitch / content_reuse / ai_remix）写进 body 的位置。"""
+    return {
+        'video': a.build_creator_project_body(creation_id='ROO_abcdefghijk012345', video_id='v0vid001', text='文案', cover_uri='tos-sg/poster001',
+                                              play_url='https://v.example.com/play.mp4', filename='a.mp4', width=720, height=1280,
+                                              duration_ms=14000, fps=30, visibility_type=0, allow_comment=0, allow_duet=1,
+                                              allow_stitch=1, allow_content_reuse=0, allow_ai_remix=0),
+        'photo': a.build_creator_photo_project_body(creation_id='abcdefghijklmnopqrstu', photos=[
+            {'id': 'file_1790000000123_42', 'uri': 'tos-sg/img001', 'width_px': 1080, 'height_px': 1920}], text='图文', title='标题',
+            visibility_type=0, allow_comment=0, allow_duet=0, allow_stitch=0, allow_content_reuse=0, allow_ai_remix=1),
+    }
+
+
+upload_case('project_bodies_toggles', project_bodies_toggles)
 upload_case('post_project', lambda a, au: a.post_project('{"post_common_info":{"creation_id":"ROO_x"}}', ticket_guard={}, auth=au))
 
 
@@ -644,3 +679,120 @@ def flow_product_reviews():
 
 
 g.case(out, 'flow_product_reviews', flow_product_reviews, input={'product': PRODUCT_URL, 'cursor': '2'}, respond=respond_api)
+
+
+# ---------------------------------------------------------------- 收藏夹：加视频、改公开状态
+FOLDER = '7394627756635573022'
+
+
+def respond_folder(req):
+    url = req['url']
+    if '/video/' in url and url.startswith('https://www.tiktok.com/@'):
+        item = {**ITEM_STRUCT, 'collected': False}
+        return {'status': 200, 'headers': {'content-type': 'text/html'},
+                'body': html_with({'webapp.video-detail': {'statusCode': 0, 'itemInfo': {'itemStruct': item}}})}
+    if '/api/collection/detail/' in url:
+        return {'statusCode': 0, 'collectionInfo': {'collectionId': FOLDER, 'name': '旧名字', 'status': 3, 'total': '5', 'userName': 'me_handle'}}
+    return respond_api(req)
+
+
+def flow_folder_add():
+    """catbus tiktok folder add <收藏夹> <视频 URL> = 视频页 → 还没收藏时先收藏 → collection/modify_items。"""
+    auth = TiktokAuth.from_cookie(COOKIE, **RUNTIME)
+    api = TiktokWebAPI(auth)
+    item = api.get_video_detail(VIDEO_URL, auth=auth)
+    handle = item['author']['uniqueId']
+    page = f'https://www.tiktok.com/@{handle}/video/{item["id"]}'
+    profile = f'https://www.tiktok.com/@{handle}'
+    api.post_item_collect(item['id'], item['author']['secUid'], auth=auth, referer=page, query_referer=profile)
+    return api.post_collection_modify_items(FOLDER, item['id'], referer=page, profile_url=profile, auth=auth)
+
+
+g.case(out, 'flow_folder_add', flow_folder_add, input={'folder': FOLDER, 'item': VIDEO_URL}, respond=respond_folder)
+
+
+def flow_folder_update():
+    """catbus tiktok folder update <收藏夹> --name 新名字 = 收藏夹详情取原来的公开状态 → modify_info。"""
+    auth = TiktokAuth.from_cookie(COOKIE, **RUNTIME)
+    api = TiktokWebAPI(auth)
+    info = api.get_collection_detail(FOLDER, auth=auth)['collectionInfo']
+    return api.post_collection_modify_info(FOLDER, '新名字', collection_status=str(info['status']), auth=auth)
+
+
+g.case(out, 'flow_folder_update', flow_folder_update, input={'folder': FOLDER, 'name': '新名字'}, respond=respond_folder)
+
+# ---------------------------------------------------------------- 只有房间号的直播间
+ENTER_ROOM = {
+    'id_str': ROOM, 'status': 2, 'title': '直播中', 'user_count': 12,
+    'owner': {'id_str': HOST, 'display_id': 'host.name', 'nickname': '主播'},
+    'cover': {'url_list': ['https://p16/cover.jpg']},
+    'stream_url': {
+        'flv_pull_url': {'FULL_HD1': 'https://pull-flv.example.com/stage/stream-1_or4.flv', 'HD1': 'https://pull-flv.example.com/stage/stream-1_hd.flv'},
+        'hls_pull_url': 'https://pull-hls.example.com/stage/stream-1/index.m3u8',
+        'rtmp_pull_url': 'rtmp://pull-rtmp.example.com/stage/stream-1',
+    },
+}
+
+
+def respond_room(req):
+    url = req['url']
+    if '/webcast/room/enter/' in url:
+        return {'status_code': 0, 'data': ENTER_ROOM, 'extra': {}}
+    if '/webcast/room/check_alive/' in url:
+        return {'status_code': 0, 'data': [{'alive': True, 'room_id': int(ROOM), 'room_id_str': ROOM}], 'extra': {}}
+    if '/webcast/room/like/' in url:
+        return {'status': 200, 'headers': {}, 'body': ''}
+    return respond_api(req)
+
+
+def flow_live_get_room():
+    """catbus tiktok live get <房间号> = check_alive → 在播时进房取房间对象。"""
+    auth = TiktokAuth.from_cookie(COOKIE, **RUNTIME)
+    api = TiktokWebAPI(auth)
+    api.check_live_rooms(ROOM, auth=auth)
+    return api.enter_live_room(ROOM, auth=auth)['data']
+
+
+g.case(out, 'flow_live_get_room', flow_live_get_room, input={'room': ROOM}, respond=respond_room)
+
+
+def flow_live_like_room():
+    """catbus tiktok live like <房间号> = 进房取主播 → room/like（referer 是主播的直播页）。"""
+    auth = TiktokAuth.from_cookie(COOKIE, **RUNTIME)
+    api = TiktokWebAPI(auth)
+    owner = api.enter_live_room(ROOM, auth=auth)['data']['owner']
+    return api.post_live_like(owner['id_str'], ROOM, auth=auth, referer=f'https://www.tiktok.com/@{owner["display_id"]}/live')
+
+
+g.case(out, 'flow_live_like_room', flow_live_like_room, input={'room': ROOM}, respond=respond_room)
+
+# ---------------------------------------------------------------- 通知：动态（500）+ 系统通知（661）
+DIGG_NOTICE = {'nid_str': '7400000000000000101', 'type': 41, 'create_time': 1789985000,
+               'digg': {'from_user': [{'uid': '42', 'nickname': '观众', 'unique_id': 'viewer'}],
+                        'aweme': {'aweme_id': AWEME, 'author': {'unique_id': 'creator'}}}}
+SYSTEM_NOTICE = {'nid_str': '7400000000000000201', 'type': 212, 'create_time': 1789988000, 'has_read': False,
+                 'template_notice': {'schema_url': 'https://www.tiktok.com/inbox', 'notice': {
+                     'title_template': {'title': '账号更新'}, 'content': '你的账号已完成验证'}}}
+
+
+def respond_notice(req):
+    url = req['url']
+    if '/api/notice/multi/' in url:
+        return {'status_code': 0, 'notice_lists': [{'group': 500, 'has_more': True, 'max_time': 1789980000, 'min_time': 1789990000,
+                                                    'notice_list': [DIGG_NOTICE]}]}
+    if '/api/inbox/notice_list/' in url:
+        return {'status_code': 0, 'notice_lists': [{'group': 661, 'has_more': False, 'max_time': 1789970000, 'min_time': 1789988000,
+                                                    'notice_list': [SYSTEM_NOTICE]}]}
+    return respond_api(req)
+
+
+def flow_notice_list():
+    """catbus tiktok notice list = notice/multi（group 500）+ inbox/notice_list（group 661）。"""
+    auth = TiktokAuth.from_cookie(COOKIE, **RUNTIME)
+    api = TiktokWebAPI(auth)
+    activity = api.get_notice_multi(group_list=[{'count': 20, 'is_mark_read': 0, 'group': 500, 'max_time': 0, 'min_time': 0}], auth=auth)
+    system = api.get_inbox_notice_list(group_list=[{'count': 20, 'is_mark_read': 0, 'group': 661, 'max_time': 0, 'min_time': 0}], auth=auth)
+    return {'activity': activity, 'system': system}
+
+
+g.case(out, 'flow_notice_list', flow_notice_list, input={}, respond=respond_notice)

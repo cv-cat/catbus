@@ -370,6 +370,28 @@ export interface NoticeGroup {
   min_time: number | string
 }
 
+/**
+ * 收件箱另一组通知（上游 get_inbox_notice_list）：默认 group 661，即网页收件箱的「系统通知」（All=661，下分 TikTok、
+ * 账号更新、LIVE、创作者变现等来源）。私信页的变体（上游 get_message_notice_list）只是 referer / from_page / history_len 不同。
+ */
+export function inboxNoticeList(t: TikTok, groupList?: NoticeGroup[], o: { referer?: string; fromPage?: string; historyLen?: string } = {}) {
+  const referer = o.referer ?? `${ORIGIN}/`
+  const groups = groupList ?? [{ count: 1, is_mark_read: 0, group: 661, max_time: 0, min_time: 0 }]
+  const p = currentParams(t, {
+    referer,
+    queryReferer: '',
+    rootReferer: '',
+    fromPage: o.fromPage ?? 'fyp',
+    historyLen: o.historyLen ?? '2',
+    slots: { after_from_page: [['group_list', compactJson(groups)]] },
+  })
+  return t.requestJson({ method: 'GET', path: '/api/inbox/notice_list/', params: p, referer })
+}
+
+/** 私信页上下文的收件箱通知（上游 get_message_notice_list）。 */
+export const MESSAGES_PAGE = `${ORIGIN}/messages?lang=zh-Hans`
+export const messageNoticeList = (t: TikTok, groupList?: NoticeGroup[]) => inboxNoticeList(t, groupList, { referer: MESSAGES_PAGE, fromPage: 'message', historyLen: '4' })
+
 export function noticeMulti(t: TikTok, groupList?: NoticeGroup[], referer?: string) {
   const ref = referer ?? DEFAULT_REF
   const groups = groupList ?? [{ count: 20, is_mark_read: 0, group: 500, max_time: 0, min_time: 0 }]
@@ -524,6 +546,70 @@ export function collectionModifyInfo(t: TikTok, collectionId: string, name: stri
     },
   })
   return t.requestJson({ method: 'POST', path: '/api/collection/modify_info/', params: p, referer: ref, origin: ORIGIN, body: '', form: true, extraHeaders: headers, headerOrder: PROFILE_LIST_ORDER })
+}
+
+/** 收藏夹的 collectionStatus：网页 IDL 的 CollectionStatus 枚举，1 为私密（上游默认值），3 为公开。 */
+export const COLLECTION_STATUS = { private: '1', public: '3' } as const
+
+/**
+ * 把视频加入收藏夹（上游 post_collection_modify_items）：业务字段全在签名 query 里，form body 为空。
+ * commitIds 只接受一个 ID（上游只有单个视频的浏览器样本，不猜多个 ID 的分隔符）。
+ * referer 是触发请求的视频页，profileUrl 是 query 里 referer / root_referer 用的主页 URL。
+ */
+export function collectionModifyItems(t: TikTok, collectionId: string, commitIds: string, o: { referer: string; profileUrl: string }) {
+  for (const [name, value] of [
+    ['collectionId', collectionId],
+    ['commitIds', commitIds],
+  ] as const) {
+    if (!value || value !== value.trim()) throw new CatbusError('USAGE', `收藏夹写入需要非空的 ${name}`)
+  }
+  for (const [name, value] of [
+    ['referer', o.referer],
+    ['profile_url', o.profileUrl],
+  ] as const) {
+    const u = new URL(value)
+    if (u.protocol !== 'https:' || u.host !== 'www.tiktok.com') throw new CatbusError('ERROR', `collection/modify_items 的 ${name} 必须是完整的 https://www.tiktok.com 页面 URL`)
+  }
+  if (!new URL(o.referer).pathname.includes('/video/')) throw new CatbusError('ERROR', 'collection/modify_items 的 referer 必须是视频详情页')
+  if (!new URL(o.profileUrl).pathname.startsWith('/@')) throw new CatbusError('ERROR', 'collection/modify_items 的 profile_url 必须是主页 URL')
+  const headers = collectionWriteHeaders(t)
+  const p = new Params([
+    ['WebIdLastTime', t.webIdLastTime],
+    ['aid', '1988'],
+    ['app_language', 'zh-Hans'],
+    ['app_name', 'tiktok_web'],
+    ['browser_language', 'zh-CN'],
+    ['browser_name', 'Mozilla'],
+    ['browser_online', 'true'],
+    ['browser_platform', 'Win32'],
+    ['browser_version', bversion(t)],
+    ['channel', 'tiktok_web'],
+    ['collectionId', collectionId],
+    ['commitIds', commitIds],
+    ['cookie_enabled', 'true'],
+    ['data_collection_enabled', 'true'],
+    ['device_id', t.deviceId],
+    ['device_platform', 'web_pc'],
+    ['focus_state', 'true'],
+    ['from_page', 'video'],
+    ['history_len', '3'],
+    ['is_fullscreen', 'false'],
+    ['is_page_visible', 'true'],
+    ['language', 'zh-Hans'],
+    ['odinId', t.odinId],
+    ['os', 'windows'],
+    ['priority_region', t.priorityRegion],
+    ['referer', o.profileUrl],
+    ['region', t.region],
+    ['root_referer', o.profileUrl],
+    ['screen_height', '1440'],
+    ['screen_width', '2560'],
+    ['tz_name', 'Asia/Shanghai'],
+    ['user_is_login', t.loggedIn ? 'true' : 'false'],
+    ['verifyFp', t.verifyFp],
+    ['webcast_language', 'zh-Hans'],
+  ])
+  return t.requestJson({ method: 'POST', path: '/api/collection/modify_items/', params: p, referer: o.referer, origin: ORIGIN, body: '', form: true, extraHeaders: headers, headerOrder: PROFILE_LIST_ORDER })
 }
 
 /** 收藏夹详情 / 内容的 query（上游 _collection_folder_params）。 */
@@ -857,6 +943,44 @@ export function liveUserRoom(t: TikTok, uniqueId: string, referer?: string) {
     },
   })
   return t.requestJson({ method: 'GET', path: '/api-live/user/room', params: p, referer: ref })
+}
+
+/**
+ * 进入直播间（上游 enter_live_room）：只有房间号时用它取房间对象（owner、stream_url 等，与 /webcast/feed/ 的房间同结构）。
+ * body 是浏览器原样的 form 串。
+ */
+export function enterLiveRoom(t: TikTok, roomId: string, o: { enterSource?: string; referer?: string } = {}) {
+  const referer = o.referer ?? LIVE
+  const p = commonParams(t, {
+    referer,
+    queryReferer: '',
+    rootReferer: '',
+    historyLen: '4',
+    includeFromPage: true,
+    fromPage: '',
+    includeUserIsLogin: true,
+    includeLanguage: false,
+    afterDevicePlatform: [['device_type', 'web_h265']],
+  })
+  const body = `enter_source=${o.enterSource ?? 'recommend-suggested_others_photo'}&room_id=${roomId}`
+  return t.requestJson({ method: 'POST', path: '/webcast/room/enter/', params: p, referer, body, form: true })
+}
+
+/** 直播间是否在播（上游 check_live_rooms）：多个房间号用逗号连接。 */
+export function checkLiveRooms(t: TikTok, roomIds: string | string[], referer = LIVE) {
+  const ids = Array.isArray(roomIds) ? roomIds.join(',') : roomIds
+  const p = commonParams(t, {
+    referer,
+    queryReferer: '',
+    rootReferer: '',
+    historyLen: '2',
+    includeFromPage: true,
+    fromPage: '',
+    includeUserIsLogin: true,
+    includeLanguage: false,
+    afterRegion: [['room_ids', ids]],
+  })
+  return t.requestJson({ method: 'GET', path: '/webcast/room/check_alive/', params: p, referer })
 }
 
 export function webcastDrawerTabs(t: TikTok, referer = LIVE, scene = '1') {

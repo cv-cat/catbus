@@ -1,0 +1,287 @@
+{
+  "input": {
+    "room": "7300000000000000456"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://webcast.tiktok.com/webcast/room/check_alive/?WebIdLastTime=1790000000&aid=1988&app_language=zh-Hans&app_name=tiktok_web&browser_language=zh-CN&browser_name=Mozilla&browser_online=true&browser_platform=Win32&browser_version=5.0%20%28Windows%20NT%2010.0%3B%20Win64%3B%20x64%29%20AppleWebKit%2F537.36%20%28KHTML%2C%20like%20Gecko%29%20Chrome%2F153.0.0.0%20Safari%2F537.36&channel=tiktok_web&cookie_enabled=true&data_collection_enabled=true&device_id=7000000000000000001&device_platform=web_pc&focus_state=true&from_page=&history_len=2&is_fullscreen=false&is_page_visible=true&odinId=7000000000000000001&os=windows&priority_region=SG&referer=&region=SG&room_ids=7300000000000000456&root_referer=&screen_height=1440&screen_width=2560&tz_name=Asia%2FShanghai&user_is_login=true&verifyFp=verify_fake0001_AbCdEfGh_IjKl_4MnO_8PqR_StUvWxYz0123&webcast_language=zh-Hans&X-Dynosaur=MJeY9XQf4q7tHndLCa3U1F0jXJ8/7Ao1gL-kphqa4Go916HVezyCE1TBkGPUrReOZJnr9AAF5mrvgdMXlGlQfGfkiXS4iyOGmQahddAOVY2IyAgzPoCvK/lCJdsCWXiGA-h1idf/zyDTl7BqP5imwHQwrApFDpHhI26UwDd2iOiHR3ErHoVsQLLV3nADXLe2g8VGNfYycCU6iFwXIj3CKoHOHDi5zBIAqJoUDxWmA57-ss0HnU57IFJleWJnwlCNZO/HxIHSNJkjnnxsSSnE70CKNfUKVFT0Nhh-51tLyBr65HOjzEhO-9cbvZnCbafdhI8baDzvhjWrkxk0B11JyxMUPHTb/KgjBapzP3XvsIYoqJbzZRpO3Q-T9KOoSLByZ19D-TOxolGxjyqWhgBVzYCYu2mW8iENQelF80NItM07xXu6KH6y4Jl9kAD320PnIXmG5ryp6BYjd3I=&msToken=FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV==&X-Bogus=1&X-Gnarly=MF9LMmscXgKLLPIZlxuM7X2z6EMCWXjvC6ikwpVDDvn32Tf391ShAs5dEUBD7kje7HGvChgg3q5xia6BsC2bu8cj/0J01E7w9Ebp4U2yVFQTuoh6FWZaHQt4bk2VYIuy/TvKm/tf7gM9O7FE1arh4RN/GKuTN2/D20yrsuA/ugblcm396G15WHc2PS57K76krD5c8xkHdzJkQGJ6T0iEfnE7nuDy6tUsv2-wjGLNPbVpEjEZBme9cEpfAwL/n6BjhD6yQD4umSWSnk0Gjr01hn8ocWqhuXxF/IMFHdsVhxts6c0sH/Sd--jjJfaxKxwZKIl94SYRT1aa",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://www.tiktok.com/live"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://www.tiktok.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "tt_csrf_token",
+          "fake-csrf-token-0001"
+        ],
+        [
+          "tt_chain_token",
+          "fakechain"
+        ],
+        [
+          "s_v_web_id",
+          "verify_fake0001_AbCdEfGh_IjKl_4MnO_8PqR_StUvWxYz0123"
+        ],
+        [
+          "multi_sids",
+          "7000000000000000001%3Afakesid0001"
+        ],
+        [
+          "sessionid",
+          "fakesession0001"
+        ],
+        [
+          "sid_tt",
+          "fakesession0001"
+        ],
+        [
+          "msToken",
+          "FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV=="
+        ],
+        [
+          "store-country-code",
+          "sg"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://webcast.tiktok.com/webcast/room/enter/?WebIdLastTime=1790000000&aid=1988&app_language=zh-Hans&app_name=tiktok_web&browser_language=zh-CN&browser_name=Mozilla&browser_online=true&browser_platform=Win32&browser_version=5.0%20%28Windows%20NT%2010.0%3B%20Win64%3B%20x64%29%20AppleWebKit%2F537.36%20%28KHTML%2C%20like%20Gecko%29%20Chrome%2F153.0.0.0%20Safari%2F537.36&channel=tiktok_web&cookie_enabled=true&data_collection_enabled=true&device_id=7000000000000000001&device_platform=web_pc&device_type=web_h265&focus_state=true&from_page=&history_len=4&is_fullscreen=false&is_page_visible=true&odinId=7000000000000000001&os=windows&priority_region=SG&referer=&region=SG&root_referer=&screen_height=1440&screen_width=2560&tz_name=Asia%2FShanghai&user_is_login=true&verifyFp=verify_fake0001_AbCdEfGh_IjKl_4MnO_8PqR_StUvWxYz0123&webcast_language=zh-Hans&X-Dynosaur=MJvoswlW2ZMQyvtSKfuH5psn5MCUFNj/qFRg-XC77jxhZe73AeApJZUlnvJk2dJDlV4ckip8eDIj10WR5LylcwAU5qztASVjRG8aBq3-FAj5OtbIjpRTCy9slGmdsDfHuwYCqMZMGeHNyGEUzC4KzX1/-KVsvkSD2LzwfVEqLaujEhrZQt44NxxuO5uKxNmThtA9XTWWyaxbiTVIcFlWwi4zDEqhZK4xjeMwANGYvty77Y2BYAwn5b03OUWIPvk2XbJolXnqJlDUWNgyhwOgETINmdUpLNrwiWU3zPENQPoJH8awDW/pdIZAfEZLPgRBH9dQThWPjvJi4tozR87/fUc2QW3KKw8JSueVYhMEDeOoNrj0dRuNORDTzROvt45O6h3T-klE1FO1P4dXnG5KMcefvuGmP2P1Z5nReQU0vYWWpkS54DBUSn05/7c9ioc1MtwHaDMp2PfINQA=&msToken=FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV==&X-Bogus=1&X-Gnarly=MkIYYlhhlFoKHAtwF0b2IDbk5cWOhLJicso-A-2fYyH8ZyJLJR9d5AAXGIPYQufu4A2zI3i-xSCAzOdESe96xOU4XTzbsP/kHVXdaJxTIkmF1Rh0jhmgu7Hg8RLQLRe-13sasGBoapeolIIbokOzTOruqPzr0btWfJqZySgxfZshJw07erY08baLRMG514oVCbOrO-zH2jggVVUjrgeq4M5U8XWgYAvlUufPBBv1Qfr/px2QXePX-FfNbJ3qcbq4Il2XwGPh5HwnGdGhZmHaBdD1xOIv3UA6l81CHaN2Zwh0wuSTMKpGZ9jCDewsWycQYLyLZfyQdJMl",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://www.tiktok.com/live"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Google Chrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "origin",
+          "https://www.tiktok.com"
+        ],
+        [
+          "content-length",
+          "73"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "ttwid",
+          "1%7Cfake-ttwid%7C1790000000%7Cabcdef"
+        ],
+        [
+          "tt_csrf_token",
+          "fake-csrf-token-0001"
+        ],
+        [
+          "tt_chain_token",
+          "fakechain"
+        ],
+        [
+          "s_v_web_id",
+          "verify_fake0001_AbCdEfGh_IjKl_4MnO_8PqR_StUvWxYz0123"
+        ],
+        [
+          "multi_sids",
+          "7000000000000000001%3Afakesid0001"
+        ],
+        [
+          "sessionid",
+          "fakesession0001"
+        ],
+        [
+          "sid_tt",
+          "fakesession0001"
+        ],
+        [
+          "msToken",
+          "FakeMsToken-0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUV=="
+        ],
+        [
+          "store-country-code",
+          "sg"
+        ]
+      ],
+      "body": "enter_source=recommend-suggested_others_photo&room_id=7300000000000000456",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "status_code": 0,
+        "data": [
+          {
+            "alive": true,
+            "room_id": 7300000000000000456,
+            "room_id_str": "7300000000000000456"
+          }
+        ],
+        "extra": {}
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "status_code": 0,
+        "data": {
+          "id_str": "7300000000000000456",
+          "status": 2,
+          "title": "直播中",
+          "user_count": 12,
+          "owner": {
+            "id_str": "7100000000000000789",
+            "display_id": "host.name",
+            "nickname": "主播"
+          },
+          "cover": {
+            "url_list": [
+              "https://p16/cover.jpg"
+            ]
+          },
+          "stream_url": {
+            "flv_pull_url": {
+              "FULL_HD1": "https://pull-flv.example.com/stage/stream-1_or4.flv",
+              "HD1": "https://pull-flv.example.com/stage/stream-1_hd.flv"
+            },
+            "hls_pull_url": "https://pull-hls.example.com/stage/stream-1/index.m3u8",
+            "rtmp_pull_url": "rtmp://pull-rtmp.example.com/stage/stream-1"
+          }
+        },
+        "extra": {}
+      }
+    }
+  ],
+  "result": {
+    "id_str": "7300000000000000456",
+    "status": 2,
+    "title": "直播中",
+    "user_count": 12,
+    "owner": {
+      "id_str": "7100000000000000789",
+      "display_id": "host.name",
+      "nickname": "主播"
+    },
+    "cover": {
+      "url_list": [
+        "https://p16/cover.jpg"
+      ]
+    },
+    "stream_url": {
+      "flv_pull_url": {
+        "FULL_HD1": "https://pull-flv.example.com/stage/stream-1_or4.flv",
+        "HD1": "https://pull-flv.example.com/stage/stream-1_hd.flv"
+      },
+      "hls_pull_url": "https://pull-hls.example.com/stage/stream-1/index.m3u8",
+      "rtmp_pull_url": "rtmp://pull-rtmp.example.com/stage/stream-1"
+    }
+  },
+  "error": null
+}
