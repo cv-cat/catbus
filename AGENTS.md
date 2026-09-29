@@ -28,7 +28,7 @@
 | slogan | 上车，开往任何平台 / all aboard, every platform |
 | 命令 | `catbus` |
 | npm 主包 | `catbus-cli`（npm 上的 `catbus` 已被别的库占用） |
-| npm scope | `@cv-cat`，用于 `@cv-cat/catbus-assets-jd`、`@cv-cat/catbus-assets-ocr` 和将来的 provider 包。`@catbus` 已被占用；`@cv-cat` 由用户注册为 npm org |
+| npm scope | `@cv-cat`，用于 `@cv-cat/catbus-assets-jd`、`@cv-cat/catbus-assets-ocr` 和将来的 provider 包。`@catbus` 已被占用；`@cv-cat` 是 npm 用户 cv-cat 的个人 scope（同名 org 建不了） |
 | 仓库 | https://github.com/cv-cat/catbus ，默认分支 `master` |
 | 许可证 | MIT（主包、assets-jd、assets-ocr 相同） |
 | 数据目录 | `~/.catbus/`，可用 `CATBUS_HOME` 覆盖 |
@@ -771,7 +771,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 - CI 在全部目标系统上跑冒烟测试，musl 用 Alpine。**任何一个目标系统缺预编译包的依赖都不能用。**
 - 发布：推送 `v*` tag 触发 `.github/workflows/release.yml`，先跑完整 CI，再发布 CI 里测过的同一份 tarball。
   - 顺序：先发 assets-jd、assets-ocr（该版本还没发布时），再发 `catbus-cli`。
-  - 需要仓库 secret `NPM_TOKEN`，对 `catbus-cli` 和 `@cv-cat` org 有发布权限；在 npm 上配好 trusted publishing 后可以改用 OIDC。
+  - 需要仓库 secret `NPM_TOKEN`（已配好）：npm 用户 cv-cat 的 granular token，权限 Read and write（publish and stage），范围 All packages；在 npm 上配好 trusted publishing 后可以改用 OIDC。
   - 仓库目前是私有的，发布不带 `--provenance`（npm 只给公开仓库生成 provenance）。仓库公开后再加回来。
 - 以后要提供 SDK 时，通过 `package.json` 的 `exports` 暴露，现在不做。
 

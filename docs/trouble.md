@@ -402,5 +402,5 @@ catbus 已同步，对拍变化的 4 个用例逐字节一致。
 
 ## 11. 其他待办
 
-- 首发：仓库还没有 `NPM_TOKEN` secret，npm 上的 `@cv-cat` org 状态未知。
+- 首发：`NPM_TOKEN` 已配好（2026-09-29）；`@cv-cat` 是 npm 用户 cv-cat 的个人 scope。还没打 tag 发布。
 - 本地提交还没推到 origin。
