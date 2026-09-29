@@ -1,17 +1,25 @@
-import { describe, expect, it } from 'vitest'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { brotliCompressSync, deflateSync } from 'node:zlib'
+import { afterAll, describe, expect, it } from 'vitest'
 import { CatbusError } from '../src/core/errors.js'
 import { fakeResponse, mockSender } from '../src/core/http.js'
+import type { Logger } from '../src/core/log.js'
+import * as pb from '../src/core/pb.js'
 import { deterministic } from '../src/core/rand.js'
 import { RAW } from '../src/core/schemas.js'
+import bilibili from '../src/platforms/bilibili/index.js'
 import * as api from '../src/platforms/bilibili/web/api.js'
-import { Bili } from '../src/platforms/bilibili/web/client.js'
+import { Bili, bili, check } from '../src/platforms/bilibili/web/client.js'
 import * as commands from '../src/platforms/bilibili/web/commands.js'
 import { CANVAS_1 } from '../src/platforms/bilibili/web/gaia.js'
 import * as geetest from '../src/platforms/bilibili/web/geetest.js'
 import * as norm from '../src/platforms/bilibili/web/normalize.js'
-import { resolveReplyTarget, resolveRoom } from '../src/platforms/bilibili/web/resolve.js'
+import { resolveDynamic, resolveFolder, resolveReplyTarget, resolveRoom } from '../src/platforms/bilibili/web/resolve.js'
 import { av2bv, bv2av, encWbi, mixinKey, murmur3Hex } from '../src/platforms/bilibili/web/sign.js'
-import { expectRequests, loadCase, makeCtx, replay } from './golden.js'
+import { uploadVideo } from '../src/platforms/bilibili/web/upos.js'
+import { expectRequests, type GoldenRequest, loadCase, makeCtx, replay } from './golden.js'
 
 const COOKIES =
   'buvid3=FAKE-BUVID3-0000infoc; b_nut=1789990000; _uuid=FAKE-UUID-0000infoc; buvid4=FAKE-BUVID4-0000; ' +
@@ -20,6 +28,14 @@ const COOKIES =
 const MIXIN = 'ea1db124af3c7062474693fa704f4ff8'
 const BVID = 'BV1GJ411x7h7'
 const NOW = 1790000000123
+
+/** 上传类用例的本地文件，内容与 gen.py 的 UPLOAD_DIR 一致。 */
+const FIXTURES = mkdtempSync(join(tmpdir(), 'catbus-bili-'))
+const COVER_FILE = join(FIXTURES, 'cover.JPG')
+const IMAGE_FILE = join(FIXTURES, 'pic.png')
+writeFileSync(COVER_FILE, 'fake-jpeg-bytes')
+writeFileSync(IMAGE_FILE, Buffer.from('\x89PNG\r\n\x1a\nfake-png', 'latin1'))
+afterAll(() => rmSync(FIXTURES, { recursive: true, force: true }))
 
 /** 登录态：与 gen.py 的 BiliAuth.from_cookie + 预置 mixin_key 一致。 */
 function loggedCtx(withMixin = true) {
@@ -129,6 +145,19 @@ const CASES: Record<string, () => Promise<unknown>> = {
   cookie_info: () => logged((b) => api.cookieInfo(b)),
   confirm_refresh: () => logged((b) => api.confirmRefresh(b, 'old-refresh-token')),
   logout: () => logged((b) => api.logout(b)),
+  // 上传：upos 三段、投稿封面（扩展名 .JPG → data:image/jpg，同上游）
+  upos_upload: () => logged((b) => uploadVideo(b, { data: new Uint8Array(Buffer.from('0123456789')), filename: 'demo.mp4', contentType: 'video/mp4' })),
+  upload_cover: () => logged((b) => commands.uploadCover(b, COVER_FILE)),
+  // 续期的两步（correspond 的路径是 RSA-OAEP 随机加密，这里用定值）与短信 / 账密登录
+  refresh_csrf: () => logged((b) => api.refreshCsrf(b, 'fakecorrespondpath')),
+  cookie_refresh: () => logged((b) => api.cookieRefresh(b, 'fake-refresh-csrf', 'old-refresh-token')),
+  sms_login: () => logged((b) => api.smsLogin(b, '13800000000', '123456', 'fake-captcha-key')),
+  // 账密：gen.py 把 RSA-OAEP 加密换成定值 enc(salt+password)，这里照同样的值传入
+  password_login: () =>
+    logged(async (b) => {
+      const key = await api.loginKey(b)
+      return api.passwordLogin(b, 'user@example.com', `enc(${key.data.hash}+fake-password)`, { token: 'tk', challenge: 'ch', validate: 'va' })
+    }),
 }
 
 describe('bilibili 对拍：请求构造与签名', () => {
@@ -140,6 +169,47 @@ describe('bilibili 对拍：请求构造与签名', () => {
       expectRequests(requests, c.requests)
     })
   }
+})
+
+/**
+ * 上游 CurlMime.addpart 没给 content_type，libcurl 按文件扩展名补上（Curl_mime_contenttype：.png → image/png）；
+ * catbus 显式给出同一个值。比较前把用例里文件段的 contentType 补成 libcurl 实际发的值。
+ */
+function withCurlContentType(requests: GoldenRequest[]): GoldenRequest[] {
+  return requests.map((r) => (r.multipart ? { ...r, multipart: r.multipart.map((m) => (m.filename?.endsWith('.png') && m.contentType == null ? { ...m, contentType: 'image/png' } : m)) } : r))
+}
+
+describe('bilibili 对拍：上传的结果与动态配图', () => {
+  it('upos_upload：返回投稿用的 filename、biz_id、key', async () => {
+    const c = loadCase('bilibili', 'upos_upload')
+    const { result } = await replay(c, CASES.upos_upload!)
+    expect(result).toEqual(c.result)
+  })
+
+  it('upload_cover / refresh_csrf：取出上游同样的字段', async () => {
+    const cover = loadCase('bilibili', 'upload_cover')
+    expect((await replay(cover, CASES.upload_cover!)).result).toBe('https://archive.biliimg.com/bfs/archive/fakecover.jpg')
+    const csrf = loadCase('bilibili', 'refresh_csrf')
+    expect((await replay(csrf, CASES.refresh_csrf!)).result).toBe(csrf.result)
+  })
+
+  it('upload_dynamic_image：multipart 的字段与顺序', async () => {
+    const c = loadCase('bilibili', 'upload_dynamic_image')
+    const { requests, error } = await replay(c, () =>
+      logged((b) => api.uploadDynamicImage(b, new Uint8Array(Buffer.from('\x89PNG\r\n\x1a\nfake-png', 'latin1')), 'pic.png', 'image/png')),
+    )
+    if (error) throw error
+    expectRequests(requests, withCurlContentType(c.requests))
+  })
+
+  it('post_dynamic_image：dynamic publish --image 先传配图再发动态（上游 post_dynamic）', async () => {
+    const c = loadCase('bilibili', 'post_dynamic_image')
+    const ctx = { ...loggedCtx(), options: { text: '带图动态', image: [IMAGE_FILE] } }
+    const { requests, result, error } = await replay(c, () => commands.dynamicPublish(ctx))
+    if (error) throw error
+    expectRequests(requests, withCurlContentType(c.requests))
+    expect(result).toEqual({ id: '987654321098765432', url: 'https://t.bilibili.com/987654321098765432' })
+  })
 })
 
 describe('bilibili 对拍：命令流程', () => {
@@ -290,6 +360,258 @@ describe('bilibili 命令：本次补齐的能力', () => {
   })
 })
 
+const web = () => {
+  const ep = bilibili.endpoints.web
+  if (ep === 'planned') throw new Error('web 是 planned')
+  return ep
+}
+
+const ROOM = { room_id: 21452505, uid: 10002, live_status: 1 }
+const GIFTS = {
+  gift_data: { room_gift_list: { gold_list: [{ gift_id: 1 }, { gift_id: 31036 }] } },
+  gift_config: {
+    base_config: {
+      list: [
+        { id: 1, name: '辣条', price: 100, coin_type: 'silver' },
+        { id: 31036, name: '小花花', price: 100, coin_type: 'gold' },
+        { id: 9, name: '别的房间', price: 1000, coin_type: 'gold' },
+      ],
+    },
+  },
+}
+
+/** 直播间命令的路由：room_init、getInfoByRoom、礼物面板，其余交给 extra。 */
+function liveRoute(extra: (url: string) => unknown = () => ok({})) {
+  return (url: string) => {
+    if (url.includes('room_init')) return ok(ROOM)
+    if (url.includes('getInfoByRoom')) return ok({ room_info: { parent_area_id: 2, area_id: 86 } })
+    if (url.includes('roomGiftList')) return ok(GIFTS)
+    return extra(url)
+  }
+}
+
+describe('bilibili 命令：审查修复', () => {
+  it('comment list 动态：业务错误带上「动态只支持纯文字和转发」', async () => {
+    const { error } = await runCommand('commentList', { args: { item: 'https://t.bilibili.com/987654321098765432' } }, () => ({ code: 12002, message: '评论区已关闭' }))
+    expect(error).toMatchObject({ code: 'UPSTREAM', hint: expect.stringContaining('动态只支持纯文字和转发') })
+    // 稿件的评论区不带这条 hint
+    const video = await runCommand('commentList', { args: { item: BVID } }, () => ({ code: 12002, message: '评论区已关闭' }))
+    expect((video.error as CatbusError).hint).toBeNull()
+  })
+
+  it('comment list / add / delete：注册表标 ◐，note 说明动态的限制', () => {
+    for (const key of ['comment list', 'comment add', 'comment delete']) {
+      expect(web().commands.get(key)).toMatchObject({ upstream: 'partial', note: expect.stringContaining('动态只支持纯文字和转发') })
+    }
+  })
+
+  it('dynamic delete：接受 dynamic publish 输出的 url', async () => {
+    const { result, bodies } = await runCommand('dynamicDelete', { args: { id: 'https://t.bilibili.com/987654321098765432' } }, () => ok({}))
+    expect(bodies[0]).toBe('{"dyn_id_str":"987654321098765432"}')
+    expect(result).toEqual({ id: '987654321098765432' })
+  })
+
+  it('folder items：接受 folder list 输出的 url，只留稿件（非上游，没有对拍）', async () => {
+    const media = { id: 1, type: 2, bvid: BVID, title: 'T', intro: 'I', upper: { mid: 2, name: 'U' }, pubtime: 1700000000, cover: 'http://i0.hdslb.com/c.jpg', cnt_info: { play: 3, collect: 4 } }
+    const { result, urls } = await runCommand('folderItems', { args: { folder: 'https://space.bilibili.com/10001/favlist?fid=123456' }, cursor: '2' }, () =>
+      ok({ medias: [media, { id: 2, type: 12, title: '音频' }], has_more: true }),
+    )
+    expect(urls).toEqual(['https://api.bilibili.com/x/v3/fav/resource/list?media_id=123456&pn=2&ps=20&keyword=&order=mtime&type=0&tid=0&platform=web&web_location=333.1387'])
+    expect(result.page).toEqual({ cursor: '3', has_more: true })
+    expect(result.data).toHaveLength(1)
+    expect(result.data[0]).toMatchObject({ id: BVID, kind: 'video', title: 'T', author: { id: '2', name: 'U' }, cover: 'https://i0.hdslb.com/c.jpg', stats: { views: 3, collects: 4 } })
+    expect(web().commands.get('folder items')).toMatchObject({ upstream: 'partial', note: expect.stringContaining('非上游') })
+  })
+
+  it('item uncollect 不带 --folder：按 fav_state 找收着它的收藏夹', async () => {
+    const { urls, bodies, result } = await runCommand('itemUncollect', { args: { item: BVID } }, (url) =>
+      url.includes('list-all') ? ok({ list: [{ id: 11, fav_state: 0 }, { id: 22, fav_state: 1 }, { id: 33, fav_state: 1 }] }) : ok({}),
+    )
+    expect(urls[0]).toBe('https://api.bilibili.com/x/v3/fav/folder/created/list-all?up_mid=10001&type=2&rid=80433022&web_location=333.999')
+    expect(bodies[1]).toContain('rid=80433022&type=2&del_media_ids=22%2C33&')
+    expect(result).toEqual({ id: BVID })
+  })
+
+  it('item uncollect 不带 --folder：没有 fav_state 时从全部收藏夹移出；都没收着时不发请求', async () => {
+    const all = await runCommand('itemUncollect', { args: { item: BVID } }, (url) => (url.includes('list-all') ? ok({ list: [{ id: 11 }, { id: 22 }] }) : ok({})))
+    expect(all.bodies[1]).toContain('&del_media_ids=11%2C22&')
+    const none = await runCommand('itemUncollect', { args: { item: BVID } }, () => ok({ list: [{ id: 11, fav_state: 0 }] }))
+    expect(none.urls).toHaveLength(1)
+    expect(none.result).toEqual({ id: BVID })
+  })
+
+  it('item collect：一个收藏夹都没有时报 UPSTREAM', async () => {
+    const { error } = await runCommand('itemCollect', { args: { item: BVID } }, () => ok({ list: [] }))
+    expect(error).toMatchObject({ code: 'UPSTREAM', message: '没有可用的收藏夹' })
+  })
+
+  it('item search --type article --sort collects：专栏没有「收藏多」，报 UNSUPPORTED 不发请求', async () => {
+    const { error, urls } = await runCommand('itemSearch', { args: { keyword: '专栏' }, options: { type: 'article', sort: 'collects' } }, () => ok({}))
+    expect(error).toMatchObject({ code: 'UNSUPPORTED' })
+    expect(urls).toHaveLength(0)
+    const video = await runCommand('itemSearch', { args: { keyword: '视频' }, options: { sort: 'collects' } }, () => ok({ result: [], numPages: 0 }))
+    expect(video.urls[0]).toMatch(/order=stow&.*search_type=video/)
+  })
+
+  it('feed list：推荐流这一批为空时 has_more 为 false', async () => {
+    const { result } = await runCommand('feedList', { cursor: '3:av_1' }, () => ok({ item: [] }))
+    expect(result.page).toEqual({ cursor: null, has_more: false })
+  })
+
+  it('item media：DASH 取最高画质的视频轨（同画质取码率高的）和码率最高的音频轨（含 flac）', async () => {
+    const dash = {
+      duration: 10,
+      video: [
+        { id: 64, bandwidth: 900, baseUrl: 'https://v/64' },
+        { id: 80, bandwidth: 100, baseUrl: 'https://v/80-low' },
+        { id: 80, bandwidth: 300, base_url: 'https://v/80-high', width: 1920, height: 1080 },
+      ],
+      audio: [
+        { id: 30216, bandwidth: 10, baseUrl: 'https://a/64k' },
+        { id: 30280, bandwidth: 30, baseUrl: 'https://a/192k' },
+      ],
+      flac: { audio: { id: 30251, bandwidth: 900, baseUrl: 'https://a/flac' } },
+    }
+    const { result } = await runCommand('itemMedia', { args: { item: BVID } }, (url) => (url.includes('/wbi/view') ? ok({ bvid: BVID, cid: 1 }) : ok({ dash })))
+    expect(result).toMatchObject([
+      { id: '80', type: 'video', url: 'https://v/80-high', width: 1920, height: 1080, duration: 10 },
+      { id: '30251', type: 'audio', url: 'https://a/flac', duration: 10 },
+    ])
+    const old = await runCommand('itemMedia', { args: { item: BVID } }, (url) =>
+      url.includes('/wbi/view') ? ok({ bvid: BVID, cid: 1 }) : ok({ durl: [{ order: 1, url: 'https://v/1.flv', length: 5000 }] }),
+    )
+    expect(old.result).toMatchObject([{ id: '1', type: 'video', url: 'https://v/1.flv', duration: 5 }])
+  })
+
+  it('item subtitles：字幕 JSON 按行归一化', async () => {
+    const { result } = await runCommand('itemSubtitles', { args: { item: BVID } }, (url) => {
+      if (url.includes('/wbi/view')) return ok({ bvid: BVID, cid: 1 })
+      if (url.includes('/player/wbi/v2')) return ok({ subtitle: { subtitles: [{ lan: 'zh-CN', lan_doc: '中文', subtitle_url: '//aisubtitle.hdslb.com/bfs/x.json' }] } })
+      return { body: [{ from: 0, to: 1.5, content: '你好' }] }
+    })
+    expect(result).toEqual([{ lang: 'zh-CN', name: '中文', url: 'https://aisubtitle.hdslb.com/bfs/x.json', lines: [{ from: 0, to: 1.5, text: '你好' }] }])
+  })
+
+  it('live gifts：只留本房间的礼物，金瓜子按 1000:1 换成元，银瓜子原样', async () => {
+    const { result } = await runCommand('liveGifts', { args: { room: '21452505' } }, liveRoute())
+    expect(result.map((g: any) => [g.id, g.name, g.price])).toEqual([
+      ['1', '辣条', { amount: 100, currency: 'BILI_SILVER' }],
+      ['31036', '小花花', { amount: 0.1, currency: 'CNY' }],
+    ])
+  })
+
+  it('live send：弹幕和送礼都返回直播间 id', async () => {
+    const chat = await runCommand('liveSend', { args: { room: '21452505', text: '你好' } }, liveRoute(() => ok({ mode_info: { extra: '{"id_str":"abc"}' } })))
+    expect(chat.result).toEqual({ id: '21452505' })
+  })
+
+  it('live send --gift：背包里够数时走背包，否则按礼物面板的价格付费送', async () => {
+    const bag = await runCommand('liveSend', { args: { room: '21452505' }, options: { gift: '1', count: 2 } }, liveRoute((url) =>
+      url.includes('bag_list') ? ok({ list: [{ gift_id: 1, gift_num: 1, bag_id: 111 }, { gift_id: 1, gift_num: 5, bag_id: 555 }] }) : ok({}),
+    ))
+    expect(bag.urls.at(-1)).toContain('/xlive/revenue/v2/gift/sendBagMultiUser?')
+    expect(bag.urls.at(-1)).toContain('gift_id=1&ruid=10002&send_ruid=0&gift_num=2&coin_type=silver&bag_id=555&')
+    expect(bag.result).toEqual({ id: '21452505' })
+
+    const paid = await runCommand('liveSend', { args: { room: '21452505' }, options: { gift: '31036' } }, liveRoute((url) => (url.includes('bag_list') ? ok({ list: [] }) : ok({}))))
+    expect(paid.urls.at(-1)).toContain('/xlive/revenue/v2/gift/sendGoldMultiUser?')
+    expect(paid.urls.at(-1)).toContain('gift_id=31036&ruid=10002&send_ruid=0&gift_num=1&coin_type=gold&bag_id=0&')
+    expect(paid.urls.at(-1)).toContain('&price=100&')
+    expect(paid.result).toEqual({ id: '21452505' })
+
+    const missing = await runCommand('liveSend', { args: { room: '21452505' }, options: { gift: '404' } }, liveRoute((url) => (url.includes('bag_list') ? ok({ list: [] }) : ok({}))))
+    expect(missing.error).toMatchObject({ code: 'USAGE' })
+  })
+
+  it('live start / stop：自己的直播间用 resolveRoom(me)', async () => {
+    const { result, urls } = await runCommand('liveStart', { options: { category: '86' } }, (url) =>
+      url.includes('getRoomInfoOld') ? ok({ roomid: 6, roomStatus: 1 }) : ok({ rtmp: { addr: 'rtmp://live-push/', code: 'k' } }),
+    )
+    expect(urls[0]).toBe('https://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid=10001')
+    expect(result).toEqual({ id: '6', push: { url: 'rtmp://live-push/', key: 'k' } })
+    const none = await runCommand('liveStop', {}, () => ok({ roomStatus: 0 }))
+    expect(none.error).toMatchObject({ code: 'UPSTREAM', message: '这个账号还没有开通直播间' })
+  })
+
+  it('article publish：没有 --cover（上游没有专栏封面），--category 是数字的专栏分区', () => {
+    const cmd = web().commands.get('article publish')!
+    expect(Object.keys(cmd.options)).not.toContain('cover')
+    expect(cmd.options.category!.safeParse('3').success).toBe(true)
+    expect(cmd.options.category!.safeParse('abc').success).toBe(false)
+  })
+})
+
+/** 捕获 warn / info 的 logger。 */
+function captureLog(): Logger & { lines: string[] } {
+  const lines: string[] = []
+  return { lines, debug() {}, info: (m) => lines.push(`info ${m}`), warn: (m) => lines.push(`warn ${m}`) }
+}
+
+describe('bilibili 续期（上游 refresh_cookies）', () => {
+  /** 按 URL 回复续期链路；refresh 为 cookie/refresh 的回复。 */
+  async function run(refresh: { setCookie: boolean; token?: string }, confirmCode = 0) {
+    const ctx = loggedCtx()
+    ctx.credential.scopes.main!.tokens.refresh_token = 'old-refresh-token'
+    const log = captureLog()
+    ctx.log = log
+    const urls: string[] = []
+    const bodies: (string | null)[] = []
+    const restoreRand = deterministic({ now: NOW })
+    const json = (body: object, headers: [string, string][] = []) => fakeResponse(body, { headers: [['content-type', 'application/json'], ...headers] })
+    const restore = mockSender((p) => {
+      urls.push(p.url)
+      bodies.push(p.body == null ? null : Buffer.from(p.body).toString('utf8'))
+      if (p.url.includes('cookie/info')) return json({ code: 0, data: { refresh: true, timestamp: NOW } })
+      if (p.url.includes('/correspond/1/')) return fakeResponse('<div id="1-name">fake-refresh-csrf</div>', { headers: [['content-type', 'text/html']] })
+      if (p.url.includes('cookie/refresh')) {
+        const cookies: [string, string][] = refresh.setCookie
+          ? [
+              ['set-cookie', 'SESSDATA=new-sessdata; Path=/; Domain=bilibili.com'],
+              ['set-cookie', 'bili_jct=newcsrf; Path=/; Domain=bilibili.com'],
+            ]
+          : []
+        return json({ code: 0, data: refresh.token ? { refresh_token: refresh.token } : {} }, cookies)
+      }
+      return json({ code: confirmCode, message: confirmCode ? '确认失败' : '0' })
+    })
+    try {
+      const b = await bili(ctx)
+      return { b, ctx, log, urls, bodies }
+    } finally {
+      restore()
+      restoreRand()
+    }
+  }
+
+  it('换到新 SESSDATA 后用新 csrf、旧 refresh_token 确认，保存新的 refresh_token', async () => {
+    const { b, ctx, log, urls, bodies } = await run({ setCookie: true, token: 'new-refresh-token' })
+    expect(urls.map((u) => new URL(u).pathname)).toEqual([
+      '/x/passport-login/web/cookie/info',
+      expect.stringMatching(/^\/correspond\/1\/[0-9a-f]+$/),
+      '/x/passport-login/web/cookie/refresh',
+      '/x/passport-login/web/confirm/refresh',
+    ])
+    expect(bodies[2]).toBe('csrf=fakecsrf0123456789abcdef01234567&refresh_csrf=fake-refresh-csrf&source=main_web&refresh_token=old-refresh-token')
+    expect(bodies[3]).toBe('csrf=newcsrf&refresh_token=old-refresh-token')
+    expect(b.jar.get('SESSDATA')).toBe('new-sessdata')
+    expect(ctx.credential.scopes.main!.tokens.refresh_token).toBe('new-refresh-token')
+    expect(log.lines).toEqual(['info 登录态已自动续期'])
+  })
+
+  it('响应没带新 SESSDATA：不确认、不动 refresh_token，只警告', async () => {
+    const { ctx, log, urls } = await run({ setCookie: false, token: 'new-refresh-token' })
+    expect(urls).toHaveLength(3)
+    expect(ctx.credential.scopes.main!.tokens.refresh_token).toBe('old-refresh-token')
+    expect(log.lines).toEqual([expect.stringMatching(/^warn 登录态续期失败：.*没有带新的 SESSDATA/)])
+  })
+
+  it('确认失败：新 Cookie 照样保存，警告旧会话没有失效；响应没有新 refresh_token 时删掉旧的', async () => {
+    const { ctx, log } = await run({ setCookie: true }, -101)
+    expect(ctx.credential.scopes.main!.tokens.refresh_token).toBeUndefined()
+    expect(log.lines).toEqual([expect.stringContaining('warn 续期响应没有新的 refresh_token'), expect.stringContaining('warn 登录态已续期，但确认更新失败')])
+  })
+})
+
 describe('bilibili 纯算', () => {
   it('评论区类型：稿件 1、专栏 12、动态 17', async () => {
     const b = new Bili(loggedCtx())
@@ -303,7 +625,80 @@ describe('bilibili 纯算', () => {
     expect(await t('https://www.bilibili.com/opus/987654321098765432')).toMatchObject({ type: 17 })
     expect(await t('987654321098765432')).toMatchObject({ type: 17 })
     expect(await t('2251799813685247')).toMatchObject({ type: 1, oid: '2251799813685247' })
-    await expect(t('什么')).rejects.toMatchObject({ code: 'USAGE' })
+    await expect(t('什么')).rejects.toMatchObject({ code: 'USAGE', hint: expect.stringContaining('动态只支持纯文字和转发') })
+  })
+
+  it('动态与收藏夹参数：ID、链接都接受', async () => {
+    const b = new Bili(loggedCtx())
+    for (const s of ['987654321098765432', 'https://t.bilibili.com/987654321098765432?share=1', 'https://www.bilibili.com/opus/987654321098765432', 'dyn:987654321098765432']) {
+      expect(await resolveDynamic(b, s)).toBe('987654321098765432')
+    }
+    await expect(resolveDynamic(b, 'abc')).rejects.toMatchObject({ code: 'USAGE' })
+    for (const s of ['123456', 'https://space.bilibili.com/10001/favlist?fid=123456&ftype=create', 'https://www.bilibili.com/medialist/detail/ml123456', 'ml123456']) {
+      expect(await resolveFolder(b, s)).toBe('123456')
+    }
+    await expect(resolveFolder(b, 'https://space.bilibili.com/10001/favlist')).rejects.toMatchObject({ code: 'USAGE' })
+  })
+
+  it('业务码：请求过于频繁和 -412 为 rate_limit，-352 为 blocked', () => {
+    const kind = (code: number) => {
+      try {
+        check(loggedCtx(), { code, message: 'x', data: null })
+      } catch (err) {
+        return [(err as CatbusError).code, ((err as CatbusError).detail as { kind: string }).kind]
+      }
+    }
+    expect(kind(-509)).toEqual(['RISK_CONTROL', 'rate_limit'])
+    expect(kind(-799)).toEqual(['RISK_CONTROL', 'rate_limit'])
+    expect(kind(-412)).toEqual(['RISK_CONTROL', 'rate_limit'])
+    expect(kind(-352)).toEqual(['RISK_CONTROL', 'blocked'])
+    expect(kind(340022)).toEqual(['RISK_CONTROL', 'captcha'])
+  })
+
+  it('稿件审核状态：state ≥ 0 已发布，打回 / 审核中按码表，其余为 null', () => {
+    const status = (state: number) => norm.archive({ Archive: { bvid: BVID, state } }).status
+    expect([0, 1].map(status)).toEqual(['published', 'published'])
+    expect([-2, -4, -16, -100].map(status)).toEqual(['rejected', 'rejected', 'rejected', 'rejected'])
+    expect([-1, -6, -30, -40].map(status)).toEqual(['reviewing', 'reviewing', 'reviewing', 'reviewing'])
+    expect(status(-999)).toBeNull()
+  })
+
+  it('视频弹幕 protobuf：idStr 优先，offset 为秒，按 ctime 出时间', () => {
+    const W = pb.protobuf.Writer
+    const elem = (id: number, progress: number, text: string, ctime: number, idStr?: string) => {
+      const w = W.create().uint32(8).int64(id).uint32(16).int32(progress).uint32(58).string(text).uint32(64).int64(ctime)
+      if (idStr) w.uint32(98).string(idStr)
+      return w.finish()
+    }
+    const reply = W.create()
+    for (const e of [elem(1, 12500, '第一条', 1700000000, '1234567890123456789'), elem(42, 0, '第二条', 1700000001)]) reply.uint32(10).bytes(e)
+    expect(commands.decodeDanmaku(reply.finish(), BVID)).toEqual([
+      { id: '1234567890123456789', item_id: BVID, offset: 12.5, text: '第一条', created_at: '2023-11-15T06:13:20+08:00' },
+      { id: '42', item_id: BVID, offset: 0, text: '第二条', created_at: '2023-11-15T06:13:21+08:00' },
+    ])
+  })
+
+  it('直播长连 pack / unpack：头 16 字节；zlib（ver 2）、brotli（ver 3）嵌套解开，op 3 为人气值', () => {
+    const head = commands.pack(Buffer.from('ab'), 7, 0)
+    expect([...head.subarray(0, 16)]).toEqual([0, 0, 0, 18, 0, 16, 0, 0, 0, 0, 0, 7, 0, 0, 0, 1])
+    const chat = { cmd: 'DANMU_MSG', info: [[0, 1, 25, 16777215, 1700000000000], '弹幕', [7, '观众']] }
+    const like = { cmd: 'LIKE_INFO_V3_CLICK', data: { uid: 8, uname: '点赞的' } }
+    const plain = Buffer.concat([commands.pack(Buffer.from(JSON.stringify(chat)), 5, 0), commands.pack(Buffer.from(JSON.stringify(like)), 5, 0)])
+    const zlib = commands.pack(deflateSync(plain), 5, 2)
+    const brotli = commands.pack(brotliCompressSync(zlib), 5, 3)
+    const heartbeat = commands.pack(Buffer.from([0, 0, 0x30, 0x39]), 3, 1)
+    expect(commands.unpack(Buffer.concat([brotli, heartbeat]))).toEqual([
+      [5, chat],
+      [5, like],
+      [3, 12345],
+    ])
+  })
+
+  it('直播进场消息 INTERACT_WORD：1 进场，2 / 4 / 5 关注，3 分享为 other', () => {
+    const t = (msg_type: number) => norm.liveEvent({ cmd: 'INTERACT_WORD', data: { msg_type, uid: 1, uname: 'u', timestamp: 1700000000 } })
+    expect([1, 2, 4, 5].map((x) => t(x).type)).toEqual(['enter', 'follow', 'follow', 'follow'])
+    expect(t(3)).toMatchObject({ type: 'other', text: '分享直播间', user: { id: '1' } })
+    expect(t(9)).toMatchObject({ type: 'other', text: 'INTERACT_WORD' })
   })
 
   it('直播间：纯数字与直播间链接不查主播', async () => {

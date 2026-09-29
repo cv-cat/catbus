@@ -8,7 +8,9 @@ const { h, impl } = handlers(() => import('./web/commands.js'))
 
 const item = { name: 'item', summary: '稿件：BV 号、av 号或 URL' }
 /** 评论区可以是稿件、专栏或动态，按参数形态识别（AGENTS 4.8：参数由平台归一化）。 */
-const replyTarget = { name: 'item', summary: '稿件（BV 号、av 号、视频链接）、专栏（cv 号、专栏链接）或动态（动态链接、动态 ID）' }
+const replyTarget = { name: 'item', summary: '稿件（BV 号、av 号、视频链接）、专栏（cv 号、专栏链接）或动态（动态链接、动态 ID；只支持纯文字和转发动态）' }
+/** 动态的评论区（type 17）只对纯文字和转发动态成立，图文动态挂在相簿上，上游没有查相簿 ID 的接口。 */
+const DYNAMIC_REPLY_NOTE = '动态只支持纯文字和转发：图文动态（带图）的评论区挂在相簿上，上游没有查相簿 ID 的接口；稿件、专栏不受影响'
 /** 直播间参数也接受主播，按 get_room_by_mid 换成房间号。 */
 const room = { name: 'room', summary: '直播间：房间号或 URL；也可以传主播（空间链接、uid:<mid>、me）' }
 const draftId = { name: 'id', summary: '草稿 ID（article publish 返回的 id）' }
@@ -86,14 +88,15 @@ export default definePlatform({
         'item delete': impl('partial', 'itemDelete', { note: '需要人机验证（极验点选），catbus 还不能自动通过，会报 RISK_CONTROL' }),
         'item categories': impl('full', 'itemCategories'),
 
-        'comment list': impl('full', 'commentList', { args: [replyTarget], options: { sort: filter.sort('popular', 'latest') } }),
+        'comment list': impl('partial', 'commentList', { note: DYNAMIC_REPLY_NOTE, args: [replyTarget], options: { sort: filter.sort('popular', 'latest') } }),
         'comment replies': 'none',
-        'comment add': impl('full', 'commentAdd', {
+        'comment add': impl('partial', 'commentAdd', {
+          note: DYNAMIC_REPLY_NOTE,
           args: [replyTarget, { name: 'text', summary: '评论内容' }],
           options: { root: z.string().regex(/^\d+$/, '评论 ID 是数字').optional().describe('根评论 ID：回复楼中楼时用，--reply-to 给被回复的那条') },
           check: (_a, o) => (o.root != null && o.replyTo == null ? '--root 要和 --reply-to 一起用' : undefined),
         }),
-        'comment delete': impl('full', 'commentDelete', { args: [replyTarget, { name: 'comment', summary: '评论 ID' }] }),
+        'comment delete': impl('partial', 'commentDelete', { note: DYNAMIC_REPLY_NOTE, args: [replyTarget, { name: 'comment', summary: '评论 ID' }] }),
         'comment like': 'none',
         'comment unlike': 'none',
 
@@ -138,7 +141,10 @@ export default definePlatform({
         'media upload': impl('full', 'mediaUpload'),
 
         'folder list': impl('partial', 'folderList'),
-        'folder items': impl('partial', 'folderItems'),
+        'folder items': impl('partial', 'folderItems', {
+          note: '非上游：上游没有收藏夹内容接口，请求按网页端收藏夹页补的（x/v3/fav/resource/list），没有对拍；只列出稿件',
+          args: [{ name: 'folder', summary: '收藏夹：ID 或 folder list 输出的 url' }],
+        }),
         'folder create': 'none',
         'folder update': 'none',
         'folder delete': 'none',
@@ -187,7 +193,7 @@ export default definePlatform({
         'dynamic delete': {
           upstream: 'full',
           summary: '删动态',
-          args: [{ name: 'id', summary: '动态 ID' }],
+          args: [{ name: 'id', summary: '动态：ID 或链接（dynamic publish 输出的 id、url）' }],
           auth: 'required',
           confirm: true,
           output: '{id}',
@@ -200,8 +206,7 @@ export default definePlatform({
           options: {
             title: z.string().describe('标题'),
             text: z.string().describe('正文（HTML），@file 表示从文件读取'),
-            cover: PUBLISH.cover,
-            category: CATEGORY,
+            category: z.string().regex(/^\d+$/, '专栏分区 ID 是数字').optional().describe('专栏分区 ID（数字），默认 0；catbus 没有专栏分区列表命令'),
             tag: PUBLISH.tag,
             summary: z.string().optional().describe('摘要'),
             draft: z.boolean().optional().describe('只存草稿，不提交'),

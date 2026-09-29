@@ -6,10 +6,9 @@ import { interactive } from '../../../core/login.js'
 import { jsonDumps } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import * as api from './api.js'
-import type { Bili } from './client.js'
+import { type Bili, fillSessionCookies, retrying } from './client.js'
 import { manualGeetest } from './geetest-manual.js'
 import { BROWSER, COOKIE_ORDER, PASSPORT, PROFILE } from './profile.js'
-import { bLsid, sid } from './sign.js'
 
 /**
  * 极验 v3（上游 utils/geetest_w.py、tools/geetest_solve.py）：
@@ -221,7 +220,6 @@ const GEETEST = 'https://api.geetest.com'
 const REFERER = 'https://passport.bilibili.com/'
 /** 点选最多试几道题（上游 BiliAuth.from_sms_login 的 attempts=4）。 */
 const ATTEMPTS = 4
-const RETRYABLE_STATUS = new Set([412, 429, 502, 503, 504])
 
 type Cookies = Map<string, string>
 
@@ -251,10 +249,10 @@ function sortCookies(c: Cookies): Cookies {
  */
 function sessionCookies(str: string): Cookies {
   const c = parseCookies(str)
-  const newSid = sid() // setdefault 的参数总会先求值，随机数照样消耗
-  if (!c.has('sid')) c.set('sid', newSid)
-  if (!c.has('PVID')) c.set('PVID', '1')
-  c.set('b_lsid', bLsid())
+  fillSessionCookies(
+    (name) => c.has(name),
+    (name, value) => c.set(name, value),
+  )
   return sortCookies(c)
 }
 
@@ -291,14 +289,8 @@ class Geetest {
   }
 
   /** 带退避重试的 GET（上游 http_util.request）。 */
-  async get(url: string, query: [string, string | number][] | undefined, cookies: Cookies): Promise<HttpResponse> {
-    let res!: HttpResponse
-    for (let attempt = 0; attempt <= 3; attempt++) {
-      res = await this.http.request({ url, query, headers: [['referer', REFERER]], cookies: Object.fromEntries(cookies) })
-      if (!RETRYABLE_STATUS.has(res.status)) return res
-      if (attempt < 3) await rand.sleep(1000 * 2 ** attempt, this.b.ctx.signal)
-    }
-    return res
+  get(url: string, query: [string, string | number][] | undefined, cookies: Cookies): Promise<HttpResponse> {
+    return retrying(() => this.http.request({ url, query, headers: [['referer', REFERER]], cookies: Object.fromEntries(cookies) }), this.b.ctx.signal)
   }
 
   /** JSONP 接口：自动带 callback，返回解析后的对象和新设的 cookie。 */
@@ -330,6 +322,13 @@ function biliCookies(b: Bili): Cookies {
 
 type Fetched = { validate: api.Geetest } | { state: ClickState; sprite: Uint8Array }
 
+/** 向 B 站申请一次人机验证（上游 get_captcha），返回 token 与极验的 gt / challenge。 */
+async function requestCaptcha(b: Bili): Promise<{ token: string; gt: string; challenge: string }> {
+  const captcha = await api.captcha(b)
+  if (captcha.code !== 0) throw new CatbusError('UPSTREAM', `申请人机验证失败：${captcha.message ?? captcha.code}`, { detail: { code: captcha.code } })
+  return { token: captcha.data.token, gt: captcha.data.geetest.gt, challenge: captcha.data.geetest.challenge }
+}
+
 /**
  * 申请 B 站 captcha，走 fullpage 无感判定（上游 fetch）：
  * 1. get.php（w = AES + RSA）建立会话，拿 c / s；
@@ -338,10 +337,7 @@ type Fetched = { validate: api.Geetest } | { state: ClickState; sprite: Uint8Arr
  */
 async function fetchPuzzle(g: Geetest): Promise<Fetched> {
   const { b } = g
-  const captcha = await api.captcha(b)
-  if (captcha.code !== 0) throw new CatbusError('UPSTREAM', `申请人机验证失败：${captcha.message ?? captcha.code}`, { detail: { code: captcha.code } })
-  const { token, geetest } = captcha.data
-  const { gt, challenge } = geetest
+  const { token, gt, challenge } = await requestCaptcha(b)
 
   const type = (await g.call('/gettype.php', [['gt', gt]], new Map())).body?.data?.type
   b.ctx.log.debug(`极验产品类型：${type}`)
@@ -496,10 +492,8 @@ export async function solve(b: Bili): Promise<api.Geetest> {
       })
     }
     b.ctx.log.warn(`人机验证没有自动通过（${err.message}），改为在浏览器里手动验证`)
-    const captcha = await api.captcha(b)
-    if (captcha.code !== 0) throw new CatbusError('UPSTREAM', `申请人机验证失败：${captcha.message ?? captcha.code}`, { detail: { code: captcha.code } })
-    const { token, geetest } = captcha.data
-    const r = await manualGeetest(b.ctx, geetest.gt, geetest.challenge)
+    const { token, gt, challenge } = await requestCaptcha(b)
+    const r = await manualGeetest(b.ctx, gt, challenge)
     return { token, challenge: r.challenge, validate: r.validate, seccode: r.seccode }
   }
 }

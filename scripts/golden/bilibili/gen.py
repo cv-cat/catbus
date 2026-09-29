@@ -155,6 +155,83 @@ case('live_danmaku_style', logged(lambda a: BiliLiveApi.send_danmaku(a, 21452505
 case('start_live', logged(lambda a: BiliLiveApi.start_live(a, 21452505, 86)), room=21452505, area=86)
 case('stop_live', logged(lambda a: BiliLiveApi.stop_live(a, 21452505)), room=21452505)
 
+# ---------------------------------------------------------------- 上传（upos 三段、投稿封面、动态配图）、续期、短信 / 账密登录
+#
+# 上游读本地文件：在用例外面建好（tempfile 取随机名字会消耗被框架替换的随机数）。
+import tempfile  # noqa: E402
+
+UPLOAD_DIR = Path(tempfile.mkdtemp(prefix='catbus-bili-up-'))
+VIDEO_FILE = str(UPLOAD_DIR / 'demo.mp4')
+COVER_FILE = str(UPLOAD_DIR / 'cover.JPG')
+IMAGE_FILE = str(UPLOAD_DIR / 'pic.png')
+# 10 字节的"视频"，chunk_size 4 → 3 片（4、4、2）
+Path(VIDEO_FILE).write_bytes(b'0123456789')
+Path(COVER_FILE).write_bytes(b'fake-jpeg-bytes')
+Path(IMAGE_FILE).write_bytes(b'\x89PNG\r\n\x1a\nfake-png')
+UPOS_HOST = 'https://upos-cs-upcdnbda2.bilivideo.com'
+
+
+def upload_respond(req):
+    url = req['url']
+    if 'member.bilibili.com/preupload' in url:
+        return {'OK': 1, 'endpoint': '//upos-cs-upcdnbda2.bilivideo.com', 'upos_uri': 'upos://ugcfx2lf/n260929fake01.mp4',
+                'auth': 'fake-upos-auth', 'biz_id': 999, 'chunk_size': 4}
+    if url.startswith(UPOS_HOST):
+        if req['method'] == 'PUT':
+            return {'status': 200, 'headers': {'content-type': 'text/plain'}, 'body': 'MULTIPART_PUT_SUCCESS'}
+        if 'uploads' in url:
+            return {'OK': 1, 'upload_id': 'fake-upload-id', 'key': '/n260929fake01.mp4'}
+        return {'OK': 1, 'location': 'upos://ugcfx2lf/n260929fake01.mp4'}
+    if 'cover/up' in url:
+        return {'code': 0, 'message': '0', 'data': {'url': 'https://archive.biliimg.com/bfs/archive/fakecover.jpg'}}
+    if 'upload_bfs' in url:
+        return {'code': 0, 'message': '0', 'data': {'image_url': 'https://i0.hdslb.com/bfs/new_dyn/fakepic.png',
+                                                  'image_width': 2, 'image_height': 3, 'img_size': 1.5}}
+    if 'create/dyn' in url:
+        return {'code': 0, 'message': '0', 'data': {'dyn_id': 987654321098765432, 'dyn_id_str': '987654321098765432'}}
+    if 'correspond/1/' in url:
+        return {'status': 200, 'headers': {'content-type': 'text/html; charset=utf-8'},
+                'body': '<html><body><div id="1-name">fake-refresh-csrf</div></body></html>'}
+    if 'cookie/refresh' in url or 'login/sms' in url or 'passport-login/web/login' in url:
+        return {'headers': {'set-cookie': ['SESSDATA=new-fake-sessdata; Path=/; Domain=bilibili.com',
+                                           'bili_jct=newcsrf0123456789abcdef012345678; Path=/; Domain=bilibili.com']},
+                'body': {'code': 0, 'message': '0', 'data': {'refresh_token': 'new-refresh-token'}}}
+    if 'web/key' in url:
+        return {'code': 0, 'message': '0', 'data': {'hash': 'fakesalt', 'key': '-----BEGIN PUBLIC KEY-----\nfake\n-----END PUBLIC KEY-----\n'}}
+    return respond(req)
+
+
+def upload_case(name, fn, **input):
+    g.case(out, name, fn, input=input, respond=upload_respond)
+
+
+from utils.upos import upload_video  # noqa: E402
+import apis.bili_login_apis as _login_apis  # noqa: E402
+
+upload_case('upos_upload', logged(lambda a: upload_video(a, VIDEO_FILE)), file='demo.mp4', size=10, chunk_size=4)
+upload_case('upload_cover', logged(lambda a: BiliCreatorApi.upload_cover(a, COVER_FILE)), file='cover.JPG')
+upload_case('upload_dynamic_image', logged(lambda a: BiliCreatorApi.upload_dynamic_image(a, IMAGE_FILE)), file='pic.png')
+upload_case('post_dynamic_image', logged(lambda a: BiliCreatorApi.post_dynamic(a, '带图动态', [IMAGE_FILE])), text='带图动态', images=['pic.png'])
+upload_case('refresh_csrf', logged(lambda a: BiliLoginApi.get_refresh_csrf(a, 'fakecorrespondpath')), path='fakecorrespondpath')
+upload_case('cookie_refresh', logged(lambda a: BiliLoginApi.cookie_refresh(a, 'fake-refresh-csrf', 'old-refresh-token')[0]),
+            refresh_csrf='fake-refresh-csrf', refresh_token='old-refresh-token')
+upload_case('sms_login', logged(lambda a: BiliLoginApi.sms_login(a, '13800000000', '123456', captcha_key='fake-captcha-key')),
+            tel='13800000000', code='123456', captcha_key='fake-captcha-key')
+
+
+def password_login():
+    """账密登录：取公钥 → 加密 → 登录。RSA-OAEP 的填充用 OpenSSL 的随机数，这里把加密换成定值，只比请求的形态。"""
+    saved = _login_apis.encrypt_password
+    _login_apis.encrypt_password = lambda salt, password, key: f'enc({salt}+{password})'
+    try:
+        return BiliLoginApi.password_login(login_auth(), 'user@example.com', 'fake-password',
+                                           {'token': 'tk', 'challenge': 'ch', 'validate': 'va'})
+    finally:
+        _login_apis.encrypt_password = saved
+
+
+upload_case('password_login', password_login, username='user@example.com')
+
 case('qrcode_generate', logged(lambda a: BiliLoginApi.qrcode_generate(a)))
 case('qrcode_poll', logged(lambda a: BiliLoginApi.qrcode_poll(a, 'fakeqrkey')[0]), key='fakeqrkey')
 case('captcha', logged(lambda a: BiliLoginApi.get_captcha(a)))

@@ -41,34 +41,59 @@ export interface ReplyTarget {
   itemId: string
 }
 
+/**
+ * 动态的评论区只有纯文字和转发动态是 type 17 + 动态 ID；图文动态（带图）的评论区挂在相簿上（type 11 + 相簿 rid），
+ * 专栏动态挂在专栏上（type 12 + cv 号）。从动态 ID 查 rid / cv 号要动态详情接口，上游没有，catbus 也不自己加。
+ */
+export const DYNAMIC_REPLY_HINT = '动态只支持纯文字和转发：图文动态（带图）的评论区挂在相簿上，上游没有查相簿 ID 的接口；专栏请传 cv 号或专栏链接'
+
 const ARTICLE_RE = [/(?:^|\/read\/)cv(\d+)/i, /\/read\/mobile(?:\/|\?id=)(\d+)/i]
 const DYNAMIC_RE = [/t\.bilibili\.com\/(\d+)/i, /bilibili\.com\/opus\/(\d+)/i, /m\.bilibili\.com\/dynamic\/(\d+)/i, /^dyn(?:amic)?:(\d+)$/i]
 /** aid 最大 2^51，16 位以内；动态 ID 是 18、19 位。更长的纯数字按动态处理。 */
 const MIN_DYNAMIC_DIGITS = 17
 
+function firstMatch(res: RegExp[], s: string): string | undefined {
+  for (const re of res) {
+    const m = re.exec(s)?.[1]
+    if (m) return m
+  }
+}
+
 /**
  * 评论区：稿件（BV 号、av 号、视频链接）→ 1；专栏（cv 号、专栏链接）→ 12；
- * 动态（动态链接、17 位以上的动态 ID、`dyn:<id>`）→ 17。
+ * 动态（动态链接、17 位以上的动态 ID、`dyn:<id>`）→ 17，只对纯文字和转发动态成立（见 DYNAMIC_REPLY_HINT）。
+ * opus 链接既可能是动态也可能是专栏，不发请求分不出来，按动态处理。
  */
 export async function resolveReplyTarget(b: Bili, input: string): Promise<ReplyTarget> {
   const s = (await expand(b, input.trim())).trim()
-  for (const re of ARTICLE_RE) {
-    const m = re.exec(s)?.[1]
-    if (m) return { type: 12, oid: m, itemId: `cv${m}` }
-  }
-  for (const re of DYNAMIC_RE) {
-    const m = re.exec(s)?.[1]
-    if (m) return { type: 17, oid: m, itemId: m }
-  }
-  if (/^\d+$/.test(s) && s.length >= MIN_DYNAMIC_DIGITS) return { type: 17, oid: s, itemId: s }
+  const cv = firstMatch(ARTICLE_RE, s)
+  if (cv) return { type: 12, oid: cv, itemId: `cv${cv}` }
+  const dyn = firstMatch(DYNAMIC_RE, s) ?? (/^\d+$/.test(s) && s.length >= MIN_DYNAMIC_DIGITS ? s : undefined)
+  if (dyn) return { type: 17, oid: dyn, itemId: dyn }
   try {
     const { bvid, aid } = await resolveItem(b, s)
     return { type: 1, oid: aid, itemId: bvid }
   } catch {
     throw new CatbusError('USAGE', `无法识别的评论区：${input}`, {
-      hint: '传稿件（BV 号、av 号、视频链接）、专栏（cv 号或专栏链接）或动态（动态链接或动态 ID）',
+      hint: `传稿件（BV 号、av 号、视频链接）、专栏（cv 号或专栏链接）或动态（动态链接或动态 ID）；${DYNAMIC_REPLY_HINT}`,
     })
   }
+}
+
+/** 动态：动态链接（t.bilibili.com、opus、m.bilibili.com/dynamic）、`dyn:<id>` 或纯数字的动态 ID。dynamic publish 输出的 id、url 都能直接用。 */
+export async function resolveDynamic(b: Bili, input: string): Promise<string> {
+  const s = (await expand(b, input.trim())).trim()
+  const id = firstMatch(DYNAMIC_RE, s) ?? /^\d+$/.exec(s)?.[0]
+  if (id) return id
+  throw new CatbusError('USAGE', `无法识别的动态：${input}`, { hint: '传动态 ID 或动态链接 https://t.bilibili.com/<id>（dynamic publish 输出的 id、url 都可以）' })
+}
+
+/** 收藏夹：folder list 输出的 url（`…/favlist?fid=<id>`）、播放列表链接（`ml<id>`）或纯数字的收藏夹 ID。 */
+export async function resolveFolder(b: Bili, input: string): Promise<string> {
+  const s = (await expand(b, input.trim())).trim()
+  const id = /[?&]fid=(\d+)/.exec(s)?.[1] ?? /(?:^|\/)ml(\d+)/.exec(s)?.[1] ?? /^\d+$/.exec(s)?.[0]
+  if (id) return id
+  throw new CatbusError('USAGE', `无法识别的收藏夹：${input}`, { hint: '传收藏夹 ID 或 folder list 输出的 url（https://space.bilibili.com/<mid>/favlist?fid=<id>）' })
 }
 
 /** 用户：mid、空间 URL、`me`。 */
@@ -94,7 +119,7 @@ export async function resolveRoom(b: Bili, input: string): Promise<string> {
   const mid = s === 'me' || /space\.bilibili\.com\/\d+/.test(s) || /^uid:?\d+$/i.test(s) ? await resolveUser(b, s) : null
   if (mid) {
     const d = await api.roomByMid(b, mid)
-    if (!d?.roomid || d.roomStatus === 0) throw new CatbusError('UPSTREAM', `用户 ${mid} 没有开通直播间`, { detail: { mid } })
+    if (!d?.roomid || d.roomStatus === 0) throw new CatbusError('UPSTREAM', s === 'me' ? '这个账号还没有开通直播间' : `用户 ${mid} 没有开通直播间`, { detail: { mid } })
     return String(d.roomid)
   }
   throw new CatbusError('USAGE', `无法识别的直播间：${input}`, {

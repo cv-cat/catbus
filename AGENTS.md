@@ -243,8 +243,8 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | bilibili | `danmaku list <item>` | 视频弹幕 | Danmaku[] |
 | bilibili | `danmaku send <item> <text> --offset <秒> [--color] [--font-size] [--position]` | 发视频弹幕。`--color` 为 `#RRGGBB` 或十进制，`--font-size` 默认 25，`--position scroll\|top\|bottom` 默认 `scroll` | `{id}` |
 | bilibili | `dynamic publish --text [--image]` | 发动态 | `{id url}` |
-| bilibili | `dynamic delete <id>` | 删动态 | `{id}` |
-| bilibili | `article publish --title --text [--cover] [--category] [--tag] [--summary] [--draft]` | 发专栏：先存草稿，再提交。`--summary` 为摘要；`--draft` 只存草稿、不提交 | `{id url}` |
+| bilibili | `dynamic delete <id>` | 删动态。`<id>` 为动态 ID 或动态链接（`dynamic publish` 输出的 `id`、`url` 都可以） | `{id}` |
+| bilibili | `article publish --title --text [--category] [--tag] [--summary] [--draft]` | 发专栏：先存草稿，再提交。`--category` 为专栏分区 ID（数字，默认 0），没有对应的 categories 命令；`--summary` 为摘要；`--draft` 只存草稿、不提交。上游没有专栏封面，所以没有 `--cover` | `{id url}` |
 | bilibili | `draft get <id>` | 专栏草稿 | Item（`kind` 为 `article`，`status` 为 `draft`） |
 | bilibili | `draft delete <id>` | 删专栏草稿 | `{id}` |
 | bilibili | `user items <user> [--keyword <词>]` | 私有选项：只看投稿里匹配关键词的 | Item[] |

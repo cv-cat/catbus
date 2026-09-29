@@ -8,8 +8,8 @@ import type { HandlerContext } from '../../../core/registry.js'
  * 人工过极验（上游 tools/geetest_helper.py 的 serve）：在 127.0.0.1 起一个页面，加载极验官方控件，
  * 用户在浏览器里完成验证后页面把 validate / seccode 回传过来。
  *
- * 只要有 gt 和 challenge 就能用：登录的自动识别失败时由 geetest.solve 调用；
- * 撤稿（item delete，需要 validate / seccode / challenge）等其他挡着极验的操作也可以直接调 manualGeetest。
+ * 只要有 gt 和 challenge 就能用。目前只有登录用：自动识别失败时由 geetest.solve 调用。
+ * 撤稿（item delete）也挡着极验，但它的 gt / challenge 从哪里申请上游没写，还没有接上。
  */
 
 export interface ManualResult {

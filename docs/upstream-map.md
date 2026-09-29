@@ -150,16 +150,20 @@
   - `builder/auth.py` 的 `BiliAuth`：`from_cookie`、`from_qrcode_login`、`from_sms_login`、`from_session(path)`（读 session.json，支持自动刷新）、`anonymous`。
   - `is_login` 看 `SESSDATA`，csrf 取自 `bili_jct`。
 - **登录**：`apis/bili_login_apis.py` 的 `BiliLoginApi`：`qrcode_login`、`sms_login`、`password_login`、`refresh_cookies`、`logout`。
-  - `refresh_cookies` 对应 catbus 的自动刷新；`logout` 是 10 个平台里唯一的服务端登出。
+  - `refresh_cookies` 对应 catbus 的自动刷新；`logout` 对应 `auth logout` 的服务端登出（10 个平台里有服务端登出的只有 B 站和快手）。
 - **上游凭证来源**：仓库根目录的 `session.json`（`utils/session.py` 写入），`cookies.txt` 是兼容镜像。
 - **API**（静态方法，第一个参数为 `auth`）
-  - `apis/bili_apis.py` 的 `BiliApi`：`get_nav`、`search_type`、`get_video_info(bvid/aid)`、`get_video_detail`、`get_play_url`、`get_danmaku_seg`、`get_replies(oid)`、`get_user_info(mid)`、`get_user_videos`、`get_all_user_videos`、`get_rcmd_feed`、`get_popular`、`get_subtitle_view`、`report_heartbeat`
+  - `apis/bili_apis.py` 的 `BiliApi`：`get_nav`、`search_type`、`get_video_info(bvid/aid)`、`get_video_detail`、`get_play_url`、`get_player_info`、`get_danmaku_seg`、`get_replies(oid)`、`get_user_info(mid)`、`get_user_videos`、`get_all_user_videos`、`get_rcmd_feed`、`get_popular`、`report_heartbeat`
   - `apis/bili_creator_apis.py`：`post_video`、`submit_archive`（转载来源、同步动态、禁止转载）、`delete_archive`、`get_my_archives`、`post_dynamic`、`remove_dynamic`、`save_article_draft`、`submit_article`、`get_article_draft`、`delete_article_draft`
   - `apis/bili_interact_apis.py`：`like`、`add_coin(also_like)`、`favour(add_media_ids, del_media_ids)`、`triple`、`add_reply(type_, root, parent)`、`delete_reply(type_)`、`send_danmaku(color, fontsize, mode)`
   - `apis/bili_live_apis.py`：`get_room_init`、`get_room_by_mid`、`get_room_info`、`send_gift`、`send_danmaku(color, mode, reply_mid, reply_uname)`、`start_live`、`stop_live`
 - **catbus 的对应**（不直观的几处）
   - `item related` 取 `get_video_detail` 返回的 `Related`；`item search --type article` 是 `search_type(search_type='article')`。
-  - 评论区类型按参数识别：稿件 1、专栏（cv 号）12、动态 17。
+  - 评论区类型按参数识别：稿件 1、专栏（cv 号）12、动态 17。动态只对纯文字和转发动态成立：图文动态的评论区是 type 11 + 相簿 rid，专栏动态是 type 12 + cv 号，从动态 ID 换过去要动态详情接口，上游没有，所以 `comment list / add / delete` 标 ◐。
+  - `item subtitles` 用 `get_player_info` 返回的 `subtitle.subtitles[].subtitle_url` 下载字幕 JSON；上游的 `get_subtitle_view` 返回 protobuf，没有用。
+  - `folder items` 是非上游的：上游没有收藏夹内容接口，按网页端补的 `x/v3/fav/resource/list`（`api.favResources`），没有对拍。`item uncollect` 不带 `--folder` 时，用 `get_fav_folders` 多带 `type=2&rid=<aid>` 的请求（非上游，`api.favFoldersOf`）按 `fav_state` 找收着它的收藏夹，没有 `fav_state` 时从全部收藏夹移出。
+  - `article publish`：上游的 `save_article_draft` / `submit_article` 把 `banner_url` 固定为空串，没有专栏封面，所以没有 `--cover`。
+  - upos 上传：上游四段都走 `http_util.request`，cookie 是整份 B 站 cookie，发往 upos 节点（bilivideo.com）时也带，catbus 照做。
   - 直播间参数传主播时，先用 `get_room_by_mid` 换房间号。
   - 推荐流翻页时，把上一批的 `av_<aid>`（已关注为 `av_n_<aid>`）作为 `last_showlist` 带上；格式见 bilibili-API-collect，上游只给了参数。
   - 长连接 `live/server.py`：op 3 的人气值和没有专门映射的 cmd 都输出为 Event `other`。
