@@ -286,10 +286,13 @@ export async function passCaptcha(ks: Ks, risk: Json, referer?: string): Promise
     result = await solver.solve()
   } catch (err) {
     ks.log.warn(`自动过滑块出错：${(err as Error).message}`)
+    ks.lastCaptcha = { error: (err as Error).message }
     return false
   }
   const ok = result?.result === 1
   if (ok) ks.log.info('滑块验证通过，重发原请求')
   else ks.log.warn(`滑块验证没有通过：${JSON.stringify(result).slice(0, 120)}`)
+  // 没过时把服务端的回复（result、error_msg）带进最后的 RISK_CONTROL，方便判断是缺口不对（350002）还是人机检查不认（350014）
+  ks.lastCaptcha = ok ? null : { result: result?.result ?? null, error_msg: result?.error_msg ?? result?.message ?? null }
   return ok
 }

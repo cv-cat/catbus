@@ -72,6 +72,8 @@ export class Ks {
   readonly falconLogin = new HxFalconSigner()
   readonly sig3 = new Sig3Signer()
   /** CP 发布权限预检的缓存（_cp_publish_authority_response）。 */
+  /** 最近一次自动过滑块没通过时服务端的回复（报 RISK_CONTROL 时放进 detail.verify）。 */
+  lastCaptcha: Json = null
   cpAuthority: Json = null
   cpLastVideoFinish: Json = null
 
@@ -218,7 +220,7 @@ export class Ks {
     let result = await post()
     // GraphQL 侧（评论、详情）同样会撞风控：挑战改成 REST 的形状交给同一个求解器
     if (isRisk(result) && (await passCaptcha(this, graphqlRiskAsRest(result), referer))) result = await post()
-    checkGraphql(this.ctx, result)
+    checkGraphql(this.ctx, result, this.lastCaptcha)
     return result
   }
 
@@ -360,7 +362,7 @@ export class Ks {
 
   /** www REST / cp 的 `result`；1 以外映射成 catbus 错误。 */
   check(body: Json, what = '快手'): Json {
-    const risk = riskOf(body)
+    const risk = riskOf(body, this.lastCaptcha)
     if (risk) throw risk
     const code = body?.result
     if (code === 1 || code === undefined) return body
@@ -456,15 +458,17 @@ export function liveContext(referer: string): LiveContext {
  * 滑块风控：REST `data.result == 400002`，GraphQL `errors` + `data.captcha.url`。
  * www 的 REST / GraphQL 已经自动过过一次（见 captcha.ts），走到这里说明没过，或者是不自动过的站点（直播、创作者中心）。
  */
-function riskOf(body: Json): CatbusError | null {
+function riskOf(body: Json, verify: Json = null): CatbusError | null {
   if (!isRisk(body)) return null
   const data = body?.data ?? {}
   const url = data.result === 400002 ? data.url : data.captcha?.url
-  return new CatbusError('RISK_CONTROL', '快手要求滑块验证（风控）：自动验证没有通过（直播、创作者中心的接口不自动验证），稍后再试', { detail: { kind: 'captcha', url } })
+  return new CatbusError('RISK_CONTROL', '快手要求滑块验证（风控）：自动验证没有通过（直播、创作者中心的接口不自动验证），稍后再试', {
+    detail: { kind: 'captcha', url, ...(verify ? { verify } : {}) },
+  })
 }
 
-function checkGraphql(ctx: HandlerContext, body: Json): void {
-  const risk = riskOf(body)
+function checkGraphql(ctx: HandlerContext, body: Json, verify: Json = null): void {
+  const risk = riskOf(body, verify)
   if (risk) throw risk
   const errors = body?.errors
   if (Array.isArray(errors) && errors.length) {

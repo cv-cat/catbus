@@ -310,7 +310,8 @@ const CASES: Record<string, { run: () => Promise<unknown>; result?: (actual: any
     run: async () => {
       const k = await logged()
       const r = await api.commentList(k, PHOTO, 'cur1')
-      expect(() => k.check(r)).toThrow(expect.objectContaining({ code: 'RISK_CONTROL' }))
+      // 最后的 RISK_CONTROL 带上服务端对 verify 的回复
+      expect(() => k.check(r)).toThrow(expect.objectContaining({ code: 'RISK_CONTROL', detail: expect.objectContaining({ kind: 'captcha', verify: expect.objectContaining({ result: expect.anything() }) }) }))
       return r
     },
     result: (a, e) => expect(a).toEqual(e),
