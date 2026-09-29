@@ -129,16 +129,19 @@
 
 | 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x |
 |---|---|---|---|---|---|---|---|---|---|---|
-| comment list | ◐ | ✓ | ✓ | ✓ | ◐ | ◐ | — | ○ | ◐ | ✓ |
+| comment list | ◐ | ✓ | ✓ | ◐ | ◐ | ◐ | — | ○ | ◐ | ✓ |
 | comment replies | ✓ | ✓ | ✓ | ○ | ◐ | ○ | — | — | — | ○ |
-| comment add | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — | ✓ |
-| comment delete | ○ | ○ | ○ | ✓ | ○ | ○ | — | — | — | ✓ |
+| comment add | ○ | ✓ | ✓ | ◐ | ○ | ○ | — | — | — | ✓ |
+| comment delete | ○ | ○ | ○ | ◐ | ○ | ○ | — | — | — | ✓ |
 | comment like / unlike | ○ | ○ | ○ | ○ | ○ | ○ | — | — | — | ✓ |
 
 - xhs `comment list`：--product 规划中
+- bilibili `comment list`：动态只支持纯文字和转发：图文动态（带图）的评论区挂在相簿上，上游没有查相簿 ID 的接口；稿件、专栏不受影响
 - kuaishou `comment list`：--product 规划中
 - weibo `comment list`：只有一级评论
 - jd `comment list`：只有第一页；--limit N 在一次请求里取 N 条
+- bilibili `comment add`：动态只支持纯文字和转发：图文动态（带图）的评论区挂在相簿上，上游没有查相簿 ID 的接口；稿件、专栏不受影响
+- bilibili `comment delete`：动态只支持纯文字和转发：图文动态（带图）的评论区挂在相簿上，上游没有查相簿 ID 的接口；稿件、专栏不受影响
 - `comment list --product`：xhs、douyin、tiktok、kuaishou
 - `comment list --label`：douyin
 - `comment list --sort` 取值：bilibili popular / latest
@@ -199,6 +202,7 @@
 | topic search | ✓ | ○ | ○ | ○ | ○ | ○ | — | — | — | — |
 | poi search | ✓ | ○ | ◐ | — | ○ | ○ | — | — | — | — |
 
+- bilibili `folder items`：非上游：上游没有收藏夹内容接口，请求按网页端收藏夹页补的（x/v3/fav/resource/list），没有对拍；只列出稿件
 - tiktok `poi search`：在推荐地点里按关键词筛选
 - `folder create --visibility` 取值：tiktok public / private
 - `folder update --visibility` 取值：tiktok public / private

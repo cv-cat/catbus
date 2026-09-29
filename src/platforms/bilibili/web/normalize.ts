@@ -253,6 +253,9 @@ export function popularityEvent(value: number): Event {
   return n.event({ type: 'other', text: `人气值 ${value}` }, { op: 3, popularity: value })
 }
 
+/** INTERACT_WORD 的 msg_type：1 进场，2 关注、4 特别关注、5 互相关注；3 分享没有对应的 Event 类型，和其余取值一样记为 other。 */
+const INTERACT_TYPE: Record<number, Event['type']> = { 1: 'enter', 2: 'follow', 4: 'follow', 5: 'follow' }
+
 /** 直播弹幕长连的业务消息 → Event：弹幕、礼物、进场、关注、点赞，其余 cmd 为 other。 */
 export function liveEvent(msg: any): Event {
   const cmd = String(msg?.cmd ?? '').split(':')[0]!
@@ -269,8 +272,11 @@ export function liveEvent(msg: any): Event {
         { type: 'gift', time: n.time(d.timestamp) ?? undefined, user: ref(d.uid, d.uname), gift: { name: String(d.giftName ?? ''), count: Number(d.num ?? 1) } },
         msg,
       )
-    case 'INTERACT_WORD':
-      return n.event({ type: d.msg_type === 2 ? 'follow' : 'enter', time: n.time(d.timestamp) ?? undefined, user: ref(d.uid, d.uname) }, msg)
+    case 'INTERACT_WORD': {
+      const type = INTERACT_TYPE[Number(d.msg_type)] ?? 'other'
+      const text = type !== 'other' ? undefined : Number(d.msg_type) === 3 ? '分享直播间' : cmd
+      return n.event({ type, time: n.time(d.timestamp) ?? undefined, user: ref(d.uid, d.uname), text }, msg)
+    }
     case 'LIKE_INFO_V3_CLICK':
       return n.event({ type: 'like', user: ref(d.uid, d.uname) }, msg)
     case 'GUARD_BUY':

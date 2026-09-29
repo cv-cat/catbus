@@ -77,11 +77,10 @@ export class Bili {
     if (!this.jar.has('buvid3')) {
       for (const [name, value] of await this.deviceCookies()) this.setDefault(name, () => value)
     }
-    // 上游 `cookie.setdefault('sid', gen_sid())` 总会先算出 gen_sid()，随机数照样消耗
-    const newSid = sid()
-    this.setDefault('sid', () => newSid)
-    this.setDefault('PVID', () => '1')
-    this.setCookie('b_lsid', bLsid())
+    fillSessionCookies(
+      (name) => this.jar.has(name),
+      (name, value) => this.setCookie(name, value),
+    )
     if (isGuest(this.ctx) && Number(this.jar.get('bili_ticket_expires') ?? 0) - TICKET_SKEW < rand.nowSeconds()) {
       await this.refreshTicket()
     }
@@ -179,17 +178,8 @@ export class Bili {
   // ---------------------------------------------------------------- 请求
 
   /** 带风控退避重试的原始请求（上游 http_util.request）。 */
-  async request(req: HttpRequest, retries = 3): Promise<HttpResponse> {
-    let res!: HttpResponse
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      res = await this.http.request(req)
-      if (res.status === 200) {
-        const code = await peekCode(res)
-        if (code === undefined || !RETRYABLE_CODES.has(code)) return res
-      } else if (!RETRYABLE_STATUS.has(res.status)) return res
-      if (attempt < retries) await rand.sleep(1000 * 2 ** attempt)
-    }
-    return res
+  request(req: HttpRequest, retries = 3): Promise<HttpResponse> {
+    return retrying(() => this.http.request(req), this.ctx.signal, retries)
   }
 
   /** 请求并解析 JSON，不检查业务码。 */
@@ -237,6 +227,34 @@ export class Bili {
   }
 }
 
+/**
+ * 会话级 cookie（上游 BiliAuth.from_cookie）：sid、PVID 缺了才补，b_lsid 每次重新生成。
+ * 上游 `cookie.setdefault('sid', gen_sid())` 总会先算出 gen_sid()，随机数照样消耗。
+ */
+export function fillSessionCookies(has: (name: string) => boolean, set: (name: string, value: string) => void): void {
+  const newSid = sid()
+  if (!has('sid')) set('sid', newSid)
+  if (!has('PVID')) set('PVID', '1')
+  set('b_lsid', bLsid())
+}
+
+/**
+ * 风控退避重试（上游 http_util.request）：HTTP 200 但业务码在 RETRYABLE_CODES 里、或 HTTP 状态在 RETRYABLE_STATUS 里时，
+ * 依次等 1、2、4 秒再发，最多再发 retries 次，返回最后一次的响应。B 站接口和极验共用。
+ */
+export async function retrying(send: () => Promise<HttpResponse>, signal?: AbortSignal, retries = 3): Promise<HttpResponse> {
+  let res!: HttpResponse
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    res = await send()
+    if (res.status === 200) {
+      const code = await peekCode(res)
+      if (code === undefined || !RETRYABLE_CODES.has(code)) return res
+    } else if (!RETRYABLE_STATUS.has(res.status)) return res
+    if (attempt < retries) await rand.sleep(1000 * 2 ** attempt, signal)
+  }
+  return res
+}
+
 async function peekCode(res: HttpResponse): Promise<number | undefined> {
   if (!(res.headers.get('content-type') ?? '').includes('json')) return undefined
   try {
@@ -247,14 +265,18 @@ async function peekCode(res: HttpResponse): Promise<number | undefined> {
   }
 }
 
+/** 请求过于频繁（-509、-799）和按 IP 限流的 -412（request was banned，与 HTTP 412 同属限流）；其余风控码（-352 风控校验失败）为 blocked。 */
+const RATE_LIMIT_CODES = new Set([-509, -799, -412])
+
 /** 业务码映射成 catbus 的错误（AGENTS 6.4）。 */
 export function check(ctx: HandlerContext, body: BiliJson): void {
   const code = body?.code
   if (code === 0 || code === undefined) return
   const message = String(body.message ?? body.msg ?? '')
   if (code === -101 || code === -111 || code === 86095) throw authError(ctx, message || undefined)
-  if (RETRYABLE_CODES.has(code) || code === -412) {
-    throw new CatbusError('RISK_CONTROL', `B 站风控拦截：${message || code}`, { detail: { kind: 'blocked', code, message } })
+  if (RETRYABLE_CODES.has(code)) {
+    const kind = RATE_LIMIT_CODES.has(code) ? 'rate_limit' : 'blocked'
+    throw new CatbusError('RISK_CONTROL', `B 站风控拦截：${message || code}`, { detail: { kind, code, message } })
   }
   if (code === 340022 || code === 10031 || code === -625) {
     throw new CatbusError('RISK_CONTROL', `需要人机验证：${message || code}`, { detail: { kind: 'captcha', code, message } })
@@ -264,9 +286,9 @@ export function check(ctx: HandlerContext, body: BiliJson): void {
 
 /**
  * Cookie 续期（上游 refresh_cookies）：每天最多检查一次 cookie/info，需要时换新的 SESSDATA 并确认。
- * 失败只记警告，当前 cookie 往往还能用一阵。
+ * 失败只记警告，当前 cookie 往往还能用一阵。响应里的 Set-Cookie 由 HttpClient 并进 cookie 罐，命令结束时由 core 落盘。
  */
-async function refreshCookies(b: Bili): Promise<void> {
+export async function refreshCookies(b: Bili): Promise<void> {
   const tokens = scope(b.ctx.credential).tokens
   const old = tokens.refresh_token as string | undefined
   if (!old || !b.isLogin) return
@@ -275,13 +297,27 @@ async function refreshCookies(b: Bili): Promise<void> {
   b.ctx.credential.extra.refresh_checked_at = rand.now()
   try {
     const info = await api.cookieInfo(b)
-    if (info.code !== 0 || !info.data?.refresh) return
+    if (info.code !== 0) throw new Error(`查 cookie/info 失败：${info.code} ${info.message ?? ''}`)
+    if (!info.data?.refresh) return
+    // 用服务端给的毫秒时间戳，避开本地时钟偏移
     const csrf = await api.refreshCsrf(b, correspondPath(info.data.timestamp || rand.now()))
-    if (!csrf) throw new Error('correspond 页面没有返回 refresh_csrf')
+    if (!csrf) throw new Error('correspond 页面没有返回 refresh_csrf（路径过期或登录态失效）')
+    const before = b.jar.get('SESSDATA')
     const r = await api.cookieRefresh(b, csrf, old)
-    if (r.code !== 0) throw new Error(`cookie/refresh 返回 ${r.code} ${r.message ?? ''}`)
-    tokens.refresh_token = r.data?.refresh_token ?? ''
-    await api.confirmRefresh(b, old)
+    if (r.code !== 0) throw new Error(`换 Cookie 失败：${r.code} ${r.message ?? ''}`)
+    if (b.jar.get('SESSDATA') === before) throw new Error('换 Cookie 成功，但响应没有带新的 SESSDATA')
+    // 旧 refresh_token 已经用掉：响应里没有新的就删掉，之后不再尝试续期
+    if (r.data?.refresh_token) tokens.refresh_token = r.data.refresh_token
+    else {
+      delete tokens.refresh_token
+      b.ctx.log.warn('续期响应没有新的 refresh_token，之后不能自动续期；过期后请重新登录')
+    }
+    // 两个参数分属新旧两代：csrf 用刷新后的 bili_jct，refresh_token 用刷新前的
+    const confirm = await api.confirmRefresh(b, old)
+    if (confirm.code !== 0) {
+      b.ctx.log.warn(`登录态已续期，但确认更新失败：${confirm.code} ${confirm.message ?? ''}（新 Cookie 可用，旧会话没有失效）`)
+      return
+    }
     b.ctx.log.info('登录态已自动续期')
   } catch (err) {
     b.ctx.log.warn(`登录态续期失败：${(err as Error).message}`)

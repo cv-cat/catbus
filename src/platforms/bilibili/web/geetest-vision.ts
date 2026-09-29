@@ -19,9 +19,16 @@ export function splitSprite(sprite: Rgb): { puzzle: Rgb; hint: Rgb } {
   return { puzzle: crop(sprite, 0, 0, width, height - HINT_HEIGHT), hint: crop(sprite, 0, height - HINT_HEIGHT, width, height) }
 }
 
-/** 检测字符框，按 x1 从左到右（detect_boxes，稳定排序）。 */
+/** 按 x1 从左到右，x1 相同时保持原顺序（Python 的 sorted 是稳定排序）。 */
+const byX = (list: Box[]) =>
+  list
+    .map((b, i) => [b, i] as const)
+    .sort((a, b) => a[0][0] - b[0][0] || a[1] - b[1])
+    .map(([b]) => b)
+
+/** 检测字符框，按 x1 从左到右（detect_boxes）。 */
 export async function detectBoxes(im: Rgb): Promise<Box[]> {
-  return ((await detect(im)) as Box[]).map((b, i) => [b, i] as const).sort((a, b) => a[0][0] - b[0][0] || a[1] - b[1]).map(([b]) => b)
+  return byX((await detect(im)) as Box[])
 }
 
 function intersectionRatio(a: Box, b: Box): number {
@@ -30,12 +37,6 @@ function intersectionRatio(a: Box, b: Box): number {
   const areaB = Math.max(1, (b[2] - b[0]) * (b[3] - b[1]))
   return inter / Math.min(areaA, areaB)
 }
-
-const byX = (list: Box[]) =>
-  list
-    .map((b, i) => [b, i] as const)
-    .sort((a, b) => a[0][0] - b[0][0] || a[1] - b[1])
-    .map(([b]) => b)
 
 /** 合并同一个彩色字的重叠框（merge_duplicate_boxes）：交集占较小框的比例 ≥ threshold 的连成一组取并集。 */
 export function mergeDuplicateBoxes(boxes: Box[], threshold = 0.25): Box[] {

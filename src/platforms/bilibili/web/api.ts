@@ -1,3 +1,4 @@
+import { CatbusError } from '../../../core/errors.js'
 import { type MultipartPart } from '../../../core/http.js'
 import { compactJson, type Pairs, quote } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
@@ -250,19 +251,55 @@ export function addCoin(b: Bili, bvid: string, num = 1, alsoLike = false) {
   return b.post(`${API}/x/web-interface/coin/add`, { headers: h.get(), form })
 }
 
-/** 我创建的收藏夹；传 rid 时每项带 fav_state（该稿件是否在此收藏夹里）。 */
-export function favFolders(b: Bili, mid?: string, rid?: string) {
+/** 我创建的收藏夹（上游 get_fav_folders），data.list[].id 即收藏时用的 media_id。 */
+export function favFolders(b: Bili, mid?: string) {
   const h = headers('GET').referer(`${MAIN}/`)
-  const query: Pairs = [['up_mid', mid ?? b.mid]]
-  if (rid) query.push(['type', 2], ['rid', rid])
-  query.push(['web_location', '333.999'])
+  const query: Pairs = [
+    ['up_mid', mid ?? b.mid],
+    ['web_location', '333.999'],
+  ]
   return b.get(`${API}/x/v3/fav/folder/created/list-all`, { headers: h.get(), query })
+}
+
+/**
+ * 非上游：同一个接口多带 `type=2&rid=<aid>`（网页端收藏弹窗的请求），每项多一个 fav_state（这个稿件在不在该收藏夹里）。
+ * 只给 `item uncollect` 不带 --folder 时找「收着它的收藏夹」用，没有对拍。
+ */
+export function favFoldersOf(b: Bili, aid: string) {
+  const h = headers('GET').referer(`${MAIN}/`)
+  const query: Pairs = [
+    ['up_mid', b.mid],
+    ['type', 2],
+    ['rid', aid],
+    ['web_location', '333.999'],
+  ]
+  return b.get(`${API}/x/v3/fav/folder/created/list-all`, { headers: h.get(), query })
+}
+
+/**
+ * 非上游：收藏夹内容（`folder items`）。上游没有这个接口，按网页端收藏夹页的请求补的，没有对拍。
+ * media_id 是收藏夹 ID（folder list 的 id）。
+ */
+export function favResources(b: Bili, mediaId: string, page = 1, pageSize = 20) {
+  const h = headers('GET').referer('https://space.bilibili.com/')
+  const query: Pairs = [
+    ['media_id', mediaId],
+    ['pn', page],
+    ['ps', pageSize],
+    ['keyword', ''],
+    ['order', 'mtime'],
+    ['type', 0],
+    ['tid', 0],
+    ['platform', 'web'],
+    ['web_location', '333.1387'],
+  ]
+  return b.get(`${API}/x/v3/fav/resource/list`, { headers: h.get(), query })
 }
 
 export async function favour(b: Bili, aid: string, addMediaIds = '', delMediaIds = '') {
   if (!addMediaIds && !delMediaIds) {
     const folders = (await favFolders(b))?.list ?? []
-    if (!folders.length) throw new Error('没有可用的收藏夹')
+    if (!folders.length) throw new CatbusError('UPSTREAM', '没有可用的收藏夹', { hint: '先在网页端建一个收藏夹，或者用 --folder 指定' })
     addMediaIds = String(folders[0].id)
   }
   const h = headers('FORM').referer(`${MAIN}/`)
@@ -511,19 +548,20 @@ export interface ArticleInput {
   title: string
   /** HTML 正文。 */
   content: string
+  /** 专栏分区 ID，默认 0。 */
   category?: number
-  bannerUrl?: string
   /** 逗号分隔。 */
   tags?: string
   summary?: string
 }
 
+/** 上游 save_article_draft / submit_article 的表单：banner_url（封面）固定为空串，上游没有专栏封面。 */
 function articleForm(b: Bili, a: ArticleInput): Pairs {
   return [
     ['title', a.title],
     ['content', a.content],
     ['summary', a.summary ?? ''],
-    ['banner_url', a.bannerUrl ?? ''],
+    ['banner_url', ''],
     ['category', a.category ?? 0],
     ['tags', a.tags ?? ''],
     ['list_id', 0],

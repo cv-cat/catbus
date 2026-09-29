@@ -1,0 +1,597 @@
+{
+  "input": {
+    "file": "demo.mp4",
+    "size": 10,
+    "chunk_size": 4
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://member.bilibili.com/preupload?name=demo.mp4&size=10&r=upos&profile=ugcfx%2Fbup&ssl=0&version=2.14.0&build=2140000&webVersion=2.14.0",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ],
+        [
+          "origin",
+          "https://member.bilibili.com"
+        ],
+        [
+          "referer",
+          "https://member.bilibili.com/"
+        ]
+      ],
+      "cookies": [
+        [
+          "buvid3",
+          "FAKE-BUVID3-0000infoc"
+        ],
+        [
+          "b_nut",
+          "1789990000"
+        ],
+        [
+          "_uuid",
+          "FAKE-UUID-0000infoc"
+        ],
+        [
+          "buvid4",
+          "FAKE-BUVID4-0000"
+        ],
+        [
+          "buvid_fp",
+          "0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "SESSDATA",
+          "fake-sessdata"
+        ],
+        [
+          "bili_jct",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "DedeUserID",
+          "10001"
+        ],
+        [
+          "DedeUserID__ckMd5",
+          "fakeckmd5"
+        ],
+        [
+          "sid",
+          "kba2fqoy"
+        ],
+        [
+          "rpdid",
+          "fake|rpdid"
+        ],
+        [
+          "PVID",
+          "1"
+        ],
+        [
+          "bili_ticket",
+          "fake.ticket"
+        ],
+        [
+          "bili_ticket_expires",
+          "1790259200"
+        ],
+        [
+          "b_lsid",
+          "52151C33_1A0C4506C7B"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://upos-cs-upcdnbda2.bilivideo.com/ugcfx2lf/n260929fake01.mp4?uploads=&output=json&profile=ugcfx%2Fbup&filesize=10&partsize=4&biz_id=999",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ],
+        [
+          "origin",
+          "https://member.bilibili.com"
+        ],
+        [
+          "referer",
+          "https://member.bilibili.com/"
+        ],
+        [
+          "x-upos-auth",
+          "fake-upos-auth"
+        ]
+      ],
+      "cookies": [
+        [
+          "buvid3",
+          "FAKE-BUVID3-0000infoc"
+        ],
+        [
+          "b_nut",
+          "1789990000"
+        ],
+        [
+          "_uuid",
+          "FAKE-UUID-0000infoc"
+        ],
+        [
+          "buvid4",
+          "FAKE-BUVID4-0000"
+        ],
+        [
+          "buvid_fp",
+          "0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "SESSDATA",
+          "fake-sessdata"
+        ],
+        [
+          "bili_jct",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "DedeUserID",
+          "10001"
+        ],
+        [
+          "DedeUserID__ckMd5",
+          "fakeckmd5"
+        ],
+        [
+          "sid",
+          "kba2fqoy"
+        ],
+        [
+          "rpdid",
+          "fake|rpdid"
+        ],
+        [
+          "PVID",
+          "1"
+        ],
+        [
+          "bili_ticket",
+          "fake.ticket"
+        ],
+        [
+          "bili_ticket_expires",
+          "1790259200"
+        ],
+        [
+          "b_lsid",
+          "52151C33_1A0C4506C7B"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "PUT",
+      "url": "https://upos-cs-upcdnbda2.bilivideo.com/ugcfx2lf/n260929fake01.mp4?partNumber=1&uploadId=fake-upload-id&chunk=0&chunks=3&size=4&start=0&end=4&total=10&output=json",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ],
+        [
+          "origin",
+          "https://member.bilibili.com"
+        ],
+        [
+          "referer",
+          "https://member.bilibili.com/"
+        ],
+        [
+          "x-upos-auth",
+          "fake-upos-auth"
+        ],
+        [
+          "Content-Type",
+          "application/octet-stream"
+        ]
+      ],
+      "cookies": [
+        [
+          "buvid3",
+          "FAKE-BUVID3-0000infoc"
+        ],
+        [
+          "b_nut",
+          "1789990000"
+        ],
+        [
+          "_uuid",
+          "FAKE-UUID-0000infoc"
+        ],
+        [
+          "buvid4",
+          "FAKE-BUVID4-0000"
+        ],
+        [
+          "buvid_fp",
+          "0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "SESSDATA",
+          "fake-sessdata"
+        ],
+        [
+          "bili_jct",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "DedeUserID",
+          "10001"
+        ],
+        [
+          "DedeUserID__ckMd5",
+          "fakeckmd5"
+        ],
+        [
+          "sid",
+          "kba2fqoy"
+        ],
+        [
+          "rpdid",
+          "fake|rpdid"
+        ],
+        [
+          "PVID",
+          "1"
+        ],
+        [
+          "bili_ticket",
+          "fake.ticket"
+        ],
+        [
+          "bili_ticket_expires",
+          "1790259200"
+        ],
+        [
+          "b_lsid",
+          "52151C33_1A0C4506C7B"
+        ]
+      ],
+      "body": "0123",
+      "multipart": null
+    },
+    {
+      "method": "PUT",
+      "url": "https://upos-cs-upcdnbda2.bilivideo.com/ugcfx2lf/n260929fake01.mp4?partNumber=2&uploadId=fake-upload-id&chunk=1&chunks=3&size=4&start=4&end=8&total=10&output=json",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ],
+        [
+          "origin",
+          "https://member.bilibili.com"
+        ],
+        [
+          "referer",
+          "https://member.bilibili.com/"
+        ],
+        [
+          "x-upos-auth",
+          "fake-upos-auth"
+        ],
+        [
+          "Content-Type",
+          "application/octet-stream"
+        ]
+      ],
+      "cookies": [
+        [
+          "buvid3",
+          "FAKE-BUVID3-0000infoc"
+        ],
+        [
+          "b_nut",
+          "1789990000"
+        ],
+        [
+          "_uuid",
+          "FAKE-UUID-0000infoc"
+        ],
+        [
+          "buvid4",
+          "FAKE-BUVID4-0000"
+        ],
+        [
+          "buvid_fp",
+          "0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "SESSDATA",
+          "fake-sessdata"
+        ],
+        [
+          "bili_jct",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "DedeUserID",
+          "10001"
+        ],
+        [
+          "DedeUserID__ckMd5",
+          "fakeckmd5"
+        ],
+        [
+          "sid",
+          "kba2fqoy"
+        ],
+        [
+          "rpdid",
+          "fake|rpdid"
+        ],
+        [
+          "PVID",
+          "1"
+        ],
+        [
+          "bili_ticket",
+          "fake.ticket"
+        ],
+        [
+          "bili_ticket_expires",
+          "1790259200"
+        ],
+        [
+          "b_lsid",
+          "52151C33_1A0C4506C7B"
+        ]
+      ],
+      "body": "4567",
+      "multipart": null
+    },
+    {
+      "method": "PUT",
+      "url": "https://upos-cs-upcdnbda2.bilivideo.com/ugcfx2lf/n260929fake01.mp4?partNumber=3&uploadId=fake-upload-id&chunk=2&chunks=3&size=2&start=8&end=10&total=10&output=json",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ],
+        [
+          "origin",
+          "https://member.bilibili.com"
+        ],
+        [
+          "referer",
+          "https://member.bilibili.com/"
+        ],
+        [
+          "x-upos-auth",
+          "fake-upos-auth"
+        ],
+        [
+          "Content-Type",
+          "application/octet-stream"
+        ]
+      ],
+      "cookies": [
+        [
+          "buvid3",
+          "FAKE-BUVID3-0000infoc"
+        ],
+        [
+          "b_nut",
+          "1789990000"
+        ],
+        [
+          "_uuid",
+          "FAKE-UUID-0000infoc"
+        ],
+        [
+          "buvid4",
+          "FAKE-BUVID4-0000"
+        ],
+        [
+          "buvid_fp",
+          "0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "SESSDATA",
+          "fake-sessdata"
+        ],
+        [
+          "bili_jct",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "DedeUserID",
+          "10001"
+        ],
+        [
+          "DedeUserID__ckMd5",
+          "fakeckmd5"
+        ],
+        [
+          "sid",
+          "kba2fqoy"
+        ],
+        [
+          "rpdid",
+          "fake|rpdid"
+        ],
+        [
+          "PVID",
+          "1"
+        ],
+        [
+          "bili_ticket",
+          "fake.ticket"
+        ],
+        [
+          "bili_ticket_expires",
+          "1790259200"
+        ],
+        [
+          "b_lsid",
+          "52151C33_1A0C4506C7B"
+        ]
+      ],
+      "body": "89",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://upos-cs-upcdnbda2.bilivideo.com/ugcfx2lf/n260929fake01.mp4?output=json&name=demo.mp4&profile=ugcfx%2Fbup&uploadId=fake-upload-id&biz_id=999",
+      "headers": [
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ],
+        [
+          "origin",
+          "https://member.bilibili.com"
+        ],
+        [
+          "referer",
+          "https://member.bilibili.com/"
+        ],
+        [
+          "x-upos-auth",
+          "fake-upos-auth"
+        ],
+        [
+          "Content-Type",
+          "application/json"
+        ]
+      ],
+      "cookies": [
+        [
+          "buvid3",
+          "FAKE-BUVID3-0000infoc"
+        ],
+        [
+          "b_nut",
+          "1789990000"
+        ],
+        [
+          "_uuid",
+          "FAKE-UUID-0000infoc"
+        ],
+        [
+          "buvid4",
+          "FAKE-BUVID4-0000"
+        ],
+        [
+          "buvid_fp",
+          "0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "SESSDATA",
+          "fake-sessdata"
+        ],
+        [
+          "bili_jct",
+          "fakecsrf0123456789abcdef01234567"
+        ],
+        [
+          "DedeUserID",
+          "10001"
+        ],
+        [
+          "DedeUserID__ckMd5",
+          "fakeckmd5"
+        ],
+        [
+          "sid",
+          "kba2fqoy"
+        ],
+        [
+          "rpdid",
+          "fake|rpdid"
+        ],
+        [
+          "PVID",
+          "1"
+        ],
+        [
+          "bili_ticket",
+          "fake.ticket"
+        ],
+        [
+          "bili_ticket_expires",
+          "1790259200"
+        ],
+        [
+          "b_lsid",
+          "52151C33_1A0C4506C7B"
+        ]
+      ],
+      "body": "{\"parts\":[{\"partNumber\":1,\"eTag\":\"etag\"},{\"partNumber\":2,\"eTag\":\"etag\"},{\"partNumber\":3,\"eTag\":\"etag\"}]}",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "OK": 1,
+        "endpoint": "//upos-cs-upcdnbda2.bilivideo.com",
+        "upos_uri": "upos://ugcfx2lf/n260929fake01.mp4",
+        "auth": "fake-upos-auth",
+        "biz_id": 999,
+        "chunk_size": 4
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "OK": 1,
+        "upload_id": "fake-upload-id",
+        "key": "/n260929fake01.mp4"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "text/plain"
+      },
+      "body": "MULTIPART_PUT_SUCCESS"
+    },
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "text/plain"
+      },
+      "body": "MULTIPART_PUT_SUCCESS"
+    },
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "text/plain"
+      },
+      "body": "MULTIPART_PUT_SUCCESS"
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "OK": 1,
+        "location": "upos://ugcfx2lf/n260929fake01.mp4"
+      }
+    }
+  ],
+  "result": {
+    "filename": "n260929fake01",
+    "biz_id": 999,
+    "key": "ugcfx2lf/n260929fake01.mp4"
+  },
+  "error": null
+}

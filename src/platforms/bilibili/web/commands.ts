@@ -1,7 +1,9 @@
+import { extname } from 'node:path'
 import { brotliDecompressSync, inflateSync } from 'node:zlib'
 import { GUEST } from '../../../core/auth-store.js'
 import { CatbusError } from '../../../core/errors.js'
 import { downloadMedia, readMedia } from '../../../core/files.js'
+import { parseJson } from '../../../core/http.js'
 import { cookieCredential, finishLogin, freshCredential, loginContext, poll, readPassword, showQrcode, smsLogin } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import * as pb from '../../../core/pb.js'
@@ -15,8 +17,8 @@ import { Bili, bili, check } from './client.js'
 import { CANVAS_1 } from './gaia.js'
 import * as geetest from './geetest.js'
 import * as norm from './normalize.js'
-import { COOKIE_DOMAIN, headers, PROFILE } from './profile.js'
-import { resolveItem, resolveReplyTarget, resolveRoom, resolveUser } from './resolve.js'
+import { COOKIE_DOMAIN, PROFILE } from './profile.js'
+import { DYNAMIC_REPLY_HINT, type ReplyTarget, resolveDynamic, resolveFolder, resolveItem, resolveReplyTarget, resolveRoom, resolveUser } from './resolve.js'
 import { encryptPassword } from './sign.js'
 import { uploadVideo } from './upos.js'
 
@@ -155,14 +157,22 @@ export async function itemGet(ctx: Ctx) {
   return norm.video(await api.videoInfo(b, bvid))
 }
 
-const SEARCH_ORDER: Record<string, string> = { general: 'totalrank', views: 'click', latest: 'pubdate', collects: 'stow' }
+/** --sort → 上游 search_type 的 order。视频：totalrank / click / pubdate / stow；专栏没有「收藏多」（它的取值是 totalrank / pubdate / click / attention / scores）。 */
+const SEARCH_ORDER: Record<'video' | 'article', Record<string, string>> = {
+  video: { general: 'totalrank', views: 'click', latest: 'pubdate', collects: 'stow' },
+  article: { general: 'totalrank', views: 'click', latest: 'pubdate' },
+}
 
 /** --type → 上游 search_type：video 视频、article 专栏。 */
 export async function itemSearch(ctx: Ctx) {
+  const type = ctx.options.type === 'article' ? 'article' : 'video'
+  const article = type === 'article'
+  const sort = (ctx.options.sort as string | undefined) ?? 'general'
+  const order = SEARCH_ORDER[type][sort]
+  if (!order) throw new CatbusError('UNSUPPORTED', `bilibili 的专栏搜索不支持 --sort ${sort}`, { hint: '专栏搜索的 --sort 可以是 general、views、latest' })
   const b = await bili(ctx)
   const p = page(ctx)
-  const article = ctx.options.type === 'article'
-  const d = await api.searchType(b, ctx.args.keyword!, SEARCH_ORDER[(ctx.options.sort as string) ?? 'general'], p, article ? 'article' : 'video')
+  const d = await api.searchType(b, ctx.args.keyword!, order, p, type)
   const result: any[] = d.result ?? []
   // 视频搜索会混进课程、广告卡片，只留真正的稿件（上游 search_by_num）
   const list = article ? result.filter((v) => v.id).map(norm.searchArticle) : result.filter((v) => v.type === 'video' && v.bvid).map(norm.searchVideo)
@@ -240,15 +250,25 @@ export async function itemCollect(ctx: Ctx) {
   return { id: bvid }
 }
 
-/** --folder 指定从哪些收藏夹移出（上游 favour 的 del_media_ids）；不给时从所有收着它的收藏夹移出。 */
+/**
+ * --folder 指定从哪些收藏夹移出（上游 favour 的 del_media_ids）。不给时从所有收着它的收藏夹移出：
+ * 上游没有查「哪些收藏夹收着它」的方法，用收藏夹列表多带 rid 时返回的 fav_state 判断（非上游，见 api.favFoldersOf）；
+ * 服务端没返回 fav_state 时退回到从全部收藏夹移出。一个收藏夹都没收着它时不发请求，照样返回成功。
+ */
 export async function itemUncollect(ctx: Ctx) {
   const b = await bili(ctx)
   b.requireLogin()
   const { bvid, aid } = await resolveItem(b, ctx.args.item!)
   let del = ctx.options.folder as string | undefined
   if (!del) {
-    const folders = ((await api.favFolders(b, undefined, aid))?.list ?? []).filter((f: any) => f.fav_state === 1)
-    del = folders.map((f: any) => f.id).join(',')
+    const folders: any[] = (await api.favFoldersOf(b, aid))?.list ?? []
+    const known = folders.some((f) => f.fav_state != null)
+    if (!known) ctx.log.debug('收藏夹列表没有返回 fav_state，从全部收藏夹移出')
+    del = folders
+      .filter((f) => !known || f.fav_state === 1)
+      .map((f) => f.id)
+      .join(',')
+    if (!del) ctx.log.info(`${bvid} 不在任何收藏夹里`)
   }
   if (del) await api.favour(b, aid, '', del)
   return { id: bvid }
@@ -263,12 +283,7 @@ export async function itemPublish(ctx: Ctx) {
   if (!o.tag?.length) throw new CatbusError('USAGE', 'B 站投稿至少需要一个 --tag')
   if (!o.category) throw new CatbusError('USAGE', 'B 站投稿需要 --category（分区 id）', { hint: 'catbus bilibili item categories' })
   const video = await uploadVideo(b, await readMedia(b.http, o.video))
-  let cover = ''
-  if (o.cover) {
-    const img = await readMedia(b.http, o.cover)
-    const r = await api.uploadCover(b, img.data, img.contentType.split('/')[1] ?? 'jpeg')
-    cover = r.url
-  }
+  const cover = o.cover ? await uploadCover(b, o.cover) : ''
   const d = await api.submitArchive(b, {
     videos: [video],
     title: o.title,
@@ -283,6 +298,13 @@ export async function itemPublish(ctx: Ctx) {
     noReprint: o.allowReprint ? 0 : 1,
   })
   return n.item({ id: d.bvid, kind: 'video', url: norm.videoUrl(d.bvid), title: o.title, text: o.text ?? null, cover: cover || null, status: 'reviewing' }, d)
+}
+
+/** 上传投稿封面，返回图片地址（上游 post_video 里的 upload_cover）。data URL 的类型取扩展名，缺省 jpeg。 */
+export async function uploadCover(b: Bili, input: string): Promise<string> {
+  const img = await readMedia(b.http, input)
+  const suffix = extname(img.filename).slice(1).toLowerCase() || 'jpeg'
+  return String((await api.uploadCover(b, img.data, suffix))?.url ?? '')
 }
 
 /**
@@ -344,10 +366,11 @@ export async function itemSubtitles(ctx: Ctx): Promise<Subtitle[]> {
     const url = n.url(s.subtitle_url)
     let lines: Subtitle['lines'] = []
     if (url) {
-      const body = await (await b.http.request({ url, cookies: false, headers: [['user-agent', PROFILE.ua], ['referer', 'https://www.bilibili.com/']] })).json<any>()
-      lines = (body.body ?? []).map((l: any) => ({ from: Number(l.from), to: Number(l.to), text: String(l.content ?? '') }))
+      const res = await b.http.request({ url, cookies: false, headers: [['user-agent', PROFILE.ua], ['referer', 'https://www.bilibili.com/']] })
+      const body = await parseJson<any>(res)
+      lines = (body?.body ?? []).map((l: any) => ({ from: Number(l.from), to: Number(l.to), text: String(l.content ?? '') }))
     }
-    out.push({ lang: s.lan, name: n.str(s.lan_doc), url, lines })
+    out.push({ lang: String(s.lan ?? ''), name: n.str(s.lan_doc), url, lines })
   }
   return out
 }
@@ -357,13 +380,26 @@ export async function itemSubtitles(ctx: Ctx): Promise<Subtitle[]> {
 /** 评论排序 → 上游 get_replies 的 mode：3 热门、2 时间。 */
 const REPLY_MODE: Record<string, number> = { popular: 3, latest: 2 }
 
+/** 动态评论区的业务错误带上 DYNAMIC_REPLY_HINT：图文动态不在 type 17 下，常见的是 12002 或者取到空列表。 */
+async function onReplies<T>(t: ReplyTarget, run: () => Promise<T>): Promise<T> {
+  try {
+    return await run()
+  } catch (err) {
+    if (t.type === 17 && err instanceof CatbusError && err.code === 'UPSTREAM') {
+      throw new CatbusError('UPSTREAM', err.message, { hint: err.hint ?? DYNAMIC_REPLY_HINT, detail: err.detail })
+    }
+    throw err
+  }
+}
+
 /** 评论区按参数形态识别：稿件 1、专栏 12、动态 17（见 resolveReplyTarget）。 */
 export async function commentList(ctx: Ctx) {
   const b = await bili(ctx)
   const t = await resolveReplyTarget(b, ctx.args.item!)
   const p = page(ctx)
-  const d = await api.replies(b, t.oid, t.type, p, REPLY_MODE[(ctx.options.sort as string) ?? 'popular'] ?? 3)
+  const d = await onReplies(t, () => api.replies(b, t.oid, t.type, p, REPLY_MODE[(ctx.options.sort as string) ?? 'popular'] ?? 3))
   const list = [...(p === 1 ? (d.top_replies ?? []) : []), ...(d.replies ?? [])].map((r: any) => norm.reply(r, t.itemId))
+  if (t.type === 17 && p === 1 && !list.length) ctx.log.info(`动态 ${t.oid} 的评论区是空的。${DYNAMIC_REPLY_HINT}`)
   return paged(list, p + 1, !d.cursor?.is_end && list.length > 0)
 }
 
@@ -374,7 +410,7 @@ export async function commentAdd(ctx: Ctx) {
   const t = await resolveReplyTarget(b, ctx.args.item!)
   const to = ctx.options.replyTo as string | undefined
   const root = (ctx.options.root as string | undefined) ?? to ?? ''
-  const d = await api.addReply(b, t.oid, ctx.args.text!, t.type, root, to ?? '')
+  const d = await onReplies(t, () => api.addReply(b, t.oid, ctx.args.text!, t.type, root, to ?? ''))
   return d.reply ? norm.reply(d.reply, t.itemId) : n.comment({ id: n.id(d.rpid_str ?? d.rpid), item_id: t.itemId, text: ctx.args.text!, parent_id: to ?? null }, d)
 }
 
@@ -382,14 +418,14 @@ export async function commentDelete(ctx: Ctx) {
   const b = await bili(ctx)
   b.requireLogin()
   const t = await resolveReplyTarget(b, ctx.args.item!)
-  await api.deleteReply(b, t.oid, ctx.args.comment!, t.type)
+  await onReplies(t, () => api.deleteReply(b, t.oid, ctx.args.comment!, t.type))
   return { id: ctx.args.comment! }
 }
 
 // ================================================================ 弹幕（扩展）
 
 /** 解 DmSegMobileReply：elems=1，每条 id=1 progress=2 ctime=8 content=7 idStr=12。 */
-function decodeDanmaku(buf: Uint8Array, bvid: string): Danmaku[] {
+export function decodeDanmaku(buf: Uint8Array, bvid: string): Danmaku[] {
   return pb.messages(pb.decode(buf), 1).map((e) => ({
     id: pb.str(e, 12) ?? pb.int64(e, 1) ?? '',
     item_id: bvid,
@@ -462,7 +498,8 @@ export async function feedList(ctx: Ctx) {
   const d = await api.rcmdFeed(b, c.page, 12, c.showlist)
   const items: any[] = d.item ?? []
   const list = items.filter((v) => v.goto === 'av' && v.bvid).map(norm.feedVideo)
-  return paged(list, `${c.page + 1}:${showlist(items)}`, true)
+  // 推荐流没有尽头；这一批一条都没有时停下，免得 --all 一直空翻
+  return paged(list, `${c.page + 1}:${showlist(items)}`, items.length > 0)
 }
 
 // ================================================================ folder
@@ -477,23 +514,12 @@ export async function folderList(ctx: Ctx) {
   return paged(list, null, false)
 }
 
+/** 收藏夹内容（非上游，见 api.favResources）。只留稿件，失效的和别的类型（音频、合集）跳过。 */
 export async function folderItems(ctx: Ctx) {
   const b = await bili(ctx)
+  const folder = await resolveFolder(b, ctx.args.folder!)
   const p = page(ctx)
-  const d = await b.get(`https://api.bilibili.com/x/v3/fav/resource/list`, {
-    headers: headers('GET').referer('https://space.bilibili.com/').get(),
-    query: [
-      ['media_id', ctx.args.folder!],
-      ['pn', p],
-      ['ps', 20],
-      ['keyword', ''],
-      ['order', 'mtime'],
-      ['type', 0],
-      ['tid', 0],
-      ['platform', 'web'],
-      ['web_location', '333.1387'],
-    ],
-  })
+  const d = await api.favResources(b, folder, p)
   return paged((d?.medias ?? []).filter((m: any) => m.bvid).map(norm.favVideo), p + 1, Boolean(d?.has_more))
 }
 
@@ -504,8 +530,9 @@ export async function mediaUpload(ctx: Ctx): Promise<Media> {
   b.requireLogin()
   const file = await readMedia(b.http, ctx.args.file!)
   if (file.contentType.startsWith('video/')) {
+    // 投稿用的是 filename；upos 的对象 key 不是可访问的地址，url 留空（core 的 Media.url 不可为 null，同 x）
     const v = await uploadVideo(b, file)
-    return n.media({ id: v.filename, type: 'video', url: v.key }, v)
+    return n.media({ id: v.filename, type: 'video', url: '' }, v)
   }
   const d = await api.uploadDynamicImage(b, file.data, file.filename, file.contentType)
   return n.media({ type: 'image', url: d.image_url, width: n.count(d.image_width), height: n.count(d.image_height) }, d)
@@ -535,25 +562,20 @@ export async function dynamicPublish(ctx: Ctx) {
 export async function dynamicDelete(ctx: Ctx) {
   const b = await bili(ctx)
   b.requireLogin()
-  await api.removeDynamic(b, ctx.args.id!)
-  return { id: ctx.args.id! }
+  const id = await resolveDynamic(b, ctx.args.id!)
+  await api.removeDynamic(b, id)
+  return { id }
 }
 
-/** 先存草稿再提交（上游 save_article_draft + submit_article）；--draft 时只存草稿。 */
+/** 先存草稿再提交（上游 save_article_draft + submit_article）；--draft 时只存草稿。上游没有专栏封面，banner_url 固定为空。 */
 export async function articlePublish(ctx: Ctx) {
   const b = await bili(ctx)
   b.requireLogin()
   const o = ctx.options as Record<string, any>
-  let banner = ''
-  if (o.cover) {
-    const img = await readMedia(b.http, o.cover)
-    banner = (await api.uploadCover(b, img.data, img.contentType.split('/')[1] ?? 'jpeg')).url
-  }
   const article: api.ArticleInput = {
     title: o.title,
     content: o.text,
     category: Number(o.category ?? 0),
-    bannerUrl: banner,
     tags: ((o.tag as string[] | undefined) ?? []).join(','),
     summary: o.summary ?? '',
   }
@@ -590,7 +612,13 @@ export async function draftDelete(ctx: Ctx) {
 
 // ================================================================ live
 
-async function room(b: Bili, input: string) {
+interface Room {
+  roomId: string
+  uid: string
+  status: number
+}
+
+async function room(b: Bili, input: string): Promise<Room> {
   const init = await api.roomInit(b, await resolveRoom(b, input))
   return { roomId: String(init.room_id), uid: String(init.uid), status: init.live_status as number }
 }
@@ -639,11 +667,16 @@ export async function liveHistory(ctx: Ctx) {
   return [...(d.admin ?? []), ...(d.room ?? [])].map(norm.historyEvent)
 }
 
+/** 直播间的礼物面板（上游 get_gift_list 要分区，先取 get_room_info）。 */
+async function roomGifts(b: Bili, r: Room) {
+  const info = (await api.roomInfo(b, r.roomId)).room_info ?? {}
+  return api.giftList(b, r.roomId, info.parent_area_id ?? 0, info.area_id ?? 0, r.uid)
+}
+
 export async function liveGifts(ctx: Ctx) {
   const b = await bili(ctx)
   const r = await room(b, ctx.args.room!)
-  const info = (await api.roomInfo(b, r.roomId)).room_info ?? {}
-  const d = await api.giftList(b, r.roomId, info.parent_area_id ?? 0, info.area_id ?? 0, r.uid)
+  const d = await roomGifts(b, r)
   const inRoom = new Set((d.gift_data?.room_gift_list?.gold_list ?? []).map((g: any) => String(g.gift_id)))
   const all: any[] = d.gift_config?.base_config?.list ?? []
   return all
@@ -687,12 +720,8 @@ export async function liveSend(ctx: Ctx) {
       style.replyMid = await resolveUser(b, replyUser)
       style.replyUname = await userName(b, style.replyMid)
     }
-    const d = await api.sendLiveDanmaku(b, r.roomId, ctx.args.text!, style)
-    let id = r.roomId
-    try {
-      id = JSON.parse(d?.mode_info?.extra ?? '{}').id_str ?? id
-    } catch {}
-    return { id }
+    await api.sendLiveDanmaku(b, r.roomId, ctx.args.text!, style)
+    return { id: r.roomId }
   }
   const count = Number(ctx.options.count ?? 1)
   const bag = ((await api.bagList(b, r.roomId))?.list ?? []).find((g: any) => String(g.gift_id) === giftId && g.gift_num >= count)
@@ -700,8 +729,7 @@ export async function liveSend(ctx: Ctx) {
     await api.sendGift(b, r.roomId, r.uid, giftId, count, bag.bag_id, 'silver', 0)
     return { id: r.roomId }
   }
-  const info = (await api.roomInfo(b, r.roomId)).room_info ?? {}
-  const list = (await api.giftList(b, r.roomId, info.parent_area_id ?? 0, info.area_id ?? 0, r.uid)).gift_config?.base_config?.list ?? []
+  const list = (await roomGifts(b, r)).gift_config?.base_config?.list ?? []
   const gift = list.find((g: any) => String(g.id) === giftId)
   if (!gift) throw new CatbusError('USAGE', `礼物 ${giftId} 不在这个直播间的礼物列表里`, { hint: `catbus bilibili live gifts ${ctx.args.room}` })
   await api.sendGift(b, r.roomId, r.uid, giftId, count, 0, gift.coin_type, gift.price)
@@ -718,18 +746,12 @@ async function userName(b: Bili, mid: string): Promise<string> {
   }
 }
 
-async function ownRoom(b: Bili): Promise<string> {
-  const d = await api.roomByMid(b, b.mid)
-  if (!d?.roomid || d.roomStatus === 0) throw new CatbusError('UPSTREAM', '这个账号还没有开通直播间')
-  return String(d.roomid)
-}
-
 export async function liveStart(ctx: Ctx) {
   const b = await bili(ctx)
   b.requireLogin()
   const area = ctx.options.category as string | undefined
   if (!area) throw new CatbusError('USAGE', '开播需要 --category（直播分区 id）', { hint: 'catbus bilibili live categories' })
-  const roomId = await ownRoom(b)
+  const roomId = await resolveRoom(b, 'me')
   const d = await api.startLive(b, roomId, area)
   return { id: roomId, push: { url: d.rtmp?.addr ?? null, key: d.rtmp?.code ?? null } }
 }
@@ -737,7 +759,7 @@ export async function liveStart(ctx: Ctx) {
 export async function liveStop(ctx: Ctx) {
   const b = await bili(ctx)
   b.requireLogin()
-  const roomId = await ownRoom(b)
+  const roomId = await resolveRoom(b, 'me')
   await api.stopLive(b, roomId)
   return { id: roomId }
 }
@@ -749,7 +771,7 @@ const OP_HEARTBEAT_REPLY = 3
 const OP_MESSAGE = 5
 const OP_AUTH = 7
 
-function pack(body: Uint8Array, op: number, ver = 1): Buffer {
+export function pack(body: Uint8Array, op: number, ver = 1): Buffer {
   const head = Buffer.alloc(16)
   head.writeUInt32BE(16 + body.length, 0)
   head.writeUInt16BE(16, 4)
@@ -759,7 +781,7 @@ function pack(body: Uint8Array, op: number, ver = 1): Buffer {
   return Buffer.concat([head, body])
 }
 
-function unpack(data: Buffer, out: [number, unknown][] = []): [number, unknown][] {
+export function unpack(data: Buffer, out: [number, unknown][] = []): [number, unknown][] {
   let offset = 0
   while (offset + 16 <= data.length) {
     const len = data.readUInt32BE(offset)
