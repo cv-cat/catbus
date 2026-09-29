@@ -5,7 +5,7 @@ import type { HandlerContext } from '../../../core/registry.js'
 import { endpointFlag } from '../../../core/auth-store.js'
 import { b3TraceId, Session, xrayTraceId, type XhsJson } from './client.js'
 import { checkSign, signFull } from './js.js'
-import { AS, CREATOR, CREATOR_BROWSER, CREATOR_ORDER, type Headers, LOGIN_LANG, orderedHeaders, UA, XHR_ACCEPT } from './profile.js'
+import { CREATOR, CREATOR_BROWSER, CREATOR_ORDER, type Headers, LOGIN_LANG, orderedHeaders, UA, XHR_ACCEPT } from './profile.js'
 import { CreatorState, DS_REFRESH_MS, type Storage } from './state.js'
 
 /**
@@ -14,7 +14,6 @@ import { CreatorState, DS_REFRESH_MS, type Storage } from './state.js'
  */
 
 const CREATOR_TIERS: Record<string, number[]> = { '0201': [200], '0101': [196, 197, 198] }
-const GETDSS = /function\s+getdss\s*\(\s*\)\s*\{\s*return\s+'(\d+)'/
 const DS_TTL = 300_000
 const AUTH_COOKIES = ['customer-sso-sid', 'access-token-creator.xiaohongshu.com', 'galaxy_creator_session_id', 'web_session']
 
@@ -103,16 +102,6 @@ export class Creator extends Session {
     this.state = new CreatorState(this.shared())
   }
 
-  sync(): void {
-    const updates: Record<string, string> = {}
-    for (const [k, v] of Object.entries(this.shared())) if (this.state.cookies[k] !== v) updates[k] = v
-    this.state.updateCookies(updates)
-  }
-
-  protected override afterResponse(): void {
-    this.sync()
-  }
-
   save(): void {
     this.credential.device.creator = { local: this.state.storage() }
   }
@@ -129,22 +118,12 @@ export class Creator extends Session {
   async dsBundle(force = false): Promise<{ dsl: string; program: string }> {
     const cached = this.credential.extra.creator_ds as { dsl: string; program: string; at: number } | undefined
     if (!force && cached?.dsl && cached.program && rand.now() - cached.at < DS_TTL) return cached
-    const res = await this.send({
-      url: `${AS}/api/sec/v1/ds?appId=ugc`,
-      headers: [
-        ['User-Agent', UA],
-        ['Referer', `${CREATOR}/`],
-        ['Accept', '*/*'],
-        ['accept-encoding', 'gzip, deflate, br, zstd'],
-      ],
-    })
-    const text = await res.text()
-    const dsl = GETDSS.exec(text)?.[1]
-    if (!dsl || !(text.includes('_dsf') || text.includes('__$c'))) {
+    const { dsl, program } = await this.fetchDs('ugc', `${CREATOR}/`)
+    if (!dsl || !(program.includes('_dsf') || program.includes('__$c'))) {
       if (cached?.dsl) return cached
       throw new CatbusError('UPSTREAM', '小红书 ds 接口（ugc）没有返回 DS 程序，无法签名')
     }
-    const bundle = { dsl, program: text, at: rand.now() }
+    const bundle = { dsl, program, at: rand.now() }
     this.credential.extra.creator_ds = bundle
     return bundle
   }

@@ -198,5 +198,3 @@ export function postedNote(v: any): Item {
     v,
   )
 }
-
-export const categoryId = (v: string) => v

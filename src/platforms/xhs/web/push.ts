@@ -3,6 +3,7 @@ import { CatbusError } from '../../../core/errors.js'
 import { compactJson } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { openSocket, type Socket } from '../../../core/stream.js'
+import { celestialLt } from './api.js'
 import type { Pc } from './client.js'
 import { PUSH_URL, UA, WEB } from './profile.js'
 
@@ -304,9 +305,42 @@ export interface Push {
   close(): void
 }
 
-/** 上游 connect_push_from_storage：没有 RWP token 时先 celestial/lt 换一个，再握手、注册 im（可选进直播间）。 */
+/** 长连的等待时限（毫秒）：握手回执、发送回执（上游 _wait_transport_ack 的 10 秒）。测试里调短。 */
+export const PUSH_TIMEOUTS = { handshake: 10_000, ack: 10_000 }
+
+const TIMEOUT = Symbol('timeout')
+
+/** ms 毫秒后兑现为 TIMEOUT 的定时器（真实时间，不受 rand 的假时钟影响）；用完 cancel。 */
+function timer(ms: number): { expired: Promise<typeof TIMEOUT>; cancel(): void } {
+  let t: ReturnType<typeof setTimeout> | undefined
+  const expired = new Promise<typeof TIMEOUT>((resolve) => (t = setTimeout(() => resolve(TIMEOUT), ms)))
+  return { expired, cancel: () => clearTimeout(t) }
+}
+
+/**
+ * 在 ms 毫秒内等 pick 认领一帧（返回非 undefined 的值）。超时或连接断开时返回 undefined。
+ * 超时后那次挂起的读取还在，会吞掉下一帧，所以这条连接不能再读，调用方随即 close。
+ */
+export async function awaitFrame<T>(conn: Push, ms: number, pick: (frame: any) => T | undefined): Promise<T | undefined> {
+  const frames = conn.frames[Symbol.asyncIterator]()
+  const wait = timer(ms)
+  try {
+    for (;;) {
+      const r = await Promise.race([frames.next(), wait.expired])
+      if (r === TIMEOUT || r.done) return undefined
+      const v = pick(r.value)
+      if (v !== undefined) return v
+    }
+  } finally {
+    wait.cancel()
+  }
+}
+
+/**
+ * 上游 connect_push_from_storage：没有 RWP token 时先 celestial/lt 换一个，再握手、注册 im（可选进直播间）。
+ * 握手回执最多等 PUSH_TIMEOUTS.handshake；握手没成功时关掉连接再抛错。
+ */
 export async function connectPush(p: Pc, signal: AbortSignal, roomId?: string): Promise<Push> {
-  const { celestialLt } = await import('./api.js')
   const tokenValid = () => p.state.rwpToken && p.state.rwpToken.uid === p.userId && (p.state.rwpToken.expiredAt == null || p.state.rwpToken.expiredAt > rand.now())
   if (!tokenValid()) {
     p.state.rwpToken = null
@@ -326,27 +360,36 @@ export async function connectPush(p: Pc, signal: AbortSignal, roomId?: string): 
       return { raw: String(raw) }
     }
   }
-  const [hs, hsId] = handshakeFrame(id)
-  await socket.send(hs)
-  // 浏览器等握手的 c=0 回执后才注册，否则后续帧都会被拒（3100001 Account has not privilege）
-  const deadline = rand.now() + 10_000
-  for (;;) {
-    if (rand.now() > deadline) throw new CatbusError('NETWORK', '私信长连握手超时')
-    const r = await it.next()
-    if (r.done) throw new CatbusError('NETWORK', '私信长连在握手时断开')
-    const f = parse(r.value)
-    if (f?.m !== hsId) {
-      pending.push(f)
-      continue
+  try {
+    const [hs, hsId] = handshakeFrame(id)
+    await socket.send(hs)
+    // 浏览器等握手的 c=0 回执后才注册，否则后续帧都会被拒（3100001 Account has not privilege）
+    const wait = timer(PUSH_TIMEOUTS.handshake)
+    try {
+      for (;;) {
+        const r = await Promise.race([it.next(), wait.expired])
+        if (r === TIMEOUT) throw new CatbusError('NETWORK', `私信长连握手超时（${PUSH_TIMEOUTS.handshake / 1000} 秒没有回执）`, { detail: { kind: 'timeout' } })
+        if (r.done) throw new CatbusError('NETWORK', '私信长连在握手时断开')
+        const f = parse(r.value)
+        if (f?.m !== hsId) {
+          pending.push(f)
+          continue
+        }
+        const c = f?.b?.a?.c
+        if (c !== 0) throw new CatbusError('AUTH_EXPIRED', `私信长连握手被拒绝：c=${c} ${f?.b?.a?.m ?? ''}`, { hint: 'catbus xhs auth login' })
+        break
+      }
+    } finally {
+      wait.cancel()
     }
-    const c = f?.b?.a?.c
-    if (c !== 0) throw new CatbusError('AUTH_EXPIRED', `私信长连握手被拒绝：c=${c} ${f?.b?.a?.m ?? ''}`, { hint: 'catbus xhs auth login' })
-    break
-  }
-  await socket.send(registerFrame('im', 'protobuf'))
-  if (roomId) {
-    await socket.send(registerFrame('room', 'json'))
-    await socket.send(joinRoomFrame(roomId))
+    await socket.send(registerFrame('im', 'protobuf'))
+    if (roomId) {
+      await socket.send(registerFrame('room', 'json'))
+      await socket.send(joinRoomFrame(roomId))
+    }
+  } catch (err) {
+    socket.close()
+    throw err
   }
   const beat = setInterval(() => void socket.send(heartbeatFrame()).catch(() => {}), 30_000).unref()
   return {

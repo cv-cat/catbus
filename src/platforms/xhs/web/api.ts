@@ -1,8 +1,8 @@
 import { CatbusError } from '../../../core/errors.js'
 import { quote, urlencode } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
-import { type Pc, splice, type XhsJson } from './client.js'
-import { EDITH, insertAfter, LIVE, orderedHeaders, PC_ORDER, SO, UA, WEB } from './profile.js'
+import { businessOrder, type Pc, pcSignedHeaders, splice, type XhsJson } from './client.js'
+import { EDITH, insertAfter, LIVE, navigationHeaders, orderedHeaders, PC_ORDER, SO, UA, WEB } from './profile.js'
 
 /**
  * 上游 apis/xhs_pc_apis.py（XHS_Apis）与 apis/xhs_live.py（XHSLiveAPI）的请求构造，一个函数对应一个上游方法，
@@ -81,8 +81,6 @@ export function homefeed(p: Pc, category: string, cursorScore: string, refreshTy
     'POST',
   )
 }
-
-export const SORT_TYPES = ['general', 'time_descending', 'popularity_descending', 'comment_descending', 'collect_descending']
 
 const NOTE_TYPE_TAGS = ['不限', '视频笔记', '普通笔记']
 const NOTE_TIME_TAGS = ['不限', '一天内', '一周内', '半年内']
@@ -192,7 +190,6 @@ export async function celestialLt(p: Pc) {
 
 /** get_note_no_water_video：无登录的笔记页导航，取 og:video。 */
 export async function noteVideo(p: Pc, noteId: string): Promise<string | null> {
-  const { navigationHeaders } = await import('./profile.js')
   const res = await p.http.request({ url: `${WEB}/explore/${noteId}`, headers: orderedHeaders(navigationHeaders(), PC_ORDER.navigation, null, { optional: ['cookie'] }), cookies: false })
   return /<meta name="og:video" content="(.*?)">/.exec(await res.text())?.[1] ?? null
 }
@@ -220,7 +217,6 @@ export async function liveRequest(p: Pc, origin: string, api: string, method: 'G
   const context = p.state.nextSignContext(api)
   const b1 = p.state.currentB1(context.now)
   const dslPair = p.state.dslPair(await p.dsl(), rand.now())
-  const { pcSignedHeaders, businessOrder } = await import('./client.js')
   const signed = pcSignedHeaders(p.state, api, data, { b1, dslPair, context, userId: p.userId, clientHints: false, trace: origin !== LIVE })
   let h = signed.headers
   h.referer = `${WEB}/`

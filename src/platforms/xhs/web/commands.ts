@@ -3,13 +3,12 @@ import { imageSize } from '../../../core/image.js'
 import { downloadMedia, type LocalMedia, readMedia } from '../../../core/files.js'
 import { cookieCredential, finishLogin, freshCredential, interactive, loginContext, poll, prompt, showQrcode, smsLogin } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
-import { parseCookieInput } from '../../../core/cookies.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { AuthStatus, Category, Conversation, Credential, Event, Media, Message, Notice, NoticeCount } from '../../../core/schemas.js'
 import { reconnecting } from '../../../core/stream.js'
 import { authError, isGuest, paged } from '../../../core/toolkit.js'
-import { GUEST } from '../../../core/auth-store.js'
+import { GUEST, readCredential } from '../../../core/auth-store.js'
 import * as api from './api.js'
 import { isAuthFailure, Pc } from './client.js'
 import { Creator } from './creator.js'
@@ -17,7 +16,7 @@ import * as capi from './creator-api.js'
 import { CreatorLogin } from './creator-api.js'
 import * as login from './login.js'
 import * as norm from './normalize.js'
-import { COOKIE_DOMAIN, CREATOR, WEB } from './profile.js'
+import { COOKIE_DOMAIN, WEB } from './profile.js'
 import * as push from './push.js'
 import { resolveNote, resolveRoom, resolveUser } from './resolve.js'
 
@@ -71,6 +70,7 @@ function canBridge(ctx: Ctx): boolean {
  * - creator scope 为空、主站已登录：先桥接；
  * - creator scope 已有 cookie，但创作者接口报登录失效：用主站登录态重新桥接一次，再重试。
  *   主站本身也失效时，桥接的 user/info 验收会报 AUTH_EXPIRED，照常报错。
+ * 桥接只在全部成功后才改凭证（见 creatorFromPc），失败时 creator scope 保持原样，下次还会再桥接。
  */
 async function creator<T>(ctx: Ctx, fn: (c: Creator) => Promise<T>): Promise<T> {
   let c: Creator
@@ -86,14 +86,7 @@ async function creator<T>(ctx: Ctx, fn: (c: Creator) => Promise<T>): Promise<T> 
     const expired = err instanceof CatbusError && (err.code === 'AUTH_REQUIRED' || err.code === 'AUTH_EXPIRED')
     if (!expired || bridged || !canBridge(ctx)) throw err
     ctx.log.info('创作者中心的登录态失效了：用主站的登录态重新初始化')
-    const saved = ctx.credential.scopes.creator
-    try {
-      c = await capi.creatorFromPc(ctx)
-    } catch (bridgeErr) {
-      // 桥接没成功：creator scope 还原成原来的，和 finally 里保存的签名状态对得上
-      if (saved) ctx.credential.scopes.creator = saved
-      throw bridgeErr
-    }
+    c = await capi.creatorFromPc(ctx)
     c.requireScope()
     return await fn(c)
   } finally {
@@ -187,7 +180,6 @@ async function creatorCookie(ctx: Ctx, imported: Credential) {
 }
 
 async function existingOrFresh(ctx: Ctx, method: Credential['method']): Promise<Credential> {
-  const { readCredential } = await import('../../../core/auth-store.js')
   const account = ctx.account ?? 'default'
   return (await readCredential(ctx.platform.id, ctx.endpoint, account).catch(() => null)) ?? freshCredential(ctx, method)
 }
@@ -215,22 +207,28 @@ async function loginCreator(ctx: Ctx, method: 'qrcode' | 'sms') {
   let qr: { id: string; url: string } | null = null
   const phone = method === 'sms' ? ((ctx.options.phone as string | undefined) ?? (interactive() ? await prompt('手机号：') : undefined)) : undefined
   if (method === 'sms' && !phone) throw new CatbusError('USAGE', '短信登录需要 --phone', { hint: 'catbus xhs auth login --scope creator --method sms --phone <手机号>' })
+  // 上游：探测到可复用的会话时跳过扫码 / 短信，直接验收
+  let active = false
+  let sent = false
+  let reason = ''
   for (let attempt = 1; attempt <= 16; attempt++) {
     await l.initCookies()
     await l.bootstrap()
     const session = await l.probeSession()
     await l.completeSecurity()
-    if (session.active) break
+    if ((active = session.active)) break
     if (method === 'qrcode') {
       qr = await l.qrcode()
       if (qr) break
     } else {
       const r = await l.sendCode(phone!)
-      if (r.ok) break
+      if ((sent = r.ok)) break
+      reason = r.message
     }
     ctx.log.warn(`当前设备会话被拒绝，重建匿名设备重试（${attempt}/16）`)
   }
-  if (method === 'qrcode') {
+  if (active) ctx.log.info('检测到可复用的创作者中心会话，跳过扫码 / 短信')
+  else if (method === 'qrcode') {
     if (!qr) throw new CatbusError('RISK_CONTROL', '创作者中心获取二维码失败', { detail: { kind: 'blocked' } })
     await showQrcode(ctx, qr.url, '请用小红书 App 扫码并确认（创作者中心）')
     let last: number | null = null
@@ -246,6 +244,7 @@ async function loginCreator(ctx: Ctx, method: 'qrcode' | 'sms') {
       { interval: 1000 },
     )
   } else {
+    if (!sent) throw new CatbusError('RISK_CONTROL', `创作者中心发送验证码失败${reason ? `：${reason}` : ''}`, { detail: { kind: 'blocked' } })
     const code = (ctx.options.code as string | undefined) ?? (interactive() ? (await prompt('验证码：')).trim() : undefined)
     if (!code) throw new CatbusError('USAGE', '创作者中心短信登录需要在终端里输入验证码，或加 --code', { hint: 'catbus xhs auth login --scope creator --method sms --phone <手机号> --code <验证码>' })
     await l.loginByCode(phone!, code)
@@ -421,9 +420,13 @@ export async function itemPublish(ctx: Ctx) {
     const postTime = o.schedule ? Date.parse(o.schedule) : null
     let postLoc: Record<string, unknown> | null = null
     if (o.poi) {
-      const pois = c.check(await capi.searchPoi(c, o.poi))?.poi_list ?? []
-      const loc = pois.find((x: any) => String(x.poi_id) === o.poi) ?? pois[0]
-      if (!loc) throw new CatbusError('USAGE', `未找到地点：${o.poi}`, { hint: 'catbus xhs poi search <关键词>' })
+      // 上游拿地点名搜索后直接取第一个；这里只认 poi_id 或名称完全相同的那个，免得发到别的地点上
+      const pois: any[] = c.check(await capi.searchPoi(c, o.poi))?.poi_list ?? []
+      const loc = pois.find((x) => String(x.poi_id) === o.poi) ?? pois.find((x) => String(x.name ?? '') === o.poi)
+      if (!loc) {
+        const near = pois.slice(0, 3).map((x) => `${x.name}（${x.poi_id}）`).join('、')
+        throw new CatbusError('USAGE', `没有找到地点 ${o.poi}${near ? `，相近的有：${near}` : ''}`, { hint: `catbus xhs poi search ${o.poi}` })
+      }
       postLoc = { name: loc.name, subname: loc.full_address, poi_id: loc.poi_id, poi_type: loc.poi_type }
     }
     const note = { title: o.title ?? '', desc: o.text ?? '', postTime, postLoc, privacy: o.visibility === 'private' ? 1 : 0 }
@@ -596,15 +599,19 @@ export async function poiSearch(ctx: Ctx) {
 
 // ================================================================ media upload
 
+/**
+ * 上传到创作者中心的素材库（spectrum）。平台只回 fileId、不回 CDN 地址，url 是文件 PUT 到的 ROS 绝对地址；
+ * 发布时引用的是 id（fileId）。
+ */
 export async function mediaUpload(ctx: Ctx): Promise<Media> {
   return creator(ctx, async (c) => {
     const file = await readMedia(c.http, ctx.args.file!)
     if (file.contentType.startsWith('video/')) {
       const up = await capi.uploadMedia(c, file.data, 'video')
-      return n.media({ id: up.fileId, type: 'video', url: `spectrum/${up.fileId}` }, up)
+      return n.media({ id: up.fileId, type: 'video', url: up.url }, up)
     }
     const img = await uploadImage(c, file)
-    return n.media({ id: img.fileId, type: 'image', url: `spectrum/${img.fileId}`, width: img.width, height: img.height }, img)
+    return n.media({ id: img.fileId, type: 'image', url: img.url!, width: img.width, height: img.height }, img)
   })
 }
 
@@ -722,33 +729,32 @@ export async function liveSend(ctx: Ctx) {
   })
 }
 
-const ROOM_ACK_TIMEOUT = 10_000
-
-/** 长连发弹幕（上游 send_room_text）：连上并进房间，发 sendMessage 帧，等同一个 m 的回执（c=0 为成功）。 */
+/**
+ * 长连发弹幕（上游 send_room_text）：连上并进房间，发 sendMessage 帧，等同一个 m 的回执（c=0 为成功）。
+ * 帧发出后没等到回执时报 NETWORK（结果不确定），不当成功。
+ */
 async function sendRoomText(p: Pc, roomId: string, text: string): Promise<void> {
   const me = p.check(await api.userMe(p))
   const userId = String(me?.user_id ?? p.userId)
-  const controller = new AbortController()
-  const conn = await push.connectPush(p, controller.signal, roomId)
-  const timer = setTimeout(() => controller.abort(), ROOM_ACK_TIMEOUT)
+  const conn = await push.connectPush(p, p.ctx.signal, roomId)
   try {
     const [frame, mid] = push.roomTextFrame({ roomId, nickname: String(me?.nickname ?? ''), avatar: String(me?.images ?? me?.imageb ?? ''), userId, content: text })
     await conn.send(frame)
-    for await (const f of conn.frames) {
-      if (f?.m !== mid) continue
-      const c = f?.b?.a?.c
-      if (c != null && c !== 0) throw new CatbusError('UPSTREAM', `直播间长连拒绝了弹幕：c=${c} ${f?.b?.a?.m ?? ''}`.trim(), { detail: { code: c, message: f?.b?.a?.m } })
-      return
+    const a = await push.awaitFrame(conn, push.PUSH_TIMEOUTS.ack, (f) => (f?.m === mid ? (f?.b?.a ?? {}) : undefined))
+    if (!a) {
+      throw new CatbusError('NETWORK', `弹幕已经从直播间长连发出，但 ${push.PUSH_TIMEOUTS.ack / 1000} 秒内没有收到回执，不确定是否发出去了`, {
+        hint: '到直播间确认后再决定要不要重发',
+        detail: { kind: 'timeout', sent: true },
+      })
     }
-    p.ctx.log.warn('直播间长连没有返回发送回执，弹幕可能没有发出去')
+    if (a.c != null && a.c !== 0) throw new CatbusError('UPSTREAM', `直播间长连拒绝了弹幕：c=${a.c} ${a.m ?? ''}`.trim(), { detail: { code: a.c, message: a.m } })
   } finally {
-    clearTimeout(timer)
     conn.close()
   }
 }
 
 /** 直播间事件：customData.type → Event.type。 */
-function roomEvent(payload: any): Event | null {
+export function roomEvent(payload: any): Event | null {
   const c = payload?.customData
   if (!c || typeof c !== 'object') return null
   const t = String(c.type ?? '')
@@ -881,22 +887,27 @@ export async function msgList(ctx: Ctx) {
 
 const HISTORY_LIMIT = 30
 
-/** 消息类型：顶层没有时在 content 里（content 是一段 JSON 字符串：{content, content_type, ...}）。 */
+/** 消息类型：顶层（数字的 type / content_type）没有时在 content 里（content 是一段 JSON 字符串：{content, content_type, ...}）。 */
 function contentType(v: any): number {
-  const top = v.type ?? v.content_type
+  const top = [v?.type, v?.content_type].find((x) => x != null && x !== '' && Number.isFinite(Number(x)))
   if (top != null) return Number(top)
   try {
-    return Number(JSON.parse(v.content)?.content_type ?? 1)
+    return Number(JSON.parse(v?.content)?.content_type ?? 1)
   } catch {
     return 1
   }
+}
+
+/** content_type → Message.type：1 文本、2 图片、3 卡片、4 视频。 */
+function messageType(v: any): Message['type'] {
+  const type = contentType(v)
+  return type === 1 ? 'text' : type === 2 ? 'image' : type === 4 ? 'video' : type === 3 ? 'card' : 'other'
 }
 
 /**
  * 一条消息。单聊里没有 sender 时按 is_self 在自己和对方之间取；群聊没有「对方」，取不到发送者时为 null。
  */
 export function messageOf(v: any, conversation: string, self: string): Message {
-  const type = contentType(v)
   const peer = groupIdOf(conversation) == null ? conversation : null
   const sender = v.sender_id ?? v.sender ?? (v.is_self ? self : peer)
   const info = v.sender_info ?? v.user_info ?? {}
@@ -905,7 +916,7 @@ export function messageOf(v: any, conversation: string, self: string): Message {
       id: String(v.message_id ?? v.id ?? v.mid),
       conversation_id: conversation,
       from: norm.ref({ user_id: sender, nickname: info.nickname ?? v.sender_nickname ?? v.nickname }),
-      type: type === 1 ? 'text' : type === 2 ? 'image' : type === 4 ? 'video' : type === 3 ? 'card' : 'other',
+      type: messageType(v),
       text: n.str(push.innerText(v.content ?? '')),
       created_at: n.time(v.created_at ?? v.create_time ?? v.ts),
     },
@@ -943,34 +954,56 @@ export async function msgSend(ctx: Ctx): Promise<Message> {
     const receiver = ctx.options.to ? (await resolveUser(p, String(ctx.options.to))).id : String(ctx.options.conversation)
     const mid = rand.uuid4()
     const chat = push.encodeChatMessage({ mid, ts: rand.now(), sender: p.userId, receiver, content: text, contentType: 1 })
-    // 优先走长连（上游 send_private_message）；连不上时走 HTTP 短链兜底（send_short_link_message）
-    const controller = new AbortController()
-    try {
-      const conn = await push.connectPush(p, controller.signal)
+    const sent = (id: string, at: unknown, raw: unknown) => n.message({ id, conversation_id: receiver, from: norm.ref({ user_id: p.userId }), text, created_at: n.time(at) }, raw)
+    // 优先走长连（上游 send_private_message）。只有私信还没发出去（连不上、握手失败、帧没写出去）时才走 HTTP 短链兜底
+    // （send_short_link_message）；帧已经发出、只是没等到回执时不再重发，免得对方收到两条
+    const conn = await push.connectPush(p, ctx.signal).catch((err: unknown) => {
+      if (ctx.signal.aborted) throw err
+      ctx.log.debug(`私信长连连不上，改走 HTTP：${(err as Error).message}`)
+      return null
+    })
+    if (conn) {
       try {
-        await conn.send(push.imFrame(chat))
-        const deadline = rand.now() + 10_000
-        for await (const frame of conn.frames) {
-          for (const d of push.decodeImFrame(frame)) {
-            if (d.ack?.mid === mid) {
-              if (d.ack.code !== 0) throw new CatbusError('UPSTREAM', d.ack.msg || `私信发送失败：${d.ack.code}`, { detail: { code: d.ack.code } })
-              return n.message({ id: d.ack.messageId || mid, conversation_id: receiver, from: norm.ref({ user_id: p.userId }), text, created_at: n.time(d.ack.ts) }, d.ack)
-            }
+        const written = await conn.send(push.imFrame(chat)).then(
+          () => true,
+          (err: unknown) => (ctx.log.debug(`私信长连写不出去，改走 HTTP：${(err as Error).message}`), false),
+        )
+        if (written) {
+          const ack = await push.awaitFrame(conn, push.PUSH_TIMEOUTS.ack, (f) => push.decodeImFrame(f).find((d) => d.ack?.mid === mid)?.ack)
+          if (!ack) {
+            throw new CatbusError('NETWORK', `私信已经从长连发出，但 ${push.PUSH_TIMEOUTS.ack / 1000} 秒内没有收到回执，不确定是否送达；为免重复，没有改走 HTTP 重发`, {
+              hint: `先用 catbus xhs msg history ${receiver} 确认，再决定要不要重发`,
+              detail: { kind: 'timeout', mid, sent: true },
+            })
           }
-          if (rand.now() > deadline) break
+          if (ack.code !== 0) throw new CatbusError('UPSTREAM', ack.msg || `私信发送失败：${ack.code}`, { detail: { code: ack.code } })
+          return sent(ack.messageId || mid, ack.ts, ack)
         }
       } finally {
         conn.close()
       }
-    } catch (err) {
-      if (err instanceof CatbusError && err.code === 'UPSTREAM') throw err
-      ctx.log.debug(`长连发送失败，改走 HTTP：${(err as Error).message}`)
-    } finally {
-      controller.abort()
     }
     const r = p.check(await api.sendShortLink(p, push.rsaShortLink(chat)))
-    return n.message({ id: String(r?.message_id ?? mid), conversation_id: receiver, from: norm.ref({ user_id: p.userId }), text, created_at: n.time(rand.now()) }, r)
+    return sent(String(r?.message_id ?? mid), rand.now(), r)
   })
+}
+
+/** 长连推来的一条私信：会话 id 是对方（自己发出的取接收方），类型与 msg history 相同，按 content_type 取。 */
+export function inboundMessageOf(m: push.InboundChat, self: string): Message {
+  const sender = String(m.json?.sender ?? m.json?.sender_id ?? '')
+  const receiver = String(m.json?.receiver ?? m.json?.receiver_id ?? '')
+  const peer = sender && sender !== self ? sender : receiver || sender
+  return n.message(
+    {
+      id: m.messageId || m.mid,
+      conversation_id: peer,
+      from: norm.ref({ user_id: sender || null }),
+      type: messageType(m.json ?? { content: m.payload }),
+      text: n.str(push.innerText(m.json ?? m.payload)),
+      created_at: n.time(m.ts),
+    },
+    m,
+  )
 }
 
 export function msgListen(ctx: Ctx) {
@@ -988,10 +1021,7 @@ export function msgListen(ctx: Ctx) {
               const m = d.message
               if (!m || seen.has(m.messageId || m.mid)) continue
               seen.add(m.messageId || m.mid)
-              const sender = String(m.json?.sender ?? m.json?.sender_id ?? '')
-              const receiver = String(m.json?.receiver ?? m.json?.receiver_id ?? '')
-              const peer = sender && sender !== p.userId ? sender : receiver || sender
-              yield n.message({ id: m.messageId || m.mid, conversation_id: peer, from: norm.ref({ user_id: sender || null }), text: n.str(push.innerText(m.json ?? m.payload)), created_at: n.time(m.ts) }, m)
+              yield inboundMessageOf(m, p.userId)
             }
           }
         } finally {
@@ -1005,15 +1035,33 @@ export function msgListen(ctx: Ctx) {
   })()
 }
 
-/** 标记已读：从会话列表里找到这个会话（会话 id 与 msg list 相同，是对方的 chat_user_id），带上它的 store_id 与未读数。 */
+/** 找会话最多翻几页（每页 100 个）。 */
+const READ_MAX_PAGES = 20
+
+/** 在单聊会话列表里逐页找这个会话，找不到时为 null。 */
+async function findChat(p: Pc, conv: string): Promise<any> {
+  for (let page = 0; page < READ_MAX_PAGES; page++) {
+    const d = p.check(await api.chats(p, page))
+    const list: any[] = d?.chat_list ?? d?.chats ?? []
+    const chat = list.find((c) => chatIdOf(c) === conv)
+    if (chat) return chat
+    if (!d?.has_more || !list.length) return null
+  }
+  return null
+}
+
+/**
+ * 标记已读：从会话列表里找到这个会话（会话 id 与 msg list 相同，是对方的 chat_user_id），带上它的 store_id 与未读数。
+ * 翻遍会话列表也找不到时报 USAGE，不发已读请求。
+ */
 export async function msgRead(ctx: Ctx) {
   const conv = ctx.args.conversation!
   privateOnly(conv, '标记已读')
   return run(ctx, async (p) => {
-    const d = p.check(await api.chats(p))
-    const chat = (d?.chat_list ?? d?.chats ?? []).find((c: any) => chatIdOf(c) === conv)
+    const chat = await findChat(p, conv)
+    if (!chat) throw new CatbusError('USAGE', `会话列表里没有这个会话：${conv}`, { hint: 'catbus xhs msg list' })
     p.check(
-      await api.markRead(p, [{ chat_id: conv, read_store_id: Number(chat?.last_store_id ?? chat?.store_id ?? 0), unread_count: Number(chat?.unread_count ?? 0), type: 1, need_rm_offline: true }]),
+      await api.markRead(p, [{ chat_id: conv, read_store_id: Number(chat.last_store_id ?? chat.store_id ?? 0), unread_count: Number(chat.unread_count ?? 0), type: 1, need_rm_offline: true }]),
     )
     return { id: conv }
   })
@@ -1034,5 +1082,3 @@ export async function msgDelete(ctx: Ctx) {
     return { id: ctx.args.conversation! }
   })
 }
-
-export { CREATOR, parseCookieInput }
