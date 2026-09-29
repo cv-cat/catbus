@@ -1,7 +1,7 @@
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { writeCredential } from '../src/core/auth-store.js'
 import type { HeaderPairs } from '../src/core/http.js'
 import { jsonDumps } from '../src/core/py.js'
@@ -87,6 +87,51 @@ function fakeConnect(script: Script[]) {
     return socket
   })
   return { state, restore }
+}
+
+/** 断线重连用：每次连接给一个新的假 socket，按 conns 依次推送；drop 的连接推完就断开（服务端关闭），其余等 hangup()。 */
+function fakeReconnects(conns: { script: Script[]; drop?: boolean }[]) {
+  const sockets: { sent: string[]; closed: boolean }[] = []
+  let hung = false
+  const wakes = new Set<() => void>()
+  const poke = () => {
+    for (const w of wakes) w()
+    wakes.clear()
+  }
+  const wait = () => new Promise<void>((r) => wakes.add(r))
+  const restore = mockConnect(async () => {
+    const conn = conns[sockets.length] ?? { script: [] }
+    const state = { sent: [] as string[], closed: false }
+    sockets.push(state)
+    const socket: ImSocket = {
+      async send(data) {
+        state.sent.push(data)
+        poke()
+      },
+      close() {
+        state.closed = true
+        poke()
+      },
+      messages: {
+        async *[Symbol.asyncIterator]() {
+          for (const s of conn.script) {
+            while (state.sent.length < s.after && !state.closed) await wait()
+            if (state.closed) return
+            yield s.data
+          }
+          if (conn.drop) return
+          while (!state.closed && !hung) await wait()
+        },
+      },
+    }
+    return socket
+  })
+  /** 服务端断开所有还开着的连接。 */
+  const hangup = () => {
+    hung = true
+    poke()
+  }
+  return { sockets, hangup, restore }
 }
 
 async function until(cond: () => boolean): Promise<void> {
@@ -344,6 +389,37 @@ describe('taobao 对拍：命令流程', () => {
     restore()
     expect(error).toMatchObject({ code: 'AUTH_EXPIRED' })
     expect(state.closed).toBe(true)
+  })
+
+  it('msg listen：断线重连后旧连接的心跳停掉，只有新连接每 15 秒发心跳', async () => {
+    const c = loadCase('taobao', 'ws_listen')
+    // 第一条连接注册完就断开；重连时再取一次 token
+    const { sockets, hangup, restore } = fakeReconnects([{ script: [], drop: true }, { script: [] }])
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+    const controller = new AbortController()
+    const ctx = { ...ctxOf(), signal: controller.signal }
+    try {
+      const { error } = await replay(combine(c, c), async () => {
+        const it = msgListen(ctx)[Symbol.asyncIterator]()
+        const next = it.next()
+        await until(() => sockets.length === 2 && sockets[1]!.sent.length === 3)
+        // 两条连接都发了 /reg、ackDiff、心跳
+        for (const s of sockets) expect(s.sent.map((f) => JSON.parse(f).lwp)).toEqual(['/reg', '/r/SyncStatus/ackDiff', '/!'])
+        vi.advanceTimersByTime(15_000)
+        expect(sockets[0]!.sent).toHaveLength(3)
+        expect(sockets[1]!.sent.map((f) => JSON.parse(f).lwp)).toEqual(['/reg', '/r/SyncStatus/ackDiff', '/!', '/!'])
+        controller.abort()
+        hangup()
+        expect(await next).toEqual({ done: true, value: undefined })
+        // 结束后不再有心跳
+        vi.advanceTimersByTime(60_000)
+        expect(sockets[1]!.sent).toHaveLength(4)
+      })
+      if (error) throw error
+    } finally {
+      vi.useRealTimers()
+      restore()
+    }
   })
 
   it('msg send --item：商品页取卖家 → get_token → 建会话 → 发文字', async () => {

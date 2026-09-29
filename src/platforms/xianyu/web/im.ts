@@ -264,7 +264,6 @@ export class Im {
   close(): void {
     if (this.closed) return
     this.closed = true
-    if (this.heartbeat) clearInterval(this.heartbeat)
     this.socket?.close()
     this.finish(null)
   }
@@ -319,9 +318,13 @@ export class Im {
     return new CatbusError('UPSTREAM', `私信请求 ${lwp} 失败：${reason || res.code}`, { detail: { code: res.code, body: res.body ?? null } })
   }
 
+  /** 连接结束（主动关闭或断线）：停心跳，等待中的请求和推送都以错误结束。 */
   private finish(err: unknown): void {
     if (err && !this.failure) this.failure = err
     this.closed = true
+    // 断线时 read() 先走到这里，之后的 close() 会直接返回，心跳必须在这里停
+    if (this.heartbeat) clearInterval(this.heartbeat)
+    this.heartbeat = null
     const e = this.failure ?? new CatbusError('NETWORK', '私信长连接已关闭', { detail: { kind: 'connect' } })
     for (const w of this.pending.values()) w.reject(e)
     this.pending.clear()
