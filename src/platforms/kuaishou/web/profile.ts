@@ -9,6 +9,34 @@ export const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 
 export const SEC_CH_UA = '"Not)A;Brand";v="8", "Chromium";v="151", "Google Chrome";v="151"'
 export const BROWSER = 'chrome_149' as const
 
+/**
+ * 进程级浏览器档案（上游 fingerprint.py 的 get_profile）：请求头、gdfp manMachine 载荷与滑块的
+ * captchaExtraParam 都从这里取值，不能各自漂移——UA、几何互相矛盾时服务端回 350014 anti check err。
+ * 几何是上游在 Chrome 151 验证码 iframe 里实测的（CURRENT_GEO 与单独给出的 CURRENT_OUTER_WIDTH）。
+ */
+export const PROFILE = {
+  ua: UA,
+  platform: 'Win32',
+  language: 'zh-CN',
+  timeZone: 'UTC+8',
+  productSub: '20030107',
+  product: 'Gecko',
+  cpuCores: 20,
+  webglVendor: 'Google Inc. (NVIDIA)',
+  webglRenderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 Ti (0x00002D04) Direct3D11 vs_5_0 ps_5_0, D3D11)',
+  screenWidth: 2560,
+  screenHeight: 1440,
+  availWidth: 2560,
+  availHeight: 1440,
+  innerHeight: 1440,
+  outerWidth: 2576,
+  outerHeight: 1460,
+  devicePixelRatio: 1,
+} as const
+
+/** `screen.width x screen.height`（gdfp 字段 8、captchaExtraParam 的 resolution）。 */
+export const RESOLUTION = `${PROFILE.screenWidth}x${PROFILE.screenHeight}`
+
 export const ACCEPT_LANGUAGE = 'zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6'
 export const ACCEPT_ENCODING = 'gzip, deflate, br, zstd'
 const ACCEPT_WWW = 'application/json'

@@ -11,6 +11,7 @@ import { cacheDir, staticFile } from '../../../core/paths.js'
 import { DEFAULT_SEED, isDeterministic, now } from '../../../core/rand.js'
 import { createContext } from '../../../core/vm.js'
 import { compactJson } from '../../../core/py.js'
+import { UA } from './profile.js'
 
 /**
  * webweapon 预言机（上游 utils/sign/weapon_oracle.py、like_token.py）：在 node:vm 里跑官方 kwf / kws 脚本
@@ -267,8 +268,6 @@ function kwsName(signUrl: string): string {
   if (!ok) throw new CatbusError('UPSTREAM', `KWS signUrl 不符合官方脚本地址：${signUrl}`, { detail: { kind: 'webweapon' } })
   return name
 }
-
-const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36'
 
 /**
  * 找到 signUrl 指定的那一份 kws 脚本：先找随包的已抓副本，再找本机缓存，都没有就下载（校验内容与 MD5）。

@@ -4,14 +4,18 @@ import type { HttpResponse } from '../../../core/http.js'
 import { compactJson } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { Ks } from './client.js'
+import { PROFILE, RESOLUTION } from './profile.js'
 
 /**
  * gdfp manMachine 预检（上游 utils/gdfp_manmachine.py）：滑块提交 verify 之前必须先上报的行为遥测。
  * SDK_INIT（换策略，上报路径由它下发）→ core `/n/a/b` → 等策略里的 wait 毫秒 → whole `/n/a/b`。
  * 不做这一步直接提交，服务端回 350014 anti check err。
  *
- * 响应按上游严格校验：状态码、content-type、响应体逐字节。上游还要求协商出 HTTP/2，
- * catbus 的 HttpResponse 拿不到协商的协议版本，这一项跳过。
+ * 分辨率、平台、CPU、WebGL 与屏幕尺寸取自统一的浏览器档案 {@link PROFILE}，与请求头和 captchaExtraParam 一致。
+ *
+ * 响应按上游严格校验：状态码、content-type、响应体逐字节。协议版本不查：上游抓包时是 HTTP/2，现在默认也接受
+ * HTTP/1.1（有的网络上这个接口只协商出 HTTP/1.1，只认 HTTP/2 会让验证码永远走不到 verify；设
+ * KS_STRICT_GDFP_HTTP2=1 才恢复只认 HTTP/2），而 catbus 的 HttpResponse 本来就拿不到协商的协议版本。
  */
 
 export const APP_KEY = '10001001'
@@ -179,6 +183,7 @@ export interface PayloadInput {
   parentUrl: string
   iframeUrl: string
   ua: string
+  /** 默认取档案的屏幕尺寸。 */
   resolution?: string
   identity: string
   nowMs: number
@@ -192,7 +197,7 @@ export interface PayloadInput {
  * 字段号都是递增的，普通对象里形如整数的键按数值升序输出，与上游的插入顺序一致。
  */
 export function buildCorePayload(o: PayloadInput): Record<string, unknown> {
-  const resolution = o.resolution ?? '2560x1440'
+  const resolution = o.resolution || RESOLUTION
   const section = {
     1: { page: o.parentUrl, identity: o.identity, page_type: 2 },
     2: o.iframeUrl,
@@ -206,7 +211,7 @@ export function buildCorePayload(o: PayloadInput): Record<string, unknown> {
     33: 'Mozilla',
     34: 'Netscape',
     35: afterMozilla(o.ua),
-    36: 'Win32',
+    36: PROFILE.platform,
     55: 0,
     56: o.ua,
     69: '0043c0b8a0b002e8133a140d14068859',
@@ -261,7 +266,7 @@ export function webrtcFields(): [candidates: string, sdp: string] {
 
 /** `sendWholeData` 的完整上报（第二次 `/n/a/b`）。 */
 export function buildWholePayload(o: PayloadInput & { reportPath?: string }): Record<string, unknown> {
-  const resolution = o.resolution ?? '2560x1440'
+  const resolution = o.resolution || RESOLUTION
   const [candidates, sdp] = webrtcFields()
   const section = {
     1: { page: o.parentUrl, identity: o.identity, page_type: 2 },
@@ -290,12 +295,12 @@ export function buildWholePayload(o: PayloadInput & { reportPath?: string }): Re
     33: 'Mozilla',
     34: 'Netscape',
     35: afterMozilla(o.ua),
-    36: 'Win32',
+    36: PROFILE.platform,
     37: '["zh-CN","zh","en","zh-TW","ja"]',
     41: '20030107',
     42: 'Google Inc.',
     43: '',
-    44: 20,
+    44: PROFILE.cpuCores,
     50: 10,
     51: '',
     52: 1,
@@ -306,8 +311,8 @@ export function buildWholePayload(o: PayloadInput & { reportPath?: string }): Re
     57: 'zh-CN',
     58: PLUGIN_LIST,
     59: MIME_LIST,
-    61: 'Google Inc. (NVIDIA)',
-    62: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 Ti (0x00002D04) Direct3D11 vs_5_0 ps_5_0, D3D11)',
+    61: PROFILE.webglVendor,
+    62: PROFILE.webglRenderer,
     63: '1',
     64: 'WebKit',
     65: 'WebGL 1.0 (OpenGL ES 2.0 Chromium)',
@@ -326,7 +331,7 @@ export function buildWholePayload(o: PayloadInput & { reportPath?: string }): Re
     82: { ...WHOLE_NATIVE_FINGERPRINT, ...cookieFingerprint(o.cookies) },
     85: candidates,
     86: sdp,
-    87: { w: 2560, h: 1440, c: 24, p: 24 },
+    87: { w: PROFILE.screenWidth, h: PROFILE.screenHeight, c: 24, p: 24 },
     88: md5(sdp),
     89: timings(o.beginMs, o.nowMs, true),
     90: '',
