@@ -1,3 +1,4 @@
+import { TextDecoder } from 'node:util'
 import {
   type BodyInit,
   type BrowserAlias,
