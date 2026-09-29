@@ -1,5 +1,5 @@
 import { CatbusError } from '../../../core/errors.js'
-import { md5Hex } from './sign.js'
+import { md5Hex } from '../../../core/hash.js'
 import { quote } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import * as api from './api.js'
@@ -23,8 +23,6 @@ export const IM_HEADER_KEYS = [
   'data_collection_enabled', 'from_appID', 'locale', 'user_agent', 'Web-Sdk-Ms-Token',
 ] as const
 
-const MESSAGES = `${ORIGIN}/messages?lang=zh-Hans`
-
 /** Request.headers 的有序 map（上游 _im_header_map）。 */
 export function imHeaders(t: TikTok): [string, string][] {
   const source = t.metrics.im_headers as Record<string, unknown> | undefined
@@ -42,8 +40,8 @@ export function imHeaders(t: TikTok): [string, string][] {
     region: t.region,
     priority_region: t.priorityRegion,
     os: 'windows',
-    referer: MESSAGES,
-    root_referer: MESSAGES,
+    referer: api.MESSAGES_PAGE,
+    root_referer: api.MESSAGES_PAGE,
     cookie_enabled: 'true',
     screen_width: '2560',
     screen_height: '1440',

@@ -207,10 +207,7 @@ export async function itemList(ctx: Ctx) {
 
 export async function itemMedia(ctx: Ctx): Promise<Media[]> {
   const t = await tiktok(ctx)
-  const s = await itemStruct(t, ctx.args.item!)
-  const media = norm.itemMedia(s)
-  if (!s.imagePost && s.music?.playUrl) media.push(n.media({ id: n.id(s.music.id), type: 'audio', url: n.url(s.music.playUrl)!, duration: n.seconds(s.music.duration) }, s.music))
-  return media
+  return norm.itemMedia(await itemStruct(t, ctx.args.item!), true)
 }
 
 export async function itemDownload(ctx: Ctx) {
@@ -551,8 +548,7 @@ export function liveListen(ctx: Ctx) {
   return (async function* () {
     const t = await tiktok(ctx)
     const r = await resolveRoom(t, ctx.args.room!)
-    const page = r.handle ? norm.liveUrl(r.handle)! : `${ORIGIN}/live`
-    for await (const e of liveEvents(ctx, t, r.roomId, page)) {
+    for await (const e of liveEvents(ctx, t, r.roomId, livePage(r))) {
       const ev = norm.liveEvent(e)
       if (ev) yield ev
     }
@@ -582,6 +578,7 @@ function noticeGroup(d: any, group: number): any {
 /**
  * 动态（notice/multi，group 500）和系统通知（inbox/notice_list，group 661）合在一起，按时间倒序。
  * 游标是两组各自的 max_time，写成 `<动态>:<系统>`，翻完的一组记作 `-`，不再请求。
+ * 系统通知这一路失败时只返回动态通知，游标里保留它原来的位置，下一页再试。
  */
 export async function noticeList(ctx: Ctx) {
   const t = await tiktok(ctx)
@@ -601,9 +598,10 @@ export async function noticeList(ctx: Ctx) {
       raw.push(...(g.notice_list ?? []).map((v: any) => ({ v, system: true })))
       if (bool(g.has_more) && g.max_time != null) next.system = String(g.max_time)
     } catch (err) {
-      // 系统通知取不到时不影响动态通知
+      // 系统通知取不到时不影响动态通知；只有它失败、动态也翻完时游标不变，由翻页循环停下
       if (err instanceof CatbusError && (err.code === 'AUTH_REQUIRED' || err.code === 'AUTH_EXPIRED')) throw err
-      ctx.log.warn(`[catbus] TikTok 系统通知获取失败，本次只返回动态通知：${(err as Error).message}`)
+      next.system = system
+      ctx.log.warn(`TikTok 系统通知获取失败，本次只返回动态通知：${(err as Error).message}`)
     }
   }
   raw.sort((a, b) => (Number(b.v?.create_time) || 0) - (Number(a.v?.create_time) || 0))
@@ -677,7 +675,7 @@ export async function msgHistory(ctx: Ctx) {
   const info = await conversationInfo(t, id)
   const raw = await im.pullConversation(t, { conversationId: id, shortId: info.short_id, type: info.type, anchorIndex: cursorOf(ctx) })
   const page = wire.imPullPage(raw, 301)
-  return paged(wire.pulledMessages(wire.decodeWire(raw)).map(norm.pulledMessage), page.cursor, page.hasMore)
+  return paged(wire.pulledMessages(wire.decodeWire(raw)).map(norm.imMessage), page.cursor, page.hasMore)
 }
 
 export async function msgSend(ctx: Ctx): Promise<Message> {
@@ -751,17 +749,7 @@ export function msgListen(ctx: Ctx) {
           const key = `${m.conversation_id}:${m.server_message_id}`
           if (seen.has(key)) continue
           seen.add(key)
-          yield n.message(
-            {
-              id: m.server_message_id,
-              conversation_id: m.conversation_id,
-              from: n.userRef({ id: m.sender }),
-              type: 'text',
-              text: m.text,
-              created_at: n.time(m.create_time),
-            },
-            m,
-          )
+          yield norm.imMessage(m)
         }
       } finally {
         socket.close()

@@ -1024,6 +1024,87 @@ describe('tiktok 补齐的能力：翻页、参数与解析', () => {
     expect(r2.result).toMatchObject({ total: 6, comment: 1, like: 4, follow: 1, mention: null, system: null })
   })
 
+  it('notice list 的组合游标：`<动态>:<系统>`，翻完的一组是 -，不再请求', async () => {
+    const { noticeList } = await import('../src/platforms/tiktok/web/commands.js')
+    const groupOf = (url: string) => JSON.parse(new URL(url).searchParams.get('group_list')!)[0]
+    const activity = { status_code: 0, notice_lists: [{ group: 500, has_more: true, max_time: 1789970000, notice_list: [{ nid_str: '1', type: 41, create_time: 1789975000 }] }] }
+    const a = await withBodies([JSON.stringify(activity)], async () => noticeList(sessionCtx({ platform: 'tiktok', cursor: '1789980000:-' })))
+    expect(a.requests.map((r) => new URL(r.url).pathname)).toEqual(['/api/notice/multi/'])
+    expect(groupOf(a.requests[0]!.url)).toMatchObject({ group: 500, max_time: 1789980000 })
+    expect((a.result as any).page).toEqual({ cursor: '1789970000:-', has_more: true })
+
+    const system = { status_code: 0, notice_lists: [{ group: 661, has_more: false, max_time: 1789960000, notice_list: [{ nid_str: '2', create_time: 1789965000 }] }] }
+    const s = await withBodies([JSON.stringify(system)], async () => noticeList(sessionCtx({ platform: 'tiktok', cursor: '-:1789970000' })))
+    expect(s.requests.map((r) => new URL(r.url).pathname)).toEqual(['/api/inbox/notice_list/'])
+    expect(groupOf(s.requests[0]!.url)).toMatchObject({ group: 661, max_time: 1789970000 })
+    expect(s.result as any).toMatchObject({ data: [{ id: '2', type: 'system' }], page: { cursor: null, has_more: false } })
+  })
+
+  it('notice list：系统通知失败时只返回动态，游标保留系统通知的位置；登录失效照常报错', async () => {
+    const { noticeList } = await import('../src/platforms/tiktok/web/commands.js')
+    const activity = { status_code: 0, notice_lists: [{ group: 500, has_more: false, notice_list: [{ nid_str: '1', type: 41, create_time: 1789975000 }] }] }
+    const ctx = sessionCtx({ platform: 'tiktok', cursor: '0:1789970000' })
+    const warn = vi.spyOn(ctx.log, 'warn').mockImplementation(() => {})
+    const r = await withBodies([JSON.stringify(activity), '{"status_code":5,"status_msg":"server busy"}'], async () => noticeList(ctx))
+    expect(r.result as any).toMatchObject({ data: [{ id: '1', type: 'like' }], page: { cursor: '-:1789970000', has_more: true } })
+    expect(warn).toHaveBeenCalledWith('TikTok 系统通知获取失败，本次只返回动态通知：server busy')
+    await expect(withBodies([JSON.stringify(activity), '{"status_code":8}'], async () => noticeList(sessionCtx({ platform: 'tiktok' })))).rejects.toMatchObject({ code: 'AUTH_EXPIRED' })
+  })
+
+  it('live get <房间号>：check_alive 出错时退回进房', async () => {
+    const { liveGet } = await import('../src/platforms/tiktok/web/commands.js')
+    const enter = loadCase('tiktok', 'flow_live_like_room').responses[0]!.body
+    const ctx = sessionCtx({ platform: 'tiktok', args: { room: ROOM } })
+    const { result, requests } = await withBodies(['{"status_code":5}', JSON.stringify(enter)], async () => liveGet(ctx))
+    expect(requests.map((r) => new URL(r.url).pathname)).toEqual(['/webcast/room/check_alive/', '/webcast/room/enter/'])
+    expect(result).toMatchObject({ id: ROOM, status: 'live', host: { id: HOST } })
+    // 登录失效不退回
+    await expect(withBodies(['{"status_code":20003}'], async () => liveGet(sessionCtx({ platform: 'tiktok', args: { room: ROOM } })))).rejects.toMatchObject({ code: 'AUTH_EXPIRED' })
+  })
+
+  it('item media 附上视频的背景音乐，Item.media 不附', async () => {
+    const { itemMedia } = await import('../src/platforms/tiktok/web/commands.js')
+    const struct = {
+      id: AWEME,
+      author: { id: '1', uniqueId: 'creator' },
+      video: { id: 'v1', playAddr: 'https://v16/play.mp4', duration: 14 },
+      music: { id: '99', playUrl: 'https://sf16/music.mp3', duration: 30 },
+    }
+    const video = page({ 'webapp.video-detail': { statusCode: 0, itemInfo: { itemStruct: struct } } })
+    const { result } = await withBodies([video], async () => itemMedia(sessionCtx({ platform: 'tiktok', args: { item: VIDEO_URL } })))
+    expect((result as Media[]).map(({ id, type, url, duration }) => ({ id, type, url, duration }))).toEqual([
+      { id: 'v1', type: 'video', url: 'https://v16/play.mp4', duration: 14 },
+      { id: '99', type: 'audio', url: 'https://sf16/music.mp3', duration: 30 },
+    ])
+    expect(norm.item(struct).media.map((m) => m.type)).toEqual(['video'])
+  })
+
+  it('msg listen：WS 推送的文本消息归一化成 Message，心跳 hi 原样回', async () => {
+    const { msgListen } = await import('../src/platforms/tiktok/web/commands.js')
+    const { expected } = await det('im_decode', () => null)
+    sockets.length = 0
+    wsFrames = ['hi', B64(expected.frame)]
+    const ctx = sessionCtx({ platform: 'tiktok' })
+    const out: any[] = []
+    await withBodies([], async () => {
+      for await (const m of msgListen(ctx)) {
+        out.push(m)
+        break
+      }
+    })
+    expect(new TextDecoder().decode(sockets[0]!.sent[0])).toBe('hi')
+    expect(out).toMatchObject([
+      { id: '9003', conversation_id: expected.decoded.conversation_id, from: { id: '6900000000000000001' }, type: 'text', text: '推送', created_at: n.time(1789990002000) },
+    ])
+  })
+
+  it('folder add：视频页没有 collected 字段时不先收藏', async () => {
+    const { folderAdd } = await import('../src/platforms/tiktok/web/commands.js')
+    const video = page({ 'webapp.video-detail': { statusCode: 0, itemInfo: { itemStruct: { id: AWEME, author: { id: '1', uniqueId: 'creator', secUid: SEC } } } } })
+    const { requests } = await withBodies([video, '{"statusCode":0}'], async () => folderAdd(sessionCtx({ platform: 'tiktok', args: { folder: FOLDER, item: VIDEO_URL } })))
+    expect(requests.map((r) => new URL(r.url).pathname)).toEqual(['/@creator/video/7300000000000000123', '/api/collection/modify_items/'])
+  })
+
   it('发布的互动开关：on / off → 1 / 0，不给时交给 body 用上游默认值', () => {
     expect(publishToggles({ allowComment: 'off', allowDuet: 'on' })).toEqual({ allowComment: 0, allowDuet: 1, allowStitch: undefined, allowContentReuse: undefined, allowAiRemix: undefined })
     const body = JSON.parse(up.buildVideoProjectBody({ creationId: 'c', videoId: 'v', text: '', coverUri: 'u', playUrl: 'p', filename: 'a.mp4', width: 1, height: 1, durationMs: 1, ...publishToggles({}) }))

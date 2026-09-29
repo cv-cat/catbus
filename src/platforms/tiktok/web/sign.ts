@@ -1,4 +1,5 @@
 import { createDecipheriv, createHash, createHmac, createPrivateKey, createPublicKey, pbkdf2Sync, sign as ecSign } from 'node:crypto'
+import { hmacSha256Hex, md5Hex, sha256Hex } from '../../../core/hash.js'
 import { compactJson, quote } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 
@@ -80,10 +81,6 @@ function customB64(data: Bytes, alphabet: string): string {
     out += o + 2 < data.length ? alphabet[c & 63] : alphabet[64]
   }
   return out
-}
-
-export function md5Hex(value: string | Bytes): string {
-  return createHash('md5').update(utf8(value)).digest('hex')
 }
 
 /** 5.3.x 的 FNV 式 query / UA 绑定。 */
@@ -583,7 +580,6 @@ export function canonicalAwsQuery(pairs: [string, string][]): string {
   return encoded.map(([k, v]) => `${k}=${v}`).join('&')
 }
 
-const sha256Hex = (b: Bytes | string) => createHash('sha256').update(b).digest('hex')
 const hmac = (key: Bytes | string, value: string) => createHmac('sha256', key).update(value, 'utf8').digest()
 
 export function amzDate(ms = rand.now()): string {
@@ -622,7 +618,7 @@ export function signAwsV4(o: {
   key = hmac(key, region)
   key = hmac(key, service)
   key = hmac(key, 'aws4_request')
-  const signature = createHmac('sha256', key).update(stringToSign, 'utf8').digest('hex')
+  const signature = hmacSha256Hex(key, stringToSign)
   const headers: Record<string, string> = {
     authorization: `AWS4-HMAC-SHA256 Credential=${o.accessKeyId}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`,
     'x-amz-security-token': o.sessionToken,
