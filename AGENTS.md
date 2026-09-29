@@ -912,6 +912,7 @@ All-In-One/
 ├── src/
 │   ├── cli/                        # 入口 main.ts、argv 解析、帮助、信封输出、确认
 │   ├── core/                       # registry、auth store、config、errors、http、schemas、signing(vm)、log
+│   ├── platforms/_shared/          # 多个平台共用、但不属于 core 的实现，例如 impaas.ts（闲鱼、淘宝的钉钉 IMPaaS 私信长连）
 │   └── platforms/<p>/
 │       ├── index.ts                # 平台声明与命令注册
 │       ├── UPSTREAM                # 移植所基于的上游仓库与 commit

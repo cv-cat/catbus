@@ -5,11 +5,11 @@ import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { AuthStatus, Media, Message } from '../../../core/schemas.js'
-import { reconnecting } from '../../../core/stream.js'
 import { isGuest, paged } from '../../../core/toolkit.js'
+import { collectHistory, listen, pushedPayloads } from '../../_shared/impaas.js'
 import * as api from './api.js'
 import { accessToken, Taobao, taobao } from './client.js'
-import { createChatFrame, createdCid, FIRST_CURSOR, historyPages, Im, imId, type OutgoingMessage, sendMsgFrame } from './im.js'
+import { createChatFrame, createdCid, FIRST_CURSOR, imId, openIm, type OutgoingMessage, sendMsgFrame } from './im.js'
 import * as norm from './normalize.js'
 import { COOKIE_DOMAIN, IM_DOMAIN } from './profile.js'
 import { resolveConversation, resolveItem, resolveSellerItem } from './resolve.js'
@@ -78,27 +78,10 @@ export async function msgHistory(ctx: Ctx) {
   const { limit, all } = ctx.options as { limit?: number; all?: boolean }
   // 不带 --limit / --all 时只取一页
   const want = limit ?? (all ? Infinity : 0)
-  const im = await Im.open(tb)
+  const im = await openIm(tb)
   try {
     await im.ready()
-    let models: any[] = []
-    let next: string | null = null
-    let more = false
-    for await (const page of historyPages(im, cid, cursor)) {
-      models.push(...page.models)
-      next = page.nextCursor
-      more = page.hasMore
-      if (models.length >= want) break
-    }
-    if (want > 0 && models.length > want) {
-      // 截在一页中间：游标是消息的 createAt（往更早翻），从保留下来最早的那条接着翻，被截掉的下次还能取到
-      models = models.slice(0, want)
-      const at = models.at(-1)?.message?.createAt
-      if (at != null) {
-        next = String(at)
-        more = true
-      }
-    }
+    const { models, next, more } = await collectHistory(im, cid, cursor, want)
     return paged(models.reverse().map((m) => norm.historyMessage(m, cid)), next, more)
   } finally {
     im.close()
@@ -145,7 +128,7 @@ export async function msgSend(ctx: Ctx): Promise<Message> {
     outgoing.push({ media: [img.media], message: img.message })
   }
 
-  const im = await Im.open(tb)
+  const im = await openIm(tb)
   try {
     await im.ready()
     let cid = target.cid
@@ -178,23 +161,10 @@ export async function msgSend(ctx: Ctx): Promise<Message> {
   }
 }
 
-/** 推送帧里的聊天消息：syncPushPackage.data[].data 是 base64 + MessagePack；能直接解析成 JSON 的是状态类推送，跳过。 */
-export function pushedMessages(tb: Taobao, frame: any): Message[] {
+/** 推送帧里别人发来的聊天消息。 */
+function pushedMessages(tb: Taobao, frame: unknown): Message[] {
   const out: Message[] = []
-  for (const entry of frame?.body?.syncPushPackage?.data ?? []) {
-    const data = entry?.data
-    if (typeof data !== 'string') continue
-    try {
-      JSON.parse(data)
-      continue
-    } catch {}
-    let decoded: unknown
-    try {
-      decoded = JSON.parse(decrypt(data))
-    } catch (err) {
-      tb.ctx.log.debug(`推送解码失败：${(err as Error).message}`)
-      continue
-    }
+  for (const decoded of pushedPayloads(frame, decrypt, tb.ctx)) {
     const message = norm.pushMessage(decoded)
     if (!message) continue
     // 自己发出的消息（上游按 sender_nick 判断）不输出
@@ -205,31 +175,15 @@ export function pushedMessages(tb: Taobao, frame: any): Message[] {
   return out
 }
 
-/** 登录态失效时不再重连：由重连循环里的连接交出来，在外面抛出。 */
-class Fatal {
-  constructor(readonly error: unknown) {}
-}
-
 export function msgListen(ctx: Ctx) {
   return (async function* () {
     const tb = taobao(ctx)
     tb.requireLogin()
-    const stream = reconnecting<Message | Fatal>(ctx, async function* () {
-      let im: Im | null = null
-      try {
-        im = await Im.open(tb, { heartbeat: true })
-        for await (const frame of im.pushFrames()) yield* pushedMessages(tb, frame)
-      } catch (err) {
-        if (!isAuthError(err)) throw err
-        yield new Fatal(err)
-      } finally {
-        im?.close()
-      }
-    })
-    for await (const item of stream) {
-      if (item instanceof Fatal) throw item.error
-      yield item
-    }
+    yield* listen(
+      ctx,
+      () => openIm(tb, { heartbeat: true }),
+      (frame) => pushedMessages(tb, frame),
+    )
   })()
 }
 

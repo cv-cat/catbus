@@ -6,11 +6,11 @@ import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { AuthStatus, Media, Message } from '../../../core/schemas.js'
-import { reconnecting } from '../../../core/stream.js'
 import { isGuest, paged } from '../../../core/toolkit.js'
+import { collectHistory, type Im, listen, pushedPayloads } from '../../_shared/impaas.js'
 import * as api from './api.js'
 import { unsignedMtop, Xianyu, xianyu } from './client.js'
-import { createChatFrame, createdCid, FIRST_CURSOR, historyPages, Im, type OutgoingMessage, sendMsgFrame } from './im.js'
+import { createChatFrame, createdCid, FIRST_CURSOR, openIm, type OutgoingMessage, sendMsgFrame } from './im.js'
 import * as norm from './normalize.js'
 import { COOKIE_DOMAIN, itemUrl } from './profile.js'
 import { resolveConversation, resolveItem, resolveUser } from './resolve.js'
@@ -170,27 +170,10 @@ export async function msgHistory(ctx: Ctx) {
   const { limit, all } = ctx.options as { limit?: number; all?: boolean }
   // 不带 --limit / --all 时只取一页
   const want = limit ?? (all ? Infinity : 0)
-  const im = await Im.open(x)
+  const im = await openIm(x)
   try {
     await im.ready()
-    let models: any[] = []
-    let next: string | null = null
-    let more = false
-    for await (const page of historyPages(im, cid, cursor)) {
-      models.push(...page.models)
-      next = page.nextCursor
-      more = page.hasMore
-      if (models.length >= want) break
-    }
-    if (want > 0 && models.length > want) {
-      // 截在一页中间：游标是消息的 createAt（往更早翻），从保留下来最早的那条接着翻，被截掉的下次还能取到
-      models = models.slice(0, want)
-      const at = models.at(-1)?.message?.createAt
-      if (at != null) {
-        next = String(at)
-        more = true
-      }
-    }
+    const { models, next, more } = await collectHistory(im, cid, cursor, want)
     return paged(models.reverse().map((m) => norm.historyMessage(m, cid)), next, more)
   } finally {
     im.close()
@@ -215,7 +198,7 @@ const PEER_PAGES = 10
 async function peerOf(im: Im, x: Xianyu, cid: string): Promise<string> {
   let pages = 0
   let more = false
-  for await (const page of historyPages(im, cid, FIRST_CURSOR)) {
+  for await (const page of im.historyPages(cid, FIRST_CURSOR)) {
     for (const model of page.models) {
       const sender = norm.historyMessage(model, cid).from?.id
       const receiver = (model as any)?.message?.extension?.receiver
@@ -268,7 +251,7 @@ export async function msgSend(ctx: Ctx): Promise<Message> {
     outgoing.push({ media: [img.media], message: img.message })
   }
 
-  const im = await Im.open(x)
+  const im = await openIm(x)
   try {
     await im.ready()
     let cid: string
@@ -306,33 +289,15 @@ export async function msgSend(ctx: Ctx): Promise<Message> {
   }
 }
 
-/** 推送帧里的聊天消息：syncPushPackage.data[].data 是 base64 + MessagePack；能直接解析成 JSON 的是状态类推送，跳过。 */
-export function pushedMessages(x: Xianyu, frame: any): Message[] {
+/** 推送帧里别人发来的聊天消息。 */
+function pushedMessages(x: Xianyu, frame: unknown): Message[] {
   const out: Message[] = []
-  for (const entry of frame?.body?.syncPushPackage?.data ?? []) {
-    const data = entry?.data
-    if (typeof data !== 'string') continue
-    try {
-      JSON.parse(data)
-      continue
-    } catch {}
-    let decoded: unknown
-    try {
-      decoded = JSON.parse(decrypt(data))
-    } catch (err) {
-      x.ctx.log.debug(`推送解码失败：${(err as Error).message}`)
-      continue
-    }
+  for (const decoded of pushedPayloads(frame, decrypt, x.ctx)) {
     const message = norm.pushMessage(decoded)
     // 自己发出的消息不输出
     if (message && message.from?.id !== x.myId) out.push(message)
   }
   return out
-}
-
-/** 登录态失效时不再重连：由重连循环里的连接交出来，在外面抛出。 */
-class Fatal {
-  constructor(readonly error: unknown) {}
 }
 
 export function msgListen(ctx: Ctx) {
@@ -345,22 +310,11 @@ export function msgListen(ctx: Ctx) {
     }, KEEPALIVE_MS)
     keepalive.unref()
     try {
-      const stream = reconnecting<Message | Fatal>(ctx, async function* () {
-        let im: Im | null = null
-        try {
-          im = await Im.open(x, { heartbeat: true })
-          for await (const frame of im.pushFrames()) yield* pushedMessages(x, frame)
-        } catch (err) {
-          if (!isAuthError(err)) throw err
-          yield new Fatal(err)
-        } finally {
-          im?.close()
-        }
-      })
-      for await (const item of stream) {
-        if (item instanceof Fatal) throw item.error
-        yield item
-      }
+      yield* listen(
+        ctx,
+        () => openIm(x, { heartbeat: true }),
+        (frame) => pushedMessages(x, frame),
+      )
     } finally {
       clearInterval(keepalive)
     }
