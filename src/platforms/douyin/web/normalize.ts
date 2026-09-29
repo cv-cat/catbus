@@ -20,7 +20,7 @@ export function authorRef(u: any): UserRef | null {
 }
 
 /** 图文：aweme_type 68，或带 images。 */
-function isImage(v: any): boolean {
+export function isImage(v: any): boolean {
   return v?.aweme_type === 68 || (Array.isArray(v?.images) && v.images.length > 0)
 }
 
@@ -302,7 +302,6 @@ export function productDetail(body: any, promotionId: string): Item {
   )
 }
 
-/** 通知（notice_list_v2 项）。 */
 /**
  * 通知类型按通知体带的字段判断：数字 type 随版本变（实测 2026-09：31 评论、41 点赞、9009 互动），
  * 而 401 / 601 / 2 / 3 是请求时 notice_group 的分组号，不是单条通知的 type。
@@ -315,6 +314,7 @@ function noticeKind(v: any): Notice['type'] {
   return 'system'
 }
 
+/** 通知（notice_list_v2 项）。 */
 export function notice(v: any): Notice {
   const u = v.from_user?.[0] ?? v.user ?? v.comment?.comment?.user ?? v.digg?.from_user?.[0] ?? v.follow?.from_user ?? v.interactive_notice?.from_user?.[0] ?? null
   const aweme = v.comment?.aweme ?? v.digg?.aweme ?? v.aweme ?? null

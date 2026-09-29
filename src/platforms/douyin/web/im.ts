@@ -3,11 +3,12 @@ import type { LocalMedia } from '../../../core/files.js'
 import { compactJson, parseQsl, urlencode } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { type Douyin, type DyJson, riskJson } from './client.js'
-import { crc32Hex, ecdsaSign, sigv4, type Sts, VOD_HOST } from './crypto.js'
+import { ecdsaSign, sigv4, type Sts, VOD_HOST } from './crypto.js'
 import { imageSize } from './image.js'
 import * as proto from './proto.js'
 import { APP_VERSION, headers, Params, platformParams, PROFILE, WWW } from './profile.js'
 import { md5Hex, spliceUrl } from './sign.js'
+import { IM_TOS, type TosNode, tosUpload, VOD_VERSION } from './tos.js'
 
 /**
  * PC 私信（上游 builder/proto.py、DouyinAPI.create_conversation / get_identity_security_token / _send_message_raw、
@@ -156,9 +157,6 @@ export const textContent = (text: string) => ({ aweType: 700, type: 0, richTextI
 // ================================================================ 富媒体上传（douyin_im_media.py）
 
 const UPLOAD_CONFIG_PATH = '/aweme/v1/web/im/upload/config/v2'
-const VOD_VERSION = '2020-11-19'
-const DIRECT_LIMIT = 3 * 1024 * 1024
-const MB = 1024 * 1024
 
 interface ImSts extends Sts {
   space_name: string
@@ -214,16 +212,7 @@ function gatewayHeaders(sign: Record<string, string>, contentType?: string): [st
   return Object.entries(h)
 }
 
-interface Node {
-  store_uri: string
-  auth: string
-  upload_id: string
-  upload_host: string
-  session_key: string
-  upload_header: Record<string, string>
-}
-
-async function applyUpload(d: Douyin, sts: ImSts, fileType: string, size: number, gcm = false): Promise<Node> {
+async function applyUpload(d: Douyin, sts: ImSts, fileType: string, size: number, gcm = false): Promise<TosNode> {
   const query: [string, string | number][] = [
     ['Action', 'ApplyUploadInner'],
     ['Version', VOD_VERSION],
@@ -242,65 +231,10 @@ async function applyUpload(d: Douyin, sts: ImSts, fileType: string, size: number
   return { store_uri: store.StoreUri ?? '', auth: store.Auth ?? '', upload_id: store.UploadID ?? '', upload_host: node.UploadHost ?? '', session_key: node.SessionKey ?? '', upload_header: node.UploadHeader ?? {} }
 }
 
-function tosHeaders(node: Node, userId: string, crc?: string): [string, string][] {
-  const h: Record<string, string> = {
-    authorization: node.auth,
-    referer: `${WWW}/`,
-    'user-agent': PROFILE.ua,
-    'x-storage-u': encodeURIComponent(userId),
-    'content-type': 'application/octet-stream',
-    accept: '*/*',
-    'accept-language': PROFILE.acceptLanguage,
-    origin: WWW,
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'cross-site',
-  }
-  if (crc != null) h['content-crc32'] = crc
-  return Object.entries({ ...h, ...node.upload_header })
-}
+/** 字节传到 TOS（上游 _upload_source）：直传上限 3MB（DIRECT_UPLOAD_LIMIT），与创作者中心共用 tos.ts。 */
+const uploadSource = (d: Douyin, node: TosNode, data: Uint8Array, userId: string) => tosUpload(d, IM_TOS, node, data, userId)
 
-async function tosPost(d: Douyin, url: string, h: [string, string][], data?: Uint8Array): Promise<any> {
-  const res = await d.plain({ method: 'POST', url, headers: h, body: data ?? '', timeout: 300 })
-  let body: any
-  try {
-    body = JSON.parse(await res.text())
-  } catch {
-    throw new CatbusError('UPSTREAM', `IM TOS 返回的不是 JSON（HTTP ${res.status}）`)
-  }
-  if (![undefined, null, 2000, '2000'].includes(body.code)) throw new CatbusError('UPSTREAM', `IM TOS 上传失败：${body.message ?? body.code}`)
-  return body
-}
-
-async function uploadSource(d: Douyin, node: Node, data: Uint8Array, userId: string): Promise<void> {
-  const base = `https://${node.upload_host}/upload/v1/${node.store_uri}`
-  if (data.length <= DIRECT_LIMIT) {
-    await tosPost(d, base, tosHeaders(node, userId, crc32Hex(data)), data)
-    return
-  }
-  let uploadId = node.upload_id
-  if (!uploadId) {
-    const init = await tosPost(d, `${base}?uploadmode=part&phase=init`, tosHeaders(node, userId))
-    uploadId = init.data?.uploadid
-    if (!uploadId) throw new CatbusError('UPSTREAM', 'IM 分片初始化失败')
-  }
-  const partSize = Math.max(data.length >= 500 * MB ? 10 * MB : data.length >= 100 * MB ? 5 * MB : 3 * MB, 5 * MB)
-  const crcs: string[] = []
-  for (let offset = 0, part = 1; offset < data.length; offset += partSize, part++) {
-    const chunk = data.subarray(offset, offset + partSize)
-    const crc = crc32Hex(chunk)
-    await tosPost(d, `${base}?uploadid=${encodeURIComponent(uploadId)}&part_number=${part}&phase=transfer&part_offset=${offset}`, tosHeaders(node, userId, crc), chunk)
-    crcs.push(crc)
-  }
-  await tosPost(
-    d,
-    `${base}?uploadmode=part&phase=finish&uploadid=${encodeURIComponent(uploadId)}`,
-    tosHeaders(node, userId),
-    Buffer.from(crcs.map((c, i) => `${i + 1}:${c}`).join(',')),
-  )
-}
-
-async function commitUpload(d: Douyin, sts: ImSts, node: Node, functions: unknown[] = []): Promise<any> {
+async function commitUpload(d: Douyin, sts: ImSts, node: TosNode, functions: unknown[] = []): Promise<any> {
   const body = compactJson({ SessionKey: node.session_key, Functions: functions })
   const query: [string, string][] = [
     ['Action', 'CommitUploadInner'],

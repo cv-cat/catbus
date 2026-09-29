@@ -1,3 +1,5 @@
+import protobuf from 'protobufjs'
+import { CatbusError } from '../../../core/errors.js'
 import * as n from '../../../core/normalize.js'
 import { urlencode } from '../../../core/py.js'
 import type { HandlerContext } from '../../../core/registry.js'
@@ -20,9 +22,18 @@ export interface LiveSocket {
   headers: Record<string, string>
 }
 
+/** im/fetch 的响应（LiveResponse）；不是 protobuf 时多为登录态失效或被风控，报 UPSTREAM。 */
+export function decodeFetch(raw: Uint8Array): any {
+  try {
+    return proto.decode('Live', 'LiveResponse', proto.inflate(raw))
+  } catch {
+    throw new CatbusError('UPSTREAM', `im/fetch 返回的不是 protobuf（${raw.length} 字节），多为登录态失效或被风控`, { detail: { bytes: raw.length } })
+  }
+}
+
 /** 先 im/fetch 取 cursor / internalExt，再拼 wss 地址（上游 DouyinLive.start_ws）。 */
 export async function liveSocket(d: Douyin, info: api.LiveInfo, webRid: string): Promise<LiveSocket> {
-  const fetched = proto.decode('Live', 'LiveResponse', await api.webcastFetch(d, info.user_id, info.room_id, `${LIVE}/${webRid}`))
+  const fetched = decodeFetch(await api.webcastFetch(d, info.user_id, info.room_id, `${LIVE}/${webRid}`))
   const p = new Params()
   p.add('app_name', 'douyin_web').add('version_code', '180800').add('webcast_sdk_version', '1.0.15').add('update_version_code', '1.0.15')
   p.add('compress', 'gzip').add('device_platform', 'web').add('cookie_enabled', 'true').add('screen_width', '1707').add('screen_height', '960')
@@ -54,14 +65,42 @@ const LIVE_TYPES: Record<string, string> = {
   WebcastRoomStatsMessage: 'RoomStatsMessage',
 }
 
-/** LiveResponse 的 messagesList → Event[]，不关心的消息跳过。 */
+/**
+ * 消息的发送时间：各 Webcast*Message 的字段 1 是公共头 Common，其中字段 4 是 createTime（毫秒）。
+ * 随包的 Live.proto（上游原样）没有声明 Common，这里用 protobufjs 的 Reader 直接读，取不到时为 null。
+ */
+export function messageTime(payload: Uint8Array): string | null {
+  try {
+    const r = protobuf.Reader.create(payload)
+    while (r.pos < r.len) {
+      const tag = r.uint32()
+      if (tag >>> 3 !== 1 || (tag & 7) !== 2) {
+        r.skipType(tag & 7)
+        continue
+      }
+      const common = protobuf.Reader.create(r.bytes())
+      while (common.pos < common.len) {
+        const t = common.uint32()
+        if (t >>> 3 === 4 && (t & 7) === 0) return n.time(common.uint64().toString())
+        common.skipType(t & 7)
+      }
+      return null
+    }
+  } catch {}
+  return null
+}
+
+/** LiveResponse 的 messagesList → Event[]，不关心的消息跳过。时间取消息自带的 createTime。 */
 function responseEvents(res: any): Event[] {
   const events: Event[] = []
   for (const item of res.messagesList ?? []) {
     const name = LIVE_TYPES[item.method]
     if (!name) continue
     const event = norm.liveEvent(item.method, proto.decode('Live', name, item.payload))
-    if (event) events.push(event)
+    if (!event) continue
+    const time = messageTime(item.payload)
+    if (time) event.time = time
+    events.push(event)
   }
   return events
 }
@@ -78,15 +117,26 @@ export function liveFrame(raw: Uint8Array): { events: Event[]; ack: Uint8Array |
 
 /** 进房时 im/fetch 的响应（LiveResponse，need_persist_msg_count=15）里带回的最近消息。 */
 export function fetchEvents(raw: Uint8Array): Event[] {
-  return responseEvents(proto.decode('Live', 'LiveResponse', proto.inflate(raw)))
+  return responseEvents(decodeFetch(raw))
 }
 
 export const heartbeatFrame = () => proto.encode('Live', 'PushFrame', { payloadType: 'hb' })
 
-export function listenLive(ctx: HandlerContext, d: Douyin, webRid: string): AsyncIterable<Event> {
-  return reconnecting(ctx, async function* () {
-    const info = await api.liveInfo(d, webRid)
-    if (!info) throw new Error(`未能解析直播间信息：${webRid}`)
+/** 直播间页面解析不出房间信息：房间号不对，或者直播已经结束。 */
+export function roomNotFound(webRid: string): CatbusError {
+  return new CatbusError('UPSTREAM', `未能解析直播间信息：${webRid}`, { hint: '确认直播间号，或者直播已经结束' })
+}
+
+/**
+ * 弹幕长连。进入重连循环之前先解析一次房间：房间号无效时直接报 UPSTREAM，不当成断线一直重连。
+ * 重连时重新取房间信息（重新开播后 room_id 会变），取不到同样报 UPSTREAM，由 core 连续 5 次后放弃。
+ */
+export async function* listenLive(ctx: HandlerContext, d: Douyin, webRid: string): AsyncIterable<Event> {
+  const first = await api.liveInfo(d, webRid)
+  if (!first) throw roomNotFound(webRid)
+  yield* reconnecting(ctx, async function* (attempt) {
+    const info = attempt === 0 ? first : await api.liveInfo(d, webRid)
+    if (!info) throw roomNotFound(webRid)
     const s = await liveSocket(d, info, webRid)
     const socket = await openSocket(s.url, { headers: s.headers, proxy: ctx.config.proxy ?? undefined, signal: ctx.signal })
     const beat = setInterval(() => void socket.send(heartbeatFrame()).catch(() => {}), 5000).unref()
