@@ -20,14 +20,14 @@
 
 | # | 平台 | 问题 | 性质 | 状态 | 现在 catbus 的表现 |
 |---|---|---|---|---|---|
-| 1 | douyin | 发布、评论、点赞、收藏需要浏览器生成的 `dtrait_blob` | 平台风控 + 上游只能手工提供 | 待上游 | 发布、评论：本地拦下，报 `AUTH_REQUIRED`。点赞、收藏：请求照发，被拒后**登录态被踢下线** |
+| 1 | douyin | 发布、评论、点赞、收藏需要 `dtrait_blob` | 平台风控 | 已集成上游 fix-dtrait-blob（2026-09-29），**发布仍失败**，上游同样失败；待扫码后立即发布的对照 | 没有 blob 时按随包设备档案现算。发布：`create_v2` 仍返回 HTTP 200 空响应，报 `RISK_CONTROL`（登录态没被踢） |
 | 2 | xhs | 扫码登录，手机确认后服务端要求人机验证（HTTP 471） | 平台风控，上游同样失败 | 待上游；catbus 已兜底 | 报 `RISK_CONTROL`（captcha），提示改用 cookie 导入 |
 | 3 | xhs | 评论接口间歇性要求人机验证（HTTP 461） | 平台风控，概率性 | 待上游；catbus 已兜底 | 报 `RISK_CONTROL`（captcha），过几十秒到几分钟自己恢复 |
 | 4 | bilibili | `danmaku list`：短视频只拿到前 2 分钟的弹幕，超过 6 分钟的视频直接失败 | 上游 bug | 待上游 | ≤ 6 分钟：结果**不完整且不报错**；> 6 分钟：报 `UPSTREAM`（HTTP 404） |
 | 5 | 多个 | 部分归一化字段恒为空 | 上游接口不返回 | 不处理（要补需上游加接口） | 字段为 null |
 | 6 | — | 写操作、长连接、部分平台还没测 | 未验证 | 未测（进度见第 6 节） | — |
 | 7 | xhs | 测试笔记删不掉 | xhs `item delete` 上游没有（○） | 待手动删 | — |
-| 8 | kuaishou | 滑块风控（400002）自动通过：链路已移植，但真机上服务端不认上游的人机指纹（`350014`） | catbus 漏移植（已补）+ 上游指纹失效 | 待上游 | 自动尝试一次，没过报 `RISK_CONTROL`（captcha） |
+| 8 | kuaishou | 滑块风控（400002）自动通过 | 上游指纹失效 | 已集成上游 feat/fix-slider-fingerprint-http2（2026-09-29）；真机只触发到一次、没过，原因没记下，之后 216 次请求没再触发 | 自动尝试一次，没过报 `RISK_CONTROL`（captcha），`detail.verify` 带服务端的回复 |
 | 9 | kuaishou | 直播间的主播 id 不能当用户用 | 平台两套 id | 已兜底 | `Live.host` 的链接传给用户命令时报 `USAGE` 并说明 |
 
 ---
@@ -135,6 +135,22 @@ payload = {"dtrait":<设备特征 blob>,"timestamp":<秒>,"sdkVersion":"1.0.0.16
 
 ---
 
+### 1.6 集成上游 fix-dtrait-blob 后（2026-09-29）
+
+上游在 `fix-dtrait-blob` 分支（94c744b，尚未合进上游 master）采用了 1.4 的方案 B：随包带一份从 Chrome 153 取证的设备档案（`utils/dtrait_profile.json`），没有 `DY_DTRAIT_BLOB` 时用 `build_blob` 现算内层 blob。catbus 已同步（`static/douyin/dtrait_profile.json`、`web/dtrait.ts`），对拍逐字节一致；凭证里的 `dtrait_blob` 仍然优先，也可以导入自己的 `dtrait_profile`。
+
+移植时发现的一个细节：档案里的 Math 指纹（`str_11` / `str_12`）要和浏览器逐位一致，而 macOS 的 `tan(-1e300)` 与 Chrome 差 1 ULP，Node 24 自带的 V8 在 `atanh` / `log` / `expm1` 上也和 Chrome 153 各差 1 ULP。所以上游测试在 macOS 上会失败；catbus 把这 7 个结果写成 Chrome 的常量（入参本来就是字面常量）。建议上游同样改成常量。
+
+真机结果（同一个账号，扫码登录后第二天）：
+
+| 做法 | 结果 |
+|---|---|
+| catbus，默认档案，`item publish --visibility private`（图文） | 上传图片成功，`create_v2` 仍返回 **HTTP 200 空响应**，登录态没被踢 |
+| catbus，档案的 UA 改成与请求一致的 Chrome 151（档案是 153） | 同上，所以不是 UA 不一致导致的 |
+| **上游 Python（fix-dtrait-blob）**，用同一份 cookie / ticket / ts_sign / 私钥构造 `DouyinAuth.from_cookie`，`post_images(visibility=1)` | **同样失败**：「发布接口返回非 JSON（HTTP 200）」 |
+
+结论：catbus 与上游行为一致；随包档案本身不足以让这个会话发布成功。还差一个对照：上游 `quick_publish.py` 的做法是扫码登录后在同一进程里立即发布，要用这种方式再试一次，才能确定是档案不被接受，还是会话隔了一天后 ticket 类凭证失效。
+
 ## 2. 小红书：扫码登录被要求人机验证（HTTP 471）
 
 **现象**：扫码、在手机上确认之后，最后一步 `GET /api/sns/web/v1/login/qrcode/status` 返回：
@@ -238,9 +254,18 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 **真机结果（2026-09-28）：过不了，原因在上游。**
 1. catbus 自己的 bug（已修）：真实下发的背景图是 **JPEG**，解码没等 `loadImage` 完成，画成全黑，缺口位置全错（服务端回 `350002 verify err`）。修好后缺口位置与上游一致（同一张图都是 490）。
 2. 修好后服务端回 **`350014 anti check err`**：答案位置对了，但人机检查不认。用上游 Python 在同一个账号上跑，结果完全一样，所以不是移植问题。多半是上游随包的浏览器指纹（`captcha_fp.py` 的 gpuInfo / captchaExtraParam、gdfp 遥测里的 canvas / WebGL 哈希等，作者 2026-08-16 在自己机器上采的）已经不被接受，或者遥测里还缺什么。
-3. 上游另有一个 bug：`utils/transport.py` 的 `is_http2` 把 curl_cffi 返回的 HTTP/2（`2`）判成不是 HTTP/2，上游的滑块流程在提交答案之前就一定失败（报 `did not negotiate captured HTTP/2`）。catbus 没有移植这项检查，不受影响。
+3. ~~上游另有一个 bug：`is_http2` 把 HTTP/2 判错~~——**这条记录是错的**。curl_cffi 的 `http_version` 取自 libcurl 的 `CURLINFO_HTTP_VERSION`：`2` 是 HTTP/1.1，`3` 才是 HTTP/2。上游的判断是对的，报错说明那次 gdfp 请求实际协商的是 HTTP/1.1，而上游当时只接受 HTTP/2。catbus 没有做这项检查（wreq-js 拿不到协商出的协议版本）。
 
-**状态**：待上游。
+**集成上游 feat/fix-slider-fingerprint-http2（552cf60，2026-09-29，尚未合进上游 master）**：
+- 滑块指纹换成新采的值（canvas / 音频哈希、窗口几何），key35 / key36 从每次随机改成稳定的浏览器哈希；UA、几何、WebGL 等统一取自一份浏览器档案，header、gdfp、captchaExtraParam 不再互相矛盾；
+- gdfp 默认接受 HTTP/1.1（设 `KS_STRICT_GDFP_HTTP2=1` 才只认 HTTP/2），上游的流程不会再在提交前失败；
+- 上游新增的 `set_captcha_fingerprint`（用浏览器现抓的指纹）只有 Python API，catbus 没有命令行入口，没移植。
+
+catbus 已同步，对拍变化的 4 个用例逐字节一致。
+
+**真机（2026-09-29）**：连续请求时触发过一次滑块，自动验证没过，但服务端的回复被后面的日志覆盖了，没能确定是不是 350014；之后连续 216 次请求（作品详情、评论）都没再触发，暂时无法复现。catbus 现在把服务端对 verify 的回复放进 `RISK_CONTROL` 的 `detail.verify`，下次触发时能直接看到原因。
+
+**状态**：已集成，待复现确认。
 
 ## 4b. 快手：直播间的主播 id 不能当用户用
 
@@ -327,11 +352,11 @@ catbus 忠实移植了这个请求。catbus 原来还有一个问题：没检查
 
 | 上游仓库 | 内容 | 对应章节 | 集成时 catbus 要做的 |
 |---|---|---|---|
-| DouYin_Spider | `dtrait_blob` 的获取方式（抓取说明，或纯算档案）；README 补上 `DY_DTRAIT_BLOB`、`UIFID` 由推荐流下发 | 1 | 移植新的获取方式；确定是否给点赞 / 收藏 / 私信加本地拦截 |
+| DouYin_Spider | `dtrait_blob` 的获取方式：fix-dtrait-blob 分支已改为随包档案纯算，catbus **已集成**；但同一账号上发布仍返回空响应（上游同样，见 1.6）；另建议把 Math 指纹写成 Chrome 的常量（macOS 上上游测试会失败）；README 补上 `DY_DTRAIT_BLOB`、`UIFID` 由推荐流下发 | 1 | 等发布跑通后改状态 |
 | Spider_XHS | 扫码后 471（verifytype 120）的验证流程 | 2 | 移植验证流程，去掉「改用 cookie」的兜底提示 |
 | Spider_XHS | 评论 461（verifytype 124）的验证码 | 3 | 同上 |
 | BilibiliApis | 弹幕分段去掉 `ps` / `pe` | 4 | 改 `danmakuSeg`，重新生成对拍数据 |
-| KuaiShou-Spider | 滑块验证 `350014 anti check err`：随包指纹 / gdfp 遥测不被接受；另 `is_http2` 把 HTTP/2 判错，流程在提交前就失败 | 4a | 同步新的指纹 / 遥测 |
+| KuaiShou-Spider | 滑块验证 `350014 anti check err`：feat/fix-slider-fingerprint-http2 分支刷新了指纹、放宽 HTTP 版本，catbus **已集成**；真机待复现确认（4a） | 4a | 复现确认后改状态 |
 | DouYin_Spider | 综合搜索只发「已筛选」标记、不发筛选值（commit fe3eb24 删掉了），排序 / 时间筛选对综合频道不生效；catbus 照抄并在 stderr 提示改用 `--type video` | 10 | 移植修正后的请求 |
 | BilibiliApis | 极验点选：下载第一张题图时把 B 站会话 cookie 也发给了 static.geetest.com（登录时只是匿名设备 cookie，已登录账号复用时会带出 SESSDATA） | 10 | 移植修正后的请求 |
 
