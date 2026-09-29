@@ -186,11 +186,15 @@
   - 直播：`ks_apis/live_api.py` 的 `KuaishouLiveAPI`（礼物：`gift_list` 首屏与 `sort_type=0` 的“更多礼物”，`emoji_all_gifts` 完整礼物字典）；弹幕：`ks_apis/live_ws.py` 的 `LiveDanmakuClient`
   - 发布：`ks_apis/publish_api.py` 的 `KuaishouPublishAPI`；发布后 `video_photo_list(query_type=2, post_publish=True)` 取 publishId，`video_publish_refresh` 取发布状态
   - 不在 `_LIVE_CURRENT_PATHS` 放行名单里的直播接口（`comment_add`、`comment_like`、`profile_like`、`liveroom_status` 等）上游运行时直接拒绝发包，不移植
+- **上游基线**：当前移植的是 `feat/fix-slider-fingerprint-http2` 分支的 552cf60（还没合进上游 master），比 master d4fcfd0 多一个提交：刷新验证码指纹、gdfp 接受 HTTP/1.1。
+- **浏览器档案**：`utils/fingerprint.py` 的 `get_profile()`（UA、平台、语言、时区、CPU、WebGL、屏幕 / 可用区 / 内外窗口几何）→ catbus `web/profile.ts` 的 `PROFILE`。请求头、gdfp manMachine 载荷、`captchaExtraParam` 都从它取值，不各自写死。
 - **滑块验证码**：`KuaishouAPI._post` / `_get` / `graphql` 遇到 400002（GraphQL 是 `errors` + `data.captcha.url`）时调 `_pass_captcha` 过一次滑块，再重新序列化同一条 Cookie 线序重发。
   - `builder/auth.py` 的 `prepare_captcha_context`：验证码 iframe 以 `verification-captcha` 产品名单独引导 webweapon，Cookie 线序 `captcha`（`kwpsecproductname` 出现两次）
   - `utils/captcha.py`：`find_gap_x`（cv2 边缘图 + 带掩码的模板匹配，catbus 用 @techstark/opencv-js）、`build_trajectory`、`SlidingCaptcha`
-  - `utils/captcha_fp.py`（`gpuInfo` / `captchaExtraParam`）、`utils/gdfp_manmachine.py`（SDK_INIT → core / whole `/n/a/b`）、`utils/sign/captcha_crypto.py`（三路 LFSR + 32 字节头）
+  - `utils/captcha_fp.py`（`gpuInfo` / `captchaExtraParam`；key35 / key36 是稳定的浏览器哈希，只有 key18–key26 每次现算）、`utils/gdfp_manmachine.py`（SDK_INIT → core / whole `/n/a/b`）、`utils/sign/captcha_crypto.py`（三路 LFSR + 32 字节头）
   - 对应 catbus 的 `web/captcha.ts`、`gap.ts`、`captcha-fp.ts`、`gdfp.ts`、`captcha-crypto.ts`
+  - **未移植**：`KuaishouAuth.set_captcha_fingerprint`（传给 `SlidingCaptcha` 的 `fingerprint`，用浏览器现抓的 `gpuInfo` / `captchaExtraParam` 代替随包默认值）：只有 Python API，没有 CLI 入口。catbus 始终用 `captcha-fp.ts` 的默认值。
+- **HTTP 版本检查**：上游对 gdfp（`/s/w/c`、manMachine、vision、gameLive）检查协商出的协议，现在默认接受 HTTP/1.1，设 `KS_STRICT_GDFP_HTTP2=1` 才只认 HTTP/2；`utils/transport.py` 的 `_curl_http_version_value` 也接受字符串形式的枚举值。catbus 不查协议版本（wreq-js 拿不到协商出的协议），与上游的默认行为一致。
 - **JS 与 proto 资产**
   - `reverse/bundles/weapon/`：21 个 JS（kwf，以及 kws-0 到 kws-19）
   - `reverse/js/cp-kwf.js`

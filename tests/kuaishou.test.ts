@@ -16,7 +16,7 @@ import * as gdfp from '../src/platforms/kuaishou/web/gdfp.js'
 import { decodeFrame, enterRoomFrame, feedEvents, heartbeatFrame, userExitFrame } from '../src/platforms/kuaishou/web/live.js'
 import * as norm from '../src/platforms/kuaishou/web/normalize.js'
 import { genFingerprintReport, genKwfv1, genKwscode, genLikeToken } from '../src/platforms/kuaishou/web/oracle.js'
-import { CP, LIVE, WWW } from '../src/platforms/kuaishou/web/profile.js'
+import { CP, LIVE, UA, WWW } from '../src/platforms/kuaishou/web/profile.js'
 import { axiosQuery, buildSignInput, HxFalconSigner, Sig3Signer, weaponEncrypt } from '../src/platforms/kuaishou/web/sign.js'
 import { expectRequests, type GoldenCase, type GoldenRequest, loadCase, makeCtx, normalize } from './golden.js'
 
@@ -238,7 +238,24 @@ const CASES: Record<string, { run: () => Promise<unknown>; result?: (actual: any
     result: (a, e) => expect(a).toEqual(e),
   },
   captcha_fp: {
-    run: async () => [gpuInfoJson(), captchaExtraParamJson({ did: DID }), captchaExtraParamJson({ did: DID, nowMs: 1790000000999 })],
+    run: async () => {
+      const overrides = {
+        key1: 'web_snapshot',
+        key2: 1,
+        key18: ['0,1,-1,-1,-1,prepare1'],
+        key35: 'f'.repeat(32),
+        canvasGraph: '1' + 'e'.repeat(32),
+        extraKey: 'x',
+      }
+      return [
+        gpuInfoJson(),
+        captchaExtraParamJson({ did: DID }),
+        captchaExtraParamJson({ did: DID, nowMs: 1790000000999 }),
+        gpuInfoJson({ unmaskVendor: 'Snapshot Vendor', extraKey: 'x' }),
+        captchaExtraParamJson({ overrides, did: DID, nowMs: 1790000000999 }),
+        captchaExtraParamJson({ overrides, nowMs: 1790000000999, freshSession: false }),
+      ]
+    },
     result: (a, e) => expect(a).toEqual(e),
   },
   gdfp_payloads: {
@@ -258,7 +275,7 @@ const CASES: Record<string, { run: () => Promise<unknown>; result?: (actual: any
         ] as [string, string][],
         parentUrl: 'https://www.kuaishou.com/new-reco',
         iframeUrl: IFRAME,
-        ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36',
+        ua: UA,
         identity: '11111111-2222-4333-8444-555555555555',
         beginMs: now,
         sessionId: '66666666-7777-4888-9999-000000000000',

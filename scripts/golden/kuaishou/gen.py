@@ -8,7 +8,8 @@
   直接跑会被当成 ES module，这里经 run_cjs.cjs 按 CommonJS 执行；并预加载 vm_determinism.cjs，
   让预言机内部 vm.createContext 出来的 context 也用固定的 Math.random / Date。
 - 进程级签名器单例（ks_util）与 gdfp 预检缓存每个用例重置：一个用例对应浏览器的一次页面加载。
-- FakeResponse 补上 http_version（gdfp 会检查协商协议）：默认 HTTP/1.1，gdfp manMachine 的响应按用例给 HTTP/2。
+- FakeResponse 补上 http_version（gdfp 会检查协商协议）：默认 HTTP/1.1，gdfp manMachine 的响应按抓包给 HTTP/2
+  （上游 552cf60 起默认也接受 HTTP/1.1，KS_STRICT_GDFP_HTTP2=1 才只认 HTTP/2）。
 - 响应体可以是 bytes（滑块的背景图、滑块图），记录成 {base64}。
 - random.gauss 的缓存（_inst.gauss_next）每个用例清空，与 TS 侧 rand.gauss 在 deterministic() 里清空对应。
 """
@@ -662,8 +663,14 @@ def _gdfp_payloads():
 case('py_float', _py_float)
 case('captcha_crypto', _captcha_crypto)
 case('captcha_trajectory', _trajectory)
+# 覆盖：浏览器快照先合并，key1 / key2 与会话字段（key18–key26）之后再刷新；快照里的 key35 等浏览器级字段保留
+FP_OVERRIDES = {'key1': 'web_snapshot', 'key2': 1, 'key18': ['0,1,-1,-1,-1,prepare1'], 'key35': 'f' * 32, 'canvasGraph': '1' + 'e' * 32,
+                'extraKey': 'x'}
 case('captcha_fp', lambda: [captcha_fp.gpu_info_json(), captcha_fp.captcha_extra_param_json(did=DID),
-                            captcha_fp.captcha_extra_param_json(did=DID, now_ms=1790000000999)])
+                            captcha_fp.captcha_extra_param_json(did=DID, now_ms=1790000000999),
+                            captcha_fp.gpu_info_json({'unmaskVendor': 'Snapshot Vendor', 'extraKey': 'x'}),
+                            captcha_fp.captcha_extra_param_json(FP_OVERRIDES, did=DID, now_ms=1790000000999),
+                            captcha_fp.captcha_extra_param_json(FP_OVERRIDES, now_ms=1790000000999, fresh_session=False)])
 case('gdfp_payloads', _gdfp_payloads)
 case('captcha_gap', lambda: [C.find_gap_x(BG_PNG, CUT_PNG), C.find_gap_x(BG2_PNG, CUT2_PNG)],
      match=[b64(BG_PNG), b64(CUT_PNG)], fallback=[b64(BG2_PNG), b64(CUT2_PNG)])

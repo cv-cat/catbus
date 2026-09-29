@@ -1,2 +1,3 @@
 repo: https://github.com/cv-cat/KuaiShou-Spider
-commit: d4fcfd0d12632d7d8008eecd404af09be78f8828
+commit: 552cf60e59f6e97c759956b229f3f5563fb152bc
+branch: feat/fix-slider-fingerprint-http2
