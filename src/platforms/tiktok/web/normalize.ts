@@ -1,7 +1,7 @@
 import * as n from '../../../core/normalize.js'
 import type { Category, Comment, Conversation, Event, Folder, Gift, Item, Live, Media, Message, Notice, Poi, Rank, User, UserRef } from '../../../core/schemas.js'
 import { ORIGIN, SHOP } from './profile.js'
-import type { LiveEvent, LiveUser, PulledMessage } from './wire.js'
+import type { ImTextMessage, LiveEvent, LiveUser, PulledMessage } from './wire.js'
 
 /** TikTok 原始对象 → 归一化类型（AGENTS 6.2）。 */
 
@@ -45,8 +45,11 @@ export function item(v: any): Item {
   )
 }
 
-/** 可播放 / 下载的媒体：视频取 playAddr（同源 h264），图文取每张图，另附背景音乐。 */
-export function itemMedia(v: any): Media[] {
+/**
+ * 可播放 / 下载的媒体：视频取 playAddr（同源 h264），图文取每张图。
+ * 背景音乐：图文总是附上（图文的声音只在音乐里）；视频只在 `withMusic` 时附上（`item media` 要，Item.media 与下载不要）。
+ */
+export function itemMedia(v: any, withMusic = false): Media[] {
   const out: Media[] = []
   const images: any[] = v.imagePost?.images ?? []
   if (images.length) {
@@ -65,7 +68,7 @@ export function itemMedia(v: any): Media[] {
       )
     }
   }
-  if (images.length && v.music?.playUrl) out.push(n.media({ id: n.id(v.music.id), type: 'audio', url: n.url(v.music.playUrl)!, duration: n.seconds(v.music.duration) }, v.music))
+  if ((images.length || withMusic) && v.music?.playUrl) out.push(n.media({ id: n.id(v.music.id), type: 'audio', url: n.url(v.music.playUrl)!, duration: n.seconds(v.music.duration) }, v.music))
   return out
 }
 
@@ -304,7 +307,8 @@ export function notice(v: any, system = false): Notice {
   )
 }
 
-export function pulledMessage(m: PulledMessage): Message {
+/** 私信文本消息：拉取回包（PulledMessage）和 WS 推送（ImTextMessage）的字段相同。 */
+export function imMessage(m: PulledMessage | ImTextMessage): Message {
   return n.message(
     {
       id: m.server_message_id,

@@ -388,8 +388,10 @@ export function inboxNoticeList(t: TikTok, groupList?: NoticeGroup[], o: { refer
   return t.requestJson({ method: 'GET', path: '/api/inbox/notice_list/', params: p, referer })
 }
 
-/** 私信页上下文的收件箱通知（上游 get_message_notice_list）。 */
+/** 私信页：私信页上下文的请求（收件箱通知、用户卡片、IM 的 im_headers）用它作 referer。 */
 export const MESSAGES_PAGE = `${ORIGIN}/messages?lang=zh-Hans`
+
+/** 私信页上下文的收件箱通知（上游 get_message_notice_list）。catbus 的命令没有用到（notice list 走首页上下文），保留供对拍。 */
 export const messageNoticeList = (t: TikTok, groupList?: NoticeGroup[]) => inboxNoticeList(t, groupList, { referer: MESSAGES_PAGE, fromPage: 'message', historyLen: '4' })
 
 export function noticeMulti(t: TikTok, groupList?: NoticeGroup[], referer?: string) {
@@ -408,7 +410,7 @@ export function noticeMulti(t: TikTok, groupList?: NoticeGroup[], referer?: stri
 
 /** 私信页的用户卡片（不签名）：uid → unique_id 等。 */
 export function imUserProfile(t: TikTok, userIds: string[]) {
-  const ref = `${ORIGIN}/messages?lang=zh-Hans`
+  const ref = MESSAGES_PAGE
   const p = new Params([
     ['aid', '1988'],
     ['user_ids', JSON.stringify(userIds.map(String))],

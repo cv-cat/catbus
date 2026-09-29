@@ -3,7 +3,6 @@ import { join } from 'node:path'
 import { CatbusError } from '../../../core/errors.js'
 import { PACKAGE_ROOT, staticFile } from '../../../core/paths.js'
 import * as rand from '../../../core/rand.js'
-import { md5Hex } from './sign.js'
 
 /**
  * 上游的两个签名运行器（AGENTS 7.4 的子进程退路）：
@@ -81,11 +80,6 @@ export async function frontierSign(o: FrontierInput): Promise<string> {
     throw new CatbusError('ERROR', `本地 frontierSign 未产生长度 16 的 X-Bogus${result.error ? `：${String(result.error).slice(0, 200)}` : ''}`)
   }
   return marker
-}
-
-/** 私信帧的 stub：md5(序列化的 Request)。 */
-export function imStub(request: Uint8Array): string {
-  return md5Hex(request)
 }
 
 // ---------------------------------------------------------------- Shop BSID（signing/shop_bsid.py ShopBSIDSigner）

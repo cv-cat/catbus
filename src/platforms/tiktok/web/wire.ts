@@ -287,7 +287,7 @@ export interface Inbox {
   cursor_type?: IntLike | null
 }
 
-/** cmd 204：get_by_user_combo。 */
+/** cmd 204：get_by_user_combo（上游 get_im_messages_per_user_combo）。catbus 的命令没有用到（msg list 走 203），保留供对拍。 */
 export function imUserComboRequest(inboxes: Inbox[], e: ImEnvelope, o: { statusAdapterMap?: IntLike; lastPullTime?: IntLike } = {}): Uint8Array {
   if (!inboxes.length) throw new CatbusError('ERROR', '私信 get_by_user_combo 至少需要一个 inbox')
   const parts = inboxes.map((b) =>
