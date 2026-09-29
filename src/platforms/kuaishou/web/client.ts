@@ -11,6 +11,7 @@ import {
   CP,
   ID_HOST,
   LIVE,
+  LIVE_SENTRY_BAGGAGE,
   PRODUCT_CP,
   PRODUCT_LIVE,
   PRODUCT_WWW,
@@ -71,9 +72,9 @@ export class Ks {
   readonly falconLive = new HxFalconSigner(SDK_VERSION_LIVE)
   readonly falconLogin = new HxFalconSigner()
   readonly sig3 = new Sig3Signer()
-  /** CP 发布权限预检的缓存（_cp_publish_authority_response）。 */
   /** 最近一次自动过滑块没通过时服务端的回复（报 RISK_CONTROL 时放进 detail.verify）。 */
   lastCaptcha: Json = null
+  /** CP 发布权限预检的缓存（_cp_publish_authority_response）。 */
   cpAuthority: Json = null
   cpLastVideoFinish: Json = null
 
@@ -154,7 +155,7 @@ export class Ks {
   // ---------------------------------------------------------------- www REST / GraphQL（kuaishou_api.py）
 
   /** KuaishouAPI._post：JSON body，kww 头，白名单接口带 __NS_hxfalcon。 */
-  async wwwPost(api: string, body: unknown, o: { referer?: string; forceSign?: boolean; extraHeaders?: [string, string][]; cookieProfile?: string } = {}): Promise<Json> {
+  async wwwPost(api: string, body: unknown, o: { referer?: string; extraHeaders?: [string, string][]; cookieProfile?: string } = {}): Promise<Json> {
     const referer = o.referer ?? RECO_REFERER
     const h = buildHeaders('POST')
     h.set('referer', referer)
@@ -164,7 +165,7 @@ export class Ks {
     for (const [k, v] of o.extraHeaders ?? []) h.set(k.toLowerCase(), v)
     if (body == null) h.remove('content-type')
     const params: [string, unknown][] = []
-    if (o.forceSign || needSign(api)) {
+    if (needSign(api)) {
       params.push(['__NS_hxfalcon', this.falcon.sign(buildSignInput(api, {}, body, 'application/json', { omitEmptyBody: true }))], ['caver', CAVER])
     }
     const data = body == null ? undefined : compactJson(body)
@@ -174,7 +175,7 @@ export class Ks {
     const post = async () => this.json(await this.send({ method: 'POST', url, headers: h.get(), cookie: await this.s.cookieHeader(site), body: data }))
     let result = await post()
     // 撞上滑块风控就过一次验证码；验证可能轮换短期票据，重发前重新序列化同一条 Cookie 线序
-    if (!o.forceSign && isRisk(result) && (await passCaptcha(this, result, referer))) result = await post()
+    if (isRisk(result) && (await passCaptcha(this, result, referer))) result = await post()
     if (api === '/rest/v/profile/feed' && this.s.wwwPhase !== 'relogin') this.s.wwwPhase = 'refreshed'
     return result
   }
@@ -281,7 +282,7 @@ export class Ks {
     if (sentry) {
       const [trace, span] = this.s.nextLiveSentry(o.referer)
       h.set('sentry-trace', `${trace}-${span}-0`)
-      h.set('baggage', 'sentry-environment=prod,sentry-release=ab256f1')
+      h.set('baggage', LIVE_SENTRY_BAGGAGE)
     }
     const kww = await this.s.kww()
     if (kww) h.set('kww', kww)

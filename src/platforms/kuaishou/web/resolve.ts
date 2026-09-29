@@ -47,7 +47,7 @@ export async function selfEid(ks: Ks): Promise<string> {
   return ks.s.selfEid
 }
 
-/** 用户：eid、主页 URL（www /profile/<eid>、live /u/<eid>、/profile/<eid>）或 `me`。 */
+/** 用户：eid、主页 URL（www.kuaishou.com/profile/<eid>）、分享短链或 `me`。直播间链接（live.kuaishou.com）报 USAGE。 */
 export async function resolveUser(ks: Ks, input: string): Promise<string> {
   const s = (await expand(ks, input.trim())).trim()
   if (s === 'me') return selfEid(ks)

@@ -4,6 +4,10 @@ import { compactJson } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { genFingerprintReport, genKwfv1, genKwscode } from './oracle.js'
 import {
+  ACCEPT_ENCODING,
+  ACCEPT_LANGUAGE,
+  ACCEPT_LANGUAGE_SHORT,
+  CAPTCHA_HOST,
   GDFP,
   HREF_CP,
   HREF_WWW,
@@ -68,8 +72,8 @@ async function corsPreflight(t: Transport, url: string, origin: string, referer:
       ['origin', origin],
       ['sec-fetch-mode', 'cors'],
       ['user-agent', UA],
-      ['accept-encoding', 'gzip, deflate, br, zstd'],
-      ['accept-language', 'zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6'],
+      ['accept-encoding', ACCEPT_ENCODING],
+      ['accept-language', ACCEPT_LANGUAGE],
       ['priority', 'u=1, i'],
       ['referer', referer],
       ['sec-fetch-dest', 'empty'],
@@ -97,8 +101,8 @@ export async function fetchConfig(t: Transport, did: string, product: string, re
       ['content-type', 'application/json'],
       ['referer', referer],
       ['accept', '*/*'],
-      ['accept-encoding', 'gzip, deflate, br, zstd'],
-      ['accept-language', 'zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6'],
+      ['accept-encoding', ACCEPT_ENCODING],
+      ['accept-language', ACCEPT_LANGUAGE],
       ['origin', origin],
       ['priority', 'u=1, i'],
       ['sec-fetch-dest', 'empty'],
@@ -138,8 +142,8 @@ export async function reportFingerprint(
       ['content-type', 'application/json'],
       ['referer', o.referer],
       ['accept', '*/*'],
-      ['accept-encoding', 'gzip, deflate, br, zstd'],
-      ['accept-language', 'zh-CN,zh;q=0.9'],
+      ['accept-encoding', ACCEPT_ENCODING],
+      ['accept-language', ACCEPT_LANGUAGE_SHORT],
       ['origin', o.referer.replace(/\/+$/, '')],
       ['priority', 'u=1, i'],
       ['sec-fetch-dest', 'empty'],
@@ -480,7 +484,7 @@ export class Session {
    */
   async prepareCaptchaContext(iframeUrl: string): Promise<CaptchaContext> {
     const fail = (message: string) => new CatbusError('UPSTREAM', message, { detail: { kind: 'captcha' } })
-    if (!iframeUrl.startsWith('https://captcha.zt.kuaishou.com/iframe/')) throw fail('验证码 iframe 地址不是 captcha.zt.kuaishou.com')
+    if (!iframeUrl.startsWith(`${CAPTCHA_HOST}/iframe/`)) throw fail('验证码 iframe 地址不是 captcha.zt.kuaishou.com')
     const snapshot = (await this.current()).get('kwfv1') ?? ''
     if (!snapshot) throw fail('验证码 iframe 初始化前缺少当前 kwfv1')
     // iframe 拿到新的 secToken 并执行下发的 signUrl，即使父页的票据还有效

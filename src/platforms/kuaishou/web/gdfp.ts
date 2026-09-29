@@ -5,7 +5,7 @@ import type { HttpResponse } from '../../../core/http.js'
 import { compactJson } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { Ks } from './client.js'
-import { PROFILE, RESOLUTION } from './profile.js'
+import { ACCEPT_ENCODING, ACCEPT_LANGUAGE, CAPTCHA_HOST, PROFILE, RESOLUTION } from './profile.js'
 
 /**
  * gdfp manMachine 预检（上游 utils/gdfp_manmachine.py）：滑块提交 verify 之前必须先上报的行为遥测。
@@ -29,7 +29,6 @@ export const URL_CORE_REPORT = '/n/a/b'
 const BUSS_TYPE_MAN_MACHINE = 'manMachine'
 const FLAG = 2
 const RESPONSE_CONTENT_TYPE = 'application/json;charset=UTF-8'
-const CAPTCHA_ORIGIN = 'https://captcha.zt.kuaishou.com'
 
 export const MAN_MACHINE_INIT_RESPONSE =
   '{"result":1,"error_msg":"","antispamPluginRsp":' +
@@ -271,7 +270,7 @@ export function buildWholePayload(o: PayloadInput & { reportPath?: string }): Re
   const section = {
     1: { page: o.parentUrl, identity: o.identity, page_type: 2 },
     2: o.iframeUrl,
-    4: CAPTCHA_ORIGIN,
+    4: CAPTCHA_HOST,
     5: o.sessionId,
     6: 'captcha',
     7: Object.fromEntries(o.cookies),
@@ -401,9 +400,9 @@ export async function report(ks: Ks, o: ReportInput): Promise<{ identity: string
     ['content-type', 'text/plain;charset=UTF-8'],
     ['referer', o.iframeUrl],
     ['accept', '*/*'],
-    ['accept-encoding', 'gzip, deflate, br, zstd'],
-    ['accept-language', 'zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6'],
-    ['origin', CAPTCHA_ORIGIN],
+    ['accept-encoding', ACCEPT_ENCODING],
+    ['accept-language', ACCEPT_LANGUAGE],
+    ['origin', CAPTCHA_HOST],
     ['priority', 'u=1, i'],
     ['sec-fetch-dest', 'empty'],
     ['sec-fetch-mode', 'cors'],

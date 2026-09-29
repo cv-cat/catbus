@@ -2,7 +2,7 @@ import { basename, extname } from 'node:path'
 import { GUEST } from '../../../core/auth-store.js'
 import { CatbusError } from '../../../core/errors.js'
 import { downloadMedia, type LocalMedia, readMedia } from '../../../core/files.js'
-import { cookieCredential, finishLogin, freshCredential, loginContext, showQrcode, smsLogin } from '../../../core/login.js'
+import { cookieCredential, finishLogin, freshCredential, loginContext, poll, showQrcode, smsLogin } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
@@ -106,12 +106,15 @@ function loginKs(ctx: Ctx, credential: Credential): Ks {
   return k
 }
 
+/** 扫码登录的总时限（等扫码与等确认共用）。 */
+const QR_TIMEOUT_MS = 600_000
+
 async function qrcodeLogin(ctx: Ctx) {
   const credential = freshCredential(ctx, 'qrcode')
   const k = loginKs(ctx, credential)
   const sid = api.SID_WWW
   const channel = api.channelFor(sid)
-  const deadline = rand.now() + 600_000
+  const deadline = rand.now() + QR_TIMEOUT_MS
   const state = { token: '', signature: '' }
   const issue = async () => {
     const start = await api.qrStart(k, sid, channel)
@@ -122,29 +125,32 @@ async function qrcodeLogin(ctx: Ctx) {
     return true
   }
   if (!(await issue())) throw new CatbusError('UPSTREAM', '申请二维码失败', { detail: { stage: 'qr/start' } })
-  const poll = async (step: 'scan' | 'accept'): Promise<Json> => {
-    while (rand.now() < deadline) {
-      let data: Json
-      try {
-        data = step === 'scan' ? await api.qrScanResult(k, state.token, state.signature, channel) : await api.qrAcceptResult(k, state.token, state.signature, sid, channel)
-      } catch (err) {
-        if (err instanceof CatbusError && err.code === 'NETWORK' && (err.detail as any)?.kind === 'timeout') continue
-        throw err
-      }
-      const result = data?.result
-      if (result === 1) return data
-      if (result === 707) {
-        if (step === 'accept' || !(await issue())) throw new CatbusError('AUTH_REQUIRED', '二维码已过期', { hint: 'catbus kuaishou auth login' })
-        continue
-      }
-      if (result === 711 || result === 712) throw new CatbusError('AUTH_REQUIRED', '已在手机上取消登录', { detail: { result } })
-      await rand.sleep(1000)
-    }
-    throw new CatbusError('AUTH_REQUIRED', '登录超时', { hint: 'catbus kuaishou auth login' })
-  }
-  await poll('scan')
+  // 上游 login_by_qr 的 poll：等扫码时二维码过期（707）就换一张，扫过之后不能再换；711 / 712 是在手机上取消
+  const wait = (step: 'scan' | 'accept') =>
+    poll<Json>(
+      async () => {
+        let data: Json
+        try {
+          data = step === 'scan' ? await api.qrScanResult(k, state.token, state.signature, channel) : await api.qrAcceptResult(k, state.token, state.signature, sid, channel)
+        } catch (err) {
+          // 长轮询读超时是正常的（上游 ReadTimeout 接着轮）；其他网络错误交给 poll 容忍几次
+          if (err instanceof CatbusError && err.code === 'NETWORK' && (err.detail as any)?.kind === 'timeout') return undefined
+          throw err
+        }
+        const result = data?.result
+        if (result === 1) return data
+        if (result === 707) {
+          if (step === 'accept' || !(await issue())) throw new CatbusError('AUTH_REQUIRED', '二维码已过期', { hint: 'catbus kuaishou auth login' })
+          return undefined
+        }
+        if (result === 711 || result === 712) throw new CatbusError('AUTH_REQUIRED', '已在手机上取消登录', { detail: { result } })
+        return undefined
+      },
+      { interval: 1000, timeout: deadline - rand.now(), what: '扫码登录' },
+    )
+  await wait('scan')
   ctx.log.info('已扫码，请在手机上确认')
-  const accepted = await poll('accept')
+  const accepted = await wait('accept')
   const qrToken = accepted.qrToken ?? accepted.qr_token
   if (!qrToken) throw new CatbusError('UPSTREAM', '确认登录后没有拿到 qrToken', { detail: { stage: 'acceptResult' } })
   const [data, issued] = await api.qrCallback(k, qrToken, sid, channel)
@@ -262,8 +268,9 @@ export async function userGet(ctx: Ctx) {
       return norm.selfUser(p)
     }
     const eid = await resolveUser(k, ctx.args.user!)
-    const r = await api.profileReduced(k, eid)
-    if (r?.result !== 1 || !r.userProfile) throw new CatbusError('UPSTREAM', `用户不存在或不可见（result=${r?.result}）`, { detail: { result: r?.result, user: eid } })
+    // result 与其他接口一样映射（109 需要登录、2 风控）；result=1 却没有 userProfile 的是用户不存在或不可见
+    const r = k.check(await api.profileReduced(k, eid), '用户资料')
+    if (!r.userProfile) throw new CatbusError('UPSTREAM', `用户不存在或不可见（result=${r?.result}）`, { detail: { result: r?.result, user: eid } })
     return norm.reducedUser(r)
   })
 }
@@ -349,24 +356,50 @@ export async function itemRelated(ctx: Ctx) {
   })
 }
 
-/** 作品管理页的作品列表（创作者中心），带审核状态。 */
-/** 作品管理页的时间范围：服务端拒绝超过一年的范围（「时间范围不能大于1年」），取最近 365 天。 */
+/** 作品管理页的时间范围：服务端拒绝超过一年的范围（「时间范围不能大于1年」），一次查一年。 */
 const WORKS_RANGE_MS = 365 * 86_400_000
 const WORKS_PAGE = 20
+/** 往前翻的下限：快手 2011 年上线，更早的窗口不用再查。 */
+const WORKS_FLOOR_MS = Date.parse('2011-01-01T00:00:00+08:00')
 
+/** photo/list 的查询（上游 video_photo_list，字段顺序照浏览器）：时间窗口 [end - 1 年, end]，从 cursor 往前翻。 */
+function worksQuery(queryType: string, cursor: number, end: number): api.PhotoListQuery {
+  return { queryType, cursor, startTime: end - WORKS_RANGE_MS, endTime: end, limit: WORKS_PAGE, timeRangeType: 5, keyword: '' }
+}
+
+/** item list 的游标 `<cursor>:<窗口终点>`；只有一个数字的（旧版本输出的）按窗口终点为现在处理。 */
+function worksCursor(cursor: string | null, now: number): [cursor: number, end: number] {
+  if (!cursor) return [now, now]
+  const [at, end] = cursor.split(':').map(Number)
+  if (!Number.isSafeInteger(at) || (end !== undefined && !Number.isSafeInteger(end))) throw new CatbusError('USAGE', '无效的 --cursor')
+  return [at!, end ?? now]
+}
+
+/**
+ * 作品管理页的作品列表（创作者中心），带审核状态。服务端一次只查一年：窗口里按 nextCursor 往前翻，
+ * 一个窗口翻完（一页不满 20 条）就把窗口前移一年接着翻（窗口编进游标），直到某个窗口一条作品都没有，或者早于快手上线。
+ */
 export async function itemList(ctx: Ctx) {
   return run(ctx, 'cp', async (k) => {
     const now = rand.now()
-    const cursor = ctx.cursor ? Number(ctx.cursor) : now
-    const r = k.check(
-      await api.videoPhotoList(k, { queryType: '0', cursor, startTime: now - WORKS_RANGE_MS, endTime: now, limit: WORKS_PAGE, timeRangeType: 5, keyword: '' }),
-      '作品管理',
-    )
+    const [cursor, end] = worksCursor(ctx.cursor, now)
+    const r = await api.videoPhotoList(k, worksQuery('0', cursor, end))
+    try {
+      k.check(r, '作品管理')
+    } catch (err) {
+      // 前移过的窗口没有实测过：服务端不认时当作没有更早的作品，前面已经取到的不因此作废
+      if (end > now - WORKS_RANGE_MS || !(err instanceof CatbusError) || err.code !== 'UPSTREAM') throw err
+      k.log.warn(`更早的作品没有取到，停止往前翻：${err.message}`)
+      return paged([], null, false)
+    }
     const rows: Json[] = r.data?.list ?? []
     const list = rows.map(norm.work)
-    // nextCursor 是本页最后一条的时间减 1 毫秒；一页不满说明没有更早的作品了
+    // nextCursor 是本页最后一条的时间减 1 毫秒；一页满 20 条就在这个窗口里接着翻
     const next = r.data?.nextCursor
-    return paged(list, next, rows.length >= WORKS_PAGE && more(next))
+    if (rows.length >= WORKS_PAGE && more(next)) return paged(list, `${next}:${end}`, true)
+    const start = end - WORKS_RANGE_MS
+    if ((!rows.length && cursor === end) || start <= WORKS_FLOOR_MS) return paged(list, null, false)
+    return paged(list, `${start - 1}:${start - 1}`, true)
   })
 }
 
@@ -552,7 +585,10 @@ export async function itemPublish(ctx: Ctx) {
       return null
     })
     if (!published) return fallback
-    return { ...published, text: published.text ?? fallback.text, status: o.visibility === 'private' ? 'private' : published.status }
+    // 就地改字段：展开会丢掉不可枚举的原始对象（--raw）
+    published.text ??= fallback.text
+    if (o.visibility === 'private') published.status = 'private'
+    return published
   })
 }
 
@@ -561,9 +597,9 @@ export async function itemPublish(ctx: Ctx) {
  * 再 publish/refresh 取一次发布状态（上游 video_photo_list(post_publish) + video_publish_refresh）。
  * 这一行对不上本次上传（不是唯一一行、已有 workId、封面不是这次的）时不轮询，只用列表里的数据。
  */
-async function afterVideoPublish(k: Ks, coverKey: string): Promise<Item | null> {
+export async function afterVideoPublish(k: Ks, coverKey: string): Promise<Item | null> {
   const now = rand.now()
-  const list = await api.videoPhotoList(k, { queryType: '2', cursor: now, startTime: now - WORKS_RANGE_MS, endTime: now, limit: WORKS_PAGE, timeRangeType: 5, keyword: '' }, { postPublish: true })
+  const list = await api.videoPhotoList(k, worksQuery('2', now, now), { postPublish: true })
   if (list?.result !== 1) return null
   const rows: Json[] = list.data?.list ?? []
   const id = api.publishRefreshId(list, coverKey)
@@ -610,7 +646,11 @@ export async function commentReplies(ctx: Ctx) {
 
 // ================================================================ feed
 
-/** recommend 是 new-reco 的推荐流（get_feed_hot，上游 docstring：“获取推荐流（精彩推荐）”）；following 是关注页。 */
+/**
+ * recommend 是 new-reco 的推荐流（get_feed_hot，上游 docstring：“获取推荐流（精彩推荐）”）；following 是关注页。
+ * 推荐流每页都返回 pcursor="1"、翻页固定发 `{}`，原样输出的话游标不变，core 会停止翻页：输出的游标带上已取的页数
+ * `<pcursor>:<页数>`，请求时只用 pcursor。某页没有作品、或者 pcursor 表示没有更多时停止（与上游 get_some_feed_hot 相同）。
+ */
 export async function feedList(ctx: Ctx) {
   const kind = (ctx.options.kind as string) ?? 'recommend'
   return run(ctx, 'www', async (k) => {
@@ -619,10 +659,20 @@ export async function feedList(ctx: Ctx) {
       if (r?.result != null && r.result !== 1) k.check(r, '关注流')
       return paged((r.feeds ?? []).map((f: Json) => norm.feed(f)), null, false)
     }
-    const r = k.check(await api.feedHot(k, ctx.cursor ?? ''), 'feed/hot')
+    const [pcursor, pages] = feedCursor(ctx.cursor)
+    const r = k.check(await api.feedHot(k, pcursor), 'feed/hot')
     const list = (r.feeds ?? []).map((f: Json) => norm.feed(f))
-    return paged(list, r.pcursor, list.length > 0 && more(r.pcursor))
+    return paged(list, `${r.pcursor}:${pages + 1}`, list.length > 0 && more(r.pcursor))
   })
+}
+
+/** 推荐流的游标 `<pcursor>:<已取的页数>`；没有页数的（旧版本输出的）按已取一页处理。 */
+function feedCursor(cursor: string | null): [pcursor: string, pages: number] {
+  if (!cursor) return ['', 0]
+  const i = cursor.lastIndexOf(':')
+  const pages = i < 0 ? 1 : Number(cursor.slice(i + 1))
+  if (!Number.isSafeInteger(pages) || pages < 1) throw new CatbusError('USAGE', '无效的 --cursor')
+  return [i < 0 ? cursor : cursor.slice(0, i), pages]
 }
 
 // ================================================================ live
@@ -701,9 +751,14 @@ export async function liveGifts(ctx: Ctx): Promise<Gift[]> {
   return run(ctx, 'live', async (k) => {
     const eid = await resolveRoom(k, ctx.args.room!)
     const room = await roomState(k, eid)
-    // 进房间时的首屏列表，再点开“更多礼物”（sortType=0）取全量
+    // 进房间时的首屏列表，再点开“更多礼物”（sortType=0）取全量；全量取不到时退回首屏
     const first: Json[] = k.checkLive(await api.giftList(k, String(room.id), eid)).gifts ?? []
-    const all: Json[] = k.checkLive(await api.giftList(k, String(room.id), eid, 0)).gifts ?? []
+    let all: Json[] = []
+    try {
+      all = k.checkLive(await api.giftList(k, String(room.id), eid, 0)).gifts ?? []
+    } catch (err) {
+      k.log.warn(`“更多礼物”没有取到，只列出首屏礼物：${(err as Error).message}`)
+    }
     return (all.length ? all : first).map(norm.gift)
   })
 }

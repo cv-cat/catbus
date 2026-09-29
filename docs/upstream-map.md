@@ -187,6 +187,7 @@
   - `ks_apis/kuaishou_api.py` 的 `KuaishouAPI`：`get_feed_hot`（new-reco 推荐流 → `feed list --kind recommend`）、`get_work_info`、`get_video_detail`、`get_comment_list`、`get_all_comment`、`get_sub_comment_list`、`get_profile`、`get_profile_feed`、`get_user_all_work`、`search_feed`、`search_user`、`get_relation`、`get_liked_list`、`get_collect_list`、`get_history_list`、`graphql`
   - 直播：`ks_apis/live_api.py` 的 `KuaishouLiveAPI`（礼物：`gift_list` 首屏与 `sort_type=0` 的“更多礼物”，`emoji_all_gifts` 完整礼物字典）；弹幕：`ks_apis/live_ws.py` 的 `LiveDanmakuClient`
   - 发布：`ks_apis/publish_api.py` 的 `KuaishouPublishAPI`；发布后 `video_photo_list(query_type=2, post_publish=True)` 取 publishId，`video_publish_refresh` 取发布状态
+  - 翻页（catbus 补充）：`get_feed_hot` 每页都回 `pcursor="1"`，catbus 的游标写成 `<pcursor>:<已取页数>`，请求时只用 pcursor；`video_photo_list` 的时间范围服务端限一年，`item list` 在一年窗口里按 `nextCursor` 翻，翻完把窗口前移一年（游标 `<cursor>:<窗口终点>`），某个窗口没有作品时停止
   - 不在 `_LIVE_CURRENT_PATHS` 放行名单里的直播接口（`comment_add`、`comment_like`、`profile_like`、`liveroom_status` 等）上游运行时直接拒绝发包，不移植
 - **上游基线**：当前移植的是 `feat/fix-slider-fingerprint-http2` 分支的 552cf60（还没合进上游 master），比 master d4fcfd0 多一个提交：刷新验证码指纹、gdfp 接受 HTTP/1.1。
 - **浏览器档案**：`utils/fingerprint.py` 的 `get_profile()`（UA、平台、语言、时区、CPU、WebGL、屏幕 / 可用区 / 内外窗口几何）→ catbus `web/profile.ts` 的 `PROFILE`。请求头、gdfp manMachine 载荷、`captchaExtraParam` 都从它取值，不各自写死。

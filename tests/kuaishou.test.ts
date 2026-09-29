@@ -306,6 +306,7 @@ const CASES: Record<string, { run: () => Promise<unknown>; result?: (actual: any
   // ---------------------------------------------------------------- 滑块验证码：业务请求 → 400002 → 过滑块 → 重发
   captcha_comment_list: { run: async () => api.commentList(await logged(), PHOTO, 'cur1'), result: (a, e) => expect(a).toEqual(e) },
   captcha_video_detail: { run: async () => api.videoDetail(await logged(), PHOTO), result: (a, e) => expect(a).toEqual(e) },
+  captcha_profile_get: { run: async () => api.profile(await logged()), result: (a, e) => expect(a).toEqual(e) },
   captcha_verify_fail: {
     run: async () => {
       const k = await logged()
@@ -578,6 +579,8 @@ describe('kuaishou 对拍：命令流程', () => {
       author: { id: SELF_EID, name: '测试' },
       status: 'private',
     })
+    // 改 text / status 时不能丢掉 --raw 用的原始对象
+    expect(result[RAW]).toMatchObject({ publishId: 424242, workId: '3xfakework0002' })
   })
 
   it('live gifts：直播首页找房间 → 首屏礼物 → “更多礼物”（sortType=0）', async () => {
@@ -657,5 +660,297 @@ describe('kuaishou 业务码映射', () => {
     const k = new Ks(makeCtx({ platform: 'kuaishou', account: 'default' }))
     expect(() => k.check({ result: 109 }, '搜索')).toThrow(expect.objectContaining({ code: 'AUTH_EXPIRED' }))
     expect(() => k.check({ result: 2 }, '搜索')).toThrow(expect.objectContaining({ code: 'RISK_CONTROL', detail: { kind: 'blocked', result: 2 } }))
+  })
+})
+
+// ================================================================ 命令级测试（catbus 自己的逻辑，没有上游对拍）
+
+interface SentRequest {
+  method: string
+  url: URL
+  body: any
+}
+type Reply = unknown | Error | { status: number; headers: [string, string][]; body: unknown }
+
+/** 响应：普通值按 JSON 回复；Error 当作网络层抛出；带 status 与 headers 的按原样回复。 */
+function reply(r: Reply, url: string): HttpResponse {
+  if (r instanceof Error) throw r
+  if (r && typeof r === 'object' && 'status' in r && 'headers' in r && 'body' in r) {
+    const x = r as { status: number; headers: [string, string][]; body: unknown }
+    return fakeResponse(typeof x.body === 'string' ? x.body : JSON.stringify(x.body), { status: x.status, headers: x.headers, url })
+  }
+  return fakeResponse(JSON.stringify(r ?? {}), { status: 200, headers: [['content-type', 'application/json']], url })
+}
+
+/**
+ * 命令级会话：随机数与时钟固定，Ks 从已物化的 COOKIES（加上 extra）起步、init 不出网，请求交给 respond 回复。
+ */
+async function session<T>(respond: (req: SentRequest) => Reply, run: () => Promise<T>, extra: [string, string][] = []) {
+  const requests: SentRequest[] = []
+  const restoreRand = rand.deterministic()
+  const init = Ks.prototype.init
+  Ks.prototype.init = function (this: Ks) {
+    return init.call(this, [...COOKIES, ...extra])
+  }
+  const restoreSender = mockSender((p) => {
+    const text = p.body == null ? null : typeof p.body === 'string' ? p.body : Buffer.from(p.body).toString('utf8')
+    let body: any = text
+    try {
+      body = text ? JSON.parse(text) : text
+    } catch {}
+    const req = { method: p.method, url: new URL(p.url), body }
+    requests.push(req)
+    return reply(respond(req), p.url)
+  })
+  try {
+    return { requests, result: (await run()) as T, error: undefined as any }
+  } catch (error) {
+    return { requests, result: undefined as T | undefined, error: error as any }
+  } finally {
+    restoreSender()
+    Ks.prototype.init = init
+    restoreRand()
+  }
+}
+
+const FEED = loadCase('kuaishou', 'feed_hot').responses[0]!.body as any
+const feedOf = (id: string) => ({ ...FEED.feeds[0], photo: { ...FEED.feeds[0].photo, id } })
+const paths = (requests: SentRequest[]) => requests.map((r) => r.url.pathname)
+
+describe('kuaishou feed list（推荐流翻页）', () => {
+  it('每页都回 pcursor="1"：游标带上已取的页数，--limit 能翻过两页；翻页请求仍按 pcursor="1" 发 {}', async () => {
+    const { newCredential, setCurrent, writeCredential } = await import('../src/core/auth-store.js')
+    const { cli } = await import('./helpers.js')
+    await writeCredential(newCredential({ platform: 'kuaishou', endpoint: 'web', account: 'feed', method: 'cookie' }))
+    await setCurrent('kuaishou', 'web', 'feed')
+    let n = 0
+    const { requests, result } = await session(
+      (req) => (req.url.pathname === '/rest/v/feed/hot' ? { result: 1, pcursor: '1', feeds: [feedOf(`p${++n}`), feedOf(`p${++n}`)] } : { result: 1 }),
+      () => cli('kuaishou', 'feed', 'list', '--limit', '5'),
+    )
+    const hot = requests.filter((r) => r.url.pathname === '/rest/v/feed/hot')
+    expect(hot.map((r) => r.body)).toEqual([null, {}, {}])
+    expect(result!.env.data.map((x: any) => x.id)).toEqual(['p1', 'p2', 'p3', 'p4', 'p5'])
+    // 截在第三页中间：游标指回第三页（已取两页），续翻时跳过已经输出的一条
+    expect(result!.env.page).toEqual({ cursor: '1:2#skip=1', has_more: true })
+    await setCurrent('kuaishou', 'web', null)
+  })
+
+  it('游标解析：页数递增；某页没有作品或 pcursor 表示没有更多时停止；游标不合法报 USAGE', async () => {
+    const { feedList } = await import('../src/platforms/kuaishou/web/commands.js')
+    const page = async (cursor: string | null, body: unknown) => {
+      const { requests, result, error } = await session(() => body, () => feedList(makeCtx({ platform: 'kuaishou', options: { kind: 'recommend' }, cursor })) as Promise<any>)
+      if (error) throw error
+      return { body: requests[0]!.body, page: result.page }
+    }
+    expect(await page(null, { result: 1, pcursor: '1', feeds: [FEED.feeds[0]] })).toEqual({ body: null, page: { cursor: '1:1', has_more: true } })
+    expect(await page('1:7', { result: 1, pcursor: '1', feeds: [FEED.feeds[0]] })).toEqual({ body: {}, page: { cursor: '1:8', has_more: true } })
+    // 旧版本输出的 '1' 按已取一页处理
+    expect((await page('1', { result: 1, pcursor: '1', feeds: [FEED.feeds[0]] })).page.cursor).toBe('1:2')
+    expect((await page('1:3', { result: 1, pcursor: '1', feeds: [] })).page).toEqual({ cursor: null, has_more: false })
+    expect((await page('1:3', { result: 1, pcursor: 'no_more', feeds: [FEED.feeds[0]] })).page).toEqual({ cursor: null, has_more: false })
+    await expect(page('1:x', {})).rejects.toMatchObject({ code: 'USAGE' })
+  })
+})
+
+describe('kuaishou item list（作品管理，按年窗口）', () => {
+  const YEAR = 365 * 86_400_000
+  const rows = (count: number) => Array.from({ length: count }, (_, i) => ({ workId: `3xw${i}`, publishStatus: 1, uploadTime: 1789000000000 - i }))
+  async function list(cursor: string | null, body: unknown) {
+    const { itemList } = await import('../src/platforms/kuaishou/web/commands.js')
+    const { requests, result, error } = await session(() => body, () => itemList(makeCtx({ platform: 'kuaishou', cursor })) as Promise<any>)
+    const sent = requests.find((r) => r.url.pathname === '/rest/cp/works/v2/video/pc/photo/list')?.body
+    return { sent, result, error, count: requests.length }
+  }
+  const now = rand.DEFAULT_NOW
+
+  it('第一页：窗口是最近一年；一页满 20 条就在窗口里按 nextCursor 接着翻', async () => {
+    const { sent, result } = await list(null, { result: 1, data: { list: rows(20), nextCursor: 1788000000000 } })
+    expect(sent).toMatchObject({ queryType: '0', cursor: now, startTime: now - YEAR, endTime: now, limit: 20, timeRangeType: 5, keyword: '' })
+    expect(result.data).toHaveLength(20)
+    expect(result.page).toEqual({ cursor: `1788000000000:${now}`, has_more: true })
+  })
+
+  it('窗口翻完（一页不满 20 条、或者没有 nextCursor）：窗口前移一年', async () => {
+    const end = now - 1000
+    const { sent, result } = await list(`1788000000000:${end}`, { result: 1, data: { list: rows(3), nextCursor: 1787000000000 } })
+    expect(sent).toMatchObject({ cursor: 1788000000000, startTime: end - YEAR, endTime: end })
+    expect(result.page).toEqual({ cursor: `${end - YEAR - 1}:${end - YEAR - 1}`, has_more: true })
+    // 窗口里上一页恰好满 20 条、这一页是空的：窗口有作品，照样前移
+    expect((await list(`1788000000000:${end}`, { result: 1, data: { list: [] } })).result.page.has_more).toBe(true)
+    expect((await list(null, { result: 1, data: { list: rows(20) } })).result.page).toEqual({ cursor: `${now - YEAR - 1}:${now - YEAR - 1}`, has_more: true })
+  })
+
+  it('一整个窗口没有作品、或者窗口早于快手上线时停止；旧版本的纯数字游标按窗口终点为现在处理', async () => {
+    const end = now - YEAR - 1
+    expect((await list(`${end}:${end}`, { result: 1, data: { list: [] } })).result.page).toEqual({ cursor: null, has_more: false })
+    expect((await list(null, { result: 1, data: { list: [] } })).result.page).toEqual({ cursor: null, has_more: false })
+    const old = Date.parse('2011-06-01T00:00:00+08:00')
+    expect((await list(`${old}:${old}`, { result: 1, data: { list: rows(1) } })).result.page).toEqual({ cursor: null, has_more: false })
+    const legacy = await list('1788000000000', { result: 1, data: { list: rows(20), nextCursor: 1787000000000 } })
+    expect(legacy.sent).toMatchObject({ cursor: 1788000000000, startTime: now - YEAR, endTime: now })
+    expect(legacy.result.page.cursor).toBe(`1787000000000:${now}`)
+    expect((await list('abc', {})).error).toMatchObject({ code: 'USAGE' })
+  })
+
+  it('前移过的窗口服务端不认：当作没有更早的作品；第一个窗口出错照常报错，登录墙不吞', async () => {
+    const end = now - YEAR - 1
+    expect((await list(`${end}:${end}`, { result: 500, message: '时间范围不能大于1年' })).result.page).toEqual({ cursor: null, has_more: false })
+    expect((await list(null, { result: 500, message: '时间范围不能大于1年' })).error).toMatchObject({ code: 'UPSTREAM', message: '时间范围不能大于1年' })
+    expect((await list(`${end}:${end}`, { result: 109 })).error).toMatchObject({ code: 'AUTH_EXPIRED' })
+  })
+})
+
+describe('kuaishou user get / 参数归一化', () => {
+  async function userGet(profile: unknown) {
+    const { userGet } = await import('../src/platforms/kuaishou/web/commands.js')
+    return session(() => ({ data: { visionProfileReduced: profile } }), () => userGet(makeCtx({ platform: 'kuaishou', args: { user: EID } })) as Promise<any>)
+  }
+
+  it('visionProfileReduced 的 result 与其他接口一样映射：109 需要登录、2 风控；result=1 没有 userProfile 是用户不存在', async () => {
+    expect((await userGet({ result: 109 })).error).toMatchObject({ code: 'AUTH_EXPIRED' })
+    expect((await userGet({ result: 2 })).error).toMatchObject({ code: 'RISK_CONTROL', detail: { kind: 'blocked', result: 2 } })
+    expect((await userGet({ result: 1 })).error).toMatchObject({ code: 'UPSTREAM', detail: { result: 1, user: EID } })
+    expect((await userGet(loadCase('kuaishou', 'profile_reduced').result)).result).toMatchObject({ id: EID, name: '作者' })
+  })
+
+  it('直播间链接不是用户主页：直接报 USAGE，不发请求', async () => {
+    const { resolveUser } = await import('../src/platforms/kuaishou/web/resolve.js')
+    const { requests, error } = await session(() => ({}), () => resolveUser(new Ks(makeCtx({ platform: 'kuaishou' })), `https://live.kuaishou.com/u/${ROOM}`))
+    expect(error).toMatchObject({ code: 'USAGE' })
+    expect(requests).toEqual([])
+  })
+})
+
+describe('kuaishou 发布后取状态（afterVideoPublish 的退路）', () => {
+  const COVER = 'fake-cover-key'
+  const row = { publishId: 424242, workId: null, publishStatus: 2, unPublishCoverKey: COVER, userIdStr: SELF_EID, userName: '测试', uploadTime: 1790000000000 }
+  async function after(list: unknown, refresh: unknown = { result: 1, data: { list: [] } }) {
+    const { afterVideoPublish } = await import('../src/platforms/kuaishou/web/commands.js')
+    const k = await logged(CP)
+    const out = await session((req) => (req.url.pathname.endsWith('/photo/list') ? list : refresh), () => afterVideoPublish(k, COVER))
+    return { ...out, paths: paths(out.requests) }
+  }
+
+  it('photo/list 的 result≠1：返回 null（发布命令退回提交时的数据），不轮询', async () => {
+    const r = await after({ result: 500 })
+    expect(r.result).toBeNull()
+    expect(r.paths).toEqual(['/rest/cp/works/v2/video/pc/photo/list'])
+  })
+
+  it('这一行不能拿去轮询（publishId 不是正整数 / 封面不是这次的）：只有唯一一行且封面对得上时用列表数据，否则 null', async () => {
+    const own = await after({ result: 1, data: { list: [{ ...row, publishId: 0 }] } })
+    expect(own.paths).toEqual(['/rest/cp/works/v2/video/pc/photo/list'])
+    expect(own.result).toMatchObject({ author: { id: SELF_EID }, status: 'reviewing' })
+    expect((await after({ result: 1, data: { list: [{ ...row, publishId: 0, unPublishCoverKey: 'other' }] } })).result).toBeNull()
+    expect((await after({ result: 1, data: { list: [row, row] } })).result).toBeNull()
+  })
+
+  it('publish/refresh 失败：用列表这一行', async () => {
+    const r = await after({ result: 1, data: { list: [row] } }, { result: 500 })
+    expect(r.paths).toEqual(['/rest/cp/works/v2/video/pc/photo/list', '/rest/cp/works/v2/video/pc/publish/refresh'])
+    expect(r.result).toMatchObject({ author: { id: SELF_EID } })
+  })
+})
+
+describe('kuaishou live gifts：“更多礼物”失败时退回首屏', () => {
+  it('sortType=0 撞上风控：不让整条命令失败，列出首屏礼物', async () => {
+    const g = loadCase('kuaishou', 'live_gifts_flow')
+    const bodies = g.responses.map((r) => r.body)
+    const { liveGifts } = await import('../src/platforms/kuaishou/web/commands.js')
+    let i = 0
+    const { result, error, requests } = await session(
+      () => (++i === 3 ? { data: { result: 2 } } : bodies[i - 1]),
+      () => liveGifts(makeCtx({ platform: 'kuaishou', args: { room: ROOM } })) as Promise<any>,
+    )
+    if (error) throw error
+    expect(requests).toHaveLength(3)
+    expect(result.map((x: any) => [x.id, x.name])).toEqual([['1', '棒棒糖']])
+  })
+})
+
+describe('kuaishou 服务端登出', () => {
+  const PASSPORT_OK = {
+    status: 200,
+    headers: [
+      ['content-type', 'application/json;charset=UTF-8'],
+      ['set-cookie', 'userId=; Path=/; Max-Age=0'],
+      ['set-cookie', 'userId=; Path=/; Domain=kuaishou.com; Max-Age=0'],
+      ['set-cookie', 'passToken=; Path=/; Max-Age=0'],
+    ] as [string, string][],
+    body: '{"result":1}',
+  }
+  const LIVE_OK = {
+    status: 200,
+    headers: [
+      ['content-type', 'application/json; charset=utf-8'],
+      ['set-cookie', 'kuaishou.live.web_st=; Path=/'],
+      ['set-cookie', 'kuaishou.live.web_ph=; Path=/'],
+      ['set-cookie', 'userId=; Path=/'],
+    ] as [string, string][],
+    body: '{"data":{"result":1}}',
+  }
+  const TICKETS: [string, string][] = [
+    ['kuaishou.live.web_st', 'fake-live-st'],
+    ['kuaishou.live.web_ph', 'fake-live-ph'],
+  ]
+
+  it('直播站票据不全：先用 passToken 补一次，补上后按浏览器的方式登出', async () => {
+    const { serverLogout } = await import('../src/platforms/kuaishou/web/commands.js')
+    const { requests, error } = await session(
+      (req) => {
+        const p = req.url.pathname
+        if (p === '/pass/kuaishou/login/passToken') return { result: 1, 'kuaishou.live.web.at': 'fake-live-at' }
+        if (p === '/live_api/baseuser/userLogin') return { status: 200, headers: [['set-cookie', 'kuaishou.live.web_st=st2; Path=/'], ['set-cookie', 'kuaishou.live.web_ph=ph2; Path=/']], body: { data: { result: 1 } } }
+        return p === '/pass/kuaishou/login/logout' ? PASSPORT_OK : LIVE_OK
+      },
+      () => serverLogout(makeCtx({ platform: 'kuaishou' })),
+      [TICKETS[0]!],
+    )
+    if (error) throw error
+    expect(paths(requests)).toEqual(['/pass/kuaishou/getCdns', '/pass/kuaishou/login/passToken', '/live_api/baseuser/userLogin', '/pass/kuaishou/login/logout', '/live_api/baseuser/userLogout'])
+  })
+
+  it('补票据没有成功：票据仍然不全，报错且不发登出请求', async () => {
+    const { serverLogout } = await import('../src/platforms/kuaishou/web/commands.js')
+    const { requests, error } = await session(() => ({ result: 400 }), () => serverLogout(makeCtx({ platform: 'kuaishou' })), [TICKETS[0]!])
+    expect(error).toMatchObject({ code: 'UPSTREAM', message: expect.stringContaining('票据不全') })
+    expect(paths(requests)).toEqual(['/pass/kuaishou/getCdns', '/pass/kuaishou/login/passToken'])
+  })
+
+  it('passport 登出的 Cookie 线缺字段（_assert_passport_logout_cookie）：不发登出请求', async () => {
+    const k = await logged(LIVE)
+    k.s.update(TICKETS)
+    k.s.cookies.delete('bUserId')
+    const { requests, error } = await session(() => ({}), () => api.liveLogout(k))
+    expect(error).toMatchObject({ code: 'UPSTREAM', message: expect.stringContaining('Cookie 字段或顺序') })
+    expect(requests).toEqual([])
+  })
+})
+
+describe('kuaishou 扫码登录的轮询（core poll）', () => {
+  it('长轮询读超时接着轮、偶发的网络错误容忍、等扫码时二维码过期换一张；已扫码后在手机上取消报 AUTH_REQUIRED', async () => {
+    const g = loadCase('kuaishou', 'qrcode_login_flow')
+    const { RequestError } = await import('wreq-js')
+    const { authLogin } = await import('../src/platforms/kuaishou/web/commands.js')
+    const scan: Reply[] = [new RequestError('Request timed out'), new RequestError('connection reset by peer'), { result: 0 }, { result: 707 }, { result: 1 }]
+    const accept: Reply[] = [new RequestError('Request timed out'), { result: 711 }]
+    const restoreRand = rand.deterministic({ seed: g.seed, now: g.now })
+    const sent: string[] = []
+    const restoreSender = mockSender((p) => {
+      const path = new URL(p.url).pathname
+      sent.push(path)
+      if (path === '/s/w/c') return toResponse(g.responses[sent.length - 1]!, p.url)
+      if (path.endsWith('/qr/start')) return toResponse(g.responses[2]!, p.url)
+      return reply(path.endsWith('/qr/scanResult') ? scan.shift() : accept.shift(), p.url)
+    })
+    try {
+      await expect(authLogin(commandCtx({ method: 'qrcode' }, null))).rejects.toMatchObject({ code: 'AUTH_REQUIRED', message: '已在手机上取消登录' })
+    } finally {
+      restoreSender()
+      restoreRand()
+    }
+    const qr = sent.filter((p) => p.startsWith('/rest/c/infra/ks/qr/')).map((p) => p.split('/').pop())
+    expect(qr).toEqual(['start', 'scanResult', 'scanResult', 'scanResult', 'scanResult', 'start', 'scanResult', 'acceptResult', 'acceptResult'])
   })
 })

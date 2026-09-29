@@ -5,7 +5,7 @@ import * as rand from '../../../core/rand.js'
 import { type Json, type Ks, liveContext } from './client.js'
 import * as gql from './gql.js'
 import { genLikeToken } from './oracle.js'
-import { ACCEPT_AXIOS, ACCEPT_ENCODING, ACCEPT_LANGUAGE, buildHeaders, CP, ID_HOST, LIVE, PASSPORT, UA, WWW } from './profile.js'
+import { ACCEPT_AXIOS, ACCEPT_ENCODING, ACCEPT_LANGUAGE, ACCEPT_LANGUAGE_SHORT, buildHeaders, CP, ID_HOST, LIVE, LIVE_SENTRY_BAGGAGE, PASSPORT, PRODUCT_LIVE, SEQUENCES, UA, WWW } from './profile.js'
 import { type Issued, mergeIssued, responseCookies } from './session.js'
 
 /**
@@ -265,7 +265,7 @@ function navHeaders(referer: string): [string, string][] {
     ['sec-fetch-dest', 'iframe'],
     ['referer', referer],
     ['accept-encoding', ACCEPT_ENCODING],
-    ['accept-language', 'zh-CN,zh;q=0.9'],
+    ['accept-language', ACCEPT_LANGUAGE_SHORT],
   ]
 }
 
@@ -444,6 +444,26 @@ async function checkLogout(res: HttpResponse, kind: 'passport' | 'live', require
 }
 
 /**
+ * _assert_passport_logout_cookie：passport 登出的 Cookie 线必须与 Chrome 抓包的字段、顺序完全一致（缺字段也不行），
+ * webweapon 四件套的值形态也要对（PCLive、174 位 kwfv1、88 位 secToken、64 位十六进制 kwscode），否则不发登出请求。
+ */
+function assertPassportLogoutCookie(raw: string, profile: string): void {
+  const pairs = raw.split('; ').filter((part) => part.includes('=')).map((part) => [part.slice(0, part.indexOf('=')), part.slice(part.indexOf('=') + 1)] as const)
+  const names = pairs.map(([name]) => name)
+  const values = (name: string) => pairs.filter(([key]) => key === name).map(([, value]) => value)
+  const fail = (message: string) => new CatbusError('UPSTREAM', `快手登出：${message}，没有发登出请求`, { detail: { profile, cookies: names } })
+  if (names.join('; ') !== (SEQUENCES[profile] ?? []).join('; ')) throw fail('passport 登出的 Cookie 字段或顺序与浏览器不一致')
+  if (
+    values('kwpsecproductname').join() !== PRODUCT_LIVE ||
+    values('kwfv1').map((v) => v.length).join() !== '174' ||
+    values('kwssectoken').map((v) => v.length).join() !== '88' ||
+    !/^[0-9a-f]{64}$/.test(values('kwscode')[0] ?? '')
+  ) {
+    throw fail('passport 登出的 webweapon Cookie 形态与浏览器不一致')
+  }
+}
+
+/**
  * logout_session：直播页的“退出登录”——先 `POST id.kuaishou.com/pass/kuaishou/login/logout`，再
  * `POST /live_api/baseuser/userLogout`。两条请求的请求头与 Cookie 线都是动作之前的快照；每一步按响应删掉
  * passToken、userId 与直播票据（apply_live_logout）。上游对响应还检查 HTTP/1.1 与 Set-Cookie 的属性，这里不查。
@@ -456,6 +476,7 @@ export async function liveLogout(ks: Ks): Promise<Json> {
   const kww = await ks.s.kww()
   const passportCookie = await ks.s.cookieHeader(`live_logout_passport_${state}`)
   const liveCookie = await ks.s.cookieHeader(`live_room_logout_${state}`)
+  assertPassportLogoutCookie(passportCookie, `live_logout_passport_${state}`)
 
   const ph = buildHeaders('POST', 'login_pass_token')
   ph.set('referer', referer)
@@ -467,7 +488,7 @@ export async function liveLogout(ks: Ks): Promise<Json> {
   lh.set('referer', referer)
   lh.set('origin', LIVE)
   lh.set('sentry-trace', `${trace}-${span}-0`)
-  lh.set('baggage', 'sentry-environment=prod,sentry-release=ab256f1')
+  lh.set('baggage', LIVE_SENTRY_BAGGAGE)
   lh.set('kww', kww)
 
   const passport = await checkLogout(

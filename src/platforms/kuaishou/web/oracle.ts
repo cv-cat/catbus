@@ -11,7 +11,7 @@ import { cacheDir, staticFile } from '../../../core/paths.js'
 import { DEFAULT_SEED, isDeterministic, now } from '../../../core/rand.js'
 import { createContext } from '../../../core/vm.js'
 import { compactJson } from '../../../core/py.js'
-import { UA } from './profile.js'
+import { ACCEPT_ENCODING, ACCEPT_LANGUAGE, UA } from './profile.js'
 
 /**
  * webweapon 预言机（上游 utils/sign/weapon_oracle.py、like_token.py）：在 node:vm 里跑官方 kwf / kws 脚本
@@ -289,8 +289,8 @@ export async function resolveKwsScript(signUrl: string, href: string, http: Http
     headers: [
       ['user-agent', UA],
       ['accept', '*/*'],
-      ['accept-encoding', 'gzip, deflate, br, zstd'],
-      ['accept-language', 'zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6'],
+      ['accept-encoding', ACCEPT_ENCODING],
+      ['accept-language', ACCEPT_LANGUAGE],
       ['referer', href || 'https://www.kuaishou.com/new-reco'],
       ['sec-fetch-dest', 'script'],
       ['sec-fetch-mode', 'no-cors'],

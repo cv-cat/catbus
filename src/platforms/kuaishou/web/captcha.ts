@@ -7,7 +7,7 @@ import { captchaExtraParamJson, gpuInfoJson } from './captcha-fp.js'
 import type { Json, Ks } from './client.js'
 import { findGapX } from './gap.js'
 import * as gdfp from './gdfp.js'
-import { ACCEPT_AXIOS, ACCEPT_ENCODING, ACCEPT_LANGUAGE, RECO_REFERER, UA } from './profile.js'
+import { ACCEPT_AXIOS, ACCEPT_ENCODING, ACCEPT_LANGUAGE, CAPTCHA_HOST, RECO_REFERER, UA } from './profile.js'
 
 /**
  * 快手滑块验证码（captcha.zt.kuaishou.com，上游 utils/captcha.py 与 KuaishouAPI._pass_captcha）。
@@ -18,9 +18,8 @@ import { ACCEPT_AXIOS, ACCEPT_ENCODING, ACCEPT_LANGUAGE, RECO_REFERER, UA } from
  * 同一条 Cookie 线序，把原请求重发一次。
  */
 
-const HOST = 'https://captcha.zt.kuaishou.com'
-const CONFIG_URL = `${HOST}/rest/zt/captcha/sliding/config`
-const VERIFY_URL = `${HOST}/rest/zt/captcha/sliding/kSecretApiVerify`
+const CONFIG_URL = `${CAPTCHA_HOST}/rest/zt/captcha/sliding/config`
+const VERIFY_URL = `${CAPTCHA_HOST}/rest/zt/captcha/sliding/kSecretApiVerify`
 const TIMEOUT = 30
 
 /** Python 的真值判断：空数组 / 空对象 / 空串 / 0 / null 为假。 */
@@ -162,7 +161,7 @@ export class SlidingCaptcha {
             ['accept', ACCEPT_AXIOS],
             ['accept-encoding', ACCEPT_ENCODING],
             ['accept-language', ACCEPT_LANGUAGE],
-            ['origin', HOST],
+            ['origin', CAPTCHA_HOST],
             ['referer', this.o.referer],
             ['sec-fetch-dest', 'empty'],
             ['sec-fetch-mode', 'cors'],

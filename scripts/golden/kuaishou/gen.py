@@ -686,3 +686,6 @@ captcha_case('captcha_video_detail', lambda: KuaishouAPI.get_video_detail(logged
 # verify 没通过：不重发，原样返回风控响应
 captcha_case('captcha_verify_fail', lambda: KuaishouAPI.get_comment_list(logged(), PHOTO, 'cur1'), _is_comment, REST_RISK,
              verify_ok=False, photo=PHOTO)
+# REST GET（KuaishouAPI._get，只有 profile/get）：同样过一次滑块再重发
+_is_profile_get = lambda req: urllib.parse.urlsplit(req['url']).path == '/rest/v/profile/get'  # noqa: E731
+captcha_case('captcha_profile_get', lambda: KuaishouAPI.get_profile(logged()), _is_profile_get, REST_RISK)

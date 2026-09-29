@@ -38,6 +38,8 @@ export const PROFILE = {
 export const RESOLUTION = `${PROFILE.screenWidth}x${PROFILE.screenHeight}`
 
 export const ACCEPT_LANGUAGE = 'zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6'
+/** 登录站的 STS 导航与 gdfp 指纹上报用的短 accept-language（上游实抓如此）。 */
+export const ACCEPT_LANGUAGE_SHORT = 'zh-CN,zh;q=0.9'
 export const ACCEPT_ENCODING = 'gzip, deflate, br, zstd'
 const ACCEPT_WWW = 'application/json'
 export const ACCEPT_AXIOS = 'application/json, text/plain, */*'
@@ -53,6 +55,11 @@ export const LIVE = 'https://live.kuaishou.com'
 export const ID_HOST = 'https://id.kuaishou.com'
 export const PASSPORT = 'https://passport.kuaishou.com'
 export const GDFP = 'https://gdfp.gifshow.com'
+/** 滑块验证码的 iframe 与接口。 */
+export const CAPTCHA_HOST = 'https://captcha.zt.kuaishou.com'
+
+/** 直播页 Sentry 的 baggage（带 sentry-trace 的直播接口与登出）。 */
+export const LIVE_SENTRY_BAGGAGE = 'sentry-environment=prod,sentry-release=ab256f1'
 
 export const RECO_REFERER = `${WWW}/new-reco`
 export const PUBLISH_REFERER = `${CP}/article/publish/video?origin=www.kuaishou.com`
@@ -65,7 +72,7 @@ export const PRODUCT_CAPTCHA = 'verification-captcha'
 export const HREF_WWW = `${WWW}/new-reco`
 export const HREF_CP = PUBLISH_REFERER
 export const HREF_LIVE = `${LIVE}/`
-export const HREF_CAPTCHA = 'https://captcha.zt.kuaishou.com/iframe/index.html'
+export const HREF_CAPTCHA = `${CAPTCHA_HOST}/iframe/index.html`
 
 /** 按 product 取 webweapon 的 href / product（_site_defaults）。 */
 export function siteDefaults(product: string): [href: string, product: string] {
