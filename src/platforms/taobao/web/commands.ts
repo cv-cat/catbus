@@ -5,8 +5,8 @@ import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { AuthStatus, Media, Message } from '../../../core/schemas.js'
-import { isGuest, paged } from '../../../core/toolkit.js'
-import { collectHistory, listen, pushedPayloads } from '../../_shared/impaas.js'
+import { isGuest } from '../../../core/toolkit.js'
+import { history, listen, pushedPayloads } from '../../_shared/impaas.js'
 import * as api from './api.js'
 import { accessToken, Taobao, taobao } from './client.js'
 import { createChatFrame, createdCid, FIRST_CURSOR, imId, openIm, type OutgoingMessage, sendMsgFrame } from './im.js'
@@ -64,28 +64,12 @@ export async function userGet(ctx: Ctx) {
 
 // ================================================================ msg
 
-/**
- * 消息记录。上游 list_all_conversations 在一条连接上按 nextCursor 一直翻到底；这里也在同一条连接上翻，
- * 翻到 `--limit` 条或（`--all`）没有更多为止，不让 core 每页重新取 token、建连接、注册、等 /s/vulcan。
- * 接口从新到旧给；取最新的那些条，再像上游一样反转成从旧到新。`page.cursor` 接着往更早翻。
- */
+/** 消息记录：在一条连接上往更早翻，输出从旧到新；游标见 _shared/impaas.ts 的 history。 */
 export async function msgHistory(ctx: Ctx) {
   const tb = taobao(ctx)
   tb.requireLogin()
   const { cid } = resolveConversation(ctx.args.conversation!, tb.myId)
-  const cursor = ctx.cursor ?? FIRST_CURSOR
-  if (!/^\d+$/.test(cursor)) throw new CatbusError('USAGE', `--cursor 不对：${cursor}`, { hint: '用上次输出的 page.cursor' })
-  const { limit, all } = ctx.options as { limit?: number; all?: boolean }
-  // 不带 --limit / --all 时只取一页
-  const want = limit ?? (all ? Infinity : 0)
-  const im = await openIm(tb)
-  try {
-    await im.ready()
-    const { models, next, more } = await collectHistory(im, cid, cursor, want)
-    return paged(models.reverse().map((m) => norm.historyMessage(m, cid)), next, more)
-  } finally {
-    im.close()
-  }
+  return history(ctx, () => openIm(tb), cid, (m) => norm.historyMessage(m, cid))
 }
 
 /** 上传一张图，返回发图片消息要用的字段（上游 make_image 的参数）。 */

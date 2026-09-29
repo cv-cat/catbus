@@ -2,9 +2,9 @@ import { CatbusError } from '../../core/errors.js'
 import type { HeaderPairs } from '../../core/http.js'
 import { jsonDumps } from '../../core/py.js'
 import * as rand from '../../core/rand.js'
-import type { HandlerContext } from '../../core/registry.js'
+import type { HandlerContext, Page } from '../../core/registry.js'
 import { openSocket, reconnecting } from '../../core/stream.js'
-import { authError } from '../../core/toolkit.js'
+import { authError, paged } from '../../core/toolkit.js'
 
 /**
  * 私信：钉钉 IMPaaS 的 wss 长连，闲鱼（上游 goofish_live.py 的 XianyuLive）和淘宝（taobao_live.py）共用。
@@ -366,30 +366,50 @@ export class Im {
 // ================================================================ 命令里的共同流程
 
 /**
- * msg history 的取数：上游 list_all_conversations 在一条连接上按 nextCursor 一直翻到底；这里也在同一条连接上翻，
- * 翻到 want 条或没有更多为止（want 为 0 时只取一页），不让 core 每页重新取 token、建连接、注册、等 /s/vulcan。
- * 接口从新到旧给，只留最新的 want 条。
+ * msg history 截在一页中间时的游标：`<这一页的起始游标>+<N>`，续翻时重取这一页、跳过已经输出的 N 条。
+ * 与 core 的 `<游标>#skip=N` 同义（cli/dispatch 的 runPaged）；写法不同，是因为 core 见到 `#skip=N` 会自己从结果的
+ * 前面丢掉 N 条，而这里的结果是反转过的（从旧到新），要丢的是这一页最新的 N 条，只能由 handler 自己跳过。
  */
-export async function collectHistory(im: Im, cid: string, cursor: string, want: number): Promise<{ models: any[]; next: string | null; more: boolean }> {
-  let models: any[] = []
-  let next: string | null = null
-  let more = false
-  for await (const page of im.historyPages(cid, cursor)) {
-    models.push(...page.models)
-    next = page.nextCursor
-    more = page.hasMore
-    if (models.length >= want) break
-  }
-  if (want > 0 && models.length > want) {
-    // 截在一页中间：游标是消息的 createAt（往更早翻），从保留下来最早的那条接着翻，被截掉的下次还能取到
-    models = models.slice(0, want)
-    const at = models.at(-1)?.message?.createAt
-    if (at != null) {
-      next = String(at)
-      more = true
+const RESUME_RE = /^(\d+)\+(\d+)$/
+
+/**
+ * msg history：上游 list_all_conversations 在一条连接上按 nextCursor 一直翻到底；这里也在同一条连接上翻，
+ * 翻到 `--limit` 条或（`--all`）没有更多为止，不带时只取一页，不让 core 每页重新取 token、建连接、注册、等 /s/vulcan。
+ * 接口从新到旧给；取最新的那些条，再像上游一样反转成从旧到新。`page.cursor` 接着往更早翻。
+ */
+export async function history<T>(ctx: HandlerContext, open: () => Promise<Im>, cid: string, toMessage: (model: any) => T): Promise<{ data: T[]; page: Page }> {
+  const resume = RESUME_RE.exec(ctx.cursor ?? '')
+  const cursor = resume ? resume[1]! : (ctx.cursor ?? FIRST_CURSOR)
+  if (!/^\d+$/.test(cursor)) throw new CatbusError('USAGE', `--cursor 不对：${ctx.cursor}`, { hint: '用上次输出的 page.cursor' })
+  let skip = resume ? Number(resume[2]) : 0
+  const { limit, all } = ctx.options as { limit?: number; all?: boolean }
+  // 不带 --limit / --all 时只取一页
+  const want = limit ?? (all ? Infinity : 0)
+  const im = await open()
+  try {
+    await im.ready()
+    const models: unknown[] = []
+    const done = (next: string | null | undefined, more: boolean) => paged(models.reverse().map(toMessage), next, more)
+    let start = cursor
+    let last: HistoryPage | null = null
+    for await (const page of im.historyPages(cid, cursor)) {
+      const fresh = page.models.slice(skip)
+      if (want > 0 && models.length + fresh.length > want) {
+        // --limit 截在这一页中间：留下最新的，游标指回这一页的起始，续翻时跳过已经输出的
+        const take = want - models.length
+        models.push(...fresh.slice(0, take))
+        return done(`${start}+${skip + take}`, true)
+      }
+      models.push(...fresh)
+      skip = 0
+      last = page
+      if (models.length >= want) break
+      start = page.nextCursor!
     }
+    return done(last?.nextCursor, last?.hasMore ?? false)
+  } finally {
+    im.close()
   }
-  return { models, next, more }
 }
 
 /**

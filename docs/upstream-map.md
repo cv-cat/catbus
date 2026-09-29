@@ -221,15 +221,17 @@
 
 ### xianyu — XianYuApis
 
-- **鉴权**：没有独立的鉴权类。`build_initial_cookies()` 生成初始 cookie（含 `tfstk`），`XianyuApis` 内部负责 `get_token` / `refresh_token`。
+- **鉴权**：没有独立的鉴权类。`build_initial_cookies()` 生成初始 cookie（含 `tfstk`，扫码登录前用），`XianyuApis(cookies, device_id)` 直接接收 cookie 字典；mtop 签名用 `_m_h5_tk`。
 - **登录**：`goofish_apis.py` 里的函数 `qrcode_login()`。
 - **上游凭证来源**：无。
 - **API**
-  - `goofish_apis.py` 的 `XianyuApis`：`get_item_info(item_id)`、`public`（发布商品；`price.original_price` → 私有选项 `--original-price`）、`upload_media`、`get_default_location`
-  - 私信：`goofish_live.py` 的 `XianyuLive`（async WebSocket）：`create_chat`（`item_id` 默认 `891198795482`，→ `msg send --to`；`--to` 加 `--item` 时用指定商品）、`send_msg`、`list_all_conversations(cid)`（→ `msg history`：同一条连接上按 nextCursor 翻页，结果从旧到新）
-- **JS 资产**
-  - `static/goofish_js_origin_version_2.js`、`static/goofish_js_version_1.js`、`static/goofish_js_version_2.js`
-  - `utils/et_f.js`、`utils/gen_tfstk.js`
+  - `goofish_apis.py` 的 `XianyuApis`：`get_token`（私信长连的 accessToken）、`refresh_token`（`mtop.taobao.idlemessage.pc.loginuser.get`：cookie 登录的校验、`auth status`、`user get me`，以及 `msg listen` 每 10 分钟的续期，对应上游 `user_alive`）、`get_item_info(item_id)`、`upload_media`、`get_public_channel`（按标题和图片推荐类目，`public` 内部调用）、`get_default_location`、`public`（发布商品；`price.original_price` → 私有选项 `--original-price`）
+  - 私信：`goofish_live.py` 的 `XianyuLive`（async WebSocket）：`create_chat`（`item_id` 默认 `891198795482`，→ `msg send --to`；`--to` 加 `--item` 时用指定商品）、`send_msg`、`list_all_conversations(cid)`（→ `msg history`：同一条连接上按 nextCursor 翻页，结果从旧到新；`--limit` 截在一页中间时游标为 `<这一页的起始游标>+<已输出条数>`，续翻时重取这一页、跳过已输出的）、`main` / `heart_beat`（→ `msg listen`）
+  - 连接、注册、ack、心跳、翻页与淘宝逐行相同，catbus 共用 `src/platforms/_shared/impaas.ts`
+- **JS 资产**（catbus 原样复制到 `static/xianyu/`）
+  - `static/goofish_js_version_2.js`：`utils/goofish_utils.py` 经 PyExecJS 调用的 `generate_sign`、`generate_mid`、`generate_uuid`、`generate_device_id`、`decrypt`（base64 + MessagePack）
+  - `utils/gen_tfstk.js` + `utils/et_f.js`：生成 cookie `tfstk`（上游起 node 子进程）
+  - `static/goofish_js_origin_version_2.js`、`static/goofish_js_version_1.js` 上游没有用到，没有复制
 - **注意**：上游用相对 CWD 的路径读 JS。catbus 从 `static/xianyu/` 按包内路径加载，不受 CWD 影响。
 
 ### taobao — TaoBaoApis
@@ -241,7 +243,8 @@
 - **上游凭证来源**：无。
 - **API**
   - `taobao_apis.py` 的 `TaobaoApis`：`get_token`、`get_goods_uid_encrypt_uid(goods_url)`（从商品页 HTML 里取卖家 `uid` / `encrypt_uid`，供 `msg send --item` 用）、`upload_media`
-  - 私信：`taobao_live.py` 的 `taobaoLive(cookies_str)`（async WebSocket）：`list_all_conversations(cid)`（→ `msg history`：同一条连接上按 nextCursor 翻页，结果从旧到新）、`create_chat`、`send_msg`
+  - 私信：`taobao_live.py` 的 `taobaoLive(cookies_str)`（async WebSocket）：`list_all_conversations(cid)`（→ `msg history`：同一条连接上按 nextCursor 翻页，结果从旧到新；`--limit` 截断时的游标同闲鱼）、`create_chat`、`send_msg`、`main` / `heart_beat`（→ `msg listen`）
+  - 连接、注册、ack、心跳、翻页与闲鱼逐行相同，catbus 共用 `src/platforms/_shared/impaas.ts`
   - `utils/taobao_utils.py`：`generate_sign`、`generate_mid`、`generate_uuid`、`generate_device_id`、`decrypt`（实际是 base64 + MessagePack，由上游 JS 解码；import 了 blackboxprotobuf 但没用）、`trans_cookies`
 - **JS 资产**：`static/taobao_js_20260407.js`
 - **注意**

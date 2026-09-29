@@ -305,7 +305,7 @@ describe('taobao 对拍：命令流程', () => {
     expect(data.map((m: any) => `cntaobao${m.from.name}`)).toEqual(c.result.result.map((u: any) => u.send_user_name))
   })
 
-  it('msg history --limit：翻到够数就停；截在页中间时游标取保留下来最早那条的时间', async () => {
+  it('msg history --limit：翻到够数就停；截在页中间时游标指回这一页的起始游标，带上已输出的条数', async () => {
     const c = loadCase('taobao', 'ws_history_all')
     // 第一页 2 条、第二页 2 条：--limit 3 翻两页，保留最新的 3 条
     const { state, restore } = fakeConnect(c.result.server.slice(0, 3))
@@ -314,7 +314,7 @@ describe('taobao 对拍：命令流程', () => {
     if (error) throw error
     expect(state.sent).toEqual(c.result.sent.slice(0, 7))
     expect((result as any).data.map((m: any) => m.id)).toEqual(['m2', 'm3', 'm4'])
-    expect((result as any).page).toEqual({ cursor: '1789990000500', has_more: true })
+    expect((result as any).page).toEqual({ cursor: '1789990002000+1', has_more: true })
 
     // 正好翻完整页：游标就是接口的 nextCursor
     const again = fakeConnect(c.result.server.slice(0, 2))
@@ -524,9 +524,27 @@ describe('taobao auth（CLI）', () => {
     const r = result as Awaited<ReturnType<typeof cli>>
     expect(r.code).toBe(0)
     expect(r.env.data.map((m: any) => m.id)).toEqual(['m2', 'm3', 'm4'])
-    expect(r.env.page).toEqual({ cursor: '1789990000500', has_more: true })
+    expect(r.env.page).toEqual({ cursor: '1789990002000+1', has_more: true })
     expect(state.connects).toBe(1)
     expect(state.sent).toEqual(c.result.sent.slice(0, 7))
+  })
+
+  it('msg history --cursor <起始游标>+<N>：core 原样交给 handler；重取那一页、跳过已输出的，接着往更早翻', async () => {
+    await writeCredential(ctxOf().credential)
+    const c = loadCase('taobao', 'ws_history_all')
+    const [vulcan, , second, third] = c.result.server as Script[]
+    // 从第二页开始：/s/vulcan 之后回第二页、第三页
+    const { state, restore } = fakeConnect([vulcan!, { ...second!, after: 4 }, { ...third!, after: 6 }])
+    const { result, error } = await replay(c, () => cli('taobao', 'msg', 'history', CID, '--limit', '3', '--cursor', '1789990002000+1', '-a', 'default'))
+    restore()
+    if (error) throw error
+    const r = result as Awaited<ReturnType<typeof cli>>
+    expect(r.code).toBe(0)
+    expect(r.env.data.map((m: any) => m.id)).toEqual(['m0', 'm1'])
+    expect(r.env.page).toEqual({ cursor: null, has_more: false })
+    expect(state.connects).toBe(1)
+    // 与上游翻第二、三页的请求相同
+    expect(state.sent).toEqual([...c.result.sent.slice(0, 3), ...c.result.sent.slice(5, 9)])
   })
 
   it('user get me：规划中', async () => {
