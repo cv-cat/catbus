@@ -5,11 +5,10 @@ import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { AuthStatus, Media, Message } from '../../../core/schemas.js'
-import { reconnecting } from '../../../core/stream.js'
-import { isGuest, paged } from '../../../core/toolkit.js'
+import { history, listen, pushedPayloads } from '../../_shared/impaas.js'
 import * as api from './api.js'
 import { accessToken, Taobao, taobao } from './client.js'
-import { createChatFrame, createdCid, FIRST_CURSOR, historyPages, Im, imId, type OutgoingMessage, sendMsgFrame } from './im.js'
+import { createChatFrame, createdCid, imId, openIm, type OutgoingMessage, sendMsgFrame } from './im.js'
 import * as norm from './normalize.js'
 import { COOKIE_DOMAIN, IM_DOMAIN } from './profile.js'
 import { resolveConversation, resolveItem, resolveSellerItem } from './resolve.js'
@@ -39,7 +38,8 @@ export async function authLogin(ctx: Ctx) {
 export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
   const off: AuthStatus = { logged_in: false, user: null, method: null, expires_at: null }
   const tb = taobao(ctx)
-  if (isGuest(ctx) || !tb.myId) return off
+  // 没登录时是一份空凭证，没有 unb
+  if (!tb.myId) return off
   try {
     await accessToken(tb)
   } catch (err) {
@@ -64,45 +64,12 @@ export async function userGet(ctx: Ctx) {
 
 // ================================================================ msg
 
-/**
- * 消息记录。上游 list_all_conversations 在一条连接上按 nextCursor 一直翻到底；这里也在同一条连接上翻，
- * 翻到 `--limit` 条或（`--all`）没有更多为止，不让 core 每页重新取 token、建连接、注册、等 /s/vulcan。
- * 接口从新到旧给；取最新的那些条，再像上游一样反转成从旧到新。`page.cursor` 接着往更早翻。
- */
+/** 消息记录：在一条连接上往更早翻，输出从旧到新；游标见 _shared/impaas.ts 的 history。 */
 export async function msgHistory(ctx: Ctx) {
   const tb = taobao(ctx)
   tb.requireLogin()
   const { cid } = resolveConversation(ctx.args.conversation!, tb.myId)
-  const cursor = ctx.cursor ?? FIRST_CURSOR
-  if (!/^\d+$/.test(cursor)) throw new CatbusError('USAGE', `--cursor 不对：${cursor}`, { hint: '用上次输出的 page.cursor' })
-  const { limit, all } = ctx.options as { limit?: number; all?: boolean }
-  // 不带 --limit / --all 时只取一页
-  const want = limit ?? (all ? Infinity : 0)
-  const im = await Im.open(tb)
-  try {
-    await im.ready()
-    let models: any[] = []
-    let next: string | null = null
-    let more = false
-    for await (const page of historyPages(im, cid, cursor)) {
-      models.push(...page.models)
-      next = page.nextCursor
-      more = page.hasMore
-      if (models.length >= want) break
-    }
-    if (want > 0 && models.length > want) {
-      // 截在一页中间：游标是消息的 createAt（往更早翻），从保留下来最早的那条接着翻，被截掉的下次还能取到
-      models = models.slice(0, want)
-      const at = models.at(-1)?.message?.createAt
-      if (at != null) {
-        next = String(at)
-        more = true
-      }
-    }
-    return paged(models.reverse().map((m) => norm.historyMessage(m, cid)), next, more)
-  } finally {
-    im.close()
-  }
+  return history(ctx, () => openIm(tb), cid, (m) => norm.historyMessage(m, cid))
 }
 
 /** 上传一张图，返回发图片消息要用的字段（上游 make_image 的参数）。 */
@@ -145,7 +112,7 @@ export async function msgSend(ctx: Ctx): Promise<Message> {
     outgoing.push({ media: [img.media], message: img.message })
   }
 
-  const im = await Im.open(tb)
+  const im = await openIm(tb)
   try {
     await im.ready()
     let cid = target.cid
@@ -155,8 +122,8 @@ export async function msgSend(ctx: Ctx): Promise<Message> {
     }
     let last!: Message
     for (const { media, message } of outgoing) {
-      // 上游直接拼 cookie `_nk_` 的原值；中文昵称的 `_nk_` 是转义过的，这里用解码后的昵称（ASCII 昵称两者相同）
-      const frame = sendMsgFrame(tb.myId, imId(cid), target.peer, IM_DOMAIN + tb.nick, message)
+      // 照上游（taobao_live.py 的 f"cntaobao{self.nk}"）拼 cookie `_nk_` 的原值，中文昵称也不解码
+      const frame = sendMsgFrame(tb.myId, imId(cid), target.peer, IM_DOMAIN + tb.rawNick, message)
       const res = await im.request(frame)
       const b = res.body ?? {}
       last = n.message(
@@ -178,58 +145,29 @@ export async function msgSend(ctx: Ctx): Promise<Message> {
   }
 }
 
-/** 推送帧里的聊天消息：syncPushPackage.data[].data 是 base64 + MessagePack；能直接解析成 JSON 的是状态类推送，跳过。 */
-export function pushedMessages(tb: Taobao, frame: any): Message[] {
+/** 推送帧里别人发来的聊天消息。 */
+function pushedMessages(tb: Taobao, frame: unknown): Message[] {
   const out: Message[] = []
-  for (const entry of frame?.body?.syncPushPackage?.data ?? []) {
-    const data = entry?.data
-    if (typeof data !== 'string') continue
-    try {
-      JSON.parse(data)
-      continue
-    } catch {}
-    let decoded: unknown
-    try {
-      decoded = JSON.parse(decrypt(data))
-    } catch (err) {
-      tb.ctx.log.debug(`推送解码失败：${(err as Error).message}`)
-      continue
-    }
+  for (const decoded of pushedPayloads(frame, decrypt, tb.ctx)) {
     const message = norm.pushMessage(decoded)
     if (!message) continue
     // 自己发出的消息（上游按 sender_nick 判断）不输出
     const nick = (decoded as any)?.['1']?.['10']?.sender_nick
-    if (message.from?.id === tb.myId || (nick != null && (nick === IM_DOMAIN + tb.cookie('_nk_') || nick === IM_DOMAIN + tb.nick))) continue
+    if (message.from?.id === tb.myId || (nick != null && (nick === IM_DOMAIN + tb.rawNick || nick === IM_DOMAIN + tb.nick))) continue
     out.push(message)
   }
   return out
-}
-
-/** 登录态失效时不再重连：由重连循环里的连接交出来，在外面抛出。 */
-class Fatal {
-  constructor(readonly error: unknown) {}
 }
 
 export function msgListen(ctx: Ctx) {
   return (async function* () {
     const tb = taobao(ctx)
     tb.requireLogin()
-    const stream = reconnecting<Message | Fatal>(ctx, async function* () {
-      let im: Im | null = null
-      try {
-        im = await Im.open(tb, { heartbeat: true })
-        for await (const frame of im.pushFrames()) yield* pushedMessages(tb, frame)
-      } catch (err) {
-        if (!isAuthError(err)) throw err
-        yield new Fatal(err)
-      } finally {
-        im?.close()
-      }
-    })
-    for await (const item of stream) {
-      if (item instanceof Fatal) throw item.error
-      yield item
-    }
+    yield* listen(
+      ctx,
+      () => openIm(tb, { heartbeat: true }),
+      (frame) => pushedMessages(tb, frame),
+    )
   })()
 }
 

@@ -100,7 +100,7 @@ export function itemInfo(x: Xianyu, itemId: string) {
   return signed(x, 'mtop.taobao.idle.pc.detail', '{"itemId":"' + itemId + '"}', SESSION_HEADERS, IM_SPM)
 }
 
-export interface ImageInfo {
+interface ImageInfo {
   url: string
   width: number
   height: number
@@ -148,7 +148,7 @@ export function defaultLocation(x: Xianyu) {
   })
 }
 
-export interface UploadObject {
+interface UploadObject {
   url: string
   pix?: string
   fileId?: unknown
@@ -175,7 +175,7 @@ export async function uploadMedia(x: Xianyu, file: LocalMedia): Promise<{ object
 /** 发货方式（上游 DeliverySettings.choice 的四个取值）。 */
 export type Shipping = 'free' | 'distance' | 'fixed' | 'none'
 
-export interface PublishInput {
+interface PublishInput {
   images: LocalMedia[]
   desc: string
   /** 元；null 表示不填价格（上游 price=None → defaultPrice）。 */
@@ -331,7 +331,7 @@ function loginParams(csrf: string, cookie2: string): Pairs {
   ]
 }
 
-export interface QrCode {
+interface QrCode {
   codeContent: string
   t: string | number
   ck: string

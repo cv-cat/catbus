@@ -314,6 +314,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
   - 传纯 ID 时要加 `--product`，否则按 item 处理。
 - `msg send --item <item>`：对商品卖家 / 客服发消息（闲鱼、淘宝、京东）。
 - `msg send --to <user> --item <item>`：就这件商品给指定用户发消息（闲鱼：卖家主动联系买家）。不支持的平台报 `UNSUPPORTED`。
+- taobao 没有按用户查询、按用户发起会话的接口：`user get <user>` 的 `<user>` 只接受商品链接，返回这件商品的卖家；`msg send` 不支持 `--to`（报 `UNSUPPORTED`）。
 
 ### 4.9 选项
 
@@ -913,6 +914,7 @@ All-In-One/
 ├── src/
 │   ├── cli/                        # 入口 main.ts、argv 解析、帮助、信封输出、确认
 │   ├── core/                       # registry、auth store、config、errors、http、schemas、signing(vm)、log
+│   ├── platforms/_shared/          # 多个平台共用、但不属于 core 的实现，例如 impaas.ts（闲鱼、淘宝的钉钉 IMPaaS 私信长连）
 │   └── platforms/<p>/
 │       ├── index.ts                # 平台声明与命令注册
 │       ├── UPSTREAM                # 移植所基于的上游仓库与 commit

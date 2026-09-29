@@ -8,9 +8,9 @@ import type { HeaderPairs } from '../../../core/http.js'
 /** build_initial_cookies / qrcode_login 用的 UA（Chrome 147）。 */
 export const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36'
 /** XianyuApis 各方法用的 UA（Chrome 146）。 */
-export const API_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36'
+const API_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36'
 /** 私信长连握手用的 UA（Chrome 133，goofish_live.py），照抄。 */
-export const WS_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36'
+const WS_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36'
 const SEC_CH_UA_147 = '"Google Chrome";v="147", "Not.A/Brand";v="8", "Chromium";v="147"'
 const SEC_CH_UA_146 = '"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"'
 const ACCEPT_LANGUAGE = 'en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6'

@@ -7,7 +7,7 @@ import { plainId } from './im.js'
 const ITEM_HOST = /(^|\.)(taobao|tmall)\.com$/i
 const SHORT_HOST = /(^|\.)tb\.cn$/i
 
-export const itemUrl = (id: string) => `https://item.taobao.com/item.htm?id=${id}`
+const itemUrl = (id: string) => `https://item.taobao.com/item.htm?id=${id}`
 
 /** 分享短链（m.tb.cn）：落地页用脚本跳转，从最终地址或页面里找商品 ID。 */
 async function expand(tb: Taobao, url: string): Promise<string | null> {

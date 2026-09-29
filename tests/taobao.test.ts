@@ -1,7 +1,7 @@
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { writeCredential } from '../src/core/auth-store.js'
 import type { HeaderPairs } from '../src/core/http.js'
 import { jsonDumps } from '../src/core/py.js'
@@ -87,6 +87,51 @@ function fakeConnect(script: Script[]) {
     return socket
   })
   return { state, restore }
+}
+
+/** 断线重连用：每次连接给一个新的假 socket，按 conns 依次推送；drop 的连接推完就断开（服务端关闭），其余等 hangup()。 */
+function fakeReconnects(conns: { script: Script[]; drop?: boolean }[]) {
+  const sockets: { sent: string[]; closed: boolean }[] = []
+  let hung = false
+  const wakes = new Set<() => void>()
+  const poke = () => {
+    for (const w of wakes) w()
+    wakes.clear()
+  }
+  const wait = () => new Promise<void>((r) => wakes.add(r))
+  const restore = mockConnect(async () => {
+    const conn = conns[sockets.length] ?? { script: [] }
+    const state = { sent: [] as string[], closed: false }
+    sockets.push(state)
+    const socket: ImSocket = {
+      async send(data) {
+        state.sent.push(data)
+        poke()
+      },
+      close() {
+        state.closed = true
+        poke()
+      },
+      messages: {
+        async *[Symbol.asyncIterator]() {
+          for (const s of conn.script) {
+            while (state.sent.length < s.after && !state.closed) await wait()
+            if (state.closed) return
+            yield s.data
+          }
+          if (conn.drop) return
+          while (!state.closed && !hung) await wait()
+        },
+      },
+    }
+    return socket
+  })
+  /** 服务端断开所有还开着的连接。 */
+  const hangup = () => {
+    hung = true
+    poke()
+  }
+  return { sockets, hangup, restore }
 }
 
 async function until(cond: () => boolean): Promise<void> {
@@ -260,7 +305,7 @@ describe('taobao 对拍：命令流程', () => {
     expect(data.map((m: any) => `cntaobao${m.from.name}`)).toEqual(c.result.result.map((u: any) => u.send_user_name))
   })
 
-  it('msg history --limit：翻到够数就停；截在页中间时游标取保留下来最早那条的时间', async () => {
+  it('msg history --limit：翻到够数就停；截在页中间时游标指回这一页的起始游标，带上已输出的条数', async () => {
     const c = loadCase('taobao', 'ws_history_all')
     // 第一页 2 条、第二页 2 条：--limit 3 翻两页，保留最新的 3 条
     const { state, restore } = fakeConnect(c.result.server.slice(0, 3))
@@ -269,7 +314,7 @@ describe('taobao 对拍：命令流程', () => {
     if (error) throw error
     expect(state.sent).toEqual(c.result.sent.slice(0, 7))
     expect((result as any).data.map((m: any) => m.id)).toEqual(['m2', 'm3', 'm4'])
-    expect((result as any).page).toEqual({ cursor: '1789990000500', has_more: true })
+    expect((result as any).page).toEqual({ cursor: '1789990002000+1', has_more: true })
 
     // 正好翻完整页：游标就是接口的 nextCursor
     const again = fakeConnect(c.result.server.slice(0, 2))
@@ -346,6 +391,37 @@ describe('taobao 对拍：命令流程', () => {
     expect(state.closed).toBe(true)
   })
 
+  it('msg listen：断线重连后旧连接的心跳停掉，只有新连接每 15 秒发心跳', async () => {
+    const c = loadCase('taobao', 'ws_listen')
+    // 第一条连接注册完就断开；重连时再取一次 token
+    const { sockets, hangup, restore } = fakeReconnects([{ script: [], drop: true }, { script: [] }])
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+    const controller = new AbortController()
+    const ctx = { ...ctxOf(), signal: controller.signal }
+    try {
+      const { error } = await replay(combine(c, c), async () => {
+        const it = msgListen(ctx)[Symbol.asyncIterator]()
+        const next = it.next()
+        await until(() => sockets.length === 2 && sockets[1]!.sent.length === 3)
+        // 两条连接都发了 /reg、ackDiff、心跳
+        for (const s of sockets) expect(s.sent.map((f) => JSON.parse(f).lwp)).toEqual(['/reg', '/r/SyncStatus/ackDiff', '/!'])
+        vi.advanceTimersByTime(15_000)
+        expect(sockets[0]!.sent).toHaveLength(3)
+        expect(sockets[1]!.sent.map((f) => JSON.parse(f).lwp)).toEqual(['/reg', '/r/SyncStatus/ackDiff', '/!', '/!'])
+        controller.abort()
+        hangup()
+        expect(await next).toEqual({ done: true, value: undefined })
+        // 结束后不再有心跳
+        vi.advanceTimersByTime(60_000)
+        expect(sockets[1]!.sent).toHaveLength(4)
+      })
+      if (error) throw error
+    } finally {
+      vi.useRealTimers()
+      restore()
+    }
+  })
+
   it('msg send --item：商品页取卖家 → get_token → 建会话 → 发文字', async () => {
     const goods = loadCase('taobao', 'goods_uid')
     const token = loadCase('taobao', 'get_token')
@@ -391,6 +467,24 @@ describe('taobao 对拍：命令流程', () => {
     })
   })
 
+  it('msg send：sender_nick 照上游拼 cookie _nk_ 的原值（中文昵称不解码）', async () => {
+    const c = loadCase('taobao', 'ws_send_nick')
+    const token = loadCase('taobao', 'get_token')
+    const init = frames('ws_init')
+    const [text] = c.result as string[]
+    const { state, restore } = fakeConnect([
+      { after: 2, data: jsonDumps({ lwp: '/s/vulcan', headers: {} }) },
+      { after: 4, data: jsonDumps({ code: 200, headers: { mid: JSON.parse(text!).headers.mid }, body: {} }) },
+    ])
+    const ctx = ctxOf({ cookies: c.input.cookies, args: { text: '你好' }, options: { conversation: CID } })
+    const { result, error } = await replay(token, () => msgSend(ctx))
+    restore()
+    if (error) throw error
+    expect(state.sent.filter((f) => !f.startsWith('{"code"'))).toEqual([...init, text])
+    // 输出里的昵称是解码后的
+    expect(result).toMatchObject({ from: { id: MY_ID, name: 'tb测试' }, type: 'text', text: '你好' })
+  })
+
   it('user get：商品页里的卖家', async () => {
     const c = loadCase('taobao', 'goods_uid')
     const { requests, result, error } = await replay(c, () => userGet(ctxOf({ args: { user: c.input.url } })))
@@ -400,12 +494,11 @@ describe('taobao 对拍：命令流程', () => {
     expect((result as any)[RAW]).toMatchObject(c.result)
   })
 
-  it('user get：游客打开商品页遇到登录墙 → AUTH_REQUIRED', async () => {
+  it('user get：商品页是登录墙 → AUTH_EXPIRED', async () => {
     const c = loadCase('taobao', 'goods_uid')
     const wall = { ...c, responses: [{ status: 200, headers: {}, body: '<script>var jump = "https://item.taobao.com/_____tmd_____/page/login_jump?rand=x"</script>' }] }
-    const ctx = makeCtx({ platform: 'taobao', account: 'guest', args: { user: c.input.url } })
-    const { error } = await replay(wall, () => userGet(ctx))
-    expect(error).toMatchObject({ code: 'AUTH_REQUIRED' })
+    const { error } = await replay(wall, () => userGet(ctxOf({ args: { user: c.input.url } })))
+    expect(error).toMatchObject({ code: 'AUTH_EXPIRED', hint: 'catbus taobao auth login -a default' })
   })
 })
 
@@ -433,6 +526,14 @@ describe('taobao auth（CLI）', () => {
     expect((result as any).code).toBe(3)
   })
 
+  it('msg send --to：淘宝不能按用户发起会话，报 UNSUPPORTED（退出码 2），不联网', async () => {
+    await writeCredential(ctxOf().credential)
+    const r = await cli('taobao', 'msg', 'send', '在吗', '--to', PEER_ID, '-a', 'default')
+    expect(r.code).toBe(2)
+    expect(r.env.error).toMatchObject({ code: 'UNSUPPORTED' })
+    expect(r.env.error.hint).toContain('--item')
+  })
+
   it('游客 auth status：不联网，logged_in 为 false', async () => {
     const r = await cli('taobao', 'auth', 'status')
     expect(r.env.data).toEqual({ logged_in: false, user: null, method: null, expires_at: null })
@@ -448,9 +549,27 @@ describe('taobao auth（CLI）', () => {
     const r = result as Awaited<ReturnType<typeof cli>>
     expect(r.code).toBe(0)
     expect(r.env.data.map((m: any) => m.id)).toEqual(['m2', 'm3', 'm4'])
-    expect(r.env.page).toEqual({ cursor: '1789990000500', has_more: true })
+    expect(r.env.page).toEqual({ cursor: '1789990002000+1', has_more: true })
     expect(state.connects).toBe(1)
     expect(state.sent).toEqual(c.result.sent.slice(0, 7))
+  })
+
+  it('msg history --cursor <起始游标>+<N>：core 原样交给 handler；重取那一页、跳过已输出的，接着往更早翻', async () => {
+    await writeCredential(ctxOf().credential)
+    const c = loadCase('taobao', 'ws_history_all')
+    const [vulcan, , second, third] = c.result.server as Script[]
+    // 从第二页开始：/s/vulcan 之后回第二页、第三页
+    const { state, restore } = fakeConnect([vulcan!, { ...second!, after: 4 }, { ...third!, after: 6 }])
+    const { result, error } = await replay(c, () => cli('taobao', 'msg', 'history', CID, '--limit', '3', '--cursor', '1789990002000+1', '-a', 'default'))
+    restore()
+    if (error) throw error
+    const r = result as Awaited<ReturnType<typeof cli>>
+    expect(r.code).toBe(0)
+    expect(r.env.data.map((m: any) => m.id)).toEqual(['m0', 'm1'])
+    expect(r.env.page).toEqual({ cursor: null, has_more: false })
+    expect(state.connects).toBe(1)
+    // 与上游翻第二、三页的请求相同
+    expect(state.sent).toEqual([...c.result.sent.slice(0, 3), ...c.result.sent.slice(5, 9)])
   })
 
   it('user get me：规划中', async () => {

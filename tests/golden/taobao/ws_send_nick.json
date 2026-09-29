@@ -1,0 +1,15 @@
+{
+  "input": {
+    "cookies": "cna=fakecna; cookie2=fakecookie2; t=faket; _tb_token_=faketbtoken; unb=2200000001; _nk_=tb%5Cu6d4b%5Cu8bd5; sgcookie=fakesg; _m_h5_tk=0123456789abcdef0123456789abcdef_1790003600000; _m_h5_tk_enc=fakeenc",
+    "cid": "2200000001.1-2200000999.1#11001",
+    "peer": "2200000999"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": [
+    "{\"lwp\": \"/r/MessageSend/sendByReceiverScope\", \"headers\": {\"mid\": \"5811790000000123 0\"}, \"body\": [{\"cid\": \"2200000001.1-2200000999.1#11001@cntaobao\", \"uuid\": \"_s_1790000000123_1\", \"conversationType\": 1, \"redPointPolicy\": 0, \"extension\": {\"senderBizDomain\": \"taobao\", \"receiverBizDomain\": \"taobao\", \"sender_nick\": \"cntaobaotb%5Cu6d4b%5Cu8bd5\"}, \"content\": {\"contentType\": 1, \"text\": {\"extension\": {\"sender_nick\": \"cntaobaotb%5Cu6d4b%5Cu8bd5\"}, \"content\": \"\\u4f60\\u597d\"}}, \"ctx\": {\"senderBizDomain\": \"taobao\", \"receiverBizDomain\": \"taobao\"}}, {\"actualReceivers\": [\"2200000001@cntaobao\", \"2200000999@cntaobao\"]}]}"
+  ],
+  "error": null
+}

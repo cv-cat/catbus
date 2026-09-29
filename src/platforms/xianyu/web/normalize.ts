@@ -5,7 +5,7 @@ import { itemUrl, userUrl } from './profile.js'
 
 /** 闲鱼原始对象 → 归一化类型（AGENTS 6.2）。 */
 
-export function ref(id: unknown, name: unknown): UserRef | null {
+function ref(id: unknown, name: unknown): UserRef | null {
   const s = plainId(id)
   return n.userRef({ id: s || null, name, url: s ? userUrl(s) : null })
 }
