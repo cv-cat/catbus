@@ -251,7 +251,7 @@
 ### jd — JdApis
 
 - **鉴权**
-  - `builder/auth.py` 的 `JdAuth`，需要 `pt_key` 和 `pt_pin`。
+  - `builder/auth.py` 的 `JdAuth`：`is_login` 要求有登录票据 `thor`（PC 扫码下发）或 `pt_key`（M 端），再加上 `pin`（依次取 `pin`、`pt_pin`、`_pst`）。
   - 按 origin 保存 localStorage，catbus 里放在凭证文件的 `device`。
   - `update_cookies(persist=)`、`flush()`。
 - **登录**：`jd_apis/jd_login_api.py` 的 `JdLoginAPI.qr_login`，以及 `jd_apis/jd_sms_login_api.py` 的 `JdSmsLoginAPI.login`。
@@ -265,12 +265,14 @@
   - 客服：聊天相关方法，以及 `jd_apis/jd_chat_ws.py` 的 `JdChatWS`
   - 参数对应：各接口的 `area` → 私有选项 `--area`；`get_order_list(date_range)` 的 `1` / `2` / 年份 → `order list --range 3m|this_year|<年份>`；`get_product_comments(count)` → `comment list --limit`；`get_chat_info` / `send_hello` / `send_text` 的 `order_id` → `msg send --order`；短信登录 `login(area_code)` 的国家码 → 从 `--phone` 的 `+` / `00` 前缀识别
   - `diagnose`（`:800`）：业务接口重试后仍 403 空 body 时只跑第一步 `check_session`，失效报 `AUTH_EXPIRED`，仍登录报 `RISK_CONTROL`（`rate_limit`）；不再发 hotwords / getCartNum 探针
+  - `call_api` 命中 `_read_disposal`（`:413`，处置常常只在 `x-rp-content` 响应头里，body 为空、状态码 200）时照样返回原始结果：catbus 把解开的处置挂到结果上，报 `RISK_CONTROL`（`captcha`）
+  - 上游只返回原始 JSON、不判业务失败。catbus 的映射：非 JSON 响应、网关错误 `{code, echo}`（如 601）、`success: false` → `UPSTREAM`；登录墙（code 3、购物车的 `pin is null`、浏览历史的 `resultCode: -100`）→ `AUTH_EXPIRED`。`code` 非 0 只对核对过正常值的接口（hotwords、getAidInfo、getChatSessionLog）判失败，其余接口正常响应里 code 的含义没核对过（getRecommendCoupon 会回只有 `{"code":"1"}` 的响应）
   - 没有移植：`get_diviner`（`:942`）的首请求要 `securityToken`，分页变体要「类目 `p`」和 `shopId`，上游注释要求传浏览器抓包值、没有调用处，也没有从详情接口推出 `p` 的方法，所以 `item related` 仍用 relsearch 的相关词搜索
 - **JS 资产**（npm 依赖 `jsdom`、`@napi-rs/canvas`）
   - `static/`：`h5st5_env.js`、`h5st5_lib.js`、`h5st5_server.js`、`pc_tk_lib.js`、`pc_tk_server.js`、`summer_cryptico_runner.js`
   - `static/webm/env/run.js`、`static/webm/run/jdwebm-riskhandle.js`
-  - `static/jcap/env/`：`env_core.js`、`run.js`；`http_bridge.py` 要移植成 TS
-  - `static/jcap/run/`：`jcap_ujb96b.js`；`captcha_solver.py` 要移植成 TS
+  - `static/jcap/env/`：`env_core.js`、`run.js`；网络桥 `http_bridge.py` 移植为 `src/platforms/jd/web/jcap/helper.ts` 的 `bridge`
+  - `static/jcap/run/`：`jcap_ujb96b.js`；图像求解 `captcha_solver.py` 移植为 `jcap/solver.ts`（由 `helper.ts` 的 `solve` 调用）。run.js 起这两个 Python 子进程的地方由预加载的 `jcap/host.ts` 换成 `helper.js`
   - `static/jcap/run/models/`：`orientation_model_v2_0.9882.onnx`、`u2netp.onnx`，共约 81 MB，放进 `@cv-cat/catbus-assets-jd`，不复制到 `static/`
   - 调用这些 JS 的 Python：`utils/h5st5.py`、`utils/device_token.py`、`utils/jcap_solver.py`、`utils/summer_cryptico.py`、`utils/webm.py`
 - **注意**：上游 JS 用 `createRequire(<项目根>/package.json)` 解析 npm 模块。catbus 在 vm 里注入的 `require` 指向自己的 `node_modules`（见 AGENTS.md 7.4）。

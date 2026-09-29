@@ -1,7 +1,7 @@
-import { writeFile, mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { GUEST } from '../../../core/auth-store.js'
 import { CatbusError } from '../../../core/errors.js'
+import { writeFileAtomic } from '../../../core/fsutil.js'
 import { cookieCredential, finishLogin, freshCredential, interactive, loginContext, prompt, showQrcode, smsLogin, smsState } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import { cacheDir } from '../../../core/paths.js'
@@ -9,14 +9,14 @@ import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { AuthStatus, Credential, Message } from '../../../core/schemas.js'
 import { reconnecting } from '../../../core/stream.js'
-import { authError, isGuest, paged } from '../../../core/toolkit.js'
+import { authError, paged } from '../../../core/toolkit.js'
 import * as api from './api.js'
 import { ChatClient, HEARTBEAT_INTERVAL, MsgType, packets, WAITER_APP } from './chat.js'
-import { checkRisk, Jd } from './client.js'
+import { checkBusiness, checkRisk, Jd } from './client.js'
 import * as login from './login.js'
 import * as norm from './normalize.js'
 import { COOKIE_DOMAIN } from './profile.js'
-import { bootstrapCookies, TraceContext } from './util.js'
+import { bootstrapCookies, ITEM_URL_SKU, TraceContext } from './util.js'
 
 type Ctx = HandlerContext
 const page = (ctx: Ctx) => Number(ctx.cursor ?? 1) || 1
@@ -24,14 +24,12 @@ const page = (ctx: Ctx) => Number(ctx.cursor ?? 1) || 1
 /** `--area`：收货地区编码，`-` 写法转成接口里的 `_`；没给时由接口从 ipLoc-djd cookie 取。 */
 const areaOpt = (ctx: Ctx): string | undefined => (ctx.options.area as string | undefined)?.replaceAll('-', '_')
 
-/** 建立会话；游客先补齐游客态（埋点 cookie、设备票据）。 */
+/** 建立会话（web 端没有游客态，core 保证已登录）。 */
 async function session(ctx: Ctx): Promise<Jd> {
-  const jd = new Jd(ctx)
-  if (isGuest(ctx)) await jd.ensureGuest()
-  return jd
+  return new Jd(ctx)
 }
 
-/** 需要登录的命令：本地就缺 thor / pin 时直接报错，不发请求。 */
+/** 需要登录态 cookie 的命令：本地就缺 thor / pin 时直接报错，不发请求。 */
 async function loggedSession(ctx: Ctx): Promise<Jd> {
   const jd = await session(ctx)
   jd.requireLogin()
@@ -42,7 +40,7 @@ async function loggedSession(ctx: Ctx): Promise<Jd> {
 export async function resolveSku(jd: Jd, input: string): Promise<string> {
   const s = String(input ?? '').trim()
   if (/^\d{4,}$/.test(s)) return s
-  const m = /(?:item(?:\.m)?\.jd\.(?:com|hk)|npcitem\.jd\.hk)\/(?:product\/)?(\d{4,})\.html/.exec(s) ?? /[?&](?:sku|skuId|wareId)=(\d{4,})/.exec(s)
+  const m = ITEM_URL_SKU.exec(s) ?? /[?&](?:sku|skuId|wareId)=(\d{4,})/.exec(s)
   if (m) return m[1]!
   if (/^https?:\/\/(3\.cn|u\.jd\.com)\//i.test(s)) {
     let url = s
@@ -58,13 +56,15 @@ export async function resolveSku(jd: Jd, input: string): Promise<string> {
   throw new CatbusError('USAGE', `无法识别的商品：${input}`, { hint: '传商品 SKU（纯数字）或商品页 URL，例如 https://item.jd.com/100012043978.html' })
 }
 
-/** 业务响应的通用检查：风控、403、登录墙。游客被拒时提示登录。 */
-async function check(jd: Jd, res: any): Promise<void> {
-  if (res?._status === 403) {
-    if (isGuest(jd.ctx)) throw authError(jd.ctx, '京东拒绝了游客访问（403），请登录后再试')
-    await diagnose403(jd)
-  }
+/**
+ * 业务响应的通用检查：风控处置（body 里的或 x-rp-content 头里的）、403、登录墙、业务错误。
+ * 处置先于 403：带处置的 403 已经说明了原因，不用再探测登录态。
+ * strict：正常响应的 code 核对过是 0 / "0" 的接口，其余非 0 的 code 都报 UPSTREAM（见 client.ts 的 checkBusiness）。
+ */
+async function check(jd: Jd, res: any, strict = false): Promise<void> {
   checkRisk(jd, res)
+  if (res?._status === 403) await diagnose403(jd)
+  checkBusiness(jd, res, strict)
 }
 
 /**
@@ -120,10 +120,9 @@ async function qrLogin(ctx: Ctx) {
       const { png, content } = await login.getQrcode(jd)
       if (content) await showQrcode(ctx, content, '请用京东 App 扫码并确认')
       else {
-        const dir = cacheDir('jd')
-        await mkdir(dir, { recursive: true, mode: 0o700 })
-        const file = join(dir, 'qrcode.png')
-        await writeFile(file, png)
+        // 没有 QRCodeKey、解不出二维码内容时只能给原图（与 showQrcode 一样原子写入、0600）
+        const file = join(cacheDir('jd'), 'qrcode.png')
+        await writeFileAtomic(file, png)
         ctx.log.info(`请用京东 App 扫描二维码并确认：${file}`)
       }
       nextRefresh = rand.now() + QR_REFRESH
@@ -333,6 +332,7 @@ export async function itemRelated(ctx: Ctx) {
   const jd = await session(ctx)
   const sku = await resolveSku(jd, ctx.args.item!)
   const rel = await api.relatedSearch(jd, sku)
+  await check(jd, rel)
   const keyword = norm.keywordsFromRel(rel)[0]?.text
   if (!keyword) return paged([], null, false)
   return searchItems(ctx, jd, keyword)
@@ -363,7 +363,7 @@ export async function keywordSuggest(ctx: Ctx) {
 export async function keywordHot(ctx: Ctx) {
   const jd = await session(ctx)
   const d = await api.searchHotwords(jd)
-  await check(jd, d)
+  await check(jd, d, true)
   return norm.keywordsFromHot(d)
 }
 
@@ -390,14 +390,14 @@ export async function orderList(ctx: Ctx) {
   const p = page(ctx)
   const res = await api.orderList(jd, p, orderRange(ctx.options.range as string | undefined))
   if (res._error) throw authError(ctx, res._error)
-  return paged(res.orders.map((o) => norm.order(o, res.skus?.get(o.orderId))), p + 1, res.orders.length > 0)
+  return paged(res.orders.map((o) => norm.order(o)), p + 1, res.orders.length > 0)
 }
 
 export async function cartCount(ctx: Ctx) {
   const jd = await loggedSession(ctx)
   const d = await api.cartNum(jd, areaOpt(ctx))
   await check(jd, d)
-  const count = n.count(norm.find(d, ['cartNum', 'num', 'count']))
+  const count = norm.cartCount(d)
   if (count == null) throw new CatbusError('UPSTREAM', '购物车接口没有返回数量', { detail: { code: d?.code ?? null } })
   return { count }
 }
@@ -417,7 +417,7 @@ async function chatSession(ctx: Ctx): Promise<Jd> {
   const jd = await loggedSession(ctx)
   if (!jd.chat.aid) {
     const r = await api.aidInfo(jd)
-    await check(jd, r)
+    await check(jd, r, true)
     if (!r?.aid) throw new CatbusError('UPSTREAM', '咚咚没有下发 aid', { detail: { code: r?.code ?? null } })
   }
   return jd
@@ -426,7 +426,7 @@ async function chatSession(ctx: Ctx): Promise<Jd> {
 export async function msgList(ctx: Ctx) {
   const jd = await chatSession(ctx)
   const d = await api.chatSessionLog(jd)
-  await check(jd, d)
+  await check(jd, d, true)
   return paged(norm.conversations(d), null, false)
 }
 
@@ -438,12 +438,18 @@ export async function msgHistory(ctx: Ctx) {
   const before = Number(ctx.cursor ?? 0) || 0
   const d = await api.queryLastLogs(jd, venderId, HISTORY_SIZE, before)
   await check(jd, d)
-  const list = norm.findList(d, ['body', 'mid', 'from']).map((m: any) => norm.message(m, venderId))
-  const oldest = list.reduce<number | null>((min, m) => {
-    const t = Date.parse(m.created_at ?? '')
-    return Number.isFinite(t) && (min == null || t < min) ? t : min
+  const raw = norm.findList(d, ['body', 'mid', 'from'])
+  // 游标是这一页最早一条的毫秒时间戳（queryLastLogs 的 startTimeStamp）。created_at 只到秒，拿它还原会跳过同一秒里的其余消息，
+  // 所以取原始的毫秒 timestamp；没有时才退回 datetime
+  const oldest = raw.reduce<number | null>((min, m) => {
+    const t = Number(m?.timestamp ?? m?.time) || Date.parse(n.time(m?.datetime) ?? '')
+    return Number.isFinite(t) && t > 0 && (min == null || t < min) ? t : min
   }, null)
-  return paged(list, oldest, list.length >= HISTORY_SIZE && oldest != null)
+  return paged(
+    raw.map((m) => norm.message(m, venderId)),
+    oldest,
+    raw.length >= HISTORY_SIZE && oldest != null,
+  )
 }
 
 /** 商家侧 appId：咚咚消息信封的 to.app（get_vender_app），京东自营是 jd.waiter。 */
@@ -477,8 +483,8 @@ export async function chatTarget(ctx: Ctx, jd: Jd): Promise<{ venderId: string; 
     pid = await resolveSku(jd, o.item)
     const d = await api.productDetail(jd, pid)
     await check(jd, d)
-    venderId = n.str(norm.find(d, ['venderId'])) ?? ''
-    if (!venderId) throw new CatbusError('UPSTREAM', '商品详情里没有商家 venderId')
+    venderId = norm.detailVenderId(d) ?? ''
+    if (!venderId) throw new CatbusError('UPSTREAM', '商品详情里没有商家 venderId', { hint: '用 --conversation <商家 venderId> 直接指定商家' })
   }
   return { venderId, pid, orderId }
 }
@@ -500,24 +506,53 @@ export async function msgSend(ctx: Ctx): Promise<Message> {
     await chat.send(chat.helloPacket(pid, orderId))
     const packet = chat.textPacket(text, pid, orderId)
     await chat.send(packet)
-    // 等服务端的 chat_message_result 回执，最多 5 秒
-    const ack = await waitFor(socket.messages, (p) => p.type === MsgType.CHAT_MESSAGE_RESULT || p.type === MsgType.FAILURE, 5000)
-    if (ack?.type === MsgType.FAILURE) throw new CatbusError('UPSTREAM', `咚咚发送失败：${ack.body?.msg ?? ack.body?.code ?? ''}`, { detail: ack.body ?? null })
+    await waitReceipt(ctx, socket.messages, String(packet.id))
     return norm.message(packet, venderId)
   } finally {
     chat.close()
   }
 }
 
-async function waitFor(messages: AsyncIterable<string | Buffer>, match: (p: any) => boolean, timeout: number): Promise<any> {
+/** 等服务端回执的时长。 */
+const RECEIPT_TIMEOUT = 5000
+
+/**
+ * 等这条消息的回执：按帧的 id 对上刚发的消息（欢迎语、心跳也有各自的回执，不能拿来算）。
+ * - 对上的 chat_message_result → 发送成功；对上的 failure → UPSTREAM；
+ * - 超时：途中收到过没对上 id 的 failure 时按失败报 UPSTREAM，否则只在 stderr 提示没等到回执（消息可能已送达）。
+ */
+export async function waitReceipt(ctx: Ctx, messages: AsyncIterable<string | Buffer>, id: string, timeout = RECEIPT_TIMEOUT): Promise<void> {
   const it = messages[Symbol.asyncIterator]()
-  const deadline = Date.now() + timeout
-  while (Date.now() < deadline) {
-    const next = await Promise.race([it.next(), new Promise<null>((r) => setTimeout(() => r(null), Math.max(0, deadline - Date.now())))])
-    if (!next || next.done) return null
-    for (const p of packets(next.value)) if (match(p)) return p
+  const deadline = rand.now() + timeout
+  let timer: NodeJS.Timeout | undefined
+  let pending: Promise<IteratorResult<string | Buffer>> | null = null
+  let other: any = null
+  const fail = (p: any) => new CatbusError('UPSTREAM', `咚咚发送失败：${p.body?.msg ?? p.body?.code ?? ''}`, { detail: p.body ?? null })
+  try {
+    while (rand.now() < deadline) {
+      pending ??= it.next()
+      const expired = new Promise<null>((r) => (timer = setTimeout(() => r(null), Math.max(0, deadline - rand.now()))))
+      const next = await Promise.race([pending, expired])
+      clearTimeout(timer)
+      if (!next) break
+      pending = null
+      if (next.done) break
+      for (const p of packets(next.value)) {
+        if (p?.type === MsgType.CHAT_MESSAGE_RESULT && p.id === id) return
+        if (p?.type === MsgType.FAILURE) {
+          if (p.id === id) throw fail(p)
+          other ??= p
+        }
+      }
+    }
+  } finally {
+    clearTimeout(timer)
+    // 超时时还挂着的 next() 与关闭迭代器：连接随后由 chat.close() 关掉，它们的结果（包括出错）都不再需要
+    pending?.catch(() => {})
+    it.return?.()?.catch(() => {})
   }
-  return null
+  if (other) throw fail(other)
+  ctx.log.warn(`咚咚 ${timeout / 1000} 秒内没有回执，消息可能没有送达`)
 }
 
 /** 监听咚咚消息：只发心跳，不像上游示例那样自动向京东自营发起咨询。 */

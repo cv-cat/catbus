@@ -16,7 +16,6 @@ import { PROFILE } from './profile.js'
 
 const hostRequire = createRequire(import.meta.url)
 const RESULT_PREFIX = '__WEBM_RESULT__'
-const COOKIE_NAME = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/
 
 /** jsdom window realm 的确定性（对拍时与 scripts/golden/jd/preload.cjs 相同）。 */
 const REALM_JS = `(() => {
@@ -129,10 +128,7 @@ export async function buildSearchPayload(jd: Jd, pageUrl: string, configData = '
     throw new CatbusError('ERROR', '纯程序 WebM 指纹返回格式异常')
   }
   if (!result.ok) throw new CatbusError('ERROR', `纯程序 WebM 指纹生成失败：${String(result.errorMessage || result.error || '').slice(0, 240)}`)
-  if (result.cookies && typeof result.cookies === 'object') {
-    jd.update(Object.entries(result.cookies as Record<string, unknown>).filter(([k]) => COOKIE_NAME.test(k)).map(([k, v]) => [k, String(v ?? '')] as [string, string]))
-  }
-  if (result.localStorage && typeof result.localStorage === 'object') jd.replaceLocalStorage(pageUrl, result.localStorage)
+  jd.absorbScript(pageUrl, result)
   const payload = result.payload
   if (!payload || typeof payload !== 'object' || typeof payload.body !== 'object' || !payload.body) throw new CatbusError('ERROR', '纯程序 WebM 指纹缺少上报正文')
   return payload

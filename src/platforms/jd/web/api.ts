@@ -35,8 +35,7 @@ import {
   SEARCH_ORIGIN,
   xhr,
 } from './profile.js'
-import { areaOf, searchUuidOf, stripTags } from './util.js'
-import { orderSkus } from './normalize.js'
+import { areaOf, ITEM_URL_SKU, searchUuidOf, stripTags } from './util.js'
 import { buildSearchPayload } from './webm.js'
 
 /**
@@ -320,10 +319,12 @@ export interface RawOrder {
   status: string
   products: string[]
   url: string
+  /** 与 products 一一对应的商品 SKU（取自同一个商品名链接，认不出时为 null）。上游没有这个字段：不可枚举，不参与序列化。 */
+  skus?: (string | null)[]
 }
 
 /** 订单列表（get_order_list）：订单中心是 HTML 页面，逐个 `<tbody id="tb-<订单号>">` 解析。 */
-export async function orderList(jd: Jd, page = 1, dateRange = '1'): Promise<{ orders: RawOrder[]; count: number; page: number; _error?: string; skus?: Map<string, string[]> }> {
+export async function orderList(jd: Jd, page = 1, dateRange = '1'): Promise<{ orders: RawOrder[]; count: number; page: number; _error?: string }> {
   const res = await jd.send({
     url: ORDER_URL,
     headers: orderDoc().get(),
@@ -340,10 +341,7 @@ export async function orderList(jd: Jd, page = 1, dateRange = '1'): Promise<{ or
     return { orders: [], count: 0, page, _error: '被跳到登录页，登录态失效了' }
   }
   const orders = parseOrders(html)
-  const out = { orders, count: orders.length, page }
-  // 商品链接里的 SKU 不在上游的解析结果里，单独挂上（不参与序列化）
-  Object.defineProperty(out, 'skus', { value: orderSkus(html), enumerable: false })
-  return out as typeof out & { skus?: Map<string, string[]> }
+  return { orders, count: orders.length, page }
 }
 
 export function parseOrders(html: string): RawOrder[] {
@@ -352,20 +350,27 @@ export function parseOrders(html: string): RawOrder[] {
   for (const match of html.matchAll(/<tbody id="tb-(\d+)"[^>]*>([\s\S]*?)<\/tbody>/g)) {
     const [, orderId, chunk] = match as unknown as [string, string, string]
     const pick = (re: RegExp) => clean(re.exec(chunk)?.[1])
-    let names = [...chunk.matchAll(/<div class="p-name">\s*<a[^>]*>([\s\S]*?)<\/a>/g)].map((m) => clean(m[1]))
-    if (!names.length) names = [...chunk.matchAll(/class="p-name"[^>]*>\s*<a[^>]*>([\s\S]*?)<\/a>/g)].map((m) => clean(m[1]))
+    // 商品名与 SKU 从同一个 <a> 里取，空名的链接连同它的 SKU 一起去掉，两者不会错位
+    let links = [...chunk.matchAll(/<div class="p-name">\s*<a([^>]*)>([\s\S]*?)<\/a>/g)]
+    if (!links.length) links = [...chunk.matchAll(/class="p-name"[^>]*>\s*<a([^>]*)>([\s\S]*?)<\/a>/g)]
+    const products = links
+      .map((m) => ({ name: clean(m[2]), sku: ITEM_URL_SKU.exec(/href="([^"]*)"/.exec(m[1]!)?.[1] ?? '')?.[1] ?? null }))
+      .filter((p) => p.name)
+      .slice(0, 10)
     const amountRaw = pick(/<div class="amount"[^>]*>([\s\S]*?)<\/div>/)
     const lines = amountRaw.split(/\r?\n|\r/).map((l) => l.trim()).filter(Boolean)
-    orders.push({
+    const order: RawOrder = {
       orderId,
       time: pick(/<span class="dealtime"[^>]*>([\s\S]*?)<\/span>/),
       consignee: pick(/<div class="consignee[^"]*"[^>]*>\s*<span class="txt">([\s\S]*?)<\/span>/),
       amount: lines[0] ?? amountRaw,
       payType: lines[1] ?? '',
       status: pick(/<span class="order-status[^"]*"[^>]*>([\s\S]*?)<\/span>/),
-      products: names.filter(Boolean).slice(0, 10),
+      products: products.map((p) => p.name),
       url: `https://details.jd.com/normal/item.action?orderid=${orderId}`,
-    })
+    }
+    Object.defineProperty(order, 'skus', { value: products.map((p) => p.sku), enumerable: false })
+    orders.push(order)
   }
   return orders
 }

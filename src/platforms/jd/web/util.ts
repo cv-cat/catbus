@@ -7,17 +7,8 @@ import { DEFAULT_AREA } from './profile.js'
 
 export { sha256Hex } from '../../../core/hash.js'
 
-/** 浏览器复制的 Cookie 头 → 有序的 name → value（trans_cookies）。 */
-export function transCookies(cookie: string): Map<string, string> {
-  const out = new Map<string, string>()
-  for (const raw of (cookie ?? '').split(';')) {
-    const item = raw.trim()
-    if (!item || !item.includes('=')) continue
-    const i = item.indexOf('=')
-    out.set(item.slice(0, i).trim(), item.slice(i + 1).trim())
-  }
-  return out
-}
+/** 商品页 URL 里的 SKU：PC、移动（item.m.jd.com/product/）、全球购（item.jd.hk、npcitem.jd.hk）。 */
+export const ITEM_URL_SKU = /(?:item(?:\.m)?\.jd\.(?:com|hk)|npcitem\.jd\.hk)\/(?:product\/)?(\d{4,})\.html/
 
 /** 去掉搜索结果里的高亮标签。 */
 export function stripTags(text: unknown): string {
@@ -39,13 +30,6 @@ export function generateWid(): string {
 /** 咚咚会话 ID（getSessionId）。 */
 export function sessionId(pin: string, app: string, venderId: string): string {
   return `${pin.toLowerCase()}:${app}:${venderId}`
-}
-
-/** 风控埋点的逐字符 XOR 5（对合）。 */
-export function xor5(text: string): string {
-  let out = ''
-  for (const ch of text) out += String.fromCodePoint(ch.codePointAt(0)! ^ 5)
-  return out
 }
 
 /** 从 `ipLoc-djd` 取收货地区；full 时保留 `.addressId` 后缀（area_of）。 */
@@ -182,7 +166,6 @@ export function parseAttrs(tag: string): Record<string, string> {
   }
   return out
 }
-
 
 /** 同一登录页内的链路上下文：Page-Id 取自页面，Session-Id 页面内复用（LoginTraceContext）。 */
 export class TraceContext {

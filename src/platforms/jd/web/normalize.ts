@@ -40,7 +40,6 @@ export function find(obj: unknown, keys: string[], depth = 5): any {
   return undefined
 }
 
-/** 找第一个"元素带某些键"的对象数组。 */
 /** 按键名找数组（广度优先）；找不到返回 null。 */
 export function findArrayByKey(obj: unknown, key: string, depth = 6): any[] | null {
   let level: unknown[] = [obj]
@@ -57,6 +56,7 @@ export function findArrayByKey(obj: unknown, key: string, depth = 6): any[] | nu
   return null
 }
 
+/** 找第一个"元素带某些键"的对象数组（广度优先）；找不到返回空数组。 */
 export function findList(obj: unknown, keys: string[], depth = 6): any[] {
   let level: unknown[] = [obj]
   for (let d = 0; d <= depth && level.length; d++) {
@@ -94,27 +94,44 @@ export function ware(w: any): Item {
   )
 }
 
-/** 商品详情（pc_detailpage_wareBusiness）。 */
+/** 商品详情里的店铺：shopInfo.shop，没有时再按键名 shop 找。 */
+function detailShop(d: any): any {
+  const shop = d?.shopInfo?.shop ?? find(d, ['shop'])
+  return shop && typeof shop === 'object' ? shop : {}
+}
+
+/** 商品详情里的商家 venderId（咚咚咨询的对象）：店铺上的，其次 wareInfo 的；0 表示没有。 */
+export function detailVenderId(d: any): string | null {
+  const v = n.str(detailShop(d).venderId ?? d?.wareInfo?.venderId ?? find(d, ['venderId']))
+  return v && v !== '0' ? v : null
+}
+
+/**
+ * 商品详情（pc_detailpage_wareBusiness）。上游只返回原始 JSON、没有解析代码，真机上这个接口一直被 403，没有核对过真实响应；
+ * 先取确定的路径（wareInfo.wname、price.p、shopInfo.shop、wareInfo / imageInfo 下的主图列表），没有时再按专有键名广搜兜底。
+ * 兜底不用 url / p / name 这类通用键名：浅层的 name、url 会压过深层真正的 wname、big。
+ */
 export function detail(sku: string, d: any): Item {
-  const shop = find(d, ['shop']) ?? {}
-  const images = findList(d, ['big', 'imgUrl', 'imageUrl', 'url']).map((x: any) => image(x.big ?? x.imgUrl ?? x.imageUrl ?? x.url)).filter(Boolean) as string[]
+  const ware = d?.wareInfo && typeof d.wareInfo === 'object' ? d.wareInfo : {}
+  const shop = detailShop(d)
+  const list = [ware.imageList, d?.imageInfo?.imageList, d?.imageInfo].find(Array.isArray) ?? findList(d, ['big', 'imgUrl', 'imageUrl'])
+  const images = list.map((x: any) => image(typeof x === 'string' ? x : (x?.big ?? x?.imgUrl ?? x?.imageUrl))).filter(Boolean) as string[]
   return n.item(
     {
       id: sku,
       kind: 'goods',
       url: itemUrl(sku),
-      title: n.str(find(d, ['wname', 'skuName', 'wareName', 'name'])) ,
+      title: n.str(ware.wname ?? find(d, ['wname', 'skuName', 'wareName'])),
       author: shopRef(shop.shopId ?? find(d, ['shopId']), shop.name ?? find(d, ['shopName'])),
-      cover: images[0] ?? image(find(d, ['imageUrl', 'imgUrl', 'image'])),
+      cover: images[0] ?? image(ware.imageUrl ?? find(d, ['imageUrl', 'imgUrl'])),
       media: images.map((url, i) => n.media({ id: String(i + 1), type: 'image', url })),
       stats: { comments: n.count(find(d, ['commentCount', 'allCnt', 'commentNum'])) },
-      price: n.price(d?.price?.p ?? find(d, ['p', 'jdPrice', 'finalPrice'])),
+      price: n.price(d?.price?.p ?? d?.price?.finalPrice?.price ?? find(d, ['jdPrice'])),
     },
     d,
   )
 }
 
-/** 商品评价（getLegoWareDetailComment）。 */
 /**
  * 商品评价（getLegoWareDetailComment）。响应里同时有评价 `commentInfoList` 和问答 `questionList`，
  * 问答条目也有 `content`，按字段名去猜会拿成问答，所以先按键名取评价列表。
@@ -154,7 +171,11 @@ export function coupons(d: any): Coupon[] {
   })
 }
 
-/** 浏览历史 / 关注商品里的一件商品。 */
+/**
+ * 浏览历史 / 关注商品里的一件商品（pc_myjd_getBrowseHistory、pc_follow_product_new）。
+ * 这两个接口的真实响应还没核对过字段（2026-09-28 真机 user collects 的 cover、author 都取不到），
+ * 这里在元素上按商品接口常见的键名取，图片多认几种写法（searchWare 的 imageurl 等）。
+ */
 export function listed(w: any): Item {
   const id = n.id(w.skuId ?? w.wareId ?? w.sku ?? w.productId)
   return n.item(
@@ -163,47 +184,45 @@ export function listed(w: any): Item {
       kind: 'goods',
       url: itemUrl(id),
       title: n.str(stripTags(w.wname ?? w.skuName ?? w.wareName ?? w.name ?? w.title)),
-      author: shopRef(w.shopId ?? w.venderId, w.shopName),
-      cover: image(w.imgUrl ?? w.imageUrl ?? w.image ?? w.img),
+      author: shopRef(w.shopId ?? w.venderId, w.shopName ?? w.venderName),
+      cover: image(w.imgUrl ?? w.imageUrl ?? w.imageurl ?? w.imagePath ?? w.skuImg ?? w.image ?? w.img),
       price: n.price(w.jdPrice ?? w.price ?? w.p),
     },
     w,
   )
 }
 
+/** 购物车数量（pcCart_jc_getCartNum 的 cartNum，上游 get_cart_num 注释里实抓的字段）。 */
+export function cartCount(d: any): number | null {
+  return n.count(d?.cartNum ?? find(d, ['cartNum']))
+}
+
 export function listedItems(d: any): Item[] {
   return findList(d, ['skuId', 'wareId', 'productId']).map(listed)
 }
 
-/** 订单（订单中心 HTML）。skus 是同一订单里商品链接的 SKU，按出现顺序。 */
-export function order(o: RawOrder, skus: string[] = []): Order {
+/** 订单（订单中心 HTML）。商品的 SKU 与商品名取自同一个链接（parseOrders 的 skus，与 products 一一对应）。 */
+export function order(o: RawOrder): Order {
+  const skus = o.skus ?? []
   return withRaw(
     {
       id: o.orderId,
       status: o.status || null,
       total: n.price(o.amount),
-      items: o.products.map((title, i) => n.item({ id: skus[i] ?? '', kind: 'goods', url: skus[i] ? itemUrl(skus[i]) : null, title })),
+      items: o.products.map((title, i) => {
+        const sku = skus[i] ?? null
+        return n.item({ id: sku ?? '', kind: 'goods', url: sku ? itemUrl(sku) : null, title })
+      }),
       created_at: n.time(o.time),
     },
     o,
   )
 }
 
-/** 订单 HTML 里每个订单的商品 SKU（按商品名链接的顺序）。 */
-export function orderSkus(html: string): Map<string, string[]> {
-  const out = new Map<string, string[]>()
-  for (const m of html.matchAll(/<tbody id="tb-(\d+)"[^>]*>([\s\S]*?)<\/tbody>/g)) {
-    const skus = [...m[2]!.matchAll(/class="p-name"[^>]*>\s*<a[^>]*href="[^"]*item\.jd\.com\/(\d+)\.html/g)].map((x) => x[1]!)
-    out.set(m[1]!, skus)
-  }
-  return out
-}
-
+/** 搜索热词（pc_search_hotwords 的 data）：先滤掉没有词的条目，再逐条归一化，原始对象与输出一一对应。 */
 export function keywordsFromHot(d: any): Keyword[] {
-  return (Array.isArray(d?.data) ? d.data : [])
-    .map((x: any) => n.str(x.n ?? x.ext_columns?.text ?? x.keyword))
-    .filter(Boolean)
-    .map((text: string, i: number) => n.keyword({ text }, d.data[i]))
+  const text = (x: any) => n.str(x?.n ?? x?.ext_columns?.text ?? x?.keyword)
+  return (Array.isArray(d?.data) ? d.data : []).filter((x: any) => text(x)).map((x: any) => n.keyword({ text: text(x)! }, x))
 }
 
 export function keywordsFromRel(d: any): Keyword[] {
@@ -221,8 +240,9 @@ export const meRef = (pin: string, name: string | null): UserRef => ({ id: pin, 
 
 // ---------------------------------------------------------------- 咚咚
 
+/** 历史会话（getChatSessionLog）：列表在 chatSessions（2026-09-29 真机），没有时再找带 venderId 的数组。 */
 export function conversations(d: any): Conversation[] {
-  return findList(d, ['venderId']).map((s: any) => {
+  return (Array.isArray(d?.chatSessions) ? d.chatSessions : findList(d, ['venderId'])).map((s: any) => {
     const last = s.lastMsg ?? s.lastMessage ?? s.msg ?? {}
     return n.conversation(
       {

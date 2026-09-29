@@ -16,7 +16,6 @@ import { PROFILE } from './profile.js'
  */
 
 const RESULT_PREFIX = '__JCAP_RESULT__'
-const COOKIE_NAME = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/
 const LINES = /\r?\n/
 
 export interface CaptchaOptions {
@@ -137,10 +136,7 @@ export async function solveCaptcha(jd: Jd, o: CaptchaOptions): Promise<string> {
   } catch {
     throw new CatbusError('ERROR', '纯程序图形验证码返回格式异常')
   }
-  if (payload.cookies && typeof payload.cookies === 'object') {
-    jd.update(Object.entries(payload.cookies as Record<string, unknown>).filter(([k]) => COOKIE_NAME.test(k)).map(([k, v]) => [k, String(v ?? '')] as [string, string]))
-  }
-  if (payload.localStorage && typeof payload.localStorage === 'object') jd.replaceLocalStorage(o.pageUrl, payload.localStorage)
+  jd.absorbScript(o.pageUrl, payload)
   if (!payload.ok) {
     const stage = payload.error === 'timeout' ? '超时' : '失败'
     throw new CatbusError('RISK_CONTROL', `纯程序图形验证码求解${stage}：${diagnostics(output)}`, { detail: { kind: 'captcha', error: payload.error ?? null } })
