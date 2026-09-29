@@ -265,6 +265,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | douyin | `live like <room> [--count N]` | 私有选项：一次点赞的次数 | `{id}` |
 | douyin | `comment list <product> --product [--label <标签名或 id>]` | 私有选项：商品评价按标签筛选（好评 / 差评 / 有图等） | Comment[] |
 | douyin | `notice list [--group all\|fans\|mention\|comment\|like\|danmaku]` | 私有选项：通知分组，不带时为默认分组 | Notice[] |
+| xhs | `item publish [--poi-name <名称>] [--poi <id>]` | 私有选项：地点名称。小红书的地点只能按名称搜，搜不到 id，所以 `--poi` 要和 `--poi-name` 一起用（取 id 相同的那个）；只给 `--poi-name` 时取名称完全相同的。都找不到时报 `USAGE` 并列出相近的地点 | Item |
 | weibo | `item publish [--poi-name <名称>]` | 私有选项：地点名称，发成「#名称[地点]#」的地点标签。微博发布没有地点 id，不支持 `--poi` | Item |
 | douyin | `auth login --method sms --sso` | 私有选项：短信登录改走 `login.douyin.com` 页的 SSO 链 | Account |
 | jd | `order list` | 订单 | Order[] |

@@ -45,7 +45,10 @@ export default definePlatform({
         'item uncollect': 'none',
         'item publish': impl('full', 'itemPublish', {
           supports: ['title', 'text', 'image', 'video', 'cover', 'tag', 'topic', 'poi', 'visibility', 'schedule'],
-          options: { visibility: visibility('public', 'private') },
+          options: {
+            visibility: visibility('public', 'private'),
+            poiName: z.string().optional().describe('地点名称（按它搜地点）；同时给 --poi 时取 id 相同的那个，否则取名称完全相同的'),
+          },
         }),
         'item delete': 'none',
 

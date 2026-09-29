@@ -419,13 +419,16 @@ export async function itemPublish(ctx: Ctx) {
   return creator(ctx, async (c) => {
     const postTime = o.schedule ? Date.parse(o.schedule) : null
     let postLoc: Record<string, unknown> | null = null
-    if (o.poi) {
-      // 上游拿地点名搜索后直接取第一个；这里只认 poi_id 或名称完全相同的那个，免得发到别的地点上
-      const pois: any[] = c.check(await capi.searchPoi(c, o.poi))?.poi_list ?? []
-      const loc = pois.find((x) => String(x.poi_id) === o.poi) ?? pois.find((x) => String(x.name ?? '') === o.poi)
+    if (o.poi != null || o.poiName != null) {
+      // 地点搜索只认名称（按 id 搜不到那个地点），所以用 --poi-name 搜；同时给了 --poi 时取 id 相同的那个，否则取名称完全相同的。
+      // 上游拿地点名搜索后直接取第一个；这里要求精确匹配，免得发到别的地点上
+      if (o.poiName == null) throw new CatbusError('USAGE', '小红书按名称搜地点，--poi 要和 --poi-name 一起用', { hint: 'catbus xhs poi search <名称> 查到名称和 id 后，用 --poi-name <名称> [--poi <id>]' })
+      const keyword = String(o.poiName)
+      const pois: any[] = c.check(await capi.searchPoi(c, keyword))?.poi_list ?? []
+      const loc = o.poi != null ? pois.find((x) => String(x.poi_id) === o.poi) : pois.find((x) => String(x.name ?? '') === keyword)
       if (!loc) {
         const near = pois.slice(0, 3).map((x) => `${x.name}（${x.poi_id}）`).join('、')
-        throw new CatbusError('USAGE', `没有找到地点 ${o.poi}${near ? `，相近的有：${near}` : ''}`, { hint: `catbus xhs poi search ${o.poi}` })
+        throw new CatbusError('USAGE', `没有找到地点 ${o.poi ?? keyword}${near ? `，相近的有：${near}` : ''}`, { hint: `catbus xhs poi search ${keyword}` })
       }
       postLoc = { name: loc.name, subname: loc.full_address, poi_id: loc.poi_id, poi_type: loc.poi_type }
     }

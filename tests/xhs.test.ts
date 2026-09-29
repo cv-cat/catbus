@@ -1016,18 +1016,22 @@ describe('xhs 发布与上传', () => {
     { poi_id: 'p2', name: '外滩源', full_address: '上海市黄浦区圆明园路', poi_type: 1 },
   ]
 
-  it('item publish --poi：只认 poi_id 或名称完全相同的地点，否则报 USAGE（不上传、不发布）', async () => {
+  it('item publish --poi-name：只认名称完全相同的地点（给了 --poi 时认 id），否则报 USAGE（不上传、不发布）', async () => {
     const route = (r: GoldenRequest) => security(r) ?? (r.url.includes('/poi/creator/search') ? ok({ poi_list: POIS }) : undefined)
-    const { requests, error } = await serve(route, () => cmd.itemPublish(bothCtx({ image: ['/nonexistent.png'], poi: '外滩美术馆', visibility: 'public' })))
+    const { requests, error } = await serve(route, () => cmd.itemPublish(bothCtx({ image: ['/nonexistent.png'], poiName: '外滩美术馆', visibility: 'public' })))
     expect(error).toMatchObject({ code: 'USAGE', message: expect.stringContaining('外滩（p1）'), hint: 'catbus xhs poi search 外滩美术馆' })
     expect(hits(requests, '/upload/creator/permit')).toHaveLength(0)
     expect(hits(requests, '/web_api/sns/v2/note')).toHaveLength(0)
+    // 地点只能按名称搜：只给 --poi 时直接报 USAGE，不发请求
+    const only = await serve(route, () => cmd.itemPublish(bothCtx({ image: ['/nonexistent.png'], poi: 'p2', visibility: 'public' })))
+    expect(only.error).toMatchObject({ code: 'USAGE', message: expect.stringContaining('--poi-name') })
+    expect(hits(only.requests, '/poi/creator/search')).toHaveLength(0)
   })
 
-  it('item publish --poi：按 id 或名称精确匹配后写进 post_loc', async () => {
+  it('item publish --poi-name [--poi]：按 id 或名称精确匹配后写进 post_loc', async () => {
     const file = join(tmpdir(), `catbus-xhs-${process.pid}.png`)
     writeFileSync(file, PNG)
-    for (const poi of ['p2', '外滩源']) {
+    for (const poi of [{ poiName: '外滩', poi: 'p2' }, { poiName: '外滩源' }]) {
       const route = (r: GoldenRequest): Reply => {
         if (r.url.includes('/poi/creator/search')) return ok({ poi_list: POIS })
         if (r.url.includes('/upload/creator/permit')) return ok({ uploadTempPermits: [{ fileIds: ['spectrum/fid1'], token: 't', expireTime: 1790000000000, uploadAddr: 'ros-upload.xiaohongshu.com' }] })
@@ -1035,7 +1039,7 @@ describe('xhs 发布与上传', () => {
         if (r.url.includes('/web_api/sns/v2/note')) return ok({ id: NOTE_ID })
         return security(r)
       }
-      const { requests, error } = await serve(route, () => cmd.itemPublish(bothCtx({ image: [file], poi, visibility: 'public' })))
+      const { requests, error } = await serve(route, () => cmd.itemPublish(bothCtx({ image: [file], ...poi, visibility: 'public' })))
       if (error) throw error
       expect(jsonBody(hits(requests, '/web_api/sns/v2/note')[0]!).common.post_loc).toEqual({ name: '外滩源', subname: '上海市黄浦区圆明园路', poi_id: 'p2', poi_type: 1 })
     }
