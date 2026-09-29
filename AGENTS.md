@@ -824,7 +824,7 @@ wreq-js 默认会读 `HTTP(S)_PROXY` 环境变量和 Windows 系统代理。为�
 - **对拍测试**：`tests/<p>.test.ts` 用 `tests/golden.ts` 的 `replay()` 在同样的随机数与时钟下运行 TS 实现，`expectRequests()` 逐字节比较请求（URL、header 顺序、cookie、body）。请求构造和签名都必须有对拍测试。
 - **平台实现的约定**（参考实现是 `src/platforms/bilibili/web/`）：
   - 文件：`client.ts`（会话：设备初始化、签名密钥、带重试的请求、业务码 → 错误）、`api.ts`（一个函数对应一个上游方法，字段与顺序照抄）、`commands.ts`（命令 handler）、`normalize.ts`（原始对象 → 6.2 的类型，挂上原始对象供 `--raw`）、`resolve.ts`（参数归一化）。
-  - 随机数和当前时间只经 `core/rand.ts`，等待用 `rand.sleep`；与 Python 对应的编码（`urlencode`、`quote`、`json.dumps`）用 `core/py.ts`；需要精确键序的 JSON 用 Map。
+  - 随机数和当前时间只经 `core/rand.ts`，等待用 `rand.sleep`；与 Python 对应的编码（`urlencode`、`quote`、`json.dumps`）用 `core/py.ts`；需要精确键序的 JSON 用 Map。解析平台响应用 `core/py.ts` 的 `jsonLoads`（与 `json.loads` 一样保留 64 位整数 ID），不直接用 `JSON.parse`。
   - HTTP 用 `core/http.ts` 的 `HttpClient`（`toolkit.httpClient(ctx)`），请求头按上游顺序显式给出；cookie 在凭证的 cookie 罐里，Set-Cookie 自动写回，命令结束时由 core 落盘。
   - 签名 JS 复制到 `static/<p>/`，用 `core/vm.ts` 的 `loadScript` / `callScript` 执行。
   - 业务错误映射到 6.4 的错误码：登录墙 → `toolkit.authError`，风控 → `RISK_CONTROL`，其余 → `UPSTREAM`（原始错误码放 `detail`）。
