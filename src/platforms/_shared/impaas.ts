@@ -412,9 +412,16 @@ export async function history<T>(ctx: HandlerContext, open: () => Promise<Im>, c
   }
 }
 
+/** base64 解开后就是 JSON 文本（以 `{` 开头）：会话唤起（contentType 8）等状态推送，不是 MessagePack。 */
+function isBase64Json(data: string): boolean {
+  const head = Buffer.from(data.slice(0, 8), 'base64')
+  return head[0] === 0x7b
+}
+
 /**
  * 推送帧里的聊天消息：syncPushPackage.data[].data 是 base64 + MessagePack，用平台的上游 JS 解码成 JSON；
- * 能直接解析成 JSON 的是状态类推送，跳过（上游 handle_message）。
+ * 能直接解析成 JSON 的是状态类推送，跳过（上游 handle_message）。base64 里直接是 JSON 的也是状态推送
+ * （真机 2026-09-29：建连后会收到一批会话唤起），同样跳过，不当成解码失败。
  */
 export function* pushedPayloads(frame: any, decrypt: (data: string) => string, ctx: HandlerContext): Generator<unknown> {
   for (const entry of frame?.body?.syncPushPackage?.data ?? []) {
@@ -424,6 +431,7 @@ export function* pushedPayloads(frame: any, decrypt: (data: string) => string, c
       JSON.parse(data)
       continue
     } catch {}
+    if (isBase64Json(data)) continue
     let decoded: unknown
     try {
       decoded = JSON.parse(decrypt(data))

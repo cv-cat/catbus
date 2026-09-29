@@ -721,3 +721,17 @@ describe('xianyu 参数与解析', () => {
     expect(createdCid({ body: {} })).toBeNull()
   })
 })
+
+describe('推送解码（_shared/impaas）', () => {
+  it('base64 里直接是 JSON 的状态推送（会话唤起）跳过，不当成解码失败', async () => {
+    const { pushedPayloads } = await import('../src/platforms/_shared/impaas.js')
+    const debug = vi.fn()
+    const ctx = { log: { debug, info: vi.fn(), warn: vi.fn() } } as any
+    const arouse = Buffer.from(JSON.stringify({ chatType: 1, incrementType: 1, operation: { content: { contentType: 8 } } })).toString('base64')
+    const frame = { body: { syncPushPackage: { data: [{ data: arouse }, { data: '{"plain":1}' }] } } }
+    const decrypt = vi.fn(() => '{}')
+    expect([...pushedPayloads(frame, decrypt, ctx)]).toEqual([])
+    expect(decrypt).not.toHaveBeenCalled()
+    expect(debug).not.toHaveBeenCalled()
+  })
+})
