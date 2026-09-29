@@ -73,7 +73,7 @@ export default definePlatform({
         'feed categories': 'none',
 
         'live get': impl('full', 'liveGet'),
-        'live list': impl('full', 'liveList'),
+        'live list': impl('full', 'liveList', { note: '只有关注的人里正在直播的（上游 get_webcast_feed 是直播页侧栏的关注列表）；没关注的人在播时为空' }),
         'live search': impl('full', 'liveSearch'),
         'live categories': impl('full', 'liveCategories'),
         'live listen': impl('full', 'liveListen'),

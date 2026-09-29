@@ -226,6 +226,7 @@
 | live replays | — | ○ | — | ○ | ✓ | ○ | — | ○ | — | — |
 | live start / stop | ○ | ○ | ○ | ✓ | ○ | ○ | — | ○ | — | — |
 
+- tiktok `live list`：只有关注的人里正在直播的（上游 get_webcast_feed 是直播页侧栏的关注列表）；没关注的人在播时为空
 - douyin `live history`：只有进房时 im/fetch 带回的最近 15 条
 - xhs `live send`：--gift 规划中
 - douyin `live send`：--gift 规划中

@@ -21,6 +21,8 @@ const SKIP = new Set(['auth login', 'auth use', 'auth logout'])
 
 /** 这些命令在真实平台上不该返回空列表。 */
 const NON_EMPTY = new Set(['item search', 'user search', 'feed list', 'keyword hot', 'keyword suggest', 'live list', 'live search'])
+/** 取决于账号关注了谁的列表：可以为空。 */
+const MAY_BE_EMPTY = new Set(['tiktok live list'])
 
 const KEYWORD: Record<string, string> = { tiktok: 'cat', x: 'cat', xianyu: '键盘', taobao: '键盘', jd: '键盘' }
 /** 命令之间的间隔（毫秒）。小红书对连续请求更敏感：1.5 秒间隔下评论接口触发过 461。 */
@@ -241,7 +243,7 @@ for (const platform of PLATFORMS) {
         } else {
           expect(env.page).toBeNull()
         }
-        if (NON_EMPTY.has(cmd.key)) expect(data.length, '真实平台上不该是空列表').toBeGreaterThan(0)
+        if (NON_EMPTY.has(cmd.key) && !MAY_BE_EMPTY.has(`${p} ${cmd.key}`)) expect(data.length, '真实平台上不该是空列表').toBeGreaterThan(0)
         harvest(pool, cmd, argv as string[], data)
       })
     }
