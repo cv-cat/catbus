@@ -15,18 +15,6 @@ export function itemUrl(mid: string, uid?: unknown, bid?: unknown): string {
   return `https://weibo.com/${uid}/${bid || midToBid(mid)}`
 }
 
-const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'", '#x27': "'", nbsp: ' ' }
-
-/** 微博正文的 HTML → 纯文本：换行还原，表情取 alt，其余标签去掉。 */
-export function plain(html: unknown): string | null {
-  if (html == null || html === '') return null
-  return String(html)
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<img[^>]*?\balt=(["'])(.*?)\1[^>]*>/gi, '$2')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&(amp|lt|gt|quot|#39|#x27|nbsp);/g, (_, e: string) => ENTITIES[e]!)
-}
-
 export function ref(u: any): UserRef | null {
   const id = u?.idstr ?? u?.id
   return n.userRef({ id, name: u?.screen_name, url: id == null || id === '' ? null : userUrl(id) })
@@ -114,7 +102,7 @@ export function mblog(m: any, own = false): Item {
       kind,
       url: itemUrl(id, author?.id, m.mblogid ?? m.bid),
       title: kind === 'article' ? n.str(m.page_info?.page_title ?? m.page_info?.content1) : null,
-      text: n.str(m.text_raw) ?? plain(m.text),
+      text: n.str(m.text_raw) ?? n.plainText(m.text),
       author,
       created_at: n.time(m.created_at),
       cover,
@@ -163,7 +151,7 @@ export function comment(c: any, itemId: string): Comment {
       item_id: itemId,
       parent_id: root && root !== id ? root : null,
       author: ref(c.user),
-      text: n.str(c.text_raw) ?? plain(c.text) ?? '',
+      text: n.str(c.text_raw) ?? n.plainText(c.text) ?? '',
       created_at: n.time(c.created_at),
       stats: { likes: n.count(c.like_counts), replies: n.count(c.total_number) },
     },

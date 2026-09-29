@@ -1,4 +1,5 @@
 import { createCipheriv, createHash, createHmac } from 'node:crypto'
+import { md5Hex, sha256Hex } from '../../../core/hash.js'
 import { quote } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { PROFILE } from './profile.js'
@@ -98,9 +99,7 @@ function rc4(key: ArrayLike<number>, data: ArrayLike<number>): number[] {
   return out
 }
 
-export function md5Hex(data: string | Uint8Array): string {
-  return createHash('md5').update(data).digest('hex')
-}
+export { md5Hex, sha256Hex }
 
 /** 上游 splice_url：值用 `quote(safe='')` 编码，键原样，按插入顺序拼接。 */
 export function spliceUrl(params: Iterable<[string, unknown]>): string {
@@ -460,10 +459,6 @@ export function pyCompare(a: string, b: string): number {
   const y = [...b].map((c) => c.codePointAt(0)!)
   for (let i = 0; i < Math.min(x.length, y.length); i++) if (x[i] !== y[i]) return x[i]! - y[i]!
   return x.length - y.length
-}
-
-export function sha256Hex(text: string | Uint8Array): string {
-  return createHash('sha256').update(text).digest('hex')
 }
 
 /** challenge 的 AES-256-CBC：key = SHA256(UA)，IV = key 后 16 字节，Base64URL（保留 =）。 */

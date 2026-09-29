@@ -58,6 +58,11 @@ export class CookieJar {
     return this
   }
 
+  /** Cookie 请求头：对 url 生效的 cookie（不给 url 时为全部），按存入顺序拼成 `a=1; b=2`。 */
+  header(url?: string | URL): string {
+    return (url ? this.forUrl(url) : this.cookies).map((c) => `${c.name}=${c.value}`).join('; ')
+  }
+
   /** 名字 → 值；同名时取第一个。 */
   toObject(url?: string): Record<string, string> {
     const out: Record<string, string> = {}

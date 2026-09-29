@@ -1,4 +1,5 @@
 import { isoNow } from './fsutil.js'
+import { now } from './rand.js'
 import type {
   Category,
   Comment,
@@ -54,18 +55,26 @@ export function str(value: unknown): string | null {
   return value == null || value === '' ? null : String(value)
 }
 
+/** 不带时区的日期时间：`2025-08-01 12:00`、`2025-08-01T12:00:00`。 */
+const NAIVE_TIME = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})(:\d{2}(?:\.\d+)?)?$/
+
 /**
- * 时间转带时区的 ISO 8601。数字按量级判断：小于 1e11 视为秒，否则为毫秒；
- * 字符串先按数字处理，否则交给 Date 解析。
+ * 时间转带时区的 ISO 8601。数字按量级判断：小于 1e11 视为秒，小于 1e14 为毫秒，再大是微秒；
+ * 字符串先按数字处理；不带时区的日期时间按北京时间（这些平台给的本地时间都是北京时间，
+ * 不能按运行 catbus 的机器所在时区解析）；其余交给 Date 解析。
  */
 export function time(value: unknown): string | null {
   if (value == null || value === '' || value === 0 || value === '0') return null
   let ms: number
   if (typeof value === 'number' || (typeof value === 'string' && /^\d+(\.\d+)?$/.test(value))) {
     const n = Number(value)
-    ms = n < 1e11 ? n * 1000 : n
+    ms = n < 1e11 ? n * 1000 : n < 1e14 ? n : Math.floor(n / 1000)
   } else if (value instanceof Date) ms = value.getTime()
-  else ms = Date.parse(String(value))
+  else {
+    const s = String(value).trim()
+    const naive = NAIVE_TIME.exec(s)
+    ms = Date.parse(naive ? `${naive[1]}T${naive[2]}${naive[3] ?? ':00'}+08:00` : s)
+  }
   return Number.isFinite(ms) ? isoNow(new Date(ms)) : null
 }
 
@@ -85,10 +94,40 @@ export function url(value: unknown): string | null {
   return s
 }
 
+/** 金额（元）：数字，或 `¥1,099.00`、`总额 -23.28` 这类带符号、千分位的字符串。 */
 export function price(amount: unknown, currency = 'CNY'): Price | null {
   if (amount == null || amount === '') return null
-  const n = Number(amount)
+  const m = typeof amount === 'number' ? null : /-?\d[\d,]*(?:\.\d+)?/.exec(String(amount))
+  const n = typeof amount === 'number' ? amount : m ? Number(m[0].replaceAll(',', '')) : NaN
   return Number.isFinite(n) ? { amount: n, currency } : null
+}
+
+const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', yen: '¥', middot: '·', hellip: '…', ldquo: '“', rdquo: '”', lsquo: '‘', rsquo: '’', mdash: '—', ndash: '–', times: '×' }
+
+/** HTML 实体解码（`html.unescape` 的常用子集）：命名实体与 `&#39;` / `&#x27;` 这类数字实体。 */
+export function unescapeHtml(s: string): string {
+  return s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);?/gi, (m, e: string) => {
+    if (e[0] === '#') {
+      const code = e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10)
+      return Number.isFinite(code) && code <= 0x10ffff ? String.fromCodePoint(code) : m
+    }
+    return ENTITIES[e.toLowerCase()] ?? m
+  })
+}
+
+/**
+ * HTML 片段 → 纯文本：`<br>` 还原成换行，图片（表情）取 alt，其余标签去掉，实体解码。空串为 null。
+ * 用于搜索结果的高亮标签、微博正文等。
+ */
+export function plainText(html: unknown): string | null {
+  if (html == null || html === '') return null
+  const text = unescapeHtml(
+    String(html)
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<img[^>]*?\balt=(["'])(.*?)\1[^>]*>/gi, '$2')
+      .replace(/<[^>]+>/g, ''),
+  )
+  return text === '' ? null : text
 }
 
 /** 构造函数的入参：字段都可省略，stats 也可以只给一部分。 */
@@ -185,7 +224,7 @@ export function live(v: Input<Live, 'id' | 'status'>, raw?: unknown): Live {
 }
 
 export function event(v: Partial<Event> & { type: Event['type'] }, raw?: unknown): Event {
-  return attach({ type: v.type, time: v.time ?? isoNow(), user: v.user ?? null, text: v.text ?? null, gift: v.gift ?? null }, raw)
+  return attach({ type: v.type, time: v.time ?? isoNow(new Date(now())), user: v.user ?? null, text: v.text ?? null, gift: v.gift ?? null }, raw)
 }
 
 export function gift(v: Partial<Gift> & { id: string; name: string }, raw?: unknown): Gift {

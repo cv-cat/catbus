@@ -758,7 +758,7 @@ export function msgListen(ctx: Ctx) {
               from: n.userRef({ id: m.sender }),
               type: 'text',
               text: m.text,
-              created_at: n.time(Number(m.create_time) > 1e14 ? Math.floor(Number(m.create_time) / 1000) : m.create_time),
+              created_at: n.time(m.create_time),
             },
             m,
           )

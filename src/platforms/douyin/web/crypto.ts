@@ -1,4 +1,5 @@
 import { createCipheriv, createECDH, createHash, createHmac, createPrivateKey, createPublicKey } from 'node:crypto'
+import { sha256Hex } from '../../../core/hash.js'
 import { compactJson } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 
@@ -231,7 +232,6 @@ export const IMAGEX_HOST = 'imagex.bytedanceapi.com'
 export const VOD_HOST = 'vod.bytedanceapi.com'
 const REGION = 'cn-north-1'
 
-const sha256Hex = (data: string | Uint8Array) => createHash('sha256').update(data).digest('hex')
 const rfc3986 = (s: string) => encodeURIComponent(s).replace(/[!'()*]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase())
 
 function canonicalQuery(query: [string, string | number][]): string {

@@ -1,5 +1,6 @@
-import { createCipheriv, createHash } from 'node:crypto'
+import { createCipheriv } from 'node:crypto'
 import { CatbusError } from '../../../core/errors.js'
+import { md5Hex } from '../../../core/hash.js'
 import { HttpClient, type HttpResponse, parseJsonp } from '../../../core/http.js'
 import { interactive } from '../../../core/login.js'
 import { jsonDumps } from '../../../core/py.js'
@@ -109,7 +110,6 @@ export function csCipher(track: string, c: number[] | null | undefined, s: strin
   return result
 }
 
-const md5 = (text: string) => createHash('md5').update(text, 'utf8').digest('hex')
 
 const EMPTY_TRACK = 'M(*((1((M(('
 const EMPTY_HDL_TRACK = 'tEQOYESJYERVYEQ.'
@@ -149,15 +149,15 @@ export function buildPayload(gt: string, challenge: string, passtime: number, c?
     ['type', 'fullpage'],
     ['tt', tt(c, s)],
     ['light', -1],
-    ['s', md5(EMPTY_HDL_TRACK)],
-    ['h', md5(EMPTY_HDL_N)],
-    ['hh', md5(EMPTY_BUF_MAGIC)],
-    ['hi', md5(EMPTY_BUF_BANG)],
+    ['s', md5Hex(EMPTY_HDL_TRACK)],
+    ['h', md5Hex(EMPTY_HDL_N)],
+    ['hh', md5Hex(EMPTY_BUF_MAGIC)],
+    ['hi', md5Hex(EMPTY_BUF_BANG)],
     ['vip_order', -1],
     ['ct', -1],
     ['ep', ep],
     ['passtime', passtime],
-    ['rp', md5(`${gt}${challenge}${passtime}`)],
+    ['rp', md5Hex(`${gt}${challenge}${passtime}`)],
   ])
 }
 
@@ -193,7 +193,7 @@ export function buildClickPayload(gt: string, challenge: string, a: string, pic:
     ['tt', tt(c, s)],
     ['ep', ep],
   ]
-  if (a) fields.push(['rp', md5(`${gt}${challenge}${passtime}`)])
+  if (a) fields.push(['rp', md5Hex(`${gt}${challenge}${passtime}`)])
   return stringify(fields)
 }
 

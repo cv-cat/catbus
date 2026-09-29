@@ -3,11 +3,11 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { CatbusError } from '../src/core/errors.js'
+import { plainText } from '../src/core/normalize.js'
 import { RAW } from '../src/core/schemas.js'
 import * as api from '../src/platforms/weibo/web/api.js'
 import { check, Weibo } from '../src/platforms/weibo/web/client.js'
 import * as cmd from '../src/platforms/weibo/web/commands.js'
-import { plain } from '../src/platforms/weibo/web/normalize.js'
 import { resolveItem } from '../src/platforms/weibo/web/resolve.js'
 import { bidToMid, fileParams, midToBid } from '../src/platforms/weibo/web/sign.js'
 import { expectRequests, type GoldenCase, type GoldenRequest, loadCase, makeCtx, replay } from './golden.js'
@@ -354,6 +354,6 @@ describe('weibo 纯算', () => {
   })
 
   it('正文 HTML → 纯文本', () => {
-    expect(plain('a<br />b <a href="x"><span class="surl-text">#话题#</span></a><img alt="[笑]" src="y"/> &lt;&amp;&gt;')).toBe('a\nb #话题#[笑] <&>')
+    expect(plainText('a<br />b <a href="x"><span class="surl-text">#话题#</span></a><img alt="[笑]" src="y"/> &lt;&amp;&gt;')).toBe('a\nb #话题#[笑] <&>')
   })
 })

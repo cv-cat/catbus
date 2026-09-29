@@ -1,3 +1,4 @@
+import { createHash, createHmac } from 'node:crypto'
 import { readFileSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -7,12 +8,16 @@ import { satisfies } from '../src/cli/commands/doctor.js'
 import { nativeHint } from '../src/cli/hints.js'
 import { ACCOUNT_RE, checkAccountName, getCurrent, listAccounts, newCredential, readCredential, setCurrent, writeCredential } from '../src/core/auth-store.js'
 import { checkProxy, parseKey, resolveNetwork, setConfig } from '../src/core/config.js'
+import { CookieJar } from '../src/core/cookies.js'
 import { EXIT_CODES } from '../src/core/errors.js'
 import { isoNow, writeFileAtomic } from '../src/core/fsutil.js'
+import { hmacSha256Hex, md5Hex, sha256Hex } from '../src/core/hash.js'
 import { toNetworkError } from '../src/core/http.js'
 import { redact } from '../src/core/log.js'
+import * as n from '../src/core/normalize.js'
 import { describeOption, filter, flagName, parseDuration, PUBLISH } from '../src/core/options.js'
 import { loadScript } from '../src/core/vm.js'
+import { checkMsgSend } from '../src/core/vocab.js'
 import { useTempHome } from './helpers.js'
 
 const home = useTempHome()
@@ -286,5 +291,58 @@ describe('http：按响应头的 charset 解码', () => {
     } finally {
       restore()
     }
+  })
+})
+
+describe('normalize 工具', () => {
+  it('time：秒、毫秒、微秒；不带时区的日期时间按北京时间', () => {
+    expect(n.time(1790000000)).toBe(n.time(1790000000000))
+    expect(n.time(1790000000123456)).toBe(n.time(1790000000123))
+    expect(n.time('2025-08-01 12:00')).toBe(n.time('2025-08-01T04:00:00Z'))
+    expect(n.time('2025-08-01 12:00:05')).toBe(n.time('2025-08-01T12:00:05+08:00'))
+    expect(n.time('Wed Oct 10 20:19:24 +0000 2018')).toBe(n.time('2018-10-10T20:19:24Z'))
+    expect(n.time('')).toBeNull()
+  })
+
+  it('price：带货币符号、千分位、负号的字符串', () => {
+    expect(n.price('¥1,099.00')).toEqual({ amount: 1099, currency: 'CNY' })
+    expect(n.price('总额 -23.28', 'USD')).toEqual({ amount: -23.28, currency: 'USD' })
+    expect(n.price(12)).toEqual({ amount: 12, currency: 'CNY' })
+    expect(n.price('面议')).toBeNull()
+  })
+
+  it('plainText / unescapeHtml：标签、换行、表情 alt、命名与数字实体', () => {
+    expect(n.plainText('<em class="keyword">猫</em>&amp;&#39;狗&#x27;&nbsp;')).toBe("猫&'狗' ")
+    expect(n.plainText('a<br/>b<img alt="[笑]" src="x">')).toBe('a\nb[笑]')
+    expect(n.plainText('')).toBeNull()
+    expect(n.unescapeHtml('&lt;&yen;&unknown;')).toBe('<¥&unknown;')
+  })
+})
+
+describe('checkMsgSend', () => {
+  it('目标三选一（--to 与 --item 可以同时用），平台可追加目标与内容', () => {
+    expect(checkMsgSend({ text: 'hi' }, { to: 'u', item: 'i' })).toBeUndefined()
+    expect(checkMsgSend({ text: 'hi' }, { conversation: 'c', item: 'i' })).toMatch(/需要用一个/)
+    expect(checkMsgSend({}, { to: 'u' })).toBe('需要 <text>、--image 或 --video')
+    expect(checkMsgSend({ text: 'hi' }, { order: 'o' }, { targets: ['order'] })).toBeUndefined()
+    expect(checkMsgSend({}, { to: 'u', share: 's' }, { content: ['file', 'share'] })).toBeUndefined()
+  })
+})
+
+describe('CookieJar.header / hash', () => {
+  it('header 按 url 过滤、按存入顺序拼接', () => {
+    const jar = new CookieJar([
+      { name: 'a', value: '1', domain: '.x.com', path: '/', expires: null },
+      { name: 'b', value: '2', domain: 'other.com', path: '/', expires: null },
+      { name: 'c', value: '3', domain: 'www.x.com', path: '/', expires: null },
+    ])
+    expect(jar.header('https://www.x.com/')).toBe('a=1; c=3')
+    expect(jar.header()).toBe('a=1; b=2; c=3')
+  })
+
+  it('md5 / sha256 / hmac', () => {
+    expect(md5Hex('catbus')).toBe(createHash('md5').update('catbus').digest('hex'))
+    expect(sha256Hex(new Uint8Array([1, 2]))).toBe(createHash('sha256').update(Buffer.from([1, 2])).digest('hex'))
+    expect(hmacSha256Hex('k', 'v')).toBe(createHmac('sha256', 'k').update('v').digest('hex'))
   })
 })

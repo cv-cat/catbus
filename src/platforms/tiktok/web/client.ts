@@ -141,7 +141,7 @@ export class TikTok {
 
   /** 发给所有 tiktok.com 子域的 cookie 串（上游 cookie_str），签名 JS 也读它。 */
   get cookieStr(): string {
-    return this.jar.forUrl(ORIGIN + '/').map((c) => `${c.name}=${c.value}`).join('; ')
+    return this.jar.header(ORIGIN + '/')
   }
 
   /** WebIdLastTime：会话里给出的值，其次是浏览器存储的 g_exp，最后是首次使用的时间（之后固定）。 */

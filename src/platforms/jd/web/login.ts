@@ -1,13 +1,14 @@
 import { CatbusError } from '../../../core/errors.js'
 import { type HttpResponse, parseJsonp } from '../../../core/http.js'
+import { unescapeHtml } from '../../../core/normalize.js'
 import { type Pairs, pyFloatStr, type Scalar } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { type AksState, encryptQuery } from './aks.js'
 import type { Jd } from './client.js'
-import { summerEncrypt } from './js.js'
 import { solveCaptcha } from './jcap.js'
+import { summerEncrypt } from './js.js'
 import { APPID_PASSPORT, basic, type Header, LOGIN_PAGE, PASSPORT_URL, QR_URL, qrImage, qrJsonp, qrValidation } from './profile.js'
-import { encodeQueryPairs, parseAttrs, randomJqueryCallback, TraceContext, unescapeHtml } from './util.js'
+import { encodeQueryPairs, parseAttrs, randomJqueryCallback, TraceContext } from './util.js'
 
 /**
  * 京东 PC 登录（上游 jd_apis/jd_login_api.py 与 jd_sms_login_api.py）：

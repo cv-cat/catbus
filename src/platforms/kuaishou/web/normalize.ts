@@ -16,9 +16,6 @@ export function ref(id: unknown, name: unknown): UserRef | null {
   return n.userRef({ id, name, url: id == null || id === '' ? null : profileUrl(id) })
 }
 
-/** "74万" / "1.2w" / 数字 → 整数。 */
-export const count = (v: unknown) => n.count(v)
-
 /** 取 URL：字符串，或 [{url}] / [{cdn,url}] 列表的第一个。 */
 function urlOf(v: unknown): string | null {
   if (typeof v === 'string') return n.url(v)
@@ -73,11 +70,11 @@ export function feed(v: any, authorFallback?: any): Item {
       cover: urlOf(first(photo, 'coverUrl', 'coverUrls')),
       media: photoMedia(photo),
       stats: {
-        views: count(first(photo, 'viewCount', 'view_count')),
-        likes: count(first(photo, 'realLikeCount', 'likeCount', 'like_count')),
-        comments: count(comments),
-        collects: count(first(photo, 'collectCount', 'collect_count')),
-        shares: count(first(photo, 'shareCount', 'share_count')),
+        views: n.count(first(photo, 'viewCount', 'view_count')),
+        likes: n.count(first(photo, 'realLikeCount', 'likeCount', 'like_count')),
+        comments: n.count(comments),
+        collects: n.count(first(photo, 'collectCount', 'collect_count')),
+        shares: n.count(first(photo, 'shareCount', 'share_count')),
       },
     },
     v,
@@ -101,10 +98,10 @@ export function selfUser(v: any): User {
       url: profileUrl(id),
       bio: n.str(first(v, 'userText', 'user_text', 'description')),
       stats: {
-        followers: count(first(v, 'fans', 'fan', 'followerCount')),
-        following: count(first(v, 'follows', 'follow', 'followingCount')),
-        items: count(first(v, 'photo', 'photoCount', 'photo_public')),
-        likes: count(first(v, 'liked', 'likedCount')),
+        followers: n.count(first(v, 'fans', 'fan', 'followerCount')),
+        following: n.count(first(v, 'follows', 'follow', 'followingCount')),
+        items: n.count(first(v, 'photo', 'photoCount', 'photo_public')),
+        likes: n.count(first(v, 'liked', 'likedCount')),
       },
     },
     v,
@@ -130,9 +127,9 @@ export function listUser(v: any): User {
       url: profileUrl(id),
       bio: n.str(first(v, 'user_text', 'description', 'userText')),
       stats: {
-        followers: count(first(v, 'fansCount', 'fans', 'fan')),
-        following: count(first(v, 'followCount', 'follows')),
-        items: count(first(v, 'photoCount', 'photo')),
+        followers: n.count(first(v, 'fansCount', 'fans', 'fan')),
+        following: n.count(first(v, 'followCount', 'follows')),
+        items: n.count(first(v, 'photoCount', 'photo')),
       },
     },
     v,
@@ -149,7 +146,7 @@ export function comment(v: any, itemId: string, parentId: string | null = null):
       author: ref(first(v, 'authorEid', 'authorId', 'author_id'), first(v, 'authorName', 'author_name')),
       text: String(v.content ?? ''),
       created_at: n.time(v.timestamp),
-      stats: { likes: count(first(v, 'realLikedCount', 'likedCount')), replies: count(first(v, 'subCommentCount')) ?? (v.hasSubComments ? null : 0) },
+      stats: { likes: n.count(first(v, 'realLikedCount', 'likedCount')), replies: n.count(first(v, 'subCommentCount')) ?? (v.hasSubComments ? null : 0) },
     },
     v,
   )
@@ -167,7 +164,7 @@ export function liveRoom(v: any): Live {
       status: v.living || author.living ? 'live' : 'offline',
       host: n.userRef({ id: eid, name: author.name, url: liveUrl(eid) }),
       cover: n.url(v.poster),
-      stats: { viewers: count(v.watchingCount) },
+      stats: { viewers: n.count(v.watchingCount) },
     },
     v,
   )
@@ -185,7 +182,7 @@ export function playback(v: any, eid: string): Item {
       author: ref(eid, null),
       created_at: n.time(first(v, 'createTime', 'timestamp')),
       cover: n.url(first(v, 'poster', 'coverUrl')),
-      stats: { views: count(v.viewCount), likes: count(v.likeCount), comments: count(v.commentCount) },
+      stats: { views: n.count(v.viewCount), likes: n.count(v.likeCount), comments: n.count(v.commentCount) },
     },
     v,
   )
@@ -216,11 +213,11 @@ export function work(v: any): Item {
       created_at: n.time(first(v, 'publishTime', 'uploadTime', 'createTime')),
       cover: n.url(first(v, 'coverUrl', 'publishCoverUrl', 'cover')),
       stats: {
-        views: count(first(v, 'playCount', 'viewCount')),
-        likes: count(first(v, 'likeCount')),
-        comments: count(first(v, 'commentCount')),
-        collects: count(first(v, 'collectCount')),
-        shares: count(first(v, 'shareCount')),
+        views: n.count(first(v, 'playCount', 'viewCount')),
+        likes: n.count(first(v, 'likeCount')),
+        comments: n.count(first(v, 'commentCount')),
+        collects: n.count(first(v, 'collectCount')),
+        shares: n.count(first(v, 'shareCount')),
       },
       status: workStatus(v),
     },

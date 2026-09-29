@@ -1,5 +1,5 @@
-import { createHash } from 'node:crypto'
 import { crc32 } from 'node:zlib'
+import { md5Hex } from '../../../core/hash.js'
 import { type Pairs, urlencode } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 
@@ -7,9 +7,7 @@ import * as rand from '../../../core/rand.js'
 
 export const APP_SOURCE = '339644097'
 
-export function md5Hex(data: string | Uint8Array): string {
-  return createHash('md5').update(data).digest('hex')
-}
+export { md5Hex }
 
 /** generate_params：CRC32（上游手写的查表实现，与标准 CRC32 相同）、MD5、大小。 */
 export function fileParams(file: Uint8Array): { cs: number; md5: string; fileSize: number } {

@@ -1,4 +1,5 @@
 import { parseJsonp } from '../../../core/http.js'
+import { unescapeHtml } from '../../../core/normalize.js'
 import { quote, urlencode } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { type Jd, searchReferer } from './client.js'
@@ -34,7 +35,7 @@ import {
   SEARCH_ORIGIN,
   xhr,
 } from './profile.js'
-import { areaOf, searchUuidOf, stripTags, unescapeHtml } from './util.js'
+import { areaOf, searchUuidOf, stripTags } from './util.js'
 import { orderSkus } from './normalize.js'
 import { buildSearchPayload } from './webm.js'
 

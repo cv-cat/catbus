@@ -15,7 +15,7 @@ import { shapeOf } from './shapes.js'
 const READ_ACTIONS = new Set([
   'status', 'get', 'search', 'related', 'list', 'media', 'categories', 'items', 'likes', 'collects', 'reposts',
   'followers', 'following', 'replies', 'history', 'rank', 'gifts', 'products', 'replays', 'suggest', 'hot', 'count',
-  'subtitles', 'fans',
+  'subtitles',
 ])
 const SKIP = new Set(['auth login', 'auth use', 'auth logout'])
 

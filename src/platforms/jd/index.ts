@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { filter } from '../../core/options.js'
+import { type Args, checkMsgSend, type Options } from '../../core/vocab.js'
 import { definePlatform, handlers } from '../../core/registry.js'
 
 /** 懒加载 web 端的 handler：只有执行到这条命令时才加载实现。 */
@@ -21,12 +22,7 @@ const order = { order: z.string().optional().describe('订单号或订单详情�
  * 再加上 --order：可与 --item 或 --conversation 之一合用，只有 --order 时联系京东自营客服。
  * --to 在 handler 里报 UNSUPPORTED（京东只能联系商家客服）。
  */
-function msgSendCheck(args: Record<string, string | undefined>, o: Record<string, unknown>): string | undefined {
-  const targets = ['to', 'conversation', 'item'].filter((k) => o[k] != null)
-  if (targets.length > 1 && targets.includes('conversation')) return '--to、--conversation、--item 需要用一个，只有 --to 与 --item 可以同时用'
-  if (!targets.length && o.order == null) return '需要 --conversation、--item 或 --order'
-  if (args.text == null && o.image == null && o.video == null) return '需要 <text>、--image 或 --video'
-}
+const msgSendCheck = (a: Args, o: Options) => checkMsgSend(a, o, { targets: ['order'] })
 
 export default definePlatform({
   id: 'jd',

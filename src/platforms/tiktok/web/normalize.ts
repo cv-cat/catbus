@@ -146,7 +146,7 @@ export function product(d: any): Item {
         return url ? [n.media({ id: String(i + 1), type: 'image', url, width: n.count(img.width), height: n.count(img.height) }, img)] : []
       }),
       stats: { comments: n.count(d.review_info?.total_reviews ?? p.review_count), views: null, likes: null, collects: null, shares: null },
-      price: amount != null ? n.price(String(amount).replace(/[^\d.]/g, ''), price.currency ?? price.currency_name ?? 'USD') : null,
+      price: n.price(amount, price.currency ?? price.currency_name ?? 'USD'),
       status: p.status === 1 || p.status == null ? 'on_sale' : 'off_shelf',
     },
     d,
@@ -312,7 +312,7 @@ export function pulledMessage(m: PulledMessage): Message {
       from: n.userRef({ id: m.sender }),
       type: 'text',
       text: m.text,
-      created_at: n.time(Number(m.create_time) > 1e14 ? Math.floor(Number(m.create_time) / 1000) : m.create_time),
+      created_at: n.time(m.create_time),
     },
     m,
   )
@@ -324,7 +324,7 @@ export function conversation(id: string, peer: string | null, last: PulledMessag
       id,
       peer: peer ? n.userRef({ id: peer }) : null,
       last_message: last?.text ?? null,
-      updated_at: last ? n.time(Number(last.create_time) > 1e14 ? Math.floor(Number(last.create_time) / 1000) : last.create_time) : null,
+      updated_at: last ? n.time(last.create_time) : null,
     },
     raw,
   )

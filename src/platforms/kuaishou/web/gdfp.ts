@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { CatbusError } from '../../../core/errors.js'
+import { md5Hex } from '../../../core/hash.js'
 import type { HttpResponse } from '../../../core/http.js'
 import { compactJson } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
@@ -114,11 +115,10 @@ const WHOLE_NATIVE_FINGERPRINT = {
   kh: '61792d30f54bedfe1007347e9fdc4223',
 }
 
-const md5 = (s: string) => createHash('md5').update(s, 'utf8').digest('hex')
 const sha1 = (s: string) => createHash('sha1').update(s, 'utf8').digest('hex')
 
-/** `md5(appKey + secretKey + 秒级时间戳)`。 */
-export const signFor = (ts: number | string) => md5(`${APP_KEY}${SECRET_KEY}${ts}`)
+/** `md5Hex(appKey + secretKey + 秒级时间戳)`。 */
+export const signFor = (ts: number | string) => md5Hex(`${APP_KEY}${SECRET_KEY}${ts}`)
 
 /** gdfp 请求地址（appkey / seckey / bussType / timestamp / sign）。 */
 export function buildUrl(path: string, bussType = BUSS_TYPE_MAN_MACHINE, tsSeconds?: number, extra = ''): string {
@@ -134,7 +134,7 @@ function scriptList(scriptUrls: string[] = []): string[] {
 
 function cookieFingerprint(cookies: [string, string][]): { ci: number; ih: string } {
   const line = cookies.map(([k, v]) => `${k}=${v}`).join('; ')
-  return { ci: [...line].length, ih: md5(line) }
+  return { ci: [...line].length, ih: md5Hex(line) }
 }
 
 function callStack(kind: 'core' | 'whole'): string {
@@ -332,7 +332,7 @@ export function buildWholePayload(o: PayloadInput & { reportPath?: string }): Re
     85: candidates,
     86: sdp,
     87: { w: PROFILE.screenWidth, h: PROFILE.screenHeight, c: 24, p: 24 },
-    88: md5(sdp),
+    88: md5Hex(sdp),
     89: timings(o.beginMs, o.nowMs, true),
     90: '',
     100: 11,

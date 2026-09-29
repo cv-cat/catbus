@@ -780,7 +780,7 @@ export function liveListen(ctx: Ctx) {
   return (async function* () {
     const b = await bili(ctx)
     const r = await room(b, ctx.args.room!)
-    const cookie = b.jar.forUrl('https://live.bilibili.com/').map((c) => `${c.name}=${c.value}`).join('; ')
+    const cookie = b.jar.header('https://live.bilibili.com/')
     yield* reconnecting(ctx, async function* () {
       const info = await api.danmuInfo(b, r.roomId)
       const host = info.host_list?.[0]

@@ -538,7 +538,9 @@ describe('douyin 对拍：补齐的命令流程', () => {
     expect(cmd.check({}, { to: 'u', share: 'x' })).toBeUndefined()
     expect(cmd.check({}, { to: 'u', file: 'a.pdf' })).toBeUndefined()
     expect(cmd.check({}, { to: 'u' })).toMatch(/--file 或 --share/)
-    expect(cmd.check({ text: 'hi' }, { to: 'u', conversation: 'c' })).toMatch(/只能用一个/)
+    expect(cmd.check({ text: 'hi' }, { to: 'u', conversation: 'c' })).toMatch(/需要用一个/)
+    // --to 与 --item 可以同时用（AGENTS 4.8），抖音不支持，由 handler 报 UNSUPPORTED
+    expect(cmd.check({ text: 'hi' }, { to: 'u', item: 'i' })).toBeUndefined()
   })
 })
 

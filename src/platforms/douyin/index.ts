@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { filter, PRODUCT } from '../../core/options.js'
 import { definePlatform, type Handler, handlers } from '../../core/registry.js'
-import type { Args, Options } from '../../core/vocab.js'
+import { type Args, checkMsgSend, type Options } from '../../core/vocab.js'
 
 /** 懒加载 web 端的 handler：只有执行到这条命令时才加载实现。缺 UIFID 时自动补上重试（commands.withUifid）。 */
 const { h, impl } = handlers(
@@ -12,11 +12,8 @@ const { h, impl } = handlers(
 /** 平台私有选项（AGENTS 4.7 的 douyin 行）。 */
 const folder = (summary: string) => ({ folder: z.string().optional().describe(summary) })
 
-/** `msg send`：比词表多了 --file / --share 也算消息内容。 */
-function msgSendCheck(a: Args, o: Options): string | undefined {
-  if (['to', 'conversation', 'item'].filter((k) => o[k] != null).length !== 1) return '--to、--conversation、--item 需要且只能用一个'
-  if (a.text == null && o.image == null && o.video == null && o.file == null && o.share == null) return '需要 <text>、--image、--video、--file 或 --share'
-}
+/** `msg send`：比词表多了 --file / --share 也算消息内容。--to 与 --item 同时用时由 handler 报 UNSUPPORTED。 */
+const msgSendCheck = (a: Args, o: Options) => checkMsgSend(a, o, { content: ['file', 'share'] })
 
 export default definePlatform({
   id: 'douyin',

@@ -57,6 +57,26 @@ function given(options: Options, keys: string[]): string[] {
   return keys.filter((k) => options[k] != null)
 }
 
+const flags = (keys: string[]) => keys.map((k) => (k === 'text' ? '<text>' : `--${k}`)).join('、')
+
+/**
+ * `msg send` 的参数约束（AGENTS 4.8）：--to、--conversation、--item 用一个，只有 --to 与 --item 可以同时用；
+ * 要有消息内容。平台可以追加目标（京东的 --order）和内容（抖音的 --file、--share）。
+ * 某个平台不支持 --to 与 --item 同时用时，由 handler 报 UNSUPPORTED。
+ */
+export function checkMsgSend(a: Args, o: Options, extra: { targets?: string[]; content?: string[] } = {}): string | undefined {
+  const targets = given(o, ['to', 'conversation', 'item'])
+  const extraTargets = given(o, extra.targets ?? [])
+  if ((targets.length === 0 && extraTargets.length === 0) || (targets.length > 1 && targets.includes('conversation'))) {
+    return `${flags(['to', 'conversation', 'item', ...(extra.targets ?? [])])} 需要用一个，只有 --to 与 --item 可以同时用`
+  }
+  const content = ['image', 'video', ...(extra.content ?? [])]
+  if (a.text == null && given(o, content).length === 0) {
+    const all = flags(['text', ...content]).split('、')
+    return `需要 ${all.slice(0, -1).join('、')} 或 ${all.at(-1)}`
+  }
+}
+
 /** 通用词表（AGENTS 4.5、4.8、6.3）。平台只声明与默认不同的部分。 */
 export const VOCAB: Record<string, CommandSpec> = {
   'auth login': read('登录', [], 'Account', {
@@ -156,14 +176,7 @@ export const VOCAB: Record<string, CommandSpec> = {
       image: PUBLISH.image,
       video: PUBLISH.video,
     },
-    check: (a, o) => {
-      // 三者用一个；只有 --to 与 --item 可以一起用（就某件商品联系某个用户，AGENTS 4.8）
-      const targets = given(o, ['to', 'conversation', 'item'])
-      if (targets.length === 0 || (targets.length > 1 && targets.includes('conversation'))) {
-        return '--to、--conversation、--item 需要用一个，只有 --to 与 --item 可以同时用'
-      }
-      if (a.text == null && o.image == null && o.video == null) return '需要 <text>、--image 或 --video'
-    },
+    check: (a, o) => checkMsgSend(a, o),
   }),
   'msg listen': read('监听新消息', [], 'Message', { auth: 'required', stream: true, options: STREAM }),
   'msg read': write('标记会话已读', [arg.conversation]),

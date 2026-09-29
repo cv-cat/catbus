@@ -462,6 +462,8 @@ def case(out: Path, name: str, fn: Callable[[], Any], *, input: Any = None,
          respond: Callable[[dict], Any] | None = None) -> None:
     """跑一个用例：重置随机数种子，按 respond 回复请求，记录请求序列与返回值."""
     _source[0] = mulberry32(SEED)
+    # random.gauss 的缓存每个用例清空，与 TS 侧 deterministic() 清空 gaussNext 对应
+    random._inst.gauss_next = None
     _captured.clear()
     _responses.clear()
     _responder[0] = respond or (lambda req: {'code': 0, 'data': {}})

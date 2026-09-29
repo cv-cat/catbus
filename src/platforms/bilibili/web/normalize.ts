@@ -8,26 +8,8 @@ export const spaceUrl = (mid: unknown) => `https://space.bilibili.com/${mid}`
 export const liveUrl = (room: unknown) => `https://live.bilibili.com/${room}`
 export const articleUrl = (cvid: unknown) => `https://www.bilibili.com/read/cv${cvid}`
 
-const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'", '#x27': "'", nbsp: ' ' }
-
-/** 搜索结果里的高亮标签与 HTML 实体。 */
-export function plain(html: unknown): string | null {
-  if (html == null) return null
-  return String(html)
-    .replace(/<[^>]+>/g, '')
-    .replace(/&(amp|lt|gt|quot|#39|#x27|nbsp);/g, (_, e: string) => ENTITIES[e]!)
-}
-
 export function ref(mid: unknown, name: unknown): UserRef | null {
   return n.userRef({ id: mid, name, url: mid == null || mid === '' ? null : spaceUrl(mid) })
-}
-
-/** "4:30" / "1:02:03" / 秒数 → 秒。 */
-export function duration(v: unknown): number | null {
-  if (typeof v === 'number') return v
-  if (typeof v !== 'string' || !v) return null
-  if (/^\d+$/.test(v)) return Number(v)
-  return v.split(':').reduce((s, p) => s * 60 + Number(p), 0)
 }
 
 /** 稿件详情（x/web-interface/wbi/view 的 data）。 */
@@ -61,7 +43,7 @@ export function searchVideo(v: any): Item {
       id: v.bvid,
       kind: 'video',
       url: videoUrl(v.bvid),
-      title: plain(v.title),
+      title: n.plainText(v.title),
       text: n.str(v.description),
       author: ref(v.mid, v.author),
       created_at: n.time(v.pubdate),
@@ -79,8 +61,8 @@ export function searchArticle(v: any): Item {
       id: `cv${v.id}`,
       kind: 'article',
       url: articleUrl(v.id),
-      title: plain(v.title),
-      text: plain(v.desc),
+      title: n.plainText(v.title),
+      text: n.plainText(v.desc),
       author: ref(v.mid, null),
       created_at: n.time(v.pub_time),
       cover: n.url(v.image_urls?.[0]),
@@ -240,7 +222,7 @@ export function searchLive(v: any): Live {
     {
       id: n.id(v.roomid),
       url: liveUrl(v.roomid),
-      title: plain(v.title),
+      title: n.plainText(v.title),
       status: v.live_status === 1 ? 'live' : 'offline',
       host: ref(v.uid, v.uname),
       cover: n.url(v.user_cover || v.cover),

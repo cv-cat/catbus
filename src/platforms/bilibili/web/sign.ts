@@ -1,13 +1,12 @@
-import { constants, createHash, createHmac, publicEncrypt } from 'node:crypto'
+import { constants, publicEncrypt } from 'node:crypto'
+import { hmacSha256Hex, md5Hex } from '../../../core/hash.js'
 import { jsonDumps, type Pairs, pyStr, urlencode } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { PROFILE } from './profile.js'
 
 /** B 站的纯算签名与设备值（上游 utils/wbi.py、ticket.py、bv.py、murmur3.py、dm_img.py、device.py、correspond.py）。 */
 
-export function md5(text: string): string {
-  return createHash('md5').update(text, 'utf8').digest('hex')
-}
+export const md5 = (text: string): string => md5Hex(text)
 
 // ---------------------------------------------------------------- WBI
 
@@ -43,7 +42,7 @@ export function encWbi(params: Pairs, key: string, wts = rand.nowSeconds()): Pai
 export const TICKET_KEY_ID = 'ec02'
 
 export function ticketHexSign(ts: number): string {
-  return createHmac('sha256', 'XgwSnGZ1p').update(`ts${ts}`).digest('hex')
+  return hmacSha256Hex('XgwSnGZ1p', `ts${ts}`)
 }
 
 // ---------------------------------------------------------------- av / bv

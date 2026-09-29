@@ -1,11 +1,11 @@
-import { createHash } from 'node:crypto'
+import * as n from '../../../core/normalize.js'
 import { pyStr, type Scalar } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { DEFAULT_AREA } from './profile.js'
 
 /** 纯算工具（上游 utils/jd_util.py、utils/jd_cookie.py、utils/trace_headers.py、utils/aks.py 的编码部分）。 */
 
-export const sha256Hex = (text: string): string => createHash('sha256').update(String(text), 'utf8').digest('hex')
+export { sha256Hex } from '../../../core/hash.js'
 
 /** 浏览器复制的 Cookie 头 → 有序的 name → value（trans_cookies）。 */
 export function transCookies(cookie: string): Map<string, string> {
@@ -178,23 +178,11 @@ export function parseAttrs(tag: string): Record<string, string> {
   while ((m = re.exec(body))) {
     const name = m[1]!.toLowerCase()
     if (name in out) continue
-    out[name] = unescapeHtml(m[2] ?? m[3] ?? m[4] ?? '')
+    out[name] = n.unescapeHtml(m[2] ?? m[3] ?? m[4] ?? '')
   }
   return out
 }
 
-const NAMED: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', yen: '¥' }
-
-/** `html.unescape` 的常用子集。 */
-export function unescapeHtml(s: string): string {
-  return s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);?/gi, (m, e: string) => {
-    if (e[0] === '#') {
-      const code = e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10)
-      return Number.isFinite(code) ? String.fromCodePoint(code) : m
-    }
-    return NAMED[e.toLowerCase()] ?? m
-  })
-}
 
 /** 同一登录页内的链路上下文：Page-Id 取自页面，Session-Id 页面内复用（LoginTraceContext）。 */
 export class TraceContext {

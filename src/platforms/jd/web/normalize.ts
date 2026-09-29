@@ -20,22 +20,6 @@ export function image(path: unknown): string | null {
   return `https://img14.360buyimg.com/n1/${s.replace(/^\/+/, '')}`
 }
 
-/** 京东的时间字符串是北京时间（`2025-08-01 12:00:00`）。 */
-export function time(v: unknown): string | null {
-  if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?$/.test(v.trim())) {
-    return n.time(v.trim().replace(' ', 'T') + (v.trim().length === 16 ? ':00' : '') + '+08:00')
-  }
-  return n.time(v)
-}
-
-/** 金额：`¥1,099.00`、`总额 ¥23.28`、数字。 */
-export function money(v: unknown): Price | null {
-  if (v == null || v === '') return null
-  if (typeof v === 'number') return n.price(v)
-  const m = /-?\d[\d,]*(?:\.\d+)?/.exec(String(v))
-  return m ? n.price(m[0].replaceAll(',', '')) : null
-}
-
 /** 在对象里按键名找第一个非空值（广度优先，限深度）。 */
 export function find(obj: unknown, keys: string[], depth = 5): any {
   let level: unknown[] = [obj]
@@ -104,7 +88,7 @@ export function ware(w: any): Item {
       author: shopRef(w.shopId ?? w.venderId, w.shopName),
       cover: image(w.imageurl ?? w.imageUrl ?? w.imgUrl ?? w.image),
       stats: { comments: n.count(w.comment ?? w.commentCount) },
-      price: money(w.jdPrice ?? w.finalPrice?.price ?? w.price),
+      price: n.price(w.jdPrice ?? w.finalPrice?.price ?? w.price),
     },
     w,
   )
@@ -124,7 +108,7 @@ export function detail(sku: string, d: any): Item {
       cover: images[0] ?? image(find(d, ['imageUrl', 'imgUrl', 'image'])),
       media: images.map((url, i) => n.media({ id: String(i + 1), type: 'image', url })),
       stats: { comments: n.count(find(d, ['commentCount', 'allCnt', 'commentNum'])) },
-      price: money(d?.price?.p ?? find(d, ['p', 'jdPrice', 'finalPrice'])),
+      price: n.price(d?.price?.p ?? find(d, ['p', 'jdPrice', 'finalPrice'])),
     },
     d,
   )
@@ -144,7 +128,7 @@ export function comments(sku: string, d: any): Comment[] {
         item_id: sku,
         author: n.userRef({ id: c.userNickName ?? c.nickName ?? c.nickname ?? c.userId, name: c.userNickName ?? c.nickName ?? c.nickname }),
         text: String(c.commentData ?? c.content ?? ''),
-        created_at: time(c.commentDate ?? c.creationTime ?? c.date),
+        created_at: n.time(c.commentDate ?? c.creationTime ?? c.date),
         stats: { likes: n.count(c.praiseCnt ?? c.usefulVoteCount ?? c.likeCount), replies: n.count(c.replyCnt ?? c.replyCount) },
       },
       c,
@@ -155,15 +139,15 @@ export function comments(sku: string, d: any): Comment[] {
 /** 推荐优惠券（getRecommendCoupon）。 */
 export function coupons(d: any): Coupon[] {
   return findList(d, ['discount', 'quota', 'couponId', 'batchId']).map((c: any) => {
-    const quota = money(c.quota ?? c.threshold)
+    const quota = n.price(c.quota ?? c.threshold)
     return withRaw(
       {
         id: n.id(c.couponId ?? c.batchId ?? c.roleId ?? c.key ?? c.id),
         title: n.str(c.name ?? c.couponTitle ?? c.title ?? c.desc ?? c.limitStr),
-        discount: money(c.discount ?? c.discountAmount ?? c.parValue),
+        discount: n.price(c.discount ?? c.discountAmount ?? c.parValue),
         threshold: quota && quota.amount > 0 ? quota : null,
-        start_at: time(c.beginTime ?? c.startTime),
-        end_at: time(c.endTime),
+        start_at: n.time(c.beginTime ?? c.startTime),
+        end_at: n.time(c.endTime),
       },
       c,
     )
@@ -181,7 +165,7 @@ export function listed(w: any): Item {
       title: n.str(stripTags(w.wname ?? w.skuName ?? w.wareName ?? w.name ?? w.title)),
       author: shopRef(w.shopId ?? w.venderId, w.shopName),
       cover: image(w.imgUrl ?? w.imageUrl ?? w.image ?? w.img),
-      price: money(w.jdPrice ?? w.price ?? w.p),
+      price: n.price(w.jdPrice ?? w.price ?? w.p),
     },
     w,
   )
@@ -197,9 +181,9 @@ export function order(o: RawOrder, skus: string[] = []): Order {
     {
       id: o.orderId,
       status: o.status || null,
-      total: money(o.amount),
+      total: n.price(o.amount),
       items: o.products.map((title, i) => n.item({ id: skus[i] ?? '', kind: 'goods', url: skus[i] ? itemUrl(skus[i]) : null, title })),
-      created_at: time(o.time),
+      created_at: n.time(o.time),
     },
     o,
   )
@@ -246,7 +230,7 @@ export function conversations(d: any): Conversation[] {
         peer: { id: n.id(s.venderId), name: n.str(s.venderName ?? s.shopName ?? s.name), url: s.shopId ? shopUrl(s.shopId) : null },
         unread: n.count(s.unreadCount ?? s.unread ?? s.unReadNum),
         last_message: n.str(typeof last === 'string' ? last : (last.content ?? last.body?.content)),
-        updated_at: time(s.timestamp ?? s.lastTime ?? s.time ?? last.timestamp ?? last.datetime),
+        updated_at: n.time(s.timestamp ?? s.lastTime ?? s.time ?? last.timestamp ?? last.datetime),
       },
       s,
     )
@@ -284,7 +268,7 @@ export function chatEvent(p: any): Message | null {
   if (!p || typeof p !== 'object') return null
   const body = p.body && typeof p.body === 'object' ? p.body : {}
   const vender = String(body.chatinfo?.venderId ?? body.venderId ?? '')
-  const other = (text: string | null, from: UserRef | null = null) => n.message({ id: n.id(p.id), conversation_id: vender, from, type: 'other', text, created_at: time(p.timestamp ?? p.datetime) }, p)
+  const other = (text: string | null, from: UserRef | null = null) => n.message({ id: n.id(p.id), conversation_id: vender, from, type: 'other', text, created_at: n.time(p.timestamp ?? p.datetime) }, p)
   switch (p.type) {
     case 'chat_message':
     case 'event_message': {
@@ -323,7 +307,7 @@ export function message(p: any, venderId: string): Message {
       type: MSG_TYPES[kind] ?? (extractText(body) ? 'text' : 'other'),
       text: extractText(body),
       media: url ? [n.media({ type: 'image', url })] : [],
-      created_at: time(p.timestamp ?? p.datetime ?? p.time),
+      created_at: n.time(p.timestamp ?? p.datetime ?? p.time),
     },
     p,
   )
