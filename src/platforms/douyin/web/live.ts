@@ -1,7 +1,7 @@
 import protobuf from 'protobufjs'
 import { CatbusError } from '../../../core/errors.js'
 import * as n from '../../../core/normalize.js'
-import { urlencode } from '../../../core/py.js'
+import { jsonLoads, urlencode } from '../../../core/py.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { Event, Message, Media } from '../../../core/schemas.js'
 import { openSocket, reconnecting } from '../../../core/stream.js'
@@ -190,7 +190,7 @@ export function imFrame(raw: Uint8Array): Message | null {
   if (type === 50001) return null
   let content: any = {}
   try {
-    content = JSON.parse(m.content ?? '{}')
+    content = jsonLoads(m.content ?? '{}')
   } catch {}
   const media: Media[] = []
   const url = (x: any) => n.url(x?.origin_url_list?.[0] ?? x?.url_list?.[0])

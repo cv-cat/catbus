@@ -627,7 +627,7 @@ describe('kuaishou 归一化', () => {
 })
 
 describe('kuaishou 归一化（真实响应的结构）', () => {
-  it('作品管理的列表：showAtlasIcon 判图集，作者取 userIdStr / userName', async () => {
+  it('作品管理的列表：showAtlasIcon / 不显示时长判图片，publishStatus 4 是仅自己可见，作者取 userIdStr / userName', async () => {
     const norm = await import('../src/platforms/kuaishou/web/normalize.js')
     const row = { workId: '3xfakework0001', title: '', userIdStr: '3xfakeuser0001', userName: '测试用户', uploadTime: 1788067637186, publishStatus: 4, showAtlasIcon: true, playCount: 1 }
     expect(norm.work(row)).toMatchObject({
@@ -635,7 +635,11 @@ describe('kuaishou 归一化（真实响应的结构）', () => {
       kind: 'image',
       author: { id: '3xfakeuser0001', name: '测试用户', url: 'https://www.kuaishou.com/profile/3xfakeuser0001' },
       text: null,
+      status: 'private',
     })
+    // 单图：没有图集图标，但不显示时长；视频有时长
+    expect(norm.work({ ...row, showAtlasIcon: false, showDuration: false, durationSecond: 0 }).kind).toBe('image')
+    expect(norm.work({ ...row, showAtlasIcon: false, showDuration: true, durationSecond: 2 }).kind).toBe('video')
     expect(norm.work({ ...row, showAtlasIcon: false }).kind).toBe('video')
   })
 })

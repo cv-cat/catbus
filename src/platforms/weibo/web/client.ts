@@ -1,7 +1,7 @@
 import type { CookieJar } from '../../../core/cookies.js'
 import { CatbusError } from '../../../core/errors.js'
 import type { HttpClient, HttpRequest, HttpResponse } from '../../../core/http.js'
-import { quote } from '../../../core/py.js'
+import { jsonLoads, quote } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import { authError, httpClient } from '../../../core/toolkit.js'
@@ -96,7 +96,7 @@ export class Weibo {
     const text = await res.text()
     let body: { retcode?: number; msg?: string } | null = null
     try {
-      body = JSON.parse(/\((\{[\s\S]*\})\)/.exec(text)?.[1] ?? 'null')
+      body = jsonLoads(/\((\{[\s\S]*\})\)/.exec(text)?.[1] ?? 'null')
     } catch {}
     if (body?.retcode !== 20000000 || !this.hasSub('cn')) {
       throw new CatbusError('RISK_CONTROL', `生成微博访客身份失败：${body?.msg ?? `HTTP ${res.status}`}`, {
@@ -142,7 +142,7 @@ export class Weibo {
   private async parse<T>(res: HttpResponse): Promise<T> {
     const text = await res.text()
     try {
-      return JSON.parse(text) as T
+      return jsonLoads(text) as T
     } catch {
       riskCheck(res.status)
       throw new CatbusError('UPSTREAM', `微博返回的不是 JSON（HTTP ${res.status}）`, { detail: { status: res.status, body: text.slice(0, 300) } })

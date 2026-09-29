@@ -1,6 +1,6 @@
 import { CatbusError } from '../../../core/errors.js'
 import { parseJson } from '../../../core/http.js'
-import { type Pairs, jsonDumps } from '../../../core/py.js'
+import { jsonDumps, jsonLoads, type Pairs } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { Weibo, WeiboJson } from './client.js'
 import {
@@ -44,7 +44,7 @@ export async function selfInfo(w: Weibo): Promise<SelfInfo | null> {
   if (!raw) return null
   let config: any
   try {
-    config = JSON.parse(raw)
+    config = jsonLoads(raw)
   } catch {
     return null
   }
@@ -99,7 +99,7 @@ export async function mobileDetail(w: Weibo, id: string): Promise<any> {
     throw new CatbusError('UPSTREAM', `微博 ${id} 不存在、已删除或不可见`, { detail: { status: page.status } })
   }
   try {
-    return JSON.parse(raw)
+    return jsonLoads(raw)
   } catch {
     throw new CatbusError('UPSTREAM', '无法解析微博详情页', { detail: { status: page.status } })
   }

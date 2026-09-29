@@ -1,6 +1,6 @@
 import { CatbusError } from '../../../core/errors.js'
 import type { LocalMedia } from '../../../core/files.js'
-import { compactJson, parseQsl, urlencode } from '../../../core/py.js'
+import { compactJson, jsonLoads, parseQsl, urlencode } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { type Douyin, type DyJson, riskJson } from './client.js'
 import { ecdsaSign, sigv4, type Sts, VOD_HOST } from './crypto.js'
@@ -224,7 +224,7 @@ async function applyUpload(d: Douyin, sts: ImSts, fileType: string, size: number
   ]
   if (gcm) query.push(['OpenGcmEnc', 'true'])
   const res = await d.plain({ url: `https://${VOD_HOST}/`, headers: gatewayHeaders(sigv4(sts, 'GET', query, '', 'vod')), query })
-  const body = JSON.parse(await res.text())
+  const body = jsonLoads(await res.text())
   const node = body.Result?.InnerUploadAddress?.UploadNodes?.[0]
   const store = node?.StoreInfos?.[0]
   if (!store) throw new CatbusError('UPSTREAM', `ApplyUploadInner(${fileType}) 失败`, { detail: { error: body.ResponseMetadata?.Error ?? null } })
@@ -242,7 +242,7 @@ async function commitUpload(d: Douyin, sts: ImSts, node: TosNode, functions: unk
     ['SpaceName', sts.space_name],
   ]
   const res = await d.plain({ method: 'POST', url: `https://${VOD_HOST}/`, headers: gatewayHeaders(sigv4(sts, 'POST', query, body, 'vod'), 'text/plain;charset=UTF-8'), query, body })
-  const payload = JSON.parse(await res.text())
+  const payload = jsonLoads(await res.text())
   const item = payload.Result?.Results?.[0] ?? payload.Result
   if (!item) throw new CatbusError('UPSTREAM', 'CommitUploadInner 失败', { detail: { error: payload.ResponseMetadata?.Error ?? null } })
   return item

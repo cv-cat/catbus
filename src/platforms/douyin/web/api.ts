@@ -1,4 +1,4 @@
-import { jsonDumps, quote, urlencode } from '../../../core/py.js'
+import { jsonDumps, jsonLoads, quote, urlencode } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { authError } from '../../../core/toolkit.js'
 import { type Douyin, type DyJson, riskJson } from './client.js'
@@ -238,7 +238,7 @@ export async function mySecUid(d: Douyin): Promise<{ secUid: string; user: any }
       ],
       timeout: 20,
     })
-    const user = (JSON.parse(await res.text()) ?? {}).user ?? {}
+    const user = (jsonLoads(await res.text()) ?? {}).user ?? {}
     if (user.sec_uid) return { secUid: user.sec_uid, user }
   } catch {}
   const res = await d.request({ url: `${WWW}/user/self`, headers: headers('GET').list(), query: [['from_tab_name', 'main']] })
@@ -914,7 +914,7 @@ export async function serverCert(d: Douyin, aid: number | string, cookieStr: str
   h.push(['content-type', 'application/x-www-form-urlencoded'], ['cookie', cookieStr])
   h.push(['accept-language', 'zh-CN,zh;q=0.9'], ['origin', origin], ['priority', 'u=1, i'], ['sec-fetch-dest', 'empty'], ['sec-fetch-mode', 'cors'], ['sec-fetch-site', 'same-origin'])
   const res = await d.http.request({ method: 'POST', url, headers: h, body: `server_data=1,aid=${aid}`, timeout: 15 })
-  const body = JSON.parse(await res.text())
+  const body = jsonLoads(await res.text())
   if (body.message !== 'success') throw new Error(`获取服务端证书失败：${body.message ?? ''}`)
   const cert = body.data?.server_cert
   if (!cert) throw new Error('服务端证书为空')

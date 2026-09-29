@@ -148,6 +148,16 @@ function dumpString(s: string, ensureAscii: boolean): string {
 }
 
 /**
+ * `json.loads`：与 Python 一样保留大整数。超出 JS 安全整数范围（2^53）的整数（各平台的 64 位 ID，
+ * 例如 TikTok 的 collectionId）保留成原文字符串，不按 double 取近似值；其余与 JSON.parse 相同。
+ */
+export function jsonLoads<T = any>(text: string): T {
+  return JSON.parse(text, (_key, value, context?: { source?: string }) =>
+    typeof value === 'number' && !Number.isSafeInteger(value) && context?.source != null && /^-?\d+$/.test(context.source) ? context.source : value,
+  ) as T
+}
+
+/**
  * `json.dumps(value, separators=..., ensure_ascii=...)`。对象按插入顺序输出，与 Python dict 一致。
  * 注意 JS 对象里形如整数的键（如 `"3064"`）总是排在最前；需要精确键序时传 Map。
  */

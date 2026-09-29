@@ -1,5 +1,5 @@
 import { CatbusError } from '../../../core/errors.js'
-import { quote } from '../../../core/py.js'
+import { jsonLoads, quote } from '../../../core/py.js'
 import type { Douyin } from './client.js'
 import { crc32Hex } from './crypto.js'
 import { CREATOR, PROFILE, WWW } from './profile.js'
@@ -68,7 +68,7 @@ async function tosPost(d: Douyin, style: TosStyle, url: string, h: [string, stri
   const res = await d.plain({ method: 'POST', url, headers: h, body: data, timeout: 300 })
   let body: any
   try {
-    body = JSON.parse(await res.text())
+    body = jsonLoads(await res.text())
   } catch {
     throw new CatbusError('UPSTREAM', `${style.label} 返回的不是 JSON（HTTP ${res.status}）`)
   }

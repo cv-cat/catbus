@@ -12,7 +12,7 @@ import {
 import type { CookieJar } from './cookies.js'
 import { CatbusError } from './errors.js'
 import type { Logger } from './log.js'
-import { jsonDumps, type PairsInit, parseQsl, pyStr, requoteUri, toPairs, urlencode } from './py.js'
+import { jsonDumps, jsonLoads, type PairsInit, parseQsl, pyStr, requoteUri, toPairs, urlencode } from './py.js'
 
 // wreq-js 默认读 HTTP(S)_PROXY 和系统代理。代理只能显式配置（AGENTS 5.5），这里全部关掉，
 // 只通过 transport 的 proxy 传入。cli/main.ts 在加载任何模块前也会设置一次。
@@ -353,7 +353,7 @@ function decodeByCharset(res: HttpResponse): HttpResponse {
 export async function parseJson<T>(res: HttpResponse): Promise<T> {
   const text = await res.text()
   try {
-    return JSON.parse(text) as T
+    return jsonLoads<T>(text)
   } catch {
     throw new CatbusError('UPSTREAM', `平台返回的不是 JSON（HTTP ${res.status}）`, {
       detail: { status: res.status, body: text.slice(0, 300) },
@@ -367,7 +367,7 @@ export function parseJsonp(text: string | null | undefined): any {
   const t = text.trim()
   const m = /^[^({["]*\(([\s\S]*)\)[;\s]*$/.exec(t)
   try {
-    return JSON.parse(m ? m[1]! : t)
+    return jsonLoads(m ? m[1]! : t)
   } catch {
     return null
   }

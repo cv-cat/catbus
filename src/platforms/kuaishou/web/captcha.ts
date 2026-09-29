@@ -1,6 +1,6 @@
 import { CatbusError } from '../../../core/errors.js'
 import type { HeaderPairs } from '../../../core/http.js'
-import { compactJson, parseQsl, pyFloatStr, pyRound, quote } from '../../../core/py.js'
+import { compactJson, jsonLoads, parseQsl, pyFloatStr, pyRound, quote } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { verifyParam } from './captcha-crypto.js'
 import { captchaExtraParamJson, gpuInfoJson } from './captcha-fp.js'
@@ -253,7 +253,7 @@ export class SlidingCaptcha {
     })
     const text = await res.text()
     try {
-      return JSON.parse(text)
+      return jsonLoads(text)
     } catch {
       return { _status: res.status, _text: text.slice(0, 200) }
     }

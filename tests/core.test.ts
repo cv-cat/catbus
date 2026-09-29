@@ -16,6 +16,7 @@ import { toNetworkError } from '../src/core/http.js'
 import { redact } from '../src/core/log.js'
 import * as n from '../src/core/normalize.js'
 import { describeOption, filter, flagName, parseDuration, PUBLISH } from '../src/core/options.js'
+import { jsonLoads } from '../src/core/py.js'
 import { loadScript } from '../src/core/vm.js'
 import { checkMsgSend } from '../src/core/vocab.js'
 import { useTempHome } from './helpers.js'
@@ -344,5 +345,18 @@ describe('CookieJar.header / hash', () => {
     expect(md5Hex('catbus')).toBe(createHash('md5').update('catbus').digest('hex'))
     expect(sha256Hex(new Uint8Array([1, 2]))).toBe(createHash('sha256').update(Buffer.from([1, 2])).digest('hex'))
     expect(hmacSha256Hex('k', 'v')).toBe(createHmac('sha256', 'k').update('v').digest('hex'))
+  })
+})
+
+describe('jsonLoads', () => {
+  it('超出安全整数范围的整数保留成原文字符串（与 Python json.loads 一样不丢精度），其余同 JSON.parse', () => {
+    expect(jsonLoads('{"id":7690845662544301123,"n":12,"f":1.5,"neg":-9007199254740993,"list":[9007199254740993,1e400]}')).toEqual({
+      id: '7690845662544301123',
+      n: 12,
+      f: 1.5,
+      neg: '-9007199254740993',
+      list: ['9007199254740993', Infinity],
+    })
+    expect(jsonLoads('"x"')).toBe('x')
   })
 })

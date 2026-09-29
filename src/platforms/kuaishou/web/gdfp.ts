@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { CatbusError } from '../../../core/errors.js'
 import { md5Hex } from '../../../core/hash.js'
 import type { HttpResponse } from '../../../core/http.js'
-import { compactJson } from '../../../core/py.js'
+import { compactJson, jsonLoads } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { Ks } from './client.js'
 import { ACCEPT_ENCODING, ACCEPT_LANGUAGE, CAPTCHA_HOST, PROFILE, RESOLUTION } from './profile.js'
@@ -363,7 +363,7 @@ export function parseInitResponse(resp: any): Record<string, any> {
   const blob = String(resp?.antispamPluginRsp ?? '')
   if (!blob) return {}
   try {
-    return JSON.parse(Buffer.from(blob, 'base64').toString('utf8'))
+    return jsonLoads(Buffer.from(blob, 'base64').toString('utf8'))
   } catch {
     return {}
   }
@@ -376,7 +376,7 @@ async function validate(res: HttpResponse, role: string, expected: string): Prom
   if (type !== RESPONSE_CONTENT_TYPE) throw fail(`content-type 偏离：${type}`)
   const raw = await res.text()
   if (raw !== expected) throw fail(`响应体偏离：${raw.slice(0, 200)}`)
-  return JSON.parse(raw)
+  return jsonLoads(raw)
 }
 
 export interface ReportInput {

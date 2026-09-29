@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { CatbusError } from '../../../core/errors.js'
 import type { HttpResponse } from '../../../core/http.js'
 import { staticFile } from '../../../core/paths.js'
-import { compactJson, jsonDumps, parseQsl, quote, urlencode } from '../../../core/py.js'
+import { compactJson, jsonDumps, jsonLoads, parseQsl, quote, urlencode } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import * as api from './api.js'
 import type { Douyin } from './client.js'
@@ -621,7 +621,7 @@ export class Passport {
       await this.absorb(res, { ticket: true, secTs: true })
       const text = await res.text()
       if (text.trimStart().startsWith('{')) {
-        const body = JSON.parse(text)
+        const body = jsonLoads(text)
         raiseIfBlocked('get_qrcode/', body)
         return body
       }
@@ -657,7 +657,7 @@ export class Passport {
     const raw = (await res.text()).trim()
     if (!raw) return { data: { error_code: 7, description: 'empty response from QR poll edge' }, message: 'retry' }
     if (!raw.startsWith('{')) throw new CatbusError('RISK_CONTROL', `check_qrconnect 返回的不是 JSON（HTTP ${res.status}），可能命中登录风控页`, { detail: { kind: 'blocked' } })
-    const body = JSON.parse(raw)
+    const body = jsonLoads(raw)
     if (body.data?.status === 'expired') {
       this.qrRefreshReady = true
       this.setdefault('download_guide', downloadGuide('1'))
@@ -834,7 +834,7 @@ export class Passport {
       'sms',
     )
     await this.absorb(res)
-    const body = JSON.parse(await res.text())
+    const body = jsonLoads(await res.text())
     this.smsSentAt = rand.now()
     if (body.error_code && body.error_code !== 0) throw smsError(body)
     if (body.data?.error_code) throw smsError(body.data)
@@ -856,7 +856,7 @@ export class Passport {
       'sms_login',
     )
     await this.absorb(res, { ticket: true, secTs: true })
-    const body = JSON.parse(await res.text())
+    const body = jsonLoads(await res.text())
     const err = body.data?.error_code ?? body.error_code
     if (err) throw smsError(body.data ?? body)
     await this.finish(body.data?.redirect_url ?? body.redirect_url)
@@ -960,7 +960,7 @@ export class Passport {
       const text = await res.text()
       if (text.trimStart().startsWith('{')) {
         try {
-          return JSON.parse(text)
+          return jsonLoads(text)
         } catch {}
       }
       if (attempt === 0 && this.solveGfkadpd(text)) continue
@@ -1125,7 +1125,7 @@ function lastJson(text: string): any {
     const s = line.trim()
     if (!s) continue
     try {
-      return JSON.parse(s)
+      return jsonLoads(s)
     } catch {}
   }
   return null
@@ -1134,7 +1134,7 @@ function lastJson(text: string): any {
 async function jsonOrRaw(res: HttpResponse): Promise<any> {
   const text = await res.text()
   try {
-    return JSON.parse(text)
+    return jsonLoads(text)
   } catch {
     return { raw: text.slice(0, 200), status: res.status }
   }
@@ -1163,7 +1163,7 @@ export function applyTicketGuard(d: Douyin, res: HttpResponse): boolean {
   if (!raw) raw = /(?:^|\s)bd_ticket_guard_server_data=([^;]*)/.exec(res.headers.getSetCookie().join('\n'))?.[1] ?? null
   if (!raw) return false
   try {
-    const info = JSON.parse(Buffer.from(decodeURIComponent(raw), 'base64').toString('utf8'))
+    const info = jsonLoads(Buffer.from(decodeURIComponent(raw), 'base64').toString('utf8'))
     if (!info.ticket) return false
     Object.assign(d.tokens, { ticket: info.ticket, ts_sign: info.ts_sign ?? '', client_cert: info.client_cert ?? '' })
     return true

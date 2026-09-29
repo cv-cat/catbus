@@ -1,6 +1,6 @@
 import { CatbusError } from '../../../core/errors.js'
 import type { HttpResponse } from '../../../core/http.js'
-import { compactJson, quote } from '../../../core/py.js'
+import { compactJson, jsonLoads, quote } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { type Json, type Ks, liveContext } from './client.js'
 import * as gql from './gql.js'
@@ -430,7 +430,7 @@ async function checkLogout(res: HttpResponse, kind: 'passport' | 'live', require
   const text = await res.text()
   let payload: Json
   try {
-    payload = JSON.parse(text)
+    payload = jsonLoads(text)
   } catch {
     payload = { result: -1, error: text.slice(0, 500) }
   }
@@ -786,7 +786,7 @@ async function uploadCall(ks: Ks, method: string, base: string, path: string, qu
   if (res.status >= 400) throw new CatbusError('UPSTREAM', `上传失败：HTTP ${res.status}`, { detail: { status: res.status, path } })
   const text = await res.text()
   try {
-    return JSON.parse(text)
+    return jsonLoads(text)
   } catch {
     return { raw: text }
   }

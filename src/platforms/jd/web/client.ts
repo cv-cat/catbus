@@ -2,7 +2,7 @@ import { createCipheriv } from 'node:crypto'
 import { CatbusError } from '../../../core/errors.js'
 import * as n from '../../../core/normalize.js'
 import { HttpClient, type HttpRequest, type HttpResponse, parseJsonp } from '../../../core/http.js'
-import { compactJson, jsonDumps, type Pairs, quote, type Scalar, unquote } from '../../../core/py.js'
+import { compactJson, jsonDumps, jsonLoads, type Pairs, quote, type Scalar, unquote } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { Cookie } from '../../../core/schemas.js'
@@ -397,7 +397,7 @@ function splitN(s: string, sep: string, n: number): string[] {
 export async function parse(res: HttpResponse): Promise<any> {
   const text = await res.text()
   try {
-    return JSON.parse(text)
+    return jsonLoads(text)
   } catch {
     const p = parseJsonp(text)
     if (p != null) return p
@@ -412,7 +412,7 @@ export function decodeDisposal(raw: string | null): any {
     const chunk = cut ? raw.slice(0, raw.length - cut) : raw
     try {
       const b = Buffer.from(chunk.replaceAll('-', '+').replaceAll('_', '/'), 'base64')
-      return JSON.parse(b.toString('utf8'))
+      return jsonLoads(b.toString('utf8'))
     } catch {}
   }
   return undefined
@@ -425,7 +425,7 @@ function readDisposal(res: HttpResponse): string | null {
   if (info === undefined) return `x-rp-content 解不开：${raw.slice(0, 60)}`
   let ev: any = {}
   try {
-    ev = JSON.parse(info?.disposal?.evContent || '{}')
+    ev = jsonLoads(info?.disposal?.evContent || '{}')
   } catch {}
   return `code=${info?.code} ${ev.title ?? ''} ${ev.evTypeTip ?? ''}（接口 ${ev.evApi ?? ''}）`
 }
@@ -457,7 +457,7 @@ export function checkRisk(jd: Jd, res: any): void {
   if (header) {
     let ev: any = {}
     try {
-      ev = JSON.parse(header.disposal?.evContent || '{}')
+      ev = jsonLoads(header.disposal?.evContent || '{}')
     } catch {}
     throw new CatbusError('RISK_CONTROL', `京东要求人机验证（x-rp-content code=${header.code ?? '?'}）：账号或 IP 被风控标记了`, {
       hint: '等风控解除（十几分钟到几小时）后再试',

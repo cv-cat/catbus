@@ -1,7 +1,7 @@
 import type { CookieJar } from '../../../core/cookies.js'
 import { CatbusError } from '../../../core/errors.js'
 import { type HttpClient, type HttpRequest, type HttpResponse, type MultipartPart, parseJson } from '../../../core/http.js'
-import type { Pairs } from '../../../core/py.js'
+import { jsonLoads, type Pairs } from '../../../core/py.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import { authError, httpClient } from '../../../core/toolkit.js'
 import { GraphQLOperation } from './graphql.js'
@@ -183,7 +183,7 @@ export class XClient {
   private httpError(status: number, text: string, operation: string): CatbusError {
     let errors: unknown
     try {
-      errors = JSON.parse(text)?.errors
+      errors = jsonLoads(text)?.errors
     } catch {}
     if (Array.isArray(errors) && errors[0]?.code != null) return this.mapErrors(new GraphQLError(operation, errors, text.slice(0, 300)), status)
     if (status === 401 || status === 403) return authError(this.ctx)

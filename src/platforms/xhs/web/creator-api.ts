@@ -2,7 +2,7 @@ import { CookieJar } from '../../../core/cookies.js'
 import { CatbusError } from '../../../core/errors.js'
 import { imageSize } from '../../../core/image.js'
 import { mp4AvgFrameRate, mp4VideoTrack } from '../../../core/mp4.js'
-import { pyFloatStr, pyRound } from '../../../core/py.js'
+import { jsonLoads, pyFloatStr, pyRound } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { Credential } from '../../../core/schemas.js'
@@ -339,7 +339,7 @@ type Kind = keyof typeof CREATOR_ORDER
  */
 async function lenientJson(res: Awaited<ReturnType<Creator['send']>>): Promise<any> {
   try {
-    return JSON.parse(await res.text())
+    return jsonLoads(await res.text())
   } catch {
     return {}
   }

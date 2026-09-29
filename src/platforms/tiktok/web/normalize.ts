@@ -1,4 +1,5 @@
 import * as n from '../../../core/normalize.js'
+import { jsonLoads } from '../../../core/py.js'
 import type { Category, Comment, Conversation, Event, Folder, Gift, Item, Live, Media, Message, Notice, Poi, Rank, User, UserRef } from '../../../core/schemas.js'
 import { ORIGIN, SHOP } from './profile.js'
 import type { ImTextMessage, LiveEvent, LiveUser, PulledMessage } from './wire.js'
@@ -210,7 +211,7 @@ const PROTOCOLS = ['flv', 'hls', 'cmaf', 'dash', 'lls']
 function parseJson(v: unknown): any {
   if (typeof v !== 'string') return v ?? null
   try {
-    return JSON.parse(v)
+    return jsonLoads(v)
   } catch {
     return null
   }

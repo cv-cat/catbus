@@ -7,6 +7,7 @@ import { parseJson } from '../../../core/http.js'
 import { cookieCredential, finishLogin, freshCredential, loginContext, poll, readPassword, showQrcode, smsLogin } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import * as pb from '../../../core/pb.js'
+import { jsonLoads } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { AuthStatus, Credential, Danmaku, Media, Subtitle } from '../../../core/schemas.js'
@@ -792,7 +793,7 @@ export function unpack(data: Buffer, out: [number, unknown][] = []): [number, un
     if (ver === 2) unpack(inflateSync(body), out)
     else if (ver === 3) unpack(brotliDecompressSync(body), out)
     else if (ver === 1) out.push([op, body.length >= 4 ? body.readUInt32BE(0) : 0])
-    else out.push([op, body.length ? JSON.parse(body.toString('utf8')) : {}])
+    else out.push([op, body.length ? jsonLoads(body.toString('utf8')) : {}])
     offset += len
   }
   return out

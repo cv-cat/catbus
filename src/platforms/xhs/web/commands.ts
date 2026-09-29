@@ -3,6 +3,7 @@ import { imageSize } from '../../../core/image.js'
 import { downloadMedia, type LocalMedia, readMedia } from '../../../core/files.js'
 import { cookieCredential, finishLogin, freshCredential, interactive, loginContext, poll, prompt, showQrcode, smsLogin } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
+import { jsonLoads } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { AuthStatus, Category, Conversation, Credential, Event, Media, Message, Notice, NoticeCount } from '../../../core/schemas.js'
@@ -895,7 +896,7 @@ function contentType(v: any): number {
   const top = [v?.type, v?.content_type].find((x) => x != null && x !== '' && Number.isFinite(Number(x)))
   if (top != null) return Number(top)
   try {
-    return Number(JSON.parse(v?.content)?.content_type ?? 1)
+    return Number(jsonLoads(v?.content)?.content_type ?? 1)
   } catch {
     return 1
   }

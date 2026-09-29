@@ -985,6 +985,9 @@ describe('tiktok 补齐的能力：翻页、参数与解析', () => {
     const dflt = sessionCtx({ platform: 'tiktok', args: { name: '收藏' } })
     const r2 = await withBodies(['{"statusCode":0}', '{"statusCode":0,"collectionId":"7394627756635573022"}'], async () => folderCreate(dflt))
     expect(new URL(r2.requests[1]!.url).searchParams.get('collectionStatus')).toBe('1')
+    // 真机回包里的 collectionId 是不带引号的 64 位整数：原样保留，不能按 double 取近似（7690845662544301123 → …1000）
+    const big = await withBodies(['{"statusCode":0}', '{"statusCode":0,"collection":{"collectionId":7690845662544301123}}'], async () => folderCreate(dflt))
+    expect(big.result).toMatchObject({ id: '7690845662544301123' })
     // 回包里没有收藏夹 id：报 UPSTREAM，不输出空 id
     await expect(withBodies(['{"statusCode":0}', '{"statusCode":0}'], async () => folderCreate(dflt))).rejects.toMatchObject({ code: 'UPSTREAM' })
     // friends 在注册表里就没有：dispatch 报 UNSUPPORTED

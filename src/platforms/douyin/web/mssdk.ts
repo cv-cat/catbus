@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { staticFile } from '../../../core/paths.js'
-import { compactJson } from '../../../core/py.js'
+import { compactJson, jsonLoads } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { APP_VERSION, PROFILE } from './profile.js'
 import { encodeStrData } from './sign.js'
@@ -67,7 +67,7 @@ export function commonReport(aid = 6383, pageId = 6241, sms = false): string {
   n.audio.audioContext.state = 'running'
   let custom: Record<string, any>
   try {
-    custom = typeof n.custom === 'string' ? JSON.parse(n.custom) : { ...(n.custom ?? {}) }
+    custom = typeof n.custom === 'string' ? jsonLoads(n.custom) : { ...(n.custom ?? {}) }
   } catch {
     custom = {}
   }

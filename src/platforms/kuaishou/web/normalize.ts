@@ -195,7 +195,9 @@ function workStatus(v: any): ItemStatus | null {
   if (v?.photoStatus === 2 || v?.privacy === 2) return 'private'
   if (s === 1 || s === 3) return 'published'
   if (s === 2 || s === 0) return 'reviewing'
-  if (s < 0 || s === 4) return 'rejected'
+  // 真机（2026-09-29）：仅自己可见的作品都是 publishStatus 4、judgementStatus 1、没有驳回原因，公开主页上看不到
+  if (s === 4) return 'private'
+  if (s < 0) return 'rejected'
   return null
 }
 
@@ -205,8 +207,9 @@ export function work(v: any): Item {
   return n.item(
     {
       id,
-      // 作品管理的列表没有 photoType，图集靠 showAtlasIcon 判断
-      kind: first(v, 'atlasId') || v?.photoType === 1 || v?.showAtlasIcon === true ? 'image' : 'video',
+      // 作品管理的列表没有 photoType：多图图集有 showAtlasIcon；单图没有图集图标，但不显示时长、时长为 0（视频是 showDuration: true）
+      kind:
+        first(v, 'atlasId') || v?.photoType === 1 || v?.showAtlasIcon === true || (v?.showDuration === false && !Number(v?.durationSecond)) ? 'image' : 'video',
       url: first(v, 'workId', 'photoId', 'photoIdStr') ? photoUrl(id) : null,
       text: n.str(first(v, 'caption', 'title')),
       author: v?.userIdStr ? n.userRef({ id: String(v.userIdStr), name: n.str(v.userName), url: profileUrl(v.userIdStr) }) : null,

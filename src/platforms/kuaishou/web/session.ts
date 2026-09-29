@@ -1,6 +1,6 @@
 import { CatbusError } from '../../../core/errors.js'
 import type { HttpClient, HttpResponse } from '../../../core/http.js'
-import { compactJson } from '../../../core/py.js'
+import { compactJson, jsonLoads } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { genFingerprintReport, genKwfv1, genKwscode } from './oracle.js'
 import {
@@ -113,14 +113,14 @@ export async function fetchConfig(t: Transport, did: string, product: string, re
   const text = await res.text()
   let envelope: any
   try {
-    envelope = JSON.parse(text)
+    envelope = jsonLoads(text)
   } catch {
     throw new CatbusError('UPSTREAM', `gdfp /s/w/c 返回的不是 JSON（HTTP ${res.status}）`, { detail: { kind: 'webweapon', body: text.slice(0, 200) } })
   }
   if (envelope?.result !== 1) {
     throw new CatbusError('UPSTREAM', `gdfp 换票失败：result=${envelope?.result} ${envelope?.error_msg ?? ''}`, { detail: { kind: 'webweapon', result: envelope?.result } })
   }
-  const data = JSON.parse(weaponDecrypt(String(envelope.dataRsp)))
+  const data = jsonLoads(weaponDecrypt(String(envelope.dataRsp)))
   return { fpUrl: String(data.fpUrl ?? ''), signUrl: String(data.signUrl ?? ''), secToken: String(data.secToken ?? ''), raw: data }
 }
 

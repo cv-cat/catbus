@@ -1,4 +1,4 @@
-import { quote } from '../../../core/py.js'
+import { jsonLoads, quote } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { openSocket, type Socket } from '../../../core/stream.js'
 import type { Jd } from './client.js'
@@ -132,7 +132,7 @@ export class ChatClient {
 /** 下行帧：单个对象或数组。 */
 export function packets(raw: string | Buffer): any[] {
   try {
-    const v = JSON.parse(typeof raw === 'string' ? raw : raw.toString('utf8'))
+    const v = jsonLoads(typeof raw === 'string' ? raw : raw.toString('utf8'))
     return Array.isArray(v) ? v : [v]
   } catch {
     return []

@@ -1,7 +1,7 @@
 import { CatbusError } from '../../../core/errors.js'
 import { type HttpResponse, parseJsonp } from '../../../core/http.js'
 import { unescapeHtml } from '../../../core/normalize.js'
-import { type Pairs, pyFloatStr, type Scalar } from '../../../core/py.js'
+import { jsonLoads, type Pairs, pyFloatStr, type Scalar } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { type AksState, encryptQuery } from './aks.js'
 import type { Jd } from './client.js'
@@ -36,13 +36,13 @@ const aksState = (jd: Jd): AksState => ((jd.ctx.credential.device.aks as AksStat
 export async function parseResponse(res: HttpResponse): Promise<any> {
   const text = await res.text()
   try {
-    const v = JSON.parse(text)
+    const v = jsonLoads(text)
     if (v && typeof v === 'object' && !Array.isArray(v)) return v
   } catch {}
   let t = (text ?? '').trim().replace(/;+$/, '')
   if (t.startsWith('(') && t.endsWith(')')) t = t.slice(1, -1).trim()
   try {
-    const v = JSON.parse(t)
+    const v = jsonLoads(t)
     return v && typeof v === 'object' && !Array.isArray(v) ? v : {}
   } catch {
     return { _invalid_response_length: t.length }
@@ -106,7 +106,7 @@ export async function publicKey(jd: Jd, trace: Record<string, string>): Promise<
   const text = await res.text()
   let payload: any
   try {
-    payload = JSON.parse(text)
+    payload = jsonLoads(text)
   } catch {
     throw new CatbusError('UPSTREAM', `publicKey/init 返回非 JSON：${text.slice(0, 200)}`)
   }
@@ -141,7 +141,7 @@ export async function validateTicket(jd: Jd, ticket: string, trace: TraceContext
   const text = await res.text()
   let json: any
   try {
-    json = JSON.parse(text)
+    json = jsonLoads(text)
   } catch {
     json = { raw: text.slice(0, 500) }
   }
@@ -294,7 +294,7 @@ async function loadSsoDomains(jd: Jd, ctx: SmsContext): Promise<void> {
           const quoted = m ? m[1]!.trim() : ''
           if (quoted.length >= 2 && quoted[0] === quoted[quoted.length - 1] && (quoted[0] === "'" || quoted[0] === '"')) outer = quoted.slice(1, -1).replaceAll("\\'", "'")
         }
-        const payload = typeof outer === 'string' ? JSON.parse(outer) : outer
+        const payload = typeof outer === 'string' ? jsonLoads(outer) : outer
         const ok = probe.status === 200 && payload && typeof payload === 'object' && payload.result === 'success'
         return { domain: ok ? domain : '', probe }
       } catch {
@@ -501,7 +501,7 @@ function parseCandidate(candidate: string): Record<string, any> | null {
     if (transform === 'decodeURIComponent' || transform === 'decodeURI') serialized = decodeURIComponent(serialized)
     else if (transform === 'atob') serialized = Buffer.from(serialized, 'base64').toString('utf8')
     try {
-      const obj = JSON.parse(serialized)
+      const obj = jsonLoads(serialized)
       if (obj && typeof obj === 'object' && !Array.isArray(obj) && Object.keys(obj).length) return obj
     } catch {}
   }

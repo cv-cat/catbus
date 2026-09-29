@@ -1,7 +1,7 @@
 import type { CookieJar } from '../../../core/cookies.js'
 import { CatbusError } from '../../../core/errors.js'
 import type { HttpClient, HttpRequest, HttpResponse } from '../../../core/http.js'
-import { unquote } from '../../../core/py.js'
+import { jsonLoads, unquote } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import { authError, httpClient, isGuest } from '../../../core/toolkit.js'
@@ -197,7 +197,7 @@ export class TikTok {
         for (const [key, value] of Object.entries(storage)) {
           if (!key.startsWith('__tea_cache_tokens_')) continue
           try {
-            const id = String(JSON.parse(String(value)).web_id ?? '')
+            const id = String(jsonLoads(String(value)).web_id ?? '')
             if (/^\d{16,20}$/.test(id) && !candidates.includes(id)) candidates.push(id)
           } catch {}
         }
@@ -354,7 +354,7 @@ export class TikTok {
     }
     let body: any
     try {
-      body = JSON.parse(text)
+      body = jsonLoads(text)
     } catch {
       throw new CatbusError('UPSTREAM', `TikTok 返回的不是 JSON（HTTP ${res.status}）`, { detail: { status: res.status, path: o.path, body: text.slice(0, 300) } })
     }
@@ -405,7 +405,7 @@ export function hydration(html: string): Record<string, any> | null {
   const m = /<script[^>]*id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([\s\S]*?)<\/script>/.exec(html)
   if (!m) return null
   try {
-    return JSON.parse(m[1]!).__DEFAULT_SCOPE__ ?? null
+    return jsonLoads(m[1]!).__DEFAULT_SCOPE__ ?? null
   } catch {
     return null
   }

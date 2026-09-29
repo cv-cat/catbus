@@ -1,6 +1,6 @@
 import { constants, createPublicKey, publicEncrypt } from 'node:crypto'
 import { CatbusError } from '../../../core/errors.js'
-import { compactJson } from '../../../core/py.js'
+import { compactJson, jsonLoads } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { openSocket, type Socket } from '../../../core/stream.js'
 import { celestialLt } from './api.js'
@@ -135,7 +135,7 @@ export function decodeChat(data: Uint8Array): { message?: InboundChat; ack?: Cha
     const payload = text(f, 5)
     let json: any = null
     try {
-      json = JSON.parse(payload)
+      json = jsonLoads(payload)
     } catch {}
     out.message = { mid: text(f, 1), messageId: text(f, 2), ts: int(f, 3), payload, json }
   }
@@ -157,7 +157,7 @@ export function innerText(body: unknown): string {
     }
     if (typeof content === 'string') {
       try {
-        const parsed = JSON.parse(content)
+        const parsed = jsonLoads(content)
         if (parsed && typeof parsed === 'object') {
           content = parsed
           continue
@@ -266,10 +266,10 @@ export function decodeRoomPush(frame: any): any[] {
   for (const item of d.b) {
     if (typeof item?.d !== 'string') continue
     try {
-      const payload = JSON.parse(Buffer.from(item.d, 'base64').toString('utf8'))
+      const payload = jsonLoads(Buffer.from(item.d, 'base64').toString('utf8'))
       if (typeof payload?.customData === 'string') {
         try {
-          payload.customData = JSON.parse(payload.customData)
+          payload.customData = jsonLoads(payload.customData)
         } catch {}
       }
       out.push(payload)
@@ -355,7 +355,7 @@ export async function connectPush(p: Pc, signal: AbortSignal, roomId?: string): 
   const pending: any[] = []
   const parse = (raw: string | Buffer) => {
     try {
-      return JSON.parse(String(raw))
+      return jsonLoads(String(raw))
     } catch {
       return { raw: String(raw) }
     }

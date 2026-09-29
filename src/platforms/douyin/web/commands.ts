@@ -2,6 +2,7 @@ import { CatbusError } from '../../../core/errors.js'
 import { downloadMedia, readMedia } from '../../../core/files.js'
 import { cookieCredential, finishLogin, freshCredential, showQrcode, smsLogin } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
+import { jsonLoads } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { AuthStatus, Credential, Item, Media, Message, User } from '../../../core/schemas.js'
@@ -270,7 +271,7 @@ export async function feedList(ctx: Ctx) {
   const index = cursor(ctx, '2')
   const body = check(ctx, await api.feed(d, '20', index))
   // 推荐流现在放在 cards[].aweme（JSON 串）里，老的 aweme_list 兜底
-  const cards: any[] = (body.cards ?? []).map((c: any) => (typeof c.aweme === 'string' ? JSON.parse(c.aweme) : c.aweme)).filter((a: any) => a?.aweme_id)
+  const cards: any[] = (body.cards ?? []).map((c: any) => (typeof c.aweme === 'string' ? jsonLoads(c.aweme) : c.aweme)).filter((a: any) => a?.aweme_id)
   const list = [...(body.aweme_list ?? []), ...cards].map(norm.aweme)
   return paged(list, Number(index) + 1, body.has_more == null ? list.length > 0 : more(body.has_more))
 }

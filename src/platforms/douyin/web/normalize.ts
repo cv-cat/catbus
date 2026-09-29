@@ -1,4 +1,5 @@
 import * as n from '../../../core/normalize.js'
+import { jsonLoads } from '../../../core/py.js'
 import type { Comment, Event, Item, ItemStatus, Live, Media, Notice, Rank, User, UserRef } from '../../../core/schemas.js'
 import { LIVE, WWW } from './profile.js'
 
@@ -157,7 +158,7 @@ export function searchLive(item: any): Live | null {
   const lives = item?.lives ?? item
   let room: any = {}
   try {
-    room = typeof lives?.rawdata === 'string' ? JSON.parse(lives.rawdata) : (lives?.rawdata ?? {})
+    room = typeof lives?.rawdata === 'string' ? jsonLoads(lives.rawdata) : (lives?.rawdata ?? {})
   } catch {}
   const owner = room.owner ?? lives?.author ?? {}
   const webRid = owner.web_rid ?? room.web_rid ?? /"web_rid":"(\d+)"/.exec(JSON.stringify(lives ?? {}))?.[1]
@@ -212,12 +213,12 @@ export function liveStreams(body: any): Media[] {
   let data: any = null
   try {
     const raw = stream.live_core_sdk_data?.pull_data?.stream_data
-    data = (typeof raw === 'string' ? JSON.parse(raw) : raw)?.data ?? null
+    data = (typeof raw === 'string' ? jsonLoads(raw) : raw)?.data ?? null
   } catch {}
   for (const [quality, v] of Object.entries<any>(data ?? {})) {
     let params: any = {}
     try {
-      params = typeof v?.main?.sdk_params === 'string' ? JSON.parse(v.main.sdk_params) : (v?.main?.sdk_params ?? {})
+      params = typeof v?.main?.sdk_params === 'string' ? jsonLoads(v.main.sdk_params) : (v?.main?.sdk_params ?? {})
     } catch {}
     push(`${quality}.flv`, v?.main?.flv, v, params.resolution)
     push(`${quality}.hls`, v?.main?.hls, v, params.resolution)

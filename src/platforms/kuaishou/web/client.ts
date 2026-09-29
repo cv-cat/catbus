@@ -1,6 +1,6 @@
 import { CatbusError } from '../../../core/errors.js'
 import { type HeaderPairs, HttpClient, type HttpResponse } from '../../../core/http.js'
-import { compactJson, quote } from '../../../core/py.js'
+import { compactJson, jsonLoads, quote } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { Cookie, Credential } from '../../../core/schemas.js'
@@ -146,7 +146,7 @@ export class Ks {
   async json(res: HttpResponse): Promise<Json> {
     const text = await res.text()
     try {
-      return JSON.parse(text)
+      return jsonLoads(text)
     } catch {
       throw new CatbusError('UPSTREAM', `快手返回的不是 JSON（HTTP ${res.status}）`, { detail: { status: res.status, body: text.slice(0, 300) } })
     }

@@ -1,6 +1,6 @@
 import { CatbusError } from '../../core/errors.js'
 import type { HeaderPairs } from '../../core/http.js'
-import { jsonDumps } from '../../core/py.js'
+import { jsonDumps, jsonLoads } from '../../core/py.js'
 import * as rand from '../../core/rand.js'
 import type { HandlerContext, Page } from '../../core/registry.js'
 import { openSocket, reconnecting } from '../../core/stream.js'
@@ -297,7 +297,7 @@ export class Im {
       for await (const raw of this.socket.messages) {
         let msg: Frame
         try {
-          msg = JSON.parse(typeof raw === 'string' ? raw : Buffer.from(raw).toString('utf8'))
+          msg = jsonLoads(typeof raw === 'string' ? raw : Buffer.from(raw).toString('utf8'))
         } catch {
           continue
         }
@@ -428,13 +428,13 @@ export function* pushedPayloads(frame: any, decrypt: (data: string) => string, c
     const data = entry?.data
     if (typeof data !== 'string') continue
     try {
-      JSON.parse(data)
+      jsonLoads(data)
       continue
     } catch {}
     if (isBase64Json(data)) continue
     let decoded: unknown
     try {
-      decoded = JSON.parse(decrypt(data))
+      decoded = jsonLoads(decrypt(data))
     } catch (err) {
       ctx.log.debug(`推送解码失败：${(err as Error).message}`)
       continue

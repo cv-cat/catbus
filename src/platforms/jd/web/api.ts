@@ -1,6 +1,6 @@
 import { parseJsonp } from '../../../core/http.js'
 import { unescapeHtml } from '../../../core/normalize.js'
-import { quote, urlencode } from '../../../core/py.js'
+import { jsonLoads, quote, urlencode } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { type Jd, searchReferer } from './client.js'
 import { solveCaptcha } from './jcap.js'
@@ -535,7 +535,7 @@ export function verificationUrl(res: any, referer: string): string {
   const disposal = res?.disposal ?? {}
   let ev: any
   try {
-    ev = JSON.parse(disposal.evContent || '{}')
+    ev = jsonLoads(disposal.evContent || '{}')
   } catch {
     return ''
   }
@@ -561,7 +561,7 @@ function riskPageEid(jd: Jd): string {
   const value = String(jd.cookie('unionwsws') ?? '')
   if (!value) return ''
   try {
-    const parsed = JSON.parse(decodeURIComponent(value))
+    const parsed = jsonLoads(decodeURIComponent(value))
     return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? String(parsed.devicefinger ?? '') : ''
   } catch {
     return ''
@@ -576,7 +576,7 @@ export async function solveSearchRisk(jd: Jd, response: any, keyword = '', attem
   if (!disposal || typeof disposal !== 'object') return { code: -1, stage: 'disposal' }
   let event: any
   try {
-    event = JSON.parse(disposal.evContent || '{}')
+    event = jsonLoads(disposal.evContent || '{}')
   } catch {
     return { code: -1, stage: 'disposal' }
   }

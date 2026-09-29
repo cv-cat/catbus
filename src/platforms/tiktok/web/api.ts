@@ -1,5 +1,5 @@
 import { CatbusError } from '../../../core/errors.js'
-import { compactJson, quote } from '../../../core/py.js'
+import { compactJson, jsonLoads, quote } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { hydration, type TikTok } from './client.js'
 import { ORIGIN, Params, type QueryValue, SHOP } from './profile.js'
@@ -1187,7 +1187,7 @@ export async function shopProductDetail(t: TikTok, productUrl: string, productId
   if (!m) throw new CatbusError('UPSTREAM', 'TikTok Shop 页面中没有 __MODERN_ROUTER_DATA__')
   let loader: any
   try {
-    loader = JSON.parse(m[1]!).loaderData
+    loader = jsonLoads(m[1]!).loaderData
   } catch {
     throw new CatbusError('UPSTREAM', 'TikTok Shop SSR loaderData 无法解析')
   }

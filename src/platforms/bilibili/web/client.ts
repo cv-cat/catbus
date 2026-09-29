@@ -1,7 +1,7 @@
 import type { CookieJar } from '../../../core/cookies.js'
 import { CatbusError } from '../../../core/errors.js'
 import { type HttpClient, type HttpRequest, type HttpResponse, parseJson } from '../../../core/http.js'
-import { compactJson, type Pairs } from '../../../core/py.js'
+import { compactJson, jsonLoads, type Pairs } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import { authError, httpClient, isGuest, scope } from '../../../core/toolkit.js'
@@ -258,7 +258,7 @@ export async function retrying(send: () => Promise<HttpResponse>, signal?: Abort
 async function peekCode(res: HttpResponse): Promise<number | undefined> {
   if (!(res.headers.get('content-type') ?? '').includes('json')) return undefined
   try {
-    const body = JSON.parse(await res.clone().text())
+    const body = jsonLoads(await res.clone().text())
     return typeof body?.code === 'number' ? body.code : undefined
   } catch {
     return undefined

@@ -1,6 +1,6 @@
 import { CatbusError } from '../../../core/errors.js'
 import type { LocalMedia } from '../../../core/files.js'
-import { compactJson } from '../../../core/py.js'
+import { compactJson, jsonLoads } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { authError } from '../../../core/toolkit.js'
 import * as api from './api.js'
@@ -183,7 +183,7 @@ async function creatorApi(d: Douyin, method: 'GET' | 'POST', path: string, o: Cr
   const h = await xhrHeaders(d, o.referer ?? POST_VIDEO_REFERER, { contentType: o.contentType, method, first: o.first, bodyLength: bodyBytes?.length })
   const res = await d.request({ method, url: CREATOR + path, headers: h.list(), query, body: bodyBytes })
   try {
-    return JSON.parse(await res.text())
+    return jsonLoads(await res.text())
   } catch {
     throw new CatbusError('UPSTREAM', `creator 接口返回的不是 JSON：${path}（HTTP ${res.status}）`)
   }
@@ -214,10 +214,10 @@ function browserRandomS(d: Douyin): string {
 export async function uploadAuth(d: Douyin, referer = POST_VIDEO_REFERER): Promise<Sts> {
   const h = await xhrHeaders(d, referer)
   const query = await signedParams(d)
-  const body = JSON.parse(await (await d.request({ url: `${CREATOR}/web/api/media/upload/auth/v5/`, headers: h.list(), query })).text())
+  const body = jsonLoads(await (await d.request({ url: `${CREATOR}/web/api/media/upload/auth/v5/`, headers: h.list(), query })).text())
   let sts: Sts
   try {
-    sts = JSON.parse(body.auth)
+    sts = jsonLoads(body.auth)
   } catch {
     throw new CatbusError('UPSTREAM', `获取上传凭证失败：${body.status_msg ?? body.status_code ?? ''}`)
   }
@@ -250,11 +250,11 @@ export async function uploadImage(d: Douyin, sts: Sts, file: LocalMedia, userId 
     ['user_id', userId],
     ['s', browserRandomS(d)],
   ]
-  const apply = JSON.parse(await (await d.plain({ url: `https://${IMAGEX_HOST}/`, headers: gatewayHeaders(sigv4(sts, 'GET', applyQuery)), query: applyQuery })).text())
+  const apply = jsonLoads(await (await d.plain({ url: `https://${IMAGEX_HOST}/`, headers: gatewayHeaders(sigv4(sts, 'GET', applyQuery)), query: applyQuery })).text())
   const addr = apply.Result?.UploadAddress
   const store = addr?.StoreInfos?.[0]
   if (!store) throw new CatbusError('UPSTREAM', 'ApplyImageUpload 失败', { detail: { error: apply.ResponseMetadata?.Error ?? null } })
-  const up = JSON.parse(
+  const up = jsonLoads(
     await (
       await d.plain({
         method: 'POST',
@@ -287,7 +287,7 @@ export async function uploadImage(d: Douyin, sts: Sts, file: LocalMedia, userId 
     ['user_id', userId],
   ]
   const body = compactJson({ SessionKey: addr.SessionKey })
-  const commit = JSON.parse(
+  const commit = jsonLoads(
     await (
       await d.plain({ method: 'POST', url: `https://${IMAGEX_HOST}/`, headers: gatewayHeaders(sigv4(sts, 'POST', commitQuery, body), 'application/json'), query: commitQuery, body })
     ).text(),
@@ -322,7 +322,7 @@ export async function uploadVideo(d: Douyin, sts: Sts, file: LocalMedia, userId:
     ['user_id', userId],
     ['s', browserRandomS(d)],
   ]
-  const apply = JSON.parse(await (await d.plain({ url: `https://${VOD_HOST}/`, headers: gatewayHeaders(sigv4(sts, 'GET', applyQuery, '', 'vod')), query: applyQuery })).text())
+  const apply = jsonLoads(await (await d.plain({ url: `https://${VOD_HOST}/`, headers: gatewayHeaders(sigv4(sts, 'GET', applyQuery, '', 'vod')), query: applyQuery })).text())
   const n = apply.Result?.InnerUploadAddress?.UploadNodes?.[0]
   const store = n?.StoreInfos?.[0]
   if (!store) throw new CatbusError('UPSTREAM', 'ApplyUploadInner 失败', { detail: { error: apply.ResponseMetadata?.Error ?? null } })
@@ -337,7 +337,7 @@ export async function uploadVideo(d: Douyin, sts: Sts, file: LocalMedia, userId:
     ['user_id', userId],
   ]
   const body = compactJson({ SessionKey: node.session_key, Functions: [{ name: 'GetMeta' }, { name: 'Snapshot', input: { SnapshotTime: 0 } }] })
-  const commit = JSON.parse(
+  const commit = jsonLoads(
     await (
       await d.plain({ method: 'POST', url: `https://${VOD_HOST}/`, headers: gatewayHeaders(sigv4(commitSts, 'POST', commitQuery, body, 'vod'), 'text/plain;charset=UTF-8'), query: commitQuery, body })
     ).text(),

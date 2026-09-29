@@ -1,4 +1,5 @@
 import * as n from '../../../core/normalize.js'
+import { jsonLoads } from '../../../core/py.js'
 import type { Item, ItemStatus, Media, Message, User, UserRef } from '../../../core/schemas.js'
 import { plainId } from './im.js'
 import { itemUrl, userUrl } from './profile.js'
@@ -69,7 +70,7 @@ function customData(data: unknown): any {
   const s = String(data)
   for (const text of [s, Buffer.from(s, 'base64').toString('utf8')]) {
     try {
-      return JSON.parse(text)
+      return jsonLoads(text)
     } catch {}
   }
   return null

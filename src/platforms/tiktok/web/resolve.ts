@@ -1,4 +1,5 @@
 import { CatbusError } from '../../../core/errors.js'
+import { jsonLoads } from '../../../core/py.js'
 import * as api from './api.js'
 import { hydration, type TikTok } from './client.js'
 import { ORIGIN } from './profile.js'
@@ -82,7 +83,7 @@ function matchUserDetail(html: string): any {
   const m = /"webapp\.user-detail":(.*?),"webapp\.a-b"/.exec(html)
   if (!m) return null
   try {
-    return JSON.parse(m[1]!)
+    return jsonLoads(m[1]!)
   } catch {
     return null
   }

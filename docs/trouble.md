@@ -307,7 +307,10 @@ catbus 已同步，对拍变化的 4 个用例逐字节一致。
 |---|---|---|
 | xhs | `msg send` / `read` / `revoke` / `delete`、`msg listen`、`live listen` / `send` | 私信需要指定一个收件账号；长连接要单独测 |
 | douyin | `item like` / `unlike` / `collect` / `uncollect`（见第 1 节）、`item publish`（见第 1 节）、`comment add`、`msg send` / `listen`、`live send` / `like` / `listen`、`product get`、`item download`、`media upload` | 写操作都卡在 dtrait。`product get` 需要一个真实商品 id |
-| bilibili | 全部写操作：`item like` / `collect` / `coin` / `triple` / `publish`、`comment add`、`danmaku send`、`dynamic publish` / `delete`、`article publish`、`live send` / `start` / `stop`、`media upload`；`live listen`、`item download` | 投币、三连会真的花掉硬币 |
+| bilibili | `item coin` / `triple` / `publish`、`dynamic publish` / `delete`、`article publish`（正式提交）、`live send` / `start` / `stop`；`live listen`、`item download`。**已测 ✓（2026-09-29，自己的仅自己可见稿件）**：`item like` / `unlike`、`collect` / `uncollect`（取消时自动找到收藏夹）、`comment add` / `delete`、`danmaku send`、`article publish --draft` → `draft get` → `draft delete` | 投币、三连会真的花掉硬币；动态没有仅自己可见，发出去就是公开的；投稿需要视频文件 |
+| tiktok | `item like` / `unlike` / `collect` / `uncollect`、`comment add`、`msg send`、`live send` / `like`、`item publish` | 只导入了 cookie：这些写接口要 security-sdk 的 ticket-guard 数据（上游同样要求），catbus 在本地拦下并提示用浏览器会话 JSON 登录，没有发请求。`folder create` ✓（id 精度问题已修，见第 8 节） |
+| weibo | — | `item publish --visibility private`（纯文字）✓、`media upload` ✓ |
+| kuaishou | `item publish` 的视频、`live` 写操作 | `item publish --image --visibility private` ✓ |
 
 ### 6.2 各平台进度
 
@@ -319,8 +322,8 @@ catbus 已同步，对拍变化的 4 个用例逐字节一致。
 | kuaishou | 扫码 ✓ | ✓ 23 条通过（2026-09-29 复测）；被滑块风控时跳过（第 4a 节） | 未测 | 推荐流连续翻页 ✓、作品列表前移一年的窗口 ✓（服务端正常返回空） |
 | xianyu | 扫码 ✓ | ✓ `auth status`、`user get me`、`media upload`（在线测试拿不到商品和会话 id，其余命令需要手动给参数） | 未测：私信会打扰真人，发布会上架真实商品 | `user get me` 的接口只返回 userId |
 | jd | 扫码 ✓；**2026-09-29 测试账号被封**，暂停一切真机请求 | ✓ 14 条通过（封号前） | 未测 | 审查修复里按已知结构改的字段（收藏 / 历史的图片与店铺、优惠券、购物车数量、商品详情路径）和私信回执匹配都还没真机确认。修了：登录后用户名乱码（响应是 GBK，core 改为按 charset 解码）、`comment list` 取成了问答、会话更新时间。`item get` 与评价接口被 605 / 403 风控拦住（新的 403 探测正确区分了风控与登录失效） |
-| tiktok | cookie ✓（2026-09-29） | ✓ 32 条通过 | 未测 | `live list` 是直播页侧栏的「关注的人在播」，账号没关注在播的人时为空（注册表 note 已写明） |
-| weibo | cookie ✓（2026-09-29） | ✓ 7 条通过（全部已实现的只读命令） | `media upload` 图片 ✓ | |
+| tiktok | cookie ✓（2026-09-29） | ✓ 32 条通过 | 点赞 / 收藏 / 评论要浏览器会话 JSON（见 6.1）；`folder create` ✓ | `live list` 是直播页侧栏的「关注的人在播」，账号没关注在播的人时为空（注册表 note 已写明）。`folder list` 对自己也只返回 `total: 0`，刚建的私密收藏夹不在里面（可能只列公开的），原因待查 |
+| weibo | cookie ✓（2026-09-29） | ✓ 7 条通过（全部已实现的只读命令） | 仅自己可见的发布 ✓、`media upload` 图片 ✓ | |
 | taobao | cookie ✓（2026-09-29） | ✓ `auth status`；`msg listen` 长连正常（共享的 IMPaaS 模块） | `media upload` 图片 ✓；私信未测 | 这个账号的昵称是 ASCII，「中文昵称发消息时 sender_nick 用未解码的原值」验证不了；`user get` 要商品链接、`msg history` 要会话 id，在线测试拿不到 |
 | x | cookie | 未开始 | 未测 | 用户暂不测 |
 
@@ -333,6 +336,10 @@ catbus 已同步，对拍变化的 4 个用例逐字节一致。
 | xhs | 一篇仅自己可见的测试笔记「catbus 接口测试」，id `6aba1e6b000000001303e71a` | xhs 的 `item delete` 上游没有（○），需要在 App 里手动删，或者留着（只有自己能看到） |
 | xhs | 通过 `media upload` 上传过一张测试图片（没有发布） | 无需处理 |
 | douyin | 无：发布被拦截，没有作品生成；点赞没成功，不用取消 | — |
+| bilibili | 自己的仅自己可见稿件 `BV1BkYa6zE6d` 上发了一条弹幕「catbus 自测」；点赞、收藏、评论、专栏草稿都已撤销 / 删除 | 弹幕没有删除命令，留着（稿件只有自己能看） |
+| tiktok | 一个空的私密收藏夹「catbus 测试收藏夹」 | catbus 没有 `folder delete`（上游没有），真实 id 因为当时的精度问题没拿到，`folder list` 也列不出来；需要在 App 里手动删 |
+| weibo | 一条仅自己可见的微博「catbus 接口自测（仅自己可见）」`RklGdvbO7` | 微博的 `item delete` 上游没有，需要手动删，或者留着 |
+| kuaishou | 一条仅自己可见的单图作品「catbus 接口自测」`3xaxqixynr5xx9g` | 快手的 `item delete` 上游没有，需要在创作者中心手动删，或者留着 |
 
 ---
 
@@ -351,6 +358,8 @@ catbus 已同步，对拍变化的 4 个用例逐字节一致。
 - kuaishou：
   - `item list`：`startTime: 0` 被服务端拒绝（「时间范围不能大于1年」），改为最近 365 天；翻页游标改用 `nextCursor`（原来会把最后一条重复返回、`--all` 死循环）。
   - 作品管理的列表：图集靠 `showAtlasIcon` 判断，补上作者。
+- tiktok：新建收藏夹返回的 `collectionId` 是不带引号的 64 位整数，`JSON.parse` 取了近似值（`…301123` → `…301000`），接着 `folder update` 查不到。core 新增 `jsonLoads`（与 Python `json.loads` 一样保留大整数，超出安全范围的整数保留成原文字符串），各平台解析响应都改用它（2026-09-29）。
+- kuaishou：作品管理列表里 `publishStatus: 4` 是仅自己可见（原来映射成 rejected）；单图作品没有图集图标、按「不显示时长」判成图片（原来判成 video）（2026-09-29）。
 - core：
   - `auth login` 信封的 `account` 为 null；
   - 二维码 PNG 权限改成 0600。

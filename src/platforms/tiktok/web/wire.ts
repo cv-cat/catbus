@@ -3,7 +3,7 @@ import { gunzipSync } from 'node:zlib'
 import { CatbusError } from '../../../core/errors.js'
 import { staticFile } from '../../../core/paths.js'
 import { protobuf } from '../../../core/pb.js'
-import { compactJson } from '../../../core/py.js'
+import { compactJson, jsonLoads } from '../../../core/py.js'
 
 /**
  * protobuf 线格式（上游 signing/protobuf.py、signing/live_wire.py，以及 api/tiktok_web.py 的私信帧构造）。
@@ -444,7 +444,7 @@ export function decodeImNotification(raw: string | Uint8Array): ImTextMessage | 
   if (!m || Number(m.message_type ?? 0) !== 7) return null
   let content: any
   try {
-    content = JSON.parse(m.content)
+    content = jsonLoads(m.content)
   } catch {
     throw new CatbusError('UPSTREAM', '私信文本推送 content 缺少 text')
   }
@@ -494,7 +494,7 @@ function wireValue(v: Raw): WireValue {
   if (text != null && !/[\x00-\x08\x0e-\x1f\x7f]/.test(text)) {
     if (text.startsWith('{') || text.startsWith('[')) {
       try {
-        return JSON.parse(text)
+        return jsonLoads(text)
       } catch {}
     }
     return text

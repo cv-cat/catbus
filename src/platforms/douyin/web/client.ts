@@ -1,5 +1,6 @@
 import { CatbusError } from '../../../core/errors.js'
 import { HttpClient, type HttpRequest, type HttpResponse } from '../../../core/http.js'
+import { jsonLoads } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { Cookie } from '../../../core/schemas.js'
@@ -351,13 +352,13 @@ function headerList(init: HttpRequest['headers']): [string, unknown][] {
 export async function riskJson<T = DyJson>(res: HttpResponse): Promise<T> {
   const text = await res.text()
   const trimmed = text.trimStart()
-  if (trimmed.startsWith('{') || trimmed.startsWith('[')) return JSON.parse(text) as T
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) return jsonLoads(text) as T
   const logid = res.headers.get('x-tt-logid')
   const bd = res.headers.get('x-vc-bdturing-parameters')
   if (bd) {
     let subtype = ''
     try {
-      subtype = JSON.parse(Buffer.from(bd, 'base64').toString('utf8')).subtype ?? ''
+      subtype = jsonLoads(Buffer.from(bd, 'base64').toString('utf8')).subtype ?? ''
     } catch {}
     throw new CatbusError('RISK_CONTROL', `触发人机验证（bdturing ${subtype || '未知类型'}），请在浏览器完成验证或更换 IP、降低频率后重试`, {
       detail: { kind: 'captcha', subtype, logid },
@@ -367,7 +368,7 @@ export async function riskJson<T = DyJson>(res: HttpResponse): Promise<T> {
   if (pp) {
     let scene = ''
     try {
-      scene = JSON.parse(pp).event_params.verify_scene ?? ''
+      scene = jsonLoads(pp).event_params.verify_scene ?? ''
     } catch {}
     throw new CatbusError('RISK_CONTROL', `需要二次身份验证（scene=${scene || '未知'}），多为缺少 x-tt-session-dtrait 或账号风控`, {
       detail: { kind: 'blocked', scene, logid },
