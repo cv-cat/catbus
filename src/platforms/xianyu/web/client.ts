@@ -5,7 +5,7 @@ import { unquote } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { UserRef } from '../../../core/schemas.js'
-import { authError, httpClient, isGuest } from '../../../core/toolkit.js'
+import { authError, httpClient } from '../../../core/toolkit.js'
 import { APP_KEY, BROWSER, COOKIE_DOMAIN, H5API, merge, MTOP_HEADERS, SESSION_HEADERS, userUrl } from './profile.js'
 import { generateDeviceId, genTfstk } from './sign.js'
 
@@ -73,13 +73,8 @@ export class Xianyu {
       .join('; ')
   }
 
-  /** 每条命令开始时调用：游客还没有初始 cookie 时，生成一份并缓存在 guest.json。 */
-  async init(): Promise<void> {
-    if (isGuest(this.ctx) && !this.jar.has('cookie2')) await this.buildInitialCookies()
-  }
-
   /**
-   * 纯 HTTP 获取初始 cookie，不含登录态（上游 build_initial_cookies）：
+   * 纯 HTTP 获取初始 cookie，不含登录态（上游 build_initial_cookies，扫码登录前用）：
    * eg.js 拿 `cna`，两次空签名的 mtop 拿 `_m_h5_tk` 和 `cookie2`，最后跑 JS 生成 `tfstk`。
    */
   async buildInitialCookies(): Promise<void> {
@@ -140,7 +135,7 @@ export function unsignedMtop(api: string): HttpRequest {
 }
 
 /** mtop 的 ret 映射成 catbus 的错误（AGENTS 6.4）。 */
-export function check(ctx: HandlerContext, body: MtopJson): void {
+function check(ctx: HandlerContext, body: MtopJson): void {
   const ret = body?.ret ?? []
   const first = String(ret[0] ?? '')
   if (first.startsWith('SUCCESS')) return
@@ -155,9 +150,7 @@ export function check(ctx: HandlerContext, body: MtopJson): void {
   throw new CatbusError('UPSTREAM', `闲鱼返回错误：${message}`, { detail })
 }
 
-/** 建立会话，游客补齐初始 cookie。 */
-export async function xianyu(ctx: HandlerContext): Promise<Xianyu> {
-  const x = new Xianyu(ctx)
-  await x.init()
-  return x
+/** 建立会话。web 端不支持游客态（AGENTS 5.2），除 auth 外的命令都已登录。 */
+export function xianyu(ctx: HandlerContext): Xianyu {
+  return new Xianyu(ctx)
 }

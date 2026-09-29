@@ -3,8 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import { readCredential, writeCredential } from '../src/core/auth-store.js'
-import type { HeaderPairs } from '../src/core/http.js'
-import { time } from '../src/core/normalize.js'
+import { fakeResponse, type HeaderPairs, mockSender, type PreparedRequest } from '../src/core/http.js'
 import { jsonDumps } from '../src/core/py.js'
 import { deterministic } from '../src/core/rand.js'
 import { RAW } from '../src/core/schemas.js'
@@ -272,35 +271,6 @@ describe('xianyu 对拍：私信帧', () => {
 // ================================================================ 命令流程
 
 describe('xianyu 对拍：命令流程', () => {
-  it('游客 item get：初始 cookie（eg.js → 两次空签名 mtop → tfstk）后取商品详情', async () => {
-    const c = loadCase('xianyu', 'guest_item_get')
-    const ctx = makeCtx({ platform: 'xianyu', account: 'guest', args: { item: `https://www.goofish.com/item?spm=a21ybx.home.feeds.1&id=${ITEM_ID}&categoryId=1` } })
-    const { requests, result, error } = await replay(c, () => itemGet(ctx))
-    if (error) throw error
-    expectRequests(requests, c.requests)
-    expect((result as any)[RAW]).toEqual(c.result.detail.data)
-    expect(result).toEqual({
-      id: ITEM_ID,
-      kind: 'goods',
-      url: `https://www.goofish.com/item?id=${ITEM_ID}`,
-      title: '九成新机械键盘',
-      text: '九成新机械键盘，青轴',
-      author: { id: PEER_ID, name: '测试卖家', url: `https://www.goofish.com/personal?userId=${PEER_ID}` },
-      created_at: time(1789990000000),
-      cover: 'https://img.alicdn.com/bao/uploaded/fake1.jpg',
-      media: [
-        { id: null, type: 'image', url: 'https://img.alicdn.com/bao/uploaded/fake1.jpg', width: 800, height: 600, duration: null },
-        { id: null, type: 'image', url: 'https://img.alicdn.com/bao/uploaded/fake2.jpg', width: 640, height: 640, duration: null },
-      ],
-      stats: { views: 321, likes: null, comments: null, collects: 12, shares: null },
-      price: { amount: 199, currency: 'CNY' },
-      status: null,
-    })
-    // 初始 cookie（含 tfstk）留在游客凭证里，下次直接复用
-    const saved = ctx.credential.scopes.main!.cookies.map((x) => [x.name, x.value, x.domain])
-    expect(saved.sort()).toEqual([...c.result.cookies].sort())
-  })
-
   it('item publish：传图 → 推荐类目 → 默认地址 → 提交', async () => {
     const c = loadCase('xianyu', 'publish')
     const ctx = ctxOf({ options: { text: '九成新机械键盘', image: [pngFile()], price: 199.9, originalPrice: 399, shipping: 'fixed', postage: 12.5, pickup: true } })
@@ -712,6 +682,32 @@ describe('xianyu 参数与解析', () => {
     expect(await resolveUser(x, `快来看看 https://h5.m.goofish.com/app/idleFish-F2e/fish-mini-home/pages/personal?userid=${PEER_ID}&spm=a 的主页`)).toBe(PEER_ID)
     expect(await resolveUser(x, 'me')).toBe(MY_ID)
     await expect(resolveUser(x, 'abc')).rejects.toMatchObject({ code: 'USAGE' })
+  })
+
+  it('用户：分享短链跟一次跳转取 userId；跳转地址里没有时打开落地页找；都没有时报 USAGE', async () => {
+    const x = xOf()
+    const sent: PreparedRequest[] = []
+    const restore = mockSender((p) => {
+      sent.push(p)
+      if (p.url === 'https://m.tb.cn/h.a') return fakeResponse('', { status: 302, headers: [['location', `https://www.goofish.com/personal?userId=${PEER_ID}&spm=x`]] })
+      if (p.url === 'https://m.tb.cn/h.b') return fakeResponse('', { status: 302, headers: [['location', 'https://h5.m.goofish.com/landing?code=b']] })
+      if (p.url === 'https://h5.m.goofish.com/landing?code=b') return fakeResponse(`<script>location.href = "https://www.goofish.com/personal?from=share&amp;userId=${PEER_ID}"</script>`)
+      if (p.url === 'https://m.tb.cn/h.c') return fakeResponse('<html>页面不存在</html>')
+      throw new Error(`多发了请求：${p.url}`)
+    })
+    try {
+      expect(await resolveUser(x, 'https://m.tb.cn/h.a')).toBe(PEER_ID)
+      expect(await resolveUser(x, '【闲鱼】https://m.tb.cn/h.b 点击链接直接打开')).toBe(PEER_ID)
+      await expect(resolveUser(x, 'https://m.tb.cn/h.c')).rejects.toMatchObject({ code: 'USAGE' })
+    } finally {
+      restore()
+    }
+    expect(sent.map((p) => p.url)).toEqual(['https://m.tb.cn/h.a', 'https://m.tb.cn/h.b', 'https://h5.m.goofish.com/landing?code=b', 'https://m.tb.cn/h.c'])
+    // 跟跳转不带账号的 cookie
+    for (const p of sent) {
+      expect(p.cookies).toEqual([])
+      expect(p.headers).toEqual([['user-agent', 'Mozilla/5.0']])
+    }
   })
 
   it('会话 ID：带不带 @goofish 都行', () => {

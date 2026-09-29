@@ -31,8 +31,9 @@ const im = impaas<Xianyu>({
   token: accessToken,
 })
 
-/** `<id>@goofish`；plainId 去掉 `@goofish` 后缀。 */
-export const { imId, plainId, regFrame, ackDiffFrame, heartbeatFrame, listFrame, createdCid, open: openIm } = im
+/** plainId 去掉 `@goofish` 后缀。 */
+export const { plainId, regFrame, ackDiffFrame, heartbeatFrame, listFrame, createdCid, open: openIm } = im
+const { imId } = im
 
 /** create_chat 的 item_id 默认值（上游写死）：只给对方用户、不指定商品时用它建会话。 */
 export const DEFAULT_ITEM_ID = '891198795482'

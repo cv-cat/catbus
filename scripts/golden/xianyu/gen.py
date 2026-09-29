@@ -146,7 +146,7 @@ def _connect(url, extra_headers=None, **kwargs):
 websockets.connect = _connect
 
 import goofish_apis  # noqa: E402
-from goofish_apis import XianyuApis, build_initial_cookies, qrcode_login  # noqa: E402
+from goofish_apis import XianyuApis, qrcode_login  # noqa: E402
 from goofish_live import XianyuLive  # noqa: E402
 from message import make_image, make_text  # noqa: E402
 from utils.goofish_utils import decrypt, generate_device_id, generate_mid, generate_sign, generate_uuid, trans_cookies  # noqa: E402
@@ -291,7 +291,7 @@ def pure():
 
 case('pure', pure, pushes=PUSHES + [STATUS_PUSH])
 
-# ---------------------------------------------------------------- 游客：初始 cookie（含 tfstk）+ 商品详情
+# ---------------------------------------------------------------- 初始 cookie（含 tfstk）：扫码登录的第一步（build_initial_cookies）
 
 GUEST_COOKIES = {
     'log.mmstat.com': ['cna=FAKECNA0000000000000000; Domain=.mmstat.com; Path=/'],
@@ -312,23 +312,10 @@ def guest_respond(req):
     return respond(req)
 
 
-def guest_session():
-    s = build_initial_cookies()
-    x = XianyuApis({}, 'unused')
-    x.session = s
-    return x
-
-
 def cookie_list(session):
     return sorted([c.name, c.value, c.domain] for c in session.cookies)
 
 
-def guest_item_get():
-    x = guest_session()
-    return {'detail': x.get_item_info(ITEM_ID), 'cookies': cookie_list(x.session)}
-
-
-case('guest_item_get', guest_item_get, guest_respond, item=ITEM_ID)
 
 # ---------------------------------------------------------------- 登录态下的 HTTP：XianyuApis
 

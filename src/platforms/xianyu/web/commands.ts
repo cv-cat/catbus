@@ -6,7 +6,6 @@ import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { AuthStatus, Media, Message } from '../../../core/schemas.js'
-import { isGuest } from '../../../core/toolkit.js'
 import { history, type Im, listen, pushedPayloads } from '../../_shared/impaas.js'
 import * as api from './api.js'
 import { unsignedMtop, Xianyu, xianyu } from './client.js'
@@ -82,7 +81,8 @@ export async function authLogin(ctx: Ctx) {
 export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
   const off: AuthStatus = { logged_in: false, user: null, method: null, expires_at: null }
   const x = new Xianyu(ctx)
-  if (isGuest(ctx) || !x.myId) return off
+  // 没登录时是一份空凭证，没有 unb
+  if (!x.myId) return off
   try {
     await api.refreshToken(x)
   } catch (err) {
@@ -99,7 +99,7 @@ export async function userGet(ctx: Ctx) {
   if (ctx.args.user !== 'me') {
     throw new CatbusError('NOT_IMPLEMENTED', 'xianyu 的 user get 只支持 me，查询他人尚未实现', { detail: { upstream: 'none' } })
   }
-  const x = await xianyu(ctx)
+  const x = xianyu(ctx)
   x.requireLogin()
   return norm.me((await api.refreshToken(x)).data, x.me())
 }
@@ -107,7 +107,7 @@ export async function userGet(ctx: Ctx) {
 // ================================================================ item
 
 export async function itemGet(ctx: Ctx) {
-  const x = await xianyu(ctx)
+  const x = xianyu(ctx)
   const id = await resolveItem(x, ctx.args.item!)
   return norm.item((await api.itemInfo(x, id)).data, x.myId)
 }
@@ -115,7 +115,7 @@ export async function itemGet(ctx: Ctx) {
 type Shipping = api.Shipping
 
 export async function itemPublish(ctx: Ctx) {
-  const x = await xianyu(ctx)
+  const x = xianyu(ctx)
   x.requireLogin()
   const o = ctx.options as Record<string, any>
   const desc = (o.text ?? o.title) as string | undefined
@@ -158,7 +158,7 @@ export async function itemPublish(ctx: Ctx) {
 
 /** 消息记录：在一条连接上往更早翻，输出从旧到新；游标见 _shared/impaas.ts 的 history。 */
 export async function msgHistory(ctx: Ctx) {
-  const x = await xianyu(ctx)
+  const x = xianyu(ctx)
   x.requireLogin()
   const cid = resolveConversation(ctx.args.conversation!)
   return history(ctx, () => openIm(x), cid, (m) => norm.historyMessage(m, cid))
@@ -176,8 +176,8 @@ async function uploadImage(x: Xianyu, input: string): Promise<{ media: Media; me
 const PEER_PAGES = 10
 
 /**
- * 已有会话的对方：照上游 list_all_conversations 在同一条连接上往更早翻，找不是自己发的消息；
- * 自己发的消息带 `extension.receiver` 时也认。都找不到（对方从没回过）就报错，让用户改用 --to。
+ * 已有会话的对方：照上游 list_all_conversations 在同一条连接上往更早翻，找不是自己发的消息的发送者；
+ * 找不到（对方从没回过）就报错，让用户改用 --to。
  */
 async function peerOf(im: Im, x: Xianyu, cid: string): Promise<string> {
   let pages = 0
@@ -185,8 +185,7 @@ async function peerOf(im: Im, x: Xianyu, cid: string): Promise<string> {
   for await (const page of im.historyPages(cid, FIRST_CURSOR)) {
     for (const model of page.models) {
       const sender = norm.historyMessage(model, cid).from?.id
-      const receiver = (model as any)?.message?.extension?.receiver
-      for (const id of [sender, receiver == null ? null : String(receiver)]) if (id && id !== x.myId) return id
+      if (sender && sender !== x.myId) return sender
     }
     more = page.hasMore
     if (++pages >= PEER_PAGES) break
@@ -222,7 +221,7 @@ async function chatTarget(x: Xianyu, o: { to?: string; item?: string }): Promise
  * 文字和图片都有时依次发送，返回最后一条。
  */
 export async function msgSend(ctx: Ctx): Promise<Message> {
-  const x = await xianyu(ctx)
+  const x = xianyu(ctx)
   x.requireLogin()
   const o = ctx.options as { to?: string; conversation?: string; item?: string; image?: string[]; video?: string }
   if (o.video != null) throw new CatbusError('UNSUPPORTED', '闲鱼私信不支持发视频')
@@ -286,7 +285,7 @@ function pushedMessages(x: Xianyu, frame: unknown): Message[] {
 
 export function msgListen(ctx: Ctx) {
   return (async function* () {
-    const x = await xianyu(ctx)
+    const x = xianyu(ctx)
     x.requireLogin()
     // 上游 user_alive：常驻时每 10 分钟调一次 refresh_token 续期 cookie
     const keepalive = setInterval(() => {
@@ -308,7 +307,7 @@ export function msgListen(ctx: Ctx) {
 // ================================================================ media
 
 export async function mediaUpload(ctx: Ctx): Promise<Media> {
-  const x = await xianyu(ctx)
+  const x = xianyu(ctx)
   x.requireLogin()
   const file = await readMedia(x.http, ctx.args.file!)
   if (!file.contentType.startsWith('image/')) throw new CatbusError('UNSUPPORTED', `闲鱼只支持上传图片：${ctx.args.file}`)

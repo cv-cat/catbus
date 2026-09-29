@@ -133,7 +133,7 @@ export interface ImSocket {
   messages: AsyncIterable<string | Uint8Array>
 }
 
-export type Connect = (url: string, headers: HeaderPairs, ctx: HandlerContext) => Promise<ImSocket>
+type Connect = (url: string, headers: HeaderPairs, ctx: HandlerContext) => Promise<ImSocket>
 
 const realConnect: Connect = (url, headers, ctx) =>
   openSocket(url, {
@@ -160,7 +160,7 @@ interface Waiter {
 }
 
 /** listUserMessages 的一页：消息从新到旧。 */
-export interface HistoryPage {
+interface HistoryPage {
   models: unknown[]
   nextCursor: string | null
   hasMore: boolean
