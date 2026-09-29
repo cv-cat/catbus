@@ -6,6 +6,7 @@ import { authError } from '../../../core/toolkit.js'
 import * as api from './api.js'
 import { type Douyin, type DyJson, riskJson } from './client.js'
 import { crc32Hex, IMAGEX_HOST, sigv4, type Sts, VOD_HOST } from './crypto.js'
+import { DTRAIT_BROKEN, DTRAIT_HINT } from './dtrait.js'
 import { imageSize } from './image.js'
 import { CREATOR, creatorPlatformParams, Headers, Params, PROFILE, WWW_ONLY } from './profile.js'
 import { spliceUrl, svWebId } from './sign.js'
@@ -444,7 +445,7 @@ export function requirePublishSecurity(d: Douyin): void {
     .map(([k]) => k)
   if (missing.length) throw authError(d.ctx, `发布需要 bd-ticket-guard 凭证（缺少 ${missing.join('、')}），请用扫码登录`)
   if (!d.ticketMatchesSession()) throw authError(d.ctx, 'ticket / ts_sign 与 cookie 不属于同一次登录，请重新登录')
-  if (!d.device.dtrait_blob) throw new CatbusError('AUTH_REQUIRED', '发布需要可按 path 重算的 dtrait 设备素材（dtrait_blob）', { hint: 'catbus douyin auth login --method cookie --cookie @<凭证 JSON>' })
+  if (!d.dtraitBlob()) throw new CatbusError('AUTH_REQUIRED', `发布需要可按 path 重算的 dtrait 设备素材（${DTRAIT_BROKEN}）`, { hint: DTRAIT_HINT })
 }
 
 const jsLength = (s: string) => s.length

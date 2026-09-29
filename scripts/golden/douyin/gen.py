@@ -9,7 +9,8 @@
 - 每个用例开始时重置上游的进程级状态：a_bogus / X-Bogus 签名器、mssdk 的 token 缓存、V8 随机串池；
 - 二进制响应（protobuf）记成 {"base64": ...}；tempfile 的临时名不再消耗被替换的随机数；
 - 上游的 Node 脚本复制到仓库外运行（catbus 的 package.json 是 "type": "module"，会把它们当成 ESM）；
-- time.strftime 固定北京时间。
+- time.strftime 固定北京时间；
+- dtrait 的 Math 指纹按 V8 的取值固定（见下方 _V8_MATH）。
 """
 
 import base64
@@ -64,6 +65,19 @@ from utils.secsdk_web_sign import sign_url  # noqa: E402
 from utils.sm3 import sm3_hex  # noqa: E402
 from utils.strdata_pure import build_report_body  # noqa: E402
 from utils.xbogus_pure import XbogusSigner  # noqa: E402
+
+# dtrait 内层 blob 的 Math 指纹（utils/dtrait_features.math_features）入参全是字面常量，结果取决于本机的 libm。
+# 上游的基准是浏览器 V8 的值（tests/test_dtrait_profile.py 的 CAPTURED_BLOB 就是 Chrome 抓的）：
+# macOS 的 libm 算 tan(-1e300) 比 V8 低 1 ULP，这里固定成 V8 的值，与固定时区同理。
+# gen_gap.py 的 dtrait 用例会断言默认档案生成的 blob 等于 CAPTURED_BLOB，别的函数在别的机器上有出入时会报出来。
+import math as _math  # noqa: E402
+import types as _types  # noqa: E402
+
+import utils.dtrait_features as _dtrait_features  # noqa: E402
+
+_V8_MATH = {('tan', -1e300): -1.4214488238747245}
+_dtrait_features.math = _types.SimpleNamespace(**{k: getattr(_math, k) for k in dir(_math) if not k.startswith('_')})
+_dtrait_features.math.tan = lambda x: _V8_MATH.get(('tan', x), _math.tan(x))
 
 # 只有假值
 PRIVATE_KEY = SigningKey.from_secret_exponent(0x1234567890ABCDEF, curve=NIST256p).to_pem().decode()

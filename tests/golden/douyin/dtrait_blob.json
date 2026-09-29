@@ -1,0 +1,224 @@
+{
+  "input": {
+    "cookies": "ttwid=1%7Cfake-ttwid%7C1790000000%7Cabcdef; UIFID=fake-uifid-0123456789abcdef; s_v_web_id=verify_fakesvwebid_0000_0000_4000_8000_000000000000; passport_csrf_token=fakecsrf0123456789abcdef01234567; passport_csrf_token_default=fakecsrf0123456789abcdef01234567; odin_tt=fake-odin-tt; sessionid=fake-sessionid; sessionid_ss=fake-sessionid; sid_guard=fake-sid-guard; uid_tt=fake-uid-tt; bd_ticket_guard_client_web_domain=2; bd_ticket_guard_ts_sign_id=ts.2.fakesign",
+    "private_key": "-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABI0VniQq83voAoGCCqGSM49AwEHoUQDQgAE\nn62Erq4Iu+9/AQAU2CzvagneKwz4cbXODE8dE6WaWTQHy0V2nxBw4sJHD+Wxv+YxM8CwzcZOpL83\nkajsKgf9Tw==\n-----END EC PRIVATE KEY-----\n",
+    "server_cert": "pub.BFLG/1tx3mXYPHXTk+JJ7AOJQ3BRXQsimxxiJGgfKlAwtvMjwgwg0CHWEeCHz0gvUpfmE1y+5tOZSDIWTkeebpY=",
+    "ticket": "hash.fake-ticket-0000",
+    "ts_sign": "ts.2.fakesign0123456789abcdef",
+    "client_cert": "pub.ZmFrZS1jbGllbnQtY2VydA==",
+    "dtrait_blob": "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9g",
+    "ms_token": "fake-mstoken-0123456789",
+    "webid": "7400000000000000001",
+    "uid": "97872126662",
+    "captured": "IAAAAADQIC0FVqIh4kBm/yLQO48ZI8SHsdUkUnQhRSUtc6pZJoXtgvcnqvUbwih5/ufyKR3SnsMqMtFjyisa3jq/LEbrp0It3oooWy6x8OwMLzYf+ukwKpioVDEAAAAAMiZm67kzi/GgODSiHrKONRJqRnA2hZHFNjcbzZ0NOFhf5lQ5ucywezqnDTbrO0LJZ588JQFrBT3os+69Pnc1cw4/6hH+lkBcuWKWR5QWrJM=",
+    "custom_profile": {
+      "source": "catbus golden",
+      "reserved": 1,
+      "dtrait_type": 1,
+      "version": 3,
+      "bools": {
+        "0": true,
+        "1": true,
+        "2": false,
+        "9": true,
+        "10": true,
+        "32": true,
+        "40": false,
+        "63": true
+      },
+      "render_hashes": {
+        "1": 755324578,
+        "2": 3795871487,
+        "3": 3493564185,
+        "4": 3297227221,
+        "5": 4294967295,
+        "6": 762554969,
+        "7": 2246935287,
+        "8": 2868190146,
+        "9": 2046748658,
+        "10": 500342467,
+        "13": 0,
+        "20": 2347868216,
+        "21": 2719920782,
+        "22": 308954736,
+        "23": 2240922934,
+        "24": 466459917,
+        "25": 1482679892,
+        "26": 3117199483,
+        "33": 1555653270
+      },
+      "downlink": 1.45,
+      "effective_type": "3g",
+      "language": "en-US",
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "str16_list": [
+        "PDF Viewer",
+        "Chrome PDF Viewer"
+      ],
+      "vendor": "Google Inc.",
+      "platform": "MacIntel",
+      "str17_tail": "undefined",
+      "str18_list": [
+        "思源黑体",
+        "Arial"
+      ],
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+      "locale": "en-US",
+      "timezone": "America/New_York",
+      "notification_permission": "granted",
+      "str29_head": "9",
+      "device_memory": 8,
+      "hardware_concurrency": 12,
+      "max_touch_points": 0,
+      "avail_height": 1055,
+      "avail_left": 0,
+      "avail_top": 25,
+      "avail_width": 1920,
+      "screen_height": 1080,
+      "screen_width": 1920,
+      "color_depth": 30,
+      "pixel_depth": 30,
+      "device_pixel_ratio": 2.5,
+      "hook_score": "0"
+    }
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": {
+    "default": "IAAAAADQIC0FVqIh4kBm/yLQO48ZI8SHsdUkUnQhRSUtc6pZJoXtgvcnqvUbwih5/ufyKR3SnsMqMtFjyisa3jq/LEbrp0It3oooWy6x8OwMLzYf+ukwKpioVDEAAAAAMiZm67kzi/GgODSiHrKONRJqRnA2hZHFNjcbzZ0NOFhf5lQ5ucywezqnDTbrO0LJZ588JQFrBT3os+69Pnc1cw4/6hH+lkBcuWKWR5QWrJM=",
+    "default_features": {
+      "11": "-1.4214488238747245,0.5493061443340549,0.5493061443340549,-0.8390715290095377",
+      "12": "1.7182818284590453,1.9275814160560206e-50,0.8178819121159085,-1.4214488238747245",
+      "14": "10,4g",
+      "15": "zh-CN,zh-CN,zh,en,zh-TW,ja",
+      "16": ",Google Inc.",
+      "17": "Win32,undefined",
+      "18": "",
+      "19": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+      "27": "zh-CN+Asia/Shanghai",
+      "28": "default",
+      "29": "10,32,20,10",
+      "30": "1392,0,0,2560",
+      "31": "1440,2560",
+      "32": "24,24,1",
+      "34": "1"
+    },
+    "custom": "YwAEAAYDAIAAAAEgLQVWoiHiQGb/ItA7jxkjxIex1ST/////JS1zqlkmhe2C9yeq9RvCKHn+5/IpHdKewyoy0WPKKxreOr8sAAAAAC0GCLAMLpaBu/kvZC+FdTAmknBhMXdR3q4yVQ/58TOL8aA4NKIeso41EmpGcDaFkcU2NxvNnQ04WF/mVDm5zLB7OjLMaHw7aWqDpTz/Im3qPcTXpBg+c+D+3j/EnUMNQFy5YpZH0nHAfw==",
+    "custom_edge": "cwAEAAYDAIAAAAEgLQVWoiHiQGb/ItA7jxkjxIex1ST/////JS1zqlkmhe2C9yeq9RvCKHn+5/IpHdKewyoy0WPKKxreOr8sAAAAAC0GCLAMLpaBu/kvZC+FdTAmknBhMXdR3q4yVQ/58TOL8aA4NKIeso41EmpGcDaFkcU2NxvNnQ04WF/mVDm5zLB7OjLMaHw7aWqDpTz/Im3qPcTXpBg+c+D+3j/EnUMNQFy5YpZH0nHAfw==",
+    "custom_features": {
+      "11": "-1.4214488238747245,0.5493061443340549,0.5493061443340549,-0.8390715290095377",
+      "12": "1.7182818284590453,1.9275814160560206e-50,0.8178819121159085,-1.4214488238747245",
+      "14": "1.45,3g",
+      "15": "en-US,en-US,en",
+      "16": "PDF Viewer,Chrome PDF Viewer,Google Inc.",
+      "17": "MacIntel,undefined",
+      "18": "思源黑体,Arial",
+      "19": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+      "27": "en-US+America/New_York",
+      "28": "granted",
+      "29": "9,8,12,0",
+      "30": "1055,0,25,1920",
+      "31": "1080,1920",
+      "32": "30,30,2.5",
+      "34": "0"
+    },
+    "murmur3": [
+      [
+        "",
+        0
+      ],
+      [
+        "a",
+        1009084850
+      ],
+      [
+        "ab",
+        2613040991
+      ],
+      [
+        "abc",
+        3017643002
+      ],
+      [
+        "abcd",
+        1139631978
+      ],
+      [
+        "abcde",
+        3902511862
+      ],
+      [
+        "中文",
+        3676729751
+      ],
+      [
+        "10,4g",
+        3733596251
+      ],
+      [
+        "𠀀 四字节 UTF-8",
+        4160740233
+      ]
+    ],
+    "js_number": [
+      [
+        0.30000000000000004,
+        "0.30000000000000004"
+      ],
+      [
+        0.3333333333333333,
+        "0.3333333333333333"
+      ],
+      [
+        100.0,
+        "100"
+      ],
+      [
+        -0.0,
+        "0"
+      ],
+      [
+        1e+21,
+        "1e+21"
+      ],
+      [
+        1.2345678901234568e+20,
+        "123456789012345680000"
+      ],
+      [
+        1e-07,
+        "1e-7"
+      ],
+      [
+        1.5e-06,
+        "0.0000015"
+      ],
+      [
+        -2.5e-07,
+        "-2.5e-7"
+      ],
+      [
+        9007199254740992.0,
+        "9007199254740992"
+      ],
+      [
+        5e-324,
+        "5e-324"
+      ],
+      [
+        1.7976931348623157e+308,
+        "1.7976931348623157e+308"
+      ],
+      [
+        -1.4214488238747245,
+        "-1.4214488238747245"
+      ]
+    ]
+  },
+  "error": null
+}

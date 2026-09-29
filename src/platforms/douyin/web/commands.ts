@@ -9,6 +9,7 @@ import { authError, paged } from '../../../core/toolkit.js'
 import * as api from './api.js'
 import { check, Douyin, douyin } from './client.js'
 import * as creator from './creator.js'
+import { buildBlob, DTRAIT_BROKEN, DTRAIT_HINT } from './dtrait.js'
 import * as im from './im.js'
 import * as live from './live.js'
 import * as norm from './normalize.js'
@@ -346,12 +347,15 @@ export async function liveProducts(ctx: Ctx) {
 
 // ================================================================ 登录
 
+/** 设备绑定的 dtrait 素材：内层 blob、设备档案、成品头（上游 DY_DTRAIT_BLOB / DY_DTRAIT_PROFILE / DY_SESSION_DTRAIT）。 */
+const DTRAIT_KEYS = ['dtrait_blob', 'dtrait_profile', 'session_dtrait']
+
 /**
  * 登录用的临时会话：凭证是新建的；设备绑定的 dtrait 素材从同名账号继承（上游 save_credential 把它和 cookie 一起落盘）。
  */
 function loginSession(ctx: Ctx, method: Credential['method']): Douyin {
   const credential = freshCredential(ctx, method)
-  for (const key of ['dtrait_blob', 'session_dtrait']) if (ctx.credential.device[key]) credential.device[key] = ctx.credential.device[key]
+  for (const key of DTRAIT_KEYS) if (ctx.credential.device[key]) credential.device[key] = ctx.credential.device[key]
   return new Douyin({ ...ctx, credential })
 }
 
@@ -367,8 +371,12 @@ async function completeLogin(ctx: Ctx, d: Douyin) {
 
 /**
  * `--cookie` 除了 cookie 串 / 浏览器导出的 JSON 数组，还接受一个 JSON 对象，用来一并导入写操作需要的
- * bd-ticket-guard 与 dtrait 素材（上游 DouyinAuth.from_cookie 的参数）：
+ * bd-ticket-guard 素材（上游 DouyinAuth.from_cookie 的参数），以及可选的 dtrait 素材：
  * `{"cookie": "...", "ticket": "...", "ts_sign": "...", "client_cert": "...", "private_key": "-----BEGIN ...", "dtrait_blob": "..."}`
+ *
+ * dtrait 素材不给时，按随包的设备档案现算。想用自己浏览器的设备指纹时再导入：`dtrait_blob` 是抓到的内层 blob，
+ * `dtrait_profile` 是设备档案对象（结构同 static/douyin/dtrait_profile.json），两者都给时 dtrait_blob 优先。
+ * JSON 里出现任何一个 dtrait 键时这一组整体替换，值为 null 表示清掉；一个都没有时沿用同名账号已有的。
  */
 function cookieLogin(ctx: Ctx): Douyin {
   const input = String(ctx.options.cookie ?? '').trim()
@@ -387,9 +395,14 @@ function cookieLogin(ctx: Ctx): Douyin {
   for (const c of credential.scopes.main!.cookies) c.domain = WWW_ONLY.has(c.name) ? 'www.douyin.com' : '.douyin.com'
   const tokens = credential.scopes.main!.tokens
   for (const key of ['ticket', 'ts_sign', 'client_cert']) if (typeof extra[key] === 'string') tokens[key] = extra[key]
-  for (const key of ['private_key', 'dtrait_blob', 'session_dtrait']) {
-    if (typeof extra[key] === 'string') credential.device[key] = extra[key]
-    else if (ctx.credential.device[key] && key !== 'private_key') credential.device[key] = ctx.credential.device[key]
+  if (typeof extra.private_key === 'string') credential.device.private_key = extra.private_key
+  const given = DTRAIT_KEYS.some((k) => k in extra)
+  for (const key of DTRAIT_KEYS) {
+    const v = given ? extra[key] : ctx.credential.device[key]
+    if (v == null || v === '') continue
+    if (given && key === 'dtrait_profile') buildBlob(v) // 导入时就校验档案（上游 load_dtrait_profile），坏档案报 USAGE
+    else if (given && typeof v !== 'string') throw new CatbusError('USAGE', `--cookie 的 ${key} 要是字符串`)
+    credential.device[key] = v
   }
   return new Douyin({ ...ctx, credential })
 }
@@ -481,8 +494,8 @@ export const itemUncollect = (ctx: Ctx) => collectItem(ctx, '0')
 /** 评论发布前的安全素材检查（上游 publish_comment 的前置条件）。 */
 function requireCommentSecurity(d: Douyin): void {
   if (!d.ticketMatchesSession()) throw authError(d.ctx, '发评论需要与 cookie 同一次登录的 ticket / ts_sign，请用扫码登录或导入配套凭证')
-  if (!d.device.dtrait_blob && !d.device.session_dtrait) {
-    throw new CatbusError('AUTH_REQUIRED', '发评论需要同一浏览器会话的 dtrait 素材，只有 cookie 会被风控拦截', { hint: 'catbus douyin auth login --method cookie --cookie @<凭证 JSON>' })
+  if (!d.dtraitBlob() && !d.device.session_dtrait) {
+    throw new CatbusError('AUTH_REQUIRED', `发评论需要 dtrait 设备素材（${DTRAIT_BROKEN}），只有 cookie 会被风控拦截`, { hint: DTRAIT_HINT })
   }
 }
 

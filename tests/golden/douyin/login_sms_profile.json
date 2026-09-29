@@ -1,0 +1,1965 @@
+{
+  "input": {
+    "cookies": "ttwid=1%7Cfake-ttwid%7C1790000000%7Cabcdef; UIFID=fake-uifid-0123456789abcdef; s_v_web_id=verify_fakesvwebid_0000_0000_4000_8000_000000000000; passport_csrf_token=fakecsrf0123456789abcdef01234567; passport_csrf_token_default=fakecsrf0123456789abcdef01234567; odin_tt=fake-odin-tt; sessionid=fake-sessionid; sessionid_ss=fake-sessionid; sid_guard=fake-sid-guard; uid_tt=fake-uid-tt; bd_ticket_guard_client_web_domain=2; bd_ticket_guard_ts_sign_id=ts.2.fakesign",
+    "private_key": "-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABI0VniQq83voAoGCCqGSM49AwEHoUQDQgAE\nn62Erq4Iu+9/AQAU2CzvagneKwz4cbXODE8dE6WaWTQHy0V2nxBw4sJHD+Wxv+YxM8CwzcZOpL83\nkajsKgf9Tw==\n-----END EC PRIVATE KEY-----\n",
+    "server_cert": "pub.BFLG/1tx3mXYPHXTk+JJ7AOJQ3BRXQsimxxiJGgfKlAwtvMjwgwg0CHWEeCHz0gvUpfmE1y+5tOZSDIWTkeebpY=",
+    "ticket": "hash.fake-ticket-0000",
+    "ts_sign": "ts.2.fakesign0123456789abcdef",
+    "client_cert": "pub.ZmFrZS1jbGllbnQtY2VydA==",
+    "dtrait_blob": null,
+    "ms_token": "fake-mstoken-0123456789",
+    "webid": "7400000000000000001",
+    "uid": "97872126662",
+    "phone": "13800000000",
+    "code": "123456"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://www.douyin.com/?recommend=1",
+      "headers": [
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not=A?Brand\";v=\"99\", \"Google Chrome\";v=\"151\", \"Chromium\";v=\"151\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "priority",
+          "u=0, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "document"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-site",
+          "none"
+        ],
+        [
+          "sec-fetch-user",
+          "?1"
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/?recommend=1"
+        ]
+      ],
+      "cookies": [
+        [
+          "s_v_web_id",
+          "verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR"
+        ],
+        [
+          "bd_ticket_guard_client_data",
+          "eyJiZC10aWNrZXQtZ3VhcmQtdmVyc2lvbiI6MiwiYmQtdGlja2V0LWd1YXJkLWl0ZXJhdGlvbi12ZXJzaW9uIjoxLCJiZC10aWNrZXQtZ3VhcmQtcmVlLXB1YmxpYy1rZXkiOiJCRGExZ0ZKbVJGNG8rV3ZSYm1pR251YTJrVHllbmVQSWRaZGIvcUxCRGZlYjNkMEM4ZktlZE9tc0lycE1tYlBEK3FwZ1FVaHZjeUJ6ZjhuM0RYTGxvU2s9IiwiYmQtdGlja2V0LWd1YXJkLXdlYi12ZXJzaW9uIjoyfQ%3D%3D"
+        ],
+        [
+          "bd_ticket_guard_client_web_domain",
+          "2"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://ttwid.bytedance.com/ttwid/union/register/",
+      "headers": [
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [],
+      "body": "{\"region\": \"cn\", \"aid\": 1768, \"needFid\": false, \"service\": \"www.douyin.com\", \"migrate_info\": {\"ticket\": \"\", \"source\": \"node\"}, \"cbUrlProtocol\": \"https\", \"union\": true}",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://www.douyin.com/ttwid/check/",
+      "headers": [
+        [
+          "referer",
+          "https://www.douyin.com/jingxuan"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "x-secsdk-csrf-token",
+          "DOWNGRADE"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "origin",
+          "https://www.douyin.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "__ac_nonce",
+          "0680fake00000000000a"
+        ],
+        [
+          "__ac_signature",
+          "_02B4Z6wo00f01AfSNDAAAIDBipJNoI9-VWwH8jCAAGtMa4"
+        ],
+        [
+          "ttwid",
+          "1%7CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%7C1790000000%7Cbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ],
+        [
+          "enter_pc_once",
+          "1"
+        ],
+        [
+          "UIFID_TEMP",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "x-web-secsdk-uid",
+          "0ee4bba4-e25b-4295-83b0-90bef2192e13"
+        ],
+        [
+          "s_v_web_id",
+          "verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR"
+        ],
+        [
+          "odin_tt",
+          "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+        ],
+        [
+          "device_web_cpu_core",
+          "20"
+        ],
+        [
+          "device_web_memory_size",
+          "32"
+        ],
+        [
+          "architecture",
+          "amd64"
+        ],
+        [
+          "is_support_rtm_web_ts",
+          "1"
+        ],
+        [
+          "hevc_supported",
+          "true"
+        ],
+        [
+          "IsDouyinActive",
+          "true"
+        ],
+        [
+          "home_can_add_dy_2_desktop",
+          "%220%22"
+        ],
+        [
+          "dy_swidth",
+          "2560"
+        ],
+        [
+          "dy_sheight",
+          "1440"
+        ],
+        [
+          "stream_recommend_feed_params",
+          "%22%7B%5C%22cookie_enabled%5C%22%3Atrue%2C%5C%22screen_width%5C%22%3A2560%2C%5C%22screen_height%5C%22%3A1440%2C%5C%22browser_online%5C%22%3Atrue%2C%5C%22cpu_core_num%5C%22%3A20%2C%5C%22device_memory%5C%22%3A32%2C%5C%22downlink%5C%22%3A10%2C%5C%22effective_type%5C%22%3A%5C%224g%5C%22%2C%5C%22round_trip_time%5C%22%3A0%7D%22"
+        ],
+        [
+          "strategyABtestKey",
+          "%221790000000.123%22"
+        ]
+      ],
+      "body": "{\"aid\":6383,\"service\":\"www.douyin.com\"}",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://mssdk.bytedance.com/web/r/token?ms_appid=6383",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not=A?Brand\";v=\"99\", \"Google Chrome\";v=\"151\", \"Chromium\";v=\"151\""
+        ],
+        [
+          "content-type",
+          "text/plain;charset=UTF-8"
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "origin",
+          "https://www.douyin.com"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "cross-site"
+        ]
+      ],
+      "cookies": [],
+      "body": "{\"magic\":538969122,\"version\":1,\"dataType\":8,\"strData\":\"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\",\"tspFromClient\":1790000000123,\"ulr\":0}",
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://www.douyin.com/passport/general/login_guiding_strategy/?passport_jssdk_version=3.4.4&passport_jssdk_type=normal&is_from_ttaccountsdk=1&aid=6383&language=zh&account_app_language=zh-CN&ts=1789992000&account_sdk_source=web&account_sdk_source_info=7e276d64776172647760466a6b66707777606b667c273f3735292772606761776c736077273f63646976602927666d776a686061776c736077273f63646976602927766d60696961776c736077273f63646976602927756970626c6b76273f3029276c6b6b60774d606c626d71273f3437343029276c6b6b6077526c61716d273f3730333529276a707160774d606c626d71273f34363c3729276a70716077526c61716d273f3730333529277260676269273f7e2773606b616a77273f27426a6a626960254c6b662b252d4b534c414c442c27292777606b6160776077273f27444b424940252d4b534c414c4429254b534c414c44254260436a7766602557515d253035333525516c252d357d35353535374135312c25416c77606671364134342573765a305a352575765a305a35292541364134342c277829276470716a6864716c6a6b273f7e2776273f27353535353535353527292766273f273535353527292775273f27353535353535352729277634273f2735353535353535352729276634273f27353535352729277534273f273527782927756077636a7768646b6660273f7e27716c68604a776c626c6b273f34323d3c3c3c3c3c33343233312b342927707660614f564d606475566c7f60273f31323730363230303429276b64736c6264716c6a6b516c686c6b62273f7e276160666a616061476a617c566c7f60273f3c333d3130312927606b71777c517c7560273f276b64736c6264716c6a6b2729276c6b6c716c64716a77517c7560273f276b64736c6264716c6a6b2729276b646860273f276d717175763f2a2a7272722b616a707c6c6b2b666a682a3a7760666a6868606b61383427292777606b61607747696a666e6c6b62567164717076273f276b6a6b2867696a666e6c6b62272927766077736077516c686c6b62273f2766616b286664666d602960616260296a776c626c6b296c6b6b60772971715a646272272927627069605671647771273f3334352b3d3c3c3c3c3c3c323334303d3429276270696041707764716c6a6b273f276b6a6b60277878292767776a72766077273f7e2771273f273c3233323731323d333d353336272927676c715a75776a716a666a69273f276364697660272927676c715a6d6069756077273f63646976607878&p_js_v=3.4.4&p_js_t=pro&p_zt=3.3.17&p_ver=1.1.3&p_ver_real=0&request_host=https%253A%252F%252Fwww.douyin.com&p_bd=1.0.1.19-fix.01&p_ts=1790000000123&p_no=08eac61770ad21362b6a5e8b5257cad93fdafe8a4cbc058edf80d3b602f9c6c1&biz_trace_id=ab754eb2&device_platform=web_app&sign=f223d0b5a17f2e9b1234569410fe6bc9988082388919ac44d5cbb1faedbd4743&qs=6466666a706b715a6475755a69646b6270646260296466666a706b715a76616e5a766a70776660296466666a706b715a76616e5a766a707766605a6c6b636a29646c6129676c7f5a71776466605a6c61296160736c66605a75696471636a7768296c765a63776a685a71716466666a706b7176616e2969646b627064626029755a676129755a6f765a71&msToken=guest-mstoken-from-mssdk&a_bogus=Qfsjkt7LExQ5adFtYOTkH3alLh6ANPWyoFioRqFl7PL5yhzTxYNfzxtJbxL0Yq9SPYB0h9IHMDTlbVdcZstipH9kwmkfuxkRszA59h0oZ1qXYFiQgqRBCu0oSJeY8YvEuQKjJIUlUtQa2EC4Dpr0UQA9tApjsmvpQHaSdrUai9ekgMs9Pqq%2FuOGDPXzGBco5xf%3D%3D",
+      "headers": [
+        [
+          "x-tt-passport-csrf-token",
+          ""
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/jingxuan"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/javascript"
+        ],
+        [
+          "x-tt-passport-aid-sign",
+          "df9b3b7ae9526f3b60bc77e1878737b72a492d2ce6a60bea16faf3cebeaed7f1"
+        ],
+        [
+          "x-tt-passport-trace-id",
+          "ab754eb2"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "origin",
+          "https://www.douyin.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "__ac_nonce",
+          "0680fake00000000000a"
+        ],
+        [
+          "__ac_signature",
+          "_02B4Z6wo00f01AfSNDAAAIDBipJNoI9-VWwH8jCAAGtMa4"
+        ],
+        [
+          "enter_pc_once",
+          "1"
+        ],
+        [
+          "UIFID_TEMP",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "x-web-secsdk-uid",
+          "0ee4bba4-e25b-4295-83b0-90bef2192e13"
+        ],
+        [
+          "s_v_web_id",
+          "verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR"
+        ],
+        [
+          "odin_tt",
+          "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+        ],
+        [
+          "device_web_cpu_core",
+          "20"
+        ],
+        [
+          "device_web_memory_size",
+          "32"
+        ],
+        [
+          "architecture",
+          "amd64"
+        ],
+        [
+          "is_support_rtm_web_ts",
+          "1"
+        ],
+        [
+          "hevc_supported",
+          "true"
+        ],
+        [
+          "IsDouyinActive",
+          "true"
+        ],
+        [
+          "home_can_add_dy_2_desktop",
+          "%220%22"
+        ],
+        [
+          "dy_swidth",
+          "2560"
+        ],
+        [
+          "dy_sheight",
+          "1440"
+        ],
+        [
+          "stream_recommend_feed_params",
+          "%22%7B%5C%22cookie_enabled%5C%22%3Atrue%2C%5C%22screen_width%5C%22%3A2560%2C%5C%22screen_height%5C%22%3A1440%2C%5C%22browser_online%5C%22%3Atrue%2C%5C%22cpu_core_num%5C%22%3A20%2C%5C%22device_memory%5C%22%3A32%2C%5C%22downlink%5C%22%3A10%2C%5C%22effective_type%5C%22%3A%5C%224g%5C%22%2C%5C%22round_trip_time%5C%22%3A0%7D%22"
+        ],
+        [
+          "strategyABtestKey",
+          "%221790000000.123%22"
+        ],
+        [
+          "ttwid",
+          "1%7CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%7C1790000002%7Ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        ],
+        [
+          "is_dash_user",
+          "1"
+        ],
+        [
+          "biz_trace_id",
+          "ab754eb2"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://www.douyin.com/passport/user_info/get_sec_ts/?aid=6383&is_from_ttaccountsdk=1&msToken=guest-mstoken-from-mssdk&a_bogus=EJ45hF6ixqWceVKbYKizH3clqh6%2Frsuykli2RcBl9PL8LZeYoYPSzxbraxLUYh2SPbpihH1HZDPMYVVcZ0tTpCrpqmpkuEiRzGAc988LZ1qgYMvQEHfqCz8L7JebWYvEu5oRJIWl6tQO2DA4D3rsUQl9yAkJ4QJpKqrRdnRaE9ekgz49MrqduPtdOXFYBb95Nf%3D%3D",
+      "headers": [
+        [
+          "referer",
+          "https://www.douyin.com/user/self"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "x-secsdk-csrf-token",
+          "DOWNGRADE"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "origin",
+          "https://www.douyin.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "__ac_nonce",
+          "0680fake00000000000a"
+        ],
+        [
+          "__ac_signature",
+          "_02B4Z6wo00f01AfSNDAAAIDBipJNoI9-VWwH8jCAAGtMa4"
+        ],
+        [
+          "enter_pc_once",
+          "1"
+        ],
+        [
+          "UIFID_TEMP",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "x-web-secsdk-uid",
+          "0ee4bba4-e25b-4295-83b0-90bef2192e13"
+        ],
+        [
+          "s_v_web_id",
+          "verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR"
+        ],
+        [
+          "odin_tt",
+          "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+        ],
+        [
+          "device_web_cpu_core",
+          "20"
+        ],
+        [
+          "device_web_memory_size",
+          "32"
+        ],
+        [
+          "architecture",
+          "amd64"
+        ],
+        [
+          "is_support_rtm_web_ts",
+          "1"
+        ],
+        [
+          "hevc_supported",
+          "true"
+        ],
+        [
+          "IsDouyinActive",
+          "true"
+        ],
+        [
+          "home_can_add_dy_2_desktop",
+          "%220%22"
+        ],
+        [
+          "dy_swidth",
+          "2560"
+        ],
+        [
+          "dy_sheight",
+          "1440"
+        ],
+        [
+          "stream_recommend_feed_params",
+          "%22%7B%5C%22cookie_enabled%5C%22%3Atrue%2C%5C%22screen_width%5C%22%3A2560%2C%5C%22screen_height%5C%22%3A1440%2C%5C%22browser_online%5C%22%3Atrue%2C%5C%22cpu_core_num%5C%22%3A20%2C%5C%22device_memory%5C%22%3A32%2C%5C%22downlink%5C%22%3A10%2C%5C%22effective_type%5C%22%3A%5C%224g%5C%22%2C%5C%22round_trip_time%5C%22%3A0%7D%22"
+        ],
+        [
+          "strategyABtestKey",
+          "%221790000000.123%22"
+        ],
+        [
+          "ttwid",
+          "1%7CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%7C1790000002%7Ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        ],
+        [
+          "is_dash_user",
+          "1"
+        ],
+        [
+          "biz_trace_id",
+          "ab754eb2"
+        ],
+        [
+          "passport_csrf_token",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ],
+        [
+          "passport_csrf_token_default",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ]
+      ],
+      "body": "aid=6383&is_from_ttaccountsdk=1",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://login.douyin.com/ttwid/check/",
+      "headers": [
+        [
+          "referer",
+          "https://www.douyin.com/"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/plain, */*"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "origin",
+          "https://www.douyin.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "enter_pc_once",
+          "1"
+        ],
+        [
+          "UIFID_TEMP",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "odin_tt",
+          "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+        ],
+        [
+          "is_support_rtm_web_ts",
+          "1"
+        ],
+        [
+          "hevc_supported",
+          "true"
+        ],
+        [
+          "IsDouyinActive",
+          "true"
+        ],
+        [
+          "home_can_add_dy_2_desktop",
+          "%220%22"
+        ],
+        [
+          "stream_recommend_feed_params",
+          "%22%7B%5C%22cookie_enabled%5C%22%3Atrue%2C%5C%22screen_width%5C%22%3A2560%2C%5C%22screen_height%5C%22%3A1440%2C%5C%22browser_online%5C%22%3Atrue%2C%5C%22cpu_core_num%5C%22%3A20%2C%5C%22device_memory%5C%22%3A32%2C%5C%22downlink%5C%22%3A10%2C%5C%22effective_type%5C%22%3A%5C%224g%5C%22%2C%5C%22round_trip_time%5C%22%3A0%7D%22"
+        ],
+        [
+          "strategyABtestKey",
+          "%221790000000.123%22"
+        ],
+        [
+          "ttwid",
+          "1%7CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%7C1790000002%7Ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        ],
+        [
+          "is_dash_user",
+          "1"
+        ],
+        [
+          "biz_trace_id",
+          "ab754eb2"
+        ],
+        [
+          "passport_csrf_token",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ],
+        [
+          "passport_csrf_token_default",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ]
+      ],
+      "body": "{\"aid\":6383,\"service\":\"www.douyin.com\"}",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://login.douyin.com/passport/web/challenge/?passport_jssdk_version=3.4.4&passport_jssdk_type=normal&is_from_ttaccountsdk=1&aid=6383&language=zh&account_app_language=zh-CN&ts=1789992000&request_host=https%253A%252F%252Fwww.douyin.com&skip_c=1&p_ca=4.0.26&p_ca_real=1.0.0.892&fp=verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR&verifyFp=verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR&account_sdk_source=web&account_sdk_source_info=7e276d64776172647760466a6b66707777606b667c273f3735292772606761776c736077273f63646976602927666d776a686061776c736077273f63646976602927766d60696961776c736077273f63646976602927756970626c6b76273f3029276c6b6b60774d606c626d71273f3437343029276c6b6b6077526c61716d273f3730333529276a707160774d606c626d71273f34363c3729276a70716077526c61716d273f3730333529277260676269273f7e2773606b616a77273f27426a6a626960254c6b662b252d4b534c414c442c27292777606b6160776077273f27444b424940252d4b534c414c4429254b534c414c44254260436a7766602557515d253035333525516c252d357d35353535374135312c25416c77606671364134342573765a305a352575765a305a35292541364134342c277829276470716a6864716c6a6b273f7e2776273f27353535353535353527292766273f273535353527292775273f27353535353535352729277634273f2735353535353535352729276634273f27353535352729277534273f273527782927756077636a7768646b6660273f7e27716c68604a776c626c6b273f34323d3c3c3c3c3c33343233312b342927707660614f564d606475566c7f60273f31323730363230303429276b64736c6264716c6a6b516c686c6b62273f7e276160666a616061476a617c566c7f60273f3c333d3130312927606b71777c517c7560273f276b64736c6264716c6a6b2729276c6b6c716c64716a77517c7560273f276b64736c6264716c6a6b2729276b646860273f276d717175763f2a2a7272722b616a707c6c6b2b666a682a3a7760666a6868606b61383427292777606b61607747696a666e6c6b62567164717076273f276b6a6b2867696a666e6c6b62272927766077736077516c686c6b62273f2766616b286664666d602960616260296a776c626c6b296c6b6b60772971715a646272272927627069605671647771273f3334352b3d3c3c3c3c3c3c323334303d3429276270696041707764716c6a6b273f276b6a6b60277878292767776a72766077273f7e2771273f273c3233323731323d333d353336272927676c715a75776a716a666a69273f276364697660272927676c715a6d6069756077273f63646976607878&p_js_v=3.4.4&p_js_t=pro&p_zt=3.3.17&p_ver=1.1.3&p_ver_real=0&p_bd=1.0.1.19-fix.01&p_ts=1790000000123&p_no=c1c9e5651aa452f39c8e3002af4792a878b7156e490a83d92dd87f2ef1670ea8&biz_trace_id=ab754eb2&device_platform=web_app&sign=2823a3bf641c760b8acb49ee65c7a37c6cc52983c5152bd1ff8dcacb7dac436f&qs=6466666a706b715a6475755a69646b6270646260296466666a706b715a76616e5a766a70776660296466666a706b715a76616e5a766a707766605a6c6b636a29646c6129676c7f5a71776466605a6c61296160736c66605a75696471636a7768296375296c765a63776a685a71716466666a706b7176616e2969646b627064626029755a6761&msToken=guest-mstoken-from-mssdk&a_bogus=Yjsfg7W7mxQVKd%2FG8Cau7aaUuh6MrsSykaixSE3PeOTnLwlYdSN6ziiJnxNfsZguFuBhheI7cVCTbEncN4lCk9HpompfSxvRzTIC9hmLM1whYzvQErRZCzmoHJeY8YkEYAobJIRUAtmO2x%2F4LZazUB-ytApJsQipQHrfdr4GT9ev6MT9BqF2uxGDTXzT-c25BE%3D%3D",
+      "headers": [
+        [
+          "web-sdk-version",
+          "1"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "x-tt-session-dtrait",
+          "d0_eeau18whLtgJzZgrUoY2kLIco6yg5mgAijNfb/8mjJDg+dXHlR0oetAAD/3aRyzDFHZWTV0scYvr8cvum4JuoCNg5XngQfuu+UstXIAHFuNTkYKKE0v6BiLrHvcGnyWUdZqk5bQpClgukz2KcuEfOwMEteHF4qZ9pAFYSqD5Z85YPTiHbVq49KIwFOuGknnfP2SkyQY7d31YWGikDdUrDBHRcFnd/P3ni+Y/BAfntMucLt9ECaFjNpUyh8LS3Hu01Sg7F6BBqSPlFlvppMQvDcO9brPl8LM9SBNTqJjMahUqGHoWhq6pZ2j1Hq69EY6zCOvaWHigpUkMb55cuDqKmg==_SGiCmJ5e6eiPDOwuZAe35ZOiRaDBbO0InDcKPCin6sZBxjR2Om3kONUt7SCe1t0/Wm/mq2W0Yn/ie3WoOHKI8IXRg9+vJHv2EqsQ5yu8iZc0L1wovqo8htwOQn6I8QFWiquNYLESIT8WZG9ouBP3RROZkKDl7OQbUVqDGLSLX5oyoG8jEtGy9B2izFgr6gZiEp3VsOea8D2IlYfSbgLDjiWF9/1iCQhoPaO9MeSCDGa3nkLRqES3zy9cVAAnB+LYddhL9HtmRbRK71PwFZdz40qdWN2WRhidAcyPlKGpmIgBIZaXucHl/MgsRueo6BwdlAWmkR3TyXMz6ovOUulonahqww5SGc30n56n750myAZmU3VcowUJv7Rqps3w+JzhzT2aUAyW4BlceXiOOyZL4yAKgGWSeguFFPJ56FMMApFUtRYn9defE7/FMhm4KKBT0of0LpuenuCu3p1Nt7MHxA=="
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not=A?Brand\";v=\"99\", \"Google Chrome\";v=\"151\", \"Chromium\";v=\"151\""
+        ],
+        [
+          "x-tt-passport-aid-sign",
+          "3aac813239be6358085569ae6440df820d5f917a78016d144f1cab2187a220e4"
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "x-tt-passport-csrf-token",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ],
+        [
+          "x-tt-passport-trace-id",
+          "ab754eb2"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/javascript"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "x-tt-passport-verify-portrait",
+          "d592a0c2-464f-492c-b03d-902187b522b4.login"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "origin",
+          "https://www.douyin.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "enter_pc_once",
+          "1"
+        ],
+        [
+          "UIFID_TEMP",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "odin_tt",
+          "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+        ],
+        [
+          "is_support_rtm_web_ts",
+          "1"
+        ],
+        [
+          "hevc_supported",
+          "true"
+        ],
+        [
+          "IsDouyinActive",
+          "true"
+        ],
+        [
+          "home_can_add_dy_2_desktop",
+          "%220%22"
+        ],
+        [
+          "stream_recommend_feed_params",
+          "%22%7B%5C%22cookie_enabled%5C%22%3Atrue%2C%5C%22screen_width%5C%22%3A2560%2C%5C%22screen_height%5C%22%3A1440%2C%5C%22browser_online%5C%22%3Atrue%2C%5C%22cpu_core_num%5C%22%3A20%2C%5C%22device_memory%5C%22%3A32%2C%5C%22downlink%5C%22%3A10%2C%5C%22effective_type%5C%22%3A%5C%224g%5C%22%2C%5C%22round_trip_time%5C%22%3A0%7D%22"
+        ],
+        [
+          "strategyABtestKey",
+          "%221790000000.123%22"
+        ],
+        [
+          "is_dash_user",
+          "1"
+        ],
+        [
+          "passport_csrf_token",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ],
+        [
+          "passport_csrf_token_default",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ],
+        [
+          "ttwid",
+          "1%7CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%7C1790000002%7Ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        ],
+        [
+          "biz_trace_id",
+          "ab754eb2"
+        ],
+        [
+          "__security_mc_1_s_sdk_crypt_sdk",
+          "aa346c08-7334-4c8b"
+        ],
+        [
+          "bd_ticket_guard_regenerate_keys_time",
+          "2026-09-21/22:13:20"
+        ],
+        [
+          "bd_ticket_guard_client_data",
+          "eyJiZC10aWNrZXQtZ3VhcmQtdmVyc2lvbiI6MiwiYmQtdGlja2V0LWd1YXJkLWl0ZXJhdGlvbi12ZXJzaW9uIjoxLCJiZC10aWNrZXQtZ3VhcmQtcmVlLXB1YmxpYy1rZXkiOiJCRGExZ0ZKbVJGNG8rV3ZSYm1pR251YTJrVHllbmVQSWRaZGIvcUxCRGZlYjNkMEM4ZktlZE9tc0lycE1tYlBEK3FwZ1FVaHZjeUJ6ZjhuM0RYTGxvU2s9IiwiYmQtdGlja2V0LWd1YXJkLXdlYi12ZXJzaW9uIjoyfQ%3D%3D"
+        ],
+        [
+          "bd_ticket_guard_client_web_domain",
+          "2"
+        ]
+      ],
+      "body": "sign=UpP0UrRmIwFjZbigTqu47d30spq2oYLKF_tz4t0PxxLtjkvxsXiU5wnGCtwH_Q88B0Q-5W6Dlt9LhrsOI22DLFLCYmIQSvz3vpEBFeogoQo68i0IShIbNUfNECAM4D6od5KbfgBbCNqT334QX8-zEgDZBX8TWZgIBvoYhUrWcch48XptSn5kvjS0QJuN0TFzIzDXoyUofy4pomXsp8RCgoJV37_oCyijyBM_eOlhfYOvvowLIZyaeGW3_C4TSSaimiyM-fH8Uom_tE1fZlG4io-vgPlNVNbPY5Wddj4LpfvrNQ1mdy-a0stwlAVWXwZT5a14eWOnr_PT3VPex2OlgOzMETntTYyZSg5u0SvvRGsHE4LNxpuaDqOp1Uls8syddaYj0a9hxazMbYEP61xv-w44vXfIMNzF61nsBvFJCCPp4nk4mv0VuAXHEBrckYRqKUMgObCEfs19BCXKcdLPgbhgV9UxfKZowpyxAwBaU5hWM4GPerOhpImChpeR5AVcGDLWQepPpKU-TdbiTC0PpCzcCodgDvG6U2CK1WOBAx37apurHtn95okZP9gdYNQUAsxA5wXbBQZtwA8-kCu9UvtRQ3-N-Y2lfmsGgEX5QG7Ii5FDnvvpgG4lAaTiLdR803-2Asf9MYeuwLl9QEkdYF5sS9lyEqHZmot4Fl7DztmF6a_Uc9dj7xi23egO4Kh3ibwMeEZUatSmpxm9mPzYlS55yCNjx_pcxtuN9Pr-hNl6ZfeAZmpNAp2BBL6mDUZ6OgW2iUm9OTPx6VaHT7PVdJgzr93sntBoyM_cM-_LfqN00pBTYBeqkRC2c0b5d202XGundhvMzpwI3BRgX4fKdyyM2y6B0Mmbcu-xiPXrzoSvEoOUkBI09KTHtlOCIUd1NzpO8CYsNtQw5qAHlCapdptwjEB17bzvxEAdAkLY-yeKtHHkCfet_sYkOV5U8ORRRJqJJUcvhKX7Mf3_imJQAuFnocUezQ_Q-VjiiVINJKleZluDaWdzN4jZw-ETbphEDFLPjGqnF-TrT9UaEoPS8OpJqGPwUPsgX7ZUbjBgRUrEsaxe70NEyJMEZ-Ae_hJT2BsBF8F_wYSaxF5p_lPF1v7RakVf5q-Mo-xZutUFO5TxS-LwLAutlnRjdvnZFv232JRrwyKEmmKRqe_buVl0mNKcM2ldpSr12FAo1P6fBNo7plV-x14Maa6InJ_J-RLgjus4KP8mE1kMzcYDWZcfOBt4wUKgPknq6Jb8tTUynxk5MERUIVZ568nqnDAhTKloFNevc6XZb-iwQKj51hAd4kTfiUG-9zxiKOV5NwYMhyi4nykPbmE0X38KO0YX0jPVBrL27sKaj421TO5YoSx8U1SpVENwnpxJpKPIw3xkVE0HQDk_Xs6K1USrp_Gdph_gwFWEDw4Lp7gFNqAHq6lf91z1hPbm7gEKCFXJJsMKnzfLKetHRsrh0xcqvXucSPVAyP5BbIPuSu3Yt8cbnZhrCVUEHluYCQNLKH-7DBvoeyj_lDE6SjNFkVMdHBqHHtuEXAzvA6lqDc-6DQpQhwhB1yT7iHyKEfGd5w1nzBF2rVJuVxojW-z3ErTQWe2nyZ61D-qELMaJslGGUA2Xru390xiNF8r5nb8V-n24guSyYkMnQU801vg4WCJAPw14a5Z_8bJ-dR6sX3_m--V7ijbqq52JH2ptFaRgDkYmrsW2l3KyG4eaO_BWFnYqhDiWsKlNrId_Usr8OQKxqlb7a-PiGYSrGzYvBu8PwCyL8oO3w8UaifOWt7-xof9sNhfxuZNeumMF9J3g6ikKIziuxiwD5XMkAZAYxh63KCgnQCdT-d6dXKLYIHjhRAA2pK0UsjjW1y8YlEPRKlDY0G6hPdntNlopX5i0bwbSHwLeMzAYdMtTsvaedQ_u8gBonXOM3oASR6FsFyy4hITP5YxzqZTifxn2KB809su3tYM7dvovC0JYSZgIKCI2cYklKKd4u5pG5KvNXjKbcTH384SnqjxCbw5FXORzUAK67-nJUzoeVZBIlJCrAZ2PiDSHpxqXLzJwbA6AdevEeYpUWM_AZPo5ZD9jG0hrwkonrIiLvNByJvxHWJpDzutGykUXFS1pc9TqTgWkBI4Vb6W4n8kAxCnuukasehRer8wYBnzbMYcMRt1Ci3xHTT96p7Bm6ADKlNEFjJoGS0o_HBdFnLE9U_mEb_71GQvMK1yLUiQXpfMQuUcEqTLaFyjlXqV_P4dEFPHmGhxA6FjhhajEJbFVb9GJiHavBV1J-Y8ylKX7XmSra-HPB3nIpNTvnYKrr4oqcE0KHCusIIS2TeTPy0m7gALtr3SiA9nHvcrwyK5R6MSRMlwoQGCOfeD0NDqH5TWlbijpGfehbnBgnEFdw0i_97C5bCvTmdReholJihgce0BH6pGmbLAVYt5IkhioshFDEiS7-dFcJ-nfCn-VO8ceaUa9xHp1BXDu2vaAnai9gnL5Ke9VsP0RSvEyg9d0dX4CMjgMrC7Cz_yTndC1sQA5Z-a1mqDs9q7g1LHB-lmJJzXIZv0H-PAlwSe4IKWSnztkNANe7nUXCiWkm_DmuzpqlG9d6SOYSJXjEC-37bekr8ZLo01M3Q4vmBOE7uYSMo59x6jBYfxV_jjd6U929AcFH-81lgVfUJKq26nSu3B3zpDVJ1W5md5pZOAcJVMCEAAmDaYA3WEs-aHG-fPHRRUafgiWAXvtAxptTIRPgeI0IWvEByKOwLnrtiIMTmYq5-SZM8tiZYmAxXyiQT61qaTT2n073VEXK9vknJt-dft3ZVOi-3vZ4GBlMygtEcWBQUZAadpv2fKNBkmlxXrP32EwHjUEhkOdjRMZNa8NKSEvIoN_3v6dUaYKC97DSkNkhKl3TSceIooHrLq9JYFj8udluHIYuw4ZqUIvQqOkrglHiakoMd6Q3jd01efcNt1ozKXeiFJ68nf4hhtRK9bKXJ666RF9l3lzR_nAk-wZUi_PhwDqZlhmxY9ammomMPKbvXh7Gugj65y3rY0U-8isjjWKtKCHYJLd4-B69r-v92U9JLrKMqd-S95i1m5L-Z4aDa00IE10YPWwFFOG6XTJpXvsAPD0ZGlsjnWRDLyOFlMK0CC0lJe_VmBGx7kCeAgCm1TyhrPIAJvkZYi5a13Uk1SOeVVihA3sVDk0Oe-j01E54_SCknr10nZlZ5DtwvF8ocGlZJMVE3WFfnWsji4ljWSz49J9fNA_KDmmwHxzGsPUD-hH-FGfyluI4k4qCmRPvWAw0Zx3r6kXnOvfwvFVxa4CKYDRDp23EEjhDlDmTNnfeLR2-T6R-qEIMXWwsWVrMGL1Ii7w_7OUWHLRJmVBM3uYeK3ruZN0ow8Yu_5b8YxltJ04-H8v8bv4FrWyCjTJuhw_Z8H0yfFy4RYgtJtA2XYhvY4EoYAcTkEWye6c-ZbxqxMv3ZdcNOL5qCmHjIdLn6H0UELW5tO-KCGdfeyO3krmy2mK4iUjXAutMNAxmlXeNDQO66__a96DIWW8SjMtEJOgtSUxZFhPtt7XeoZofPpyjMKu5-lkmY6szDtoPE-Q689Qtxbu0AY5lvUvQt2ciTjT8EbZRr9A7AgDj9KdDQQqk-JZBZ1zzfQtgAepbt6Cxp1HXZbELRxJPulS_7XE5BH9RngkLV-dbFCru2Wmz36KvemY6HUAC2DnvWIhlbM2k8CDcci_PlN5qkUwPr_8SBFejEDM-fOEA225NfuYtb7UC5kJDTHcMTJYL3FQz8_e9UFKCYoIKwfdZEmRFJWirvWT6sZZkNJLpZYEH_BIxoUpLdU4BQ%3D%3D&sk=2037352037352037352037356471203735712b626071567164666e4077776a772037352d6d71717576203644203743203743696328616a707c6c6b287566287260672b616a707c6c6b767164716c662b666a682037436a676f203743616a707c6c6b287566287260672037436c6076203743616a707c6c6b5a72606720374364767c6b66203743343c3434352b66356364633c3d322b6f76203644372036443735323c3d2c2037352037352037352037356471203735642037352d6d71717576203644203743203743696328616a707c6c6b287566287260672b616a707c6c6b767164716c662b666a682037436a676f203743616a707c6c6b287566287260672037436c6076203743616a707c6c6b5a72606720374364767c6b66203743343c3434352b66356364633c3d322b6f762036443720364434363632312c",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://www.douyin.com/passport/ticket_guard/get_client_cert/?aid=6383&is_from_ttaccountsdk=1&msToken=guest-mstoken-from-mssdk&a_bogus=DJsVgztEmpR5FdKSuci0HVeUzh6lNBuyw-idRr%2FUyPoWywlYoSP6zPGrjxLUbh9SMSB0h9IH8DP%2FbVdcN4tkpCrkLmpDSxkR0zII90soM1qXY0JQErfBCzmoeJtTWOvEuAoyJlWl6tQP2EC4gZrhUBlyCApisYJp%2FraRdnUaE9tk6zG9PHqouxbDEXzTBb255D%3D%3D",
+      "headers": [
+        [
+          "x-tt-session-dtrait",
+          "d0_eeau18whLtgJzZgrUoY2kLIco6yg5mgAijNfb/8mjJDg+dXHlR0oetAAD/3aRyzDFHZWTV0scYvr8cvum4JuoCNg5XngQfuu+UstXIAHFuNTkYKKE0v6BiLrHvcGnyWUdZqk5bQpClgukz2KcuEfOwMEteHF4qZ9pAFYSqD5Z85YPTiHbVq49KIwFOuGknnfP2SkyQY7d31YWGikDdUrDBHRcFnd/P3ni+Y/BAfntMucLt9ECaFjNpUyh8LS3Hu01Sg7F6BBqSPlFlvppMQvDcO9brPl8LM9SBNTqJjMahUqGHoWhq6pZ2j1Hq69EY6zCOvaWHigpUkMb55cuDqKmg==_as2Xrw9gqJ6xtUi8+0KUUuuMWhEBydSv/dcp/apAKBHga9Xn5MteOO+0wclEGpxLiaTeckhOEvL//16VfOHronvjPsLyB1PWaULsTiFa1I8Q+Md6NvBzPakiQWn82KF4LeRjHEVbAEhKNYsM/6YOYienJROOyEXtWqukjKTJI8qgEGhQ0odWTNJsJyRRkN+mzfmskzEhITF5mMmn4dVzSKb8BOUSz6QtLodXa4dYXnURiLgdtC/1LafdCdOSK4j0ll0oIXMkuBDAxuSOESX/IbjhXaqoiKI+wEeBnK1KDOFqhCy23TqS5zoeWj8DUMW3O8G2ZWf5U7hVhqjnGMwbc43YknmAqOhjcsEZIuFSAaLYVFfZTjIdosOTIRtslIos+jYT8hDTAO9svV7/S4NOan1ccxdCyE1ZRtZZlUDIi7+CgUvISAe/ej7U1JDV22rxauOP3b9O0mLj1eP3fWnY7XK1UTQNUFj7WZTxKSBBL+g="
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "x-secsdk-csrf-token",
+          "DOWNGRADE"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "origin",
+          "https://www.douyin.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ]
+      ],
+      "cookies": [
+        [
+          "__ac_nonce",
+          "0680fake00000000000a"
+        ],
+        [
+          "__ac_signature",
+          "_02B4Z6wo00f01AfSNDAAAIDBipJNoI9-VWwH8jCAAGtMa4"
+        ],
+        [
+          "enter_pc_once",
+          "1"
+        ],
+        [
+          "UIFID_TEMP",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "x-web-secsdk-uid",
+          "0ee4bba4-e25b-4295-83b0-90bef2192e13"
+        ],
+        [
+          "s_v_web_id",
+          "verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR"
+        ],
+        [
+          "odin_tt",
+          "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+        ],
+        [
+          "device_web_cpu_core",
+          "20"
+        ],
+        [
+          "device_web_memory_size",
+          "32"
+        ],
+        [
+          "architecture",
+          "amd64"
+        ],
+        [
+          "is_support_rtm_web_ts",
+          "1"
+        ],
+        [
+          "hevc_supported",
+          "true"
+        ],
+        [
+          "IsDouyinActive",
+          "true"
+        ],
+        [
+          "home_can_add_dy_2_desktop",
+          "%220%22"
+        ],
+        [
+          "dy_swidth",
+          "2560"
+        ],
+        [
+          "dy_sheight",
+          "1440"
+        ],
+        [
+          "stream_recommend_feed_params",
+          "%22%7B%5C%22cookie_enabled%5C%22%3Atrue%2C%5C%22screen_width%5C%22%3A2560%2C%5C%22screen_height%5C%22%3A1440%2C%5C%22browser_online%5C%22%3Atrue%2C%5C%22cpu_core_num%5C%22%3A20%2C%5C%22device_memory%5C%22%3A32%2C%5C%22downlink%5C%22%3A10%2C%5C%22effective_type%5C%22%3A%5C%224g%5C%22%2C%5C%22round_trip_time%5C%22%3A0%7D%22"
+        ],
+        [
+          "strategyABtestKey",
+          "%221790000000.123%22"
+        ],
+        [
+          "is_dash_user",
+          "1"
+        ],
+        [
+          "passport_csrf_token",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ],
+        [
+          "passport_csrf_token_default",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ],
+        [
+          "fpk1",
+          "U2FsdGVkX1+9oxjot7q4H3yo59qHBVr/fXAhKTW6HZi3qcmYmLAmAKFl9iLTX85XfNCsChJNpV0dCgjr9ER1gg=="
+        ],
+        [
+          "fpk2",
+          "6967ec7261b3cbe6a91d798c6b951c60"
+        ],
+        [
+          "ttwid",
+          "1%7CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%7C1790000002%7Ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        ],
+        [
+          "biz_trace_id",
+          "ab754eb2"
+        ],
+        [
+          "__security_mc_1_s_sdk_crypt_sdk",
+          "aa346c08-7334-4c8b"
+        ],
+        [
+          "bd_ticket_guard_regenerate_keys_time",
+          "2026-09-21/22:13:20"
+        ]
+      ],
+      "body": "server_data=1,aid=6383",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://mssdk.bytedance.com/web/common?ms_appid=6383&msToken=guest-mstoken-from-mssdk",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not=A?Brand\";v=\"99\", \"Google Chrome\";v=\"151\", \"Chromium\";v=\"151\""
+        ],
+        [
+          "content-type",
+          "text/plain;charset=UTF-8"
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "origin",
+          "https://www.douyin.com"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "cross-site"
+        ],
+        [
+          "sec-fetch-storage-access",
+          "active"
+        ]
+      ],
+      "cookies": [],
+      "body": "{\"magic\":538969122,\"version\":1,\"dataType\":8,\"strData\":\"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\",\"tspFromClient\":1790000000134,\"ulr\":0}",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://login.douyin.com/passport/web/send_code/?passport_jssdk_version=3.4.4&passport_jssdk_type=normal&is_from_ttaccountsdk=1&aid=6383&language=zh&account_app_language=zh-CN&ts=1789992000&is_from_iesaccountsaas=1&p_ui=2.4.4&p_ca=4.0.26&p_ca_real=1.0.0.892&fp=verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR&verifyFp=verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR&account_sdk_source=web&account_sdk_source_info=7e276d64776172647760466a6b66707777606b667c273f3735292772606761776c736077273f63646976602927666d776a686061776c736077273f63646976602927766d60696961776c736077273f63646976602927756970626c6b76273f3029276c6b6b60774d606c626d71273f3437343029276c6b6b6077526c61716d273f3730333529276a707160774d606c626d71273f34363c3729276a70716077526c61716d273f3730333529277260676269273f7e2773606b616a77273f27426a6a626960254c6b662b252d4b534c414c442c27292777606b6160776077273f27444b424940252d4b534c414c4429254b534c414c44254260436a7766602557515d253035333525516c252d357d35353535374135312c25416c77606671364134342573765a305a352575765a305a35292541364134342c277829276470716a6864716c6a6b273f7e2776273f27353535353535353527292766273f273535353527292775273f27353535353535352729277634273f2735353535353535352729276634273f27353535352729277534273f273527782927756077636a7768646b6660273f7e27716c68604a776c626c6b273f34323d3c3c3c3c3c33343233312b342927707660614f564d606475566c7f60273f31323730363230303429276b64736c6264716c6a6b516c686c6b62273f7e276160666a616061476a617c566c7f60273f3c333d3130312927606b71777c517c7560273f276b64736c6264716c6a6b2729276c6b6c716c64716a77517c7560273f276b64736c6264716c6a6b2729276b646860273f276d717175763f2a2a7272722b616a707c6c6b2b666a682a3a7760666a6868606b61383427292777606b61607747696a666e6c6b62567164717076273f276b6a6b2867696a666e6c6b62272927766077736077516c686c6b62273f2766616b286664666d602960616260296a776c626c6b296c6b6b60772971715a646272272927627069605671647771273f3334352b3d3c3c3c3c3c3c323334303d3429276270696041707764716c6a6b273f276b6a6b60277878292767776a72766077273f7e2771273f273c3233323731323d333d353336272927676c715a75776a716a666a69273f276364697660272927676c715a6d6069756077273f63646976607878&p_js_v=3.4.4&p_js_t=pro&p_zt=3.3.17&p_ver=1.1.3&p_ver_real=0&request_host=https%253A%252F%252Fwww.douyin.com&p_bd=1.0.1.19-fix.01&p_ts=1790000000123&p_no=580e0626ee91b1359deedf69832ec816f43c27024e6cc9b2f4fc7bb3680c389a&biz_trace_id=ab754eb2&device_platform=web_app&sign=b720b32a9662174e8425ea3d9ed7d2f04443f0dd085d782110692a0858202d92&qs=6466666a706b715a6475755a69646b6270646260296466666a706b715a76616e5a766a70776660296466666a706b715a76616e5a766a707766605a6c6b636a29646c6129676c7f5a71776466605a6c61296160736c66605a75696471636a7768296375296c765a63776a685a6c60766466666a706b7176646476296c765a63776a685a71716466666a706b7176616e2969646b6270646260&msToken=LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL&a_bogus=dv0nDqyEmomcFdKSYKaY7naloh6lNBWyGFi%2FSaVPexTAyhtToSPSzYJJrOqk4ZLuBSpshH17cVSZYdDPq06FD9nkzmkDuxJRzzIA9hmo%2F1wXYzJQErRBCLsLyJeG8QiEYQoWJIUU6tmP2DK4E1rTUQAyHAkE4YvpQNrSdrUGY9eD6MT9BNqxuNSDxXFY-b95Wj%3D%3D",
+      "headers": [
+        [
+          "web-sdk-version",
+          "1"
+        ],
+        [
+          "x-tt-session-dtrait",
+          "d0_eeau18whLtgJzZgrUoY2kLIco6yg5mgAijNfb/8mjJDg+dXHlR0oetAAD/3aRyzDFHZWTV0scYvr8cvum4JuoCNg5XngQfuu+UstXIAHFuNTkYKKE0v6BiLrHvcGnyWUdZqk5bQpClgukz2KcuEfOwMEteHF4qZ9pAFYSqD5Z85YPTiHbVq49KIwFOuGknnfP2SkyQY7d31YWGikDdUrDBHRcFnd/P3ni+Y/BAfntMucLt9ECaFjNpUyh8LS3Hu01Sg7F6BBqSPlFlvppMQvDcO9brPl8LM9SBNTqJjMahUqGHoWhq6pZ2j1Hq69EY6zCOvaWHigpUkMb55cuDqKmg==_o6E/VFS5g5LWftM8mPe8rzujJYFOYGMlcZi6xUuaZKaM1MlUioI1kvNZ3xZJcuB6ccFgipNdpyucDItxmrLu58PiW6vMaND7SBPcXEVTHKbf5e90IHFl2o5yx+WUC/NVIdL+vxf2p5JIgUgbhD0skdgqCNtkixU2pueB4e5vlogNxI909++0NtT+tYl/tk4gCmCuRoCVhyXDWouPoYMPV6RxZ5ZY6tAAZdMPWMIwTfzn2mSjQXRMh3Rvpk5VOAsrLtdrOZq+3kQq6XdLpGgvYipzXRnHM+2P+8B18CtWpQXgUUeH3qQRJ/hHBZe41u3RLpTOSuQUK1fTPgTRf75mqMr0jB1ux5AC5Kj3Qvnc/3S/yZ5BfvzLC46J5U4yQVGb8UFUehRr2qR7hcLDIWUKwOhvQza6TwUwvtVAbmZWjccOdDw6mxLmwySwfTZ6RLtxHpYkv2BXXHsl+7oewjJ6Lw=="
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/"
+        ],
+        [
+          "x-tt-passport-aid-sign",
+          "77ebe1c010c1347936897144c5978778bd85d527fd2416a2c8c9cebc081940ea"
+        ],
+        [
+          "x-tt-passport-csrf-token",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ],
+        [
+          "x-tt-passport-trace-id",
+          "ab754eb2"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/javascript"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "x-tt-passport-verify-portrait",
+          "d592a0c2-464f-492c-b03d-902187b522b4.login"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "content-length",
+          "87"
+        ],
+        [
+          "origin",
+          "https://www.douyin.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "enter_pc_once",
+          "1"
+        ],
+        [
+          "UIFID_TEMP",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "odin_tt",
+          "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+        ],
+        [
+          "is_support_rtm_web_ts",
+          "1"
+        ],
+        [
+          "hevc_supported",
+          "true"
+        ],
+        [
+          "IsDouyinActive",
+          "true"
+        ],
+        [
+          "home_can_add_dy_2_desktop",
+          "%220%22"
+        ],
+        [
+          "stream_recommend_feed_params",
+          "%22%7B%5C%22cookie_enabled%5C%22%3Atrue%2C%5C%22screen_width%5C%22%3A2560%2C%5C%22screen_height%5C%22%3A1440%2C%5C%22browser_online%5C%22%3Atrue%2C%5C%22cpu_core_num%5C%22%3A20%2C%5C%22device_memory%5C%22%3A32%2C%5C%22downlink%5C%22%3A10%2C%5C%22effective_type%5C%22%3A%5C%224g%5C%22%2C%5C%22round_trip_time%5C%22%3A0%7D%22"
+        ],
+        [
+          "strategyABtestKey",
+          "%221790000000.123%22"
+        ],
+        [
+          "is_dash_user",
+          "1"
+        ],
+        [
+          "passport_csrf_token",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ],
+        [
+          "passport_csrf_token_default",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ],
+        [
+          "ttwid",
+          "1%7CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%7C1790000002%7Ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        ],
+        [
+          "biz_trace_id",
+          "ab754eb2"
+        ],
+        [
+          "__security_mc_1_s_sdk_crypt_sdk",
+          "aa346c08-7334-4c8b"
+        ],
+        [
+          "bd_ticket_guard_regenerate_keys_time",
+          "2026-09-21/22:13:20"
+        ],
+        [
+          "bd_ticket_guard_client_data",
+          "eyJiZC10aWNrZXQtZ3VhcmQtdmVyc2lvbiI6MiwiYmQtdGlja2V0LWd1YXJkLWl0ZXJhdGlvbi12ZXJzaW9uIjoxLCJiZC10aWNrZXQtZ3VhcmQtcmVlLXB1YmxpYy1rZXkiOiJCRGExZ0ZKbVJGNG8rV3ZSYm1pR251YTJrVHllbmVQSWRaZGIvcUxCRGZlYjNkMEM4ZktlZE9tc0lycE1tYlBEK3FwZ1FVaHZjeUJ6ZjhuM0RYTGxvU2s9IiwiYmQtdGlja2V0LWd1YXJkLXdlYi12ZXJzaW9uIjoyfQ%3D%3D"
+        ],
+        [
+          "bd_ticket_guard_client_web_domain",
+          "2"
+        ],
+        [
+          "bd_ticket_guard_client_data_v2",
+          "eyJyZWVfcHVibGljX2tleSI6IkJEYTFnRkptUkY0bytXdlJibWlHbnVhMmtUeWVuZVBJZFpkYi9xTEJEZmViM2QwQzhmS2VkT21zSXJwTW1iUEQrcXBnUVVodmN5QnpmOG4zRFhMbG9Taz0iLCJyZXFfY29udGVudCI6InNlY190cyIsInJlcV9zaWduIjoiSThJamRtRWRVd2lqSTdrMzAvWXpZRXpmVThjdG1sc0xCUjQvZVFFR2NUOD0iLCJzZWNfdHMiOiIjYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhIn0%3D"
+        ],
+        [
+          "sdk_source_info",
+          "7e276470716a68645a606960273f276364697660272927676c715a6d6069756077273f276364697660272927666d776a68605a607d71606b766c6a6b5a7666776c7571273f275e58272927666a6b766a69605a696c6061273f27636469766027292762696a6764695a7364776c6467696076273f275e582729277672715a646971273f2763646976602729277f6b5a666475273f2763646976602729276d6a6e5a6b6a716c273f2763646976602729276c6b6f5a7f6367273f27636469766027292771273f2735353535353535353535353535272927676c715a75776a716a666a69273f2763646976602778"
+        ],
+        [
+          "bit_env",
+          "cWshSRMV3PPHkIReujhUyIQOlSUoKKVHX71OgSsoUuHio7XJR7TeAtEhIL9-5rgbq3ETrSbj1YZxG44xnAdLj04w4zjtwFLwFKfV5tr_KKvlrOMz7dwf2IEjHGf_Sxk_pTuxQnfR8wUYe_Q6vMUzwuZhYFNwZbETLqORWudttO5WUIY4U4G21qG5JusPwtUklCln6TwWg6b26YnT70gKMKAaV7XR5txOS1EbUJXVpCFIByPM1_AJDNeiiibSAH-tHjjog2jJccVoIStoN2sjOt8dywP1V1Jgz03YqsZvzxFSZQxPTK0kqmh9_jf1JM7kDmbsPRa1fM2tn5dPGldr7vI9QmOitIunfz3EvidAMO0jPXmTeB4bUdewBdjJiFI6HLsE2VNttjeygobGXktfmPB1JZ5eLJihsS1wonwdT8YGXzewaGETBBhEPkc3arYCjdYb8vLGzfQAxFaV6v_abYkgPLNNkB-kuq9fwfDK6hpeLgTsoTLcsEEhQ31NEus5"
+        ],
+        [
+          "gulu_source_res",
+          "eyJwX2luIjoiOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZiJ9"
+        ],
+        [
+          "passport_auth_mix_state",
+          "lnxuihq3f6av73mrvj95fwt77a78fgi9rumlk0sbscu24brm"
+        ]
+      ],
+      "body": "is6Digits=1&mix_mode=1&mobile=2e3d332534363d3535353535353535&type=3731&fixed_mix_mode=1",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://login.douyin.com/passport/web/sms_login/?passport_jssdk_version=3.4.4&passport_jssdk_type=normal&is_from_ttaccountsdk=1&aid=6383&language=zh&account_app_language=zh-CN&ts=1789992000&is_from_iesaccountsaas=1&p_ui=2.4.4&p_ca=4.0.26&p_ca_real=1.0.0.892&fp=verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR&verifyFp=verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR&account_sdk_source=web&account_sdk_source_info=7e276d64776172647760466a6b66707777606b667c273f3735292772606761776c736077273f63646976602927666d776a686061776c736077273f63646976602927766d60696961776c736077273f63646976602927756970626c6b76273f3029276c6b6b60774d606c626d71273f3437343029276c6b6b6077526c61716d273f3730333529276a707160774d606c626d71273f34363c3729276a70716077526c61716d273f3730333529277260676269273f7e2773606b616a77273f27426a6a626960254c6b662b252d4b534c414c442c27292777606b6160776077273f27444b424940252d4b534c414c4429254b534c414c44254260436a7766602557515d253035333525516c252d357d35353535374135312c25416c77606671364134342573765a305a352575765a305a35292541364134342c277829276470716a6864716c6a6b273f7e2776273f27353535353535353527292766273f273535353527292775273f27353535353535352729277634273f2735353535353535352729276634273f27353535352729277534273f273527782927756077636a7768646b6660273f7e27716c68604a776c626c6b273f34323d3c3c3c3c3c33343233312b342927707660614f564d606475566c7f60273f31323730363230303429276b64736c6264716c6a6b516c686c6b62273f7e276160666a616061476a617c566c7f60273f3c333d3130312927606b71777c517c7560273f276b64736c6264716c6a6b2729276c6b6c716c64716a77517c7560273f276b64736c6264716c6a6b2729276b646860273f276d717175763f2a2a7272722b616a707c6c6b2b666a682a3a7760666a6868606b61383427292777606b61607747696a666e6c6b62567164717076273f276b6a6b2867696a666e6c6b62272927766077736077516c686c6b62273f2766616b286664666d602960616260296a776c626c6b296c6b6b60772971715a646272272927627069605671647771273f3334352b3d3c3c3c3c3c3c323334303d3429276270696041707764716c6a6b273f276b6a6b60277878292767776a72766077273f7e2771273f273c3233323731323d333d353336272927676c715a75776a716a666a69273f276364697660272927676c715a6d6069756077273f63646976607878&p_js_v=3.4.4&p_js_t=pro&p_zt=3.3.17&p_ver=1.1.3&p_ver_real=0&request_host=https%253A%252F%252Fwww.douyin.com&p_bd=1.0.1.19-fix.01&p_ts=1790000000123&p_no=8d7cbfc8be0c468a681e7a185b1aa22f679d1830a578f7e93c82662c74b3046a&biz_trace_id=ab754eb2&device_platform=web_app&sign=1096cb6186c687ebdb4c36df17b0f2fbf35f368bf5a74bbcf54610b6eb3863c1&qs=6466666a706b715a6475755a69646b6270646260296466666a706b715a76616e5a766a70776660296466666a706b715a76616e5a766a707766605a6c6b636a29646c6129676c7f5a71776466605a6c61296160736c66605a75696471636a7768296375296c765a63776a685a6c60766466666a706b7176646476296c765a63776a685a71716466666a706b7176616e2969646b6270646260&msToken=LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL&a_bogus=dyURkqSyYxWjed%2FSuCaL7aCULh6MNTuyw-i%2FWtIPCOYJLw0TxYPbzwjJnxwDsq6uMuBTh9IHJVe1bdDPN0I-de9pwmpfuDiR0tIV988L21qhYziQDHRPCu8oCJtbWmiEu%2FKRJA4UAtmO2xK4L3rhUp-y7Aki4YvpOHa6dnRaN9ekgzG9MrqOuPtDTXzT-b25wE%3D%3D",
+      "headers": [
+        [
+          "web-sdk-version",
+          "1"
+        ],
+        [
+          "x-tt-session-dtrait",
+          "d0_eeau18whLtgJzZgrUoY2kLIco6yg5mgAijNfb/8mjJDg+dXHlR0oetAAD/3aRyzDFHZWTV0scYvr8cvum4JuoCNg5XngQfuu+UstXIAHFuNTkYKKE0v6BiLrHvcGnyWUdZqk5bQpClgukz2KcuEfOwMEteHF4qZ9pAFYSqD5Z85YPTiHbVq49KIwFOuGknnfP2SkyQY7d31YWGikDdUrDBHRcFnd/P3ni+Y/BAfntMucLt9ECaFjNpUyh8LS3Hu01Sg7F6BBqSPlFlvppMQvDcO9brPl8LM9SBNTqJjMahUqGHoWhq6pZ2j1Hq69EY6zCOvaWHigpUkMb55cuDqKmg==_knLd8skqY0FQuNxJXiqaYA4npTOOpNTcu+ZO3FQfbPfASo9tM3rJOrT28jwFxsy0zDB4nso+M98LHGRphUV9DjUriszw8hWLVxHa0Pb0AADS1eWoviibVxkafvTpoDt0wEtOqnWX3aMwExqezNkSbUcSiPnYsTLqmb8Rr1Mv5TgjKQdgrc9TCSRL+xA2pzUACkdyxkxmJu3HyqdaospgcmtH8PZZhl9er0s+BysRlHfgzCFG0SktFFDBlZNZLEbgB++N5/OBkTbcnA4qxqMUAA8GYpU1GO6a+ZlI+odsGZj5yJni3oIYZ635aTjEe0NNaw2+2GYjdrYcW5hZP1F7ywsUX9JB2h8oibghll+2yjNoALAGWeR6ZHzkt63VShMVJz/6AH1L58kBChA8tnYzz/xAu+bd265e5AvWHwoiBU5bYEIh6A28EcG7KXii5Byqya+OepXjxdOu4FFB3zRjUA=="
+        ],
+        [
+          "referer",
+          "https://www.douyin.com/"
+        ],
+        [
+          "x-tt-passport-aid-sign",
+          "dd56912183258106c4e92d4c4a3c159a6773f4eeaed0c00d3dbf7c29e2bba78e"
+        ],
+        [
+          "x-tt-passport-csrf-token",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ],
+        [
+          "x-tt-passport-trace-id",
+          "ab754eb2"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ],
+        [
+          "accept",
+          "application/json, text/javascript"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "x-tt-passport-verify-portrait",
+          "d592a0c2-464f-492c-b03d-902187b522b4.login"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9"
+        ],
+        [
+          "content-length",
+          "120"
+        ],
+        [
+          "origin",
+          "https://www.douyin.com"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ]
+      ],
+      "cookies": [
+        [
+          "enter_pc_once",
+          "1"
+        ],
+        [
+          "UIFID_TEMP",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "odin_tt",
+          "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+        ],
+        [
+          "is_support_rtm_web_ts",
+          "1"
+        ],
+        [
+          "hevc_supported",
+          "true"
+        ],
+        [
+          "IsDouyinActive",
+          "true"
+        ],
+        [
+          "home_can_add_dy_2_desktop",
+          "%220%22"
+        ],
+        [
+          "stream_recommend_feed_params",
+          "%22%7B%5C%22cookie_enabled%5C%22%3Atrue%2C%5C%22screen_width%5C%22%3A2560%2C%5C%22screen_height%5C%22%3A1440%2C%5C%22browser_online%5C%22%3Atrue%2C%5C%22cpu_core_num%5C%22%3A20%2C%5C%22device_memory%5C%22%3A32%2C%5C%22downlink%5C%22%3A10%2C%5C%22effective_type%5C%22%3A%5C%224g%5C%22%2C%5C%22round_trip_time%5C%22%3A0%7D%22"
+        ],
+        [
+          "strategyABtestKey",
+          "%221790000000.123%22"
+        ],
+        [
+          "is_dash_user",
+          "1"
+        ],
+        [
+          "passport_csrf_token",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ],
+        [
+          "passport_csrf_token_default",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ],
+        [
+          "ttwid",
+          "1%7CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%7C1790000002%7Ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        ],
+        [
+          "biz_trace_id",
+          "ab754eb2"
+        ],
+        [
+          "__security_mc_1_s_sdk_crypt_sdk",
+          "aa346c08-7334-4c8b"
+        ],
+        [
+          "bd_ticket_guard_regenerate_keys_time",
+          "2026-09-21/22:13:20"
+        ],
+        [
+          "bd_ticket_guard_client_data",
+          "eyJiZC10aWNrZXQtZ3VhcmQtdmVyc2lvbiI6MiwiYmQtdGlja2V0LWd1YXJkLWl0ZXJhdGlvbi12ZXJzaW9uIjoxLCJiZC10aWNrZXQtZ3VhcmQtcmVlLXB1YmxpYy1rZXkiOiJCRGExZ0ZKbVJGNG8rV3ZSYm1pR251YTJrVHllbmVQSWRaZGIvcUxCRGZlYjNkMEM4ZktlZE9tc0lycE1tYlBEK3FwZ1FVaHZjeUJ6ZjhuM0RYTGxvU2s9IiwiYmQtdGlja2V0LWd1YXJkLXdlYi12ZXJzaW9uIjoyfQ%3D%3D"
+        ],
+        [
+          "bd_ticket_guard_client_web_domain",
+          "2"
+        ],
+        [
+          "bd_ticket_guard_client_data_v2",
+          "eyJyZWVfcHVibGljX2tleSI6IkJEYTFnRkptUkY0bytXdlJibWlHbnVhMmtUeWVuZVBJZFpkYi9xTEJEZmViM2QwQzhmS2VkT21zSXJwTW1iUEQrcXBnUVVodmN5QnpmOG4zRFhMbG9Taz0iLCJyZXFfY29udGVudCI6InNlY190cyIsInJlcV9zaWduIjoiSThJamRtRWRVd2lqSTdrMzAvWXpZRXpmVThjdG1sc0xCUjQvZVFFR2NUOD0iLCJzZWNfdHMiOiIjYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhIn0%3D"
+        ],
+        [
+          "sdk_source_info",
+          "7e276470716a68645a606960273f276364697660272927676c715a6d6069756077273f276364697660272927666d776a68605a607d71606b766c6a6b5a7666776c7571273f275e58272927666a6b766a69605a696c6061273f27636469766027292762696a6764695a7364776c6467696076273f275e582729277672715a646971273f2763646976602729277f6b5a666475273f2763646976602729276d6a6e5a6b6a716c273f2763646976602729276c6b6f5a7f6367273f27636469766027292771273f2735353535353535353535353535272927676c715a75776a716a666a69273f2763646976602778"
+        ],
+        [
+          "bit_env",
+          "cWshSRMV3PPHkIReujhUyIQOlSUoKKVHX71OgSsoUuHio7XJR7TeAtEhIL9-5rgbq3ETrSbj1YZxG44xnAdLj04w4zjtwFLwFKfV5tr_KKvlrOMz7dwf2IEjHGf_Sxk_pTuxQnfR8wUYe_Q6vMUzwuZhYFNwZbETLqORWudttO5WUIY4U4G21qG5JusPwtUklCln6TwWg6b26YnT70gKMKAaV7XR5txOS1EbUJXVpCFIByPM1_AJDNeiiibSAH-tHjjog2jJccVoIStoN2sjOt8dywP1V1Jgz03YqsZvzxFSZQxPTK0kqmh9_jf1JM7kDmbsPRa1fM2tn5dPGldr7vI9QmOitIunfz3EvidAMO0jPXmTeB4bUdewBdjJiFI6HLsE2VNttjeygobGXktfmPB1JZ5eLJihsS1wonwdT8YGXzewaGETBBhEPkc3arYCjdYb8vLGzfQAxFaV6v_abYkgPLNNkB-kuq9fwfDK6hpeLgTsoTLcsEEhQ31NEus5"
+        ],
+        [
+          "gulu_source_res",
+          "eyJwX2luIjoiOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZiJ9"
+        ],
+        [
+          "passport_auth_mix_state",
+          "lnxuihq3f6av73mrvj95fwt77a78fgi9rumlk0sbscu24brm"
+        ]
+      ],
+      "body": "service=https%3A%2F%2Fwww.douyin.com&mix_mode=1&mobile=2e3d332534363d3535353535353535&code=343736313033&fixed_mix_mode=1",
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://www.douyin.com/passport/sso/login/callback/?ticket=sms",
+      "headers": [
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=0, i"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not=A?Brand\";v=\"99\", \"Google Chrome\";v=\"151\", \"Chromium\";v=\"151\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "document"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-site",
+          "none"
+        ],
+        [
+          "sec-fetch-user",
+          "?1"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "enter_pc_once",
+          "1"
+        ],
+        [
+          "UIFID_TEMP",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "is_support_rtm_web_ts",
+          "1"
+        ],
+        [
+          "hevc_supported",
+          "true"
+        ],
+        [
+          "IsDouyinActive",
+          "true"
+        ],
+        [
+          "home_can_add_dy_2_desktop",
+          "%220%22"
+        ],
+        [
+          "stream_recommend_feed_params",
+          "%22%7B%5C%22cookie_enabled%5C%22%3Atrue%2C%5C%22screen_width%5C%22%3A2560%2C%5C%22screen_height%5C%22%3A1440%2C%5C%22browser_online%5C%22%3Atrue%2C%5C%22cpu_core_num%5C%22%3A20%2C%5C%22device_memory%5C%22%3A32%2C%5C%22downlink%5C%22%3A10%2C%5C%22effective_type%5C%22%3A%5C%224g%5C%22%2C%5C%22round_trip_time%5C%22%3A0%7D%22"
+        ],
+        [
+          "odin_tt",
+          "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+        ],
+        [
+          "strategyABtestKey",
+          "%221790000000.123%22"
+        ],
+        [
+          "passport_csrf_token",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ],
+        [
+          "passport_csrf_token_default",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ],
+        [
+          "ttwid",
+          "1%7CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%7C1790000002%7Ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        ],
+        [
+          "__security_mc_1_s_sdk_crypt_sdk",
+          "aa346c08-7334-4c8b"
+        ],
+        [
+          "bd_ticket_guard_regenerate_keys_time",
+          "2026-09-21/22:13:20"
+        ],
+        [
+          "bd_ticket_guard_client_data",
+          "eyJiZC10aWNrZXQtZ3VhcmQtdmVyc2lvbiI6MiwiYmQtdGlja2V0LWd1YXJkLWl0ZXJhdGlvbi12ZXJzaW9uIjoxLCJiZC10aWNrZXQtZ3VhcmQtcmVlLXB1YmxpYy1rZXkiOiJCRGExZ0ZKbVJGNG8rV3ZSYm1pR251YTJrVHllbmVQSWRaZGIvcUxCRGZlYjNkMEM4ZktlZE9tc0lycE1tYlBEK3FwZ1FVaHZjeUJ6ZjhuM0RYTGxvU2s9IiwiYmQtdGlja2V0LWd1YXJkLXdlYi12ZXJzaW9uIjoyfQ%3D%3D"
+        ],
+        [
+          "bd_ticket_guard_client_web_domain",
+          "2"
+        ],
+        [
+          "bd_ticket_guard_client_data_v2",
+          "eyJyZWVfcHVibGljX2tleSI6IkJEYTFnRkptUkY0bytXdlJibWlHbnVhMmtUeWVuZVBJZFpkYi9xTEJEZmViM2QwQzhmS2VkT21zSXJwTW1iUEQrcXBnUVVodmN5QnpmOG4zRFhMbG9Taz0iLCJyZXFfY29udGVudCI6InNlY190cyIsInJlcV9zaWduIjoiSThJamRtRWRVd2lqSTdrMzAvWXpZRXpmVThjdG1sc0xCUjQvZVFFR2NUOD0iLCJzZWNfdHMiOiIjYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhIn0%3D"
+        ],
+        [
+          "biz_trace_id",
+          "ab754eb2"
+        ],
+        [
+          "sdk_source_info",
+          "7e276470716a68645a606960273f276364697660272927676c715a6d6069756077273f276364697660272927666d776a68605a607d71606b766c6a6b5a7666776c7571273f275e58272927666a6b766a69605a696c6061273f27636469766027292762696a6764695a7364776c6467696076273f275e582729277672715a646971273f2763646976602729277f6b5a666475273f2763646976602729276d6a6e5a6b6a716c273f2763646976602729276c6b6f5a7f6367273f27636469766027292771273f2735353535353535353535353535272927676c715a75776a716a666a69273f2763646976602778"
+        ],
+        [
+          "bit_env",
+          "cWshSRMV3PPHkIReujhUyIQOlSUoKKVHX71OgSsoUuHio7XJR7TeAtEhIL9-5rgbq3ETrSbj1YZxG44xnAdLj04w4zjtwFLwFKfV5tr_KKvlrOMz7dwf2IEjHGf_Sxk_pTuxQnfR8wUYe_Q6vMUzwuZhYFNwZbETLqORWudttO5WUIY4U4G21qG5JusPwtUklCln6TwWg6b26YnT70gKMKAaV7XR5txOS1EbUJXVpCFIByPM1_AJDNeiiibSAH-tHjjog2jJccVoIStoN2sjOt8dywP1V1Jgz03YqsZvzxFSZQxPTK0kqmh9_jf1JM7kDmbsPRa1fM2tn5dPGldr7vI9QmOitIunfz3EvidAMO0jPXmTeB4bUdewBdjJiFI6HLsE2VNttjeygobGXktfmPB1JZ5eLJihsS1wonwdT8YGXzewaGETBBhEPkc3arYCjdYb8vLGzfQAxFaV6v_abYkgPLNNkB-kuq9fwfDK6hpeLgTsoTLcsEEhQ31NEus5"
+        ],
+        [
+          "gulu_source_res",
+          "eyJwX2luIjoiOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZiJ9"
+        ],
+        [
+          "passport_auth_mix_state",
+          "lnxuihq3f6av73mrvj95fwt77a78fgi9rumlk0sbscu24brm"
+        ],
+        [
+          "is_dash_user",
+          "1"
+        ],
+        [
+          "sessionid",
+          "fake-sms-session"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    },
+    {
+      "method": "GET",
+      "url": "https://www.douyin.com/",
+      "headers": [
+        [
+          "accept",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        ],
+        [
+          "accept-language",
+          "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=0, i"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not=A?Brand\";v=\"99\", \"Google Chrome\";v=\"151\", \"Chromium\";v=\"151\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "document"
+        ],
+        [
+          "sec-fetch-mode",
+          "navigate"
+        ],
+        [
+          "sec-fetch-site",
+          "none"
+        ],
+        [
+          "sec-fetch-user",
+          "?1"
+        ],
+        [
+          "upgrade-insecure-requests",
+          "1"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "enter_pc_once",
+          "1"
+        ],
+        [
+          "UIFID_TEMP",
+          "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        ],
+        [
+          "is_support_rtm_web_ts",
+          "1"
+        ],
+        [
+          "hevc_supported",
+          "true"
+        ],
+        [
+          "IsDouyinActive",
+          "true"
+        ],
+        [
+          "home_can_add_dy_2_desktop",
+          "%220%22"
+        ],
+        [
+          "stream_recommend_feed_params",
+          "%22%7B%5C%22cookie_enabled%5C%22%3Atrue%2C%5C%22screen_width%5C%22%3A2560%2C%5C%22screen_height%5C%22%3A1440%2C%5C%22browser_online%5C%22%3Atrue%2C%5C%22cpu_core_num%5C%22%3A20%2C%5C%22device_memory%5C%22%3A32%2C%5C%22downlink%5C%22%3A10%2C%5C%22effective_type%5C%22%3A%5C%224g%5C%22%2C%5C%22round_trip_time%5C%22%3A0%7D%22"
+        ],
+        [
+          "odin_tt",
+          "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+        ],
+        [
+          "strategyABtestKey",
+          "%221790000000.123%22"
+        ],
+        [
+          "passport_csrf_token",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ],
+        [
+          "passport_csrf_token_default",
+          "a1b2c3d4e5f60718293a4b5c6d7e8f90"
+        ],
+        [
+          "ttwid",
+          "1%7CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%7C1790000002%7Ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        ],
+        [
+          "__security_mc_1_s_sdk_crypt_sdk",
+          "aa346c08-7334-4c8b"
+        ],
+        [
+          "bd_ticket_guard_regenerate_keys_time",
+          "2026-09-21/22:13:20"
+        ],
+        [
+          "bd_ticket_guard_client_data",
+          "eyJiZC10aWNrZXQtZ3VhcmQtdmVyc2lvbiI6MiwiYmQtdGlja2V0LWd1YXJkLWl0ZXJhdGlvbi12ZXJzaW9uIjoxLCJiZC10aWNrZXQtZ3VhcmQtcmVlLXB1YmxpYy1rZXkiOiJCRGExZ0ZKbVJGNG8rV3ZSYm1pR251YTJrVHllbmVQSWRaZGIvcUxCRGZlYjNkMEM4ZktlZE9tc0lycE1tYlBEK3FwZ1FVaHZjeUJ6ZjhuM0RYTGxvU2s9IiwiYmQtdGlja2V0LWd1YXJkLXdlYi12ZXJzaW9uIjoyfQ%3D%3D"
+        ],
+        [
+          "bd_ticket_guard_client_web_domain",
+          "2"
+        ],
+        [
+          "bd_ticket_guard_client_data_v2",
+          "eyJyZWVfcHVibGljX2tleSI6IkJEYTFnRkptUkY0bytXdlJibWlHbnVhMmtUeWVuZVBJZFpkYi9xTEJEZmViM2QwQzhmS2VkT21zSXJwTW1iUEQrcXBnUVVodmN5QnpmOG4zRFhMbG9Taz0iLCJyZXFfY29udGVudCI6InNlY190cyIsInJlcV9zaWduIjoiSThJamRtRWRVd2lqSTdrMzAvWXpZRXpmVThjdG1sc0xCUjQvZVFFR2NUOD0iLCJzZWNfdHMiOiIjYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhIn0%3D"
+        ],
+        [
+          "biz_trace_id",
+          "ab754eb2"
+        ],
+        [
+          "sdk_source_info",
+          "7e276470716a68645a606960273f276364697660272927676c715a6d6069756077273f276364697660272927666d776a68605a607d71606b766c6a6b5a7666776c7571273f275e58272927666a6b766a69605a696c6061273f27636469766027292762696a6764695a7364776c6467696076273f275e582729277672715a646971273f2763646976602729277f6b5a666475273f2763646976602729276d6a6e5a6b6a716c273f2763646976602729276c6b6f5a7f6367273f27636469766027292771273f2735353535353535353535353535272927676c715a75776a716a666a69273f2763646976602778"
+        ],
+        [
+          "bit_env",
+          "cWshSRMV3PPHkIReujhUyIQOlSUoKKVHX71OgSsoUuHio7XJR7TeAtEhIL9-5rgbq3ETrSbj1YZxG44xnAdLj04w4zjtwFLwFKfV5tr_KKvlrOMz7dwf2IEjHGf_Sxk_pTuxQnfR8wUYe_Q6vMUzwuZhYFNwZbETLqORWudttO5WUIY4U4G21qG5JusPwtUklCln6TwWg6b26YnT70gKMKAaV7XR5txOS1EbUJXVpCFIByPM1_AJDNeiiibSAH-tHjjog2jJccVoIStoN2sjOt8dywP1V1Jgz03YqsZvzxFSZQxPTK0kqmh9_jf1JM7kDmbsPRa1fM2tn5dPGldr7vI9QmOitIunfz3EvidAMO0jPXmTeB4bUdewBdjJiFI6HLsE2VNttjeygobGXktfmPB1JZ5eLJihsS1wonwdT8YGXzewaGETBBhEPkc3arYCjdYb8vLGzfQAxFaV6v_abYkgPLNNkB-kuq9fwfDK6hpeLgTsoTLcsEEhQ31NEus5"
+        ],
+        [
+          "gulu_source_res",
+          "eyJwX2luIjoiOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZiJ9"
+        ],
+        [
+          "passport_auth_mix_state",
+          "lnxuihq3f6av73mrvj95fwt77a78fgi9rumlk0sbscu24brm"
+        ],
+        [
+          "is_dash_user",
+          "1"
+        ],
+        [
+          "sessionid",
+          "fake-sms-session"
+        ],
+        [
+          "sessionid_ss",
+          "fake-ss"
+        ]
+      ],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "text/html",
+        "set-cookie": [
+          "__ac_nonce=0680fake00000000000a; Path=/",
+          "UIFID_TEMP=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef; Domain=douyin.com; Path=/",
+          "odin_tt=fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210; Domain=douyin.com; Path=/"
+        ]
+      },
+      "body": "<html>acrawler</html>"
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": "ttwid=1%7CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%7C1790000000%7Cbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb; Path=/; Domain=douyin.com"
+      },
+      "body": {
+        "status_code": 0
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": "ttwid=1%7CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%7C1790000002%7Ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc; Path=/; Domain=douyin.com"
+      },
+      "body": {
+        "status_code": 0
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "x-ms-token": "guest-mstoken-from-mssdk"
+      },
+      "body": {
+        "code": 0
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": [
+          "passport_csrf_token=a1b2c3d4e5f60718293a4b5c6d7e8f90; Domain=douyin.com; Path=/",
+          "passport_csrf_token_default=a1b2c3d4e5f60718293a4b5c6d7e8f90; Domain=douyin.com; Path=/"
+        ]
+      },
+      "body": {
+        "message": "success",
+        "data": {}
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "bd-ticket-guard-sec-ts": "#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "body": {
+        "data": null,
+        "message": "success"
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "set-cookie": "ttwid=1%7CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%7C1790000002%7Ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc; Path=/; Domain=douyin.com"
+      },
+      "body": {
+        "status_code": 0
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "message": "success",
+        "data": {
+          "passportiv": "Pv-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "template": "module.exports = { default: function () { return { p_in: \"9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f\", e_in: { automa_ele: \"false\", console_liad: \"false\", t: \"0000000000000\" } } } }"
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "message": "success",
+        "data": {
+          "server_cert": "pub.BFLG/1tx3mXYPHXTk+JJ7AOJQ3BRXQsimxxiJGgfKlAwtvMjwgwg0CHWEeCHz0gvUpfmE1y+5tOZSDIWTkeebpY=",
+          "server_sn": "fake-sn"
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "x-ms-token": "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL"
+      },
+      "body": {
+        "code": 0
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "message": "success",
+        "data": {
+          "mobile_ticket": "fake-mobile-ticket",
+          "error_code": 0
+        }
+      }
+    },
+    {
+      "status": 200,
+      "headers": {
+        "bd-ticket-guard-server-data": "eyJ0aWNrZXQiOiAiaGFzaC5sb2dpbi10aWNrZXQiLCAidHNfc2lnbiI6ICJ0cy4yLmxvZ2luc2lnbiIsICJjbGllbnRfY2VydCI6ICJwdWIubG9naW5jZXJ0IiwgImNyZWF0ZV90aW1lIjogMTc5MDAwMDAwMCwgImxvZ19pZCI6ICJmYWtlIn0=",
+        "set-cookie": "sessionid=fake-sms-session; Domain=douyin.com; Path=/"
+      },
+      "body": {
+        "message": "success",
+        "data": {
+          "error_code": 0,
+          "redirect_url": "https://www.douyin.com/passport/sso/login/callback/?ticket=sms"
+        }
+      }
+    },
+    {
+      "status": 302,
+      "headers": {
+        "location": "https://www.douyin.com/",
+        "set-cookie": "sessionid_ss=fake-ss; Domain=douyin.com; Path=/"
+      },
+      "body": ""
+    },
+    {
+      "status": 200,
+      "headers": {
+        "content-type": "text/html"
+      },
+      "body": "<html></html>"
+    }
+  ],
+  "result": {
+    "cookies": {
+      "s_v_web_id": "verify_mubbs7ln_aJI4Rjgx_K97M_45mD_8Eg9_jLA226plD1tR",
+      "bd_ticket_guard_client_data": "eyJiZC10aWNrZXQtZ3VhcmQtdmVyc2lvbiI6MiwiYmQtdGlja2V0LWd1YXJkLWl0ZXJhdGlvbi12ZXJzaW9uIjoxLCJiZC10aWNrZXQtZ3VhcmQtcmVlLXB1YmxpYy1rZXkiOiJCRGExZ0ZKbVJGNG8rV3ZSYm1pR251YTJrVHllbmVQSWRaZGIvcUxCRGZlYjNkMEM4ZktlZE9tc0lycE1tYlBEK3FwZ1FVaHZjeUJ6ZjhuM0RYTGxvU2s9IiwiYmQtdGlja2V0LWd1YXJkLXdlYi12ZXJzaW9uIjoyfQ%3D%3D",
+      "bd_ticket_guard_client_web_domain": "2",
+      "__ac_nonce": "0680fake00000000000a",
+      "UIFID_TEMP": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "odin_tt": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+      "ttwid": "1%7CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%7C1790000002%7Ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "biz_trace_id": "ab754eb2",
+      "enter_pc_once": "1",
+      "is_support_rtm_web_ts": "1",
+      "hevc_supported": "true",
+      "IsDouyinActive": "true",
+      "is_dash_user": "1",
+      "my_rd": "2",
+      "home_can_add_dy_2_desktop": "%220%22",
+      "strategyABtestKey": "%221790000000.123%22",
+      "dy_swidth": "2560",
+      "dy_sheight": "1440",
+      "device_web_cpu_core": "20",
+      "device_web_memory_size": "32",
+      "architecture": "amd64",
+      "x-web-secsdk-uid": "0ee4bba4-e25b-4295-83b0-90bef2192e13",
+      "stream_recommend_feed_params": "%22%7B%5C%22cookie_enabled%5C%22%3Atrue%2C%5C%22screen_width%5C%22%3A2560%2C%5C%22screen_height%5C%22%3A1440%2C%5C%22browser_online%5C%22%3Atrue%2C%5C%22cpu_core_num%5C%22%3A20%2C%5C%22device_memory%5C%22%3A32%2C%5C%22downlink%5C%22%3A10%2C%5C%22effective_type%5C%22%3A%5C%224g%5C%22%2C%5C%22round_trip_time%5C%22%3A0%7D%22",
+      "__security_mc_1_s_sdk_crypt_sdk": "aa346c08-7334-4c8b",
+      "bd_ticket_guard_regenerate_keys_time": "2026-09-21/22:13:20",
+      "fpk2": "6967ec7261b3cbe6a91d798c6b951c60",
+      "fpk1": "U2FsdGVkX1+9oxjot7q4H3yo59qHBVr/fXAhKTW6HZi3qcmYmLAmAKFl9iLTX85XfNCsChJNpV0dCgjr9ER1gg==",
+      "passport_auth_mix_state": "lnxuihq3f6av73mrvj95fwt77a78fgi9rumlk0sbscu24brm",
+      "gulu_source_res": "eyJwX2luIjoiOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZjlmOWY5ZiJ9",
+      "sdk_source_info": "7e276470716a68645a606960273f276364697660272927676c715a6d6069756077273f276364697660272927666d776a68605a607d71606b766c6a6b5a7666776c7571273f275e58272927666a6b766a69605a696c6061273f27636469766027292762696a6764695a7364776c6467696076273f275e582729277672715a646971273f2763646976602729277f6b5a666475273f2763646976602729276d6a6e5a6b6a716c273f2763646976602729276c6b6f5a7f6367273f27636469766027292771273f2735353535353535353535353535272927676c715a75776a716a666a69273f2763646976602778",
+      "__ac_signature": "_02B4Z6wo00f01AfSNDAAAIDBipJNoI9-VWwH8jCAAGtMa4",
+      "passport_csrf_token": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+      "passport_csrf_token_default": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+      "bit_env": "cWshSRMV3PPHkIReujhUyIQOlSUoKKVHX71OgSsoUuHio7XJR7TeAtEhIL9-5rgbq3ETrSbj1YZxG44xnAdLj04w4zjtwFLwFKfV5tr_KKvlrOMz7dwf2IEjHGf_Sxk_pTuxQnfR8wUYe_Q6vMUzwuZhYFNwZbETLqORWudttO5WUIY4U4G21qG5JusPwtUklCln6TwWg6b26YnT70gKMKAaV7XR5txOS1EbUJXVpCFIByPM1_AJDNeiiibSAH-tHjjog2jJccVoIStoN2sjOt8dywP1V1Jgz03YqsZvzxFSZQxPTK0kqmh9_jf1JM7kDmbsPRa1fM2tn5dPGldr7vI9QmOitIunfz3EvidAMO0jPXmTeB4bUdewBdjJiFI6HLsE2VNttjeygobGXktfmPB1JZ5eLJihsS1wonwdT8YGXzewaGETBBhEPkc3arYCjdYb8vLGzfQAxFaV6v_abYkgPLNNkB-kuq9fwfDK6hpeLgTsoTLcsEEhQ31NEus5",
+      "bd_ticket_guard_client_data_v2": "eyJyZWVfcHVibGljX2tleSI6IkJEYTFnRkptUkY0bytXdlJibWlHbnVhMmtUeWVuZVBJZFpkYi9xTEJEZmViM2QwQzhmS2VkT21zSXJwTW1iUEQrcXBnUVVodmN5QnpmOG4zRFhMbG9Taz0iLCJyZXFfY29udGVudCI6InNlY190cyIsInJlcV9zaWduIjoiSThJamRtRWRVd2lqSTdrMzAvWXpZRXpmVThjdG1sc0xCUjQvZVFFR2NUOD0iLCJzZWNfdHMiOiIjYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhIn0%3D",
+      "sessionid": "fake-sms-session",
+      "sessionid_ss": "fake-ss"
+    },
+    "ticket": "hash.login-ticket",
+    "ts_sign": "ts.2.loginsign"
+  },
+  "error": null
+}
