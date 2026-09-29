@@ -380,7 +380,7 @@ catbus 已同步，对拍变化的 4 个用例逐字节一致。
 | tiktok | 收藏夹加内容（`folder add`）与公开 / 私密（顺带修了改名会把公开收藏夹变私密的 bug）、发布互动开关（`--allow-*`）、`item related` 与私信翻页、按房间号操作直播、`live media`、系统通知（group 661）并入 `notice list` | 已补，待真机验证。**私信翻页的游标字段位置是按字节 IM 协议推断的，上游没有解析**；`live media` 的流地址结构也是推断的 |
 | x | 同步上游 3fe6ea7：长推（超 280 权重自动走 CreateNoteTweet）、`--thread`、`article publish` / `delete`；搜索媒体（`--type video\|image`）、引用（`--quote`，新的通用发布选项）、私信补对方资料 | 已补，待真机验证（长推和文章需要 Premium 账号）。**不做**：账号密码登录（依赖 Castle 反自动化令牌，登录方式只保留 cookie）；`msg list` 翻页（上游没有收件箱翻页接口，只取首页，标 ◐） |
 | jd | 403 时区分登录失效与风控、订单时间范围（`--range`）、按订单咨询客服（`--order`）、评价条数（`--limit` → commentNum）、收货地区（`--area`）、国际手机号、`msg listen` 其余消息类型 | 已补，待真机验证（撤回消息的 id 字段名是推断的；评价条数的服务端上限未知）。`item related` 保持 ◐：diviner 的 `p` 只能从浏览器抓包得到 |
-| xianyu | 主动给指定用户发私信（`--to`，可配 `--item`）、发布原价（`--original-price`）、`msg history` 同一条长连翻页并按从旧到新排列 | 已补，待真机验证。`--limit` 截在页中间时的游标取最早一条的 `createAt`（推断） |
+| xianyu | 主动给指定用户发私信（`--to`，可配 `--item`）、发布原价（`--original-price`）、`msg history` 同一条长连翻页并按从旧到新排列 | 已补，待真机验证。`--limit` 截在页中间时，游标是 `<这一页的起始游标>+<已输出条数>`，续翻时重取这一页、跳过已输出的（输出按从旧到新排列，不能用 core 的 `#skip=N`） |
 | taobao | `msg history` 同一条长连翻页并按从旧到新排列 | 已补，待真机验证（游标推断同闲鱼） |
 | weibo | 发布「粉丝可见」（新增 `--visibility fans` 标准取值）、`item search` 改标 ◐ | 已补。PC 端详情不移植：weibo.com 是单页应用，上游取的 `$CONFIG` 里没有正文 |
 | core | 翻页游标重复时停止（`--all` 防死循环） | 已补 |
