@@ -1,17 +1,10 @@
 import { z } from 'zod'
-import { CATEGORY, filter, PUBLISH } from '../../core/options.js'
-import { type CommandDecl, definePlatform, type Handler, type Upstream } from '../../core/registry.js'
+import { CATEGORY, filter, PUBLISH, visibility } from '../../core/options.js'
+import { type CommandDecl, definePlatform, handlers } from '../../core/registry.js'
 import { type Args, type Options, VOCAB } from '../../core/vocab.js'
 
-type Commands = typeof import('./web/commands.js')
-
 /** 懒加载 web 端的 handler：只有执行到这条命令时才加载实现。 */
-const h =
-  (name: keyof Commands) =>
-  (): Promise<Handler> =>
-    import('./web/commands.js').then((m) => m[name] as Handler)
-
-const impl = (upstream: Upstream, name: keyof Commands, extra: Partial<CommandDecl> = {}): CommandDecl => ({ upstream, handler: h(name), ...extra })
+const { h, impl } = handlers(() => import('./web/commands.js'))
 
 const item = { name: 'item', summary: '稿件：BV 号、av 号或 URL' }
 /** 评论区可以是稿件、专栏或动态，按参数形态识别（AGENTS 4.8：参数由平台归一化）。 */
@@ -82,7 +75,9 @@ export default definePlatform({
         'item collect': impl('full', 'itemCollect', { options: { folder: FOLDER } }),
         'item uncollect': impl('full', 'itemUncollect', { options: { folder: FOLDER } }),
         'item publish': impl('full', 'itemPublish', {
+          supports: ['title', 'text', 'video', 'cover', 'tag', 'category', 'visibility'],
           options: {
+            visibility: visibility('public', 'private'),
             source: z.string().optional().describe('转载来源；给出时按转载投稿，不给为自制'),
             dynamic: z.string().optional().describe('同步到动态的文案'),
             allowReprint: z.boolean().optional().describe('允许转载，默认禁止'),

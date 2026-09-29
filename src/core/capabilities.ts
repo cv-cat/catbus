@@ -1,4 +1,4 @@
-import { describeOption, FILTER_VALUES, flagName, PAGING } from './options.js'
+import { describeOption, FILTER_VALUES, flagName, PAGING, STANDARD_VALUES } from './options.js'
 import { type AvailableEndpoint, type Command, type Platform, sortCommands, type Upstream } from './registry.js'
 import { VOCAB } from './vocab.js'
 
@@ -107,11 +107,24 @@ function footnotes(platforms: Platform[], rows: Row[]): string[] {
   for (const r of rows) {
     for (const key of r.keys) {
       const commands = platforms.map((p) => [p, web(p).commands.get(key)] as const).filter(([, c]) => c) as [Platform, Command][]
+      // 词表给了、平台不支持的标准选项（用了报 UNSUPPORTED）
+      const without = commands.filter(([, c]) => c.unsupported.length)
+      if (without.length) {
+        lines.push(`- \`${key}\` 不支持的标准选项：${without.map(([p, c]) => `${p.id} ${c.unsupported.map((o) => `--${flagName(o)}`).join(' ')}`).join('；')}`)
+      }
+      // 有标准取值、平台只支持其中一部分的选项（例如 --visibility）
+      for (const option of Object.keys(VOCAB[key]!.options).filter((o) => STANDARD_VALUES[o] && o !== 'method')) {
+        const dflt = describeOption(VOCAB[key]!.options[option]!).values
+        const differ = commands.filter(([, c]) => option in c.options && describeOption(c.options[option]!).values?.join() !== dflt?.join())
+        if (!differ.length) continue
+        const values = differ.map(([p, c]) => `${p.id} ${describeOption(c.options[option]!).values?.join(' / ')}`)
+        lines.push(`- \`${key} --${flagName(option)}\` 取值：默认 ${dflt?.join(' / ')}；${values.join('；')}`)
+      }
       const base = new Set([...Object.keys(VOCAB[key]!.options), ...Object.keys(PAGING)])
       const extra = [...new Set(commands.flatMap(([, c]) => Object.keys(c.options)))].filter((o) => !base.has(o))
       for (const option of extra) {
         const has = commands.filter(([, c]) => option in c.options)
-        if (FILTERS.includes(option)) {
+        if (FILTERS.includes(option) || (STANDARD_VALUES[option] && option !== 'method')) {
           const values = has.map(([p, c]) => `${p.id} ${describeOption(c.options[option]!).values?.join(' / ')}`)
           lines.push(`- \`${key} --${flagName(option)}\` 取值：${values.join('；')}`)
         } else {

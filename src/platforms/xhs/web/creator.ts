@@ -1,5 +1,5 @@
 import { CatbusError } from '../../../core/errors.js'
-import { compactJson, type Scalar, urlencode } from '../../../core/py.js'
+import { compactJson, pyFloatStr, type Scalar, urlencode } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import { endpointFlag } from '../../../core/auth-store.js'
@@ -40,25 +40,12 @@ export class PyFloat {
   }
 }
 
-const floatRepr = (x: number) => (Number.isInteger(x) ? `${x}.0` : String(x))
-
 /** 与 compactJson 相同，PyFloat 按 Python 的 float 写。 */
 export function pyJson(v: unknown): string {
-  if (v instanceof PyFloat) return floatRepr(v.value)
+  if (v instanceof PyFloat) return pyFloatStr(v.value)
   if (Array.isArray(v)) return `[${v.map(pyJson).join(',')}]`
   if (v && typeof v === 'object' && !(v instanceof Map)) return `{${Object.entries(v).map(([k, x]) => `${compactJson(k)}:${pyJson(x)}`).join(',')}}`
   return compactJson(v)
-}
-
-/** Python 的 round(x, 3)：按精确值四舍五入，恰好一半时取偶数（只有 x × 16 为奇数时才会恰好一半）。 */
-export function pyRound3(x: number): number {
-  const q = x * 16
-  if (Number.isInteger(q) && q % 2 !== 0) {
-    const v = x * 1000
-    const f = Math.floor(v)
-    return (f % 2 === 0 ? f : f + 1) / 1000
-  }
-  return Number(x.toFixed(3))
 }
 
 export interface CreatorSignOptions {

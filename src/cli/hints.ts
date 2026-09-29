@@ -18,8 +18,10 @@ const RESOURCE_WORDS: Record<string, Canonical> = {
   mix: 'series',
   playlist: 'series',
   reply: 'comment',
+  评价: 'comment',
   dm: 'msg',
   im: 'msg',
+  咚咚: 'msg',
   location: 'poi',
   playurl: 'item media',
 }
@@ -29,13 +31,17 @@ const ACTION_WORDS: Record<string, Canonical> = {
   favorite: (p) => (p === 'x' ? 'like' : 'collect'),
   favour: 'collect',
   bookmark: 'collect',
+  想要: 'collect',
+  关注商品: 'collect',
   retweet: 'repost',
   watch: 'listen',
   playurl: 'media',
 }
 
 function lookup(words: Record<string, Canonical>, word: string, platform: string): string | null {
-  const c = words[word]
+  // 只认自己的键：valueOf、constructor 这类原型上的名字不算
+  const key = word.toLowerCase()
+  const c = Object.hasOwn(words, key) ? words[key] : undefined
   return c == null ? null : typeof c === 'string' ? c : c(platform)
 }
 

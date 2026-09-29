@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { mulberry32 } from '../../../../core/rand.js'
-import { crop, type F32, fromMat, img, type Img, loadCv, toMat, type U8, withMats } from './image.js'
+import { crop, type F32, fromMat, img, type Img, loadCv, toMat, type U8, withMats } from '../../../../core/image.js'
+import { pyRound } from '../../../../core/py.js'
 import { detectLines } from './lsd.js'
 
 /**
@@ -48,18 +49,6 @@ export function pairwiseSum(a: ArrayLike<number>, start = 0, n = a.length): numb
 
 export const mean32 = (a: ArrayLike<number>) => f(pairwiseSum(a) / a.length)
 const clip = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v)
-
-/** Python 的 round(x, nd)：对二进制值做正确舍入，恰好一半时取偶。 */
-export function pyRound(x: number, nd = 2): number {
-  const s = x.toFixed(nd)
-  const exact = x.toPrecision(40)
-  const scaled = Number(exact) * 10 ** nd
-  if (Math.abs(scaled - Math.trunc(scaled)) === 0.5 && Number.isInteger(scaled * 2)) {
-    const lo = Math.floor(scaled)
-    return (lo % 2 === 0 ? lo : lo + 1) / 10 ** nd
-  }
-  return Number(s)
-}
 
 function reflect101(p: number, len: number): number {
   if (len === 1) return 0
@@ -412,7 +401,7 @@ export async function resamplePath(path: Node[], count = 64): Promise<number[][]
   let acc = 0
   for (const d of dists) cum.push((acc = f(acc + d)))
   const total = cum[cum.length - 1]!
-  if (total <= 0) return Array.from({ length: n }, (_, i) => [pyRound(simp[i * 2]!), pyRound(simp[i * 2 + 1]!)])
+  if (total <= 0) return Array.from({ length: n }, (_, i) => [pyRound(simp[i * 2]!, 2), pyRound(simp[i * 2 + 1]!, 2)])
   const step = total / (count - 1)
   const out: number[][] = []
   let seg = 0
@@ -423,7 +412,7 @@ export async function resamplePath(path: Node[], count = 64): Promise<number[][]
     const ratio = (target - cum[seg]!) / span
     const px = simp[seg * 2]! + ratio * f(simp[(seg + 1) * 2]! - simp[seg * 2]!)
     const py = simp[seg * 2 + 1]! + ratio * f(simp[(seg + 1) * 2 + 1]! - simp[seg * 2 + 1]!)
-    out.push([pyRound(px), pyRound(py)])
+    out.push([pyRound(px, 2), pyRound(py, 2)])
   }
   return out
 }
@@ -467,8 +456,8 @@ export async function extractConfidentPath(saliency: F32): Promise<Solution> {
   if (!best) return { retry: true, reason: 'no-path', score: 0 }
   const m = best.c
   const accepted = m.confidence >= 100 && m.length >= 150 && m.thickness <= 22 && m.coverage >= 1.05 && m.endpoints <= 5 && m.center_ok
-  if (!accepted) return { retry: true, reason: 'low-confidence', score: pyRound(m.confidence) }
-  return { retry: false, score: pyRound(m.confidence), points: await resamplePath(best.path) }
+  if (!accepted) return { retry: true, reason: 'low-confidence', score: pyRound(m.confidence, 2) }
+  return { retry: false, score: pyRound(m.confidence, 2), points: await resamplePath(best.path) }
 }
 
 // ---------------------------------------------------------------- tp=2 点选
@@ -507,8 +496,8 @@ export async function solveClick(image: U8, tip: U8, modelPath: string): Promise
   let best: [number, [number, number], [number, number]] | null = null
   for (let i = 0; i < 15; i++) {
     const scale = i === 14 ? 1.4 : i * ((1.4 - 0.7) / 14) + 0.7
-    const sw = Math.max(4, pyRoundInt(width * scale))
-    const sh = Math.max(4, pyRoundInt(height * scale))
+    const sw = Math.max(4, pyRound(width * scale))
+    const sh = Math.max(4, pyRound(height * scale))
     if (sw >= image.width || sh >= image.height) continue
     const scaled = o.resize(template, sw, sh, o.cv.INTER_CUBIC) as U8
     const mask = o.resize(img(width, height, 1, tmask), sw, sh, o.cv.INTER_NEAREST) as U8
@@ -525,15 +514,10 @@ export async function solveClick(image: U8, tip: U8, modelPath: string): Promise
   }
   if (!best || best[0] < 0.72) return { retry: true, reason: 'click-match-low-confidence', score: pyRound(best ? best[0] : 0, 4) }
   const [score, loc, size] = best
-  return { retry: false, solver: 'u2net-masked-template', x: pyRound(loc[0] + size[0] / 2), y: pyRound(loc[1] + size[1] / 2), score: pyRound(score, 4) }
+  return { retry: false, solver: 'u2net-masked-template', x: pyRound(loc[0] + size[0] / 2, 2), y: pyRound(loc[1] + size[1] / 2, 2), score: pyRound(score, 4) }
 }
 
 /** Python 的 int(round(x))（银行家舍入）。 */
-function pyRoundInt(x: number): number {
-  const r = Math.round(x)
-  return Math.abs(x - Math.trunc(x)) === 0.5 ? 2 * Math.round(x / 2) : r
-}
-
 // ---------------------------------------------------------------- tp=26 旋转
 
 const circularDistance = (a: number, b: number) => {
@@ -592,8 +576,8 @@ export async function solveRotation(image: U8, modelPath: string): Promise<Solut
   return {
     retry: false,
     solver: 'orientation-classifier-axis',
-    angle: pyRound(css),
-    cvAngle: pyRound(cvAngle),
+    angle: pyRound(css, 2),
+    cvAngle: pyRound(cvAngle, 2),
     orientationClass: cls,
     score: pyRound(p[cls]!, 4),
     axisStrength: pyRound(strength, 4),
@@ -687,7 +671,7 @@ export async function solveSlider(image: U8, slot: U8): Promise<Solution> {
     retry: !accepted,
     reason: accepted ? '' : 'low-slider-confidence',
     solver: 'slider-contour-texture',
-    offset: pyRound(bestIndex),
+    offset: pyRound(bestIndex, 2),
     score: pyRound(scores[bestIndex]!, 4),
     margin: pyRound(scores[bestIndex]! - runnerUp, 4),
     correlation: pyRound(corrs[bestIndex]!, 4),
@@ -983,9 +967,9 @@ export async function solveTrace(image: U8, modelPath: string): Promise<Solution
     if (!best || cand.score > best.score) best = cand
   }
   if (!best || best.score < 55) {
-    return { retry: true, reason: 'low-geometric-confidence', score: pyRound(best?.score ?? 0), saliencyScore: skeletonSolution.score ?? 0 }
+    return { retry: true, reason: 'low-geometric-confidence', score: pyRound(best?.score ?? 0, 2), saliencyScore: skeletonSolution.score ?? 0 }
   }
-  const path = best.chain.map(([x, y]) => [pyRoundInt(y), pyRoundInt(x)] as Node)
-  return { retry: false, solver: 'four-corner-geometric', score: pyRound(best.score), points: await resamplePath(path) }
+  const path = best.chain.map(([x, y]) => [pyRound(y), pyRound(x)] as Node)
+  return { retry: false, solver: 'four-corner-geometric', score: pyRound(best.score, 2), points: await resamplePath(path) }
 }
 

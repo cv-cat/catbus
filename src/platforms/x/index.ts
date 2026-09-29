@@ -1,16 +1,9 @@
 import { z } from 'zod'
-import { filter, PUBLISH, QUOTE } from '../../core/options.js'
-import { type CommandDecl, definePlatform, type Handler, type Upstream } from '../../core/registry.js'
-
-type Commands = typeof import('./web/commands.js')
+import { filter, PUBLISH, QUOTE, visibility } from '../../core/options.js'
+import { definePlatform, handlers } from '../../core/registry.js'
 
 /** 懒加载 web 端的 handler：只有执行到这条命令时才加载实现。 */
-const h =
-  (name: keyof Commands) =>
-  (): Promise<Handler> =>
-    import('./web/commands.js').then((m) => m[name] as Handler)
-
-const impl = (upstream: Upstream, name: keyof Commands, extra: Partial<CommandDecl> = {}): CommandDecl => ({ upstream, handler: h(name), ...extra })
+const { h, impl } = handlers(() => import('./web/commands.js'))
 
 export default definePlatform({
   id: 'x',
@@ -51,7 +44,9 @@ export default definePlatform({
         'item unrepost': impl('full', 'itemUnrepost'),
         'item publish': impl('full', 'itemPublish', {
           note: '正文超过 280 权重时自动按长推发（需要 Premium）；--thread 发 thread',
+          supports: ['text', 'image', 'video', 'visibility'],
           options: {
+            visibility: visibility('public'),
             quote: QUOTE,
             thread: z.array(z.string()).optional().describe('thread 的后续各条，依次回复上一条'),
           },

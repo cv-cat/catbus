@@ -1,6 +1,6 @@
 import { CatbusError } from '../../../core/errors.js'
 import { readMedia } from '../../../core/files.js'
-import { cookieCredential, finishLogin } from '../../../core/login.js'
+import { cookieCredential, finishLogin, loginContext } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
@@ -18,7 +18,7 @@ type Ctx = HandlerContext
 
 export async function authLogin(ctx: Ctx) {
   const credential = cookieCredential(ctx, COOKIE_DOMAIN)
-  const w = new Weibo({ ...ctx, account: 'login', credential })
+  const w = new Weibo(loginContext(ctx, credential))
   const self = await api.selfInfo(w)
   if (!self) throw new CatbusError('AUTH_REQUIRED', '登录没有成功：cookie 无效或已过期', { hint: '在浏览器登录 weibo.com 后，复制请求头里完整的 Cookie' })
   return finishLogin(ctx, credential, { id: self.uid, name: n.str(self.nick), url: norm.userUrl(self.uid) })
@@ -134,11 +134,6 @@ function content(text: string, topics: string[], location: string): string {
 
 export async function itemPublish(ctx: Ctx): Promise<Item> {
   const o = ctx.options as Record<string, any>
-  for (const key of ['title', 'cover', 'tag', 'mention', 'category', 'schedule', 'price']) {
-    if (o[key] != null && !(Array.isArray(o[key]) && !o[key].length)) {
-      throw new CatbusError('UNSUPPORTED', `微博发布不支持 --${key}`, { hint: '可用：--text、--image、--video、--topic、--poi（地点名称）、--visibility' })
-    }
-  }
   const images = (o.image as string[] | undefined) ?? []
   if (images.length && o.video) throw new CatbusError('USAGE', '--image 和 --video 不能同时使用')
   if (images.length > MAX_IMAGES) throw new CatbusError('USAGE', `微博最多 ${MAX_IMAGES} 张图片`)
@@ -147,7 +142,7 @@ export async function itemPublish(ctx: Ctx): Promise<Item> {
 
   const w = new Weibo(ctx)
   const me = await self(w)
-  const body = content(text, (o.topic as string[] | undefined) ?? [], (o.poi as string | undefined) ?? '')
+  const body = content(text, (o.topic as string[] | undefined) ?? [], (o.poiName as string | undefined) ?? '')
   const visible = VISIBLE[(o.visibility as string) ?? 'public'] ?? '0'
   let result
   if (o.video) {

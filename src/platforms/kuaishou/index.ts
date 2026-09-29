@@ -1,15 +1,8 @@
 import { filter, PRODUCT } from '../../core/options.js'
-import { type CommandDecl, definePlatform, type Handler, type Upstream } from '../../core/registry.js'
-
-type Commands = typeof import('./web/commands.js')
+import { definePlatform, handlers } from '../../core/registry.js'
 
 /** 懒加载 web 端的 handler：只有执行到这条命令时才加载实现。 */
-const h =
-  (name: keyof Commands) =>
-  (): Promise<Handler> =>
-    import('./web/commands.js').then((m) => m[name] as Handler)
-
-const impl = (upstream: Upstream, name: keyof Commands, extra: Partial<CommandDecl> = {}): CommandDecl => ({ upstream, handler: h(name), ...extra })
+const { h, impl } = handlers(() => import('./web/commands.js'))
 
 export default definePlatform({
   id: 'kuaishou',
@@ -45,7 +38,9 @@ export default definePlatform({
         'item unlike': 'none',
         'item collect': 'none',
         'item uncollect': 'none',
-        'item publish': impl('partial', 'itemPublish'),
+        'item publish': impl('partial', 'itemPublish', {
+          supports: ['title', 'text', 'image', 'video', 'tag', 'topic', 'visibility', 'schedule'],
+        }),
         'item delete': 'none',
 
         'product get': 'none',

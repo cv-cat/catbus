@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises'
 import { text as readStdin } from 'node:stream/consumers'
-import { setTimeout as sleep } from 'node:timers/promises'
 import { z } from 'zod'
 import { checkAccountName, endpointFlag, getCurrent, GUEST, newCredential, readCredential, writeCredential } from '../core/auth-store.js'
 import { resolveNetwork } from '../core/config.js'
 import { CatbusError, toCatbusError } from '../core/errors.js'
 import { createLogger, type Logger } from '../core/log.js'
-import { describeOption, flagName, parseDuration, STANDARD_VALUES } from '../core/options.js'
+import { describeOption, flagName, PAGING, parseDuration, STANDARD_VALUES } from '../core/options.js'
 import {
+  type AvailableEndpoint,
   type Command,
   ENDPOINTS,
   type Endpoint,
@@ -15,6 +15,7 @@ import {
   type Page,
   type Platform,
 } from '../core/registry.js'
+import * as rand from '../core/rand.js'
 import type { Credential } from '../core/schemas.js'
 import { type Args, type Options, VOCAB } from '../core/vocab.js'
 import { findPlatform, PLATFORMS } from '../platforms/index.js'
@@ -232,7 +233,8 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
     },
   }
 
-  const snapshot = JSON.stringify(ctx.credential)
+  // 不支持游客态的端上，游客凭证只在内存里（见 resolveIdentity）
+  const snapshot = ctx.credential.account === GUEST && !ep.guest ? null : JSON.stringify(ctx.credential)
   try {
     if (command.stream) {
       out.format = 'jsonl'
@@ -252,8 +254,8 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
  * 请求中更新过的凭证（Set-Cookie、刷新的 token、新生成的游客设备数据）落盘。
  * 账号文件已被删除（logout）时不再写回。
  */
-async function persistCredential(credential: Credential, snapshot: string): Promise<void> {
-  if (JSON.stringify(credential) === snapshot) return
+async function persistCredential(credential: Credential, snapshot: string | null): Promise<void> {
+  if (snapshot == null || JSON.stringify(credential) === snapshot) return
   const { platform, endpoint, account } = credential
   if (account !== GUEST && !(await readCredential(platform, endpoint as Endpoint, account).catch(() => null))) return
   await writeCredential(credential)
@@ -264,6 +266,12 @@ function validate(platform: Platform, command: Command, words: string[], given: 
   const p = platform.id
   const help = `catbus ${p} ${command.key} --help`
   for (const key of Object.keys(given)) {
+    if (command.unsupported.includes(key)) {
+      const usable = Object.keys(command.options).filter((k) => !(k in PAGING))
+      throw new CatbusError('UNSUPPORTED', `${p} 的 ${command.key} 不支持 --${flagName(key)}`, {
+        hint: usable.length ? `可用的选项：${usable.map((k) => `--${flagName(k)}`).join('、')}` : help,
+      })
+    }
     if (!(key in command.options)) {
       throw new CatbusError('USAGE', `选项 --${flagName(key)} 不适用于 ${p} ${command.key}`, { hint: help })
     }
@@ -314,11 +322,14 @@ async function resolveIdentity(
 ): Promise<{ account: string | null; credential: Credential }> {
   const p = platform.id
   const e = endpointFlag(endpoint)
-  const guest = async () =>
-    (await readCredential(p, endpoint, GUEST).catch(() => null)) ??
-    newCredential({ platform: p, endpoint, account: GUEST, method: 'guest' })
+  const ep = platform.endpoints[endpoint] as AvailableEndpoint
+  const blank = () => newCredential({ platform: p, endpoint, account: GUEST, method: 'guest' })
+  // 不支持游客态的端上没有 guest.json：auth 命令没有账号时用一份不落盘的空凭证（AGENTS 5.2）
+  const guest = async () => (ep.guest ? ((await readCredential(p, endpoint, GUEST).catch(() => null)) ?? blank()) : blank())
   if (command.resource === 'auth') {
-    const account = g.account != null ? checkAccountName(g.account, { allowGuest: true }) : await getCurrent(p, endpoint)
+    // -a guest 只对 auth status 有意义；登录、登出到 guest 都不行（guest 是保留名）
+    const allowGuest = command.key === 'auth status'
+    const account = g.account != null ? checkAccountName(g.account, { allowGuest }) : await getCurrent(p, endpoint)
     const credential = account == null || account === GUEST ? null : await readCredential(p, endpoint, account).catch(() => null)
     return { account: account === GUEST ? null : account, credential: credential ?? (await guest()) }
   }
@@ -359,22 +370,39 @@ async function readFileOptions(options: Options): Promise<void> {
   }
 }
 
+/** 截在一页中间时的游标后缀：`<这一页的游标>#skip=N`，续翻时重取这一页、跳过已经输出的 N 条。 */
+const SKIP_RE = /#skip=(\d+)$/
+
+export function splitCursor(cursor: string | null): { cursor: string | null; skip: number } {
+  const m = cursor == null ? null : SKIP_RE.exec(cursor)
+  if (!m) return { cursor, skip: 0 }
+  const base = cursor!.slice(0, m.index)
+  return { cursor: base === '' ? null : base, skip: Number(m[1]) }
+}
+
 /** 分页：默认一页；--limit N 翻到取满 N 条；--all 翻到没有更多。jsonl 时边翻边输出。 */
 async function runPaged(platform: Platform, ctx: HandlerContext, handler: (ctx: HandlerContext) => unknown, out: Output) {
   const { limit, all } = ctx.options as { limit?: number; all?: boolean }
   const target = limit ?? (all ? Infinity : null)
   const collected: unknown[] = []
   let count = 0
-  let cursor = ctx.cursor
+  let { cursor, skip } = splitCursor(ctx.cursor)
   let page: Page
   for (;;) {
     const result = (await handler({ ...ctx, cursor })) as { data: unknown[]; page: Page }
-    let items = result.data
-    if (target != null && count + items.length > target) items = items.slice(0, target - count)
+    let items = result.data.slice(skip)
+    const offset = skip
+    skip = 0
+    page = result.page
+    if (target != null && count + items.length > target) {
+      // --limit 截在一页中间：游标指回这一页，续翻时跳过已经输出的，剩下的不丢
+      const take = target - count
+      items = items.slice(0, take)
+      page = { cursor: `${cursor ?? ''}#skip=${offset + take}`, has_more: true }
+    }
     count += items.length
     if (out.format === 'jsonl') items.forEach((v) => out.item(v))
     else collected.push(...items)
-    page = result.page
     if (target == null || count >= target || !page.has_more || page.cursor == null) break
     // 服务端把同一个游标又返回一遍：再翻只会重复拿到同一页，停在这里
     if (page.cursor === cursor) {
@@ -384,7 +412,7 @@ async function runPaged(platform: Platform, ctx: HandlerContext, handler: (ctx: 
     }
     cursor = page.cursor
     ctx.log.debug(`翻页：已取 ${count} 条`)
-    await sleep(platform.pageInterval)
+    await rand.sleep(platform.pageInterval)
   }
   out.result(collected, { page, streamed: out.format === 'jsonl' })
 }

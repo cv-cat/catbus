@@ -2,14 +2,13 @@ import { readFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createInterface } from 'node:readline'
 import { text as readStreamText } from 'node:stream/consumers'
-import { setTimeout as sleep } from 'node:timers/promises'
 import QRCode from 'qrcode'
 import { endpointFlag, getCurrent, newCredential, readCredential, setCurrent, toAccount, writeCredential } from './auth-store.js'
 import { parseCookieInput } from './cookies.js'
 import { CatbusError } from './errors.js'
 import { writeFileAtomic } from './fsutil.js'
 import { cacheDir } from './paths.js'
-import { now } from './rand.js'
+import { now, sleep } from './rand.js'
 import type { HandlerContext } from './registry.js'
 import type { Account, Credential, UserRef } from './schemas.js'
 
@@ -18,6 +17,13 @@ import type { Account, Credential, UserRef } from './schemas.js'
 /** 登录到哪个账号：`-a` > 当前账号 > `default`。 */
 export function loginTarget(ctx: HandlerContext): string {
   return ctx.account ?? 'default'
+}
+
+/**
+ * 登录流程里校验新凭证用的上下文：账号是要登录到的那个（出错时提示里的账号名对得上），凭证是还没落盘的新凭证。
+ */
+export function loginContext(ctx: HandlerContext, credential: Credential): HandlerContext {
+  return { ...ctx, account: loginTarget(ctx), credential }
 }
 
 /** 登录方式对应的新凭证（还没落盘）。 */

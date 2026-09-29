@@ -1,6 +1,6 @@
 import { CatbusError } from '../../../core/errors.js'
 import { downloadMedia, readMedia } from '../../../core/files.js'
-import { cookieCredential, finishLogin } from '../../../core/login.js'
+import { cookieCredential, finishLogin, loginContext } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
@@ -76,7 +76,7 @@ export async function authLogin(ctx: Ctx) {
   if (!names.has('auth_token') || !names.has('ct0')) {
     throw new CatbusError('USAGE', 'X 的 cookie 需要包含 auth_token 和 ct0', { hint: '在已登录的 x.com 页面复制完整的 Cookie 请求头' })
   }
-  const x = await xclient({ ...ctx, account: 'login', credential })
+  const x = await xclient(loginContext(ctx, credential))
   let me: any
   try {
     me = await viewer(x)
@@ -198,8 +198,6 @@ export const itemRepost = (ctx: Ctx) => act(ctx, ctx.args.item!, api.createRetwe
 export const itemUnrepost = (ctx: Ctx) => act(ctx, ctx.args.item!, api.deleteRetweet)
 export const itemDelete = (ctx: Ctx) => act(ctx, ctx.args.item!, api.deleteTweet)
 
-/** X 发推不支持的发布选项。 */
-const PUBLISH_UNSUPPORTED = ['title', 'cover', 'tag', 'topic', 'mention', 'poi', 'category', 'schedule', 'price'] as const
 /** thread 两条之间的间隔（上游 post_thread 的 interval），太快容易触发风控。 */
 const THREAD_INTERVAL = 2000
 
@@ -216,9 +214,6 @@ async function quoteUrl(x: XClient, input: string): Promise<string> {
  */
 export async function itemPublish(ctx: Ctx) {
   const o = ctx.options as Record<string, any>
-  const bad = PUBLISH_UNSUPPORTED.filter((k) => o[k] != null && !(Array.isArray(o[k]) && !o[k].length))
-  if (bad.length) throw new CatbusError('UNSUPPORTED', `X 发推不支持 ${bad.map((k) => `--${k}`).join('、')}`)
-  if (o.visibility && o.visibility !== 'public') throw new CatbusError('UNSUPPORTED', 'X 的推文只能公开发布')
   const images: string[] = o.image ?? []
   if (images.length && o.video) throw new CatbusError('USAGE', 'X 的一条推文不能同时带图片和视频')
   if (images.length > 4) throw new CatbusError('USAGE', 'X 的一条推文最多 4 张图片')

@@ -51,6 +51,11 @@ export type HandlerLoader = () => Promise<Handler>
 export interface CommandDecl extends Partial<CommandSpec> {
   upstream: Upstream
   note?: string
+  /**
+   * 词表给这个命令的标准选项里，平台支持的那些（例如 item publish 的 `['text', 'image', 'visibility']`）。
+   * 不写时全部支持；没列出的标准选项不出现在帮助里，用了报 UNSUPPORTED（AGENTS 4.9）。
+   */
+  supports?: string[]
   handler?: HandlerLoader
 }
 
@@ -95,12 +100,16 @@ export interface Command extends CommandSpec {
   status: Status
   /** 不在第 4.5 节词表里的平台扩展。 */
   extension: boolean
+  /** 词表给了、但平台不支持的标准选项（见 CommandDecl.supports）。 */
+  unsupported: string[]
   handler: HandlerLoader | null
 }
 
 export interface AvailableEndpoint {
   login: LoginDecl
   logout?: HandlerLoader
+  /** 是否支持游客态（AGENTS 5.2）。 */
+  guest: boolean
   commands: Map<string, Command>
 }
 
@@ -116,11 +125,33 @@ export interface Platform {
 const coreHandler = (name: 'list' | 'use' | 'logout'): HandlerLoader => () =>
   import('./auth-handlers.js').then((m) => m[name])
 
+/** 懒加载的 handler 带上它在模块里的名字，测试用来检查命令与 handler 是否对应。 */
+export type NamedLoader = HandlerLoader & { handlerName: string }
+
+/**
+ * 平台 index.ts 用的 handler 声明：`h('itemGet')` 懒加载 handler，`impl('full', 'itemGet', {...})` 连同 upstream 一起声明。
+ * `wrap` 给每个 handler 套一层（例如抖音遇到 Uifid 失效时重试）。
+ */
+export function handlers<M extends object>(load: () => Promise<M>, wrap?: (m: M, handler: Handler) => Handler) {
+  const h = (name: keyof M & string): NamedLoader =>
+    Object.assign(
+      () =>
+        load().then((m) => {
+          const handler = m[name] as unknown as Handler
+          return wrap ? wrap(m, handler) : handler
+        }),
+      { handlerName: name },
+    )
+  const impl = (upstream: Upstream, name: keyof M & string, extra: Partial<CommandDecl> = {}): CommandDecl => ({ upstream, handler: h(name), ...extra })
+  return { h, impl }
+}
+
 export function definePlatform(decl: PlatformDecl): Platform {
   const endpoints = {} as Platform['endpoints']
   for (const endpoint of ENDPOINTS) {
     const e = decl.endpoints[endpoint]
-    endpoints[endpoint] = e === 'planned' ? 'planned' : { login: e.login, logout: e.logout, commands: resolveCommands(decl, e) }
+    endpoints[endpoint] =
+      e === 'planned' ? 'planned' : { login: e.login, logout: e.logout, guest: e.guest ?? false, commands: resolveCommands(decl, e) }
   }
   return {
     id: decl.id,
@@ -155,6 +186,17 @@ function resolveCommands(decl: PlatformDecl, e: EndpointDecl): Map<string, Comma
       spec.auth = 'required'
     }
     const options: Record<string, z.ZodType> = { ...(spec.paged ? PAGING : {}), ...base?.options, ...d.options }
+    const unsupported: string[] = []
+    if (d.supports) {
+      const standard = Object.keys(base?.options ?? {})
+      for (const k of d.supports) if (!standard.includes(k)) fail(key, `supports 里的 ${k} 不是这个命令的标准选项`)
+      for (const k of standard) {
+        if (d.supports.includes(k)) continue
+        if (d.options && k in d.options) fail(key, `选项 ${k} 既在 options 里声明，又没列进 supports`)
+        unsupported.push(k)
+        delete options[k]
+      }
+    }
     if (key === 'auth login') {
       options.method = z.enum(e.login.methods).default(e.login.default).describe('登录方式')
       if (e.login.scopes?.length) options.scope = z.enum(e.login.scopes).optional().describe('子站点')
@@ -173,6 +215,7 @@ function resolveCommands(decl: PlatformDecl, e: EndpointDecl): Map<string, Comma
       note: d.note ?? null,
       status: d.handler ? 'implemented' : 'planned',
       extension: !base,
+      unsupported,
       handler: d.handler ?? null,
     })
   }
@@ -188,6 +231,7 @@ function resolveCommands(decl: PlatformDecl, e: EndpointDecl): Map<string, Comma
       note: null,
       status: 'implemented',
       extension: false,
+      unsupported: [],
       handler: coreHandler(action),
     })
   }

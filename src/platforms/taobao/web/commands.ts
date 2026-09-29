@@ -1,6 +1,6 @@
 import { CatbusError } from '../../../core/errors.js'
 import { readMedia } from '../../../core/files.js'
-import { cookieCredential, finishLogin } from '../../../core/login.js'
+import { cookieCredential, finishLogin, loginContext } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
@@ -24,7 +24,7 @@ const isAuthError = (err: unknown) => err instanceof CatbusError && (err.code ==
 /** cookie 登录：导入后换一次私信 token 作为校验（上游没有取当前用户的接口）。 */
 export async function authLogin(ctx: Ctx) {
   const credential = cookieCredential(ctx, COOKIE_DOMAIN)
-  const tb = new Taobao({ ...ctx, account: 'login', credential })
+  const tb = new Taobao(loginContext(ctx, credential))
   const hint = '复制浏览器里登录后的淘宝 cookie（需要包含 unb、_m_h5_tk、cookie2）'
   if (!tb.myId) throw new CatbusError('USAGE', 'cookie 里没有 unb，不是登录后的淘宝 cookie', { hint })
   try {

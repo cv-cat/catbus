@@ -1,6 +1,6 @@
 import { CatbusError } from '../../../core/errors.js'
 import type { LocalMedia } from '../../../core/files.js'
-import { parseJson } from '../../../core/http.js'
+import { parseJson, parseJsonp } from '../../../core/http.js'
 import type { Pairs } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { authError } from '../../../core/toolkit.js'
@@ -40,9 +40,8 @@ export async function getToken(tb: Taobao): Promise<any> {
       ['data', data],
     ]
     const text = await tb.text({ url: LOGIN_TOKEN_URL, query, headers: TOKEN_HEADERS })
-    const m = / mtopjsonp3\((.*)\)/.exec(text)
-    if (!m) throw new CatbusError('UPSTREAM', '淘宝返回的不是 mtop 的 JSONP', { detail: { body: text.slice(0, 300) } })
-    const body = JSON.parse(m[1]!)
+    const body = parseJsonp(text)
+    if (body == null) throw new CatbusError('UPSTREAM', '淘宝返回的不是 mtop 的 JSONP', { detail: { body: text.slice(0, 300) } })
     if (attempt < MAX_TOKEN_RETRY && TOKEN_RETRY.test(String(body?.ret?.[0] ?? ''))) continue
     return body
   }

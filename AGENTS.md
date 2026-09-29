@@ -230,8 +230,8 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | 平台 | 命令 | 说明 | 输出 |
 |---|---|---|---|
 | tiktok | `folder add <folder> <item>` | 把视频加入收藏夹（一次一个视频）。TikTok 只能把已收藏的视频加进收藏夹 | `{id}`（视频 id） |
-| tiktok | `folder create <name> [--visibility public\|private]` | 私有选项：收藏夹公开 / 私密，沿用 4.9 标准选项 `--visibility` 的名字与取值，不支持 `friends`；默认 `private`（与上游一致） | Folder |
-| tiktok | `folder update <folder> [--name <name>] [--visibility public\|private]` | 私有选项：同上。`--name`、`--visibility` 至少给一个，没给的保持原值 | Folder |
+| tiktok | `folder create <name> [--visibility public\|private]` | 收藏夹公开 / 私密：用 4.9 的标准选项 `--visibility`，只取 `public`、`private`；默认 `private`（与上游一致） | Folder |
+| tiktok | `folder update <folder> [--name <name>] [--visibility public\|private]` | 同上。`--name`、`--visibility` 至少给一个，没给的保持原值 | Folder |
 | tiktok | `item publish [--allow-comment on\|off]` | 私有选项：允许评论，默认 `on` | Item |
 | tiktok | `item publish [--allow-duet on\|off]` | 私有选项：允许合拍（Duet），默认视频 `off`、图文 `on`（照上游） | Item |
 | tiktok | `item publish [--allow-stitch on\|off]` | 私有选项：允许拼接（Stitch），默认视频 `off`、图文 `on`（照上游） | Item |
@@ -265,6 +265,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | douyin | `live like <room> [--count N]` | 私有选项：一次点赞的次数 | `{id}` |
 | douyin | `comment list <product> --product [--label <标签名或 id>]` | 私有选项：商品评价按标签筛选（好评 / 差评 / 有图等） | Comment[] |
 | douyin | `notice list [--group all\|fans\|mention\|comment\|like\|danmaku]` | 私有选项：通知分组，不带时为默认分组 | Notice[] |
+| weibo | `item publish [--poi-name <名称>]` | 私有选项：地点名称，发成「#名称[地点]#」的地点标签。微博发布没有地点 id，不支持 `--poi` | Item |
 | douyin | `auth login --method sms --sso` | 私有选项：短信登录改走 `login.douyin.com` 页的 SSO 链 | Account |
 | jd | `order list` | 订单 | Order[] |
 | jd | `order list [--range 3m\|this_year\|<年份>]` | 私有选项：订单的时间范围。`3m` 近三个月（默认），`this_year` 今年内，`2025` 这样的四位年份表示那一年 | Order[] |
@@ -334,7 +335,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | 选项 | 说明 |
 |---|---|
 | `--limit N` | 默认只取一页。指定 N 后自动翻页，直到取满 N 条。翻页间隔用平台默认值 |
-| `--cursor <c>` | 从上次返回的 `page.cursor` 继续翻。cursor 是不透明字符串 |
+| `--cursor <c>` | 从上次返回的 `page.cursor` 继续翻。cursor 是不透明字符串。`--limit` 截在一页中间时，`page.cursor` 指回这一页，续翻时跳过已经输出的，不丢数据 |
 | `--all` | 一直翻到没有更多为止 |
 
 **筛选**：各平台在注册表里声明支持哪些筛选、取哪些值。取值只能从下表里选；需要新取值时先改本表。
@@ -365,6 +366,8 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | `--schedule <ISO 时间>` | 定时发布 |
 | `--price <金额>` | 商品价格（闲鱼） |
 | `--quote <item>` | 引用一条内容（ID 或 URL），发成引用。目前只有 x 支持，其他平台没有这个选项 |
+
+平台在注册表里用 `supports` 声明 `item publish` 支持上表中的哪些选项。没声明支持的选项不出现在帮助里，用了报 `UNSUPPORTED`（`hint` 列出可用的选项），不会被静默忽略。各平台的取舍见 capabilities.md。
 
 本地文件会自动上传，不需要先调 `media upload`。
 
@@ -454,10 +457,10 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 
 身份按以下优先级选择：`-a <name>` > `_current` > 游客。
 
-- `-a guest` 强制使用游客身份（只在支持游客态的端上有意义）。
+- `-a guest` 强制使用游客身份（只在支持游客态的端上有意义）。`auth login` / `logout` / `use` 不接受 `-a guest`（保留名），报 `USAGE`。
 - `-a` 指定的账号不存在时，报 `AUTH_REQUIRED`，`hint` 为 `catbus <p> auth login -a <name>`。
 
-**游客态只在声明了 `guest: true` 的端上存在**（见 7.6）。
+**游客态只在声明了 `guest: true` 的端上存在**（见 7.6）。不支持游客态的端上没有 `guest.json`：`auth status` 等 auth 命令没有账号时，用一份只在内存里的空凭证，不落盘。
 - **web 端都不支持游客态**：各平台的 web 端不登录几乎看不到内容，所以 web 端除 `auth` 命令外全部需要登录，未登录时直接报 `AUTH_REQUIRED` 并提示登录命令。游客态主要留给 app 端。
 - 支持游客态的端上，很多平台匿名访问也需要设备 cookie 或 token（例如 xhs 的 `a1`、抖音的 `ttwid`、B 站的 `buvid`、X 的 guest token）。catbus 自动生成这些数据，缓存到 `guest.json`，过期后重新生成；各平台的生成方式见 upstream-map。
 - 登录流程本身仍会先生成这些设备数据（很多平台的登录接口要求先有设备 cookie），这与游客态无关。
@@ -876,6 +879,7 @@ export default definePlatform({
 | `summary` | 一句话说明 |
 | `args` | 位置参数 |
 | `options` | 私有选项和筛选取值，用 zod 声明 |
+| `supports?` | 词表给这个命令的标准选项里，平台支持哪些（如 `item publish` 的发布选项）。不写时全部支持；没列出的不出现在帮助里，用了报 `UNSUPPORTED` |
 | `auth` | `required` / `optional`；只在 `guest: true` 的端上可以是 `optional` |
 | `confirm?` | 是否需要危险操作确认 |
 | `stream?` | 是否长连接 |

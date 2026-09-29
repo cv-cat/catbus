@@ -1,12 +1,13 @@
 import { CookieJar } from '../../../core/cookies.js'
 import { CatbusError } from '../../../core/errors.js'
+import { imageSize } from '../../../core/image.js'
 import { mp4AvgFrameRate, mp4VideoTrack } from '../../../core/mp4.js'
+import { pyFloatStr, pyRound } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import { authError, scope } from '../../../core/toolkit.js'
 import { isAuthFailure } from './client.js'
-import { cspl, Creator, PyFloat, pyRound3 } from './creator.js'
-import { imageSize } from './image.js'
+import { cspl, Creator, PyFloat } from './creator.js'
 import { generateA1, generateWebId } from './login.js'
 import { creatorProfileData, creatorRapFingerprint, generateWebsectiga, rapParam, uploadSignature, urlSign } from './js.js'
 import { AS, COOKIE_DOMAIN, CREATOR, CREATOR_ORDER, CREATOR_REFERENCE, CUSTOMER, EDITH, type Headers, LOGIN_LANG, navigationHeaders, orderedHeaders, ROS_UPLOAD, UA, WEB } from './profile.js'
@@ -16,7 +17,6 @@ import { AS, COOKIE_DOMAIN, CREATOR, CREATOR_ORDER, CREATOR_REFERENCE, CUSTOMER,
  */
 
 /** Python 的 float 写法：整数值带 `.0`。 */
-const pyFloat = (x: number) => (Number.isInteger(x) ? `${x}.0` : String(x))
 
 const NOTE_MANAGER = `${CREATOR}/new/note-manager`
 const PUBLISH_REFERER = `${CREATOR}/publish/publish?source=official&from=tab_switch`
@@ -164,7 +164,7 @@ export function videoMetadata(video: Uint8Array): VideoMeta | null {
       colour_primaries: 'BT.709',
       duration,
       format: 'AVC',
-      frame_rate: fps ? new PyFloat(pyRound3(fps)) : 0,
+      frame_rate: fps ? new PyFloat(pyRound(fps, 3)) : 0,
       height,
       matrix_coefficients: 'BT.709',
       rotation: 0,
@@ -266,7 +266,7 @@ export function imageNoteData(n: NoteCommon, images: ImageInfo[]): Record<string
         height: i.height,
         metadata: { source: -1 },
         stickers: { version: 2, floating: [] },
-        extra_info_json: `{"mimeType":${JSON.stringify(i.mimeType)},"image_metadata":{"bg_color":"","origin_size":${pyFloat(i.size / 1024)}}}`,
+        extra_info_json: `{"mimeType":${JSON.stringify(i.mimeType)},"image_metadata":{"bg_color":"","origin_size":${pyFloatStr(i.size / 1024)}}}`,
       })),
     },
     video_info: null,
@@ -304,7 +304,7 @@ export function videoData(n: NoteCommon, videoFileId: string, cover: ImageInfo, 
       segments: {
         count: 1,
         need_slice: false,
-        items: [{ mute: 0, speed: 1, start: 0, duration: new PyFloat(pyRound3(duration / 1000)), transcoded: 0, media_source: 1, original_metadata: { video: meta.video, audio: meta.audio } }],
+        items: [{ mute: 0, speed: 1, start: 0, duration: new PyFloat(pyRound(duration / 1000, 3)), transcoded: 0, media_source: 1, original_metadata: { video: meta.video, audio: meta.audio } }],
       },
       entrance: 'web',
     },

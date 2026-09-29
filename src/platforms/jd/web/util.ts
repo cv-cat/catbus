@@ -19,18 +19,6 @@ export function transCookies(cookie: string): Map<string, string> {
   return out
 }
 
-/** 解开 jQuery jsonp 包装：`jQuery123({...})` → 对象；解不开时为 null。 */
-export function parseJsonp(text: string | null | undefined): any {
-  if (text == null) return null
-  const t = text.trim()
-  const m = /^[^(]*\(([\s\S]*)\)[;\s]*$/.exec(t)
-  try {
-    return JSON.parse(m ? m[1]! : t)
-  } catch {
-    return null
-  }
-}
-
 /** 去掉搜索结果里的高亮标签。 */
 export function stripTags(text: unknown): string {
   if (!text) return ''

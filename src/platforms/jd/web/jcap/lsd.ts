@@ -1,4 +1,4 @@
-import { fromMat, toMat, type U8, withMats } from './image.js'
+import { fromMat, toMat, type U8, withMats } from '../../../../core/image.js'
 
 /**
  * OpenCV 5.0 的 LineSegmentDetector（modules/imgproc/src/lsd.cpp，LSD_REFINE_STD，默认参数）移植。

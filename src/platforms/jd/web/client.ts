@@ -1,6 +1,6 @@
 import { createCipheriv } from 'node:crypto'
 import { CatbusError } from '../../../core/errors.js'
-import { type HttpRequest, type HttpResponse, HttpClient } from '../../../core/http.js'
+import { HttpClient, type HttpRequest, type HttpResponse, parseJsonp } from '../../../core/http.js'
 import { compactJson, jsonDumps, type Pairs, quote, type Scalar, unquote } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
@@ -24,7 +24,7 @@ import {
   SEARCH_REFERER,
   xhr,
 } from './profile.js'
-import { bootstrapCookies, parseJsonp, sha256Hex } from './util.js'
+import { bootstrapCookies, sha256Hex } from './util.js'
 
 /**
  * 京东 web 端的会话（上游 builder/auth.py 的 JdAuth + jd_apis/jd_api.py 的 call_api）。

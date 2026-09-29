@@ -1,15 +1,9 @@
+import { z } from 'zod'
 import { filter, visibility } from '../../core/options.js'
-import { type CommandDecl, definePlatform, type Handler, type Upstream } from '../../core/registry.js'
-
-type Commands = typeof import('./web/commands.js')
+import { definePlatform, handlers } from '../../core/registry.js'
 
 /** 懒加载 web 端的 handler：只有执行到这条命令时才加载实现。 */
-const h =
-  (name: keyof Commands) =>
-  (): Promise<Handler> =>
-    import('./web/commands.js').then((m) => m[name] as Handler)
-
-const impl = (upstream: Upstream, name: keyof Commands, extra: Partial<CommandDecl> = {}): CommandDecl => ({ upstream, handler: h(name), ...extra })
+const { h, impl } = handlers(() => import('./web/commands.js'))
 
 export default definePlatform({
   id: 'weibo',
@@ -46,7 +40,13 @@ export default definePlatform({
         'item repost': 'none',
         'item unrepost': 'none',
         // post_weibo 的 visible：0 公开、1 仅自己、6 朋友圈（互相关注）、10 粉丝
-        'item publish': impl('full', 'itemPublish', { options: { visibility: visibility('public', 'private', 'friends', 'fans') } }),
+        'item publish': impl('full', 'itemPublish', {
+          supports: ['text', 'image', 'video', 'topic', 'visibility'],
+          options: {
+            visibility: visibility('public', 'private', 'friends', 'fans'),
+            poiName: z.string().optional().describe('地点名称，发成「#名称[地点]#」的地点标签'),
+          },
+        }),
         'item delete': 'none',
 
         'comment list': impl('partial', 'commentList', { note: '只有一级评论' }),

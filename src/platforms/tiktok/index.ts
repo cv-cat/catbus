@@ -1,16 +1,9 @@
 import { z } from 'zod'
 import { filter, PRODUCT } from '../../core/options.js'
-import { type CommandDecl, definePlatform, type Handler, type Upstream } from '../../core/registry.js'
-
-type Commands = typeof import('./web/commands.js')
+import { definePlatform, handlers } from '../../core/registry.js'
 
 /** 懒加载 web 端的 handler：只有执行到这条命令时才加载实现。 */
-const h =
-  (name: keyof Commands) =>
-  (): Promise<Handler> =>
-    import('./web/commands.js').then((m) => m[name] as Handler)
-
-const impl = (upstream: Upstream, name: keyof Commands, extra: Partial<CommandDecl> = {}): CommandDecl => ({ upstream, handler: h(name), ...extra })
+const { h, impl } = handlers(() => import('./web/commands.js'))
 
 /** 发布的互动开关（AGENTS 4.7）。不给时用上游的默认值，视频与图文不同。 */
 const toggle = (what: string, dflt: string) => z.enum(['on', 'off']).optional().describe(`允许${what}，默认 ${dflt}`)
@@ -22,8 +15,8 @@ const PUBLISH_TOGGLES = {
   allowAiRemix: toggle('AI 改编', 'on'),
 }
 
-/** 收藏夹的公开 / 私密：沿用标准选项 --visibility 的名字与取值，friends 由 handler 报 UNSUPPORTED。 */
-const FOLDER_VISIBILITY = z.enum(['public', 'private', 'friends']).optional().describe('公开或私密（public / private）；新建默认 private，修改时不给则不变')
+/** 收藏夹的公开 / 私密：沿用标准选项 --visibility 的名字与取值（AGENTS 4.9），没有 friends。 */
+const FOLDER_VISIBILITY = z.enum(['public', 'private']).optional().describe('公开或私密；新建默认 private，修改时不给则不变')
 
 export default definePlatform({
   id: 'tiktok',
@@ -60,7 +53,10 @@ export default definePlatform({
         'item uncollect': impl('full', 'itemUncollect'),
         'item repost': 'none',
         'item unrepost': 'none',
-        'item publish': impl('full', 'itemPublish', { options: PUBLISH_TOGGLES }),
+        'item publish': impl('full', 'itemPublish', {
+          supports: ['text', 'image', 'video', 'cover', 'tag', 'topic', 'mention', 'visibility'],
+          options: PUBLISH_TOGGLES,
+        }),
         'item delete': 'none',
 
         'product get': impl('full', 'productGet'),

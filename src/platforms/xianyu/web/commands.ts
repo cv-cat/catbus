@@ -1,7 +1,7 @@
 import { GUEST } from '../../../core/auth-store.js'
 import { CatbusError } from '../../../core/errors.js'
 import { readMedia } from '../../../core/files.js'
-import { cookieCredential, finishLogin, freshCredential, poll, showQrcode } from '../../../core/login.js'
+import { cookieCredential, finishLogin, freshCredential, loginContext, poll, showQrcode } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
@@ -65,7 +65,7 @@ async function qrcodeLogin(ctx: Ctx) {
 export async function authLogin(ctx: Ctx) {
   if (ctx.options.method === 'cookie') {
     const credential = cookieCredential(ctx, COOKIE_DOMAIN)
-    const x = new Xianyu({ ...ctx, account: 'login', credential })
+    const x = new Xianyu(loginContext(ctx, credential))
     const hint = '复制浏览器里登录后的闲鱼 cookie（需要包含 unb、_m_h5_tk、cookie2）'
     if (!x.myId) throw new CatbusError('USAGE', 'cookie 里没有 unb，不是登录后的闲鱼 cookie', { hint })
     try {
@@ -120,8 +120,6 @@ export async function itemPublish(ctx: Ctx) {
   const o = ctx.options as Record<string, any>
   const desc = (o.text ?? o.title) as string | undefined
   if (!desc) throw new CatbusError('USAGE', '闲鱼发布需要 --text（商品描述，同时用作标题）', { hint: 'catbus xianyu item publish --text <描述> --image <图片> --price <元>' })
-  if (o.video) throw new CatbusError('UNSUPPORTED', '闲鱼发布暂不支持 --video，只支持图片')
-  if (o.schedule) throw new CatbusError('UNSUPPORTED', '闲鱼发布不支持 --schedule')
   if (o.shipping === 'fixed' && o.postage == null) throw new CatbusError('USAGE', '--shipping fixed 需要 --postage（运费，元）')
   // 上游不填价格时（price=None）不看原价
   if (o.originalPrice != null && o.price == null) throw new CatbusError('USAGE', '--original-price 要和 --price 一起用')

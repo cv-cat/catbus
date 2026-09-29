@@ -1,17 +1,13 @@
 import { z } from 'zod'
 import { filter, PRODUCT } from '../../core/options.js'
-import { type CommandDecl, definePlatform, type Handler, type Upstream } from '../../core/registry.js'
+import { definePlatform, type Handler, handlers } from '../../core/registry.js'
 import type { Args, Options } from '../../core/vocab.js'
 
-type Commands = typeof import('./web/commands.js')
-
 /** 懒加载 web 端的 handler：只有执行到这条命令时才加载实现。缺 UIFID 时自动补上重试（commands.withUifid）。 */
-const h =
-  (name: keyof Commands) =>
-  (): Promise<Handler> =>
-    import('./web/commands.js').then((m) => m.withUifid(m[name] as Handler) as Handler)
-
-const impl = (upstream: Upstream, name: keyof Commands, extra: Partial<CommandDecl> = {}): CommandDecl => ({ upstream, handler: h(name), ...extra })
+const { h, impl } = handlers(
+  () => import('./web/commands.js'),
+  (m, handler) => m.withUifid(handler) as Handler,
+)
 
 /** 平台私有选项（AGENTS 4.7 的 douyin 行）。 */
 const folder = (summary: string) => ({ folder: z.string().optional().describe(summary) })
@@ -72,6 +68,7 @@ export default definePlatform({
         'item collect': impl('full', 'itemCollect', { options: folder('收藏后移进这个收藏夹（ID 或名字）') }),
         'item uncollect': impl('full', 'itemUncollect', { options: folder('只从这个收藏夹移出，仍保留收藏（ID 或名字）') }),
         'item publish': impl('full', 'itemPublish', {
+          supports: ['title', 'text', 'image', 'video', 'cover', 'tag', 'topic', 'mention', 'poi', 'visibility', 'schedule'],
           options: {
             poiName: z.string().optional().describe('地点名称，配合 --poi'),
             series: z.string().optional().describe('加入合集（合集 ID）'),

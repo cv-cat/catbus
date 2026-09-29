@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { CatbusError } from '../../../core/errors.js'
-import { decodePng, loadCv } from '../../jd/web/jcap/image.js'
+import { decodeImage as decodeRgba, loadCv } from '../../../core/image.js'
 
 /**
  * ddddocr 1.6.1 的检测与识别（`DdddOcr(det=True).detection`、`DdddOcr().classification(probability=True)`）的移植。
@@ -11,7 +11,7 @@ import { decodePng, loadCv } from '../../jd/web/jcap/image.js'
  *   缩放用 opencv-js（与 opencv-python 同一份 OpenCV 实现）；后处理（网格解码、NMS）按 numpy 的 float32 语义逐步取整。
  * - 识别：PIL 等比缩放到高 64（LANCZOS）→ convert('L') → /255。这里重写了 Pillow 的定点实现，逐字节一致。
  *
- * 图片统一用 RGB 交错像素（与 PIL 一致）。PNG 解码与 opencv-js 的加载复用京东验证码的 jcap/image.ts。
+ * 图片统一用 RGB 交错像素（与 PIL 一致）。图片解码与 opencv-js 的加载用 core/image.ts。
  */
 
 export interface Rgb {
@@ -24,24 +24,10 @@ const f = Math.fround
 
 // ---------------------------------------------------------------- 图片
 
-/**
- * 解码题图为 RGB（alpha 丢弃，与 cv2.imdecode 的 IMREAD_COLOR 一致）。PNG 用自带的解码器，逐像素与 PIL / cv2 一致；
- * JPEG 等交给 @napi-rs/canvas 的 loadImage（要等它解码完再画，同步设 src 后立刻 drawImage 画出来是全黑的）。
- */
+/** 解码题图为 RGB（alpha 丢弃，与 cv2.imdecode 的 IMREAD_COLOR 一致）。 */
 export async function decodeImage(bytes: Uint8Array): Promise<Rgb> {
-  let png: { width: number; height: number; rgba: Uint8Array } | null = null
-  try {
-    png = decodePng(bytes)
-    if (!png) {
-      const { createCanvas, loadImage } = await import('@napi-rs/canvas')
-      const im = await loadImage(Buffer.from(bytes))
-      const ctx = createCanvas(im.width, im.height).getContext('2d')
-      ctx.drawImage(im, 0, 0)
-      const d = ctx.getImageData(0, 0, im.width, im.height)
-      png = { width: im.width, height: im.height, rgba: new Uint8Array(d.data.buffer, d.data.byteOffset, d.data.length) }
-    }
-  } catch {}
-  if (!png?.width) throw new CatbusError('RISK_CONTROL', '极验题图无法解码', { detail: { kind: 'captcha' } })
+  const png = await decodeRgba(bytes)
+  if (!png) throw new CatbusError('RISK_CONTROL', '极验题图无法解码', { detail: { kind: 'captcha' } })
   const data = new Uint8Array(png.width * png.height * 3)
   for (let i = 0, j = 0; j < data.length; i += 4, j += 3) data.set(png.rgba.subarray(i, i + 3), j)
   return { width: png.width, height: png.height, data }

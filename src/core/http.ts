@@ -236,8 +236,9 @@ export class HttpClient {
         .map((c) => c.trim())
         .filter(Boolean)
         .map((c) => {
+          // 没有 = 的片段当作空值的 cookie（与 Python 的 SimpleCookie 一致：foo → foo=）
           const i = c.indexOf('=')
-          return [c.slice(0, i), c.slice(i + 1)] as [string, string]
+          return (i < 0 ? [c, ''] : [c.slice(0, i), c.slice(i + 1)]) as [string, string]
         })
       for (let i = headers.length - 1; i >= 0; i--) if (headers[i]![0].toLowerCase() === 'cookie') headers.splice(i, 1)
     } else if (req.cookies !== false) {
@@ -358,6 +359,30 @@ export async function parseJson<T>(res: HttpResponse): Promise<T> {
       detail: { status: res.status, body: text.slice(0, 300) },
     })
   }
+}
+
+/** 解开 JSONP 包装：`cb({...})`、`cb({...});` → 对象；不带包装时按 JSON 解。都解不开时为 null。 */
+export function parseJsonp(text: string | null | undefined): any {
+  if (text == null) return null
+  const t = text.trim()
+  const m = /^[^({["]*\(([\s\S]*)\)[;\s]*$/.exec(t)
+  try {
+    return JSON.parse(m ? m[1]! : t)
+  } catch {
+    return null
+  }
+}
+
+/** 响应体按 JSONP 解析（见 parseJsonp），解不开时报 UPSTREAM，带上状态码和响应开头。 */
+export async function jsonpOf<T = any>(res: HttpResponse): Promise<T> {
+  const text = await res.text()
+  const data = parseJsonp(text)
+  if (data == null) {
+    throw new CatbusError('UPSTREAM', `平台返回的不是 JSON / JSONP（HTTP ${res.status}）`, {
+      detail: { status: res.status, body: text.slice(0, 300) },
+    })
+  }
+  return data as T
 }
 
 /** wreq-js 的错误映射成 NETWORK，`detail.kind` 区分超时、代理、连接、DNS、TLS、中止。 */

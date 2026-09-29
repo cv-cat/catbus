@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import { newCredential, readCredential, setCurrent, writeCredential } from '../src/core/auth-store.js'
 import type { HandlerContext } from '../src/core/registry.js'
@@ -8,6 +10,8 @@ import { cli, useTempHome } from './helpers.js'
 vi.mock('../src/platforms/index.js', async (importOriginal) => {
   const real = await importOriginal<typeof import('../src/platforms/index.js')>()
   const { definePlatform } = await import('../src/core/registry.js')
+  const { reconnecting } = await import('../src/core/stream.js')
+  const { CatbusError } = await import('../src/core/errors.js')
   const h = (fn: (ctx: HandlerContext) => unknown) => async () => fn as any
 
   const demo = definePlatform({
@@ -40,7 +44,15 @@ vi.mock('../src/platforms/index.js', async (importOriginal) => {
           // 服务端把同一个游标又返回一遍（真实平台遇到过），--all 不能死循环
           'feed list': { upstream: 'full', handler: h(async () => ({ data: ['x'], page: { cursor: 'same', has_more: true } })) },
           'item delete': { upstream: 'full', handler: h(async (ctx) => ({ id: ctx.args.item })) },
-          'item publish': { upstream: 'full', handler: h(async (ctx) => ({ text: ctx.options.text })) },
+          'item publish': { upstream: 'full', supports: ['text', 'image'], handler: h(async (ctx) => ({ text: ctx.options.text })) },
+          // 重连解决不了的错误（登录态失效）不能无限重连
+          'msg listen': {
+            upstream: 'full',
+            handler: h((ctx) => reconnecting(ctx, async function* () {
+              yield* []
+              throw new CatbusError('AUTH_EXPIRED', '登录态失效')
+            })),
+          },
           'live listen': {
             upstream: 'full',
             handler: h(async function* (ctx) {
@@ -66,11 +78,34 @@ vi.mock('../src/platforms/index.js', async (importOriginal) => {
       pc: 'planned',
     },
   })
-  const PLATFORMS = [...real.PLATFORMS, demo]
+  // 不支持游客态的端（真实平台的 web 端都这样）：auth status 没有账号时用内存里的空凭证，不写 guest.json
+  const demo2 = definePlatform({
+    id: 'demo2',
+    name: '演示 2',
+    aliases: [],
+    item: '条目',
+    endpoints: {
+      web: {
+        login: { methods: ['cookie'], default: 'cookie' },
+        commands: {
+          'auth status': {
+            upstream: 'full',
+            handler: h(async (ctx) => {
+              ctx.credential.extra.device = 'generated'
+              return { logged_in: false, user: null, method: null, expires_at: null }
+            }),
+          },
+        },
+      },
+      app: 'planned',
+      pc: 'planned',
+    },
+  })
+  const PLATFORMS = [...real.PLATFORMS, demo, demo2]
   return { PLATFORMS, findPlatform: (n: string) => PLATFORMS.find((p) => p.id === n || p.aliases.includes(n)) }
 })
 
-useTempHome()
+const home = useTempHome()
 
 const PROMPT = '[catbus] 未登录 demo (web)，本次以游客身份访问，结果可能不完整；很多操作需要登录。登录：catbus demo auth login\n'
 
@@ -153,6 +188,19 @@ describe('分页', () => {
     expect((await cli('demo', 'item', 'search', 'kw', '-q', '--cursor', '2')).env.data).toEqual([4, 5])
   })
 
+  it('--limit 截在一页中间：page.cursor 指回这一页，续翻时跳过已输出的，不丢数据', async () => {
+    const first = await cli('demo', 'item', 'search', 'kw', '-q', '--limit', '3')
+    expect(first.env.data).toEqual([0, 1, 2])
+    expect(first.env.page).toEqual({ cursor: '1#skip=1', has_more: true })
+    const next = await cli('demo', 'item', 'search', 'kw', '-q', '--limit', '3', '--cursor', first.env.page.cursor)
+    expect(next.env.data).toEqual([3, 4, 5])
+    expect(next.env.page).toEqual({ cursor: '3', has_more: false })
+    // 截在第一页：游标是 #skip=N
+    const one = await cli('demo', 'item', 'search', 'kw', '-q', '--limit', '1')
+    expect(one.env.page).toEqual({ cursor: '#skip=1', has_more: true })
+    expect((await cli('demo', 'item', 'search', 'kw', '-q', '--cursor', '#skip=1')).env.data).toEqual([1])
+  })
+
   it('jsonl：stdout 每行一条，stderr 一行摘要信封', async () => {
     const r = await cli('demo', 'item', 'search', 'kw', '-q', '--all', '-o', 'jsonl')
     expect(r.stdout).toBe('0\n1\n2\n3\n4\n5\n')
@@ -161,6 +209,13 @@ describe('分页', () => {
 })
 
 describe('长连接', () => {
+  it('重连解决不了的错误（登录态失效）直接报错退出，不无限重连', async () => {
+    await login()
+    const r = await cli('demo', 'msg', 'listen', '-q')
+    expect(r.code).toBe(3)
+    expect(JSON.parse(r.stderr)).toMatchObject({ ok: false, error: { code: 'AUTH_EXPIRED' } })
+  })
+
   it('总是输出 jsonl，结束时 stderr 写摘要', async () => {
     const r = await cli('demo', 'live', 'listen', 'room', '-q')
     expect(r.code).toBe(0)
@@ -189,5 +244,23 @@ describe('输出', () => {
     const file = join(process.env.CATBUS_HOME!, 'post.txt')
     writeFileSync(file, '正文')
     expect((await cli('demo', 'item', 'publish', '--text', `@${file}`)).env.data).toEqual({ text: '正文' })
+  })
+})
+
+describe('发布选项（supports）', () => {
+  it('没声明支持的标准选项报 UNSUPPORTED，hint 列出可用的；声明了的照常执行', async () => {
+    await login()
+    const r = await cli('demo', 'item', 'publish', '--text', 'hi', '--visibility', 'private')
+    expect(r.code).toBe(2)
+    expect(r.env.error).toMatchObject({ code: 'UNSUPPORTED', message: 'demo 的 item publish 不支持 --visibility', hint: '可用的选项：--text、--image' })
+    expect((await cli('demo', 'item', 'publish', '--text', 'hi')).env.data).toEqual({ text: 'hi' })
+  })
+})
+
+describe('不支持游客态的端', () => {
+  it('auth status 没有账号时凭证只在内存里，不写 guest.json', async () => {
+    const r = await cli('demo2', 'auth', 'status')
+    expect(r.env.data).toMatchObject({ logged_in: false })
+    expect(existsSync(join(home.dir, 'auth', 'demo2', 'web', 'guest.json'))).toBe(false)
   })
 })

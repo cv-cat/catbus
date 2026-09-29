@@ -1,13 +1,13 @@
 import { CatbusError } from '../../../core/errors.js'
-import type { HttpResponse } from '../../../core/http.js'
-import type { Pairs, Scalar } from '../../../core/py.js'
+import { type HttpResponse, parseJsonp } from '../../../core/http.js'
+import { type Pairs, pyFloatStr, type Scalar } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { type AksState, encryptQuery } from './aks.js'
 import type { Jd } from './client.js'
 import { summerEncrypt } from './js.js'
 import { solveCaptcha } from './jcap.js'
 import { APPID_PASSPORT, basic, type Header, LOGIN_PAGE, PASSPORT_URL, QR_URL, qrImage, qrJsonp, qrValidation } from './profile.js'
-import { encodeQueryPairs, parseAttrs, parseJsonp, randomJqueryCallback, TraceContext, unescapeHtml } from './util.js'
+import { encodeQueryPairs, parseAttrs, randomJqueryCallback, TraceContext, unescapeHtml } from './util.js'
 
 /**
  * 京东 PC 登录（上游 jd_apis/jd_login_api.py 与 jd_sms_login_api.py）：
@@ -30,17 +30,6 @@ export const SSO_DOMAINS = [
 ].join(',')
 
 const aksState = (jd: Jd): AksState => ((jd.ctx.credential.device.aks as AksState) ??= {})
-
-/** Python `str(random.random())`。 */
-export function pyRepr(n: number): string {
-  if (n !== 0 && Math.abs(n) < 1e-4) {
-    const [m, e] = n.toExponential().split('e')
-    const exp = Number(e)
-    return `${m}e${exp < 0 ? '-' : '+'}${String(Math.abs(exp)).padStart(2, '0')}`
-  }
-  const s = String(n)
-  return /[.e]/.test(s) ? s : s + '.0'
-}
 
 /** 响应体：JSON，或括号包着的 JSON（_parse_response）。 */
 export async function parseResponse(res: HttpResponse): Promise<any> {
@@ -273,7 +262,7 @@ async function loadSsoDomains(jd: Jd, ctx: SmsContext): Promise<void> {
     headers: ajaxHeaders(ctx).get(),
     query: [
       ['ReturnUrl', RETURN_URL],
-      ['r', pyRepr(rand.random())],
+      ['r', pyFloatStr(rand.random())],
     ],
     timeout: 15,
   })
@@ -428,7 +417,7 @@ export async function submitCode(jd: Jd, ctx: SmsContext, mobile: string, smsCod
     ['h5st', String(signed.h5st)],
     ['_stk', String(signed._stk)],
   ]
-  const query = `ReturnUrl=${RETURN_URL}&r=${pyRepr(rand.random())}&version=2015`
+  const query = `ReturnUrl=${RETURN_URL}&r=${pyFloatStr(rand.random())}&version=2015`
   const encUrl = encryptQuery(query, ctx.publicKey, aksState(jd))
   const encBody = encrypted(jd, ctx, body)
   const res = await jd.send({
@@ -735,7 +724,7 @@ export async function submitSafeCode(jd: Jd, page: SafePage, method: Record<stri
     ['o', configValue(page, 'o')],
     ['s', configValue(page, 's')],
     ...(await safeCommonFields(jd, page)),
-    ['rnd', pyRepr(rand.random())],
+    ['rnd', pyFloatStr(rand.random())],
   ]
   const res = await jd.send({ method: 'POST', url: 'https://aq.jd.com/mobile/validateCode', headers: safeHeaders(jd, page, true).get(), form, timeout: 20 })
   const payload = await parseResponse(res)

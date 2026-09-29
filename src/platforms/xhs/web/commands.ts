@@ -1,7 +1,7 @@
-import { imageSize } from './image.js'
 import { CatbusError } from '../../../core/errors.js'
+import { imageSize } from '../../../core/image.js'
 import { downloadMedia, type LocalMedia, readMedia } from '../../../core/files.js'
-import { cookieCredential, finishLogin, freshCredential, interactive, poll, prompt, showQrcode, smsLogin } from '../../../core/login.js'
+import { cookieCredential, finishLogin, freshCredential, interactive, loginContext, poll, prompt, showQrcode, smsLogin } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import { parseCookieInput } from '../../../core/cookies.js'
 import * as rand from '../../../core/rand.js'
@@ -169,7 +169,7 @@ async function loginSms(ctx: Ctx) {
 async function loginCookie(ctx: Ctx, scopeName: string) {
   const credential = cookieCredential(ctx, COOKIE_DOMAIN)
   if (scopeName === 'creator') return creatorCookie(ctx, credential)
-  const p = new Pc({ ...ctx, account: 'login', credential })
+  const p = new Pc(loginContext(ctx, credential))
   const a1 = p.shared().a1 ?? ''
   if (!a1 || !p.shared().web_session) throw new CatbusError('USAGE', 'cookie 里需要有 a1 和 web_session', { hint: '从浏览器请求头复制完整的 Cookie' })
   if (a1.length !== 52) throw new CatbusError('USAGE', `cookie 里的 a1 长度不对（${a1.length}，应为 52）`, { hint: '从浏览器请求头复制完整的 Cookie' })
@@ -193,7 +193,7 @@ async function existingOrFresh(ctx: Ctx, method: Credential['method']): Promise<
 }
 
 async function finishCreator(ctx: Ctx, credential: Credential) {
-  const c = new Creator({ ...ctx, account: 'login', credential })
+  const c = new Creator(loginContext(ctx, credential))
   c.requireScope()
   const info = c.check(await capi.userInfo(c))
   if (!info?.userId) throw new CatbusError('AUTH_REQUIRED', '创作者中心登录没有成功')
@@ -415,7 +415,6 @@ export async function itemPublish(ctx: Ctx) {
   const o = ctx.options as Record<string, any>
   if (!o.image?.length && !o.video) throw new CatbusError('USAGE', '小红书发布需要 --image 或 --video', { hint: 'catbus xhs item publish --title <标题> --text <正文> --image <图片>' })
   if (o.image?.length && o.video) throw new CatbusError('USAGE', '--image 和 --video 只能用一个')
-  if (o.visibility === 'friends') throw new CatbusError('UNSUPPORTED', '小红书发布不支持 --visibility friends', { hint: '可选：public、private' })
   // 上游用 opencv 截视频首帧当封面；catbus 不带视频解码器，封面要自己给
   if (o.video && !o.cover) throw new CatbusError('USAGE', '小红书视频发布需要 --cover（catbus 不解码视频，截不了首帧）', { hint: 'catbus xhs item publish --video a.mp4 --cover a.jpg --title <标题>' })
   return creator(ctx, async (c) => {

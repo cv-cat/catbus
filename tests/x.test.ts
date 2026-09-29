@@ -447,6 +447,8 @@ describe('x 命令流程：cookie 登录', () => {
 })
 
 describe('x 命令与注册表', () => {
+  useTempHome()
+
   it('只支持 cookie 登录：账密登录不移植，--method password 报 UNSUPPORTED', async () => {
     const web = xPlatform.endpoints.web
     if (web === 'planned') throw new Error('web 端应当可用')
@@ -498,8 +500,8 @@ describe('x 命令与注册表', () => {
   })
 
   it('发推选项：X 不支持的选项报 UNSUPPORTED，图片和视频不能同时带', async () => {
-    await expect(cmd.itemPublish(loggedCtx({ platform: 'x', options: { text: 'a', title: 't', visibility: 'public' } }))).rejects.toMatchObject({ code: 'UNSUPPORTED' })
-    await expect(cmd.itemPublish(loggedCtx({ platform: 'x', options: { text: 'a', visibility: 'private' } }))).rejects.toMatchObject({ code: 'UNSUPPORTED' })
+    expect((await cli('x', 'item', 'publish', '--text', 'a', '--title', 't')).env.error).toMatchObject({ code: 'UNSUPPORTED', message: 'x 的 item publish 不支持 --title' })
+    expect((await cli('x', 'item', 'publish', '--text', 'a', '--visibility', 'private')).env.error).toMatchObject({ code: 'UNSUPPORTED', hint: '可选：public' })
     await expect(cmd.itemPublish(loggedCtx({ platform: 'x', options: { image: ['a.png'], video: 'b.mp4', visibility: 'public' } }))).rejects.toMatchObject({ code: 'USAGE' })
   })
 })

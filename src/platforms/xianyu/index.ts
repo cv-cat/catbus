@@ -1,16 +1,9 @@
 import { z } from 'zod'
-import { filter } from '../../core/options.js'
-import { type CommandDecl, definePlatform, type Handler, type Upstream } from '../../core/registry.js'
-
-type Commands = typeof import('./web/commands.js')
+import { filter, visibility } from '../../core/options.js'
+import { definePlatform, handlers } from '../../core/registry.js'
 
 /** 懒加载 web 端的 handler：只有执行到这条命令时才加载实现。 */
-const h =
-  (name: keyof Commands) =>
-  (): Promise<Handler> =>
-    import('./web/commands.js').then((m) => m[name] as Handler)
-
-const impl = (upstream: Upstream, name: keyof Commands, extra: Partial<CommandDecl> = {}): CommandDecl => ({ upstream, handler: h(name), ...extra })
+const { h, impl } = handlers(() => import('./web/commands.js'))
 
 export default definePlatform({
   id: 'xianyu',
@@ -37,7 +30,10 @@ export default definePlatform({
         'item collect': 'none',
         'item uncollect': 'none',
         'item publish': impl('full', 'itemPublish', {
+          supports: ['title', 'text', 'image', 'visibility', 'price'],
           options: {
+            // 商品发布即上架，没有「仅自己可见」
+            visibility: visibility('public'),
             shipping: z.enum(['free', 'distance', 'fixed', 'none']).default('free').describe('运费：free 包邮、distance 按距离计费、fixed 一口价、none 无需邮寄'),
             postage: z.number().nonnegative().optional().describe('一口价运费（元），配合 --shipping fixed'),
             pickup: z.boolean().optional().describe('支持自提'),

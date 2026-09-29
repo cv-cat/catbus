@@ -1,6 +1,6 @@
 import { createCipheriv, createHash } from 'node:crypto'
 import { CatbusError } from '../../../core/errors.js'
-import { HttpClient, type HttpResponse } from '../../../core/http.js'
+import { HttpClient, type HttpResponse, parseJsonp } from '../../../core/http.js'
 import { interactive } from '../../../core/login.js'
 import { jsonDumps } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
@@ -225,11 +225,6 @@ const RETRYABLE_STATUS = new Set([412, 429, 502, 503, 504])
 
 type Cookies = Map<string, string>
 
-function jsonp(text: string): any {
-  const m = /^[^(]*\(([\s\S]*)\)\s*$/.exec(text.trim())
-  return JSON.parse(m ? m[1]! : text)
-}
-
 /** trans_cookies：Cookie 串 → 有序的名值表。 */
 function parseCookies(str: string): Cookies {
   const out: Cookies = new Map()
@@ -310,11 +305,9 @@ class Geetest {
   async call(path: string, query: [string, string | number][], cookies: Cookies): Promise<{ body: any; cookies: [string, string][] }> {
     const res = await this.get(`${GEETEST}${path}`, [...query, ['callback', `geetest_${rand.now()}`]], cookies)
     const text = await res.text()
-    try {
-      return { body: jsonp(text), cookies: setCookies(res) }
-    } catch {
-      throw new CatbusError('UPSTREAM', `极验 ${path} 返回的不是 JSON（HTTP ${res.status}）`, { detail: { status: res.status, body: text.slice(0, 300) } })
-    }
+    const body = parseJsonp(text)
+    if (body == null) throw new CatbusError('UPSTREAM', `极验 ${path} 返回的不是 JSON（HTTP ${res.status}）`, { detail: { status: res.status, body: text.slice(0, 300) } })
+    return { body, cookies: setCookies(res) }
   }
 
   /** 下载题图。 */

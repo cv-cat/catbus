@@ -508,9 +508,6 @@ export function publishDesc(o: Record<string, any>): string {
 
 export async function itemPublish(ctx: Ctx) {
   const o = ctx.options as Record<string, any>
-  for (const key of ['category', 'price']) {
-    if (o[key] != null) throw new CatbusError('UNSUPPORTED', `douyin 的 item publish 不支持 --${key}`)
-  }
   const images: string[] = o.image ?? []
   if (!o.video && !images.length) throw new CatbusError('USAGE', '发布需要 --image（图文）或 --video（视频）', { hint: 'catbus douyin item publish --video <文件> --title <标题> --text <描述>' })
   if (o.video && images.length) throw new CatbusError('USAGE', '--image 与 --video 只能二选一')

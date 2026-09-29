@@ -2,7 +2,7 @@ import { brotliDecompressSync, inflateSync } from 'node:zlib'
 import { GUEST } from '../../../core/auth-store.js'
 import { CatbusError } from '../../../core/errors.js'
 import { downloadMedia, readMedia } from '../../../core/files.js'
-import { cookieCredential, finishLogin, freshCredential, poll, readPassword, showQrcode, smsLogin } from '../../../core/login.js'
+import { cookieCredential, finishLogin, freshCredential, loginContext, poll, readPassword, showQrcode, smsLogin } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import * as pb from '../../../core/pb.js'
 import * as rand from '../../../core/rand.js'
@@ -26,7 +26,7 @@ const page = (ctx: Ctx) => Number(ctx.cursor ?? 1) || 1
 // ================================================================ auth
 
 /** 登录用的临时上下文：凭证是新建的，身份按游客走一遍匿名设备初始化。 */
-function loginContext(ctx: Ctx, method: Credential['method']): Ctx {
+function guestLoginContext(ctx: Ctx, method: Credential['method']): Ctx {
   return { ...ctx, account: GUEST, credential: freshCredential(ctx, method) }
 }
 
@@ -43,12 +43,12 @@ export async function authLogin(ctx: Ctx) {
   const method = ctx.options.method as string
   if (method === 'cookie') {
     const credential = cookieCredential(ctx, COOKIE_DOMAIN)
-    const b = await bili({ ...ctx, account: 'login', credential })
+    const b = await bili(loginContext(ctx, credential))
     return completeLogin(ctx, b)
   }
   if (method === 'sms') {
     // 非 TTY 的第二步（--code）沿用第一步保存的设备 cookie，不重新初始化
-    const b = ctx.options.code ? new Bili(loginContext(ctx, 'sms')) : await bili(loginContext(ctx, 'sms'))
+    const b = ctx.options.code ? new Bili(guestLoginContext(ctx, 'sms')) : await bili(guestLoginContext(ctx, 'sms'))
     return smsLogin(ctx, {
       send: async (phone) => {
         const gt = await geetest.solve(b)
@@ -64,7 +64,7 @@ export async function authLogin(ctx: Ctx) {
       },
     })
   }
-  const b = await bili(loginContext(ctx, method as Credential['method']))
+  const b = await bili(guestLoginContext(ctx, method as Credential['method']))
   if (method === 'qrcode') {
     const gen = await api.qrcodeGenerate(b)
     check(ctx, gen)
@@ -262,7 +262,6 @@ export async function itemPublish(ctx: Ctx) {
   if (!o.title) throw new CatbusError('USAGE', 'B 站投稿需要 --title')
   if (!o.tag?.length) throw new CatbusError('USAGE', 'B 站投稿至少需要一个 --tag')
   if (!o.category) throw new CatbusError('USAGE', 'B 站投稿需要 --category（分区 id）', { hint: 'catbus bilibili item categories' })
-  if (o.schedule) throw new CatbusError('UNSUPPORTED', 'B 站投稿暂不支持 --schedule')
   const video = await uploadVideo(b, await readMedia(b.http, o.video))
   let cover = ''
   if (o.cover) {
@@ -279,7 +278,7 @@ export async function itemPublish(ctx: Ctx) {
     desc: o.text ?? '',
     copyright: o.source ? 2 : 1,
     source: o.source ?? '',
-    private: o.visibility !== 'public',
+    private: o.visibility === 'private',
     dynamic: o.dynamic ?? '',
     noReprint: o.allowReprint ? 0 : 1,
   })

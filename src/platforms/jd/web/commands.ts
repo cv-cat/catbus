@@ -2,7 +2,7 @@ import { writeFile, mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { GUEST } from '../../../core/auth-store.js'
 import { CatbusError } from '../../../core/errors.js'
-import { cookieCredential, finishLogin, freshCredential, interactive, prompt, showQrcode, smsLogin, smsState } from '../../../core/login.js'
+import { cookieCredential, finishLogin, freshCredential, interactive, loginContext, prompt, showQrcode, smsLogin, smsState } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import { cacheDir } from '../../../core/paths.js'
 import * as rand from '../../../core/rand.js'
@@ -88,13 +88,13 @@ async function diagnose403(jd: Jd): Promise<never> {
 
 // ================================================================ auth
 
-function loginContext(ctx: Ctx, method: Credential['method']): Ctx {
+function guestLoginContext(ctx: Ctx, method: Credential['method']): Ctx {
   return { ...ctx, account: GUEST, credential: freshCredential(ctx, method) }
 }
 
 /** 新会话：passport 页的埋点 cookie 冷启动（quick.py / login_demo.py 的 bootstrap）。 */
 function loginSession(ctx: Ctx, method: Credential['method']): Jd {
-  const jd = new Jd(loginContext(ctx, method))
+  const jd = new Jd(guestLoginContext(ctx, method))
   jd.update(bootstrapCookies('passport'))
   return jd
 }
@@ -173,7 +173,7 @@ function saveSms(jd: Jd, sms: login.SmsContext, mobile: string, extra: Partial<S
 }
 
 function restoreSms(ctx: Ctx, state: SmsSaved): { jd: Jd; sms: login.SmsContext } {
-  const lctx = loginContext(ctx, 'sms')
+  const lctx = guestLoginContext(ctx, 'sms')
   lctx.credential.scopes.main!.cookies = structuredClone(state.cookies)
   lctx.credential.device = structuredClone(state.device)
   const jd = new Jd(lctx)
@@ -243,7 +243,7 @@ export async function authLogin(ctx: Ctx) {
   const method = ctx.options.method as string
   if (method === 'cookie') {
     const imported = cookieCredential(ctx, COOKIE_DOMAIN)
-    const lctx = { ...ctx, account: 'login', credential: freshCredential(ctx, 'cookie') }
+    const lctx = loginContext(ctx, freshCredential(ctx, 'cookie'))
     const jd = new Jd(lctx)
     jd.update(imported.scopes.main!.cookies.map((c) => [c.name, c.value] as [string, string]))
     if (!jd.isLogin) throw new CatbusError('USAGE', 'cookie 里缺少 thor（或 pt_key）与 pin', { hint: '从已登录的 www.jd.com 复制完整的 Cookie' })

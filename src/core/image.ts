@@ -2,9 +2,9 @@ import { createRequire } from 'node:module'
 import { inflateSync } from 'node:zlib'
 
 /**
- * 验证码图片的解码与 OpenCV（@techstark/opencv-js）辅助。
- * PNG 用自带的解码器（与 cv2.imdecode 逐像素一致）；JPEG / WebP 交给 @napi-rs/canvas。
- * 图片统一是 BGR / BGRA 的交错像素（与 cv2 一致）。
+ * 图片解码与 OpenCV（@techstark/opencv-js）辅助，给各平台的验证码识别用（京东 JCAP、快手滑块、B 站极验）。
+ * PNG 用自带的解码器（与 cv2.imdecode / Pillow 逐像素一致，半透明像素不经过预乘）；JPEG / WebP 等交给 @napi-rs/canvas。
+ * imdecode 输出 BGR / BGRA 的交错像素（与 cv2 一致）。
  */
 
 const require = createRequire(import.meta.url)
@@ -44,15 +44,17 @@ function paeth(a: number, b: number, c: number): number {
   return pa <= pb && pa <= pc ? a : pb <= pc ? b : c
 }
 
-interface Png {
+/** 解码后的图片：RGBA8（没有 alpha 的图 alpha 为 255，与 Pillow 的 `convert("RGBA")` 相同）。 */
+export interface Rgba {
   width: number
   height: number
   rgba: Uint8Array
+  /** 原图是否带 alpha（cv2 的 IMREAD_UNCHANGED 据此输出 4 通道还是 3 通道）。 */
   hasAlpha: boolean
 }
 
-/** 非交错 PNG → RGBA8。交错图返回 null（交给 canvas）。 */
-export function decodePng(buf: Uint8Array): Png | null {
+/** 非交错 PNG → RGBA8。不是 PNG、或是交错图时返回 null（交给 canvas）。 */
+export function decodePng(buf: Uint8Array): Rgba | null {
   const b = Buffer.from(buf)
   if (b.length < 8 || b.readUInt32BE(0) !== 0x89504e47) return null
   let off = 8
@@ -137,29 +139,60 @@ export function decodePng(buf: Uint8Array): Png | null {
   return { width, height, rgba, hasAlpha: type === 4 || type === 6 || (type === 3 && trns != null) }
 }
 
-/** 其他格式：@napi-rs/canvas 解码。 */
-/** PNG 以外（JPEG、WebP 等）交给 @napi-rs/canvas 解码。解码是异步的：直接设 `Image.src` 再 drawImage 只会画出全黑。 */
-async function decodeCanvas(buf: Uint8Array): Promise<Png> {
+/** WebP / JPEG 是否带 alpha（与 libwebp 的 WebPGetFeatures 一致）；其他格式为 null（按像素判断）。 */
+function formatAlpha(b: Buffer): boolean | null {
+  if (b.length >= 2 && b[0] === 0xff && b[1] === 0xd8) return false
+  if (b.length >= 16 && b.toString('latin1', 0, 4) === 'RIFF' && b.toString('latin1', 8, 12) === 'WEBP') {
+    const kind = b.toString('latin1', 12, 16)
+    if (kind === 'VP8X' && b.length > 20) return (b[20]! & 0x10) !== 0
+    if (kind === 'VP8L' && b.length >= 25) return ((b.readUInt32LE(21) >>> 28) & 1) === 1
+    return false
+  }
+  return null
+}
+
+/**
+ * PNG 以外（JPEG、WebP 等）交给 @napi-rs/canvas 解码。解码是异步的：要等 loadImage 完成再画，
+ * 同步设 `Image.src` 后立刻 drawImage 画出来是全黑的。
+ */
+async function decodeCanvas(buf: Uint8Array): Promise<Rgba> {
   const { loadImage, createCanvas } = require('@napi-rs/canvas')
-  const im = await loadImage(Buffer.from(buf))
+  const b = Buffer.from(buf)
+  const im = await loadImage(b)
   const c = createCanvas(im.width, im.height)
   const ctx = c.getContext('2d')
   ctx.drawImage(im, 0, 0)
   const d = ctx.getImageData(0, 0, im.width, im.height)
-  return { width: im.width, height: im.height, rgba: new Uint8Array(d.data.buffer, d.data.byteOffset, d.data.length), hasAlpha: true }
+  const rgba = new Uint8Array(d.data.buffer, d.data.byteOffset, d.data.length)
+  let hasAlpha = formatAlpha(b)
+  if (hasAlpha == null) {
+    hasAlpha = false
+    for (let i = 3; i < rgba.length; i += 4) {
+      if (rgba[i] !== 255) {
+        hasAlpha = true
+        break
+      }
+    }
+  }
+  return { width: im.width, height: im.height, rgba, hasAlpha }
+}
+
+/** 任意格式 → RGBA8；解码不了（或宽高为 0）时为 null。 */
+export async function decodeImage(buf: Uint8Array): Promise<Rgba | null> {
+  try {
+    const im = decodePng(buf) ?? (await decodeCanvas(buf))
+    return im.width && im.height ? im : null
+  } catch {
+    return null
+  }
 }
 
 /**
  * cv2.imdecode：color 模式输出 BGR；unchanged 模式在有 alpha 时输出 BGRA、否则 BGR。
  */
 export async function imdecode(buf: Uint8Array, mode: 'color' | 'unchanged' = 'color'): Promise<U8 | null> {
-  let png: Png | null
-  try {
-    png = decodePng(buf) ?? (await decodeCanvas(buf))
-  } catch {
-    return null
-  }
-  if (!png?.width) return null
+  const png = await decodeImage(buf)
+  if (!png) return null
   const alpha = mode === 'unchanged' && png.hasAlpha
   const ch = alpha ? 4 : 3
   const out = new Uint8Array(png.width * png.height * ch)
@@ -170,6 +203,46 @@ export async function imdecode(buf: Uint8Array, mode: 'color' | 'unchanged' = 'c
     if (alpha) out[j + 3] = png.rgba[i + 3]!
   }
   return img(png.width, png.height, ch, out)
+}
+
+/**
+ * 只读文件头取图片宽高：PNG / JPEG / GIF / WebP / BMP（上游用 opencv / Pillow 解码后取尺寸）。读不出来时为 null。
+ */
+export function imageSize(data: Uint8Array): { width: number; height: number } | null {
+  const d = Buffer.from(data.buffer, data.byteOffset, data.byteLength)
+  try {
+    if (d.length >= 24 && d.readUInt32BE(0) === 0x89504e47) return { width: d.readUInt32BE(16), height: d.readUInt32BE(20) }
+    if (d.length >= 10 && d.toString('latin1', 0, 3) === 'GIF') return { width: d.readUInt16LE(6), height: d.readUInt16LE(8) }
+    if (d.length >= 26 && d.toString('latin1', 0, 2) === 'BM') return { width: d.readInt32LE(18), height: Math.abs(d.readInt32LE(22)) }
+    if (d.length >= 30 && d.toString('latin1', 0, 4) === 'RIFF' && d.toString('latin1', 8, 12) === 'WEBP') {
+      const kind = d.toString('latin1', 12, 16)
+      if (kind === 'VP8X') return { width: d.readUIntLE(24, 3) + 1, height: d.readUIntLE(27, 3) + 1 }
+      if (kind === 'VP8L') {
+        const bits = d.readUInt32LE(21)
+        return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1 }
+      }
+      return { width: d.readUInt16LE(26) & 0x3fff, height: d.readUInt16LE(28) & 0x3fff }
+    }
+    if (d.length >= 4 && d[0] === 0xff && d[1] === 0xd8) {
+      let o = 2
+      while (o + 9 < d.length) {
+        // 段之间可能有填充字节 0xff
+        if (d[o] !== 0xff) {
+          o++
+          continue
+        }
+        const marker = d[o + 1]!
+        if (marker === 0xff) {
+          o++
+          continue
+        }
+        const len = d.readUInt16BE(o + 2)
+        if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) return { width: d.readUInt16BE(o + 7), height: d.readUInt16BE(o + 5) }
+        o += 2 + len
+      }
+    }
+  } catch {}
+  return null
 }
 
 // ---------------------------------------------------------------- 与 cv.Mat 互转
@@ -204,10 +277,6 @@ export function channel(im: Img, c: number): Img {
   const out = im.data instanceof Float32Array ? new Float32Array(im.width * im.height) : new Uint8Array(im.width * im.height)
   for (let i = 0; i < out.length; i++) out[i] = im.data[i * im.channels + c]!
   return img(im.width, im.height, 1, out)
-}
-
-export function toFloat(im: Img): F32 {
-  return img(im.width, im.height, im.channels, Float32Array.from(im.data))
 }
 
 export function crop(im: Img, x: number, y: number, w: number, h: number): Img {

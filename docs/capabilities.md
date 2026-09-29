@@ -94,7 +94,9 @@
 - `item related --area`：jd
 - `item collect --folder`：douyin、bilibili
 - `item uncollect --folder`：douyin、bilibili
-- `item publish --poi-name`：douyin
+- `item publish` 不支持的标准选项：xhs --mention --category --price；douyin --category --price；tiktok --title --poi --category --schedule --price；bilibili --image --topic --mention --poi --schedule --price；kuaishou --cover --mention --poi --category --price；weibo --title --cover --tag --mention --poi --category --schedule --price；xianyu --video --cover --tag --topic --mention --poi --category --schedule；x --title --cover --tag --topic --mention --poi --category --schedule --price
+- `item publish --visibility` 取值：默认 public / private / friends；xhs public / private；bilibili public / private；weibo public / private / friends / fans；xianyu public；x public
+- `item publish --poi-name`：douyin、weibo
 - `item publish --series`：douyin
 - `item publish --hotspot`：douyin
 - `item publish --no-download`：douyin
@@ -197,8 +199,8 @@
 | poi search | ✓ | ○ | ◐ | — | ○ | ○ | — | — | — | — |
 
 - tiktok `poi search`：在推荐地点里按关键词筛选
-- `folder create --visibility`：tiktok
-- `folder update --visibility`：tiktok
+- `folder create --visibility` 取值：tiktok public / private
+- `folder update --visibility` 取值：tiktok public / private
 - `history list --area`：jd
 
 ## live

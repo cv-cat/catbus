@@ -2,7 +2,7 @@ import { basename, extname } from 'node:path'
 import { GUEST } from '../../../core/auth-store.js'
 import { CatbusError } from '../../../core/errors.js'
 import { downloadMedia, type LocalMedia, readMedia } from '../../../core/files.js'
-import { cookieCredential, finishLogin, freshCredential, showQrcode, smsLogin } from '../../../core/login.js'
+import { cookieCredential, finishLogin, freshCredential, loginContext, showQrcode, smsLogin } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
@@ -205,7 +205,7 @@ async function smsFlow(ctx: Ctx) {
 
 async function cookieLogin(ctx: Ctx) {
   const credential = cookieCredential(ctx, '.kuaishou.com')
-  const k = new Ks({ ...ctx, account: 'login', credential })
+  const k = new Ks(loginContext(ctx, credential))
   await k.init(credentialCookies(credential))
   // 用户 CK 里有 passToken 但缺创作者中心票据时，补一次 CP STS（catbus 补充，失败只提示）
   if (k.s.cookies.get('passToken') && !k.s.cookies.get('kuaishou.web.cp.api_ph')) {
@@ -508,9 +508,6 @@ function caption(o: Record<string, any>): string {
 
 export async function itemPublish(ctx: Ctx) {
   const o = ctx.options as Record<string, any>
-  for (const key of ['cover', 'poi', 'category', 'mention', 'price'] as const) {
-    if (o[key] != null) throw new CatbusError('UNSUPPORTED', `快手发布暂不支持 --${key}`)
-  }
   const images = (o.image as string[] | undefined) ?? []
   if (!images.length === !o.video) throw new CatbusError('USAGE', '快手发布需要 --image（1～31 张）或 --video，二选一', { hint: 'catbus kuaishou item publish --image a.jpg --text "正文"' })
   const photoStatus = api.PHOTO_STATUS[(o.visibility ?? 'public') as keyof typeof api.PHOTO_STATUS]

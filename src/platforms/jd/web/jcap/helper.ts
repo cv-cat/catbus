@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { disableEnvProxy, HttpClient } from '../../../../core/http.js'
 import { BROWSER } from '../profile.js'
-import { imdecode } from './image.js'
+import { imdecode } from '../../../../core/image.js'
 import { type Solution, solveClick, solveRotation, solveSlider, solveTrace } from './solver.js'
 
 /**

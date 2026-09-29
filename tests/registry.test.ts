@@ -128,6 +128,40 @@ function define(commands: Record<string, any>): Platform {
   return definePlatform(decl)
 }
 
+describe('handler 与命令对应', () => {
+  it('每条命令的 handler 名是 <resource><Action>（例如 draft delete → draftDelete），防止接错', () => {
+    const wrong: string[] = []
+    for (const p of PLATFORMS) {
+      for (const e of Object.values(p.endpoints)) {
+        if (e === 'planned') continue
+        for (const c of e.commands.values()) {
+          const name = (c.handler as { handlerName?: string } | null)?.handlerName
+          if (name == null) continue
+          const want = c.resource + c.action[0]!.toUpperCase() + c.action.slice(1)
+          if (name !== want) wrong.push(`${p.id} ${c.key} → ${name}`)
+        }
+      }
+    }
+    expect(wrong).toEqual([])
+  })
+
+  it('supports：没列出的标准选项从命令里去掉，记在 unsupported；列了不存在的选项报错', () => {
+    const decl = (supports: string[]): PlatformDecl => ({
+      id: 'demo',
+      name: '演示',
+      aliases: [],
+      item: '条目',
+      endpoints: { web: { login: { methods: ['cookie'], default: 'cookie' }, commands: { 'item publish': { upstream: 'full', supports } } }, app: 'planned', pc: 'planned' },
+    })
+    const web = definePlatform(decl(['text', 'image'])).endpoints.web
+    if (web === 'planned') throw new Error('web 端应当可用')
+    const publish = web.commands.get('item publish')!
+    expect(Object.keys(publish.options)).toEqual(['text', 'image'])
+    expect(publish.unsupported).toEqual(['title', 'video', 'cover', 'tag', 'topic', 'mention', 'poi', 'category', 'visibility', 'schedule', 'price'])
+    expect(() => definePlatform(decl(['text', 'thread']))).toThrow(/supports 里的 thread 不是这个命令的标准选项/)
+  })
+})
+
 describe('docs/capabilities.md', () => {
   it('与注册表一致（改了注册表后运行 npm run gen:capabilities）', () => {
     const file = readFileSync(new URL('../docs/capabilities.md', import.meta.url), 'utf8').replace(/\r\n/g, '\n')

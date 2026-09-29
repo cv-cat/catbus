@@ -1,7 +1,7 @@
 import { parseCookieInput } from '../../../core/cookies.js'
 import { CatbusError } from '../../../core/errors.js'
 import { downloadMedia, readMedia } from '../../../core/files.js'
-import { cookieCredential, finishLogin, freshCredential } from '../../../core/login.js'
+import { cookieCredential, finishLogin, freshCredential, loginContext } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
@@ -68,7 +68,7 @@ export async function authLogin(ctx: Ctx) {
   const method = ctx.options.method as string
   if (method !== 'cookie') throw new CatbusError('UNSUPPORTED', `TikTok 只支持 cookie 登录（上游没有 ${method} 登录）`, { hint: 'catbus tiktok auth login --cookie "<cookie>"' })
   const credential = loginCredential(ctx)
-  const t = await tiktok({ ...ctx, account: 'login', credential })
+  const t = await tiktok(loginContext(ctx, credential))
   if (!t.loggedIn) throw new CatbusError('AUTH_REQUIRED', 'cookie 里没有登录态（缺少 sessionid / sid_tt / multi_sids）')
   const u = await me(t)
   return finishLogin(ctx, credential, norm.ref(u.id, u.name, u.handle)!)
@@ -272,8 +272,6 @@ export async function itemPublish(ctx: Ctx) {
   const t = await tiktok(ctx)
   t.requireLogin()
   const o = ctx.options as Record<string, any>
-  if (o.schedule) throw new CatbusError('UNSUPPORTED', 'TikTok 发布暂不支持 --schedule')
-  if (o.poi || o.category || o.price != null) throw new CatbusError('UNSUPPORTED', 'TikTok 发布不支持 --poi / --category / --price')
   if (!o.video && !o.image?.length) throw new CatbusError('USAGE', '发布需要 --video 或 --image', { hint: 'catbus tiktok item publish --video a.mp4 --cover a.jpg --text "文案"' })
   if (o.video && o.image?.length) throw new CatbusError('USAGE', '--video 和 --image 只能选一个')
   const text = captionOf(o)
@@ -786,11 +784,9 @@ export async function folderItems(ctx: Ctx) {
   return itemPage(d.itemList, d.cursor, d.hasMore)
 }
 
-/** 收藏夹的 --visibility → collectionStatus；没有「仅好友」。 */
+/** 收藏夹的 --visibility（public / private，注册表已校验）→ collectionStatus。 */
 function folderStatus(visibility: unknown): string | undefined {
-  if (visibility == null) return undefined
-  if (visibility === 'friends') throw new CatbusError('UNSUPPORTED', 'TikTok 收藏夹只有公开和私密，不支持 --visibility friends', { hint: '可选：public、private' })
-  return api.COLLECTION_STATUS[visibility as 'public' | 'private']
+  return visibility == null ? undefined : api.COLLECTION_STATUS[visibility as 'public' | 'private']
 }
 
 export async function folderCreate(ctx: Ctx) {
@@ -801,7 +797,9 @@ export async function folderCreate(ctx: Ctx) {
   await api.checkPlaylistName(t, name)
   const d = await api.collectionCreate(t, name, status)
   const c = d.collection ?? d.collectionInfo ?? d
-  return n.folder({ id: n.id(c.collectionId ?? c.collection_id ?? d.collectionId), name, count: 0 }, d)
+  const id = n.id(c.collectionId ?? c.collection_id ?? d.collectionId)
+  if (!id) throw new CatbusError('UPSTREAM', '新建收藏夹没有返回收藏夹 id', { detail: { body: d } })
+  return n.folder({ id, name, count: 0 }, d)
 }
 
 /**

@@ -1,145 +1,15 @@
-import { createRequire } from 'node:module'
-import { inflateSync } from 'node:zlib'
+import { decodeImage, loadCv, type Rgba } from '../../../core/image.js'
 
 /**
  * 滑块缺口定位（上游 utils/captcha.py 的 find_gap_x，cv2 + numpy + Pillow）。
- * OpenCV 用 @techstark/opencv-js（与 cv2 同为 5.0）；PNG 用自带的解码器（与 Pillow 逐像素一致，
- * 半透明像素不经过预乘），其他格式交给 @napi-rs/canvas。numpy 的部分照原样用 float32 重写。
+ * 图片解码与 OpenCV 用 core/image.ts（PNG 与 Pillow 逐像素一致，半透明像素不经过预乘）。
+ * numpy 的部分照原样用 float32 重写。
  */
 
-const require = createRequire(import.meta.url)
-
-let cvPromise: Promise<any> | null = null
-
-/** 加载 opencv-js（WASM，首次约几百毫秒）。 */
-function loadCv(): Promise<any> {
-  cvPromise ??= (async () => {
-    let cv = require('@techstark/opencv-js')
-    if (cv instanceof Promise) cv = await cv
-    else if (!cv.Mat) await new Promise<void>((r) => (cv.onRuntimeInitialized = () => r()))
-    return cv
-  })()
-  return cvPromise
-}
-
-interface Rgba {
-  width: number
-  height: number
-  /** RGBA8，与 Pillow 的 `convert("RGBA")` 相同（没有 alpha 的图 alpha 为 255）。 */
-  data: Uint8Array
-}
-
-function paeth(a: number, b: number, c: number): number {
-  const p = a + b - c
-  const pa = Math.abs(p - a)
-  const pb = Math.abs(p - b)
-  const pc = Math.abs(p - c)
-  return pa <= pb && pa <= pc ? a : pb <= pc ? b : c
-}
-
-/** 非交错 PNG → RGBA8；不是 PNG 或是交错图时返回 null。 */
-function decodePng(buf: Uint8Array): Rgba | null {
-  const b = Buffer.from(buf)
-  if (b.length < 8 || b.readUInt32BE(0) !== 0x89504e47) return null
-  let off = 8
-  let width = 0
-  let height = 0
-  let depth = 8
-  let type = 0
-  let interlace = 0
-  let palette: Buffer | null = null
-  let trns: Buffer | null = null
-  const idat: Buffer[] = []
-  while (off + 8 <= b.length) {
-    const len = b.readUInt32BE(off)
-    const kind = b.toString('latin1', off + 4, off + 8)
-    const data = b.subarray(off + 8, off + 8 + len)
-    off += 12 + len
-    if (kind === 'IHDR') {
-      width = data.readUInt32BE(0)
-      height = data.readUInt32BE(4)
-      depth = data[8]!
-      type = data[9]!
-      interlace = data[12]!
-    } else if (kind === 'PLTE') palette = data
-    else if (kind === 'tRNS') trns = data
-    else if (kind === 'IDAT') idat.push(data)
-    else if (kind === 'IEND') break
-  }
-  if (!width || interlace) return null
-  const channels = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 }[type as 0 | 2 | 3 | 4 | 6]
-  if (!channels) return null
-  const raw = inflateSync(Buffer.concat(idat))
-  const bitsPerPixel = channels * depth
-  const bpp = Math.max(1, bitsPerPixel >> 3)
-  const stride = Math.ceil((width * bitsPerPixel) / 8)
-  const lines = new Uint8Array(stride * height)
-  let prev = new Uint8Array(stride)
-  let p = 0
-  for (let y = 0; y < height; y++) {
-    const filter = raw[p++]!
-    const line = lines.subarray(y * stride, (y + 1) * stride)
-    for (let i = 0; i < stride; i++) {
-      const x = raw[p++]!
-      const a = i >= bpp ? line[i - bpp]! : 0
-      const up = prev[i]!
-      const c = i >= bpp ? prev[i - bpp]! : 0
-      line[i] = (filter === 0 ? x : filter === 1 ? x + a : filter === 2 ? x + up : filter === 3 ? x + ((a + up) >> 1) : x + paeth(a, up, c)) & 0xff
-    }
-    prev = line
-  }
-  const out = new Uint8Array(width * height * 4)
-  const sample = (line: Uint8Array, idx: number): number => {
-    if (depth === 8) return line[idx]!
-    if (depth === 16) return line[idx * 2]!
-    const perByte = 8 / depth
-    const byte = line[Math.floor(idx / perByte)]!
-    const shift = 8 - depth * ((idx % perByte) + 1)
-    return (byte >> shift) & ((1 << depth) - 1)
-  }
-  const scale = depth < 8 && type !== 3 ? 255 / ((1 << depth) - 1) : 1
-  for (let y = 0; y < height; y++) {
-    const line = lines.subarray(y * stride, (y + 1) * stride)
-    for (let x = 0; x < width; x++) {
-      const o = (y * width + x) * 4
-      if (type === 3) {
-        const i = sample(line, x)
-        out[o] = palette?.[i * 3] ?? 0
-        out[o + 1] = palette?.[i * 3 + 1] ?? 0
-        out[o + 2] = palette?.[i * 3 + 2] ?? 0
-        out[o + 3] = trns && i < trns.length ? trns[i]! : 255
-      } else if (type === 0 || type === 4) {
-        const g = Math.round(sample(line, x * channels) * scale)
-        out[o] = out[o + 1] = out[o + 2] = g
-        out[o + 3] = type === 4 ? sample(line, x * channels + 1) : 255
-      } else {
-        out[o] = sample(line, x * channels)
-        out[o + 1] = sample(line, x * channels + 1)
-        out[o + 2] = sample(line, x * channels + 2)
-        out[o + 3] = type === 6 ? sample(line, x * channels + 3) : 255
-      }
-    }
-  }
-  return { width, height, data: out }
-}
-
-/**
- * JPEG / WebP 等：@napi-rs/canvas 解码。解码是异步的，要等 loadImage 完成再画；
- * 同步设 `Image.src` 后立刻 drawImage 画出来是全黑的（真实的背景图是 JPEG）。
- */
-async function decodeCanvas(buf: Uint8Array): Promise<Rgba> {
-  const { loadImage, createCanvas } = require('@napi-rs/canvas')
-  const im = await loadImage(Buffer.from(buf))
-  const c = createCanvas(im.width, im.height)
-  const ctx = c.getContext('2d')
-  ctx.drawImage(im, 0, 0)
-  const d = ctx.getImageData(0, 0, im.width, im.height)
-  return { width: im.width, height: im.height, data: new Uint8Array(d.data.buffer, d.data.byteOffset, d.data.length) }
-}
-
+/** 解码验证码图片（RGBA，与 Pillow 的 `convert("RGBA")` 相同）。 */
 async function decode(buf: Uint8Array): Promise<Rgba> {
-  const img = decodePng(buf) ?? (await decodeCanvas(buf))
-  if (!img.width || !img.height) throw new Error('无法解码验证码图片')
+  const img = await decodeImage(buf)
+  if (!img) throw new Error('无法解码验证码图片')
   return img
 }
 
@@ -150,9 +20,9 @@ function bgr(img: Rgba, x0 = 0, y0 = 0, w = img.width, h = img.height): Uint8Arr
     for (let x = 0; x < w; x++) {
       const s = ((y0 + y) * img.width + x0 + x) * 4
       const d = (y * w + x) * 3
-      out[d] = img.data[s + 2]!
-      out[d + 1] = img.data[s + 1]!
-      out[d + 2] = img.data[s]!
+      out[d] = img.rgba[s + 2]!
+      out[d + 1] = img.rgba[s + 1]!
+      out[d + 2] = img.rgba[s]!
     }
   }
   return out
@@ -174,7 +44,7 @@ export async function findGapX(bgPng: Uint8Array, cutPng: Uint8Array): Promise<n
   let y1 = -1
   for (let y = 0; y < cut.height; y++) {
     for (let x = 0; x < cut.width; x++) {
-      if (cut.data[(y * cut.width + x) * 4 + 3]! > 32) {
+      if (cut.rgba[(y * cut.width + x) * 4 + 3]! > 32) {
         if (x < x0) x0 = x
         if (x > x1) x1 = x
         if (y < y0) y0 = y
@@ -186,7 +56,7 @@ export async function findGapX(bgPng: Uint8Array, cutPng: Uint8Array): Promise<n
   const pieceW = x1 - x0 + 1
   const pieceH = y1 - y0 + 1
   const maskData = new Uint8Array(pieceW * pieceH)
-  for (let y = 0; y < pieceH; y++) for (let x = 0; x < pieceW; x++) maskData[y * pieceW + x] = cut.data[((y0 + y) * cut.width + x0 + x) * 4 + 3]! > 32 ? 255 : 0
+  for (let y = 0; y < pieceH; y++) for (let x = 0; x < pieceW; x++) maskData[y * pieceW + x] = cut.rgba[((y0 + y) * cut.width + x0 + x) * 4 + 3]! > 32 ? 255 : 0
 
   const bgW = bgImg.width
   const bgH = bgImg.height

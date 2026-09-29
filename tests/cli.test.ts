@@ -155,6 +155,15 @@ describe('命令判定', () => {
     expect(await hint('xhs', 'item', 'playurl', 'x')).toBe('用规范词：catbus xhs item media')
     expect(await hint('tiktok', 'collection', 'list')).toBe('用规范词：catbus tiktok folder list')
     expect(await hint('xhs', 'collection', 'list')).toBe('规范词是 folder 或 series')
+    expect(await hint('jd', '咚咚', 'list')).toBe('用规范词：catbus jd msg list')
+    expect(await hint('xianyu', 'item', '想要', 'x')).toBe('用规范词：catbus xianyu item collect')
+    expect(await hint('x', 'DM', 'list')).toBe('用规范词：catbus x msg list')
+  })
+
+  it('原型上的名字（valueOf、constructor）不当成原生叫法', async () => {
+    const r = await cli('xhs', 'item', 'valueOf', 'x')
+    expect(r.env.error).toMatchObject({ code: 'UNSUPPORTED', hint: 'catbus xhs item --help' })
+    expect((await cli('xhs', 'constructor', 'get', 'x')).env.error).toMatchObject({ code: 'UNSUPPORTED', hint: 'catbus xhs --help' })
   })
 
   it('筛选：标准值但平台不支持 → UNSUPPORTED；不是标准值 → USAGE', async () => {
@@ -225,6 +234,13 @@ describe('auth（core 实现）', () => {
     expect((await cli('xhs', 'auth', 'use', 'guest')).code).toBe(2)
     expect((await cli('xhs', 'auth', 'use', 'Bad Name')).code).toBe(2)
     expect((await cli('xhs', 'auth', 'logout')).env.error.code).toBe('USAGE')
+  })
+
+  it('auth login / logout 不接受 -a guest（保留名）', async () => {
+    const r = await cli('xhs', 'auth', 'login', '-a', 'guest', '--method', 'cookie', '--cookie', 'a=b')
+    expect(r.env.error).toMatchObject({ code: 'USAGE', message: 'guest 是保留名，表示游客身份' })
+    expect((await cli('xhs', 'auth', 'logout', '-a', 'guest')).env.error.code).toBe('USAGE')
+    expect(existsSync(join(home.dir, 'auth', 'xhs', 'web', 'default.json'))).toBe(false)
   })
 
   it('auth login 的登录方式与子站点只能取注册表声明的值', async () => {

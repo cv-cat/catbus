@@ -222,7 +222,7 @@ describe('weibo 对拍：命令流程', () => {
   it('item publish 图文：get_self_info → 逐张上传 → statuses/update（上游 post_weibo）', async () => {
     const c = loadCase('weibo', 'post_image')
     const images = (c.input.images as { base64: string }[]).map((b, i) => tmpFile(`img${i + 1}.jpg`, bytes(b)))
-    const ctx = loggedCtx({ options: { text: c.input.text, poi: c.input.poi, visibility: c.input.visibility, topic: c.input.topic, image: images } })
+    const ctx = loggedCtx({ options: { text: c.input.text, poiName: c.input.poi, visibility: c.input.visibility, topic: c.input.topic, image: images } })
     const { requests, result, error } = await replay(c, () => cmd.itemPublish(ctx))
     if (error) throw error
     expectRequests(requests, c.requests)
@@ -277,9 +277,26 @@ describe('weibo 行为', () => {
     expect(() => check(guest, { ok: 1 })).not.toThrow()
   })
 
-  it('item publish：不支持的选项报 UNSUPPORTED', async () => {
-    const ctx = loggedCtx({ options: { text: 'x', title: '标题', visibility: 'public' } })
-    await expect(cmd.itemPublish(ctx)).rejects.toMatchObject({ code: 'UNSUPPORTED' })
+})
+
+describe('item publish 不支持的标准选项（AGENTS 4.9）', () => {
+  useTempHome()
+
+  it('注册表没声明支持的选项报 UNSUPPORTED，hint 列出可用的选项；帮助里不出现', async () => {
+    for (const flag of ['--title', '--poi']) {
+      const r = await cli('weibo', 'item', 'publish', '--text', 'x', flag, 'v')
+      expect(r.env.error, flag).toMatchObject({ code: 'UNSUPPORTED', message: `weibo 的 item publish 不支持 ${flag}` })
+      expect(r.env.error.hint).toContain('--poi-name')
+      expect(r.code).toBe(2)
+    }
+    const help = (await cli('weibo', 'item', 'publish', '--help')).stdout
+    expect(help).not.toContain('--title')
+    expect(help).toContain('--poi-name')
+  })
+
+  it('闲鱼的商品发布即上架：--visibility private 报 UNSUPPORTED，不会公开上架', async () => {
+    const r = await cli('xianyu', 'item', 'publish', '--text', 'x', '--price', '1', '--visibility', 'private')
+    expect(r.env.error).toMatchObject({ code: 'UNSUPPORTED', hint: '可选：public' })
   })
 })
 
@@ -293,9 +310,18 @@ describe('--visibility fans（AGENTS 4.9）', () => {
   })
 
   it('没有声明 fans 的平台报 UNSUPPORTED，不是标准值报 USAGE', async () => {
-    for (const p of ['xhs', 'douyin', 'tiktok', 'bilibili', 'kuaishou', 'xianyu', 'x']) {
+    const supported: Record<string, string> = {
+      xhs: 'public、private',
+      douyin: 'public、private、friends',
+      tiktok: 'public、private、friends',
+      bilibili: 'public、private',
+      kuaishou: 'public、private、friends',
+      xianyu: 'public',
+      x: 'public',
+    }
+    for (const [p, values] of Object.entries(supported)) {
       const r = await cli(p, 'item', 'publish', '--text', 'x', '--visibility', 'fans')
-      expect(r.env.error, p).toMatchObject({ code: 'UNSUPPORTED', hint: '可选：public、private、friends' })
+      expect(r.env.error, p).toMatchObject({ code: 'UNSUPPORTED', hint: `可选：${values}` })
       expect(r.code).toBe(2)
     }
     expect((await cli('weibo', 'item', 'publish', '--text', 'x', '--visibility', 'nope')).env.error.code).toBe('USAGE')

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import * as api from '../src/platforms/xhs/web/api.js'
-import { Creator, PyFloat, pyJson, pyRound3 } from '../src/platforms/xhs/web/creator.js'
+import { Creator, PyFloat, pyJson } from '../src/platforms/xhs/web/creator.js'
 import * as capi from '../src/platforms/xhs/web/creator-api.js'
 import { CreatorLogin } from '../src/platforms/xhs/web/creator-api.js'
 import { Pc, resetXraySeq } from '../src/platforms/xhs/web/client.js'
@@ -8,6 +8,7 @@ import * as login from '../src/platforms/xhs/web/login.js'
 import * as norm from '../src/platforms/xhs/web/normalize.js'
 import { EDITH } from '../src/platforms/xhs/web/profile.js'
 import { fakeResponse, mockSender } from '../src/core/http.js'
+import { pyRound } from '../src/core/py.js'
 import { deterministic } from '../src/core/rand.js'
 import { RAW } from '../src/core/schemas.js'
 import * as push from '../src/platforms/xhs/web/push.js'
@@ -663,7 +664,7 @@ describe('xhs 视频元数据（替代 opencv）', () => {
   it('Python 的 float 与 round', () => {
     expect(pyJson({ a: new PyFloat(25), b: new PyFloat(0.4), c: [new PyFloat(1)], d: 0 })).toBe('{"a":25.0,"b":0.4,"c":[1.0],"d":0}')
     expect(JSON.stringify({ a: new PyFloat(25) })).toBe('{"a":25}')
-    expect([25.0625, 25.0635, 29.97002997002997, 22.727272727272727, 0.0005].map(pyRound3)).toEqual([25.062, 25.064, 29.97, 22.727, 0.001])
+    expect([25.0625, 25.0635, 29.97002997002997, 22.727272727272727, 0.0005].map((x) => pyRound(x, 3))).toEqual([25.062, 25.064, 29.97, 22.727, 0.001])
   })
 
   it('不是 MP4 / MOV：返回 null（按 0 上报，由平台转码后补全）', () => {

@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs'
 import { models } from '@cv-cat/catbus-assets-jd'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CatbusError } from '../src/core/errors.js'
+import { imdecode, img, loadCv } from '../src/core/image.js'
+import { pyFloatStr, pyRound } from '../src/core/py.js'
 import type { HandlerContext } from '../src/core/registry.js'
 import { RAW } from '../src/core/schemas.js'
 import { PLATFORMS } from '../src/platforms/index.js'
@@ -9,7 +11,6 @@ import * as api from '../src/platforms/jd/web/api.js'
 import { ChatClient } from '../src/platforms/jd/web/chat.js'
 import { Jd, simpleCookie } from '../src/platforms/jd/web/client.js'
 import * as cmd from '../src/platforms/jd/web/commands.js'
-import { imdecode, img, loadCv } from '../src/platforms/jd/web/jcap/image.js'
 import { detectLines, fastAtan2 } from '../src/platforms/jd/web/jcap/lsd.js'
 import * as solver from '../src/platforms/jd/web/jcap/solver.js'
 import { setSummerSource, summerEncrypt } from '../src/platforms/jd/web/js.js'
@@ -491,10 +492,12 @@ describe('jd 归一化与解析', () => {
     })
   })
 
-  it('pyRepr 与 Python 的 str(float) 一致', () => {
-    expect(login.pyRepr(0.5939828956034034)).toBe('0.5939828956034034')
-    expect(login.pyRepr(5.123e-5)).toBe('5.123e-05')
-    expect(login.pyRepr(0)).toBe('0.0')
+  it('pyFloatStr 与 Python 的 str(float) 一致', () => {
+    expect(pyFloatStr(0.5939828956034034)).toBe('0.5939828956034034')
+    expect(pyFloatStr(5.123e-5)).toBe('5.123e-05')
+    expect(pyFloatStr(0)).toBe('0.0')
+    // round(773.915, 2)：773.915 的二进制值略小于 773.915，Python 得 773.91
+    expect(pyRound(773.915, 2)).toBe(773.91)
   })
 })
 
