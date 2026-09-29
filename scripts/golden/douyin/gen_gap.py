@@ -1,7 +1,8 @@
 """douyin 对拍数据的第三部分：补齐上游已有、第一轮没移植的能力。由 gen.py 在末尾 exec，共用 gen.py / gen_more.py 的全局变量。
 
 搜索筛选与视频频道、作品管理（work_list）、发布的地点 / 合集 / 热点 / 下载 / 封面、收藏夹移动、私信文件与分享卡片、
-直播千票榜与点赞次数、商品评价的标签、通知分组、短信登录的 SSO 链。
+直播千票榜与点赞次数、商品评价的标签、通知分组、短信登录的 SSO 链；
+以及 dtrait 内层 blob 的纯算（utils/dtrait_features.py）和上游 fix-dtrait-blob 分支的默认设备档案（utils/dtrait_profile.json）。
 """
 
 # ================================================================ 搜索筛选
@@ -144,3 +145,74 @@ def sms_sso_flow():
 
 
 case('login_sms_sso', sms_sso_flow, sso_respond({}), phone='13800000000', code='123456')
+
+
+# ================================================================ dtrait 设备档案（上游 fix-dtrait-blob）：没有 dtrait_blob 时按档案现算内层 blob
+import copy  # noqa: E402
+
+from tests.test_dtrait_profile import CAPTURED_BLOB  # noqa: E402
+from utils.dtrait_features import build_blob, computed_features, js_number_to_str, murmur3_32  # noqa: E402
+from utils.dtrait_profile import DEFAULT_PROFILE_PATH, _normalise_profile, load_dtrait_profile  # noqa: E402
+
+# 自定义档案（JSON 形态，键是字符串）：bool 序号跨过 32（位图变长、n % 32 == 0 的分支）、非整数的数值字段、非 ASCII 的特征串
+DEFAULT_PROFILE_JSON = json.loads(Path(DEFAULT_PROFILE_PATH).read_text(encoding='utf-8'))
+CUSTOM_PROFILE = {
+    **copy.deepcopy(DEFAULT_PROFILE_JSON),
+    'source': 'catbus golden', 'reserved': 1, 'version': 3,
+    'bools': {'0': True, '1': True, '2': False, '9': True, '10': True, '32': True, '40': False, '63': True},
+    'render_hashes': {**DEFAULT_PROFILE_JSON['render_hashes'], '5': 4294967295, '13': 0},
+    'downlink': 1.45, 'effective_type': '3g', 'language': 'en-US', 'languages': ['en-US', 'en'],
+    'str16_list': ['PDF Viewer', 'Chrome PDF Viewer'], 'platform': 'MacIntel', 'str18_list': ['思源黑体', 'Arial'],
+    'ua': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36',
+    'locale': 'en-US', 'timezone': 'America/New_York', 'notification_permission': 'granted', 'str29_head': '9',
+    'device_memory': 8, 'hardware_concurrency': 12, 'max_touch_points': 0,
+    'avail_height': 1055, 'avail_left': 0, 'avail_top': 25, 'avail_width': 1920, 'screen_height': 1080, 'screen_width': 1920,
+    'color_depth': 30, 'pixel_depth': 30, 'device_pixel_ratio': 2.5, 'hook_score': '0',
+}
+MURMUR_SAMPLES = ['', 'a', 'ab', 'abc', 'abcd', 'abcde', '中文', '10,4g', '𠀀 四字节 UTF-8']
+JS_NUMBERS = [0.1 + 0.2, 1 / 3, 100.0, -0.0, 1e21, 123456789012345680000.0, 1e-7, 1.5e-6, -2.5e-7, 2.0 ** 53, 5e-324,
+              1.7976931348623157e308, -1.4214488238747245]
+
+
+def dtrait_blob():
+    default = load_dtrait_profile()
+    blob = build_blob(default)
+    assert blob == CAPTURED_BLOB, '默认档案生成的 blob 与上游测试的 CAPTURED_BLOB 不一致：本机 libm 的 Math 指纹与 V8 不同？（见 gen.py 的 _V8_MATH）'
+    custom = _normalise_profile(copy.deepcopy(CUSTOM_PROFILE))
+    return {
+        'default': blob,
+        'default_features': {str(n): v for n, v in sorted(computed_features(default).items())},
+        'custom': build_blob(custom),
+        'custom_edge': build_blob(custom, access_type=1),
+        'custom_features': {str(n): v for n, v in sorted(computed_features(custom).items())},
+        'murmur3': [[s, murmur3_32(s)] for s in MURMUR_SAMPLES],
+        'js_number': [[x, js_number_to_str(x)] for x in JS_NUMBERS],
+    }
+
+
+case('dtrait_blob', dtrait_blob, captured=CAPTURED_BLOB, custom_profile=CUSTOM_PROFILE)
+
+
+def profile_auth(profile=None):
+    """没有导入 dtrait_blob 的登录态：DouyinAuth 构造时已加载默认档案；给了 profile 时换成它（catbus 的 device.dtrait_profile）。"""
+    auth = logged_auth()
+    auth.dtrait_blob = None
+    if profile is not None:
+        auth.dtrait_profile = _normalise_profile(copy.deepcopy(profile))
+    return auth
+
+
+def creator_profile_auth():
+    auth = profile_auth()
+    auth.bootstrap_creator_session()
+    return auth
+
+
+case('comment_publish_profile', lambda: DouyinAPI.publish_comment(profile_auth(), AWEME, '默认档案'),
+     aweme_id=AWEME, text='默认档案', dtrait_blob=None)
+case('comment_publish_custom_profile', lambda: DouyinAPI.publish_comment(profile_auth(CUSTOM_PROFILE), AWEME, '自定义档案'),
+     aweme_id=AWEME, text='自定义档案', dtrait_blob=None, dtrait_profile=CUSTOM_PROFILE)
+case('post_images_profile', lambda: DouyinCreatorAPI.post_images(creator_profile_auth(), [PNG, PNG], title='标题', desc='默认档案', visibility=0),
+     media_respond, title='标题', desc='默认档案', dtrait_blob=None)
+# 严格短信登录：没有 DY_DTRAIT_BLOB 时不再拒绝，passport 请求带按默认档案现算的 x-tt-session-dtrait（820 字节）
+case('login_sms_profile', sms_flow, login_respond({}), dtrait_blob=None, phone='13800000000', code='123456')

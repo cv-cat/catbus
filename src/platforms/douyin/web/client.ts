@@ -6,6 +6,7 @@ import type { Cookie } from '../../../core/schemas.js'
 import { authError, isGuest, scope } from '../../../core/toolkit.js'
 import * as api from './api.js'
 import { type DtraitMaterial, ecdhKey, reeKey, sessionDtrait, ticketClientData, ticketGuardVersion } from './crypto.js'
+import { buildBlob, DTRAIT_BROKEN, DTRAIT_HINT, defaultProfile } from './dtrait.js'
 import { BROWSER, type Headers, WWW, WWW_ONLY } from './profile.js'
 import { ABogus, fakeWebid, md5Hex, randomMsToken, svWebId, XBogus } from './sign.js'
 
@@ -265,14 +266,29 @@ export class Douyin {
     return out
   }
 
-  /** 按 path 生成 x-tt-session-dtrait；没有设备素材时为 null（strict 时报错）。 */
+  /**
+   * x-tt-session-dtrait 的内层设备特征 blob（上游 session_dtrait_header 的取法）：导入的 dtrait_blob 优先，
+   * 其次按凭证里的 dtrait_profile 现算，都没有时按随包的默认档案现算。档案无效时为 null。
+   */
+  dtraitBlob(): string | null {
+    const blob = this.device.dtrait_blob as string | undefined
+    if (blob) return blob
+    try {
+      return buildBlob(this.device.dtrait_profile ?? defaultProfile())
+    } catch (err) {
+      this.ctx.log.debug(`dtrait 设备档案不可用：${(err as Error).message}`)
+      return null
+    }
+  }
+
+  /** 按 path 生成 x-tt-session-dtrait；算不出 blob 时为 null（strict 时报错）。 */
   dtraitHeader(path: string, options: { aid?: number | string; origin?: string; strict?: boolean; allowStatic?: boolean } = {}): string | null {
     const { aid = 6383, origin = WWW, strict = false, allowStatic = true } = options
-    const blob = this.device.dtrait_blob as string | undefined
+    const blob = this.dtraitBlob()
     const staticHeader = this.device.session_dtrait as string | undefined
     if (!blob && staticHeader && allowStatic && !strict) return staticHeader
     if (!blob) {
-      if (strict) throw new CatbusError('AUTH_REQUIRED', '缺少可按 path 重算的 dtrait 设备素材（dtrait_blob），这个操作会被风控拦截', { hint: DTRAIT_HINT })
+      if (strict) throw new CatbusError('AUTH_REQUIRED', `缺少可按 path 重算的 dtrait 设备素材（${DTRAIT_BROKEN}），这个操作会被风控拦截`, { hint: DTRAIT_HINT })
       return null
     }
     const cacheKey = `${aid}|${origin}`
@@ -319,8 +335,6 @@ export class Douyin {
     if (!this.isLogin) throw authError(this.ctx, '当前账号的 cookie 里没有 sessionid，请重新登录')
   }
 }
-
-const DTRAIT_HINT = '用 catbus douyin auth login --method cookie --cookie @<凭证 JSON> 导入浏览器里抓到的 dtrait_blob（见 --help）'
 
 function domainMatch(host: string, domain: string): boolean {
   return domain.startsWith('.') ? host === domain.slice(1) || host.endsWith(domain) : host === domain

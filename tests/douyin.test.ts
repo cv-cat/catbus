@@ -7,6 +7,7 @@ import { RAW } from '../src/core/schemas.js'
 import * as api from '../src/platforms/douyin/web/api.js'
 import { Douyin } from '../src/platforms/douyin/web/client.js'
 import * as creator from '../src/platforms/douyin/web/creator.js'
+import { buildBlob, computedFeatures, defaultProfile, murmur3 } from '../src/platforms/douyin/web/dtrait.js'
 import * as im from '../src/platforms/douyin/web/im.js'
 import * as live from '../src/platforms/douyin/web/live.js'
 import { Passport } from '../src/platforms/douyin/web/passport.js'
@@ -62,6 +63,7 @@ function loggedCtx(c: GoldenCase) {
   Object.assign(tokens, { ticket: c.input.ticket, ts_sign: c.input.ts_sign, client_cert: c.input.client_cert, webid: c.input.webid, uid: c.input.uid })
   tokens.msToken = { value: c.input.ms_token, at: NOW }
   Object.assign(ctx.credential.device, { private_key: c.input.private_key, dtrait_blob: c.input.dtrait_blob })
+  if (c.input.dtrait_profile) ctx.credential.device.dtrait_profile = c.input.dtrait_profile
   return ctx
 }
 
@@ -199,6 +201,11 @@ const CASES: Record<string, Run> = {
   product_comment_counter: (c) => logged(c, (d) => api.productCommentCounter(d, '3622058069401408999', 'fakeShop01')),
   product_comments_tag: (c) => logged(c, (d) => api.productComments(d, '3622058069401408999', 'fakeShop01', '0', '10', '0', '7')),
   notices_group: (c) => logged(c, (d) => api.notices(d, '0', '0', '10', '401')),
+
+  // ---------------------------------------------------------------- dtrait 设备档案（上游 fix-dtrait-blob）：没有导入 dtrait_blob 时按档案现算
+  comment_publish_profile: (c) => logged(c, (d) => api.publishComment(d, AWEME, c.input.text)),
+  comment_publish_custom_profile: (c) => logged(c, (d) => api.publishComment(d, AWEME, c.input.text)),
+  post_images_profile: (c) => logged(c, (d) => creator.postImages(d, [media(PNG), media(PNG)], { title: c.input.title, desc: c.input.desc, visibility: 0 })),
 }
 
 const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAYAAAC56t6BAAAAEklEQVR4nGNgYGD4z8DAwMAAAAwAAf8v0Mo8AAAAAElFTkSuQmCC'
@@ -319,6 +326,20 @@ describe('douyin 对拍：登录', () => {
     expectReqs(requests, c.requests)
     expect(Object.fromEntries(d.cookies())).toEqual(c.result.cookies)
     expect(d.tokens).toMatchObject({ ticket: c.result.ticket, ts_sign: c.result.ts_sign })
+  }, 60_000)
+
+  it('短信（严格）：没有导入 dtrait_blob 时按默认设备档案现算 x-tt-session-dtrait，不再本地拒绝', async () => {
+    const c = loadCase('douyin', 'login_sms_profile')
+    const d = new Douyin(loginCtx(c))
+    const p = new Passport(d)
+    const { requests, error } = await replayBin(c, async () => {
+      await p.bootstrap(true)
+      await p.sendSmsCode(c.input.phone)
+      await p.phoneLogin(c.input.phone, c.input.code)
+    })
+    if (error) throw error
+    expectReqs(requests, c.requests)
+    expect(Object.fromEntries(d.cookies())).toEqual(c.result.cookies)
   }, 60_000)
 })
 
@@ -589,5 +610,135 @@ describe('douyin 归一化：补齐的命令', () => {
       ['chat', '观众A', '主播好'],
       ['enter', '观众B', null],
     ])
+  })
+})
+
+/** 上游 tests/test_dtrait_profile.py 的 CAPTURED_BLOB：Chrome 153 DevTools 里抓到的内层 blob，默认档案就是从它取证的。 */
+const CAPTURED_BLOB =
+  'IAAAAADQIC0FVqIh4kBm/yLQO48ZI8SHsdUkUnQhRSUtc6pZJoXtgvcnqvUbwih5/' +
+  'ufyKR3SnsMqMtFjyisa3jq/LEbrp0It3oooWy6x8OwMLzYf+ukwKpioVDEAAAAAMi' +
+  'Zm67kzi/GgODSiHrKONRJqRnA2hZHFNjcbzZ0NOFhf5lQ5ucywezqnDTbrO0LJZ588' +
+  'JQFrBT3os+69Pnc1cw4/6hH+lkBcuWKWR5QWrJM='
+
+const errorCode = (fn: () => unknown): unknown => {
+  try {
+    fn()
+  } catch (err) {
+    return (err as { code?: unknown }).code ?? err
+  }
+  return null
+}
+
+describe('douyin dtrait 内层 blob（上游 utils/dtrait_features.py、fix-dtrait-blob 的默认档案）', () => {
+  const c = loadCase('douyin', 'dtrait_blob')
+
+  it('默认档案生成的 blob 与 Chrome 抓到的逐字节一致，也与上游 build_blob 一致', () => {
+    expect(c.input.captured).toBe(CAPTURED_BLOB)
+    expect(buildBlob(defaultProfile())).toBe(CAPTURED_BLOB)
+    expect(buildBlob(defaultProfile())).toBe(c.result.default)
+    expect(computedFeatures(defaultProfile())).toEqual(c.result.default_features)
+  })
+
+  it('自定义档案：bool 位图跨过 32、reserved / version、accessType、小数与非 ASCII 字段', () => {
+    expect(buildBlob(c.input.custom_profile)).toBe(c.result.custom)
+    expect(buildBlob(c.input.custom_profile, 1)).toBe(c.result.custom_edge)
+    expect(computedFeatures(c.input.custom_profile)).toEqual(c.result.custom_features)
+  })
+
+  it('murmur3 与 JS 的 Number → 字符串（上游 js_number_to_str）', () => {
+    expect(c.result.murmur3.map(([s]: [string]) => [s, murmur3(s)])).toEqual(c.result.murmur3)
+    expect(c.result.js_number.map(([x]: [number]) => [x, String(x)])).toEqual(c.result.js_number)
+  })
+
+  it('档案不完整时报 USAGE（上游加载档案时就用 build_blob 校验）', () => {
+    const p = c.input.custom_profile
+    const hashes = { ...p.render_hashes }
+    delete hashes['7']
+    expect(errorCode(() => buildBlob([]))).toBe('USAGE')
+    expect(errorCode(() => buildBlob({ ...p, ua: undefined }))).toBe('USAGE')
+    expect(errorCode(() => buildBlob({ ...p, languages: 'zh-CN' }))).toBe('USAGE')
+    expect(errorCode(() => buildBlob({ ...p, device_memory: null }))).toBe('USAGE')
+    expect(errorCode(() => buildBlob({ ...p, render_hashes: hashes }))).toBe('USAGE')
+    expect(errorCode(() => buildBlob({ ...p, render_hashes: { ...p.render_hashes, 7: 2 ** 32 } }))).toBe('USAGE')
+    expect(errorCode(() => buildBlob({ ...p, bools: { x: true } }))).toBe('USAGE')
+    expect(errorCode(() => buildBlob({ ...p, bools: { 1: 'yes' } }))).toBe('USAGE')
+  })
+
+  it('取 blob 的优先级：dtrait_blob > dtrait_profile > 默认档案；档案无效时算不出，评论 / 发布在本地拦下', async () => {
+    const { commentAdd } = await import('../src/platforms/douyin/web/commands.js')
+    const ctx = makeCtx({ platform: 'douyin', cookies: 'sessionid=fake; ttwid=fake', cookieDomain: '.douyin.com', args: { item: AWEME, text: 'x' } })
+    Object.assign(ctx.credential.scopes.main!.tokens, { ticket: 'hash.fake', ts_sign: 'ts.2.fake' })
+    const d = new Douyin(ctx)
+    d.device.private_key = 'fake-key'
+    expect(d.dtraitBlob()).toBe(CAPTURED_BLOB)
+    d.device.dtrait_profile = c.input.custom_profile
+    expect(d.dtraitBlob()).toBe(c.result.custom)
+    d.device.dtrait_blob = 'imported-blob'
+    expect(d.dtraitBlob()).toBe('imported-blob')
+
+    delete d.device.dtrait_blob
+    d.device.dtrait_profile = { ...c.input.custom_profile, render_hashes: {} }
+    expect(d.dtraitBlob()).toBeNull()
+    expect(d.dtraitHeader('/aweme/v1/web/comment/publish')).toBeNull()
+    expect(errorCode(() => d.dtraitHeader('/aweme/v1/web/comment/publish', { strict: true }))).toBe('AUTH_REQUIRED')
+    expect(errorCode(() => creator.requirePublishSecurity(d))).toBe('AUTH_REQUIRED')
+    await expect(commentAdd(ctx)).rejects.toMatchObject({ code: 'AUTH_REQUIRED' })
+    // 成品头只给非严格的请求用
+    d.device.session_dtrait = 'static-header'
+    expect(d.dtraitHeader('/aweme/v1/web/comment/publish')).toBe('static-header')
+    expect(errorCode(() => d.dtraitHeader('/web/api/media/aweme/create_v2/', { strict: true }))).toBe('AUTH_REQUIRED')
+  })
+
+  it('comment add：没有导入 dtrait_blob 时不再本地拒绝，按默认档案带上 x-tt-session-dtrait', async () => {
+    const c = loadCase('douyin', 'comment_publish_profile')
+    const { commentAdd } = await import('../src/platforms/douyin/web/commands.js')
+    const ctx = loggedCtx(c)
+    ctx.args = { item: AWEME, text: c.input.text }
+    const { requests, result, error } = await replay(c, () => commentAdd(ctx) as Promise<any>)
+    if (error) throw error
+    expectReqs(requests, c.requests)
+    expect(result).toMatchObject({ item_id: AWEME, text: c.input.text })
+  })
+
+  it('auth login --cookie <JSON>：可选导入 dtrait_profile / dtrait_blob，坏档案报 USAGE；出现任何 dtrait 键时整组替换', async () => {
+    const { mkdtempSync, rmSync, readFileSync: read } = await import('node:fs')
+    const { tmpdir } = await import('node:os')
+    const { join } = await import('node:path')
+    const { authLogin } = await import('../src/platforms/douyin/web/commands.js')
+    const home = mkdtempSync(join(tmpdir(), 'catbus-dy-'))
+    const prev = process.env.CATBUS_HOME
+    process.env.CATBUS_HOME = home
+    const restore = mockSender((p) => {
+      if (p.url.includes('/aweme/v1/web/query/user/')) return fakeResponse({ status_code: 0, id: '7400000000000000001', user_uid: '97872126662' })
+      if (p.url.includes('/web/api/media/user/info/')) return fakeResponse({ user: { sec_uid: SEC_UID, uid: '97872126662', nickname: '我' } })
+      if (p.url.includes('mssdk.bytedance.com')) return fakeResponse({ code: 0 }, { headers: [['x-ms-token', 'fake-mstoken']] })
+      return fakeResponse({ status_code: 0 })
+    })
+    const custom = c.input.custom_profile
+    const login = async (json: Record<string, unknown>, device: Record<string, unknown> = {}) => {
+      const ctx = makeCtx({ platform: 'douyin', account: null, options: { method: 'cookie', cookie: JSON.stringify({ cookie: 'sessionid=fake; ttwid=fake', ...json }) } })
+      Object.assign(ctx.credential.device, device)
+      await authLogin(ctx)
+      return JSON.parse(read(join(home, 'auth', 'douyin', 'web', 'default.json'), 'utf8')).device
+    }
+    try {
+      const d1 = await login({ dtrait_profile: custom })
+      expect(d1.dtrait_profile).toEqual(custom)
+      expect(d1.dtrait_blob).toBeUndefined()
+      // 同名账号已有 blob：这次只给档案时整组替换，旧 blob 不会压过新档案
+      const d2 = await login({ dtrait_profile: custom }, { dtrait_blob: 'old-blob', session_dtrait: 'old-header' })
+      expect([d2.dtrait_blob, d2.session_dtrait, d2.dtrait_profile]).toEqual([undefined, undefined, custom])
+      // 一个 dtrait 键都没给：沿用同名账号已有的
+      expect(await login({}, { dtrait_blob: 'old-blob', dtrait_profile: custom })).toMatchObject({ dtrait_blob: 'old-blob', dtrait_profile: custom })
+      // null 表示清掉，回到默认档案
+      expect((await login({ dtrait_blob: null }, { dtrait_blob: 'old-blob' })).dtrait_blob).toBeUndefined()
+      await expect(login({ dtrait_profile: { ...custom, bools: [] } })).rejects.toMatchObject({ code: 'USAGE' })
+      await expect(login({ dtrait_blob: 123 })).rejects.toMatchObject({ code: 'USAGE' })
+    } finally {
+      restore()
+      if (prev === undefined) delete process.env.CATBUS_HOME
+      else process.env.CATBUS_HOME = prev
+      rmSync(home, { recursive: true, force: true })
+    }
   })
 })

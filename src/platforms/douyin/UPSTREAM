@@ -1,2 +1,3 @@
 repo: https://github.com/cv-cat/DouYin_Spider
-commit: b17b12eef6000378aa0e3275a1e7586c1cc5987b
+commit: 94c744b9b8bea550aed0c9bfe759446ab73bde44
+branch: fix-dtrait-blob

@@ -100,10 +100,12 @@
 
 - **鉴权**
   - `builder/auth.py` 的 `DouyinAuth.perepare_auth(cookieStr, web_protect_, keys_)`（方法名原文如此拼写）。
-  - 私信签名还需要 `ticket`、`ts_sign`、`client_cert`、`private_key`，以及绑定设备的 `dtrait_blob`。catbus 里放在凭证文件的 `tokens` / `device`。
+  - 私信签名还需要 `ticket`、`ts_sign`、`client_cert`、`private_key`。catbus 里放在凭证文件的 `tokens` / `device`。
+  - 写接口和 passport 请求带 `x-tt-session-dtrait`：外层由 `utils/dtrait.py` 按请求 path 现算，内层是绑定设备的特征 blob。上游 `DouyinAuth.session_dtrait_header` 取内层的顺序是 `DY_DTRAIT_BLOB`（抓到的 blob）> 设备档案（`DY_DTRAIT_PROFILE` 指定的，否则是随包的 `utils/dtrait_profile.json`，由 `utils/dtrait_features.py` 的 `build_blob` 现算）。默认档案来自上游 `fix-dtrait-blob` 分支（还没合进 master，catbus 以它为基线，见 `UPSTREAM`），是从 Chrome 153 DevTools 取证固化的。
+  - catbus 对应：凭证 `device` 里的 `dtrait_blob`、`dtrait_profile`（都可选，用 `--cookie` 的 JSON 对象导入），没有时用 `static/douyin/dtrait_profile.json`；`build_blob` 移植在 `web/dtrait.ts`。Math 指纹的入参全是字面常量，直接写 Chrome 的结果：Node 24 自带的 V8 在 `atanh(0.5)`、`log(3)`、`expm1(1)` 上与 Chrome 差 1 ULP（实测），macOS 的 libm 在 `tan(-1e300)` 上与 V8 差 1 ULP（对拍脚本把它固定成 V8 的值）。
 - **登录**：`dy_apis/login_api.py` 的 `DYLoginApi`：`qrcode_login`、`send_sms_code`、`phone_login`、`save_credential`、`get_login_auth`。
   - 短信默认走 passport-web（`/passport/web/send_code`、`sms_login`）；`DY_PHONE_LOGIN_PROFILE=sso` 时改走 `login.douyin.com` 页的 SSO 链（`bootstrap_phone_auth`、`_send_sms_code_sso` → `/send_activation_code/v2/`、`_phone_login_sso` → `/quick_login/v2/`）。上游把它当显式开关，不是失败后的退路；catbus 对应 `auth login --method sms --sso`。
-- **上游凭证来源**：`.env` 的 `DY_COOKIES`、`DY_LIVE_COOKIES`、`DY_TICKET`、`DY_TS_SIGN`、`DY_CLIENT_CERT`、`DY_PRIVATE_KEY`、`DY_DTRAIT_BLOB`。
+- **上游凭证来源**：`.env` 的 `DY_COOKIES`、`DY_LIVE_COOKIES`、`DY_TICKET`、`DY_TS_SIGN`、`DY_CLIENT_CERT`、`DY_PRIVATE_KEY`、`DY_DTRAIT_BLOB`、`DY_DTRAIT_PROFILE`（设备档案的路径）、`DY_SESSION_DTRAIT`（成品头，只用于非严格的请求）。
 - **API**（静态方法，第一个参数为 `auth`）
   - `dy_apis/douyin_api.py` 的 `DouyinAPI`：`get_work_info(url)`、`get_user_info(user_url)`、`get_user_all_work_info`、`get_work_all_comment`、`search_general_work`（筛选只把 `is_filter_search` 置 1，筛选值不进 query）、`search_video_work`（视频频道，筛选值进 query，→ `item search --type video`）、`search_user`（`douyin_user_fans` / `douyin_user_type`）、`search_live`、`get_user_favorite`、`get_collect_list`、`move_collect_aweme` / `remove_collect_aweme`（→ `item collect / uncollect --folder`）、`get_user_follower_list/following`、`get_notice_list`（`notice_group` → `notice list --group`）、`get_feed`、`get_live_info`、`digg`、`publish_comment`、`collect_aweme`、`create_conversation`、`send_msg/image/video/file`、`send_share_aweme/share_photos/share_web/user_card`（→ `msg send --share`）
   - 直播：`get_live_room_enter`（→ `live get`，其中的 `stream_url` → `live media`）、`get_webcast_detail`（im/fetch，带回的最近 15 条 → `live history`）、`get_live_contribution_rank` / `get_live_thousand_ticket_rank`（→ `live rank --ranking`）、`diggLiveRoom`（`count` → `live like --count`）、`sendMsgInRoom`
@@ -115,7 +117,7 @@
   - `static/{Live,PK,Request,Response}.proto`，旁边是对应的 pb2
   - `utils/acrawler_runtime/`：`ac_vm.js`、`run_ac_node.js`、`browser_window_shape.json`、`canvas_actual_exact.json`
   - `utils/challenge_template_runner.js`
-  - `utils/challenge_profile.json`、`utils/mstoken_common_profile.json`、`utils/mstoken_profile.json`
+  - `utils/challenge_profile.json`、`utils/mstoken_common_profile.json`、`utils/mstoken_profile.json`、`utils/dtrait_profile.json`
 - **注意**：`newsign/package.json` 声明了 `jsdom`、`canvas`、`sdenv`、`jsrsasign`，但没有任何代码引用，是遗留文件，不用管。
 
 ### tiktok — TiktokApis

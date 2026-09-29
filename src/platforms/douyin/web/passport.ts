@@ -12,6 +12,7 @@ import * as rand from '../../../core/rand.js'
 import * as api from './api.js'
 import type { Douyin } from './client.js'
 import { clientDataCookie, clientDataV2Cookie, generateEcKey } from './crypto.js'
+import { DTRAIT_BROKEN } from './dtrait.js'
 import { commonBehavior, commonReport } from './mssdk.js'
 import { headers as baseHeaders, LOGIN, Params, PROFILE, WWW } from './profile.js'
 import { aidSign, md5Hex, passportEncrypt, passportSign, sdkTs, spliceUrl, svWebId, uaAesUrlsafe } from './sign.js'
@@ -566,8 +567,9 @@ export class Passport {
       }
     }
     this.verifyPortrait = `${rand.uuid4()}.login`
-    if (!d.device.dtrait_blob && !d.device.session_dtrait) {
-      if (strict) throw new CatbusError('AUTH_REQUIRED', '短信登录需要 dtrait 设备素材（dtrait_blob）', { hint: 'catbus douyin auth login --method cookie --cookie @<凭证 JSON>，或改用扫码登录' })
+    // dtrait blob 是设备绑定的：优先用导入的素材，没有时按设备档案现算（上游 bootstrap_auth）
+    if (!d.dtraitBlob() && !d.device.session_dtrait) {
+      if (strict) throw new CatbusError('AUTH_REQUIRED', `短信登录需要 dtrait 设备素材（${DTRAIT_BROKEN}）`, { hint: '重新导入有效的 dtrait_profile / dtrait_blob（catbus douyin auth login --method cookie），或改用扫码登录' })
       d.ctx.log.debug('没有 dtrait 素材，passport 请求会缺 x-tt-session-dtrait')
     }
     if (strict && (!this.get('__ac_nonce') || !this.get('__ac_signature'))) {
