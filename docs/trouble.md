@@ -20,7 +20,7 @@
 
 | # | 平台 | 问题 | 性质 | 状态 | 现在 catbus 的表现 |
 |---|---|---|---|---|---|
-| 1 | douyin | 发布、评论、点赞、收藏需要 `dtrait_blob` | 平台风控 | 已集成上游 fix-dtrait-blob（2026-09-29），**发布仍失败**，上游同样失败；待扫码后立即发布的对照 | 没有 blob 时按随包设备档案现算。发布：`create_v2` 仍返回 HTTP 200 空响应，报 `RISK_CONTROL`（登录态没被踢） |
+| 1 | douyin | 发布、评论、点赞、收藏需要 `dtrait_blob` | 平台风控，上游的纯算档案不被接受 | 已集成上游 fix-dtrait-blob（2026-09-29）；**发布仍失败**，上游扫码后立即发布也失败（1.6）；待上游 | 没有 blob 时按随包设备档案现算。发布：`create_v2` 仍返回 HTTP 200 空响应，报 `RISK_CONTROL`（登录态没被踢） |
 | 2 | xhs | 扫码登录，手机确认后服务端要求人机验证（HTTP 471） | 平台风控，上游同样失败 | 待上游；catbus 已兜底 | 报 `RISK_CONTROL`（captcha），提示改用 cookie 导入 |
 | 3 | xhs | 评论接口间歇性要求人机验证（HTTP 461） | 平台风控，概率性 | 待上游；catbus 已兜底 | 报 `RISK_CONTROL`（captcha），过几十秒到几分钟自己恢复 |
 | 4 | bilibili | `danmaku list`：短视频只拿到前 2 分钟的弹幕，超过 6 分钟的视频直接失败 | 上游 bug | 待上游 | ≤ 6 分钟：结果**不完整且不报错**；> 6 分钟：报 `UPSTREAM`（HTTP 404） |
@@ -149,7 +149,11 @@ payload = {"dtrait":<设备特征 blob>,"timestamp":<秒>,"sdkVersion":"1.0.0.16
 | catbus，档案的 UA 改成与请求一致的 Chrome 151（档案是 153） | 同上，所以不是 UA 不一致导致的 |
 | **上游 Python（fix-dtrait-blob）**，用同一份 cookie / ticket / ts_sign / 私钥构造 `DouyinAuth.from_cookie`，`post_images(visibility=1)` | **同样失败**：「发布接口返回非 JSON（HTTP 200）」 |
 
-结论：catbus 与上游行为一致；随包档案本身不足以让这个会话发布成功。还差一个对照：上游 `quick_publish.py` 的做法是扫码登录后在同一进程里立即发布，要用这种方式再试一次，才能确定是档案不被接受，还是会话隔了一天后 ticket 类凭证失效。
+| **上游 Python（fix-dtrait-blob），扫码登录后在同一进程里立即发布**（照 `quick_publish.py`：`DouyinAuth.from_qrcode_login(bootstrap_creator=True)` → `post_images(visibility=1)`） | **同样失败**：扫码成功，图片上传成功，`create_v2` 返回 HTTP 200 空响应。发布前的安全检查（ticket / ts_sign / 私钥齐全、与 Cookie 同一次登录）都通过了 |
+
+扫码时上游还打了两条警告，可能相关：「未捕获当前浏览器 fpk1，已使用项目内 FingerprintJS fixture 纯算」「challenge template 没产出 p_in，沿用伪造值」。
+
+结论：**不是会话过期，也不是 catbus 移植的问题**。上游这个分支在新登录的会话上也发布不了，随包的设备档案（或 fpk1 / p_in 等其他伪造值）没被服务端接受。已反馈上游，状态仍为待上游。
 
 ## 2. 小红书：扫码登录被要求人机验证（HTTP 471）
 
@@ -352,7 +356,7 @@ catbus 已同步，对拍变化的 4 个用例逐字节一致。
 
 | 上游仓库 | 内容 | 对应章节 | 集成时 catbus 要做的 |
 |---|---|---|---|
-| DouYin_Spider | `dtrait_blob` 的获取方式：fix-dtrait-blob 分支已改为随包档案纯算，catbus **已集成**；但同一账号上发布仍返回空响应（上游同样，见 1.6）；另建议把 Math 指纹写成 Chrome 的常量（macOS 上上游测试会失败）；README 补上 `DY_DTRAIT_BLOB`、`UIFID` 由推荐流下发 | 1 | 等发布跑通后改状态 |
+| DouYin_Spider | `dtrait_blob` 的获取方式：fix-dtrait-blob 分支已改为随包档案纯算，catbus **已集成**；但发布仍返回空响应，上游扫码后立即发布同样失败（见 1.6，扫码时上游警告 fpk1、p_in 用了伪造值）；另建议把 Math 指纹写成 Chrome 的常量（macOS 上上游测试会失败）；README 补上 `DY_DTRAIT_BLOB`、`UIFID` 由推荐流下发 | 1 | 等发布跑通后改状态 |
 | Spider_XHS | 扫码后 471（verifytype 120）的验证流程 | 2 | 移植验证流程，去掉「改用 cookie」的兜底提示 |
 | Spider_XHS | 评论 461（verifytype 124）的验证码 | 3 | 同上 |
 | BilibiliApis | 弹幕分段去掉 `ps` / `pe` | 4 | 改 `danmakuSeg`，重新生成对拍数据 |
