@@ -242,6 +242,19 @@ def ws_frames():
 
 case('ws_frames', ws_frames, cid=CID, peer=PEER_ID, encrypt_uid='FAKEENCRYPTUID0001')
 
+# 中文昵称：cookie `_nk_` 是 URL 编码的 \u 转义。上游发消息只在 handle_message 里，sender_nick 是 f"cntaobao{self.nk}"，
+# 即 `_nk_` 的原值，不解码
+COOKIES_CN = COOKIES.replace('_nk_=tester', '_nk_=tb%5Cu6d4b%5Cu8bd5')
+
+
+def ws_send_nick():
+    lv, ws = taobaoLive(COOKIES_CN), FakeWs()
+    asyncio.run(lv.send_msg(ws, CID + '@cntaobao', PEER_ID, f'cntaobao{lv.nk}', make_text('你好')))
+    return ws.sent
+
+
+case('ws_send_nick', ws_send_nick, cookies=COOKIES_CN, cid=CID, peer=PEER_ID)
+
 
 def mid_of():
     return generate_mid()

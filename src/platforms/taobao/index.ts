@@ -16,7 +16,7 @@ export default definePlatform({
         'auth login': impl('full', 'authLogin'),
         'auth status': impl('partial', 'authStatus'),
 
-        'user get': impl('partial', 'userGet', { note: 'me 规划中' }),
+        'user get': impl('partial', 'userGet', { note: '参数只接受商品链接（淘宝 / 天猫商品页或 m.tb.cn 分享短链），返回这件商品的卖家；me 规划中' }),
         'user items': 'none',
         'user collects': 'none',
 
@@ -50,7 +50,7 @@ export default definePlatform({
 
         'msg list': 'none',
         'msg history': impl('full', 'msgHistory'),
-        'msg send': impl('full', 'msgSend'),
+        'msg send': impl('full', 'msgSend', { note: '--item 联系商品卖家，--conversation 回复已有会话；不支持 --to（没有按用户发起会话的接口）' }),
         'msg listen': impl('full', 'msgListen'),
         'msg read': 'none',
         'msg revoke': 'none',

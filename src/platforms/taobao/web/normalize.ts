@@ -7,7 +7,7 @@ import { plainId } from './im.js'
 /** 淘宝原始对象 → 归一化类型（AGENTS 6.2）。 */
 
 /** 私信里的 sender_nick 带 `cntaobao` 前缀。 */
-export function nickOf(senderNick: unknown): string | null {
+function nickOf(senderNick: unknown): string | null {
   const s = n.str(senderNick)
   return s == null ? null : s.startsWith(IM_DOMAIN) ? s.slice(IM_DOMAIN.length) || null : s
 }

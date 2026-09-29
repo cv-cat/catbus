@@ -5,7 +5,6 @@ import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { AuthStatus, Media, Message } from '../../../core/schemas.js'
-import { isGuest } from '../../../core/toolkit.js'
 import { history, listen, pushedPayloads } from '../../_shared/impaas.js'
 import * as api from './api.js'
 import { accessToken, Taobao, taobao } from './client.js'
@@ -39,7 +38,8 @@ export async function authLogin(ctx: Ctx) {
 export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
   const off: AuthStatus = { logged_in: false, user: null, method: null, expires_at: null }
   const tb = taobao(ctx)
-  if (isGuest(ctx) || !tb.myId) return off
+  // 没登录时是一份空凭证，没有 unb
+  if (!tb.myId) return off
   try {
     await accessToken(tb)
   } catch (err) {
@@ -122,8 +122,8 @@ export async function msgSend(ctx: Ctx): Promise<Message> {
     }
     let last!: Message
     for (const { media, message } of outgoing) {
-      // 上游直接拼 cookie `_nk_` 的原值；中文昵称的 `_nk_` 是转义过的，这里用解码后的昵称（ASCII 昵称两者相同）
-      const frame = sendMsgFrame(tb.myId, imId(cid), target.peer, IM_DOMAIN + tb.nick, message)
+      // 照上游（taobao_live.py 的 f"cntaobao{self.nk}"）拼 cookie `_nk_` 的原值，中文昵称也不解码
+      const frame = sendMsgFrame(tb.myId, imId(cid), target.peer, IM_DOMAIN + tb.rawNick, message)
       const res = await im.request(frame)
       const b = res.body ?? {}
       last = n.message(
@@ -153,7 +153,7 @@ function pushedMessages(tb: Taobao, frame: unknown): Message[] {
     if (!message) continue
     // 自己发出的消息（上游按 sender_nick 判断）不输出
     const nick = (decoded as any)?.['1']?.['10']?.sender_nick
-    if (message.from?.id === tb.myId || (nick != null && (nick === IM_DOMAIN + tb.cookie('_nk_') || nick === IM_DOMAIN + tb.nick))) continue
+    if (message.from?.id === tb.myId || (nick != null && (nick === IM_DOMAIN + tb.rawNick || nick === IM_DOMAIN + tb.nick))) continue
     out.push(message)
   }
   return out

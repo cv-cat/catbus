@@ -49,9 +49,14 @@ export class Taobao {
     return this.cookie('unb') ?? ''
   }
 
-  /** 当前账号的昵称：cookie `_nk_` 是 URL 编码后的 `\uXXXX` 转义。 */
+  /** cookie `_nk_` 的原值（没有时用 `tracknick`）：URL 编码后的 `\uXXXX` 转义。上游私信的 sender_nick 直接拼它，不解码。 */
+  get rawNick(): string {
+    return this.cookie('_nk_') ?? this.cookie('tracknick') ?? ''
+  }
+
+  /** 当前账号的昵称（解码后的 `_nk_`）。 */
   get nick(): string {
-    return decodeNick(this.cookie('_nk_') ?? this.cookie('tracknick') ?? '')
+    return decodeNick(this.rawNick)
   }
 
   /** 设备号：上游每次启动随机生成；这里生成一次后存进凭证的 device，之后复用。 */
@@ -84,7 +89,7 @@ export function decodeNick(raw: string): string {
 }
 
 /** mtop 的 ret（如 `FAIL_SYS_SESSION_EXPIRED::Session过期`）映射成 catbus 的错误（AGENTS 6.4）。 */
-export function mtopError(ctx: HandlerContext, body: { ret?: unknown[] } | null | undefined): CatbusError {
+function mtopError(ctx: HandlerContext, body: { ret?: unknown[] } | null | undefined): CatbusError {
   const ret = String(body?.ret?.[0] ?? '')
   if (/SESSION_EXPIRED|FAIL_SYS_SESSION|NOT_LOGIN|ERR_SID_INVALID/i.test(ret)) return authError(ctx, `淘宝登录态无效：${ret}`)
   if (/FAIL_SYS_USER_VALIDATE/.test(ret)) {

@@ -242,8 +242,8 @@
 - **登录**：上游没有，只支持 cookie 登录。
 - **上游凭证来源**：无。
 - **API**
-  - `taobao_apis.py` 的 `TaobaoApis`：`get_token`、`get_goods_uid_encrypt_uid(goods_url)`（从商品页 HTML 里取卖家 `uid` / `encrypt_uid`，供 `msg send --item` 用）、`upload_media`
-  - 私信：`taobao_live.py` 的 `taobaoLive(cookies_str)`（async WebSocket）：`list_all_conversations(cid)`（→ `msg history`：同一条连接上按 nextCursor 翻页，结果从旧到新；`--limit` 截断时的游标同闲鱼）、`create_chat`、`send_msg`、`main` / `heart_beat`（→ `msg listen`）
+  - `taobao_apis.py` 的 `TaobaoApis`：`get_token`、`get_goods_uid_encrypt_uid(goods_url)`（从商品页 HTML 里取卖家 `uid` / `encrypt_uid`，供 `msg send --item` 与 `user get <商品链接>` 用；上游没有按用户 ID 查询的接口）、`upload_media`
+  - 私信：`taobao_live.py` 的 `taobaoLive(cookies_str)`（async WebSocket）：`list_all_conversations(cid)`（→ `msg history`：同一条连接上按 nextCursor 翻页，结果从旧到新；`--limit` 截断时的游标同闲鱼）、`create_chat`、`send_msg`（`sender_nick` 是 cookie `_nk_` 的原值，不解码）、`main` / `heart_beat`（→ `msg listen`）
   - 连接、注册、ack、心跳、翻页与闲鱼逐行相同，catbus 共用 `src/platforms/_shared/impaas.ts`
   - `utils/taobao_utils.py`：`generate_sign`、`generate_mid`、`generate_uuid`、`generate_device_id`、`decrypt`（实际是 base64 + MessagePack，由上游 JS 解码；import 了 blackboxprotobuf 但没用）、`trans_cookies`
 - **JS 资产**：`static/taobao_js_20260407.js`

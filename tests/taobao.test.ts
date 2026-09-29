@@ -467,6 +467,24 @@ describe('taobao 对拍：命令流程', () => {
     })
   })
 
+  it('msg send：sender_nick 照上游拼 cookie _nk_ 的原值（中文昵称不解码）', async () => {
+    const c = loadCase('taobao', 'ws_send_nick')
+    const token = loadCase('taobao', 'get_token')
+    const init = frames('ws_init')
+    const [text] = c.result as string[]
+    const { state, restore } = fakeConnect([
+      { after: 2, data: jsonDumps({ lwp: '/s/vulcan', headers: {} }) },
+      { after: 4, data: jsonDumps({ code: 200, headers: { mid: JSON.parse(text!).headers.mid }, body: {} }) },
+    ])
+    const ctx = ctxOf({ cookies: c.input.cookies, args: { text: '你好' }, options: { conversation: CID } })
+    const { result, error } = await replay(token, () => msgSend(ctx))
+    restore()
+    if (error) throw error
+    expect(state.sent.filter((f) => !f.startsWith('{"code"'))).toEqual([...init, text])
+    // 输出里的昵称是解码后的
+    expect(result).toMatchObject({ from: { id: MY_ID, name: 'tb测试' }, type: 'text', text: '你好' })
+  })
+
   it('user get：商品页里的卖家', async () => {
     const c = loadCase('taobao', 'goods_uid')
     const { requests, result, error } = await replay(c, () => userGet(ctxOf({ args: { user: c.input.url } })))
@@ -476,12 +494,11 @@ describe('taobao 对拍：命令流程', () => {
     expect((result as any)[RAW]).toMatchObject(c.result)
   })
 
-  it('user get：游客打开商品页遇到登录墙 → AUTH_REQUIRED', async () => {
+  it('user get：商品页是登录墙 → AUTH_EXPIRED', async () => {
     const c = loadCase('taobao', 'goods_uid')
     const wall = { ...c, responses: [{ status: 200, headers: {}, body: '<script>var jump = "https://item.taobao.com/_____tmd_____/page/login_jump?rand=x"</script>' }] }
-    const ctx = makeCtx({ platform: 'taobao', account: 'guest', args: { user: c.input.url } })
-    const { error } = await replay(wall, () => userGet(ctx))
-    expect(error).toMatchObject({ code: 'AUTH_REQUIRED' })
+    const { error } = await replay(wall, () => userGet(ctxOf({ args: { user: c.input.url } })))
+    expect(error).toMatchObject({ code: 'AUTH_EXPIRED', hint: 'catbus taobao auth login -a default' })
   })
 })
 
@@ -507,6 +524,14 @@ describe('taobao auth（CLI）', () => {
     const { result } = await replay(expired, () => cli('taobao', 'auth', 'login', '--cookie', COOKIES))
     expect((result as any).env.error).toMatchObject({ code: 'AUTH_REQUIRED' })
     expect((result as any).code).toBe(3)
+  })
+
+  it('msg send --to：淘宝不能按用户发起会话，报 UNSUPPORTED（退出码 2），不联网', async () => {
+    await writeCredential(ctxOf().credential)
+    const r = await cli('taobao', 'msg', 'send', '在吗', '--to', PEER_ID, '-a', 'default')
+    expect(r.code).toBe(2)
+    expect(r.env.error).toMatchObject({ code: 'UNSUPPORTED' })
+    expect(r.env.error.hint).toContain('--item')
   })
 
   it('游客 auth status：不联网，logged_in 为 false', async () => {

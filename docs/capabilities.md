@@ -49,7 +49,7 @@
 
 - tiktok `user get`：me 部分支持
 - xianyu `user get`：只支持 me；查询他人规划中
-- taobao `user get`：me 规划中
+- taobao `user get`：参数只接受商品链接（淘宝 / 天猫商品页或 m.tb.cn 分享短链），返回这件商品的卖家；me 规划中
 - jd `user get`：只支持 me
 - kuaishou `user likes`：只支持 me
 - kuaishou `user followers`：只支持 me
@@ -178,6 +178,7 @@
 - xhs `msg history`：单聊传对方 id，群聊传 group:<群 id>
 - x `msg history`：消息端到端加密，只给出占位消息
 - xianyu `msg send`：--to 不带 --item 时按上游的默认商品建会话；--to 加 --item 就这件商品联系对方（卖家可以联系买家）
+- taobao `msg send`：--item 联系商品卖家，--conversation 回复已有会话；不支持 --to（没有按用户发起会话的接口）
 - `notice list --group`：douyin
 - `msg send --file`：douyin
 - `msg send --share`：douyin
