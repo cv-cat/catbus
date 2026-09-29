@@ -1,5 +1,6 @@
 import { jsonDumps, quote, urlencode } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
+import { authError } from '../../../core/toolkit.js'
 import { type Douyin, type DyJson, riskJson } from './client.js'
 import { strDataReport } from './mssdk.js'
 import { APP_VERSION, headers, type Headers, LIVE, livePlatformParams, Params, platformParams, PROFILE, WWW } from './profile.js'
@@ -209,7 +210,7 @@ export async function pageWebid(d: Douyin, url: string): Promise<string> {
   }
 }
 
-/** 自己的数字 uid（上游 get_my_uid）。 */
+/** 自己的数字 uid（上游 get_my_uid）。没有 user_uid 或为 0 表示没登录，报 AUTH_*（游客 AUTH_REQUIRED，账号 AUTH_EXPIRED）。 */
 export async function myUid(d: Douyin): Promise<string> {
   const refer = `${WWW}/`
   const h = headerUifid(d, headers('GET').set('referer', refer))
@@ -219,9 +220,9 @@ export async function myUid(d: Douyin): Promise<string> {
   fp(d, p)
   withABogus(d, p)
   const body = await getJson(d, `${WWW}/aweme/v1/web/query/user/`, h, p)
-  const uid = parseInt(String(body.user_uid ?? ''), 10)
-  if (!Number.isFinite(uid)) throw new Error('query/user 没有返回 user_uid')
-  return String(uid)
+  const uid = String(body.user_uid ?? '').trim()
+  if (!/^\d+$/.test(uid) || /^0+$/.test(uid)) throw authError(d.ctx, 'query/user 没有返回 user_uid，cookie 无效或已过期')
+  return uid
 }
 
 /** 自己的 sec_uid（上游 get_my_sec_uid）：创作者中心 user/info，主站 HTML 兜底。 */
@@ -390,9 +391,7 @@ export async function searchVideo(d: Douyin, keyword: string, offset = '0', coun
 /** 用户搜索（上游 search_user）。fans：0_1k / 1k_1w / 1w_10w / 10w_100w / 100w_；userType：common_user / enterprise_user / personal_user。 */
 export async function searchUser(d: Douyin, keyword: string, offset = '0', count = '25', fans = '', userType = ''): Promise<DyJson> {
   const refer = `${WWW}/search/${quote(keyword)}?type=user`
-  const uifid = d.cookie('UIFID') ?? ''
-  const h = headers('GET').referer(refer)
-  if (uifid) h.set('uifid', uifid)
+  const h = headerUifid(d, headers('GET').referer(refer))
   const hasFilter = Boolean(fans || userType)
   const p = new Params()
   p.add('device_platform', 'webapp').add('aid', '6383').add('channel', 'channel_pc_web').add('search_channel', 'aweme_user_web')
@@ -402,7 +401,7 @@ export async function searchUser(d: Douyin, keyword: string, offset = '0', count
   p.add('list_type', 'single').add('pc_search_top_1_params', '{"enable_ai_search_top_1":1}')
   p.update(platformParams('50').slice(3))
   await withWebId(d, p)
-  if (uifid) p.add('uifid', uifid)
+  withUifid(d, p)
   await withMsToken(d, p)
   withABogus(d, p)
   fp(d, p)
@@ -442,11 +441,11 @@ export async function userFavorite(d: Douyin, secUid: string, maxCursor = '0', c
   return getSigned(d, `${WWW}/aweme/v1/web/aweme/favorite/`, h, p)
 }
 
-/** 收藏夹列表（上游 get_collect_list）。 */
-export async function collectList(d: Douyin): Promise<DyJson> {
+/** 收藏夹列表（上游 get_collect_list 只取 cursor=0 的第一页；翻页时换成上一页响应的 cursor）。 */
+export async function collectList(d: Douyin, cursor = '0', count = '20'): Promise<DyJson> {
   const h = headerUifid(d, headers('GET')).referer(`${WWW}/?recommend=1`)
   const p = new Params()
-  p.add('device_platform', 'webapp').add('aid', '6383').add('channel', 'channel_pc_web').add('cursor', '0').add('count', '20')
+  p.add('device_platform', 'webapp').add('aid', '6383').add('channel', 'channel_pc_web').add('cursor', cursor).add('count', count)
   p.update(platformParams('0'))
   await withWebId(d, p)
   withUifid(d, p)
@@ -632,8 +631,7 @@ export async function publishComment(d: Douyin, awemeId: string, text: string, r
   const h = headers('FORM').set('origin', WWW).referer(refer)
   await d.withBd(h, api)
   await withCsrf(d, h)
-  const uifid = d.cookie('UIFID') ?? ''
-  if (uifid) h.set('uifid', uifid)
+  headerUifid(d, h)
   const p = new Params()
   p.add('app_name', 'aweme').add('enter_from', 'video_detail').add('previous_page', 'video_detail').add('device_platform', 'webapp').add('aid', '6383')
   p.add('channel', 'channel_pc_web').add('pc_client_type', '1').add('pc_libra_divert', 'Windows').add('update_version_code', '170400')
@@ -643,7 +641,7 @@ export async function publishComment(d: Douyin, awemeId: string, text: string, r
   p.add('engine_version', PROFILE.engineVersion).add('os_name', 'Windows').add('os_version', '10').add('cpu_core_num', PROFILE.cpuCoreNum)
   p.add('device_memory', PROFILE.deviceMemory).add('platform', 'PC').add('downlink', '10').add('effective_type', '4g').add('round_trip_time', '50')
   await withWebId(d, p)
-  if (uifid) p.add('uifid', uifid)
+  withUifid(d, p)
   fp(d, p)
   await withMsToken(d, p)
   const data: [string, string][] = [['aweme_id', awemeId]]

@@ -2,11 +2,12 @@ import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import * as rand from '../src/core/rand.js'
 import type { LocalMedia } from '../src/core/files.js'
-import { fakeResponse, mockSender } from '../src/core/http.js'
+import { fakeResponse, type HttpResponse, mockSender, type PreparedRequest } from '../src/core/http.js'
 import { RAW } from '../src/core/schemas.js'
 import * as api from '../src/platforms/douyin/web/api.js'
 import { Douyin } from '../src/platforms/douyin/web/client.js'
 import * as creator from '../src/platforms/douyin/web/creator.js'
+import { crc32Hex } from '../src/platforms/douyin/web/crypto.js'
 import { buildBlob, computedFeatures, defaultProfile, murmur3 } from '../src/platforms/douyin/web/dtrait.js'
 import * as im from '../src/platforms/douyin/web/im.js'
 import * as live from '../src/platforms/douyin/web/live.js'
@@ -15,6 +16,7 @@ import * as proto from '../src/platforms/douyin/web/proto.js'
 import { commonBehavior, commonReport, strDataReport } from '../src/platforms/douyin/web/mssdk.js'
 import { ABogus, fakeWebid, liveSignature, randomMsToken, signedUrl, sm3, spliceUrl, svWebId, XBogus } from '../src/platforms/douyin/web/sign.js'
 import { type GoldenCase, type GoldenRequest, loadCase, makeCtx, normalize, replay } from './golden.js'
+import { cli, useTempHome } from './helpers.js'
 
 const NOW = 1790000000123
 const SEC_UID = 'MS4wLjABAAAAfakeSecUid0123456789abcdef'
@@ -39,10 +41,7 @@ async function replayBin<T>(c: GoldenCase, run: () => Promise<T>): Promise<{ req
     requests.push(normalize(p))
     const r = c.responses[requests.length - 1]
     if (!r) throw new Error(`TS 实现多发了请求：${p.method} ${p.url}`)
-    const hs: [string, string][] = []
-    for (const [k, v] of Object.entries(r.headers)) for (const x of Array.isArray(v) ? v : [v]) hs.push([k, x])
-    const body = typeof r.body === 'string' ? r.body : (r.body as any)?.base64 != null ? new Uint8Array(Buffer.from((r.body as any).base64, 'base64')) : JSON.stringify(r.body)
-    return fakeResponse(body, { status: r.status, headers: hs, url: p.url })
+    return goldenReply(r, p.url)
   })
   try {
     return { requests, result: await run() }
@@ -400,7 +399,7 @@ describe('douyin 归一化（真实响应的结构）', () => {
 
 describe('douyin 缺 UIFID 时自动补上', () => {
   it('报 Uifid Not Found 且凭证里没有 UIFID：请求一次推荐流，拿到 Set-Cookie 的 UIFID 后重试', async () => {
-    const { withUifid } = await import('../src/platforms/douyin/web/commands.js')
+    const { retryWithUifid } = await import('../src/platforms/douyin/web/commands.js')
     const { CatbusError } = await import('../src/core/errors.js')
     const ctx = makeCtx({ platform: 'douyin', cookies: 'sessionid=fake; ttwid=fake', cookieDomain: '.douyin.com' })
     const urls: string[] = []
@@ -413,7 +412,7 @@ describe('douyin 缺 UIFID 时自动补上', () => {
     })
     let calls = 0
     try {
-      const run = withUifid(async (c) => {
+      const run = retryWithUifid(async (c) => {
         calls++
         if (!c.credential.scopes.main!.cookies.some((k) => k.name === 'UIFID')) throw new CatbusError('RISK_CONTROL', 'Uifid Not Found', { detail: { kind: 'blocked', reason: 'uifid' } })
         return 'ok'
@@ -427,12 +426,12 @@ describe('douyin 缺 UIFID 时自动补上', () => {
   })
 
   it('其他错误原样抛出；长连接的 handler（同步返回 AsyncIterable）原样交回', async () => {
-    const { withUifid } = await import('../src/platforms/douyin/web/commands.js')
+    const { retryWithUifid } = await import('../src/platforms/douyin/web/commands.js')
     const { CatbusError } = await import('../src/core/errors.js')
     const ctx = makeCtx({ platform: 'douyin', cookies: 'sessionid=fake', cookieDomain: '.douyin.com' })
-    await expect(withUifid(async () => Promise.reject(new CatbusError('UPSTREAM', 'x')))(ctx) as Promise<unknown>).rejects.toMatchObject({ code: 'UPSTREAM' })
+    await expect(retryWithUifid(async () => Promise.reject(new CatbusError('UPSTREAM', 'x')))(ctx) as Promise<unknown>).rejects.toMatchObject({ code: 'UPSTREAM' })
     const stream = (async function* () {})()
-    expect(withUifid(() => stream)(ctx)).toBe(stream)
+    expect(retryWithUifid(() => stream)(ctx)).toBe(stream)
   })
 })
 
@@ -482,12 +481,12 @@ describe('douyin 对拍：补齐的命令流程', () => {
   it('搜索筛选的取值映射：综合频道只标记 is_filter_search，--range all 在视频频道是 0', async () => {
     const { searchFilters } = await import('../src/platforms/douyin/web/commands.js')
     expect(searchFilters({}, false)).toEqual({ sortType: '0', publishTime: '0', filterDuration: '', searchRange: '', contentType: '' })
-    expect(searchFilters({ sort: 'latest', time: 'week', length: 'medium', range: 'following', type: 'image' }, false)).toEqual({
+    expect(searchFilters({ sort: 'latest', time: 'week', length: 'medium', range: 'following' }, false)).toEqual({
       sortType: '2',
       publishTime: '7',
       filterDuration: '1-5',
       searchRange: '3',
-      contentType: '2',
+      contentType: '',
     })
     expect(searchFilters({ range: 'all', length: 'long' }, true)).toMatchObject({ searchRange: '0', filterDuration: '5-10000', contentType: undefined })
   })
@@ -741,6 +740,426 @@ describe('douyin dtrait 内层 blob（上游 utils/dtrait_features.py、fix-dtra
       if (prev === undefined) delete process.env.CATBUS_HOME
       else process.env.CATBUS_HOME = prev
       rmSync(home, { recursive: true, force: true })
+    }
+  })
+})
+
+// ================================================================ 审查修复：命令级测试（不联网，按 URL 应答）
+
+/** 用例里记下的响应 → HttpResponse（二进制响应记成 {base64}）。 */
+function goldenReply(r: GoldenCase['responses'][number], url: string): HttpResponse {
+  const hs: [string, string][] = []
+  for (const [k, v] of Object.entries(r.headers)) for (const x of Array.isArray(v) ? v : [v]) hs.push([k, x])
+  const body = typeof r.body === 'string' ? r.body : (r.body as any)?.base64 != null ? new Uint8Array(Buffer.from((r.body as any).base64, 'base64')) : JSON.stringify(r.body)
+  return fakeResponse(body, { status: r.status, headers: hs, url })
+}
+
+type Route = [string | RegExp, (p: PreparedRequest) => HttpResponse]
+
+/** 按 URL 应答的假服务端（取第一个匹配的路由），时钟固定在 NOW；没配到的请求直接报错。 */
+async function withServer<T>(routes: Route[], run: (seen: GoldenRequest[]) => Promise<T>): Promise<T> {
+  const seen: GoldenRequest[] = []
+  const restoreRand = rand.deterministic({ now: NOW })
+  const restore = mockSender((p) => {
+    seen.push(normalize(p))
+    const hit = routes.find(([m]) => (typeof m === 'string' ? p.url.includes(m) : m.test(p.url)))
+    if (!hit) throw new Error(`测试没有配置这个请求：${p.method} ${p.url}`)
+    return hit[1](p)
+  })
+  try {
+    return await run(seen)
+  } finally {
+    restore()
+    restoreRand()
+  }
+}
+
+const reqPath = (r: GoldenRequest) => `${r.method} ${r.url.split('?')[0]}`
+const query = (r: GoldenRequest) => new URL(r.url).searchParams
+const loggedFrom = (name: string, init: { args?: Record<string, string>; options?: Record<string, unknown>; cursor?: string } = {}) => {
+  const ctx = loggedCtx(loadCase('douyin', name))
+  ctx.args = init.args ?? {}
+  ctx.options = init.options ?? {}
+  ctx.cursor = init.cursor ?? null
+  return ctx
+}
+const commands = () => import('../src/platforms/douyin/web/commands.js')
+
+describe('douyin 审查修复：登录态与错误映射', () => {
+  useTempHome()
+
+  it('auth login --sso 只能配 --method sms：cookie / qrcode 在发任何请求之前报 USAGE', async () => {
+    const { authLogin } = await commands()
+    for (const method of ['qrcode', 'cookie']) {
+      const ctx = makeCtx({ platform: 'douyin', account: null, options: { method, sso: true, cookie: 'sessionid=fake' } })
+      await withServer([], async (seen) => {
+        await expect(authLogin(ctx)).rejects.toMatchObject({ code: 'USAGE' })
+        expect(seen).toEqual([])
+      })
+    }
+  })
+
+  it('webcast 的 20003（User doesn\'t login）按登录墙处理，说明取 data.message', async () => {
+    const { check } = await import('../src/platforms/douyin/web/client.js')
+    const body = { status_code: 20003, data: { message: "User doesn't login" } }
+    const err = (() => {
+      try {
+        check(makeCtx({ platform: 'douyin' }), body)
+      } catch (e) {
+        return e as any
+      }
+    })()
+    expect([err.code, err.message]).toEqual(['AUTH_EXPIRED', "User doesn't login"])
+    expect(errorCode(() => check(makeCtx({ platform: 'douyin', account: 'guest' }), body))).toBe('AUTH_REQUIRED')
+    expect(errorCode(() => check(makeCtx({ platform: 'douyin' }), { status_code: 10011, status_msg: '参数错误' }))).toBe('UPSTREAM')
+  })
+
+  it('auth status：风控原样抛出；query/user 没给 uid 才算未登录；取不到 sec_uid 时沿用凭证里的用户', async () => {
+    const { authStatus } = await commands()
+    const ctx = () => {
+      const c = makeCtx({ platform: 'douyin', cookies: 'sessionid=fake; ttwid=fake; s_v_web_id=fake', cookieDomain: '.douyin.com' })
+      c.credential.scopes.main!.tokens.webid = '7400000000000000001'
+      c.credential.user = { id: SEC_UID, name: '我', url: `https://www.douyin.com/user/${SEC_UID}` }
+      return c
+    }
+    const run = (queryUser: () => HttpResponse, userInfo: () => HttpResponse = () => fakeResponse({ user: { sec_uid: SEC_UID, nickname: '新昵称' } })) =>
+      withServer(
+        [
+          ['/aweme/v1/web/query/user/', queryUser],
+          ['/web/api/media/user/info/', userInfo],
+          ['/user/self', () => fakeResponse('<html></html>')],
+        ],
+        () => authStatus(ctx()),
+      )
+    await expect(run(() => fakeResponse(''))).rejects.toMatchObject({ code: 'RISK_CONTROL' })
+    await expect(run(() => fakeResponse('Uifid Not Found'))).rejects.toMatchObject({ code: 'RISK_CONTROL', detail: { reason: 'uifid' } })
+    expect(await run(() => fakeResponse({ status_code: 0 }))).toMatchObject({ logged_in: false, user: null })
+    expect(await run(() => fakeResponse({ status_code: 0, user_uid: '0' }))).toMatchObject({ logged_in: false })
+    expect(await run(() => fakeResponse({ status_code: 0, user_uid: '97872126662' }))).toMatchObject({ logged_in: true, user: { id: SEC_UID, name: '新昵称' } })
+    expect(await run(() => fakeResponse({ status_code: 0, user_uid: '97872126662' }), () => fakeResponse(''))).toMatchObject({ logged_in: true, user: { id: SEC_UID, name: '我' } })
+  })
+
+  it('auth login --cookie：query/user 被风控时报 RISK_CONTROL，不再说成 cookie 无效', async () => {
+    const { authLogin } = await commands()
+    const login = (queryUser: () => HttpResponse) =>
+      withServer(
+        [
+          ['/aweme/v1/web/query/user', queryUser],
+          ['/discover', () => fakeResponse('<html></html>')],
+        ],
+        () => authLogin(makeCtx({ platform: 'douyin', account: null, options: { method: 'cookie', cookie: 'sessionid=fake; ttwid=fake' } })),
+      )
+    await expect(login(() => fakeResponse(''))).rejects.toMatchObject({ code: 'RISK_CONTROL' })
+    await expect(login(() => fakeResponse({ status_code: 0 }))).rejects.toMatchObject({ code: 'AUTH_REQUIRED', message: '登录没有成功：cookie 无效或已过期' })
+  })
+
+  it('读取类命令缺 UIFID 时整条重跑；登录与写操作不重跑（index.ts 只给读取类套 retryWithUifid）', async () => {
+    const m = await commands()
+    const { PLATFORMS } = await import('../src/platforms/index.js')
+    const web = PLATFORMS.find((p) => p.id === 'douyin')!.endpoints.web as any
+    const load = (key: string) => web.commands.get(key).handler()
+    const raw: [string, unknown][] = [
+      ['auth login', m.authLogin],
+      ['msg send', m.msgSend],
+      ['comment add', m.commentAdd],
+      ['item publish', m.itemPublish],
+      ['item collect', m.itemCollect],
+      ['media upload', m.mediaUpload],
+      ['live send', m.liveSend],
+      ['live like', m.liveLike],
+    ]
+    for (const [key, fn] of raw) expect(await load(key), key).toBe(fn)
+    for (const [key, fn] of [
+      ['user likes', m.userLikes],
+      ['auth status', m.authStatus],
+      ['item get', m.itemGet],
+    ] as const)
+      expect(await load(key), key).not.toBe(fn)
+  })
+})
+
+describe('douyin 审查修复：私信', () => {
+  const file = loadCase('douyin', 'im_send_file')
+  const create = loadCase('douyin', 'im_create')
+  const sendRoutes: Route[] = [
+    ['imapi.douyin.com/v2/conversation/create', (p) => goldenReply(create.responses[0]!, p.url)],
+    ['/service/2/abtest_config/', (p) => goldenReply(file.responses[0]!, p.url)],
+    ['/passport/ticket_guard/get_client_cert/', (p) => goldenReply(file.responses[1]!, p.url)],
+    ['/aweme/v1/web/im/upload/config/v2', (p) => goldenReply(file.responses[2]!, p.url)],
+    ['Action=ApplyUploadInner', (p) => goldenReply(file.responses[3]!, p.url)],
+    ['tos-fake.snssdk.com', (p) => goldenReply(file.responses[4]!, p.url)],
+    ['Action=CommitUploadInner', (p) => goldenReply(file.responses[5]!, p.url)],
+    ['/passport/safe/get_identity_security_token/', (p) => goldenReply(file.responses[6]!, p.url)],
+    ['imapi.douyin.com/v1/message/send', (p) => goldenReply(file.responses[7]!, p.url)],
+  ]
+  const sent = (seen: GoldenRequest[]) =>
+    seen.filter((r) => r.url.startsWith('https://imapi.douyin.com/v1/message/send')).map((r) => (pbBody((r.body as { base64: string }).base64) as any).body.send_message_body)
+
+  it('--share 取作品失败时一条都不发（文字不会先发出去）；--to 给数字 uid 时直接建会话', async () => {
+    const { msgSend } = await commands()
+    const ctx = loggedFrom('im_send_file', { args: { text: 'hi' }, options: { to: '1234567890', share: AWEME } })
+    await withServer([...sendRoutes, ['/aweme/v1/web/aweme/detail/', () => fakeResponse({ status_code: 0 })]], async (seen) => {
+      await expect(msgSend(ctx)).rejects.toMatchObject({ code: 'UPSTREAM' })
+      expect(seen.map(reqPath)).toEqual(['POST https://imapi.douyin.com/v2/conversation/create', 'GET https://www.douyin.com/aweme/v1/web/aweme/detail/'])
+      expect((pbBody((seen[0]!.body as { base64: string }).base64) as any).body.create_conversation_v2_body.participants).toEqual(['1234567890', file.input.uid])
+    })
+  })
+
+  it('先上传再逐条发送；--file 给 URL 时文件名照上游叫 file.bin', async () => {
+    const { msgSend } = await commands()
+    const ctx = loggedFrom('im_send_file', { args: { text: 'hi' }, options: { to: '1234567890', file: 'https://example.com/docs/a.pdf' } })
+    const bytes = Buffer.from(file.input.file, 'base64')
+    await withServer([...sendRoutes, ['https://example.com/docs/a.pdf', () => fakeResponse(new Uint8Array(bytes), { headers: [['content-type', 'application/pdf']] })]], async (seen) => {
+      const msg = await msgSend(ctx)
+      expect(msg).toMatchObject({ conversation_id: CONV_ID, type: 'other', text: 'file.bin' })
+      const paths = seen.map(reqPath)
+      const firstSend = paths.indexOf('POST https://imapi.douyin.com/v1/message/send')
+      expect(firstSend).toBeGreaterThan(paths.findIndex((x) => x.startsWith('POST https://vod.bytedanceapi.com/')))
+      const bodies = sent(seen)
+      expect(bodies.map((b: any) => b.message_type)).toEqual([im.IM_TEXT, im.IM_FILE])
+      expect(JSON.parse(bodies[0].content).text).toBe('hi')
+      expect(JSON.parse(bodies[1].content)).toMatchObject({ aweType: 15001, name: 'file.bin', format: 'bin', data_size: bytes.length })
+      expect(seen.some((r) => r.url.includes('/user/profile/other/'))).toBe(false)
+    })
+  })
+})
+
+describe('douyin 审查修复：搜索、评价、收藏夹的翻页', () => {
+  useTempHome()
+
+  it('user search / live search：has_more=1 但空列表时停止翻页；--fans / --user-type 的取值映射', async () => {
+    const { userSearch, liveSearch } = await commands()
+    await withServer(
+      [
+        ['/aweme/v1/web/discover/search/', () => fakeResponse({ status_code: 0, has_more: 1, user_list: [] })],
+        ['/aweme/v1/web/live/search/', () => fakeResponse({ status_code: 0, has_more: 1, data: [] })],
+      ],
+      async (seen) => {
+        const users: any = await userSearch(loggedFrom('search_user', { args: { keyword: '巴旦木' }, options: { fans: '1w_10w', userType: 'enterprise' } }))
+        expect(users.page).toEqual({ cursor: null, has_more: false })
+        expect(JSON.parse(query(seen[0]!).get('search_filter_value')!)).toEqual({ douyin_user_fans: ['1w_10w'], douyin_user_type: ['enterprise_user'] })
+        const lives: any = await liveSearch(loggedFrom('search_live', { args: { keyword: '三角洲' }, cursor: '15' }))
+        expect(lives.page).toEqual({ cursor: null, has_more: false })
+        expect(query(seen[1]!).get('offset')).toBe('15')
+      },
+    )
+  })
+
+  it('item search --type image 报 UNSUPPORTED（综合频道不发 content_type）', async () => {
+    const r = await cli('douyin', 'item', 'search', '美食', '--type', 'image')
+    expect([r.code, r.env.error.code]).toEqual([2, 'UNSUPPORTED'])
+  })
+
+  it('item search --type video 的第二页：游标「偏移,X-Tt-Logid」拆开，下一页游标接上新的 logid', async () => {
+    const { itemSearch } = await commands()
+    await withServer(
+      [['/aweme/v1/web/search/item/', () => fakeResponse({ status_code: 0, has_more: 1, data: [{ aweme_info: { aweme_id: AWEME, desc: 'x' } }] }, { headers: [['x-tt-logid', 'logid-2']] })]],
+      async (seen) => {
+        const r: any = await itemSearch(loggedFrom('search_video', { args: { keyword: '美食' }, options: { type: 'video' }, cursor: '16,logid-1' }))
+        expect([query(seen[0]!).get('offset'), query(seen[0]!).get('search_id')]).toEqual(['16', 'logid-1'])
+        expect(r.page).toEqual({ cursor: '32,logid-2', has_more: true })
+      },
+    )
+  })
+
+  it('notice list --group 的取值映射：不带时 960', async () => {
+    const { noticeList } = await commands()
+    await withServer([['/aweme/v1/web/notice/', () => fakeResponse({ status_code: 0, notice_list_v2: [], has_more: 0 })]], async (seen) => {
+      for (const group of [undefined, 'all', 'fans', 'mention', 'comment', 'like', 'danmaku']) await noticeList(loggedFrom('notices', { options: group ? { group } : {} }))
+      expect(seen.map((r) => query(r).get('notice_group'))).toEqual(['960', '700', '401', '601', '2', '3', '520'])
+    })
+  })
+
+  it('商品评价 --label：按名字或 id 找标签，找不到报 USAGE；tag_id 编进游标，翻页时不再请求 comment/counter', async () => {
+    const { commentList } = await commands()
+    const product = 'https://haohuo.jinritemai.com/ecommerce/trade/detail/index.html?id=3622058069401408999&promotion_id=3622058069401408240&shop_id=fakeShop01'
+    const routes: Route[] = [
+      ['/ecom/product/comment/counter/', () => fakeResponse({ status_code: 0, counter_info: { tags: [{ tag_id: 7, tag_name: '好评', count: 3 }] } })],
+      ['/ecom/product/comments/', () => fakeResponse({ status_code: 0, data: { Comments: [{ CommentId: '1', Content: '好', User: { NickName: 'a' } }], Cursor: 10, HasMore: true } })],
+    ]
+    await withServer(routes, async (seen) => {
+      const p1: any = await commentList(loggedFrom('product_comments', { args: { item: product }, options: { label: '好评' } }))
+      expect(p1.page).toEqual({ cursor: '10,7', has_more: true })
+      expect(seen.map((r) => r.url.includes('/counter/'))).toEqual([true, false])
+      expect(query(seen[1]!).get('tag_id')).toBe('7')
+      seen.length = 0
+      const p2: any = await commentList(loggedFrom('product_comments', { args: { item: product }, options: { label: '好评' }, cursor: '10,7' }))
+      expect(seen.map(reqPath)).toEqual(['GET https://www.douyin.com/aweme/v1/web/ecom/product/comments/'])
+      expect([query(seen[0]!).get('cursor'), query(seen[0]!).get('tag_id')]).toEqual(['10', '7'])
+      expect(p2.page.cursor).toBe('10,7')
+      seen.length = 0
+      // 纯数字：不在计数里也照用；名字对不上报 USAGE
+      await commentList(loggedFrom('product_comments', { args: { item: product }, options: { label: '9' } }))
+      expect(query(seen[1]!).get('tag_id')).toBe('9')
+      await expect(commentList(loggedFrom('product_comments', { args: { item: product }, options: { label: '差评' } }))).rejects.toMatchObject({ code: 'USAGE' })
+      // 不带 --label 时游标就是服务端的游标
+      const plain: any = await commentList(loggedFrom('product_comments', { args: { item: product } }))
+      expect(plain.page.cursor).toBe('10')
+    })
+  })
+
+  it('folder list 按响应的 cursor / has_more 翻页；--folder 在后面的页里也能找到', async () => {
+    const { folderList, itemCollect } = await commands()
+    const page = (cursor: string | null) =>
+      cursor === '20'
+        ? { status_code: 0, collects_list: [{ collects_id_str: '2002', collects_name: '第二页的收藏夹', total_number: 1 }], cursor: 21, has_more: false }
+        : { status_code: 0, collects_list: [{ collects_id_str: '1001', collects_name: '第一页的收藏夹', total_number: 3 }], cursor: 20, has_more: true }
+    const routes: Route[] = [
+      ['/collects/list/', (p) => fakeResponse(page(new URL(p.url).searchParams.get('cursor')))],
+      ['/service/2/abtest_config/', () => fakeResponse('', { headers: [['x-ware-csrf-token', '0001,fakecsrf,86370,success,x']] })],
+      ['/aweme/v1/web/aweme/collect/', () => fakeResponse({ status_code: 0 })],
+      ['/collects/video/move/', () => fakeResponse({ status_code: 0 })],
+    ]
+    await withServer(routes, async (seen) => {
+      const p1: any = await folderList(loggedFrom('collect_list'))
+      expect([p1.data.map((f: any) => f.id), p1.page]).toEqual([['1001'], { cursor: '20', has_more: true }])
+      const p2: any = await folderList(loggedFrom('collect_list', { cursor: '20' }))
+      expect([p2.data.map((f: any) => f.name), p2.page]).toEqual([['第二页的收藏夹'], { cursor: null, has_more: false }])
+      seen.length = 0
+      expect(await itemCollect(loggedFrom('collect_move', { args: { item: AWEME }, options: { folder: '第二页的收藏夹' } }))).toEqual({ id: AWEME })
+      const lists = seen.filter((r) => r.url.includes('/collects/list/')).map((r) => query(r).get('cursor'))
+      expect(lists).toEqual(['0', '20'])
+      const move = seen.find((r) => r.url.includes('/collects/video/move/'))!
+      expect([query(move).get('to_collects_id'), query(move).get('collects_name')]).toEqual(['2002', '第二页的收藏夹'])
+    })
+  })
+})
+
+describe('douyin 审查修复：参数与发布', () => {
+  it('--share 的目标：主页上点开的作品（/user/<sec_uid>?modal_id=）按作品算，与 resolveItem 一致', async () => {
+    const { resolveItem, resolveShare } = await import('../src/platforms/douyin/web/resolve.js')
+    const d = new Douyin(makeCtx({ platform: 'douyin' }))
+    const modal = `https://www.douyin.com/user/${SEC_UID}?modal_id=${AWEME}`
+    expect(await resolveShare(d, modal)).toEqual({ kind: 'item', id: AWEME })
+    expect(await resolveItem(d, modal)).toBe(AWEME)
+    expect(await resolveShare(d, `https://www.douyin.com/note/${AWEME}`)).toEqual({ kind: 'item', id: AWEME })
+    expect(await resolveShare(d, AWEME)).toEqual({ kind: 'item', id: AWEME })
+    expect(await resolveShare(d, `https://www.douyin.com/user/${SEC_UID}`)).toEqual({ kind: 'user', secUid: SEC_UID })
+    expect(await resolveShare(d, SEC_UID)).toEqual({ kind: 'user', secUid: SEC_UID })
+    expect(await resolveShare(d, 'https://example.com/a?b=1')).toEqual({ kind: 'web', url: 'https://example.com/a?b=1' })
+    // /user/self 不是 sec_uid，当网页
+    expect(await resolveShare(d, 'https://www.douyin.com/user/self')).toEqual({ kind: 'web', url: 'https://www.douyin.com/user/self' })
+    await expect(resolveShare(d, 'hello')).rejects.toMatchObject({ code: 'USAGE' })
+  })
+
+  it('item publish 的本地校验（不发请求）与 PublishOptions 映射', async () => {
+    const { itemPublish, publishOptions } = await commands()
+    for (const options of [{}, { video: 'v.mp4', image: ['a.png'] }, { image: ['a.png'], poiName: '北京' }, { image: ['a.png', 'b.png'], cover: 'c.png' }]) {
+      await withServer([], async (seen) => {
+        await expect(itemPublish(makeCtx({ platform: 'douyin', cookies: 'sessionid=fake', cookieDomain: '.douyin.com', options })), JSON.stringify(options)).rejects.toMatchObject({ code: 'USAGE' })
+        expect(seen).toEqual([])
+      })
+    }
+    const schedule = '2026-10-01T12:00:00+08:00'
+    expect(publishOptions({ title: 'T', text: '正文', tag: ['a'], visibility: 'friends', schedule, noDownload: true, poi: 123, poiName: '北京', series: '777', hotspot: '热点' })).toEqual({
+      title: 'T',
+      desc: '正文 #a',
+      visibility: 2,
+      timing: Math.floor(Date.parse(schedule) / 1000),
+      allowDownload: false,
+      poi: { poi_id: '123', poi_name: '北京' },
+      mixId: '777',
+      hotSpot: { word: '热点' },
+    })
+    expect(publishOptions({ visibility: 'private', poi: '1' })).toMatchObject({ desc: '', visibility: 1, allowDownload: true, poi: { poi_id: '1', poi_name: '' }, timing: undefined })
+  })
+})
+
+describe('douyin 审查修复：直播', () => {
+  const liveInfoCase = loadCase('douyin', 'live_info')
+
+  it('live listen：房间解析不出来时直接报 UPSTREAM，不当成断线一直重连', async () => {
+    const ctx = makeCtx({ platform: 'douyin', cookies: 'sessionid=fake; ttwid=fake', cookieDomain: '.douyin.com' })
+    await withServer([['https://live.douyin.com/', () => fakeResponse('<html>直播已结束</html>')]], async (seen) => {
+      await expect(live.listenLive(ctx, new Douyin(ctx), '123')[Symbol.asyncIterator]().next()).rejects.toMatchObject({ code: 'UPSTREAM' })
+      expect(seen.map(reqPath)).toEqual(['GET https://live.douyin.com/123'])
+    })
+  })
+
+  it('live history：im/fetch 返回的不是 protobuf 时报 UPSTREAM', async () => {
+    const { liveHistory } = await commands()
+    const ctx = loggedFrom('live_info', { args: { room: liveInfoCase.input.web_rid } })
+    await withServer(
+      [
+        ['/webcast/im/fetch/', () => fakeResponse('<html>captcha</html>')],
+        ['/service/2/abtest_config/', () => fakeResponse('')],
+        [`https://live.douyin.com/${liveInfoCase.input.web_rid}`, (p) => goldenReply(liveInfoCase.responses[0]!, p.url)],
+      ],
+      async () => {
+        await expect(liveHistory(ctx)).rejects.toMatchObject({ code: 'UPSTREAM', message: expect.stringContaining('im/fetch') })
+      },
+    )
+    expect(errorCode(() => live.decodeFetch(new Uint8Array([0xff, 0xff, 0xff])))).toBe('UPSTREAM')
+  })
+
+  it('直播消息的时间取公共头 Common 的 createTime（字段 1 → 4，毫秒）；没有时用当前时间', async () => {
+    const protobuf = (await import('protobufjs')).default
+    const n = await import('../src/core/normalize.js')
+    const common = protobuf.Writer.create().uint32((1 << 3) | 2).fork().uint32((1 << 3) | 2).string('WebcastChatMessage').uint32((4 << 3) | 0).uint64(1790000000123).ldelim().finish()
+    const chat = Buffer.concat([common, proto.encode('Live', 'ChatMessage', { user: { nickname: '观众A' }, content: '主播好' })])
+    const bare = proto.encode('Live', 'ChatMessage', { user: { nickname: '观众B' }, content: '在吗' })
+    expect(live.messageTime(chat)).toBe(n.time(1790000000123))
+    expect(live.messageTime(bare)).toBeNull()
+    const raw = proto.encode('Live', 'LiveResponse', {
+      messagesList: [
+        { method: 'WebcastChatMessage', payload: chat },
+        { method: 'WebcastChatMessage', payload: bare },
+      ],
+    })
+    const restore = rand.deterministic({ now: NOW })
+    try {
+      expect(live.fetchEvents(raw).map((e) => [e.text, e.time])).toEqual([
+        ['主播好', n.time(1790000000123)],
+        ['在吗', n.time(NOW)],
+      ])
+    } finally {
+      restore()
+    }
+  })
+})
+
+describe('douyin 审查修复：TOS 上传', () => {
+  const node = { store_uri: 'tos-cn-v-fake/abc', auth: 'fake-auth', upload_id: '', upload_host: 'tos-fake.snssdk.com', session_key: 'sk', upload_header: { 'x-tos-extra': '1' } }
+
+  it('分片上传（超过 3MB）：创作者中心与私信共用流程，content-crc32 的位置与 uploadid 编码（urllib.parse.quote）各照上游', async () => {
+    const tos = await import('../src/platforms/douyin/web/tos.js')
+    const data = new Uint8Array(3 * 1024 * 1024 + 1).fill(7)
+    const cases = [
+      { style: tos.CREATOR_TOS, id: 'up/id+1', origin: 'https://creator.douyin.com', crcAt: 4 },
+      { style: tos.IM_TOS, id: 'up/id%2B1', origin: 'https://www.douyin.com', crcAt: 11 },
+    ]
+    for (const c of cases) {
+      const routes: Route[] = [
+        ['phase=init', () => fakeResponse({ code: 2000, data: { uploadid: 'up/id+1' } })],
+        ['tos-fake.snssdk.com', () => fakeResponse({ code: 2000 })],
+      ]
+      await withServer(routes, async (seen) => {
+        await tos.tosUpload(new Douyin(makeCtx({ platform: 'douyin' })), c.style, node, data, '42')
+        const base = 'https://tos-fake.snssdk.com/upload/v1/tos-cn-v-fake/abc'
+        expect(seen.map((r) => r.url)).toEqual([
+          `${base}?uploadmode=part&phase=init`,
+          `${base}?uploadid=${c.id}&part_number=1&phase=transfer&part_offset=0`,
+          `${base}?uploadmode=part&phase=finish&uploadid=${c.id}`,
+        ])
+        const names = seen[1]!.headers.map(([k]) => k)
+        expect(names.indexOf('content-crc32')).toBe(c.crcAt)
+        expect(names.at(-1)).toBe('x-tos-extra')
+        expect(Object.fromEntries(seen[1]!.headers)).toMatchObject({ origin: c.origin, referer: `${c.origin}/`, 'x-storage-u': '42' })
+        expect(seen[0]!.headers.some(([k]) => k === 'content-crc32')).toBe(false)
+        expect(seen[2]!.body).toBe(`1:${crc32Hex(data)}`)
+      })
+    }
+    // 成功码：创作者中心只认 2000，私信也接受没有 code 的响应
+    const small = new Uint8Array(10)
+    for (const [style, code] of [
+      [tos.CREATOR_TOS, 'UPSTREAM'],
+      [tos.IM_TOS, null],
+    ] as const) {
+      await withServer([['tos-fake.snssdk.com', () => fakeResponse({})]], async () => {
+        const run = tos.tosUpload(new Douyin(makeCtx({ platform: 'douyin' })), style, node, small, '')
+        if (code) await expect(run).rejects.toMatchObject({ code })
+        else await run
+      })
     }
   })
 })

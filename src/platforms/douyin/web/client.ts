@@ -388,12 +388,16 @@ export async function riskJson<T = DyJson>(res: HttpResponse): Promise<T> {
   throw new CatbusError('UPSTREAM', `接口返回的不是 JSON（HTTP ${res.status}）`, { detail: { status: res.status, body: text.slice(0, 120), logid } })
 }
 
-/** 业务码检查：status_code（主站）或 code / msg（电商接口）非 0 时映射成 catbus 的错误。 */
+/**
+ * 业务码检查：status_code（主站、直播）或 code / msg（电商接口）非 0 时映射成 catbus 的错误。
+ * 登录墙：8、2483，以及直播 webcast 的 20003（User doesn't login，上游 get_live_thousand_ticket_rank 的说明），
+ * webcast 的错误说明在 data.message 里。
+ */
 export function check<T extends DyJson>(ctx: HandlerContext, body: T): T {
   const code = body?.status_code ?? (body?.code != null && body.code !== 0 && body.code !== '0' && body.msg != null ? body.code : undefined)
   if (code == null || code === 0) return body
-  const message = String(body.status_msg ?? body.msg ?? body.message ?? '')
-  if (code === 8 || code === 2483 || /未登录|登录/.test(message)) throw authError(ctx, message || undefined)
+  const message = String(body.status_msg ?? body.msg ?? body.message ?? (typeof body.data?.message === 'string' ? body.data.message : ''))
+  if (code === 8 || code === 2483 || code === 20003 || /未登录|登录/.test(message)) throw authError(ctx, message || undefined)
   throw new CatbusError('UPSTREAM', message || `抖音返回错误 ${code}`, { detail: { code, message } })
 }
 

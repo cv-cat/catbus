@@ -77,7 +77,7 @@
 | item delete | ○ | ○ | ○ | ◐ | ○ | ○ | ○ | — | — | ✓ |
 | item categories | — | — | — | ✓ | — | — | ○ | — | — | — |
 
-- douyin `item search`：--type video 走视频频道搜索
+- douyin `item search`：--type video 走视频频道搜索；综合频道照上游不发筛选值，--sort / --time / --length / --range 只在 --type video 时生效
 - weibo `item search`：只能取第一页
 - x `item search`：--type video 和 image 都走媒体搜索（结果里图片和视频都有），不能和 --sort latest 一起用
 - jd `item related`：用第一个相关搜索词的搜索结果
@@ -86,7 +86,7 @@
 - bilibili `item delete`：需要人机验证（极验点选），catbus 还不能自动通过，会报 RISK_CONTROL
 - `item get --area`：jd
 - `item search --sort` 取值：xhs general / latest / popular / comments / collects；douyin general / popular / latest；bilibili general / views / latest / collects；jd general / sales / price_asc / price_desc / comments；x general / latest
-- `item search --type` 取值：xhs all / video / image；douyin all / video / image；bilibili video / article；x all / video / image
+- `item search --type` 取值：xhs all / video / image；douyin all / video；bilibili video / article；x all / video / image
 - `item search --time` 取值：xhs all / day / week / half_year；douyin all / day / week / half_year
 - `item search --length`：douyin
 - `item search --range`：douyin

@@ -20,23 +20,35 @@ import { resolveItem, resolveProduct, resolveRoom, resolveShare, resolveUser } f
 type Ctx = HandlerContext
 const cursor = (ctx: Ctx, dflt = '0') => ctx.cursor ?? dflt
 const more = (v: unknown) => v === 1 || v === true
+const isAuthError = (err: unknown) => err instanceof CatbusError && (err.code === 'AUTH_REQUIRED' || err.code === 'AUTH_EXPIRED')
 
 // ================================================================ auth
 
+/**
+ * 在线校验：只有 query/user 表明没登录（AUTH_*：没有 user_uid 或为 0）才算未登录；
+ * 风控（空响应、acrawler、Uifid）、网络、业务错误原样抛出，不误报成未登录。
+ */
 export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
+  const loggedOut: AuthStatus = { logged_in: false, user: null, method: null, expires_at: null }
   const d = await douyin(ctx)
-  if (!d.isLogin) return { logged_in: false, user: null, method: null, expires_at: null }
+  if (!d.isLogin) return loggedOut
+  let uid: string
   try {
-    const uid = await api.myUid(d)
-    if (!uid || uid === '0') return { logged_in: false, user: null, method: null, expires_at: null }
-    d.tokens.uid = uid
-    const { secUid, user } = await api.mySecUid(d)
-    const sess = d.jar.find((c) => c.name === 'sessionid')
-    return { logged_in: true, user: norm.ref(secUid, user?.nickname ?? ctx.credential.user?.name), method: ctx.credential.method, expires_at: sess?.expires ? n.time(sess.expires) : null }
+    uid = await api.myUid(d)
   } catch (err) {
-    if (err instanceof CatbusError && err.code === 'NETWORK') throw err
-    return { logged_in: false, user: null, method: null, expires_at: null }
+    if (isAuthError(err)) return loggedOut
+    throw err
   }
+  d.tokens.uid = uid
+  // sec_uid 取不到（创作者接口与主页 HTML 都没给）时沿用凭证里的用户，登录态本身已经由 uid 确认
+  const me = await api.mySecUid(d).catch((err) => {
+    if (err instanceof CatbusError) throw err
+    ctx.log.debug(`取 sec_uid 失败：${(err as Error).message}`)
+    return null
+  })
+  const sess = d.jar.find((c) => c.name === 'sessionid')
+  const user = me ? norm.ref(me.secUid, me.user?.nickname ?? ctx.credential.user?.name) : ctx.credential.user
+  return { logged_in: true, user, method: ctx.credential.method, expires_at: sess?.expires ? n.time(sess.expires) : null }
 }
 
 // ================================================================ user
@@ -63,7 +75,8 @@ export async function userSearch(ctx: Ctx) {
   const userType = USER_TYPE[(ctx.options.userType as string | undefined) ?? ''] ?? ''
   const body = check(ctx, await api.searchUser(d, ctx.args.keyword!, offset, '25', fans, userType))
   const list = (body.user_list ?? []).map((x: any) => norm.user(x.user_info ?? x))
-  return paged(list, Number(offset) + 25, more(body.has_more))
+  // 游标是自己算的偏移：服务端给 has_more=1 却返回空列表时要停下，否则 --all 一直翻
+  return paged(list, Number(offset) + 25, more(body.has_more) && list.length > 0)
 }
 
 export async function userItems(ctx: Ctx) {
@@ -74,10 +87,11 @@ export async function userItems(ctx: Ctx) {
 }
 
 /**
- * 缺 UIFID 时自动补上再重试一次：UIFID 由服务端在推荐流的响应里下发（实测 2026-09），扫码 / 短信登录后
+ * 缺 UIFID 时自动补上，再把整条命令重跑一次：UIFID 由服务端在推荐流的响应里下发（实测 2026-09），扫码 / 短信登录后
  * 凭证里还没有它，个别接口（如 user likes）会报 "Uifid Not Found"。正常路径不多发请求，与上游一致。
+ * 整条重跑只对读取类命令安全，注册表只给它们套上（index.ts）；写操作重跑会把已经做完的步骤再做一遍。
  */
-export function withUifid(handler: (ctx: Ctx) => unknown): (ctx: Ctx) => unknown {
+export function retryWithUifid(handler: (ctx: Ctx) => unknown): (ctx: Ctx) => unknown {
   return (ctx: Ctx) => {
     const result = handler(ctx)
     // 长连接的 handler 同步返回 AsyncIterable，原样交回
@@ -134,7 +148,10 @@ const SEARCH_LENGTH: Record<string, string> = { all: '', short: '0-1', medium: '
 const SEARCH_RANGE: Record<string, string> = { seen: '1', unseen: '2', following: '3' }
 const VIDEO_PAGE = 16
 
-/** `item search` 的筛选：综合频道（上游 search_general_work）只把 is_filter_search 置 1；`--type video` 走视频频道（search_video_work）。 */
+/**
+ * `item search` 的筛选：综合频道（上游 search_general_work）只把 is_filter_search 置 1；`--type video` 走视频频道（search_video_work）。
+ * 综合频道的 content_type 同样不进 query，所以注册表不支持 `--type image`，这里不再给它取值。
+ */
 export function searchFilters(o: Record<string, unknown>, video: boolean): api.SearchFilters {
   const range = SEARCH_RANGE[o.range as string] ?? ''
   return {
@@ -142,7 +159,7 @@ export function searchFilters(o: Record<string, unknown>, video: boolean): api.S
     publishTime: SEARCH_TIME[(o.time as string) ?? 'all'] ?? '0',
     filterDuration: SEARCH_LENGTH[(o.length as string) ?? 'all'] ?? '',
     searchRange: video ? range || '0' : range,
-    contentType: video ? undefined : o.type === 'image' ? '2' : '',
+    contentType: video ? undefined : '',
   }
 }
 
@@ -160,7 +177,7 @@ export async function itemSearch(ctx: Ctx) {
   }
   const offset = cursor(ctx)
   const f = searchFilters(ctx.options, false)
-  if (f.sortType !== '0' || f.publishTime !== '0' || f.filterDuration || f.searchRange || f.contentType) {
+  if (f.sortType !== '0' || f.publishTime !== '0' || f.filterDuration || f.searchRange) {
     ctx.log.info('综合搜索照上游只标记 is_filter_search，筛选值不随请求发出；要按筛选取视频，加 --type video')
   }
   const body = check(ctx, await api.searchGeneral(d, keyword, offset, '', f))
@@ -208,16 +225,23 @@ export async function commentList(ctx: Ctx) {
   return paged(list, body.cursor, more(body.has_more))
 }
 
+/**
+ * 商品评价。带 `--label` 时游标是「服务端游标,tag_id」：标签只在第一页解析一次（comment/counter），翻页时从游标里取。
+ */
 async function productComments(ctx: Ctx, d: Douyin, input: string) {
   const p = resolveProduct(input)
   if (!p.productId || !p.shopId) {
     throw new CatbusError('USAGE', '商品评价需要 product_id 和 shop_id', { hint: '传 catbus douyin live products 输出的商品 url（带 id 和 shop_id 参数）' })
   }
-  const tagId = ctx.options.label != null ? await productLabel(ctx, d, p.productId, p.shopId, String(ctx.options.label)) : ''
-  const body = check(ctx, await api.productComments(d, p.productId, p.shopId, cursor(ctx), '10', '0', tagId))
+  const labeled = ctx.options.label != null
+  let [offset = '0', tagId = ''] = labeled ? (ctx.cursor ?? '').split(',') : [cursor(ctx)]
+  if (labeled && !tagId) tagId = await productLabel(ctx, d, p.productId, p.shopId, String(ctx.options.label))
+  offset ||= '0'
+  const body = check(ctx, await api.productComments(d, p.productId, p.shopId, offset, '10', '0', tagId))
   const data = body.data ?? {}
   const list = (data.Comments ?? data.comments ?? []).map((c: any) => norm.productComment(c, p.promotionId))
-  return paged(list, data.Cursor ?? data.cursor ?? Number(cursor(ctx)) + list.length, Boolean(data.HasMore ?? data.has_more))
+  const next = data.Cursor ?? data.cursor ?? Number(offset) + list.length
+  return paged(list, labeled ? `${next},${tagId}` : next, Boolean(data.HasMore ?? data.has_more))
 }
 
 /** `--label`：先取评价的分类计数（comment/counter），按名字或 id 找到 tag_id。 */
@@ -268,12 +292,16 @@ export async function folderList(ctx: Ctx) {
   if (ctx.args.user && ctx.args.user !== 'me' && (await resolveUser(d, ctx.args.user)) !== (await resolveUser(d, 'me'))) {
     throw new CatbusError('UNSUPPORTED', '抖音只能查看自己的收藏夹', { hint: 'catbus douyin folder list' })
   }
-  const body = check(ctx, await api.collectList(d))
-  const list = (body.collects_list ?? []).map((f: any) =>
-    n.folder({ id: n.id(f.collects_id_str ?? f.collects_id), name: String(f.collects_name ?? ''), count: n.count(f.total_number ?? f.item_num) }, f),
-  )
-  return paged(list, null, false)
+  const body = check(ctx, await api.collectList(d, cursor(ctx)))
+  const raw: any[] = body.collects_list ?? []
+  const list = raw.map((f: any) => n.folder({ id: folderId(f), name: String(f.collects_name ?? ''), count: n.count(f.total_number ?? f.item_num) }, f))
+  return paged(list, body.cursor, more(body.has_more) && raw.length > 0)
 }
+
+const folderId = (f: any) => n.id(f.collects_id_str ?? f.collects_id)
+
+/** 收藏夹最多翻几页（每页 20 个）找 `--folder`，防服务端游标不前进时死循环。 */
+const FOLDER_PAGES = 50
 
 // ================================================================ product
 
@@ -289,7 +317,7 @@ export async function productGet(ctx: Ctx) {
 async function room(d: Douyin, input: string) {
   const webRid = await resolveRoom(d, input)
   const info = await api.liveInfo(d, webRid)
-  if (!info) throw new CatbusError('UPSTREAM', `未能解析直播间信息：${webRid}`, { hint: '确认直播间号，或者直播已经结束' })
+  if (!info) throw live.roomNotFound(webRid)
   return { webRid, ...info }
 }
 
@@ -304,8 +332,10 @@ export async function liveSearch(ctx: Ctx) {
   const d = await douyin(ctx)
   const offset = cursor(ctx)
   const body = check(ctx, await api.searchLive(d, ctx.args.keyword!, offset))
-  const list = (body.data ?? []).map(norm.searchLive).filter(Boolean)
-  return paged(list, Number(offset) + 15, more(body.has_more))
+  const data: any[] = body.data ?? []
+  const list = data.map(norm.searchLive).filter(Boolean)
+  // 同 user search：偏移是自己算的，空页时停下
+  return paged(list, Number(offset) + 15, more(body.has_more) && data.length > 0)
 }
 
 /** 直播间榜单：默认贡献榜（get_live_contribution_rank），`--ranking thousand` 为千票榜（get_live_thousand_ticket_rank）。 */
@@ -321,13 +351,7 @@ export async function liveRank(ctx: Ctx) {
 export async function liveHistory(ctx: Ctx) {
   const d = await douyin(ctx)
   const r = await room(d, ctx.args.room!)
-  const bytes = await api.webcastFetch(d, r.user_id, r.room_id, norm.liveUrl(r.webRid))
-  let events
-  try {
-    events = live.fetchEvents(bytes)
-  } catch {
-    throw new CatbusError('UPSTREAM', `im/fetch 返回的不是 protobuf（${bytes.length} 字节），多为登录态失效或被风控`)
-  }
+  const events = live.fetchEvents(await api.webcastFetch(d, r.user_id, r.room_id, norm.liveUrl(r.webRid)))
   return events.filter((e) => e.type === 'chat')
 }
 
@@ -362,8 +386,14 @@ function loginSession(ctx: Ctx, method: Credential['method']): Douyin {
 /** 登录后校验：query/user 取 uid，创作者中心取 sec_uid 与昵称。 */
 async function completeLogin(ctx: Ctx, d: Douyin) {
   d.deleteCookie('msToken')
-  const uid = await api.myUid(d).catch(() => '')
-  if (!uid || uid === '0') throw new CatbusError('AUTH_REQUIRED', '登录没有成功：cookie 无效或已过期')
+  let uid: string
+  try {
+    uid = await api.myUid(d)
+  } catch (err) {
+    // 只有 query/user 表明没登录才是 cookie 无效；风控、网络错误原样抛出
+    if (isAuthError(err)) throw new CatbusError('AUTH_REQUIRED', '登录没有成功：cookie 无效或已过期')
+    throw err
+  }
   d.tokens.uid = uid
   const { secUid, user } = await api.mySecUid(d)
   return finishLogin(ctx, d.credential, norm.ref(secUid, user?.nickname)!)
@@ -409,6 +439,7 @@ function cookieLogin(ctx: Ctx): Douyin {
 
 export async function authLogin(ctx: Ctx) {
   const method = ctx.options.method as string
+  if (ctx.options.sso && method !== 'sms') throw new CatbusError('USAGE', '--sso 只用于 --method sms', { hint: 'catbus douyin auth login --method sms --sso' })
   if (method === 'cookie') {
     const d = cookieLogin(ctx)
     await d.init()
@@ -421,7 +452,6 @@ export async function authLogin(ctx: Ctx) {
     await new Passport(d).qrcodeLogin((url) => showQrcode(ctx, url, '请用抖音 App 扫码并确认').then(() => {}))
     return completeLogin(ctx, d)
   }
-  if (ctx.options.sso && method !== 'sms') throw new CatbusError('USAGE', '--sso 只用于 --method sms')
   if (method === 'sms') {
     const d = loginSession(ctx, 'sms')
     const p = new Passport(d)
@@ -460,12 +490,19 @@ async function diggItem(ctx: Ctx, type: '1' | '0') {
 export const itemLike = (ctx: Ctx) => diggItem(ctx, '1')
 export const itemUnlike = (ctx: Ctx) => diggItem(ctx, '0')
 
-/** `--folder`：收藏夹 ID 或名字 → (id, name)（移动接口两个都要）。 */
+/** `--folder`：收藏夹 ID 或名字 → (id, name)（移动接口两个都要）。逐页找，每页里 ID 优先于名字。 */
 async function findFolder(ctx: Ctx, d: Douyin, input: string): Promise<{ id: string; name: string }> {
-  const list: any[] = check(ctx, await api.collectList(d)).collects_list ?? []
-  const f = list.find((x) => n.id(x.collects_id_str ?? x.collects_id) === input) ?? list.find((x) => x.collects_name === input)
-  if (!f) throw new CatbusError('USAGE', `没有这个收藏夹：${input}`, { hint: 'catbus douyin folder list' })
-  return { id: n.id(f.collects_id_str ?? f.collects_id), name: String(f.collects_name ?? '') }
+  let at = '0'
+  for (let page = 0; page < FOLDER_PAGES; page++) {
+    const body = check(ctx, await api.collectList(d, at))
+    const list: any[] = body.collects_list ?? []
+    const f = list.find((x) => folderId(x) === input) ?? list.find((x) => x.collects_name === input)
+    if (f) return { id: folderId(f), name: String(f.collects_name ?? '') }
+    const next = body.cursor == null ? '' : String(body.cursor)
+    if (!more(body.has_more) || !list.length || !next || next === at) break
+    at = next
+  }
+  throw new CatbusError('USAGE', `没有这个收藏夹：${input}`, { hint: 'catbus douyin folder list --all' })
 }
 
 /**
@@ -519,6 +556,20 @@ export function publishDesc(o: Record<string, any>): string {
   return [o.text ?? '', ...tags, ...mentions].filter(Boolean).join(' ')
 }
 
+/** 发布选项 → creator.PublishOptions（图文封面在 itemPublish 里另算）。 */
+export function publishOptions(o: Record<string, any>): creator.PublishOptions {
+  return {
+    title: o.title,
+    desc: publishDesc(o),
+    visibility: VISIBILITY[o.visibility ?? 'public']!,
+    timing: o.schedule ? Math.floor(Date.parse(o.schedule) / 1000) : undefined,
+    allowDownload: !o.noDownload,
+    poi: o.poi != null ? { poi_id: String(o.poi), poi_name: String(o.poiName ?? '') } : undefined,
+    mixId: o.series,
+    hotSpot: o.hotspot != null ? { word: String(o.hotspot) } : undefined,
+  }
+}
+
 export async function itemPublish(ctx: Ctx) {
   const o = ctx.options as Record<string, any>
   const images: string[] = o.image ?? []
@@ -532,16 +583,7 @@ export async function itemPublish(ctx: Ctx) {
   }
   const d = await douyin(ctx)
   d.requireLogin()
-  const options: creator.PublishOptions = {
-    title: o.title,
-    desc: publishDesc(o),
-    visibility: VISIBILITY[o.visibility ?? 'public']!,
-    timing: o.schedule ? Math.floor(Date.parse(o.schedule) / 1000) : undefined,
-    allowDownload: !o.noDownload,
-    poi: o.poi != null ? { poi_id: String(o.poi), poi_name: String(o.poiName ?? '') } : undefined,
-    mixId: o.series,
-    hotSpot: o.hotspot != null ? { word: String(o.hotspot) } : undefined,
-  }
+  const options = publishOptions(o)
   let body
   if (o.video) {
     const coverFile = cover == null ? null : cover.startsWith('tos-') ? cover : await readMedia(d.http, cover)
@@ -567,7 +609,8 @@ export async function mediaUpload(ctx: Ctx): Promise<Media> {
   if (file.contentType.startsWith('video/')) {
     const sts = await creator.uploadAuth(d)
     const v = await creator.uploadVideo(d, sts, file, await api.myUid(d).catch(() => ''))
-    return n.media({ id: v.vid, type: 'video', url: v.vid, width: v.width || null, height: v.height || null, duration: v.duration || null }, v.raw)
+    // VOD 只给 vid，没有可访问的地址；Media.url 在 schemas 里不能为 null，这里留空（id 就是 vid）
+    return n.media({ id: v.vid, type: 'video', url: '', width: v.width || null, height: v.height || null, duration: v.duration || null }, v.raw)
   }
   const sts = await creator.uploadAuth(d, creator.POST_IMAGE_REFERER)
   const info = await creator.uploadImage(d, sts, file, '')
@@ -603,7 +646,10 @@ export function liveListen(ctx: Ctx) {
 
 // ================================================================ 私信
 
-/** 会话 ID 形如 0:1:<uid>:<uid>：取另一方的 uid 重新建会话，拿到 short_id 与 ticket。 */
+/**
+ * 会话 ID 形如 0:1:<uid>:<uid>：取另一方的 uid 重新建会话，拿到 short_id 与 ticket。
+ * `--to` 除了用户（sec_uid / 主页 / 分享链接）也接受数字 uid：`msg listen` 输出的 from.id 就是它，直接建会话。
+ */
 async function conversationFor(ctx: Ctx, d: Douyin) {
   const o = ctx.options as Record<string, any>
   if (o.item) throw new CatbusError('UNSUPPORTED', '抖音没有商品客服私信，--item 不适用', { hint: '用 --to <用户>' })
@@ -614,7 +660,9 @@ async function conversationFor(ctx: Ctx, d: Douyin) {
     if (!peer) throw new CatbusError('USAGE', `无法识别的会话：${o.conversation}`, { hint: '单聊会话 ID 形如 0:1:<uid>:<uid>' })
     return im.createConversation(d, peer)
   }
-  const u = await profile(d, String(o.to))
+  const to = String(o.to).trim()
+  if (/^\d+$/.test(to)) return im.createConversation(d, to)
+  const u = await profile(d, to)
   return im.createConversation(d, n.id(u.uid))
 }
 
@@ -626,13 +674,23 @@ async function shareCard(d: Douyin, input: string): Promise<[number, Record<stri
     const u = await profile(d, target.secUid)
     return [im.IM_SHARE_USER, im.userCardContent({ uid: n.id(u.uid), secUid: n.id(u.sec_uid), name: String(u.nickname ?? ''), avatar: u.avatar_larger ?? u.avatar_thumb ?? '' })]
   }
-  const detail = check(d.ctx, await api.workInfo(d, target.id)).aweme_detail
-  if (!detail) throw new CatbusError('UPSTREAM', `作品不存在或不可见：${target.id}`)
+  const v = await detail(d, target.id)
   const uid = await d.uid().catch(() => '')
-  const photos = detail.aweme_type === 68 || (Array.isArray(detail.images) && detail.images.length > 0)
-  return photos ? [im.IM_SHARE_PHOTOS, im.sharePhotosContent(detail, uid)] : [im.IM_SHARE_AWEME, im.shareAwemeContent(detail, uid)]
+  return norm.isImage(v) ? [im.IM_SHARE_PHOTOS, im.sharePhotosContent(v, uid)] : [im.IM_SHARE_AWEME, im.shareAwemeContent(v, uid)]
 }
 
+/** 一条待发的私信：IM 消息类型、content，以及输出 Message 用的类型与文字。 */
+interface Outgoing {
+  messageType: number
+  content: unknown
+  type: Message['type']
+  text: string | null
+}
+
+/**
+ * 私信：先建会话，再把每条消息准备好（上传图片 / 视频 / 文件、取分享卡片），最后逐条发送。
+ * 准备阶段出错（上传失败、分享的作品不可见、撞上风控）时一条都还没发出，不会只发出一半。返回最后一条。
+ */
 export async function msgSend(ctx: Ctx) {
   const o = ctx.options as Record<string, any>
   const images: string[] = o.image ?? []
@@ -643,29 +701,28 @@ export async function msgSend(ctx: Ctx) {
   d.requireLogin()
   if (!d.privateKey) throw authError(ctx, '私信需要扫码登录时生成的 bd-ticket-guard 私钥')
   const conv = await conversationFor(ctx, d)
-  const me = d.credential.user ?? null
-  let last: { id: string; type: Message['type']; text: string | null } | null = null
-  if (ctx.args.text) last = { id: await im.sendMessage(d, conv, im.IM_TEXT, im.textContent(ctx.args.text)), type: 'text', text: ctx.args.text }
+  const outbox: Outgoing[] = []
+  if (ctx.args.text) outbox.push({ messageType: im.IM_TEXT, content: im.textContent(ctx.args.text), type: 'text', text: ctx.args.text })
   if (o.video) {
     const content = await im.uploadVideo(d, await readMedia(d.http, o.video), await readMedia(d.http, images[0]!))
-    last = { id: await im.sendMessage(d, conv, im.IM_STORY_VIDEO, content), type: 'video', text: null }
+    outbox.push({ messageType: im.IM_STORY_VIDEO, content, type: 'video', text: null })
   } else {
-    for (const img of images) {
-      const content = await im.uploadImage(d, await readMedia(d.http, img))
-      last = { id: await im.sendMessage(d, conv, im.IM_STORY_PICTURE, content), type: 'image', text: null }
-    }
+    for (const img of images) outbox.push({ messageType: im.IM_STORY_PICTURE, content: await im.uploadImage(d, await readMedia(d.http, img)), type: 'image', text: null })
   }
   if (o.file) {
     const file = await readMedia(d.http, o.file)
     // 上游 _source_name：本地文件取文件名，URL 与字节一律叫 file.bin
     if (/^https?:\/\//i.test(o.file)) file.filename = 'file.bin'
-    last = { id: await im.sendMessage(d, conv, im.IM_FILE, await im.uploadFile(d, file)), type: 'other', text: file.filename }
+    outbox.push({ messageType: im.IM_FILE, content: await im.uploadFile(d, file), type: 'other', text: file.filename })
   }
   if (o.share) {
-    const [type, content] = await shareCard(d, String(o.share))
-    last = { id: await im.sendMessage(d, conv, type, content), type: 'card', text: null }
+    const [messageType, content] = await shareCard(d, String(o.share))
+    outbox.push({ messageType, content, type: 'card', text: null })
   }
-  return n.message({ id: last!.id, conversation_id: conv.conversationId, from: me, type: last!.type, text: last!.text, created_at: n.time(rand.now()) })
+  let id = ''
+  for (const m of outbox) id = await im.sendMessage(d, conv, m.messageType, m.content)
+  const last = outbox.at(-1)!
+  return n.message({ id, conversation_id: conv.conversationId, from: d.credential.user ?? null, type: last.type, text: last.text, created_at: n.time(rand.now()) })
 }
 
 export function msgListen(ctx: Ctx) {

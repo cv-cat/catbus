@@ -10,6 +10,7 @@ import { DTRAIT_BROKEN, DTRAIT_HINT } from './dtrait.js'
 import { imageSize } from './image.js'
 import { CREATOR, creatorPlatformParams, Headers, Params, PROFILE, WWW_ONLY } from './profile.js'
 import { spliceUrl, svWebId } from './sign.js'
+import { CREATOR_TOS, type TosNode, tosUpload, VOD_VERSION } from './tos.js'
 
 /**
  * 创作者中心（上游 dy_apis/douyin_creator_api.py 与 DouyinAuth.bootstrap_creator_session / creator_cookie_str）：
@@ -20,9 +21,7 @@ const HOST = 'creator.douyin.com'
 const IMAGEX_SERVICE_ID = 'jm8ajry58r'
 const IMAGEX_APP_ID = '2906'
 const READ_AID = '2906'
-const VOD_VERSION = '2020-11-19'
 const CSRF_PROBE = '/web/api/media/anchor/search'
-const MB = 1024 * 1024
 export const POST_IMAGE_REFERER = `${CREATOR}/creator-micro/content/post/image?enter_from=publish_page&media_type=image&type=new`
 export const POST_VIDEO_REFERER = `${CREATOR}/creator-micro/content/post/video?enter_from=publish_page`
 
@@ -195,11 +194,14 @@ function ok(body: DyJson, what: string): DyJson {
   return body
 }
 
-/** V8 的 `Math.random().toString(36).substr(2)`（上游 _browser_random_s 用 node 一次取 64 个）。确定性模式下与上游预加载的序列相同。 */
+/**
+ * V8 的 `Math.random().toString(36).substr(2)`（上游 _browser_random_s 用 node 一次取 64 个）。
+ * 确定性模式下是新起的一条 mulberry32(DEFAULT_SEED) 序列，与上游 node 子进程预加载的 Math.random 相同，不占用 rand 的主序列。
+ */
 function browserRandomS(d: Douyin): string {
   let pool = randomPools.get(d)
   if (!pool?.length) {
-    const next = rand.isDeterministic() ? rand.mulberry32(rand.DEFAULT_SEED) : Math.random
+    const next = rand.isDeterministic() ? rand.mulberry32(rand.DEFAULT_SEED) : rand.random
     pool = Array.from({ length: 64 }, () => next().toString(36).substring(2))
     randomPools.set(d, pool)
   }
@@ -298,42 +300,6 @@ export async function uploadImage(d: Douyin, sts: Sts, file: LocalMedia, userId 
   return { uri: info.ImageUri, width, height }
 }
 
-function tosHeaders(node: VideoNode, userId: string, crc?: string): [string, string][] {
-  const h: Record<string, string> = { authorization: node.auth, referer: `${CREATOR}/`, 'user-agent': PROFILE.ua, 'x-storage-u': encodeURIComponent(userId) }
-  if (crc != null) h['content-crc32'] = crc
-  Object.assign(h, {
-    'content-type': 'application/octet-stream',
-    accept: '*/*',
-    'accept-language': PROFILE.acceptLanguage,
-    origin: CREATOR,
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'cross-site',
-  })
-  return Object.entries({ ...h, ...node.upload_header })
-}
-
-async function tosPost(d: Douyin, url: string, h: [string, string][], data?: Uint8Array): Promise<any> {
-  const res = await d.plain({ method: 'POST', url, headers: h, body: data, timeout: 300 })
-  let body: any
-  try {
-    body = JSON.parse(await res.text())
-  } catch {
-    throw new CatbusError('UPSTREAM', `TOS 返回的不是 JSON（HTTP ${res.status}）`)
-  }
-  if (body.code !== 2000) throw new CatbusError('UPSTREAM', `TOS 请求失败：${body.message ?? body.code}`)
-  return body
-}
-
-interface VideoNode {
-  store_uri: string
-  auth: string
-  upload_id: string
-  upload_host: string
-  session_key: string
-  upload_header: Record<string, string>
-}
-
 export interface VideoInfo {
   vid: string
   poster_uri: string
@@ -360,28 +326,8 @@ export async function uploadVideo(d: Douyin, sts: Sts, file: LocalMedia, userId:
   const n = apply.Result?.InnerUploadAddress?.UploadNodes?.[0]
   const store = n?.StoreInfos?.[0]
   if (!store) throw new CatbusError('UPSTREAM', 'ApplyUploadInner 失败', { detail: { error: apply.ResponseMetadata?.Error ?? null } })
-  const node: VideoNode = { store_uri: store.StoreUri, auth: store.Auth, upload_id: store.UploadID ?? '', upload_host: n.UploadHost, session_key: n.SessionKey, upload_header: n.UploadHeader ?? {} }
-  const size = file.data.length
-  const slice = size >= 500 * MB ? 10 * MB : size >= 100 * MB ? 5 * MB : 3 * MB
-  const base = `https://${node.upload_host}/upload/v1/${node.store_uri}`
-  if (size <= slice) await tosPost(d, base, tosHeaders(node, userId, crc32Hex(file.data)), file.data)
-  else {
-    const part = Math.max(slice, 5 * MB)
-    let uploadId = node.upload_id
-    if (!uploadId) {
-      uploadId = (await tosPost(d, `${base}?uploadmode=part&phase=init`, tosHeaders(node, userId))).data?.uploadid
-      if (!uploadId) throw new CatbusError('UPSTREAM', '初始化分片上传失败')
-    }
-    const crcs: string[] = []
-    for (let offset = 0, i = 1; offset < size; offset += part, i++) {
-      const chunk = file.data.subarray(offset, offset + part)
-      const crc = crc32Hex(chunk)
-      await tosPost(d, `${base}?uploadid=${uploadId}&part_number=${i}&phase=transfer&part_offset=${offset}`, tosHeaders(node, userId, crc), chunk)
-      crcs.push(crc)
-      d.ctx.log.info(`视频分片上传 ${i} 片，${Math.min(offset + part, size)}/${size} 字节`)
-    }
-    await tosPost(d, `${base}?uploadmode=part&phase=finish&uploadid=${uploadId}`, tosHeaders(node, userId), Buffer.from(crcs.map((c, k) => `${k + 1}:${c}`).join(',')))
-  }
+  const node: TosNode = { store_uri: store.StoreUri, auth: store.Auth, upload_id: store.UploadID ?? '', upload_host: n.UploadHost, session_key: n.SessionKey, upload_header: n.UploadHeader ?? {} }
+  await tosUpload(d, CREATOR_TOS, node, file.data, userId)
   const commitSts = await uploadAuth(d)
   const commitQuery: [string, string][] = [
     ['Action', 'CommitUploadInner'],

@@ -16,10 +16,20 @@ async function expand(d: Douyin, input: string): Promise<string> {
   return res.headers.get('location') ?? link
 }
 
+/** 已展开的字符串里的作品 ID：作品页路径、modal_id= 等参数，或纯数字 ID。 */
+function itemIdOf(s: string): string | undefined {
+  return /\/(?:video|note|slides|share\/video|share\/note)\/(\d+)/.exec(s)?.[1] ?? /[?&](?:modal_id|aweme_id|item_id)=(\d+)/.exec(s)?.[1] ?? /^\d{8,}$/.exec(s)?.[0]
+}
+
+/** 已展开的字符串里的 sec_uid：主页路径、sec_uid= 参数，或 MS4w 开头的 sec_uid；/user/self 不算。 */
+function secUidOf(s: string): string | undefined {
+  const m = /\/(?:user|share\/user)\/([\w-]+)/.exec(s)?.[1] ?? /[?&]sec_uid=([\w-]+)/.exec(s)?.[1] ?? /^MS4w[\w-]+$/.exec(s)?.[0]
+  return m && m !== 'self' ? m : undefined
+}
+
 /** 作品：aweme_id、作品页 URL（/video/、/note/、/slides/、modal_id=）或分享短链。 */
 export async function resolveItem(d: Douyin, input: string): Promise<string> {
-  const s = await expand(d, input)
-  const m = /\/(?:video|note|slides|share\/video|share\/note)\/(\d+)/.exec(s)?.[1] ?? /[?&](?:modal_id|aweme_id|item_id)=(\d+)/.exec(s)?.[1] ?? /^\d{8,}$/.exec(s)?.[0]
+  const m = itemIdOf(await expand(d, input))
   if (m) return m
   throw new CatbusError('USAGE', `无法识别的作品：${input}`, { hint: '传作品 ID 或作品链接，例如 https://www.douyin.com/video/7433523124836060416' })
 }
@@ -32,22 +42,24 @@ export async function resolveUser(d: Douyin, input: string): Promise<string> {
     if (!d.isLogin) throw new CatbusError('AUTH_REQUIRED', 'me 表示当前账号，需要先登录', { hint: 'catbus douyin auth login' })
     return (await api.mySecUid(d)).secUid
   }
-  const s = await expand(d, input)
-  const m = /\/(?:user|share\/user)\/([\w-]+)/.exec(s)?.[1] ?? /[?&]sec_uid=([\w-]+)/.exec(s)?.[1] ?? /^MS4w[\w-]+$/.exec(s)?.[0]
-  if (m && m !== 'self') return m
+  const m = secUidOf(await expand(d, input))
+  if (m) return m
   throw new CatbusError('USAGE', `无法识别的用户：${input}`, { hint: '传用户 sec_uid（MS4wLjAB 开头）或主页链接 https://www.douyin.com/user/<sec_uid>' })
 }
 
 export type ShareTarget = { kind: 'item'; id: string } | { kind: 'user'; secUid: string } | { kind: 'web'; url: string }
 
-/** `msg send --share` 的目标：作品（ID / 链接）、用户（sec_uid / 主页 / me）、其余 http(s) 链接当网页卡片。 */
+/**
+ * `msg send --share` 的目标：作品（ID / 链接）、用户（sec_uid / 主页 / me）、其余 http(s) 链接当网页卡片。
+ * 先认作品：主页上点开的作品是 `/user/<sec_uid>?modal_id=<作品>`，与 resolveItem 一样当作品。
+ */
 export async function resolveShare(d: Douyin, input: string): Promise<ShareTarget> {
   if (input.trim() === 'me') return { kind: 'user', secUid: await resolveUser(d, 'me') }
   const s = await expand(d, input)
-  const user = /\/(?:user|share\/user)\/([\w-]+)/.exec(s)?.[1] ?? /[?&]sec_uid=([\w-]+)/.exec(s)?.[1] ?? /^MS4w[\w-]+$/.exec(s)?.[0]
-  if (user && user !== 'self') return { kind: 'user', secUid: user }
-  const item = /\/(?:video|note|slides|share\/video|share\/note)\/(\d+)/.exec(s)?.[1] ?? /[?&](?:modal_id|aweme_id|item_id)=(\d+)/.exec(s)?.[1] ?? /^\d{8,}$/.exec(s)?.[0]
+  const item = itemIdOf(s)
   if (item) return { kind: 'item', id: item }
+  const user = secUidOf(s)
+  if (user) return { kind: 'user', secUid: user }
   if (/^https?:\/\//i.test(s)) return { kind: 'web', url: s }
   throw new CatbusError('USAGE', `无法识别的分享目标：${input}`, { hint: '传作品 ID / 链接、用户 sec_uid / 主页链接，或一个网页链接' })
 }
