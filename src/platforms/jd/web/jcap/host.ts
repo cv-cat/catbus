@@ -79,7 +79,7 @@ function fromDependency(self: (...a: never[]) => unknown): boolean {
     Error.captureStackTrace(holder, self)
     const frames = holder.stack as NodeJS.CallSite[] | undefined
     const file = String(frames?.[0]?.getFileName() ?? '')
-    return /[\/]node_modules[\/]/.test(file) || file.startsWith('node:')
+    return /[\\/]node_modules[\\/]/.test(file) || file.startsWith('node:')
   } catch {
     return false
   } finally {

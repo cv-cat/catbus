@@ -1,5 +1,6 @@
 import { createCipheriv } from 'node:crypto'
 import { CatbusError } from '../../../core/errors.js'
+import * as n from '../../../core/normalize.js'
 import { HttpClient, type HttpRequest, type HttpResponse, parseJsonp } from '../../../core/http.js'
 import { compactJson, jsonDumps, type Pairs, quote, type Scalar, unquote } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
@@ -24,7 +25,7 @@ import {
   SEARCH_REFERER,
   xhr,
 } from './profile.js'
-import { bootstrapCookies, sha256Hex } from './util.js'
+import { sha256Hex } from './util.js'
 
 /**
  * 京东 web 端的会话（上游 builder/auth.py 的 JdAuth + jd_apis/jd_api.py 的 call_api）。
@@ -37,6 +38,8 @@ import { bootstrapCookies, sha256Hex } from './util.js'
 /** SimpleCookie 认得的属性（其余 key=value 会被它当作新 cookie）。 */
 const RESERVED = new Set(['expires', 'path', 'comment', 'domain', 'max-age', 'secure', 'httponly', 'version', 'samesite'])
 const FLAGS = new Set(['secure', 'httponly'])
+/** 合法的 cookie 名（签名脚本交回的 cookie 按它过滤）。 */
+const COOKIE_NAME = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/
 
 /** `http.cookies.SimpleCookie().load(line)` 的结果：解析失败时为空。 */
 export function simpleCookie(line: string): [string, string][] {
@@ -231,21 +234,15 @@ export class Jd {
     if (value) this.ctx.credential.device.profile = value
   }
 
-  // ---------------------------------------------------------------- 游客态
-
-  /**
-   * 游客态（上游 utils/jd_cookie.bootstrap + utils/device_token.get_device_fields）：
-   * 埋点 cookie 与收货地区本地生成；eid / jsToken 由 pc-tk.js 换取，结果留在游客凭证里复用。
-   */
-  async ensureGuest(): Promise<void> {
-    if (!this.cookie('__jdu')) this.update(bootstrapCookies('www'))
-    if (this.cookie('3AB9D23F7A4B3CSS')) return
-    try {
-      await this.refreshDevice()
-    } catch (err) {
-      this.ctx.log.debug(`游客设备参数生成失败：${(err as Error).message}`)
+  /** 签名脚本（WebM / JCAP 的 run.js）写的 cookie 与 localStorage 交回会话。 */
+  absorbScript(pageUrl: string, result: { cookies?: unknown; localStorage?: unknown }): void {
+    if (result.cookies && typeof result.cookies === 'object') {
+      this.update(Object.entries(result.cookies as Record<string, unknown>).filter(([k]) => COOKIE_NAME.test(k)).map(([k, v]) => [k, String(v ?? '')] as [string, string]))
     }
+    if (result.localStorage && typeof result.localStorage === 'object') this.replaceLocalStorage(pageUrl, result.localStorage as Record<string, unknown>)
   }
+
+  // ---------------------------------------------------------------- 设备票据
 
   /** 用 pc-tk.js 换设备票据写进 cookie；画像版本变化时强制换新。 */
   async refreshDevice(page?: string, origin?: string, referer?: string) {
@@ -280,7 +277,8 @@ export class Jd {
 
   /**
    * api.m.jd.com 通用调用（JdAPI.call_api）：装配 query → 算 h5st → 发请求；403 空 body 时重签重试。
-   * 返回平台原始 JSON（或 jsonp 解开后的对象）；风控处置（x-rp-content）命中时照样返回原始结果。
+   * 返回平台原始 JSON（或 jsonp 解开后的对象）；风控处置（x-rp-content）命中时照样返回原始结果，
+   * 解开的处置挂在不可枚举的 `_disposal` 上，由 checkRisk 报 RISK_CONTROL。
    */
   async call(functionId: string, o: CallOptions = {}): Promise<any> {
     const method = o.method ?? 'POST'
@@ -340,7 +338,7 @@ export class Jd {
       const risk = readDisposal(res)
       if (risk) {
         this.ctx.log.warn(`${functionId} 被风控拦下：${risk}`)
-        return parse(res)
+        return withDisposal(await parse(res), res.headers.get('x-rp-content')!)
       }
       if (!rejected || attempt === retry) {
         if (rejected) this.ctx.log.warn(`${functionId} 连续 ${retry + 1} 次 403 空 body：被限流、风控或登录态失效`)
@@ -439,14 +437,66 @@ export function searchReferer(jd: Jd, keyword = ''): string {
   return SEARCH_REFERER
 }
 
+/** x-rp-content 头里的处置挂到结果的 `_disposal` 上（不参与序列化，与上游的返回值一致），交给 checkRisk。 */
+function withDisposal(result: any, header: string): any {
+  const out = result && typeof result === 'object' ? result : { _status: 200, _raw: String(result ?? '') }
+  Object.defineProperty(out, '_disposal', { value: decodeDisposal(header) ?? { code: null }, enumerable: false, configurable: true })
+  return out
+}
+
 /**
  * 业务响应里的风控处置 / 登录墙映射成 catbus 的错误。
+ * 处置有两种来源：body 里的 `disposal` / code 605，以及只在 x-rp-content 响应头里的（body 常为空、状态码 200，见 call）。
  * 403 空 body 要先探测登录态才能分清是登录失效还是限流（见 commands.ts 的 check），这里只处理能直接判定的情况。
  */
 export function checkRisk(jd: Jd, res: any): void {
   if (res?.disposal || String(res?.code) === '605') {
     throw new CatbusError('RISK_CONTROL', '京东要求人机验证（605），纯程序验证未通过', { detail: { kind: 'captcha', code: res?.code ?? null } })
   }
+  const header = res?._disposal
+  if (header) {
+    let ev: any = {}
+    try {
+      ev = JSON.parse(header.disposal?.evContent || '{}')
+    } catch {}
+    throw new CatbusError('RISK_CONTROL', `京东要求人机验证（x-rp-content code=${header.code ?? '?'}）：账号或 IP 被风控标记了`, {
+      hint: '等风控解除（十几分钟到几小时）后再试',
+      detail: { kind: 'captcha', code: header.code ?? null, api: ev.evApi ?? null },
+    })
+  }
   if (res?._status === 401 || res?.code === 3 || res?.code === '3') throw authError(jd.ctx)
 }
 
+/** 各接口的登录墙：网关的 code 3 之外，购物车回 `pin is null` + passport 地址，浏览历史回 resultCode -100「用户未登录」（2026-09-29 真机）。 */
+function loginWall(res: any): boolean {
+  return (
+    String(res.resultCode) === '-100' ||
+    /未登录|pin is null/i.test(String(res.message ?? res.msg ?? res.resultMsg ?? res.echo ?? '')) ||
+    /passport\.jd\.com/.test(String(res.url ?? ''))
+  )
+}
+
+/**
+ * 业务失败（上游只返回原始 JSON，由调用方自己看）。所有接口都认的：
+ * - body 不是 JSON（parse 给出 `_raw`）；
+ * - 网关错误 `{code, echo}`（如 601、1 Content-Type 不兼容）；
+ * - `success: false`（购物车、浏览历史的失败响应）。
+ * `strict` 时 `code` 存在且不是 0 / "0" 也算失败：只用于核对过正常响应的 code 的接口——
+ * hotwords 为 `0`，getChatSessionLog 为 `"0"`（2026-09-29 真机），getAidInfo 为 `"0"`（上游 get_aid_info 的注释）。
+ * 其余接口（详情、评价、优惠券、关注、浏览历史、购物车、搜索、relsearch / relwords、queryLastLogs）正常响应里 code 的含义没核对过，
+ * 例如 getRecommendCoupon 会回只有 `{"code":"1"}` 的响应，分不清是没有券还是失败，所以不按 code 判。
+ */
+export function checkBusiness(jd: Jd, res: any, strict = false): void {
+  if (res == null || typeof res !== 'object' || Array.isArray(res)) return
+  if ('_raw' in res) {
+    throw new CatbusError('UPSTREAM', `京东返回了无法解析的响应（HTTP ${res._status}）`, { detail: { status: res._status ?? null, body: String(res._raw).slice(0, 200) } })
+  }
+  const badCode = res.code != null && String(res.code) !== '0'
+  const failed = res.success === false || (badCode && (strict || res.echo != null))
+  if (!failed) return
+  const message = n.str(res.message ?? res.msg ?? res.resultMsg ?? res.echo)
+  if (loginWall(res)) throw authError(jd.ctx, message ? `登录态已失效：${message}` : undefined)
+  throw new CatbusError('UPSTREAM', `京东返回业务错误（code=${res.code ?? res.resultCode ?? '-'}）${message ? `：${message}` : ''}`, {
+    detail: { code: res.code ?? null, result_code: res.resultCode ?? null, echo: res.echo ?? null, message },
+  })
+}

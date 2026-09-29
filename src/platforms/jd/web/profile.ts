@@ -34,7 +34,6 @@ export const CLIENT_IMH5: ClientPreset = { client: 'imh5', appid: 'imh5', client
 export const CLIENT_PC_ITEM: ClientPreset = { appid: 'pc-item-soa', client: 'pc', clientVersion: '1.0.0', loginType: '3' }
 export const CLIENT_PC_ITEM_V3: ClientPreset = { appid: 'item-v3', client: 'pc', clientVersion: '1.0.0', loginType: '3' }
 export const CLIENT_PC_SEARCH: ClientPreset = { appid: 'search-pc-java', client: 'pc', clientVersion: '1.0.0', loginType: '3' }
-export const CLIENT_ORDER: ClientPreset = { appid: 'order-jd-com', client: 'pc', clientVersion: '1.0.0', loginType: '3' }
 
 export const DEFAULT_AREA = '1_2800_55812_0'
 
@@ -42,7 +41,6 @@ export const ORDER_PC_SEARCH = ['appid', 't', 'client', 'clientVersion', 'cthr',
 export const ORDER_PC_ITEM = ['functionId', 'body', 'h5st', 'uuid', 'loginType', 'appid', 'clientVersion', 'client', 't', 'x-api-eid-token', 'scval']
 export const ORDER_PC_ITEM_RELWORDS = ['appid', 'functionId', 'client', 'clientVersion', 'uuid', 'skuid', 'num', 'rettype', 'type_name', 'body']
 export const ORDER_PC_API = ['functionId', 'appid', 'loginType', 'x-api-eid-token', 'h5st', 't', 'client', 'clientVersion', 'body']
-export const ORDER_PC_ORDER = ['functionId', 'appid', 'client', 'clientVersion', 'uuid', 'loginType', 't', 'body']
 export const ORDER_PC_SEARCH_PLAIN = ['appid', 'functionId', 'client', 'clientVersion', 'uuid', 'body', 't']
 export const ORDER_PC_SEARCH_RELWORDS = ['appid', 'functionId', 'client', 'clientVersion', 'uuid', 'keyword', 'num', 'rettype', 'type_name', 'body', 't']
 export const ORDER_DD_WITH_TIME = ['functionId', 'client', 'appid', 't', 'clientVersion', 'loginType', 'h5st', 'x-api-eid-token']

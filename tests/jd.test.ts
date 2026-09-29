@@ -55,7 +55,7 @@ function chatSession() {
 const cookiesOf = (jd: Jd) => Object.fromEntries(jd.cookies)
 
 /** 命令 handler 的上下文：与 session() 相同的假凭证、h5st token 与 WebM 有效期。 */
-function cmdCtx(init: { args?: Record<string, string>; options?: Record<string, unknown>; cursor?: string } = {}): HandlerContext {
+function cmdCtx(init: { args?: Record<string, string>; options?: Record<string, unknown>; cursor?: string; extra?: Record<string, unknown> } = {}): HandlerContext {
   const ctx = makeCtx({ platform: 'jd', account: 'default', cookies: COOKIES, cookieDomain: '.jd.com', ...init })
   ctx.credential.device.h5st = structuredClone(TOKEN_CACHE)
   ctx.credential.device.local_storage = structuredClone(WEBM_STORAGE)
@@ -324,16 +324,16 @@ describe('jd 403：探测登录态，分清登录失效与限流（diagnose）',
 describe('jd 命令流程', () => {
   afterEach(() => void vi.useRealTimers())
 
-  it('游客 keyword hot：按 guest.json 走免签名接口并归一化', async () => {
+  it('keyword hot：走免签名接口并归一化；没有词的条目去掉，--raw 的原始对象与输出一一对应', async () => {
     const c = loadCase('jd', 'search_hotwords')
-    const { keywordHot } = await import('../src/platforms/jd/web/commands.js')
-    const ctx = makeCtx({ platform: 'jd', account: 'guest', cookies: COOKIES, cookieDomain: '.jd.com' })
-    const hot = { ...c, responses: [{ status: 200, headers: {}, body: { code: 0, data: [{ n: '机械键盘', ext_columns: { text: '机械键盘' } }, { n: '显示器' }] } }] }
-    const result = (await run(hot, () => keywordHot(ctx))) as any[]
+    const data = [{ n: '', ext_columns: { text: '' } }, { n: '机械键盘', ext_columns: { text: '机械键盘' } }, { n: '显示器', gid: 'g2' }]
+    const hot = { ...c, responses: [{ status: 200, headers: {}, body: { abBuriedTagMap: null, code: 0, data, msg: 'Success' } }] }
+    const result = (await run(hot, () => cmd.keywordHot(cmdCtx()))) as any[]
     expect(result).toEqual([
       { text: '机械键盘', heat: null },
       { text: '显示器', heat: null },
     ])
+    expect(result.map((k) => k[RAW])).toEqual([data[1], data[2]])
   })
 
   it('搜索命中 605：纯程序验证后重试，商品归一化', async () => {
@@ -362,6 +362,169 @@ describe('jd 命令流程', () => {
       },
     ])
     expect(ctx.credential.scopes.main!.cookies.find((x) => x.name === 'x-rp-evtoken')?.value).toBe('FAKEEVTOKEN')
+  })
+})
+
+/** 与 gen.py 的 chat_logged() 一致的咚咚会话参数。 */
+const CHAT = { chat: { aid: 'FAKEAID0123', app_id: 'im.customer', dvc: null, client_type: 'comet' } }
+
+/**
+ * 用某个对拍用例的请求、换上别的响应跑命令：发出的请求仍要与上游一致（请求只取决于输入），返回命令的结果或错误。
+ * compare 为 false 时只按响应顺序回放，不比较请求（多个接口串起来、上游没有对应用例的流程）。
+ */
+async function runWith(name: string, responses: GoldenCase['responses'], fn: () => Promise<unknown>, compare = true) {
+  const c = loadCase('jd', name)
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(c.now)
+  const out = await replay({ ...c, responses }, fn)
+  if (compare) expectRequests(out.requests.map(normalizeUrl), c.requests.map(normalizeUrl))
+  return out
+}
+
+const json = (body: unknown, status = 200, headers: Record<string, string> = {}) => ({ status, headers, body })
+/** 只在响应头里的风控处置：`x-rp-content` 是 base64url 的 JSON，body 为空、状态码 200。 */
+const disposalHeader = (api: string) =>
+  Buffer.from(JSON.stringify({ code: '605', disposal: { rpId: 'FAKERPID', evContent: JSON.stringify({ evType: '3', evApi: api, title: '京东验证' }) } })).toString('base64url')
+
+async function expectError(p: Promise<{ error?: unknown; result?: unknown }>, code: string): Promise<CatbusError> {
+  const out = await p
+  expect(out.error, JSON.stringify(out.result ?? null)).toBeInstanceOf(CatbusError)
+  expect((out.error as CatbusError).code).toBe(code)
+  return out.error as CatbusError
+}
+
+describe('jd 风控处置与业务错误', () => {
+  afterEach(() => void vi.useRealTimers())
+
+  it('处置只在 x-rp-content 头里（body 为空、200）：item get / coupon list / comment list 报 RISK_CONTROL，不重试', async () => {
+    const cases: [string, string, () => Promise<unknown>][] = [
+      ['product_detail', 'color_pc_detailpage_wareBusiness', () => cmd.itemGet(cmdCtx({ args: { item: SKU } }))],
+      ['recommend_coupon', 'color_getRecommendCoupon', () => cmd.couponList(cmdCtx({ args: { item: SKU } }))],
+      ['product_comments_30', 'color_getLegoWareDetailComment', () => cmd.commentList(cmdCtx({ args: { item: SKU }, options: { limit: 30 } }))],
+    ]
+    for (const [name, evApi, fn] of cases) {
+      const err = await expectError(runWith(name, [json('', 200, { 'x-rp-content': disposalHeader(evApi) })], fn), 'RISK_CONTROL')
+      expect(err.detail, name).toEqual({ kind: 'captcha', code: '605', api: evApi })
+    }
+    // 403 带处置：已经知道原因，不再重签重试、也不探测登录态
+    const err = await expectError(runWith('product_detail', [json('', 403, { 'x-rp-content': disposalHeader('color_x') })], () => cmd.itemGet(cmdCtx({ args: { item: SKU } }))), 'RISK_CONTROL')
+    expect(err.detail).toMatchObject({ kind: 'captcha', api: 'color_x' })
+    // 解不开的头也按风控处理
+    await expectError(runWith('product_detail', [json({ code: 0 }, 200, { 'x-rp-content': '%%%' })], () => cmd.itemGet(cmdCtx({ args: { item: SKU } }))), 'RISK_CONTROL')
+  })
+
+  it('网关业务错误 {code, echo} 与非 JSON 响应报 UPSTREAM，原始错误码放 detail', async () => {
+    const itemGet = () => cmd.itemGet(cmdCtx({ args: { item: SKU } }))
+    const e601 = await expectError(runWith('product_detail', [json({ code: '601', echo: 'request is not valid' })], itemGet), 'UPSTREAM')
+    expect(e601.detail).toMatchObject({ code: '601', echo: 'request is not valid' })
+    const html = await expectError(runWith('product_detail', [json('<html>busy</html>')], itemGet), 'UPSTREAM')
+    expect(html.detail).toMatchObject({ status: 200, body: '<html>busy</html>' })
+    // item related：relsearch 的中间结果也要检查
+    await expectError(runWith('related_search', [json({ code: '601', echo: 'x' })], () => cmd.itemRelated(cmdCtx({ args: { item: SKU } }))), 'UPSTREAM')
+  })
+
+  it('item related：取 relsearch 的第一个相关词去搜索；没有相关词时返回空列表', async () => {
+    const ware = { wareId: '100000000021', wareName: '<font>蓝莓</font>礼盒', jdPrice: '46.50', shopId: 12105625, shopName: '假店铺', comment: '1万+' }
+    const rel = json({ code: 0, data: [{ keyword: '进口蓝莓' }, { keyword: '蓝莓' }] })
+    const out = await runWith('related_search', [rel, json({ code: 0, data: { resultCount: 31, wareList: [ware] } })], () => cmd.itemRelated(cmdCtx({ args: { item: SKU } })), false)
+    expect(out.error).toBeUndefined()
+    expect(out.requests.map((r) => new URL(r.url).searchParams.get('functionId'))).toEqual(['relsearch', 'pc_search_searchWare'])
+    expect(new URL(out.requests[1]!.url).searchParams.get('keyword')).toBe('进口蓝莓')
+    const r = out.result as any
+    expect(r.data.map((i: any) => [i.id, i.title, i.price?.amount])).toEqual([['100000000021', '蓝莓礼盒', 46.5]])
+    expect(r.page).toEqual({ cursor: '2', has_more: true })
+    const empty = await runWith('related_search', [json({ code: 0, data: [] })], () => cmd.itemRelated(cmdCtx({ args: { item: SKU } })))
+    expect(empty.result).toEqual({ data: [], page: { cursor: null, has_more: false } })
+  })
+
+  it('登录墙：购物车 pin is null、浏览历史 resultCode -100（2026-09-29 真机）报 AUTH_EXPIRED', async () => {
+    const cart = { success: false, code: 1, message: 'pin is null', url: 'https://passport.jd.com/new/login.aspx' }
+    const e1 = await expectError(runWith('cart_num', [json(cart)], () => cmd.cartCount(cmdCtx())), 'AUTH_EXPIRED')
+    expect(e1.hint).toBe('catbus jd auth login -a default')
+    const history = { resultCode: -100, resultMsg: '用户未登录', success: false }
+    await expectError(runWith('browse_history', [json(history)], () => cmd.historyList(cmdCtx({ cursor: '2' }))), 'AUTH_EXPIRED')
+    // success:false 但不是登录墙 → UPSTREAM
+    const e3 = await expectError(runWith('browse_history', [json({ resultCode: 500, resultMsg: '系统繁忙', success: false })], () => cmd.historyList(cmdCtx({ cursor: '2' }))), 'UPSTREAM')
+    expect(e3.detail).toMatchObject({ result_code: 500, message: '系统繁忙' })
+  })
+
+  it('code 只对核对过正常值的接口判：hotwords / getChatSessionLog 非 0 报 UPSTREAM；getRecommendCoupon 的 {"code":"1"} 仍是空列表', async () => {
+    await expectError(runWith('search_hotwords', [json({ code: 1, msg: 'fail' })], () => cmd.keywordHot(cmdCtx())), 'UPSTREAM')
+    await expectError(runWith('chat_session_log', [json({ code: '1', msg: '失败', subCode: '1' })], () => cmd.msgList(cmdCtx({ extra: CHAT }))), 'UPSTREAM')
+    const coupons = await runWith('recommend_coupon', [json({ code: '1' })], () => cmd.couponList(cmdCtx({ args: { item: SKU } })))
+    expect(coupons.error).toBeUndefined()
+    expect(coupons.result).toEqual([])
+  })
+
+  it('咚咚 aid：会话里没有时先 getAidInfo 并记下；没下发 aid 报 UPSTREAM，code 3 报登录失效', async () => {
+    const sessions = { code: '0', chatSessions: [{ venderId: '1', venderName: '京东客服', time: 1790000000123 }], msg: '请求成功', subCode: '0' }
+    const ctx = cmdCtx()
+    const ok = await runWith('aid_info', [json({ code: '0', pin: 'fake_pin', aid: 'NEWAID', subCode: '0' }), json(sessions)], () => cmd.msgList(ctx), false)
+    expect(ok.requests.map((r) => new URL(r.url).searchParams.get('functionId'))).toEqual(['getAidInfo', 'getChatSessionLog'])
+    expect((ok.result as any).data.map((c: any) => c.id)).toEqual(['1'])
+    expect(ctx.credential.extra.chat).toMatchObject({ aid: 'NEWAID', app_id: 'im.customer', client_type: 'comet' })
+    const none = await expectError(runWith('aid_info', [json({ code: '0', subCode: '0' })], () => cmd.msgList(cmdCtx()), false), 'UPSTREAM')
+    expect(none.message).toMatch(/aid/)
+    await expectError(runWith('aid_info', [json({ code: '3', echo: 'not login' })], () => cmd.msgList(cmdCtx()), false), 'AUTH_EXPIRED')
+  })
+})
+
+describe('jd 咚咚历史与发送回执', () => {
+  afterEach(() => void vi.useRealTimers())
+
+  const msg = (i: number, timestamp: number) => ({ id: `m${i}`, from: { pin: 'waiter_1' }, body: { type: 'text', content: `第 ${i} 条` }, timestamp })
+
+  it('msg history：游标是最早一条的毫秒 timestamp（同一秒的多条不会被跳过），满一页才有下一页', async () => {
+    // 20 条，最早的两条在同一秒里（…123 与 …456 毫秒）
+    const list = [...Array.from({ length: 18 }, (_, i) => msg(i, 1790000100000 + i * 1000)), msg(18, 1790000000456), msg(19, 1790000000123)]
+    const full = await runWith('query_last_logs', [json({ code: '0', data: list })], () => cmd.msgHistory(cmdCtx({ args: { conversation: '1000000' }, extra: CHAT })))
+    expect(full.error).toBeUndefined()
+    const r = full.result as any
+    expect(r.data).toHaveLength(20)
+    expect(r.page).toEqual({ cursor: '1790000000123', has_more: true })
+    expect(r.data[19]).toMatchObject({ id: 'm19', conversation_id: '1000000', text: '第 19 条', created_at: '2026-09-21T22:13:20+08:00' })
+    const last = await runWith('query_last_logs', [json({ code: '0', data: list.slice(0, 3) })], () => cmd.msgHistory(cmdCtx({ args: { conversation: '1000000' }, extra: CHAT })))
+    expect((last.result as any).page).toEqual({ cursor: null, has_more: false })
+  })
+
+  /** 按顺序吐出帧的消息流；hang 之后一直不来新帧。记录迭代器有没有被关掉。 */
+  function stream(frames: unknown[], hang = true) {
+    const state = { closed: false }
+    const messages: AsyncIterable<string> = {
+      async *[Symbol.asyncIterator]() {
+        try {
+          for (const f of frames) yield JSON.stringify(f)
+          if (hang) await new Promise(() => {})
+        } finally {
+          state.closed = true
+        }
+      },
+    }
+    return { messages, state }
+  }
+
+  it('回执按 id 对上刚发的消息：欢迎语的回执不算；对上的 failure 报 UPSTREAM', async () => {
+    const ctx = cmdCtx()
+    const s1 = stream([{ type: 'chat_message_result', id: 'hello' }, [{ type: 'ack' }, { type: 'chat_message_result', id: 'mine' }]])
+    await expect(cmd.waitReceipt(ctx, s1.messages, 'mine', 1000)).resolves.toBeUndefined()
+    expect(s1.state.closed).toBe(true)
+    const s2 = stream([{ type: 'chat_message_result', id: 'hello' }, { type: 'failure', id: 'mine', body: { code: 111, msg: '授权过期' } }])
+    const err = await cmd.waitReceipt(ctx, s2.messages, 'mine', 1000).catch((e) => e)
+    expect(err).toBeInstanceOf(CatbusError)
+    expect(err).toMatchObject({ code: 'UPSTREAM', detail: { code: 111, msg: '授权过期' } })
+  })
+
+  it('等不到回执：途中有没对上 id 的 failure 报 UPSTREAM；什么都没有只提示，按已发送返回', async () => {
+    const ctx = cmdCtx()
+    const warn = vi.spyOn(ctx.log, 'warn')
+    const s1 = stream([{ type: 'chat_message_result', id: 'hello' }])
+    await expect(cmd.waitReceipt(ctx, s1.messages, 'mine', 50)).resolves.toBeUndefined()
+    expect(warn).toHaveBeenCalledWith(expect.stringMatching(/没有回执/))
+    const s2 = stream([{ type: 'failure', body: { code: 5, msg: '发送太频繁' } }])
+    await expect(cmd.waitReceipt(ctx, s2.messages, 'mine', 50)).rejects.toMatchObject({ code: 'UPSTREAM', detail: { code: 5 } })
+    // 连接先断了：同样按没有回执处理
+    const s3 = stream([], false)
+    await expect(cmd.waitReceipt(ctx, s3.messages, 'mine', 1000)).resolves.toBeUndefined()
   })
 })
 
@@ -447,8 +610,7 @@ describe('jd 归一化与解析', () => {
   it('订单：金额、时间、商品 SKU', () => {
     const html = readFileSync(new URL('../scripts/golden/jd/order_list.html', import.meta.url), 'utf8')
     const orders = api.parseOrders(html)
-    const skus = norm.orderSkus(html)
-    const o = norm.order(orders[0]!, skus.get(orders[0]!.orderId))
+    const o = norm.order(orders[0]!)
     expect(o).toMatchObject({ id: '300000000001', status: '已完成', total: { amount: 23.28, currency: 'CNY' }, created_at: '2025-08-01T12:00:00+08:00' })
     expect(o.items.map((i) => [i.id, i.title])).toEqual([
       [SKU, '假商品 A & 配件 键盘'],
@@ -456,6 +618,30 @@ describe('jd 归一化与解析', () => {
     ])
     expect(norm.order(orders[1]!).total).toEqual({ amount: 1099, currency: 'CNY' })
     expect((o as any)[RAW].consignee).toBe('张*')
+    // SKU 不进上游的解析结果（对拍比较 orders 时不出现）
+    expect(JSON.parse(JSON.stringify(orders[0]))).not.toHaveProperty('skus')
+  })
+
+  it('订单：商品名与 SKU 取自同一个链接，全球购链接、空名链接、认不出的链接都不会让后面的商品错位', () => {
+    const name = (href: string, text: string) => `<div class="p-name"><a href="${href}" target="_blank">${text}</a></div>`
+    const html =
+      '<tbody id="tb-300000000009">' +
+      name('//npcitem.jd.hk/100000000011.html', '全球购商品') +
+      name('//item.jd.com/100000000012.html', '') +
+      name('//item.jd.hk/100000000013.html', '海外商品') +
+      name('//item.m.jd.com/product/100000000014.html', '移动端链接') +
+      name('javascript:void(0)', '礼品卡') +
+      name('//item.jd.com/100000000015.html', '普通商品') +
+      '<span class="dealtime">2025-08-01 12:00:00</span></tbody>'
+    const [raw] = api.parseOrders(html)
+    expect(raw!.products).toEqual(['全球购商品', '海外商品', '移动端链接', '礼品卡', '普通商品'])
+    expect(norm.order(raw!).items.map((i) => [i.id, i.title, i.url])).toEqual([
+      ['100000000011', '全球购商品', 'https://item.jd.com/100000000011.html'],
+      ['100000000013', '海外商品', 'https://item.jd.com/100000000013.html'],
+      ['100000000014', '移动端链接', 'https://item.jd.com/100000000014.html'],
+      ['', '礼品卡', null],
+      ['100000000015', '普通商品', 'https://item.jd.com/100000000015.html'],
+    ])
   })
 
   it('SimpleCookie：未知属性当新 cookie，非法行整体忽略', () => {
@@ -468,9 +654,45 @@ describe('jd 归一化与解析', () => {
     expect(simpleCookie('q="x\\"y"; Path=/')).toEqual([['q', 'x"y']])
   })
 
-  it('会话列表：chatSessionLog 的条目只有 time（毫秒），没有最后一条消息与未读数（2026-09-28 真机）', () => {
-    const cs = norm.conversations({ data: [{ groupId: 10000002, venderId: '1', venderName: '京东客服', appId: 'jd.waiter', time: 1790598767492 }] })
+  it('会话列表：列表在 chatSessions，条目只有 time（毫秒），没有最后一条消息与未读数（2026-09-29 真机的字段结构）', () => {
+    const session = { groupId: 10000002, venderId: '1', pid: '', label: '官方', type: 3, venderName: '京东客服', appId: 'jd.waiter', time: 1790598767492 }
+    const cs = norm.conversations({ code: '0', chatSessions: [session], msg: '请求成功', subCode: '0' })
+    expect(cs).toHaveLength(1)
     expect(cs[0]).toMatchObject({ id: '1', peer: { id: '1', name: '京东客服' }, last_message: null, unread: null, updated_at: '2026-09-28T20:32:47+08:00' })
+    expect((cs[0] as any)[RAW]).toBe(session)
+  })
+
+  it('商品详情：按 wareInfo / price.p / shopInfo.shop / 主图列表取，浅层的 name、url 不会压过真正的字段', () => {
+    const d = {
+      name: '活动名',
+      url: '//pro.jd.com/activity.html',
+      p: '1',
+      price: { p: '299.00', op: '399.00', id: SKU },
+      wareInfo: { wname: '假商品 键盘', venderId: 1000000, imageList: ['jfs/t1/a.jpg', 'jfs/t1/b.jpg'] },
+      shopInfo: { customerService: { name: '客服' }, shop: { shopId: 1000001, name: '假店铺', venderId: 1000000, url: '//mall.jd.com/index-1000001.html' } },
+    }
+    const item = norm.detail(SKU, d)
+    expect(item).toMatchObject({
+      id: SKU,
+      url: `https://item.jd.com/${SKU}.html`,
+      title: '假商品 键盘',
+      author: { id: '1000001', name: '假店铺', url: 'https://mall.jd.com/index-1000001.html' },
+      cover: 'https://img14.360buyimg.com/n1/jfs/t1/a.jpg',
+      price: { amount: 299, currency: 'CNY' },
+    })
+    expect(item.media.map((m) => m.url)).toEqual(['https://img14.360buyimg.com/n1/jfs/t1/a.jpg', 'https://img14.360buyimg.com/n1/jfs/t1/b.jpg'])
+    expect(norm.detailVenderId(d)).toBe('1000000')
+    // 没有 wareInfo 时按专有键名兜底；图片列表的元素也可以是对象
+    const other = norm.detail(SKU, { name: '活动名', data: { skuName: '兜底名', imgs: [{ big: '//img10.360buyimg.com/n1/x.jpg' }] }, price: { finalPrice: { price: '9.90' } } })
+    expect(other).toMatchObject({ title: '兜底名', cover: 'https://img10.360buyimg.com/n1/x.jpg', price: { amount: 9.9 } })
+    // venderId 为 0 不是商家
+    expect(norm.detailVenderId({ shopInfo: { shop: { venderId: 0 } } })).toBeNull()
+    expect(norm.detailVenderId({})).toBeNull()
+  })
+
+  it('购物车数量取 cartNum', () => {
+    expect(norm.cartCount({ cartNum: 2 })).toBe(2)
+    expect(norm.cartCount({ code: 0, data: { num: 5 } })).toBeNull()
   })
 
   it('评价、优惠券、关注商品按字段名提取', () => {
