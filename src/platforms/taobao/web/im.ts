@@ -9,7 +9,7 @@ import { generateMid, generateUuid } from './sign.js'
  * 连接、注册、ack、心跳、翻页与闲鱼共用 _shared/impaas.ts；这里是淘宝的参数和建会话、发消息的帧。
  */
 
-export { FIRST_CURSOR, type ImSocket, mockConnect } from '../../_shared/impaas.js'
+export { type ImSocket, mockConnect } from '../../_shared/impaas.js'
 
 const im = impaas<Taobao>({
   url: WSS_URL,
