@@ -370,7 +370,7 @@ export async function itemSubtitles(ctx: Ctx): Promise<Subtitle[]> {
       const body = await parseJson<any>(res)
       lines = (body?.body ?? []).map((l: any) => ({ from: Number(l.from), to: Number(l.to), text: String(l.content ?? '') }))
     }
-    out.push({ lang: String(s.lan ?? ''), name: n.str(s.lan_doc), url, lines })
+    out.push({ lang: n.str(s.lan), name: n.str(s.lan_doc), url, lines })
   }
   return out
 }
@@ -532,7 +532,7 @@ export async function mediaUpload(ctx: Ctx): Promise<Media> {
   if (file.contentType.startsWith('video/')) {
     // 投稿用的是 filename；upos 的对象 key 不是可访问的地址，url 留空（core 的 Media.url 不可为 null，同 x）
     const v = await uploadVideo(b, file)
-    return n.media({ id: v.filename, type: 'video', url: '' }, v)
+    return n.media({ id: v.filename, type: 'video', url: null }, v)
   }
   const d = await api.uploadDynamicImage(b, file.data, file.filename, file.contentType)
   return n.media({ type: 'image', url: d.image_url, width: n.count(d.image_width), height: n.count(d.image_height) }, d)

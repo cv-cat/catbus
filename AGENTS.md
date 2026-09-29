@@ -645,7 +645,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 
 | 类型 | 字段 |
 |---|---|
-| Subtitle | `lang name url lines[{from to text}]` |
+| Subtitle | `lang name url lines[{from to text}]`，`lang` 缺失时为 null |
 | Danmaku | `id item_id offset text created_at`，`offset` 为视频内的秒数 |
 | Order | `id status total:Price items:Item[] created_at` |
 | Coupon | `id title discount:Price threshold:Price\|null start_at end_at` |

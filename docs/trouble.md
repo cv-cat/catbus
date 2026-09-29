@@ -362,6 +362,7 @@ catbus 已同步，对拍变化的 4 个用例逐字节一致。
 | BilibiliApis | 弹幕分段去掉 `ps` / `pe` | 4 | 改 `danmakuSeg`，重新生成对拍数据 |
 | KuaiShou-Spider | 滑块验证 `350014 anti check err`：feat/fix-slider-fingerprint-http2 分支刷新了指纹、放宽 HTTP 版本，catbus **已集成**；真机待复现确认（4a） | 4a | 复现确认后改状态 |
 | DouYin_Spider | 综合搜索只发「已筛选」标记、不发筛选值（commit fe3eb24 删掉了），排序 / 时间筛选对综合频道不生效；catbus 照抄并在 stderr 提示改用 `--type video` | 10 | 移植修正后的请求 |
+| BilibiliApis | 动态评论区：图文动态的评论区是 type 11、oid 为相簿 rid，opus 若是专栏则是 type 12、oid 为 cv 号；上游没有动态详情接口（取 `basic.comment_type` / `comment_id_str`），catbus 只能按 type 17 + 动态 id 请求，图文动态取不到评论 | — | 上游加动态详情接口后按它取评论区类型；现在 `comment list/add/delete` 标 ◐，note 写明「动态只支持纯文字和转发」 |
 | BilibiliApis | 极验点选：下载第一张题图时把 B 站会话 cookie 也发给了 static.geetest.com（登录时只是匿名设备 cookie，已登录账号复用时会带出 SESSDATA） | 10 | 移植修正后的请求 |
 
 ## 10. 上游有、catbus 漏移植的（2026-09-28 审计）

@@ -186,7 +186,7 @@ export interface File {
 }
 
 export interface Subtitle {
-  lang: string
+  lang: string | null
   name: string | null
   url: string | null
   lines: { from: number; to: number; text: string }[]
