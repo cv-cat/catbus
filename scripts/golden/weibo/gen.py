@@ -128,6 +128,20 @@ case('upload_video', lambda: cr.upload_video_file('fake-upload-id', MEDIA_ID, VI
 case('video_check', lambda: cr.video_check('fake-upload-id', MEDIA_ID, len(VIDEO), 'fake-up-auth', COOKIES), size=len(VIDEO))
 case('video_output', lambda: cr.video_output(MEDIA_ID, COOKIES), media_id=MEDIA_ID)
 
+# ---------------------------------------------------------------- 命令流程：media upload（上游没有这条命令，按 post_weibo 的上传步骤）
+# 图片：get_self_info 取 uid / 昵称，再上传
+case('media_upload_image', lambda: [web.get_self_info(COOKIES), cr.upload_image_file(UID, NICK, IMG1, COOKIES)], image=IMG1)
+
+
+def media_upload_video():
+    # 视频：init → 整个文件一次上传 → check，不等转码
+    init = cr.video_init(VIDEO, COOKIES)
+    cr.upload_video_file(init['upload_id'], init['media_id'], VIDEO, init['auth'], COOKIES)
+    return cr.video_check(init['upload_id'], init['media_id'], len(VIDEO), init['auth'], COOKIES)
+
+
+case('media_upload_video', media_upload_video, video=VIDEO)
+
 # ---------------------------------------------------------------- 完整流程：post_weibo（图文 / 视频）
 case('post_image', lambda: cr.post_weibo({
     'desc': '测试 & 正文', 'location': '北京', 'type': '1', 'media_type': 'image',

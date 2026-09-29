@@ -3,10 +3,11 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { CatbusError } from '../src/core/errors.js'
+import { fakeResponse, mockSender } from '../src/core/http.js'
 import { plainText } from '../src/core/normalize.js'
 import { RAW } from '../src/core/schemas.js'
 import * as api from '../src/platforms/weibo/web/api.js'
-import { check, Weibo } from '../src/platforms/weibo/web/client.js'
+import { check, riskCheck, Weibo } from '../src/platforms/weibo/web/client.js'
 import * as cmd from '../src/platforms/weibo/web/commands.js'
 import { resolveItem } from '../src/platforms/weibo/web/resolve.js'
 import { bidToMid, fileParams, midToBid } from '../src/platforms/weibo/web/sign.js'
@@ -70,7 +71,7 @@ describe('weibo 对拍：请求构造', () => {
   }
 })
 
-// ---------------------------------------------------------------- 访客身份（上游没有）
+// ---------------------------------------------------------------- m.weibo.cn 的访客身份（上游没有）
 
 const VISITOR_SUB = '_2AkMfakeVisitorSUB'
 const VISITOR_SUBP = '0033WrSXfakeVisitorSUBP'
@@ -113,9 +114,9 @@ const visitorCookies = (expected: GoldenRequest[]): GoldenRequest[] =>
   }))
 
 describe('weibo 对拍：命令流程', () => {
-  it('游客 item get：先生成 m.weibo.cn 访客身份，再取详情页的 $render_data', async () => {
+  it('item get：先生成 m.weibo.cn 访客身份（登录 cookie 不发往 .weibo.cn），再取详情页的 $render_data', async () => {
     const c = loadCase('weibo', 'mobile_detail')
-    const ctx = makeCtx({ platform: 'weibo', account: 'guest', args: { item: `https://m.weibo.cn/detail/${MID}` } })
+    const ctx = loggedCtx({ args: { item: `https://m.weibo.cn/detail/${MID}` } })
     const { requests, result, error } = await replay(withVisitor(c, '.weibo.cn'), () => cmd.itemGet(ctx))
     if (error) throw error
     expectVisitor(requests[0]!, 'visitor.passport.weibo.cn', 'https://m.weibo.cn/')
@@ -133,34 +134,34 @@ describe('weibo 对拍：命令流程', () => {
       status: null,
     })
     expect((result as any).created_at).toMatch(/^2024-08-3\dT/)
-    // 访客 cookie 留在游客凭证里，下次直接复用
-    expect(ctx.credential.scopes.main!.cookies.map((x) => [x.name, x.domain])).toEqual([
-      ['SUB', '.weibo.cn'],
-      ['SUBP', '.weibo.cn'],
+    // 访客 cookie 留在账号凭证里，下次直接复用；登录 cookie 不受影响
+    const cookies = ctx.credential.scopes.main!.cookies
+    expect(cookies.filter((x) => x.domain === '.weibo.cn').map((x) => [x.name, x.value])).toEqual([
+      ['SUB', VISITOR_SUB],
+      ['SUBP', VISITOR_SUBP],
     ])
+    expect(cookies.find((x) => x.name === 'SUB' && x.domain === '.weibo.com')?.value).toBe('_2A25fakeSUB0000')
   })
 
-  it('游客 item search：综合搜索，合并顶层与 card_group 里的微博', async () => {
+  it('item search：综合搜索，合并顶层与 card_group 里的微博；只取第一页', async () => {
     const c = loadCase('weibo', 'mobile_search')
-    const ctx = makeCtx({ platform: 'weibo', account: 'guest', args: { keyword: '猫 咪&狗' } })
+    const ctx = loggedCtx({ args: { keyword: '猫 咪&狗' } })
     const { requests, result, error } = await replay(withVisitor(c, '.weibo.cn'), () => cmd.itemSearch(ctx))
     if (error) throw error
     expectVisitor(requests[0]!, 'visitor.passport.weibo.cn', 'https://m.weibo.cn/')
     expectRequests(requests.slice(1), visitorCookies(c.requests))
     const r = result as { data: any[]; page: unknown }
     expect(r.data.map((x) => x.id)).toEqual([MID, '5073209014095009'])
-    expect(r.page).toEqual({ cursor: '2', has_more: true })
+    // 响应里的 cardlistInfo.page 是 2，但访客翻不到第二页：不给游标
+    expect(r.page).toEqual({ cursor: null, has_more: false })
   })
 
-  it('游客 user get：先生成 weibo.com 访客身份', async () => {
+  it('登录 user get：weibo.com 用登录 cookie，不生成访客身份', async () => {
     const c = loadCase('weibo', 'user_info')
-    const ctx = makeCtx({ platform: 'weibo', account: 'guest', args: { user: 'https://weibo.com/u/1669879400' } })
-    const { requests, result, error } = await replay(withVisitor(c, '.weibo.com'), () => cmd.userGet(ctx))
+    const ctx = loggedCtx({ args: { user: 'https://weibo.com/u/1669879400' } })
+    const { requests, result, error } = await replay(c, () => cmd.userGet(ctx))
     if (error) throw error
-    expectVisitor(requests[0]!, 'passport.weibo.com', 'https://weibo.com/')
-    // 游客没有 XSRF-TOKEN，上游在这里会 KeyError；catbus 发空串
-    const expected = visitorCookies(c.requests).map((r) => ({ ...r, headers: r.headers.map(([k, v]) => [k, k === 'x-xsrf-token' ? '' : v] as [string, string]) }))
-    expectRequests(requests.slice(1), expected)
+    expectRequests(requests, c.requests)
     expect(result).toMatchObject({
       id: '1669879400',
       name: 'Dear-迪丽热巴',
@@ -254,27 +255,126 @@ describe('weibo 对拍：命令流程', () => {
   }
 })
 
-describe('weibo 行为', () => {
-  it('游客搜索第二页遇到登录墙：不重新生成访客身份，停止翻页', async () => {
-    const c = loadCase('weibo', 'mobile_search_p2')
-    const wall = { ...c, responses: [{ status: 200, headers: {}, body: { ok: -100, url: 'https://passport.weibo.com/sso/signin' } }] }
-    const ctx = makeCtx({ platform: 'weibo', account: 'guest', args: { keyword: '猫' }, cursor: '2' })
-    ctx.credential.scopes.main!.cookies.push({ name: 'SUB', value: VISITOR_SUB, domain: '.weibo.cn', path: '/', expires: null })
-    const { requests, result, error } = await replay(wall, () => cmd.itemSearch(ctx))
+describe('weibo media upload', () => {
+  it('图片：get_self_info 取 uid / 昵称 → 上传，返回 pid 与尺寸', async () => {
+    const c = loadCase('weibo', 'media_upload_image')
+    const file = tmpFile('upload.jpg', bytes(c.input.image))
+    const { requests, result, error } = await replay(c, () => cmd.mediaUpload(loggedCtx({ args: { file } })))
     if (error) throw error
-    expect(requests).toHaveLength(1)
-    expect(result).toEqual({ data: [], page: { cursor: null, has_more: false } })
+    expectRequests(requests, c.requests)
+    expect(result).toEqual({ id: 'fakepid1', type: 'image', url: 'https://wx1.sinaimg.cn/large/fakepid1.jpg', width: 100, height: 80, duration: null })
   })
 
-  it('登录墙：游客 → AUTH_REQUIRED，登录用户 → AUTH_EXPIRED，m.weibo.cn → AUTH_REQUIRED', () => {
+  it('视频：init → 上传 → check，不等转码；还没发布的视频没有播放地址，url 为空串', async () => {
+    const c = loadCase('weibo', 'media_upload_video')
+    const file = tmpFile('upload.mp4', bytes(c.input.video))
+    const { requests, result, error } = await replay(c, () => cmd.mediaUpload(loggedCtx({ args: { file } })))
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect(result).toEqual({ id: MEDIA_ID, type: 'video', url: '', width: null, height: null, duration: null })
+  })
+
+  it('上传接口返回 error 时报 UPSTREAM；视频要求实名认证时给出说明', async () => {
+    const c = loadCase('weibo', 'media_upload_video')
+    const file = tmpFile('upload2.mp4', bytes(c.input.video))
+    const denied = { ...c, responses: [{ status: 200, headers: {}, body: { error: 'user need identity authentication', error_code: 21301 } }] }
+    const { error } = await replay(denied, () => cmd.mediaUpload(loggedCtx({ args: { file } })))
+    expect(error).toMatchObject({ code: 'UPSTREAM', message: '上传视频需要先在微博完成实名认证', detail: { error_code: 21301 } })
+  })
+})
+
+describe('weibo 行为', () => {
+  it('登录墙：weibo.com → AUTH_EXPIRED（重新登录），m.weibo.cn → AUTH_REQUIRED（登录也解决不了）', () => {
     const wall = { ok: -100, url: 'https://weibo.com/login.php' }
-    const guest = makeCtx({ platform: 'weibo', account: 'guest' })
-    expect(() => check(guest, wall)).toThrow(expect.objectContaining({ code: 'AUTH_REQUIRED', hint: 'catbus weibo auth login' }))
-    expect(() => check(loggedCtx(), wall)).toThrow(expect.objectContaining({ code: 'AUTH_EXPIRED' }))
+    expect(() => check(loggedCtx(), wall)).toThrow(expect.objectContaining({ code: 'AUTH_EXPIRED', hint: 'catbus weibo auth login -a default' }))
     expect(() => check(loggedCtx(), wall, 'cn')).toThrow(expect.objectContaining({ code: 'AUTH_REQUIRED' }))
-    expect(() => check(guest, { ok: 0, message: '前方有点拥堵，请登录后使用' })).toThrow(expect.objectContaining({ code: 'AUTH_REQUIRED' }))
-    expect(() => check(guest, { ok: 0, msg: '内容违规' })).toThrow(CatbusError)
-    expect(() => check(guest, { ok: 1 })).not.toThrow()
+    expect(() => check(loggedCtx(), { ok: 0, message: '前方有点拥堵，请登录后使用' })).toThrow(expect.objectContaining({ code: 'AUTH_EXPIRED' }))
+    expect(() => check(loggedCtx(), { ok: 1 })).not.toThrow()
+    expect(() => check(loggedCtx(), {})).not.toThrow()
+  })
+
+  it('业务错误：拥堵 / 频繁 / 稍后 → RISK_CONTROL（rate_limit），其余 → UPSTREAM，带 ok / errno', () => {
+    for (const message of ['前方拥堵', '操作过于频繁', '请稍后再试']) {
+      expect(() => check(loggedCtx(), { ok: 0, msg: message })).toThrow(expect.objectContaining({ code: 'RISK_CONTROL', detail: { kind: 'rate_limit', ok: 0, message } }))
+    }
+    expect(() => check(loggedCtx(), { ok: 0, msg: '内容违规', errno: 20019 })).toThrow(
+      expect.objectContaining({ code: 'UPSTREAM', message: '内容违规', detail: { ok: 0, errno: 20019, message: '内容违规' } }),
+    )
+    expect(() => check(loggedCtx(), { ok: -1 })).toThrow(expect.objectContaining({ code: 'UPSTREAM', message: '微博返回错误 ok=-1' }))
+  })
+
+  it('没有正文的拦截状态码：432 / 418 → RISK_CONTROL blocked，429 → rate_limit；接口返回的不是 JSON 时先看状态码', async () => {
+    expect(() => riskCheck(432)).toThrow(expect.objectContaining({ code: 'RISK_CONTROL', detail: { kind: 'blocked', status: 432 } }))
+    expect(() => riskCheck(418)).toThrow(expect.objectContaining({ code: 'RISK_CONTROL', detail: { kind: 'blocked', status: 418 } }))
+    expect(() => riskCheck(429)).toThrow(expect.objectContaining({ code: 'RISK_CONTROL', detail: { kind: 'rate_limit', status: 429 } }))
+    expect(() => riskCheck(200)).not.toThrow()
+    const c = loadCase('weibo', 'user_info')
+    for (const [status, code] of [
+      [432, 'RISK_CONTROL'],
+      [502, 'UPSTREAM'],
+    ] as const) {
+      const blocked = { ...c, responses: [{ status, headers: {}, body: '<html>blocked</html>' }] }
+      const { error } = await replay(blocked, () => cmd.userGet(loggedCtx({ args: { user: '1669879400' } })))
+      expect(error).toMatchObject({ code })
+    }
+  })
+
+  it('m.weibo.cn：缓存的访客 cookie 遇到登录墙时重新生成一次访客身份再试；新生成的也被拒就报 AUTH_REQUIRED，不再重试', async () => {
+    const c = loadCase('weibo', 'mobile_search')
+    const wall = { status: 200, headers: {}, body: { ok: -100, url: 'https://passport.weibo.com/sso/signin' } }
+    const ctx = loggedCtx({ args: { keyword: '猫 咪&狗' } })
+    ctx.credential.scopes.main!.cookies.push({ name: 'SUB', value: 'stale', domain: '.weibo.cn', path: '/', expires: null })
+    const renewed = await replay({ ...c, responses: [wall, visitorResponse('.weibo.cn'), ...c.responses] }, () => cmd.itemSearch(ctx))
+    if (renewed.error) throw renewed.error
+    expect(renewed.requests.map((r) => r.url.split('?')[0])).toEqual([
+      'https://m.weibo.cn/api/container/getIndex',
+      'https://visitor.passport.weibo.cn/visitor/genvisitor2',
+      'https://m.weibo.cn/api/container/getIndex',
+    ])
+    expect(renewed.requests[0]!.cookies).toEqual([['SUB', 'stale']])
+    expect(renewed.requests[2]!.cookies).toEqual([
+      ['SUB', VISITOR_SUB],
+      ['SUBP', VISITOR_SUBP],
+    ])
+    expect((renewed.result as any).data).toHaveLength(2)
+
+    const fresh = await replay({ ...c, responses: [visitorResponse('.weibo.cn'), wall] }, () => cmd.itemSearch(loggedCtx({ args: { keyword: '猫' } })))
+    expect(fresh.requests).toHaveLength(2)
+    expect(fresh.error).toMatchObject({ code: 'AUTH_REQUIRED' })
+  })
+
+  it('genvisitor2 失败（retcode 不对、没有下发 SUB、被拦截）→ RISK_CONTROL', async () => {
+    const c = loadCase('weibo', 'mobile_detail')
+    const ok = visitorResponse('.weibo.cn')
+    for (const [response, detail] of [
+      [{ ...ok, body: 'visitor_gray_callback({"retcode":50000000,"msg":"fail"});' }, { kind: 'blocked', status: 200, retcode: 50000000 }],
+      [{ ...ok, headers: {} }, { kind: 'blocked', status: 200, retcode: 20000000 }],
+      [{ status: 432, headers: {}, body: '' }, { kind: 'blocked', status: 432 }],
+    ] as const) {
+      const { requests, error } = await replay({ ...c, responses: [response] }, () => cmd.itemGet(loggedCtx({ args: { item: MID } })))
+      expect(requests).toHaveLength(1)
+      expect(error).toMatchObject({ code: 'RISK_CONTROL', detail })
+    }
+  })
+
+  it('auth status：没有账号时凭证是空的，不发请求，logged_in 为 false', async () => {
+    const restore = mockSender(() => {
+      throw new Error('不应请求')
+    })
+    try {
+      expect(await cmd.authStatus(makeCtx({ platform: 'weibo', account: 'guest' }))).toEqual({ logged_in: false, user: null, method: null, expires_at: null })
+    } finally {
+      restore()
+    }
+  })
+
+  it('auth status：cookie 失效（首页没有 $CONFIG.user）时 logged_in 为 false', async () => {
+    const restore = mockSender(() => fakeResponse('<html><script>window.$CONFIG = {};</script></html>', { headers: [['content-type', 'text/html']] }))
+    try {
+      expect(await cmd.authStatus(loggedCtx())).toMatchObject({ logged_in: false, user: null })
+    } finally {
+      restore()
+    }
   })
 
 })

@@ -60,7 +60,6 @@ export interface AuthView {
   ct0: string
   lang: string
   loggedIn: boolean
-  guestToken?: string
 }
 
 export type HeaderType = 'GRAPHQL' | 'FORM' | 'UPLOAD'
@@ -68,10 +67,8 @@ export type HeaderType = 'GRAPHQL' | 'FORM' | 'UPLOAD'
 export interface HeaderOptions {
   referer?: string
   origin?: string
-  /** GRAPHQL / FORM 之外不带 xctid（如 guest activate）。 */
+  /** x-client-transaction-id，只有 GRAPHQL / FORM 带（UPLOAD 没有这个头）。 */
   xctid?: string
-  /** 游客读接口附带 x-guest-token（浏览器未登录时的做法；上游读接口不带，见 client.ts）。 */
-  guest?: boolean
 }
 
 /**
@@ -83,9 +80,6 @@ export function buildHeaders(type: HeaderType, url: string, auth: AuthView, opti
   const authType = (): void => {
     if (auth.loggedIn) x.push(['x-twitter-auth-type', 'OAuth2Session'])
   }
-  const guest = (): void => {
-    if (options.guest && !auth.loggedIn && auth.guestToken) x.push(['x-guest-token', auth.guestToken])
-  }
   if (type === 'GRAPHQL') {
     x.push(['content-type', 'application/json'])
     x.push(['authorization', auth.bearer])
@@ -94,7 +88,6 @@ export function buildHeaders(type: HeaderType, url: string, auth: AuthView, opti
     x.push(['x-twitter-client-language', auth.lang])
     x.push(['x-twitter-active-user', 'yes'])
     if (options.xctid) x.push(['x-client-transaction-id', options.xctid])
-    guest()
     if (options.origin) x.push(['origin', options.origin])
     if (options.referer) x.push(['referer', options.referer])
   } else if (type === 'FORM') {
@@ -105,7 +98,6 @@ export function buildHeaders(type: HeaderType, url: string, auth: AuthView, opti
     x.push(['x-twitter-active-user', 'yes'])
     x.push(['content-type', 'application/x-www-form-urlencoded; charset=UTF-8'])
     if (options.xctid) x.push(['x-client-transaction-id', options.xctid])
-    guest()
     if (options.origin) x.push(['origin', options.origin])
     if (options.referer) x.push(['referer', options.referer])
   } else {
@@ -117,14 +109,4 @@ export function buildHeaders(type: HeaderType, url: string, auth: AuthView, opti
     if (options.origin) x.push(['origin', options.origin])
   }
   return [...x, ...fetchHeaders(url)]
-}
-
-/** 只带 bearer + active-user + content-type 的 FORM（guest activate，无 referer/csrf/xctid）。 */
-export function guestActivateHeaders(url: string, bearer: string): HeaderPairs {
-  return [
-    ['authorization', bearer],
-    ['x-twitter-active-user', 'yes'],
-    ['content-type', 'application/x-www-form-urlencoded; charset=UTF-8'],
-    ...fetchHeaders(url),
-  ]
 }

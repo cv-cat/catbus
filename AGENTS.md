@@ -274,7 +274,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | jd | `item get` / `item search` / `item related` / `coupon list` / `cart count` / `history list` / `user collects` `[--area <地区编码>]` | 私有选项：收货地区，影响价格和库存。取值是京东的地区编码 `省_市_区_镇`，用 `_` 或 `-` 分隔，例如 `1_2800_55812_0`；默认取登录态里的 `ipLoc-djd` cookie，没有时为 `1_2800_55812_0` | Item / Item[] / Coupon[] / `{count}` |
 | jd | `msg send <text> --order <订单> [--item <item> \| --conversation <venderId>]` | 私有选项：按订单咨询客服，会话和消息都带上订单号。`<订单>` 是订单号（`order list` 输出的 id），也接受订单详情页 URL。可以和 `--item`、`--conversation` 之一一起用；单独用时联系京东自营客服 | Message |
 | x | `item publish [--thread <text> ...]` | 私有选项：发 thread。`--text` 是第一条，每个 `--thread` 是后面的一条，依次回复上一条；`--image` / `--video` / `--quote` 只作用于第一条。返回第一条 | Item |
-| x | `article publish --text [--title] [--cover]` | 发文章（Premium 长文）：`--text` 是 Markdown，依次建草稿、写标题、正文、封面，再发布。不给 `--title` 时取正文第一行的 `# 标题` | `{id url}` |
+| x | `article publish --text [--title] [--cover]` | 发文章（Premium 长文）：`--text` 是 Markdown，依次建草稿、写标题、正文、封面，再发布。不给 `--title` 时取正文第一行的 `# 标题`。独占一行的 `![](图片)` 上传成插图，相对路径按 `--text @file` 的文件所在目录解析（直接给正文时按当前目录） | `{id url}` |
 | x | `article delete <article>` | 删文章：草稿或已发布的都可以，已发布的连同文章推文一起删 | `{id}` |
 
 扩展类型的字段见 6.2。
@@ -355,7 +355,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | 选项 | 说明 |
 |---|---|
 | `--title` | 标题 |
-| `--text <str\|@file>` | 正文 |
+| `--text <str\|@file>` | 正文。`@file` 表示从文件读取，正文里的相对路径（如 Markdown 插图）按该文件所在目录解析 |
 | `--image <path\|url>` | 图片，可重复 |
 | `--video <path\|url>` | 视频 |
 | `--cover <path\|url>` | 封面 |

@@ -78,8 +78,8 @@
 | item categories | — | — | — | ✓ | — | — | ○ | — | — | — |
 
 - douyin `item search`：--type video 走视频频道搜索
-- weibo `item search`：只能取第一页
-- x `item search`：--type video 和 image 都走媒体搜索（结果里图片和视频都有），不能和 --sort latest 一起用
+- weibo `item search`：只能取第一页（m.weibo.cn 的访客从第二页起要求登录）
+- x `item search`：--type video / image 走媒体搜索，按类型过滤，不能和 --sort latest 一起用
 - jd `item related`：用第一个相关搜索词的搜索结果
 - douyin `item list`：取发布页的作品预览（work_list）；定时未发布的作品 status 为 draft
 - x `item publish`：正文超过 280 权重时自动按长推发（需要 Premium）；--thread 发 thread

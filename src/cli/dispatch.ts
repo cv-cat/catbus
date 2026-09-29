@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises'
+import { resolve as resolvePath } from 'node:path'
 import { text as readStdin } from 'node:stream/consumers'
 import { z } from 'zod'
 import { checkAccountName, endpointFlag, getCurrent, GUEST, newCredential, readCredential, writeCredential } from '../core/auth-store.js'
@@ -356,7 +357,10 @@ async function resolveIdentity(
   return { account: GUEST, credential: await guest() }
 }
 
-/** `--text @file`、`--cookie @file|-`：从文件或 stdin 读取。 */
+/**
+ * `--text @file`、`--cookie @file|-`：从文件或 stdin 读取。
+ * `--text @file` 同时把文件的绝对路径记在 `textFile` 里，正文里的相对路径（如 Markdown 插图）按它所在目录解析。
+ */
 async function readFileOptions(options: Options): Promise<void> {
   for (const key of ['text', 'cookie']) {
     const v = options[key]
@@ -366,6 +370,7 @@ async function readFileOptions(options: Options): Promise<void> {
       options[key] = await readFile(v.slice(1), 'utf8').catch(() => {
         throw new CatbusError('USAGE', `读取文件失败：${v.slice(1)}`)
       })
+      if (key === 'text') options.textFile = resolvePath(v.slice(1))
     }
   }
 }
