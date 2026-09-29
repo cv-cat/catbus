@@ -31,7 +31,7 @@ export default definePlatform({
 
         'item get': impl('full', 'itemGet'),
         'item search': impl('full', 'itemSearch', {
-          note: '--type video 和 image 都走媒体搜索（结果里图片和视频都有），不能和 --sort latest 一起用',
+          note: '--type video / image 走媒体搜索，按类型过滤，不能和 --sort latest 一起用',
           options: { sort: filter.sort('general', 'latest'), type: filter.type('all', 'video', 'image') },
         }),
         'item media': impl('full', 'itemMedia'),
@@ -73,7 +73,7 @@ export default definePlatform({
 
         'msg list': impl('partial', 'msgList', { note: '只取收件箱首页（最近 20 个会话），上游没有翻页' }),
         'msg history': impl('partial', 'msgHistory', { note: '消息端到端加密，只给出占位消息' }),
-        // 上游的 send_message 只是占位
+        // 上游的 send_message 只是占位：X Chat 端到端加密，要先在网页设 passcode、再逆向加密后的发送请求
         'msg send': 'none',
         'msg listen': 'none',
         'msg read': 'none',
@@ -95,7 +95,7 @@ export default definePlatform({
           args: [],
           options: {
             title: z.string().optional().describe('标题，不给时取正文第一行的 # 标题'),
-            text: z.string().describe('正文（Markdown），@file 表示从文件读取；独占一行的 ![](图片) 会上传成插图'),
+            text: z.string().describe('正文（Markdown），@file 表示从文件读取；独占一行的 ![](图片) 会上传成插图，相对路径按该文件所在目录解析'),
             cover: PUBLISH.cover,
           },
           auth: 'required',

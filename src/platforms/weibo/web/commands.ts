@@ -5,7 +5,7 @@ import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { AuthStatus, Item, Media } from '../../../core/schemas.js'
-import { authError, isGuest, paged } from '../../../core/toolkit.js'
+import { authError, paged } from '../../../core/toolkit.js'
 import * as api from './api.js'
 import { Weibo } from './client.js'
 import * as norm from './normalize.js'
@@ -33,7 +33,8 @@ function expiresAt(w: Weibo): string | null {
 
 export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
   const w = new Weibo(ctx)
-  const self = isGuest(ctx) ? null : await api.selfInfo(w)
+  // 没有账号时凭证是空的，不用请求
+  const self = w.isLogin ? await api.selfInfo(w) : null
   return {
     logged_in: Boolean(self),
     user: self ? n.userRef({ id: self.uid, name: self.nick, url: norm.userUrl(self.uid) }) : null,
@@ -101,23 +102,14 @@ function searchMblogs(cards: any[]): any[] {
   return out
 }
 
+/**
+ * 只取第一页：m.weibo.cn 用访客身份访问（登录 cookie 不发往 .weibo.cn），访客从第二页起就是登录墙；
+ * 上游 searchSome 的 page 参数同样翻不过去。
+ */
 export async function itemSearch(ctx: Ctx) {
   const w = new Weibo(ctx)
-  const page = Number(ctx.cursor ?? 1) || 1
-  let body
-  try {
-    // 第二页起访客会遇到登录墙，那是真的要登录，不用重新生成访客身份
-    body = await api.mobileSearch(w, ctx.args.keyword!, page, { retry: page === 1 })
-  } catch (err) {
-    if (page > 1 && err instanceof CatbusError && err.code === 'AUTH_REQUIRED') {
-      ctx.log.warn('m.weibo.cn 只允许游客查看第一页搜索结果，已停止翻页')
-      return paged([], null, false)
-    }
-    throw err
-  }
-  const list = searchMblogs(body.data?.cards).map((m) => norm.mblog(m))
-  const next = Number(body.data?.cardlistInfo?.page ?? 0)
-  return paged(list, next, next > page && list.length > 0)
+  const body = await api.mobileSearch(w, ctx.args.keyword!, 1)
+  return paged(searchMblogs(body.data?.cards).map((m) => norm.mblog(m)), null, false)
 }
 
 /** post_weibo 的 type（请求里的 visible）：0 公开、1 仅自己可见、6 朋友圈可见、10 粉丝可见。 */
@@ -206,8 +198,9 @@ export async function mediaUpload(ctx: Ctx): Promise<Media> {
   const file = await readMedia(w.http, ctx.args.file!)
   if (file.contentType.startsWith('video/')) {
     w.requireLogin()
+    // 还没发布的视频没有可播放的地址（转码结果只有截图），url 为空串；发布时用的是 id（media_id）
     const mediaId = String(await uploadVideoFile(w, file.data, false))
-    return n.media({ id: mediaId, type: 'video', url: `https://video.weibo.com/show?fid=1034:${mediaId}` })
+    return n.media({ id: mediaId, type: 'video', url: '' })
   }
   const me = await self(w)
   const d = await api.uploadImage(w, me.uid, me.nick, file.data)

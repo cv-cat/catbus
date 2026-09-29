@@ -50,11 +50,11 @@
 | tiktok | 没有生成器，`msToken` 来自 cookie（`builder/auth.py:156`） | 游客态需要在 catbus 里补 |
 | bilibili | `builder/auth.py:52` `BiliAuth.anonymous`；`utils/device.py` | `buvid3` / `buvid4` 等 |
 | kuaishou | `ks_apis/login_api.py:732` `bootstrap_device_fingerprint` | 设备指纹 cookie |
-| weibo | m.weibo 本身可以匿名访问 | — |
+| weibo | 上游没有：`WeiboMobileApis` 不带 cookie 访问 m.weibo.cn | 现在不带 cookie 会被 302 到访客页。catbus 访问 m.weibo.cn 时用新浪访客系统 `genvisitor2` 下发的访客 SUB / SUBP（登录后也是，登录 cookie 属于 .weibo.com）；这只是 m.weibo.cn 的访问方式，web 端没有游客态 |
 | xianyu | `utils/build_cookies.py:52` `build_initial_cookies` | 先调一次 mtop 拿 `_m_h5_tk`，再调一次拿 `cookie2`；含 `tfstk` |
 | taobao | `taobao_apis.py:29` `get_token` | `_m_h5_tk` |
 | jd | `utils/device_token.py:112` `get_device_fields` | 设备字段 |
-| x | `builder/auth.py:26` `GUEST_ACTIVATE_URL` = `https://api.x.com/1.1/guest/activate.json` | guest token，约 3 小时有效 |
+| x | `builder/auth.py:26` `GUEST_ACTIVATE_URL` = `https://api.x.com/1.1/guest/activate.json`，`:87` `XAuth.guest_token` 惰性换取 | guest token，约 3 小时有效。上游的读接口并不带它；web 端不支持游客态，catbus 没有移植 |
 
 ### 1.3 长连接
 
@@ -216,7 +216,7 @@
 - **上游凭证来源**：无。仓库另带一个 FastAPI 服务 `app.py`，不移植。
 - **API**
   - `apis/weibo_apis.py` 的 `WeiboApis`：`get_self_info`、`getUserInfo`、`getUserPosted`、`getWordComments`、`getWorkInfo`、`searchSome`、`get_user_all_posted`
-  - `apis/weibo_mobile_apis.py` 的 `WeiboMobileApis`（m.weibo，不需要 cookie）：`getWorkInfo`、`searchSome`。游客走这一路。
+  - `apis/weibo_mobile_apis.py` 的 `WeiboMobileApis`（m.weibo.cn，上游不带 cookie；catbus 带访客 cookie，见 1.2）：`getWorkInfo`（`item get`，`comment list` 缺作者 uid 时也用它查）、`searchSome`（`item search`：访客从第二页起是登录墙，只取第一页）。
   - `apis/weibo_creator_apis.py` 的 `WeiboCreaterApis.post_weibo`。`type`（请求里的 `visible`）：0 公开、1 仅自己、6 朋友圈（互相关注）、10 粉丝，对应 `--visibility public / private / friends / fans`
 - **没有移植的**
   - `WeiboApis.getWorkInfo(url)`：请求 `weibo.com/<uid>/<mblogid>`，只取页面里的 `window.$CONFIG`。现在的 weibo.com 是单页应用，页面只是一个壳，`$CONFIG` 是全站配置（登录时多一个当前用户 `user`，`get_self_info` 取的就是它），没有微博正文；正文由前端另外请求 `/ajax/statuses/show`，上游没有这个接口。上游自己的 `app.py` 取详情也走 `WeiboMobileApis.getWorkInfo`。
@@ -284,7 +284,7 @@
 
 - **鉴权**
   - `builder/auth.py` 的 `XAuth.prepare_auth(cookies_str)`，需要 `auth_token` 和 `ct0`。
-  - 支持 guest token（见 1.2）。
+  - 支持 guest token（见 1.2），web 端不支持游客态，不移植；`prepare_auth` 未登录时本地生成 ct0 的分支同样不移植。
 - **登录**：`x_apis/login_api.py`
   - `XLoginApi.login_by_password`
   - `XJetfuelLoginApi`：`login_by_password`、`login_by_password_pure`，后者需要 Castle profile。
@@ -292,13 +292,16 @@
 - **上游凭证来源**：`.env` 的 `X_COOKIES`、`X_USERNAME`、`X_PASSWORD`、`X_PROXY`，以及 Castle profile 的 `CASTLE_PURE_RL_FILE`、`CASTLE_PURE_ONLY`。
 - **API**（静态方法，第一个参数为 `auth`）
   - `x_apis/x_api.py` 的 `XAPI`：`get_work_info`、`get_work_comments`、`get_all_work_comments`、`search_work`、`get_user_info(user_name)`、`get_user_post_note`、`get_user_all_post_note`、`get_home_timeline`、`get_viewer`
-    - `search_work` 的 `product`：`Top` / `Latest` 对应 `item search --sort general|latest`，`People` 对应 `user search`，`Media` 对应 `item search --type video|image`；`Lists` 不做。
+    - `search_work` 的 `product`：`Top` / `Latest` 对应 `item search --sort general|latest`，`People` 对应 `user search`，`Media` 对应 `item search --type video|image`（结果里图片和视频混在一起，catbus 按 `Item.kind` 过滤）；`Lists` 不做。
   - `x_apis/x_write_api.py` 的 `XWriteAPI`：`post_tweet`（正文权重超过 280 时走 `create_note_tweet`，即 CreateNoteTweet 长推）、`post_thread`、`delete_tweet`、`favorite`、`retweet`、`bookmark`、`follow/unfollow`
     - 权重算法在 `utils/x_util.py` 的 `tweet_weight`（twitter-text v3）。
-    - `create_tweet` 的 `quote_url` 对应 `item publish --quote`，`post_thread` 对应 `item publish --thread`。
+    - `create_tweet` 的 `quote_url` 对应 `item publish --quote`，`post_thread` 对应 `item publish --thread`。`comment add` 也走 `post_tweet`（带 `reply_to`，同 `main.py post --reply-to`），超长时同样自动长推。
+    - `_rest_post`（关注）的业务拒绝（158 / 160 / 161 / 162）是 HTTP 403 + `errors`，catbus 先按错误码映射，没有错误码的 401 / 403 才当作登录态失效。
   - `x_apis/x_article_api.py` 的 `XArticleAPI`（文章，Premium 长文）：`create_draft`、`update_title`、`update_content`、`update_cover`、`publish`、`delete`、`list_articles`、`upload_image`，编排入口 `post_article`
     - 对应扩展命令 `article publish`（`post_article` 的 publish=True）、`article delete`；`list_articles`（草稿 / 已发布列表）没有暴露。
     - Markdown → Draft.js content_state 在 `utils/article_util.py`，catbus 移植到 `web/article.ts`。
+    - 正文插图的相对路径按 `base_dir`（`main.py` 传 Markdown 文件所在目录）解析：catbus 用 `--text @file` 的文件目录（dispatch 记在 `textFile`）。上游的封面也按 `base_dir` 解析，catbus 的 `--cover` 是命令行参数，按当前目录。
+    - `extract_tweet_id`（发布时生成的文章推文）：catbus 在 stderr 提示这条推文的链接，输出仍是文章的 `{id url}`。
   - 媒体上传：`x_apis/x_media_api.py` 的 `XMediaAPI.upload`（`with_metadata=False` 时不登记元数据，文章图片用）
   - 私信：`x_apis/x_dm_api.py` 的 `XChatAPI`：`get_initial_chat_page`（`msg list`）、`get_conversation_page`（`msg history`）、`get_users_by_ids`（`msg list` 补对方资料）
     - `get_initial_chat_page` 的 `max_local_sequence_id` / `message_pull_version` 是增量同步的水位（取某个序号之后的新消息事件），不是翻页游标。翻更早的会话要 `GetInboxPageRequestQuery`（`continue_cursor`），上游没有，所以 `msg list` 只取首页。

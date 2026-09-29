@@ -1,4 +1,5 @@
-import { CatbusError } from '../../../core/errors.js'
+import { dirname, isAbsolute, resolve } from 'node:path'
+import { CatbusError, toCatbusError } from '../../../core/errors.js'
 import { downloadMedia, readMedia } from '../../../core/files.js'
 import { cookieCredential, finishLogin, loginContext } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
@@ -28,6 +29,16 @@ async function viewer(x: XClient): Promise<any> {
   const errors: any[] = res?.errors ?? []
   if (errors.some((e) => isAuthCode(e?.code))) throw authError(x.ctx, errors.map((e) => e?.message).join('; '))
   throw new CatbusError('UPSTREAM', 'Viewer 响应里没有当前用户', { detail: res })
+}
+
+/** 校验登录态用的 Viewer：cookie 无效或已失效时返回 null，其他错误照抛。 */
+async function viewerOrNull(x: XClient): Promise<any | null> {
+  try {
+    return await viewer(x)
+  } catch (err) {
+    if (err instanceof CatbusError && (err.code === 'AUTH_EXPIRED' || err.code === 'AUTH_REQUIRED')) return null
+    throw err
+  }
 }
 
 /** UserByScreenName / UserByRestId 响应里的用户；不存在、被封禁时报错。 */
@@ -61,10 +72,13 @@ async function tweetOf(x: XClient, input: string): Promise<any> {
   return t
 }
 
-/** 时间线分页：游标没变或这一页是空的就算翻到底了。 */
-function timeline<T>(ctx: Ctx, list: T[], res: any) {
+/**
+ * 时间线分页：游标没变或这一页是空的就算翻到底了。
+ * got 是这一页取到的条数（过滤之前）；按类型过滤后这一页可能为空，但后面还有。
+ */
+function timeline<T>(ctx: Ctx, list: T[], res: any, got = list.length) {
   const next = norm.cursorOf(res, 'Bottom')
-  return paged(list, next, Boolean(next) && list.length > 0 && next !== ctx.cursor)
+  return paged(list, next, Boolean(next) && got > 0 && next !== ctx.cursor)
 }
 
 // ================================================================ auth
@@ -76,30 +90,16 @@ export async function authLogin(ctx: Ctx) {
   if (!names.has('auth_token') || !names.has('ct0')) {
     throw new CatbusError('USAGE', 'X 的 cookie 需要包含 auth_token 和 ct0', { hint: '在已登录的 x.com 页面复制完整的 Cookie 请求头' })
   }
-  const x = await xclient(loginContext(ctx, credential))
-  let me: any
-  try {
-    me = await viewer(x)
-  } catch (err) {
-    if (err instanceof CatbusError && (err.code === 'AUTH_EXPIRED' || err.code === 'AUTH_REQUIRED')) {
-      throw new CatbusError('AUTH_REQUIRED', '登录没有成功：cookie 无效或已过期', { hint: '重新在浏览器登录 x.com 后复制 cookie' })
-    }
-    throw err
-  }
+  const me = await viewerOrNull(await xclient(loginContext(ctx, credential)))
+  if (!me) throw new CatbusError('AUTH_REQUIRED', '登录没有成功：cookie 无效或已过期', { hint: '重新在浏览器登录 x.com 后复制 cookie' })
   return finishLogin(ctx, credential, norm.userRef(me)!)
 }
 
 export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
   const x = await xclient(ctx)
   const out: AuthStatus = { logged_in: false, user: null, method: null, expires_at: null }
-  if (!x.isLoggedIn) return out
-  let me: any
-  try {
-    me = await viewer(x)
-  } catch (err) {
-    if (err instanceof CatbusError && (err.code === 'AUTH_EXPIRED' || err.code === 'AUTH_REQUIRED')) return out
-    throw err
-  }
+  const me = x.isLoggedIn ? await viewerOrNull(x) : null
+  if (!me) return out
   const expires = x.jar.cookies.find((c) => c.name === 'auth_token')?.expires
   return { logged_in: true, user: norm.userRef(me), method: ctx.credential.method, expires_at: expires ? n.time(expires) : null }
 }
@@ -126,9 +126,8 @@ export async function userSearch(ctx: Ctx) {
 export async function userItems(ctx: Ctx) {
   const x = await xclient(ctx)
   const id = await resolveUserId(x, ctx.args.user!)
-  // 登录后主页 Posts 标签是 UserOriginalsTimeline；未登录只能用老的 UserTweets（前者游客 404）
-  const op = x.isLoggedIn ? 'UserOriginalsTimeline' : 'UserTweets'
-  const res = await api.getUserPostNote(x, id, ctx.cursor ?? undefined, 20, op)
+  // 登录后主页 Posts 标签是 UserOriginalsTimeline（上游 get_user_post_note 的默认）
+  const res = await api.getUserPostNote(x, id, ctx.cursor ?? undefined)
   return timeline(ctx, norm.tweetResults(res).map(norm.item), res)
 }
 
@@ -151,7 +150,10 @@ export async function itemGet(ctx: Ctx) {
 
 const SEARCH_PRODUCT: Record<string, string> = { general: 'Top', latest: 'Latest' }
 
-/** `--type video|image` 都走媒体搜索（product=Media，网页的「媒体」标签），结果里图片和视频都有。 */
+/**
+ * `--type video|image` 走媒体搜索（product=Media，网页的「媒体」标签）：结果里图片和视频混在一起，
+ * 按 Item.kind 过滤（既有图又有视频的推文算 video）。
+ */
 export async function itemSearch(ctx: Ctx) {
   const { sort, type } = ctx.options as { sort?: string; type?: string }
   const media = type === 'video' || type === 'image'
@@ -161,8 +163,8 @@ export async function itemSearch(ctx: Ctx) {
   const x = await xclient(ctx)
   const product = media ? 'Media' : (SEARCH_PRODUCT[sort ?? 'general'] ?? 'Top')
   const res = await api.searchWork(x, ctx.args.keyword!, ctx.cursor ?? undefined, product)
-  const results = media ? [...norm.tweetResults(res), ...norm.gridResults(res)] : norm.tweetResults(res)
-  return timeline(ctx, results.map(norm.item), res)
+  const results = (media ? [...norm.tweetResults(res), ...norm.gridResults(res)] : norm.tweetResults(res)).map(norm.item)
+  return timeline(ctx, media ? results.filter((it) => it.kind === type) : results, res, results.length)
 }
 
 export async function itemMedia(ctx: Ctx): Promise<Media[]> {
@@ -236,7 +238,7 @@ export async function itemPublish(ctx: Ctx) {
     try {
       posted.push(norm.item(api.createdTweet(await api.postTweet(x, t, [], posted.at(-1)!.id))))
     } catch (err) {
-      const e = err instanceof CatbusError ? err : new CatbusError('ERROR', String((err as Error)?.message ?? err))
+      const e = toCatbusError(err)
       // 中途失败：前面几条已经发出去了，把它们的 id 放进 detail，方便删除或接着发
       throw new CatbusError(e.code, `thread 第 ${i + 2} 条失败：${e.message}`, {
         hint: e.hint,
@@ -256,13 +258,16 @@ export async function commentList(ctx: Ctx) {
   return timeline(ctx, norm.replyResults(res).map((r) => norm.comment(r, id)), res)
 }
 
-/** 评论就是一条回复推文；`--reply-to` 时回复那条评论。 */
+/**
+ * 评论就是一条回复推文；`--reply-to` 时回复那条评论。和发推一样，正文超过 280 权重时自动改发长推
+ * （上游 main.py post --reply-to 走的就是 post_tweet）。
+ */
 export async function commentAdd(ctx: Ctx) {
   const x = await xclient(ctx)
   x.requireLogin()
   const id = parseTweetId(ctx.args.item!)
   const to = ctx.options.replyTo as string | undefined
-  const created = api.createdTweet(await api.createTweet(x, ctx.args.text!, [], to ? parseTweetId(to) : id))
+  const created = api.createdTweet(await api.postTweet(x, ctx.args.text!, [], to ? parseTweetId(to) : id))
   return norm.comment(created, id)
 }
 
@@ -294,7 +299,8 @@ export async function msgList(ctx: Ctx) {
   const x = await xclient(ctx)
   x.requireLogin()
   const page = (await api.getInitialChatPage(x))?.data?.get_initial_chat_page ?? {}
-  const self = x.userId
+  // 自己的 id 取 twid cookie；cookie 里没有 twid 时查一次 Viewer，不然会把自己当成对方
+  const self = x.userId || (await viewer(x)).rest_id
   const items: any[] = page.items ?? []
   const missing = [...new Set(items.flatMap((it) => norm.peersWithoutName(it, self)))]
   const members = missing.length ? norm.memberResults(await api.getUsersByIds(x, missing)) : new Map()
@@ -315,10 +321,6 @@ export async function msgHistory(ctx: Ctx) {
   )
 }
 
-/**
- * 上游 XChatAPI.send_message 只是占位：X Chat 端到端加密，要先在网页设置 passcode、
- * 再逆向加密后的发送请求，上游还没有做，这里同样报 NOT_IMPLEMENTED。
- */
 // ================================================================ media
 
 export async function mediaUpload(ctx: Ctx): Promise<Media> {
@@ -336,7 +338,7 @@ const articleUrl = (id: string) => `https://x.com/i/article/${id}`
 
 /** 在 catbus 的错误上补充已建草稿的信息：发布失败时草稿还在，方便到网页上处理或删除。 */
 function withDraft(err: unknown, articleId: string): CatbusError {
-  const e = err instanceof CatbusError ? err : new CatbusError('ERROR', String((err as Error)?.message ?? err))
+  const e = toCatbusError(err)
   return new CatbusError(e.code, `${e.message}（草稿 ${articleId} 已创建）`, {
     hint: e.hint ?? `到 ${api.articleEditUrl(articleId)} 查看，或 catbus x article delete ${articleId}`,
     detail: { article_id: articleId, edit_url: api.articleEditUrl(articleId), error: e.detail },
@@ -346,9 +348,12 @@ function withDraft(err: unknown, articleId: string): CatbusError {
 /**
  * 从 Markdown 发文章：传正文插图 → 建草稿 → 标题 → 正文 → 传封面、设封面 → 发布（同时生成一条文章推文）。
  * 没给 `--title` 时取正文第一行的 `# 标题`。上游 XArticleAPI.post_article（publish=True）。
+ *
+ * 正文里 `![](图片)` 的相对路径按 Markdown 文件所在目录解析（上游 main.py 的 base_dir）：`--text @file`
+ * 时 dispatch 把文件路径记在 textFile 里，直接给正文时按当前目录。`--cover` 是命令行参数，按当前目录。
  */
 export async function articlePublish(ctx: Ctx) {
-  const o = ctx.options as { title?: string; text: string; cover?: string }
+  const o = ctx.options as { title?: string; text: string; cover?: string; textFile?: string }
   let title: string | null | undefined = o.title
   let body = o.text
   if (title == null) [title, body] = splitTitle(body)
@@ -359,16 +364,22 @@ export async function articlePublish(ctx: Ctx) {
     const file = await readMedia(x.http, input)
     return api.articleUploadImage(x, file.data, file.filename)
   }
-  const contentState = await markdownToContentState(body, upload)
+  const baseDir = o.textFile ? dirname(resolve(o.textFile)) : null
+  const inline = (path: string) => upload(baseDir && !/^https?:\/\//i.test(path) && !isAbsolute(path) ? resolve(baseDir, path) : path)
+  const contentState = await markdownToContentState(body, inline)
   const articleId = api.extractArticleId(await api.articleCreateDraft(x))
+  let published
   try {
     await api.articleUpdateTitle(x, articleId, title)
     await api.articleUpdateContent(x, articleId, contentState)
     if (o.cover) await api.articleUpdateCover(x, articleId, await upload(o.cover))
-    await api.articlePublish(x, articleId)
+    published = await api.articlePublish(x, articleId)
   } catch (err) {
     throw withDraft(err, articleId)
   }
+  // 发布时同时生成一条带文章卡片的推文（上游 cmd_article 打印的就是它）
+  const tweetId = api.articleTweetId(published)
+  if (tweetId) ctx.log.info(`文章推文：${norm.tweetUrl(tweetId)}`)
   return { id: articleId, url: articleUrl(articleId) }
 }
 

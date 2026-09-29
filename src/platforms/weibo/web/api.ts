@@ -106,20 +106,16 @@ export async function mobileDetail(w: Weibo, id: string): Promise<any> {
 }
 
 /** searchSome：综合搜索（容器 100103type=1）。 */
-export function mobileSearch(w: Weibo, query: string, page: number | string = 1, options: { retry?: boolean } = {}) {
-  return w.json(
-    'cn',
-    {
-      url: `${MOBILE}/api/container/getIndex`,
-      headers: searchHeaders(),
-      query: [
-        ['containerid', `100103type=1&q=${query}`],
-        ['page_type', 'searchall'],
-        ['page', String(page)],
-      ],
-    },
-    options,
-  )
+export function mobileSearch(w: Weibo, query: string, page: number | string = 1) {
+  return w.json('cn', {
+    url: `${MOBILE}/api/container/getIndex`,
+    headers: searchHeaders(),
+    query: [
+      ['containerid', `100103type=1&q=${query}`],
+      ['page_type', 'searchall'],
+      ['page', String(page)],
+    ],
+  })
 }
 
 // ================================================================ WeiboCreaterApis

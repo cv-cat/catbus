@@ -1,11 +1,10 @@
 import { createHash } from 'node:crypto'
-import { mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { CatbusError } from '../src/core/errors.js'
 import { fakeResponse, mockSender } from '../src/core/http.js'
-import { deterministic } from '../src/core/rand.js'
 import { RAW } from '../src/core/schemas.js'
 import xPlatform from '../src/platforms/x/index.js'
 import * as api from '../src/platforms/x/web/api.js'
@@ -24,7 +23,8 @@ const MEDIA_ID = '1790000000000000100'
 const ARTICLE_ID = '1790000000000000200'
 
 const loggedCtx = (extra: Parameters<typeof makeCtx>[0] = { platform: 'x' }) => makeCtx({ ...extra, platform: 'x', cookies: COOKIES, cookieDomain: '.x.com' })
-const guestCtx = (extra: Parameters<typeof makeCtx>[0] = { platform: 'x' }) => makeCtx({ ...extra, platform: 'x', account: 'guest' })
+/** 没有账号时 auth 命令拿到的空凭证（web 端不支持游客态，只有 auth status 会用到）。 */
+const guestCtx = () => makeCtx({ platform: 'x', account: 'guest' })
 
 async function logged<T>(fn: (x: XClient) => Promise<T>): Promise<T> {
   const x = new XClient(loggedCtx())
@@ -36,11 +36,6 @@ const bytesOf = (b64: string) => new Uint8Array(Buffer.from(b64, 'base64'))
 
 /** 用例名 → TS 侧的等价调用（与 scripts/golden/x/gen.py 一一对应）。 */
 const CASES: Record<string, (input: any) => Promise<unknown>> = {
-  guest_activate: async () => {
-    const x = new XClient(guestCtx())
-    await x.init()
-    return x.guestToken()
-  },
   tweet_detail: () => logged((x) => api.getWorkInfo(x, TWEET_ID)),
   tweet_detail_cursor: () => logged((x) => api.getWorkInfo(x, `https://twitter.com/elonmusk/status/${TWEET_ID}?s=20`, 'DETAIL_NEXT')),
   tweet_detail_referrer: () => logged((x) => api.getWorkInfo(x, TWEET_ID, undefined, 'home')),
@@ -104,7 +99,7 @@ describe('x 对拍：请求构造与签名', () => {
       const { requests, result, error } = await replay(c, () => run(c.input))
       if (error) throw error
       expectRequests(requests, c.requests)
-      if (name === 'guest_activate' || name.startsWith('media_upload') || name === 'article_upload_image') expect(result).toBe(c.result)
+      if (name.startsWith('media_upload') || name === 'article_upload_image') expect(result).toBe(c.result)
     })
   }
 
@@ -142,9 +137,9 @@ describe('x 对拍：请求构造与签名', () => {
 })
 
 describe('x 对拍：命令流程', () => {
-  it('游客 user get：换取 guest token（写入 gt cookie），带 x-guest-token 查用户', async () => {
-    const c = loadCase('x', 'guest_user_get')
-    const ctx = guestCtx({ platform: 'x', args: { user: 'elonmusk' } })
+  it('user get：按用户名查 UserByScreenName，接受主页链接', async () => {
+    const c = loadCase('x', 'user_info')
+    const ctx = loggedCtx({ platform: 'x', args: { user: 'https://x.com/ElonMusk' } })
     const { requests, result, error } = await replay(c, () => cmd.userGet(ctx))
     if (error) throw error
     expectRequests(requests, c.requests)
@@ -157,26 +152,11 @@ describe('x 对拍：命令流程', () => {
       bio: '简介 & bio',
       stats: { followers: 241701251, following: 1412, items: 109119, likes: 249608 },
     })
-    // guest token 缓存在游客凭证里：3 小时内不再换取
-    const main = ctx.credential.scopes.main!
-    expect(main.tokens).toMatchObject({ guest_token: '1790000000000000001', guest_at: c.now })
-    expect(main.cookies.map((k) => k.name)).toEqual(['ct0', 'lang', 'gt'])
-    const restore = [
-      deterministic({ now: c.now + 3 * 3600_000 - 1 }),
-      mockSender(() => {
-        throw new Error('不应再请求 guest/activate')
-      }),
-    ]
-    try {
-      expect(await new XClient(ctx).guestToken()).toBe('1790000000000000001')
-    } finally {
-      for (const r of restore) r()
-    }
   })
 
-  it('游客 item get：TweetResultByRestId（游客可用），视频推文取码率最高的 mp4', async () => {
-    const c = loadCase('x', 'guest_item_get')
-    const ctx = guestCtx({ platform: 'x', args: { item: c.input.item } })
+  it('item get：TweetResultByRestId，视频推文取码率最高的 mp4', async () => {
+    const c = loadCase('x', 'tweet_result')
+    const ctx = loggedCtx({ platform: 'x', args: { item: TWEET_ID } })
     const { requests, result, error } = await replay(c, () => cmd.itemGet(ctx))
     if (error) throw error
     expectRequests(requests, c.requests)
@@ -197,9 +177,23 @@ describe('x 对拍：命令流程', () => {
     })
   })
 
-  it('游客 user items：先按用户名查 rest_id，未登录用 UserTweets；跳过广告，拆开 TweetWithVisibilityResults', async () => {
-    const c = loadCase('x', 'guest_user_items')
-    const ctx = guestCtx({ platform: 'x', args: { user: '@ElonMusk' } })
+  it('item get：推文已删除 / 不可见（tombstone、TweetUnavailable）时报 UPSTREAM，带上原因', async () => {
+    const c = loadCase('x', 'tweet_result')
+    for (const [result, reason] of [
+      [{ __typename: 'TweetTombstone', tombstone: { text: { text: 'This Post was deleted by the Post author.' } } }, 'This Post was deleted by the Post author.'],
+      [{ __typename: 'TweetUnavailable', reason: 'Protected' }, 'Protected'],
+      [undefined, null],
+    ] as const) {
+      const gone = structuredClone(c)
+      gone.responses[0]!.body = { data: { tweetResult: result ? { result } : {} } }
+      const { error } = await replay(gone, () => cmd.itemGet(loggedCtx({ platform: 'x', args: { item: TWEET_ID } })))
+      expect(error).toMatchObject({ code: 'UPSTREAM', message: `推文 ${TWEET_ID} 不存在或不可见${reason ? `：${reason}` : ''}` })
+    }
+  })
+
+  it('user items：先按用户名查 rest_id，再取 UserOriginalsTimeline；跳过广告，拆开 TweetWithVisibilityResults', async () => {
+    const c = loadCase('x', 'user_items')
+    const ctx = loggedCtx({ platform: 'x', args: { user: '@ElonMusk' } })
     const { requests, result, error } = await replay(c, () => cmd.userItems(ctx))
     if (error) throw error
     expectRequests(requests, c.requests)
@@ -339,41 +333,46 @@ describe('x 对拍：命令流程', () => {
     })
   })
 
-  it('item search --type image：媒体搜索（product=Media），推文在 search-grid 宫格模块里；翻页从 TimelineAddToModule 取', async () => {
+  it('item search --type image / video：媒体搜索（product=Media），推文在 search-grid 宫格模块里，按类型过滤；翻页从 TimelineAddToModule 取', async () => {
     const first = loadCase('x', 'search_media')
     const ctx = loggedCtx({ platform: 'x', args: { keyword: 'cat' }, options: { type: 'image' } })
     const r1 = await replay(first, () => cmd.itemSearch(ctx))
     if (r1.error) throw r1.error
     expectRequests(r1.requests, first.requests)
-    expect((r1.result as any).data.map((i: any) => [i.id, i.kind])).toEqual([
-      ['1002', 'image'],
-      ['1003', 'video'],
-    ])
+    expect((r1.result as any).data.map((i: any) => [i.id, i.kind])).toEqual([['1002', 'image']])
     expect((r1.result as any).page).toEqual({ cursor: 'MEDIA_NEXT', has_more: true })
+    const video = await replay(first, () => cmd.itemSearch({ ...ctx, options: { type: 'video' } }))
+    expect((video.result as any).data.map((i: any) => [i.id, i.kind])).toEqual([['1003', 'video']])
 
+    // 第二页只有一张图：--type video 过滤后这一页是空的，但后面还有，has_more 仍为 true
     const next = loadCase('x', 'search_media_cursor')
     const r2 = await replay(next, () => cmd.itemSearch({ ...ctx, options: { type: 'video' }, cursor: 'MEDIA_NEXT' }))
     if (r2.error) throw r2.error
     expectRequests(r2.requests, next.requests)
-    expect((r2.result as any).data.map((i: any) => i.id)).toEqual(['1005'])
+    expect((r2.result as any).data).toEqual([])
     expect((r2.result as any).page).toEqual({ cursor: 'MEDIA_NEXT_2', has_more: true })
+    const r3 = await replay(next, () => cmd.itemSearch({ ...ctx, cursor: 'MEDIA_NEXT' }))
+    expect((r3.result as any).data.map((i: any) => i.id)).toEqual(['1005'])
   })
 
   function articleCtx(c: ReturnType<typeof loadCase>) {
     const dir = mkdtempSync(join(tmpdir(), 'catbus-x-'))
     const file = join(dir, c.input.filename)
     writeFileSync(file, bytesOf(c.input.data))
-    // 上游按 base_dir 解析正文里的相对路径；catbus 按当前目录解析，这里直接换成绝对路径
-    const text = (c.input.markdown as string).replace('](photo.png)', `](${file})`)
-    return loggedCtx({ platform: 'x', options: { text, cover: file } })
+    // 正文里的 ![](photo.png) 按 Markdown 文件所在目录解析（上游 base_dir）；textFile 由 dispatch 读 --text @file 时给出
+    return loggedCtx({ platform: 'x', options: { text: c.input.markdown, textFile: join(dir, 'post.md'), cover: file } })
   }
 
   it('article publish：传插图 → 建草稿 → 标题（取正文第一行 # 标题）→ 正文 → 传封面、设封面 → 发布', async () => {
     const c = loadCase('x', 'post_article')
-    const { requests, result, error } = await replay(c, () => cmd.articlePublish(articleCtx(c)))
+    const ctx = articleCtx(c)
+    const info = vi.spyOn(ctx.log, 'info')
+    const { requests, result, error } = await replay(c, () => cmd.articlePublish(ctx))
     if (error) throw error
     expectRequests(requests, c.requests)
     expect(result).toEqual({ id: ARTICLE_ID, url: `https://x.com/i/article/${ARTICLE_ID}` })
+    // 发布时生成的文章推文（上游 extract_tweet_id）只在 stderr 提示
+    expect(info).toHaveBeenCalledWith('文章推文：https://x.com/i/status/4001')
   })
 
   it('article publish：草稿建好后失败时，detail 里给出草稿 id，提示删除', async () => {
@@ -403,6 +402,145 @@ describe('x 对拍：命令流程', () => {
   })
 })
 
+/** 时间线响应的骨架：一组 entry，末尾接底部游标。 */
+const timelineOf = (entries: object[], bottom: string) => ({
+  instructions: [{ type: 'TimelineAddEntries', entries: [...entries, { entryId: `cursor-bottom-${bottom}`, content: { cursorType: 'Bottom', value: bottom } }] }],
+})
+
+describe('x 命令流程：其余读写命令', () => {
+  it('comment add：回复推文；正文超过 280 权重时和发推一样自动改发长推（CreateNoteTweet）', async () => {
+    const c = loadCase('x', 'comment_add_long')
+    const ctx = loggedCtx({ platform: 'x', args: { item: `https://x.com/elonmusk/status/${TWEET_ID}`, text: c.input.text } })
+    const { requests, result, error } = await replay(c, () => cmd.commentAdd(ctx))
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect(requests[0]!.url).toContain('/CreateNoteTweet')
+    expect(result).toMatchObject({ id: '3001', item_id: TWEET_ID, author: { id: '10001' }, text: c.input.text })
+  })
+
+  it('comment add --reply-to：短评论走 CreateTweet，回复那条评论', async () => {
+    const c = loadCase('x', 'create_tweet_reply')
+    const created = { data: { create_tweet: { tweet_results: { result: { rest_id: '3001', legacy: { id_str: '3001', full_text: 'reply', in_reply_to_status_id_str: '20' } } } } } }
+    const ok = { ...c, responses: [{ ...c.responses[0]!, body: created }] }
+    const ctx = loggedCtx({ platform: 'x', args: { item: TWEET_ID, text: 'reply' }, options: { replyTo: 'https://x.com/a/status/20' } })
+    const { requests, result, error } = await replay(ok, () => cmd.commentAdd(ctx))
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect(result).toMatchObject({ id: '3001', item_id: TWEET_ID, parent_id: '20', text: 'reply' })
+  })
+
+  it('user search：SearchTimeline product=People，取 user- 条目', async () => {
+    const c = loadCase('x', 'search_people')
+    const user = { rest_id: USER_ID, core: { name: 'Elon Musk', screen_name: 'elonmusk' } }
+    const entries = [{ entryId: `user-${USER_ID}`, content: { itemContent: { user_results: { result: user } } } }]
+    const body = { data: { search_by_raw_query: { search_timeline: { timeline: timelineOf(entries, 'PEOPLE_NEXT') } } } }
+    const ctx = loggedCtx({ platform: 'x', args: { keyword: 'elon' } })
+    const { requests, result, error } = await replay({ ...c, responses: [{ ...c.responses[0]!, body }] }, () => cmd.userSearch(ctx))
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect((result as any).data.map((u: any) => [u.id, u.handle, u.url])).toEqual([[USER_ID, 'elonmusk', 'https://x.com/elonmusk']])
+    expect((result as any).page).toEqual({ cursor: 'PEOPLE_NEXT', has_more: true })
+  })
+
+  it('feed list：HomeTimeline，冷启动不带 cursor，翻页带 cursor；游标没变时算翻到底', async () => {
+    const home = loadCase('x', 'home')
+    const tweet = { rest_id: '1001', legacy: { id_str: '1001', full_text: '推荐' } }
+    const entries = [{ entryId: 'tweet-1001', content: { itemContent: { tweet_results: { result: tweet } } } }]
+    const body = { data: { home: { home_timeline_urt: timelineOf(entries, 'HOME_NEXT') } } }
+    const ctx = loggedCtx({ platform: 'x' })
+    const r1 = await replay({ ...home, responses: [{ ...home.responses[0]!, body }] }, () => cmd.feedList(ctx))
+    if (r1.error) throw r1.error
+    expectRequests(r1.requests, home.requests)
+    expect(r1.result).toMatchObject({ data: [{ id: '1001', kind: 'text', text: '推荐' }], page: { cursor: 'HOME_NEXT', has_more: true } })
+
+    const next = loadCase('x', 'home_cursor')
+    const r2 = await replay({ ...next, responses: [{ ...next.responses[0]!, body }] }, () => cmd.feedList({ ...ctx, cursor: 'HOME_NEXT' }))
+    if (r2.error) throw r2.error
+    expectRequests(r2.requests, next.requests)
+    expect((r2.result as any).page).toEqual({ cursor: null, has_more: false })
+  })
+
+  it('item download：视频取码率最高的 mp4，文件名 x_<id>_<序号>.mp4', async () => {
+    const c = loadCase('x', 'tweet_result')
+    const dir = mkdtempSync(join(tmpdir(), 'catbus-x-'))
+    const video = { status: 200, headers: { 'content-type': 'video/mp4' }, body: { base64: Buffer.from('fake-mp4').toString('base64') } }
+    const ctx = loggedCtx({ platform: 'x', args: { item: TWEET_ID }, options: { dir } })
+    const { requests, result, error } = await replay({ ...c, responses: [...c.responses, video] }, () => cmd.itemDownload(ctx))
+    if (error) throw error
+    expectRequests(requests.slice(0, 1), c.requests)
+    expect(requests[1]).toMatchObject({ method: 'GET', url: 'https://video.twimg.com/ext_tw_video/901/pu/vid/1280x720/high.mp4', cookies: [] })
+    const path = join(dir, `x_${TWEET_ID}_1.mp4`)
+    expect(result).toEqual([{ path, type: 'video', url: 'https://video.twimg.com/ext_tw_video/901/pu/vid/1280x720/high.mp4', size: 8 }])
+    expect(readFileSync(path, 'utf8')).toBe('fake-mp4')
+  })
+
+  it('media upload：INIT → APPEND → FINALIZE → 登记元数据，返回 media_id 和图片尺寸', async () => {
+    const c = loadCase('x', 'media_upload_image')
+    const dir = mkdtempSync(join(tmpdir(), 'catbus-x-'))
+    const file = join(dir, c.input.filename)
+    writeFileSync(file, bytesOf(c.input.data))
+    const { requests, result, error } = await replay(c, () => cmd.mediaUpload(loggedCtx({ platform: 'x', args: { file } })))
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect(result).toEqual({ id: MEDIA_ID, type: 'image', url: '', width: 1, height: 1, duration: null })
+  })
+
+  it('msg list：cookie 里没有 twid 时，查一次 Viewer 取自己的 id，不把自己当成对方', async () => {
+    const c = loadCase('x', 'chat_initial')
+    const viewer = loadCase('x', 'viewer')
+    const cookies = COOKIES.replace(' twid=u%3D10001;', '')
+    const ctx = makeCtx({ platform: 'x', cookies, cookieDomain: '.x.com' })
+    const urls: string[] = []
+    const restore = mockSender((p) => {
+      urls.push(p.url.split('?')[0]!)
+      return fakeResponse((p.url.includes('/Viewer') ? viewer : c).responses[0]!.body as object)
+    })
+    try {
+      const { data } = await cmd.msgList(ctx)
+      expect(data[0]!.peer).toEqual({ id: '20002', name: 'Peer', url: 'https://x.com/peer_user' })
+    } finally {
+      restore()
+    }
+    expect(urls.map((u) => u.split('/').at(-1))).toEqual(['GetInitialXChatPageQuery', 'Viewer'])
+  })
+})
+
+describe('x 错误映射（AGENTS 6.4）', () => {
+  const follow = loadCase('x', 'follow')
+  const tweet = loadCase('x', 'favorite')
+  const run = async (c: ReturnType<typeof loadCase>, status: number, body: unknown, fn: (ctx: ReturnType<typeof loggedCtx>) => Promise<unknown>) => {
+    const r = await replay({ ...c, responses: [{ status, headers: { 'content-type': 'application/json' }, body }] }, () => fn(loggedCtx({ platform: 'x', args: { user: USER_ID, item: TWEET_ID } })))
+    return r.error as CatbusError
+  }
+
+  it('REST 的业务拒绝也是 403：按 errors 里的错误码报 UPSTREAM，不当成登录态失效', async () => {
+    const err = await run(follow, 403, { errors: [{ code: 160, message: "You've already requested to follow." }] }, cmd.userFollow)
+    expect(err).toMatchObject({ code: 'UPSTREAM', message: "/1.1/friendships/create.json: You've already requested to follow.", detail: { code: 160, status: 403 } })
+  })
+
+  it('401 / 403 带会话类错误码（32、353）或没有错误码 → AUTH_EXPIRED', async () => {
+    expect(await run(follow, 403, { errors: [{ code: 353, message: 'This request requires a matching csrf cookie and header.' }] }, cmd.userFollow)).toMatchObject({ code: 'AUTH_EXPIRED' })
+    expect(await run(tweet, 401, { errors: [{ code: 32, message: 'Could not authenticate you.' }] }, cmd.itemLike)).toMatchObject({ code: 'AUTH_EXPIRED' })
+    expect(await run(tweet, 403, '', cmd.itemLike)).toMatchObject({ code: 'AUTH_EXPIRED', hint: 'catbus x auth login -a default' })
+  })
+
+  it('限流 / 风控：429 或 errors 里的 88 / 226 / 344 → RISK_CONTROL；其余 → UPSTREAM', async () => {
+    expect(await run(tweet, 429, { errors: [{ code: 88, message: 'Rate limit exceeded' }] }, cmd.itemLike)).toMatchObject({ code: 'RISK_CONTROL', detail: { kind: 'rate_limit', code: 88, status: 429 } })
+    expect(await run(tweet, 429, 'Too Many Requests', cmd.itemLike)).toMatchObject({ code: 'RISK_CONTROL', detail: { kind: 'rate_limit', status: 429 } })
+    // mutation 在 200 里回 errors 也算失败（上游 graphql_post）
+    expect(await run(tweet, 200, { errors: [{ code: 226, message: 'This request looks like it might be automated.' }] }, cmd.itemLike)).toMatchObject({
+      code: 'RISK_CONTROL',
+      detail: { kind: 'blocked', code: 226 },
+    })
+    expect(await run(tweet, 200, { errors: [{ code: 144, message: 'No status found with that ID.' }] }, cmd.itemLike)).toMatchObject({
+      code: 'UPSTREAM',
+      message: 'FavoriteTweet: No status found with that ID.',
+      detail: { code: 144, operation: 'FavoriteTweet' },
+    })
+    expect(await run(tweet, 500, 'oops', cmd.itemLike)).toMatchObject({ code: 'UPSTREAM', detail: { status: 500, body: 'oops' } })
+  })
+})
+
 describe('x 命令流程：cookie 登录', () => {
   useTempHome()
 
@@ -427,6 +565,22 @@ describe('x 命令流程：cookie 登录', () => {
     if (status.error) throw status.error
     expectRequests(status.requests, c.requests)
     expect((status.result as CliResult).env.data).toMatchObject({ logged_in: true, user: { id: '10001' }, method: 'cookie' })
+  })
+
+  it('article publish --text @file：正文里 ![](相对路径) 按 Markdown 文件所在目录解析（上游 base_dir），不按当前目录', async () => {
+    const viewer = loadCase('x', 'viewer')
+    const login = await replay(viewer, () => cli('x', 'auth', 'login', '--cookie', COOKIES))
+    expect((login.result as CliResult).code).toBe(0)
+    const c = loadCase('x', 'post_article')
+    const dir = mkdtempSync(join(tmpdir(), 'catbus-x-'))
+    writeFileSync(join(dir, c.input.filename), bytesOf(c.input.data))
+    const md = join(dir, 'post.md')
+    writeFileSync(md, c.input.markdown)
+    // 封面是命令行参数，按当前目录解析，这里给绝对路径
+    const { requests, result, error } = await replay(c, () => cli('x', 'article', 'publish', '--text', `@${md}`, '--cover', join(dir, c.input.filename), '-q'))
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect((result as CliResult).env).toMatchObject({ ok: true, data: { id: ARTICLE_ID, url: `https://x.com/i/article/${ARTICLE_ID}` } })
   })
 
   it('cookie 失效：Viewer 回 200 + code 32 → login 报 AUTH_REQUIRED 不落盘，status 为 logged_in false', async () => {

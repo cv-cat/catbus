@@ -1,5 +1,5 @@
-import { createHash } from 'node:crypto'
 import { CatbusError } from '../../../core/errors.js'
+import { md5Hex } from '../../../core/hash.js'
 import type { HeaderPairs } from '../../../core/http.js'
 import { compactJson, type Pairs, quote } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
@@ -358,7 +358,7 @@ export async function upload(
   for (let index = 0, offset = 0; offset < data.length; index++, offset += CHUNK_SIZE) {
     await mediaAppend(x, mediaId, data.subarray(offset, offset + CHUNK_SIZE), index)
   }
-  const finalized = await mediaFinalize(x, mediaId, createHash('md5').update(data).digest('hex'))
+  const finalized = await mediaFinalize(x, mediaId, md5Hex(data))
   const result = await waitProcessing(x, mediaId, finalized)
   if (options.withMetadata !== false) await mediaMetadataCreate(x, mediaId)
   return { mediaId, mediaType, result }

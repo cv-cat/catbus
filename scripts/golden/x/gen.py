@@ -3,11 +3,9 @@
 运行：.golden/x/Scripts/python scripts/golden/x/gen.py
 依赖：uv pip install curl_cffi requests
 
-两处在这里补丁，不改框架：
-- XCTID 素材固定用上游的 static/transaction_l1.json（ClientTransaction.from_cached），
-  不走 from_network（它会去抓 /i/flow/login，对拍时不能发网络）；catbus 也只用这份缓存。
-- 游客读接口带 x-guest-token：上游 graphql_get 不带，catbus 按浏览器未登录时的做法带上
-  （XAuth.guest_token 惰性换取，并写入 gt cookie，都是上游已有的逻辑）。
+XCTID 素材固定用上游的 static/transaction_l1.json（ClientTransaction.from_cached），
+不走 from_network（它会去抓 /i/flow/login，对拍时不能发网络）；catbus 也只用这份缓存。
+web 端不支持游客态（AGENTS 5.2），所以没有游客用例。
 """
 
 import base64
@@ -22,7 +20,6 @@ import catbus_golden as g  # noqa: E402
 
 out = g.setup('x', 'XApis')
 
-import builder.header as header_mod  # noqa: E402
 from builder.auth import XAuth  # noqa: E402
 from utils.transaction import ClientTransaction  # noqa: E402
 from utils.article_util import markdown_to_content_state, split_title  # noqa: E402
@@ -33,23 +30,10 @@ from x_apis.x_dm_api import XChatAPI  # noqa: E402
 from x_apis.x_media_api import XMediaAPI  # noqa: E402
 from x_apis.x_write_api import XWriteAPI  # noqa: E402
 
-_with_auth_type = header_mod.Header.with_auth_type
-
-
-def _with_auth_type_and_guest(self, auth):
-    _with_auth_type(self, auth)
-    if not auth.is_logged_in and self._order is header_mod._GRAPHQL_ORDER:
-        self.with_guest(auth)
-    return self
-
-
-header_mod.Header.with_auth_type = _with_auth_type_and_guest
-
 # 只有假值
 COOKIES = 'auth_token=fakeauthtoken000000000000000000000000000000; ct0=fakect0000000000000000000000000000000000000000; twid=u%3D10001; lang=en'
 TWEET_ID = '1585341984679469056'
 USER_ID = '44196397'
-GUEST_TOKEN = '1790000000000000001'
 MEDIA_ID = '1790000000000000100'
 ARTICLE_ID = '1790000000000000200'
 PNG = bytes.fromhex('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489') + b'\x00fake-png\xff'
@@ -182,8 +166,6 @@ state = {'status': 0}
 
 def respond(req):
     url = req['url']
-    if 'guest/activate' in url:
-        return {'guest_token': GUEST_TOKEN}
     if 'upload.x.com' in url:
         if 'command=INIT' in url:
             return {'media_id': int(MEDIA_ID), 'media_id_string': MEDIA_ID, 'expires_after_secs': 86399}
@@ -261,12 +243,6 @@ def logged():
     return auth
 
 
-def guest():
-    auth = XAuth().prepare_auth('')
-    auth._transaction = ClientTransaction.from_cached()
-    return auth
-
-
 def case(name, fn, **input):
     state.clear()
     state['status'] = 0
@@ -287,19 +263,15 @@ b64 = lambda b: base64.b64encode(b).decode()  # noqa: E731
 case('xctid', lambda: [ClientTransaction.from_cached().generate('GET', '/i/api/graphql/KybxDj9RrADIITXlGG8kpw/UserByScreenName', time_now=t, random_byte=b)
                        for t, b in ((107075600, 0), (107075600, 58), (1, 255))])
 
-# ---------------------------------------------------------------- 游客
-case('guest_activate', lambda: XAuth().refresh_guest_token())
-case('guest_user_get', lambda: XAPI.get_user_info(guest(), 'elonmusk'), user='elonmusk')
-case('guest_item_get', lambda: XAPI.get_work_result(guest(), f'https://x.com/elonmusk/status/{TWEET_ID}'), item=f'https://x.com/elonmusk/status/{TWEET_ID}')
+# ---------------------------------------------------------------- 命令流程：user items 先按用户名查 rest_id
 
 
-def guest_user_items():
-    auth = guest()
-    uid = XAPI.get_user_id(auth, '@ElonMusk')
-    return XAPI.get_user_post_note(auth, uid, operation='UserTweets')
+def user_items():
+    auth = logged()
+    return XAPI.get_user_post_note(auth, XAPI.get_user_id(auth, '@ElonMusk'))
 
 
-case('guest_user_items', guest_user_items, user='@ElonMusk')
+case('user_items', user_items, user='@ElonMusk')
 
 # ---------------------------------------------------------------- 读接口
 case('tweet_detail', L(lambda a: XAPI.get_work_comments(a, TWEET_ID)), item=TWEET_ID)
@@ -371,6 +343,9 @@ case('post_long_tweet', L(lambda a: XWriteAPI.post_tweet(a, LONG_TEXT)[2]), text
 THREAD = ['第一条', LONG_TEXT, '第三条']
 case('post_thread', L(lambda a: XWriteAPI.post_thread(a, THREAD, images=[[str(tmp / 'photo.png')]])),
      texts=THREAD, filename='photo.png', data=b64(PNG))
+
+# 命令流程：comment add = 回复推文，超过 280 权重时同样自动长推（上游 main.py post --reply-to）
+case('comment_add_long', L(lambda a: XWriteAPI.post_tweet(a, LONG_TEXT, reply_to=TWEET_ID)[2]), text=LONG_TEXT, item=TWEET_ID)
 
 # 命令流程：引用推文。--quote 给的是 ID 时先查出推文的链接，再作为 quote_url（attachment_url）发推
 case('post_quote', L(lambda a: [XAPI.get_work_result(a, TWEET_ID),
