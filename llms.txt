@@ -1,0 +1,135 @@
+# catbus
+
+> catbus (猫巴士, "all aboard, every platform") is a TypeScript CLI that drives the web APIs of 10 Chinese and global platforms — Xiaohongshu (xhs), Douyin, TikTok, Bilibili, Kuaishou, Weibo, Xianyu, Taobao, JD and X — through one uniform command syntax and one JSON output format.
+> Capabilities are ported from cv-cat's open-source Python projects and rewritten in TypeScript. Only Node is required at runtime. Version 0.1.0; web endpoints of all 10 platforms are ported; app / pc endpoints are planned.
+
+## What catbus does
+
+- One command, `catbus <platform> <resource> <action> [args] [options]`, for every platform.
+- Same meaning, same name: a platform's main content unit (note, video, post, tweet, product) is always `item`; searching is always `search`; liking is always `like`. The same command takes the same options and returns the same normalized shape on every platform.
+- stdout carries only JSON; logs, prompts, progress and QR codes go to stderr. Human-facing text (help, error `message` / `hint`) is in Chinese; command names, options, JSON fields and error codes are English.
+- Sessions are stored locally in `~/.catbus/` per platform × endpoint × account. No telemetry; nothing is uploaded.
+
+## Install
+
+Requires Node `^22.22.2 || ^24.15.0 || >=26.0.0`. No Python or compiler needed. Supported: win32 / darwin / linux, x64 / arm64 (glibc and musl).
+
+From source (current):
+
+```bash
+git clone https://github.com/cv-cat/catbus.git
+cd catbus
+npm ci
+npm run assets:jd && npm run assets:ocr   # captcha models
+npm run build
+npm link
+catbus doctor
+```
+
+From npm (not yet published; coming soon): `npm i -g catbus-cli`
+
+## Command syntax
+
+```
+catbus <platform> <resource> <action> [args...] [options...]
+catbus <global-command>
+```
+
+- Global commands: `platforms [platform]`, `doctor`, `auth list`, `config get|set|unset|list`, `version`.
+- Global options: `-a/--account <name>`, `-e/--endpoint web|app|pc` (default web), `-o/--output json|jsonl`, `--raw`, `--proxy <url>`, `-v`, `-q`, `-y/--yes`, `-h/--help`.
+- Paging: one page by default; `--limit N`, `--all`, `--cursor <page.cursor>`.
+- Standard filters: `--sort general|latest|popular|views|comments|collects|sales|price_asc|price_desc`, `--type all|video|image|text|article|goods`, `--time all|day|week|month|half_year|year`, `--kind recommend|hot|following` (feed list). Each platform supports a subset; a standard value the platform lacks returns `UNSUPPORTED`, a non-standard value returns `USAGE`.
+- Arguments accept IDs, URLs (including share short links), natural identifiers (Bilibili BV id, X handle) and `me` for users. Every output object has `id` and `url` that can be passed to the next command. For xhs, pass URLs (they carry `xsec_token`).
+- Resources: `auth user item product comment feed live keyword notice msg media folder series history topic poi`, plus platform extensions (e.g. bilibili `danmaku` `dynamic` `article` `draft`, jd `order` `cart` `coupon`, x `article`).
+- Dangerous operations (every `delete`, `msg revoke`, bilibili `item coin` / `item triple`, `live send --gift`) need `-y` unless both stdin and stderr are TTYs (then catbus asks y/N).
+- Platform-native words are not aliases: `catbus xhs note get` returns `UNSUPPORTED` with a hint pointing to `catbus xhs item get`.
+- Help: `catbus --help`, `catbus <platform> --help`, `catbus <platform> <resource> --help`, `catbus <platform> <resource> <action> --help`.
+
+Examples:
+
+```bash
+catbus bilibili item get BV1xx411c7mD
+catbus xhs item search 露营 --sort latest --limit 50
+catbus douyin comment list "<video URL>" --limit 100 -o jsonl
+catbus x user get elonmusk
+catbus jd item search 机械键盘 --sort sales
+catbus bilibili live listen <room> --duration 10m
+catbus xhs item download "<note URL>" --dir ./downloads
+catbus xianyu msg send "还在吗" --item "<listing URL>"
+catbus platforms douyin
+```
+
+## Platforms
+
+| id | Name | Aliases | item = | Login methods (default first) |
+|---|---|---|---|---|
+| xhs | 小红书 Xiaohongshu | xiaohongshu, rednote | note | qrcode, sms, cookie (scope: creator) |
+| douyin | 抖音 Douyin | dy | post (video or images) | qrcode, sms, cookie |
+| tiktok | TikTok | tt | video | cookie |
+| bilibili | B 站 Bilibili | bili, b | video submission | qrcode, sms, password, cookie |
+| kuaishou | 快手 Kuaishou | ks | post (video or images) | qrcode, sms, cookie |
+| weibo | 微博 Weibo | wb | weibo post | cookie |
+| xianyu | 闲鱼 Xianyu | goofish, xy | second-hand listing | qrcode, cookie |
+| taobao | 淘宝 Taobao | tb | product | cookie |
+| jd | 京东 JD | jingdong | product SKU | qrcode, sms, cookie |
+| x | X | twitter | tweet | cookie |
+
+Per-platform command support: [docs/capabilities.md](docs/capabilities.md), or `catbus platforms <platform>` (JSON: each command's `status` is `implemented` or `planned`, `auth`, `upstream` = full / partial / none, and `note`).
+
+## Login
+
+- All web commands except `auth` require login; otherwise `AUTH_REQUIRED` (exit 3) with the login command in `error.hint`.
+- QR code: `catbus <platform> auth login` draws the QR code on stderr and saves a PNG to `~/.catbus/cache/<platform>/`.
+- Cookie: `catbus <platform> auth login --method cookie --cookie "<Cookie>"` (`--method` can be omitted on tiktok, weibo, taobao, x, where cookie is the only method). `--cookie` accepts a string, `@file`, `-` (stdin), or an exported cookie JSON array; douyin / tiktok also accept a JSON object with device data (tickets, certificates, private keys) needed for writes. Copy the full `Cookie` request header from DevTools → Network; `document.cookie` misses HttpOnly session cookies.
+- Accounts: `-a <name>` selects an account; `catbus <platform> auth list|use|status|logout`; `catbus auth list` for all platforms.
+- `CATBUS_HOME` overrides `~/.catbus`. Directories 0700, files 0600.
+- Proxy: `catbus config set proxy <url>`, `catbus config set <platform>.proxy <url>`, or `--proxy`. `HTTP(S)_PROXY` is not read.
+
+## Output
+
+Envelope (exactly one per call with `-o json`):
+
+```json
+{ "ok": true, "platform": "xhs", "endpoint": "web", "resource": "item", "action": "get",
+  "account": "default", "data": {}, "page": null, "error": null }
+```
+
+- On error: `ok: false`, `data: null`, `error: { code, message, hint, detail }`.
+- List commands set `page: { cursor, has_more }`.
+- `-o jsonl`: one `data` entry per line on stdout; a summary envelope on stderr at the end.
+- `--raw`: platform original objects instead of normalized ones.
+- Normalized types: `User`, `Item`, `Comment`, `Live`, `Event`, `Message`, `Conversation`, `Notice`, `Media`, `Folder`, … — fields always present (`null` / `[]` when missing), IDs are strings, counts are integers, times are ISO 8601 with timezone. Full definitions: [AGENTS.md section 6](AGENTS.md).
+
+## Exit codes
+
+`0` success · `1` ERROR · `2` USAGE / UNSUPPORTED / CONFIRM_REQUIRED · `3` AUTH_REQUIRED / AUTH_EXPIRED · `4` NOT_IMPLEMENTED (planned endpoint or capability) · `5` RISK_CONTROL (`detail.kind`: captcha / rate_limit / blocked) · `6` NETWORK · `7` UPSTREAM (platform business error, original code in `detail`)
+
+## Known limitations
+
+- Douyin write operations are limited by device risk control (publish returns RISK_CONTROL); read-only commands work.
+- Xiaohongshu QR login currently fails with a captcha challenge (HTTP 471); use cookie import. Comments occasionally hit HTTP 461 and recover.
+- TikTok write operations need browser session data beyond the Cookie string.
+- Planned (○) commands return NOT_IMPLEMENTED; app / pc endpoints are all planned.
+- Details: [docs/trouble.md](docs/trouble.md).
+
+## Docs
+
+- [README.md](README.md): overview (Chinese)
+- [README.en.md](README.en.md): overview (English)
+- [AGENTS.md](AGENTS.md): the specification — commands (section 4), sessions (5), output (6), architecture (7), conventions (8) (Chinese)
+- [docs/capabilities.md](docs/capabilities.md): capability matrix, generated from the registry
+- [docs/upstream-map.md](docs/upstream-map.md): upstream porting map
+- [docs/trouble.md](docs/trouble.md): open issues and real-account verification progress
+- [skills/catbus/SKILL.md](skills/catbus/SKILL.md): instructions for AI agents
+- [CONTRIBUTING.md](CONTRIBUTING.md), [TESTING.md](TESTING.md), [SECURITY.md](SECURITY.md), [CHANGELOG.md](CHANGELOG.md)
+
+## Upstream projects
+
+All by cv-cat: [Spider_XHS](https://github.com/cv-cat/Spider_XHS), [DouYin_Spider](https://github.com/cv-cat/DouYin_Spider), [TiktokApis](https://github.com/cv-cat/TiktokApis), [BilibiliApis](https://github.com/cv-cat/BilibiliApis), [KuaiShou-Spider](https://github.com/cv-cat/KuaiShou-Spider), [WeiboApis](https://github.com/cv-cat/WeiboApis), [XianYuApis](https://github.com/cv-cat/XianYuApis), [TaoBaoApis](https://github.com/cv-cat/TaoBaoApis), [JdApis](https://github.com/cv-cat/JdApis), [XApis](https://github.com/cv-cat/XApis)
+
+## Links
+
+- GitHub: https://github.com/cv-cat/catbus (default branch `master`)
+- Author: cv-cat — https://github.com/cv-cat
+- Issues: https://github.com/cv-cat/catbus/issues
+- License: MIT

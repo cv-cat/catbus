@@ -14,7 +14,7 @@ export default definePlatform({
       login: { methods: ['cookie'], default: 'cookie' },
       commands: {
         'auth login': impl('full', 'authLogin'),
-        'auth status': impl('partial', 'authStatus'),
+        'auth status': impl('partial', 'authStatus', { note: '上游没有取当前用户的接口：换一次私信 token 校验，账号信息取自 cookie 里的 unb 和昵称' }),
 
         'user get': impl('partial', 'userGet', { note: '参数只接受商品链接（淘宝 / 天猫商品页或 m.tb.cn 分享短链），返回这件商品的卖家；me 规划中' }),
         'user items': 'none',

@@ -1,0 +1,114 @@
+name: Bug 报告
+description: catbus 的命令报错、输出不对，或者行为和文档不一致
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提交前请先看看：
+        - [docs/trouble.md](https://github.com/cv-cat/catbus/blob/master/docs/trouble.md)：真机验证中已知的问题（小红书扫码 471、抖音发布、B 站弹幕等）；
+        - 已有的 [issues](https://github.com/cv-cat/catbus/issues)，避免重复。
+
+        平台改了接口、或者被风控（`RISK_CONTROL`、`UPSTREAM`）时，请改用「平台接口变了 / 风控」模板。
+
+        **贴任何输出之前，先去掉 cookie、token、ticket、私钥、手机号等敏感信息。** catbus 的 `-v` 日志已经打码，但请再检查一遍。
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 平台
+      options:
+        - xhs
+        - douyin
+        - tiktok
+        - bilibili
+        - kuaishou
+        - weibo
+        - xianyu
+        - taobao
+        - jd
+        - x
+        - core（CLI、登录态、配置、输出等通用部分）
+        - 其他
+    validations:
+      required: true
+
+  - type: dropdown
+    id: endpoint
+    attributes:
+      label: 端
+      description: '`-e/--endpoint`，默认 web。app / pc 端目前都是规划中。'
+      options:
+        - web
+        - app
+        - pc
+      default: 0
+    validations:
+      required: true
+
+  - type: input
+    id: command
+    attributes:
+      label: 命令
+      description: 完整的命令行。链接里的 xsec_token 之类可以保留，账号名随意。
+      placeholder: catbus bilibili item get BV1xx411c7mD
+    validations:
+      required: true
+
+  - type: textarea
+    id: envelope
+    attributes:
+      label: catbus 输出的信封
+      description: stdout 上的 JSON（`-o jsonl` 时是 stderr 最后一行的摘要信封）。重点是 `error` 里的 `code`、`message`、`hint`、`detail`。
+      render: json
+      placeholder: '{"ok":false,"platform":"bilibili","endpoint":"web","resource":"item","action":"get","account":"default","data":null,"page":null,"error":{"code":"...","message":"...","hint":null,"detail":null}}'
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: catbus version 与 catbus doctor 的输出
+      render: json
+      placeholder: |
+        {"ok":true,"resource":"version","data":{"version":"0.1.0","node":"24.15.0","platform":"darwin","arch":"arm64"}, ...}
+        {"ok":true,"resource":"doctor","data":[{"name":"node","ok":true,"message":"..."}, ...], ...}
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 从登录方式（扫码 / 短信 / cookie）开始写，能稳定复现还是偶发。
+      placeholder: |
+        1. catbus bilibili auth login（扫码）
+        2. catbus bilibili item get <item>
+        3. ……
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+      description: 期望的输出或字段取值。如果和规范有关，可以引用 AGENTS.md 的小节。
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: 补充信息
+      description: 例如加 `-v` 后 stderr 的调试日志（已脱敏，贴之前再检查一遍）、网络 / 代理环境。
+      render: text
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 确认
+      options:
+        - label: 我已经去掉了 cookie、token、ticket、私钥等敏感信息
+          required: true
+        - label: 我看过 docs/trouble.md 和已有 issues，这不是已知问题
+          required: true

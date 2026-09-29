@@ -140,7 +140,7 @@ export default definePlatform({
 
         'media upload': impl('full', 'mediaUpload'),
 
-        'folder list': impl('partial', 'folderList'),
+        'folder list': impl('partial', 'folderList', { note: '只列用户自己创建的收藏夹，一次返回全部' }),
         'folder items': impl('partial', 'folderItems', {
           note: '非上游：上游没有收藏夹内容接口，请求按网页端收藏夹页补的（x/v3/fav/resource/list），没有对拍；只列出稿件',
           args: [{ name: 'folder', summary: '收藏夹：ID 或 folder list 输出的 url' }],

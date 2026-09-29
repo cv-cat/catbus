@@ -95,7 +95,7 @@ export default definePlatform({
 
         'media upload': impl('full', 'mediaUpload'),
 
-        'folder list': impl('partial', 'folderList'),
+        'folder list': impl('partial', 'folderList', { note: '只列公开的收藏夹（上游只有这一个接口），收藏夹里的笔记上游没有' }),
         // 上游只有收藏夹列表，没有收藏夹内容
         'folder items': 'none',
         'folder create': 'none',

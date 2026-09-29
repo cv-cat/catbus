@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 报告安全漏洞
+    url: https://github.com/cv-cat/catbus/security/advisories/new
+    about: 请不要在公开的 issue 里报告漏洞（例如凭证泄露、~/.catbus 权限问题）。通过 GitHub Security Advisories 私下报告，详见 SECURITY.md。
+  - name: 使用问题与讨论
+    url: https://github.com/cv-cat/catbus/discussions
+    about: 怎么用、选什么登录方式、想法和建议，欢迎到 Discussions 讨论。

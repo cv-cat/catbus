@@ -29,7 +29,7 @@ export default definePlatform({
         'user unfollow': 'none',
 
         'item get': impl('full', 'itemGet'),
-        'item search': impl('partial', 'itemSearch'),
+        'item search': impl('partial', 'itemSearch', { note: '没有筛选（--sort / --type / --time），只按关键词搜' }),
         'item related': impl('full', 'itemRelated'),
         'item list': impl('full', 'itemList'),
         'item media': impl('full', 'itemMedia'),
@@ -39,6 +39,7 @@ export default definePlatform({
         'item collect': 'none',
         'item uncollect': 'none',
         'item publish': impl('partial', 'itemPublish', {
+          note: '不支持 --cover、--mention、--poi、--category、--price；--image 1～31 张（每张不超过 15MB），与 --video 二选一',
           supports: ['title', 'text', 'image', 'video', 'tag', 'topic', 'visibility', 'schedule'],
         }),
         'item delete': 'none',
@@ -46,7 +47,7 @@ export default definePlatform({
         'product get': 'none',
 
         'comment list': impl('partial', 'commentList', { note: '--product 规划中', options: { product: PRODUCT } }),
-        'comment replies': impl('partial', 'commentReplies'),
+        'comment replies': impl('partial', 'commentReplies', { note: '上游的二级评论接口只核对过一组抓包参数，其余评论的结果没有经过上游核对' }),
         'comment add': 'none',
         'comment delete': 'none',
         'comment like': 'none',

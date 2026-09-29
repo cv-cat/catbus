@@ -44,7 +44,7 @@ export async function resolveSellerItem(tb: Taobao, input: string): Promise<stri
 export function resolveConversation(input: string, myId: string): { cid: string; peer: string } {
   const cid = plainId(input.trim())
   const m = /^(\d+)\.\d+-(\d+)\.\d+#\d+$/.exec(cid)
-  if (!m) throw new CatbusError('USAGE', `无法识别的会话 ID：${input}`, { hint: '会话 ID 形如 3888777108.1-2221755722770.1#11001，来自 msg listen 或 msg history 的 conversation_id' })
+  if (!m) throw new CatbusError('USAGE', `无法识别的会话 ID：${input}`, { hint: '会话 ID 形如 <我的用户 id>.1-<对方用户 id>.1#11001，来自 msg listen 或 msg history 的 conversation_id' })
   const [, a, b] = m as unknown as [string, string, string]
   const peer = a === myId ? b : b === myId ? a : null
   if (!peer) throw new CatbusError('USAGE', `会话 ${cid} 不属于当前账号（${myId}）`)

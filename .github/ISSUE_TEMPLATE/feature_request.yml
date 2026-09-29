@@ -1,0 +1,70 @@
+name: 功能建议
+description: 想要一条新命令、一个新选项，或者某个规划中（○）的能力
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提交前请先查：
+        - [docs/capabilities.md](https://github.com/cv-cat/catbus/blob/master/docs/capabilities.md)：各平台已经支持哪些命令。标 ○ 的是「平台有这个概念、上游还没有」，标 — 的是平台本身没有这个概念；
+        - [AGENTS.md 4.5 通用词表](https://github.com/cv-cat/catbus/blob/master/AGENTS.md#45-通用词表)：catbus 的命令一律用规范词（商品、笔记、视频都叫 `item`，搜索都叫 `search`），不接受平台原生叫法做别名；
+        - [AGENTS.md 4.12 不提供的能力](https://github.com/cv-cat/catbus/blob/master/AGENTS.md#412-不提供的能力)：埋点、弹窗、蒲公英等不会暴露为命令。
+
+        catbus 的能力来自 cv-cat 的上游仓库。上游没有的能力，一般要先在上游实现，catbus 再移植。
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 平台
+      multiple: true
+      options:
+        - xhs
+        - douyin
+        - tiktok
+        - bilibili
+        - kuaishou
+        - weibo
+        - xianyu
+        - taobao
+        - jd
+        - x
+        - core（所有平台通用）
+        - 其他
+    validations:
+      required: true
+
+  - type: dropdown
+    id: endpoint
+    attributes:
+      label: 端
+      options:
+        - web
+        - app
+        - pc
+      default: 0
+    validations:
+      required: true
+
+  - type: input
+    id: command
+    attributes:
+      label: 想要的命令
+      description: 按 `catbus <platform> <resource> <action> [参数] [选项]` 写。词表里没有的 resource / action 请说明为什么需要新增。
+      placeholder: catbus kuaishou item like <item>
+    validations:
+      required: true
+
+  - type: textarea
+    id: usage
+    attributes:
+      label: 用途
+      description: 你想用它做什么，期望输出什么（最好对应 AGENTS.md 6.2 的归一化类型）。
+    validations:
+      required: true
+
+  - type: textarea
+    id: upstream
+    attributes:
+      label: 上游情况
+      description: 对应的上游仓库（references/ 里的 cv-cat 仓库）有没有这个接口？有的话给出文件和方法名。
+      placeholder: 例如 KuaiShou-Spider 的 ks_apis/kuaishou_api.py 里有 xxx 方法

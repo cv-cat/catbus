@@ -1,0 +1,125 @@
+name: 平台接口变了 / 风控
+description: 以前能用的命令突然失败：平台改了接口、签名失效，或者触发了验证码 / 限流 / 封禁
+labels: [platform-breakage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        catbus 的请求构造和签名与上游仓库逐字节一致（对拍测试保证）。平台一变，上游和 catbus 通常一起失效，修复要先到上游，catbus 再同步（见 [AGENTS.md 7.5](https://github.com/cv-cat/catbus/blob/master/AGENTS.md#75-移植与对拍测试)）。所以请尽量用上游仓库试一下同样的操作：
+
+        | 平台 | 上游仓库 |
+        |---|---|
+        | xhs | [cv-cat/Spider_XHS](https://github.com/cv-cat/Spider_XHS) |
+        | douyin | [cv-cat/DouYin_Spider](https://github.com/cv-cat/DouYin_Spider) |
+        | tiktok | [cv-cat/TiktokApis](https://github.com/cv-cat/TiktokApis) |
+        | bilibili | [cv-cat/BilibiliApis](https://github.com/cv-cat/BilibiliApis) |
+        | kuaishou | [cv-cat/KuaiShou-Spider](https://github.com/cv-cat/KuaiShou-Spider) |
+        | weibo | [cv-cat/WeiboApis](https://github.com/cv-cat/WeiboApis) |
+        | xianyu | [cv-cat/XianYuApis](https://github.com/cv-cat/XianYuApis) |
+        | taobao | [cv-cat/TaoBaoApis](https://github.com/cv-cat/TaoBaoApis) |
+        | jd | [cv-cat/JdApis](https://github.com/cv-cat/JdApis) |
+        | x | [cv-cat/XApis](https://github.com/cv-cat/XApis) |
+
+        catbus 基于的上游 commit 记录在 `src/platforms/<platform>/UPSTREAM`。已知的风控问题见 [docs/trouble.md](https://github.com/cv-cat/catbus/blob/master/docs/trouble.md)。
+
+        **遇到 `RISK_CONTROL` 请不要反复重试**，这会让账号被标记得更久，甚至被封。
+
+        **贴任何输出之前，先去掉 cookie、token、ticket、私钥、手机号等敏感信息。**
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 平台
+      options:
+        - xhs
+        - douyin
+        - tiktok
+        - bilibili
+        - kuaishou
+        - weibo
+        - xianyu
+        - taobao
+        - jd
+        - x
+    validations:
+      required: true
+
+  - type: input
+    id: command
+    attributes:
+      label: 命令
+      placeholder: catbus xhs comment list "https://www.xiaohongshu.com/explore/<id>?xsec_token=..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: code
+    attributes:
+      label: 错误码
+      description: 信封里的 `error.code`（AGENTS.md 6.4）
+      options:
+        - RISK_CONTROL（退出码 5：验证码 / 限流 / 封禁）
+        - UPSTREAM（退出码 7：平台返回业务错误）
+        - AUTH_EXPIRED（退出码 3：登录态失效）
+        - AUTH_REQUIRED（退出码 3：未登录或平台返回登录墙）
+        - NETWORK（退出码 6：网络 / 代理错误）
+        - ERROR（退出码 1：未分类错误）
+        - USAGE（退出码 2）
+        - UNSUPPORTED（退出码 2）
+        - NOT_IMPLEMENTED（退出码 4）
+        - 没有报错，但结果不对（字段为空、条数不对等）
+    validations:
+      required: true
+
+  - type: textarea
+    id: detail
+    attributes:
+      label: error 的 message、hint 与 detail
+      description: '`RISK_CONTROL` 的 `detail.kind` 是 `captcha` / `rate_limit` / `blocked`；`UPSTREAM` 的 `detail` 里是平台的原始错误码。'
+      render: json
+      placeholder: '{"code":"RISK_CONTROL","message":"...","hint":"...","detail":{"kind":"captcha","status":461}}'
+    validations:
+      required: true
+
+  - type: textarea
+    id: when
+    attributes:
+      label: 什么时候开始的、触发频率
+      description: 例如「今天起每次都失败」「连续请求十几次后出现，几分钟后恢复」「只有新登录的账号」。
+    validations:
+      required: true
+
+  - type: dropdown
+    id: upstream
+    attributes:
+      label: 上游仓库是否同样失败
+      options:
+        - 同样失败
+        - 上游正常，只有 catbus 失败
+        - 没有试
+    validations:
+      required: true
+
+  - type: textarea
+    id: upstream_detail
+    attributes:
+      label: 上游的测试情况
+      description: 用的上游 commit、调用的方法、上游的报错。上游同样失败的话，也欢迎直接到上游仓库提 issue，再在这里附上链接。
+      render: text
+
+  - type: input
+    id: version
+    attributes:
+      label: catbus 版本
+      description: '`catbus version` 的输出'
+      placeholder: '{"version":"0.1.0","node":"24.15.0","platform":"darwin","arch":"arm64"}'
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 确认
+      options:
+        - label: 我已经去掉了 cookie、token、ticket、私钥等敏感信息
+          required: true

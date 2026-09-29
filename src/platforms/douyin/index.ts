@@ -82,7 +82,7 @@ export default definePlatform({
         }),
         'item delete': 'none',
 
-        'product get': read('partial', 'productGet'),
+        'product get': read('partial', 'productGet', { note: '上游的商品接口只给详情图、规格和跳转链接：只有标题、图片和价格，其余字段为空' }),
 
         'comment list': read('full', 'commentList', {
           options: { product: PRODUCT, label: z.string().optional().describe('商品评价按标签筛选（标签名或 id，如 好评、有图）') },
