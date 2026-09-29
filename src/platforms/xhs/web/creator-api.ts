@@ -5,8 +5,9 @@ import { mp4AvgFrameRate, mp4VideoTrack } from '../../../core/mp4.js'
 import { pyFloatStr, pyRound } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
+import type { Credential } from '../../../core/schemas.js'
 import { authError, scope } from '../../../core/toolkit.js'
-import { isAuthFailure } from './client.js'
+import { getdss, isAuthFailure, jsonOf } from './client.js'
 import { cspl, Creator, PyFloat } from './creator.js'
 import { generateA1, generateWebId } from './login.js'
 import { creatorProfileData, creatorRapFingerprint, generateWebsectiga, rapParam, uploadSignature, urlSign } from './js.js'
@@ -16,11 +17,8 @@ import { AS, COOKIE_DOMAIN, CREATOR, CREATOR_ORDER, CREATOR_REFERENCE, CUSTOMER,
  * 上游 apis/xhs_creator_apis.py（XHS_Creator_Apis）与 apis/xhs_creator_login_apis.py（XHSCreatorLoginApi）。
  */
 
-/** Python 的 float 写法：整数值带 `.0`。 */
-
 const NOTE_MANAGER = `${CREATOR}/new/note-manager`
 const PUBLISH_REFERER = `${CREATOR}/publish/publish?source=official&from=tab_switch`
-const GETDSS = /function\s+getdss\s*\(\s*\)\s*\{\s*return\s+'(\d+)'/
 const SECURITY_LENGTHS: Record<string, number> = { websectiga: 64, sec_poison_id: 36, gid: 72 }
 
 // ================================================================ 业务接口
@@ -92,8 +90,8 @@ export async function uploadPermit(c: Creator, mediaType: 'image' | 'video'): Pr
   throw new CatbusError('UPSTREAM', String(last?.msg ?? last?.message ?? '获取上传许可失败'), { detail: { code: last?.code } })
 }
 
-/** upload_media：申请许可 → q-signature → PUT 到 ROS。返回 fileId（及视频的 video_id）。 */
-export async function uploadMedia(c: Creator, data: Uint8Array, mediaType: 'image' | 'video'): Promise<{ fileId: string; videoId: string | null }> {
+/** upload_media：申请许可 → q-signature → PUT 到 ROS。返回 fileId（及视频的 video_id）和上传到的绝对地址。 */
+export async function uploadMedia(c: Creator, data: Uint8Array, mediaType: 'image' | 'video'): Promise<{ fileId: string; videoId: string | null; url: string }> {
   const { permit, xt } = await uploadPermit(c, mediaType)
   const host = String(permit.uploadAddr || new URL(ROS_UPLOAD).host)
   const url = host.startsWith('http') ? host : `https://${host}`
@@ -116,11 +114,12 @@ export async function uploadMedia(c: Creator, data: Uint8Array, mediaType: 'imag
     ['x-cos-security-token', String(permit.token)],
   ]
   // ROS 上传域收不到 creator 的登录 cookie
-  const res = await c.send({ method: 'PUT', url: `${url}/spectrum/${fileId}`, headers, body: data })
+  const target = `${url}/spectrum/${fileId}`
+  const res = await c.send({ method: 'PUT', url: target, headers, body: data })
   if (!res.ok) throw new CatbusError('UPSTREAM', `上传失败：HTTP ${res.status}`, { detail: { status: res.status } })
   const videoId = mediaType === 'video' ? res.headers.get('X-Ros-Video-Id') : null
   if (mediaType === 'video' && !videoId) throw new CatbusError('UPSTREAM', '上传响应缺少 X-Ros-Video-Id')
-  return { fileId, videoId }
+  return { fileId, videoId, url: target }
 }
 
 /** query_transcode（edith 域，沿用上传许可的签名档位）。 */
@@ -138,7 +137,7 @@ export async function uploadImage(c: Creator, data: Uint8Array, name = '图片')
   if (!size) throw new CatbusError('USAGE', `无法识别的图片：${name}`)
   const up = await uploadMedia(c, data, 'image')
   const height = size.width > 2 * size.height ? Math.floor(size.width / 2) : size.height
-  return { fileId: up.fileId, width: size.width, height, size: data.length, mimeType: 'image/png' }
+  return { fileId: up.fileId, url: up.url, width: size.width, height, size: data.length, mimeType: 'image/png' }
 }
 
 /**
@@ -215,6 +214,8 @@ const CONTEXT_JSON = '{"recommend_title":{"recommend_title_id":"","is_use":3,"us
 
 export interface ImageInfo {
   fileId: string
+  /** 上传到的绝对地址（ROS）；发布时不用。 */
+  url?: string
   width: number
   height: number
   size: number
@@ -332,13 +333,23 @@ export async function postNote(c: Creator, data: Record<string, unknown>): Promi
 
 type Kind = keyof typeof CREATOR_ORDER
 
-async function jsonOf(res: Response | Awaited<ReturnType<Creator['send']>>): Promise<any> {
+/**
+ * 宽松解析：不看状态码，不是 JSON 时为 {}。只用在上游本身就容错的两处：ds 程序取不到时退回 ds 接口
+ * （_bootstrap_dsl_program），会话探测失败按「没有已有会话」处理。其余登录请求一律用 jsonOf（状态码判风控）。
+ */
+async function lenientJson(res: Awaited<ReturnType<Creator['send']>>): Promise<any> {
   try {
     return JSON.parse(await res.text())
   } catch {
     return {}
   }
 }
+
+/**
+ * customer 域 qr-code / verify-code 的 HTTP 406 是按设备会话打标的概率闸门（上游 LOGIN_SESSION_MAX_ATTEMPTS 的注释）：
+ * 不算风控，由调用方整包重建匿名设备再试。
+ */
+const GATED = 406
 
 /** 上游 _cookies_for_url：customer 域且安全 cookie 就绪时把 loadts 挪到最后。 */
 function loginCookies(c: Creator, url: string): Record<string, string> {
@@ -422,9 +433,9 @@ export class CreatorLogin {
 
     const ds = await signed(c, '/api/sec/v1/scripting', { callFrom: 'creator-platform', callback: '', type: 'ds', appId: 'ugc' }, 'POST', { tier: '0201', b1Profile: 'login', dslPairValue: loadtsUndefined(c) })
     ds.headers['content-type'] = 'application/json'
-    const body = await jsonOf(await post(c, `${AS}/api/sec/v1/scripting`, ds.headers, 'security', ds.body))
+    const body = await lenientJson(await post(c, `${AS}/api/sec/v1/scripting`, ds.headers, 'security', ds.body))
     let code = String(body?.data?.data ?? '')
-    let dsl = GETDSS.exec(code)?.[1] ?? ''
+    let dsl = getdss(code) ?? ''
     if (!dsl || !code) {
       const b = await c.dsBundle()
       dsl ||= b.dsl
@@ -469,7 +480,7 @@ export class CreatorLogin {
     }
     let res
     for (let i = 1; i <= 5; i++) if ((res = await c.send({ method: 'POST', url: ticketUrl, headers: ticketPairs, body: t.body })).status !== 406) break
-    const d = (await jsonOf(res!))?.data ?? {}
+    const d = (await lenientJson(res!))?.data ?? {}
     return { active: Boolean(d.ticket || d.type === 'at') }
   }
 
@@ -508,7 +519,9 @@ export class CreatorLogin {
     this.require()
     const s = await signed(c, '/api/cas/customer/web/qr-code', { service: CREATOR }, 'POST', { tier: '0101', mnsProfile: 'login_ready', b1Profile: 'login' })
     s.headers['content-type'] = 'application/json'
-    const body = await jsonOf(await post(c, `${CUSTOMER}/api/cas/customer/web/qr-code`, s.headers, 'casPostNoRate', s.body))
+    const res = await post(c, `${CUSTOMER}/api/cas/customer/web/qr-code`, s.headers, 'casPostNoRate', s.body)
+    if (res.status === GATED) return null
+    const body = await jsonOf(res)
     const d = body?.data ?? {}
     return body?.success && d.id && d.url ? { id: String(d.id), url: String(d.url) } : null
   }
@@ -529,7 +542,9 @@ export class CreatorLogin {
     const s = await signed(c, '/api/cas/customer/web/verify-code', { service: CREATOR, phone, zone }, 'POST', { tier: '0101', mnsProfile: 'login_ready', b1Profile: 'login' })
     s.headers['content-type'] = 'application/json'
     s.headers['x-ratelimit-meta'] = `host=${new URL(CREATOR).host}`
-    const body = await jsonOf(await post(c, `${CUSTOMER}/api/cas/customer/web/verify-code`, s.headers, 'casPost', s.body))
+    const res = await post(c, `${CUSTOMER}/api/cas/customer/web/verify-code`, s.headers, 'casPost', s.body)
+    if (res.status === GATED) return { ok: false, message: `HTTP ${res.status}` }
+    const body = await jsonOf(res)
     return { ok: Boolean(body?.success), message: String(body?.msg ?? body?.message ?? '') }
   }
 
@@ -582,10 +597,17 @@ const SHARED_FROM_PC = new Set([
  * 用主站的登录态初始化创作者中心，不再单独扫码（AGENTS 5.3）。浏览器从主站点「发布笔记」时就是这样：
  * 发布页导航换出创作者中心的会话 cookie，然后创作者中心跑自己的安全初始化（0201 批次 → user/info → 安装 DS）。
  * 结果写进凭证的 creator scope 和 device.creator，之后的创作者命令直接复用。
+ *
+ * 桥接在凭证的副本上做，全部成功后才写回：命令失败时 core 照样会把凭证落盘，中途失败（网络、风控、主站也失效）
+ * 若已经改了 creator scope，下次就会拿这份半成品当创作者中心的登录态用，再也不会重新桥接。
  */
 export async function creatorFromPc(ctx: HandlerContext): Promise<Creator> {
-  const main = scope(ctx.credential, 'main').cookies
-  const cookies = new CookieJar((ctx.credential.scopes.creator = { cookies: [], tokens: {} }).cookies)
+  const real = ctx.credential
+  const temp: Credential = { ...real, scopes: { ...real.scopes, creator: { cookies: [], tokens: {} } }, device: { ...real.device }, extra: { ...real.extra } }
+  delete temp.device.creator
+  const bridge: HandlerContext = { ...ctx, credential: temp }
+  const main = scope(real, 'main').cookies
+  const cookies = new CookieJar(temp.scopes.creator!.cookies)
   // 各子域的 acw_tc（host-only）照浏览器的 cookie 罐一起带过去，发送时排在共享 cookie 前面
   for (const k of main) if (k.name === 'acw_tc' && !k.domain.startsWith('.')) cookies.cookies.push({ ...k })
   const seen = new Set<string>()
@@ -598,9 +620,8 @@ export async function creatorFromPc(ctx: HandlerContext): Promise<Creator> {
   cookies.set('webBuild', CREATOR_REFERENCE.release.webBuild, COOKIE_DOMAIN)
   cookies.set('xsecappid', 'ugc', COOKIE_DOMAIN)
   cookies.set('loadts', String(rand.now()), COOKIE_DOMAIN)
-  delete ctx.credential.device.creator
 
-  const c = new Creator(ctx)
+  const c = new Creator(bridge)
   // 主站的 websectiga / gid 会让签名状态以为安全初始化已完成；创作者中心还要装自己的 DS 程序
   c.state.securityReady = false
   c.state.dsl = ''
@@ -623,5 +644,10 @@ export async function creatorFromPc(ctx: HandlerContext): Promise<Creator> {
     await l.completeSecurity()
   }
   c.save()
+  // 成功：写回正式凭证（cookie 罐引用的就是这个 scope 的数组），会话从此改用正式凭证
+  real.scopes.creator = temp.scopes.creator!
+  real.device.creator = temp.device.creator!
+  Object.assign(real.extra, temp.extra)
+  bridge.credential = real
   return c
 }

@@ -1,4 +1,7 @@
-import { describe, expect, it, vi } from 'vitest'
+import { writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as api from '../src/platforms/xhs/web/api.js'
 import { Creator, PyFloat, pyJson } from '../src/platforms/xhs/web/creator.js'
 import * as capi from '../src/platforms/xhs/web/creator-api.js'
@@ -12,7 +15,10 @@ import { pyRound } from '../src/core/py.js'
 import { deterministic } from '../src/core/rand.js'
 import { RAW } from '../src/core/schemas.js'
 import * as push from '../src/platforms/xhs/web/push.js'
+import { newCredential, readCredential, setCurrent, writeCredential } from '../src/core/auth-store.js'
+import { parseCookieInput } from '../src/core/cookies.js'
 import { expectRequests, type GoldenRequest, loadCase, makeCtx, normalize, replay } from './golden.js'
+import { cli, useTempHome } from './helpers.js'
 
 /**
  * RWP 长连的替身：设置了 rwpReply 时 openSocket 不联网，按发出的每一帧回复（rwpReply 返回要推回来的帧）。
@@ -314,6 +320,37 @@ describe('xhs 登录的风控', () => {
       hint: expect.stringContaining('--method cookie'),
       detail: { kind: 'captcha', status: 471, verify_type: '124', verify_uuid: 'u-1' },
     })
+  })
+
+  it('游客初始化的 webprofile 回 461：报 RISK_CONTROL（captcha），不再当成「没换到 gid」', async () => {
+    const c = structuredClone(loadCase('xhs', 'guest_init'))
+    c.responses[10] = { status: 461, headers: { verifytype: '102' }, body: { code: 0, success: true, data: {} } }
+    const { error } = await replay(c, CASES.guest_init!)
+    expect(error).toMatchObject({ code: 'RISK_CONTROL', hint: expect.stringContaining('--method cookie'), detail: { kind: 'captcha', status: 461, verify_type: '102' } })
+  })
+
+  it('创作者中心登录：service-ticket 回 471、qr-code 轮询回 461 都报 RISK_CONTROL；qr-code 创建回 406 按设备闸门返回 null（重建再试）', async () => {
+    const at = (i: number, status: number) => {
+      const c = structuredClone(loadCase('xhs', 'creator_login'))
+      c.responses[i] = { status, headers: { verifytype: '124', verifyuuid: 'u-1' }, body: { code: 0, success: true, msg: '成功', data: {} } }
+      return c
+    }
+    const ticket = await replay(at(12, 471), CASES.creator_login!)
+    expect(ticket.error).toMatchObject({ code: 'RISK_CONTROL', detail: { kind: 'captcha', status: 471, verify_type: '124', verify_uuid: 'u-1' } })
+    const status = await replay(at(10, 461), CASES.creator_login!)
+    expect(status.error).toMatchObject({ code: 'RISK_CONTROL', detail: { kind: 'captcha', status: 461 } })
+
+    const gated = await replay(at(9, 406), async () => {
+      resetXraySeq(XRAY_SEQ)
+      const l = new CreatorLogin(new Creator(makeCtx({ platform: 'xhs', account: 'guest' })))
+      await l.initCookies()
+      await l.bootstrap()
+      await l.probeSession()
+      await l.completeSecurity()
+      return l.qrcode()
+    })
+    if (gated.error) throw gated.error
+    expect(gated.result).toBeNull()
   })
 })
 
@@ -669,5 +706,352 @@ describe('xhs 视频元数据（替代 opencv）', () => {
 
   it('不是 MP4 / MOV：返回 null（按 0 上报，由平台转码后补全）', () => {
     expect(capi.videoMetadata(new TextEncoder().encode('not a video'))).toBeNull()
+  })
+})
+
+// ================================================================ 长连发私信：只有没发出去时才走 HTTP
+
+/** 测试里把长连的等待时限调短（真实时间）。 */
+function shortPushTimeouts() {
+  const saved = { ...push.PUSH_TIMEOUTS }
+  beforeEach(() => Object.assign(push.PUSH_TIMEOUTS, { handshake: 80, ack: 80 }))
+  afterEach(() => {
+    Object.assign(push.PUSH_TIMEOUTS, saved)
+    rwpReply = null
+  })
+}
+
+const varint = (n: number) => {
+  const out: number[] = []
+  while (n > 0x7f) {
+    out.push((n % 128) | 0x80)
+    n = Math.floor(n / 128)
+  }
+  out.push(n)
+  return out
+}
+const pbBytes = (num: number, b: Buffer | string) => {
+  const buf = Buffer.from(b)
+  return Buffer.concat([Buffer.from([(num << 3) | 2, ...varint(buf.length)]), buf])
+}
+const pbInt = (num: number, v: number) => Buffer.from([num << 3, ...varint(v)])
+
+/** 发出去的 im 帧里的 mid（ChatOneMessage field 9 → ChatSendMessage field 1）。 */
+function sentMid(f: any): string {
+  const d = Buffer.from(f.b.d.b, 'base64')
+  let o = 2 // 08 01
+  if (d[o++] !== 0x4a) throw new Error('不是 field 9')
+  while (d[o++]! & 0x80);
+  if (d[o++] !== 0x0a) throw new Error('不是 mid')
+  const len = d[o++]!
+  return d.subarray(o, o + len).toString('utf8')
+}
+
+/** ChatOneMessage{chatACK} 的回执帧（t=2，b.a.b）。 */
+const imAck = (m: string, mid: string, code = 0, msg = '') => ({
+  v: 1,
+  t: 2,
+  m,
+  b: { a: { c: 0, b: pbBytes(5, Buffer.concat([pbBytes(1, mid), pbBytes(2, 'msg-9'), pbInt(3, 1790000000123), ...(code ? [pbInt(5, code), pbBytes(6, msg)] : [])])).toString('base64') } },
+})
+
+const isHandshake = (f: any) => f.t === 2 && f.b?.d?.s === 0
+const isIm = (f: any) => f.t === 3 && f.b?.d?.biz === 'im'
+const handshakeOk = (f: any) => (isHandshake(f) ? [{ v: 1, t: 2, m: f.m, b: { a: { c: 0 } } }] : [])
+
+describe('xhs 私信发送（长连优先，HTTP 兜底）', () => {
+  shortPushTimeouts()
+  const route = (r: GoldenRequest): Reply => {
+    if (r.url.includes('/api/sns/web/v1/celestial/lt')) return ok({ aLt: 'fake-alt', rLt: 'fake-rlt', expiredTime: 10080 })
+    if (r.url.includes('/api/im/web/short_link/send_message')) return ok({ message_id: 'http-1' })
+    return security(r)
+  }
+  const send = () => serve(route, () => cmd.msgSend(pcCtx({ text: '你好' }, { to: OTHER })))
+
+  it('收到回执：返回长连的消息 id，不走 HTTP', async () => {
+    rwpSent.length = 0
+    rwpReply = (f) => (isIm(f) ? [imAck(f.m, sentMid(f))] : handshakeOk(f))
+    const { requests, result, error } = await send()
+    if (error) throw error
+    expect(result).toMatchObject({ id: 'msg-9', conversation_id: OTHER, from: { id: USER_ID }, type: 'text', text: '你好' })
+    expect(rwpSent.filter(isIm)).toHaveLength(1)
+    expect(hits(requests, 'short_link')).toHaveLength(0)
+  })
+
+  it('帧已发出但没等到回执：报 NETWORK（不确定是否送达），不再走 HTTP 重发', async () => {
+    rwpSent.length = 0
+    rwpReply = handshakeOk
+    const { requests, error } = await send()
+    expect(error).toMatchObject({ code: 'NETWORK', detail: { kind: 'timeout', sent: true }, hint: `先用 catbus xhs msg history ${OTHER} 确认，再决定要不要重发` })
+    expect(rwpSent.filter(isIm)).toHaveLength(1)
+    expect(hits(requests, 'short_link')).toHaveLength(0)
+  })
+
+  it('回执 code≠0：报 UPSTREAM，不走 HTTP', async () => {
+    rwpReply = (f) => (isIm(f) ? [imAck(f.m, sentMid(f), 3001, '对方拒收')] : handshakeOk(f))
+    const { requests, error } = await send()
+    expect(error).toMatchObject({ code: 'UPSTREAM', message: '对方拒收', detail: { code: 3001 } })
+    expect(hits(requests, 'short_link')).toHaveLength(0)
+  })
+
+  it('握手被拒绝或握手超时（私信还没发出去）：改走 HTTP 短链，只发一次', async () => {
+    for (const reply of [(f: any) => (isHandshake(f) ? [{ v: 1, t: 2, m: f.m, b: { a: { c: 3100001, m: 'Account has not privilege' } } }] : []), () => []]) {
+      rwpSent.length = 0
+      rwpReply = reply
+      const { requests, result, error } = await send()
+      if (error) throw error
+      expect(result).toMatchObject({ id: 'http-1', conversation_id: OTHER, text: '你好' })
+      expect(rwpSent.filter(isIm)).toHaveLength(0)
+      expect(hits(requests, '/api/im/web/short_link/send_message')).toHaveLength(1)
+    }
+  })
+})
+
+describe('xhs 直播发弹幕的长连退路', () => {
+  shortPushTimeouts()
+  it('长连发出弹幕后没有回执：报 NETWORK，不当成功', async () => {
+    rwpReply = handshakeOk
+    const route = (r: GoldenRequest): Reply => {
+      if (r.url.includes('/room/current_room_info')) return ok({ room_id: ROOM, host_info: { user_id: 'host1' } })
+      if (r.url.includes('/interaction/send_comment')) return fail(10086, '当前房间状态不支持')
+      if (r.url.includes('/api/sns/web/v2/user/me')) return ok({ user_id: USER_ID, nickname: '测试用户' })
+      if (r.url.includes('/api/sns/web/v1/celestial/lt')) return ok({ aLt: 'fake-alt', expiredTime: 10080 })
+      return security(r)
+    }
+    const { error } = await serve(route, () => cmd.liveSend(pcCtx({ room: ROOM, text: '主播好' })))
+    expect(error).toMatchObject({ code: 'NETWORK', detail: { kind: 'timeout', sent: true } })
+  })
+})
+
+// ================================================================ 私信的其余命令
+
+describe('xhs 私信：已读、会话列表游标', () => {
+  const chat = (id: string, store: number) => ({ user_id: USER_ID, chat_user_id: id, last_store_id: store, unread_count: 1 })
+
+  it('msg read：第一页没有就往后翻；翻完也找不到报 USAGE，不发已读请求', async () => {
+    const pages = [[chat('5f00000000000000000000aa', 1)], [chat(OTHER, 42)]]
+    const route = (r: GoldenRequest): Reply => {
+      const m = /\/api\/im\/web\/v3\/chats\?.*page=(\d+)/.exec(r.url)
+      if (m) return ok({ chat_list: pages[Number(m[1])] ?? [], has_more: Number(m[1]) < pages.length - 1 })
+      return security(r)
+    }
+    const found = await serve(route, () => cmd.msgRead(pcCtx({ conversation: OTHER })))
+    if (found.error) throw found.error
+    expect(hits(found.requests, '/api/im/web/v3/chats?limit=100&complete=true&page=1&source=pc')).toHaveLength(1)
+    expect(jsonBody(hits(found.requests, '/api/im/web/v2/messages/read')[0]!).chat_list[0]).toMatchObject({ chat_id: OTHER, read_store_id: 42 })
+
+    const missing = await serve(route, () => cmd.msgRead(pcCtx({ conversation: '5f00000000000000000000bb' })))
+    expect(missing.error).toMatchObject({ code: 'USAGE', hint: 'catbus xhs msg list' })
+    expect(hits(missing.requests, '/api/im/web/v3/chats')).toHaveLength(2)
+    expect(hits(missing.requests, '/messages/read')).toHaveLength(0)
+  })
+
+  it('msg list 的 -:1 游标：单聊已取完，只取群聊第 1 页', async () => {
+    const ctx = pcCtx()
+    ctx.cursor = '-:1'
+    const { requests, result, error } = await serve(
+      (r) => security(r) ?? (r.url.includes('/chats/group') ? ok({ group_chat_list: [{ group_id: GROUP_ID, last_msg_ts: 1790000100000 }], has_more: false }) : undefined),
+      () => cmd.msgList(ctx),
+    )
+    if (error) throw error
+    expect(hits(requests, '/api/im/web/v3/chats')).toHaveLength(0)
+    expect(hits(requests, '/api/im/web/chats/group?limit=100&complete=true&page=1&source=pc')).toHaveLength(1)
+    expect(result!.data.map((c: any) => c.id)).toEqual([`group:${GROUP_ID}`])
+    expect(result!.page).toEqual({ cursor: null, has_more: false })
+  })
+
+  it('群聊列表报「系统异常」这类普通业务错误：仍按 UPSTREAM 降级为只列单聊，不当成风控', async () => {
+    const { result, error } = await serve(
+      (r) =>
+        security(r) ??
+        (r.url.includes('/api/im/web/v3/chats') ? ok({ chat_list: [chat(OTHER, 1)] }) : r.url.includes('/chats/group') ? fail(500, '系统异常，请稍后再试') : undefined),
+      () => cmd.msgList(pcCtx()),
+    )
+    if (error) throw error
+    expect(result!.data.map((c: any) => c.id)).toEqual([OTHER])
+  })
+})
+
+describe('xhs 业务码 → 错误码', () => {
+  const p = new Pc(ctxWith(PC_COOKIES))
+  const err = (body: any) => {
+    try {
+      p.check(body)
+    } catch (e) {
+      return e
+    }
+    return null
+  }
+  it('登录墙、风控码、明确的风控措辞、普通业务错误', () => {
+    expect(err({ code: 0, success: true, data: 1 })).toBeNull()
+    expect(err({ code: -100, success: false, msg: '登录已过期' })).toMatchObject({ code: 'AUTH_EXPIRED' })
+    expect(err({ code: 300013, success: false, msg: '访问频次异常，请勿频繁操作或重启试试' })).toMatchObject({ code: 'RISK_CONTROL', detail: { kind: 'captcha', code: 300013 } })
+    expect(err({ code: 300011, success: false, msg: '当前账号存在异常' })).toMatchObject({ code: 'RISK_CONTROL', detail: { kind: 'blocked' } })
+    expect(err({ code: 461, success: false, msg: '' })).toMatchObject({ code: 'RISK_CONTROL', detail: { kind: 'captcha' } })
+    expect(err({ code: 1, success: false, msg: '请完成人机验证' })).toMatchObject({ code: 'RISK_CONTROL', detail: { kind: 'captcha' } })
+    expect(err({ code: 1, success: false, msg: '操作太频繁，请稍后再试' })).toMatchObject({ code: 'RISK_CONTROL', detail: { kind: 'blocked' } })
+    for (const msg of ['服务异常', '系统异常，请稍后再试', '验证码错误', '笔记不存在']) {
+      expect(err({ code: 500, success: false, msg }), msg).toMatchObject({ code: 'UPSTREAM', message: msg, detail: { code: 500 } })
+    }
+  })
+})
+
+describe('xhs 归一化：长连推送、直播间事件、关注列表分页', () => {
+  it('长连推来的私信：类型按 content_type 取，会话 id 是对方', () => {
+    const inbound = (json: any, payload = JSON.stringify(json)) => cmd.inboundMessageOf({ mid: 'm1', messageId: 'id1', ts: 1790000000123, payload, json }, USER_ID)
+    expect(inbound({ sender: OTHER, receiver: USER_ID, content: JSON.stringify({ content: '[图片]', content_type: 2 }) })).toMatchObject({
+      id: 'id1',
+      conversation_id: OTHER,
+      from: { id: OTHER },
+      type: 'image',
+    })
+    expect(inbound({ sender: USER_ID, receiver: OTHER, content_type: 4, content: 'v' })).toMatchObject({ conversation_id: OTHER, type: 'video' })
+    expect(inbound({ sender: OTHER, content: '在吗' })).toMatchObject({ type: 'text', text: '在吗' })
+    // 顶层 type 不是数字（不是 content_type）时不采用
+    expect(inbound({ sender: OTHER, type: 'PRIVATE', content: JSON.stringify({ content: 'x', content_type: 3 }) }).type).toBe('card')
+    expect(cmd.inboundMessageOf({ mid: 'm2', messageId: '', ts: 0, payload: '纯文本', json: null }, USER_ID)).toMatchObject({ id: 'm2', type: 'text', text: '纯文本' })
+  })
+
+  it('直播间事件：弹幕、礼物、点赞、进场、关注；心跳和人数不输出', () => {
+    const ev = (customData: any) => cmd.roomEvent({ ts: 1790000000123, customData: { profile: { user_id: OTHER, nickname: '观众' }, ...customData } })
+    expect(ev({ type: 'text', desc: '主播好' })).toMatchObject({ type: 'chat', text: '主播好', user: { id: OTHER, name: '观众' }, time: '2026-09-21T22:13:20+08:00' })
+    expect(ev({ type: 'gift', gift: { name: '小心心', count: 3 } })).toMatchObject({ type: 'gift', gift: { name: '小心心', count: 3 } })
+    expect(ev({ type: 'praise' })).toMatchObject({ type: 'like' })
+    expect(ev({ type: 'enter_room' })).toMatchObject({ type: 'enter' })
+    expect(ev({ type: 'follow' })).toMatchObject({ type: 'follow' })
+    expect(ev({ type: 'viewer_heart' })).toBeNull()
+    expect(ev({ type: 'audience_num' })).toBeNull()
+    expect(ev({ type: 'shop', desc: '上新' })).toMatchObject({ type: 'other', text: '上新' })
+    expect(cmd.roomEvent({ customData: 'x' })).toBeNull()
+  })
+
+  it('user following：一页取满 200 个时认为还有下一页', async () => {
+    const users = Array.from({ length: 200 }, (_, i) => ({ user_id: `5f${String(i).padStart(22, '0')}`, nick_name: `u${i}` }))
+    const { result, error } = await serve((r) => security(r) ?? (r.url.includes('following/all') ? ok({ follow_user_d_t_o_list: users }) : undefined), () => cmd.userFollowing(pcCtx()))
+    if (error) throw error
+    expect(result!.data).toHaveLength(200)
+    expect(result!.page).toEqual({ cursor: '2', has_more: true })
+  })
+})
+
+// ================================================================ 创作者中心：第一次桥接
+
+describe('xhs 创作者中心：第一次用主站登录态桥接', () => {
+  const TOPIC = { id: 't1', name: '旅行', link: 'https://www.xiaohongshu.com/page/topics/t1', view_num: 10 }
+  /** 桥接的 user/info 验收按 userInfo 回；话题搜索正常。 */
+  const bridge = (userInfo: Reply, publish?: Reply) => (r: GoldenRequest): Reply => {
+    if (publish && r.url.startsWith('https://creator.xiaohongshu.com/publish/publish')) return publish
+    if (r.url.includes('/api/galaxy/user/info')) return userInfo
+    if (r.url.includes('/web_api/sns/v1/search/topic')) return ok({ topic_info_dtos: [TOPIC] })
+    return security(r)
+  }
+  const OK_INFO = ok({ userId: USER_ID, userName: '测试用户' })
+
+  it('桥接中途失败（验收不过 / 发布页打不开）：凭证一点不改，下次还会重新桥接', async () => {
+    for (const [route, code] of [
+      [bridge(fail(-100, '登录已过期')), 'AUTH_EXPIRED'],
+      [bridge(OK_INFO, { status: 500, body: '<html></html>' }), 'UPSTREAM'],
+    ] as const) {
+      const ctx = pcCtx({ keyword: '旅行' })
+      const before = JSON.stringify(ctx.credential)
+      const { requests, error } = await serve(route, () => cmd.topicSearch(ctx))
+      expect(error).toMatchObject({ code })
+      expect(hits(requests, 'creator.xiaohongshu.com/publish/publish')).toHaveLength(1)
+      expect(hits(requests, '/search/topic')).toHaveLength(0)
+      expect(JSON.stringify(ctx.credential)).toBe(before)
+      expect(ctx.credential.scopes.creator).toBeUndefined()
+
+      // 同一份凭证再跑一次：仍是「第一次」，重新桥接并成功
+      const again = await serve(bridge(OK_INFO), () => cmd.topicSearch(ctx))
+      if (again.error) throw again.error
+      expect(again.result!.data).toMatchObject([{ id: 't1' }])
+      expect(hits(again.requests, 'creator.xiaohongshu.com/publish/publish')).toHaveLength(1)
+      expect(ctx.credential.scopes.creator!.cookies.map((c) => c.name)).toEqual(expect.arrayContaining(['a1', 'web_session', 'webBuild', 'xsecappid', 'gid']))
+      expect(ctx.credential.device.creator).toBeTruthy()
+    }
+  })
+
+  describe('经 CLI 分发（命令失败时 core 也会把凭证落盘）', () => {
+    useTempHome()
+    async function account() {
+      const c = newCredential({ platform: 'xhs', endpoint: 'web', account: 'default', method: 'cookie' })
+      c.user = { id: USER_ID, name: '测试用户', url: null }
+      c.scopes.main!.cookies = parseCookieInput(PC_COOKIES, '.xiaohongshu.com')
+      await writeCredential(c)
+      await setCurrent('xhs', 'web', 'default')
+    }
+
+    it('第一次桥接失败不落盘半成品；下一次命令重新桥接成功并落盘', async () => {
+      await account()
+      const failed = await serve(bridge(fail(-100, '登录已过期')), () => cli('xhs', 'topic', 'search', '旅行'))
+      expect(failed.result!.env.error).toMatchObject({ code: 'AUTH_EXPIRED' })
+      const saved = (await readCredential('xhs', 'web', 'default'))!
+      expect(saved.scopes.creator).toBeUndefined()
+      expect(saved.device.creator).toBeUndefined()
+      expect(saved.extra.creator_ds).toBeUndefined()
+
+      const done = await serve(bridge(OK_INFO), () => cli('xhs', 'topic', 'search', '旅行'))
+      expect(done.result!.env).toMatchObject({ ok: true, data: [{ id: 't1', name: '旅行' }] })
+      expect(hits(done.requests, 'creator.xiaohongshu.com/publish/publish')).toHaveLength(1)
+      const bridged = (await readCredential('xhs', 'web', 'default'))!
+      expect(bridged.scopes.creator!.cookies.map((c) => c.name)).toEqual(expect.arrayContaining(['a1', 'web_session', 'gid']))
+      expect(bridged.device.creator).toBeTruthy()
+
+      // 第三次直接复用 creator scope，不再桥接
+      const reuse = await serve(bridge(OK_INFO), () => cli('xhs', 'topic', 'search', '旅行'))
+      expect(reuse.result!.env.ok).toBe(true)
+      expect(hits(reuse.requests, 'publish/publish')).toHaveLength(0)
+    })
+  })
+})
+
+describe('xhs 发布与上传', () => {
+  function bothCtx(options: Record<string, unknown> = {}, args: Record<string, string> = {}) {
+    const ctx = pcCtx(args, options)
+    ctx.credential.scopes.creator = { cookies: ctxWith(CREATOR_COOKIES, 'creator').credential.scopes.creator!.cookies, tokens: {} }
+    return ctx
+  }
+  const POIS = [
+    { poi_id: 'p1', name: '外滩', full_address: '上海市黄浦区中山东一路', poi_type: 1 },
+    { poi_id: 'p2', name: '外滩源', full_address: '上海市黄浦区圆明园路', poi_type: 1 },
+  ]
+
+  it('item publish --poi：只认 poi_id 或名称完全相同的地点，否则报 USAGE（不上传、不发布）', async () => {
+    const route = (r: GoldenRequest) => security(r) ?? (r.url.includes('/poi/creator/search') ? ok({ poi_list: POIS }) : undefined)
+    const { requests, error } = await serve(route, () => cmd.itemPublish(bothCtx({ image: ['/nonexistent.png'], poi: '外滩美术馆', visibility: 'public' })))
+    expect(error).toMatchObject({ code: 'USAGE', message: expect.stringContaining('外滩（p1）'), hint: 'catbus xhs poi search 外滩美术馆' })
+    expect(hits(requests, '/upload/creator/permit')).toHaveLength(0)
+    expect(hits(requests, '/web_api/sns/v2/note')).toHaveLength(0)
+  })
+
+  it('item publish --poi：按 id 或名称精确匹配后写进 post_loc', async () => {
+    const file = join(tmpdir(), `catbus-xhs-${process.pid}.png`)
+    writeFileSync(file, PNG)
+    for (const poi of ['p2', '外滩源']) {
+      const route = (r: GoldenRequest): Reply => {
+        if (r.url.includes('/poi/creator/search')) return ok({ poi_list: POIS })
+        if (r.url.includes('/upload/creator/permit')) return ok({ uploadTempPermits: [{ fileIds: ['spectrum/fid1'], token: 't', expireTime: 1790000000000, uploadAddr: 'ros-upload.xiaohongshu.com' }] })
+        if (r.method === 'PUT') return { body: '' }
+        if (r.url.includes('/web_api/sns/v2/note')) return ok({ id: NOTE_ID })
+        return security(r)
+      }
+      const { requests, error } = await serve(route, () => cmd.itemPublish(bothCtx({ image: [file], poi, visibility: 'public' })))
+      if (error) throw error
+      expect(jsonBody(hits(requests, '/web_api/sns/v2/note')[0]!).common.post_loc).toEqual({ name: '外滩源', subname: '上海市黄浦区圆明园路', poi_id: 'p2', poi_type: 1 })
+    }
+  })
+
+  it('media upload：url 是文件 PUT 到的绝对地址', async () => {
+    const file = join(tmpdir(), `catbus-xhs-up-${process.pid}.png`)
+    writeFileSync(file, PNG)
+    const route = (r: GoldenRequest): Reply => {
+      if (r.url.includes('/upload/creator/permit')) return ok({ uploadTempPermits: [{ fileIds: ['spectrum/fid1'], token: 't', expireTime: 1790000000000, uploadAddr: 'ros-upload.xiaohongshu.com' }] })
+      if (r.method === 'PUT') return { body: '' }
+      return security(r)
+    }
+    const { requests, result, error } = await serve(route, () => cmd.mediaUpload(bothCtx({}, { file })))
+    if (error) throw error
+    expect(result).toMatchObject({ id: 'fid1', type: 'image', url: 'https://ros-upload.xiaohongshu.com/spectrum/fid1', width: 3, height: 2 })
+    expect(requests.find((r) => r.method === 'PUT')!.url).toBe('https://ros-upload.xiaohongshu.com/spectrum/fid1')
   })
 })

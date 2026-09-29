@@ -1,11 +1,11 @@
 import type { CookieJar } from '../../../core/cookies.js'
 import { CatbusError } from '../../../core/errors.js'
 import { type HttpClient, type HttpRequest, type HttpResponse, parseJson } from '../../../core/http.js'
-import { compactJson, pyStr, type Scalar, urlencode } from '../../../core/py.js'
+import { compactJson, type Scalar, urlencode } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { Credential } from '../../../core/schemas.js'
-import { authError, httpClient, isGuest, scope } from '../../../core/toolkit.js'
+import { authError, httpClient } from '../../../core/toolkit.js'
 import { checkSign, rapParam, signFull } from './js.js'
 import {
   AS,
@@ -207,10 +207,21 @@ export interface XhsJson<T = any> {
 const DSL_TTL = 300_000
 const GETDSS = /function\s+getdss\s*\(\s*\)\s*\{\s*return\s+'(\d+)'/
 
+/** 安全程序里 `function getdss() { return '<数字>' }` 的值（window._dsl），没有时为 undefined。 */
+export const getdss = (code: string): string | undefined => GETDSS.exec(code)?.[1]
+
+/** 签名状态里 Session 要用到的部分（PcState、CreatorState 都有）。 */
+interface CookieState {
+  cookies: Record<string, string>
+  updateCookies(updates: Record<string, string>): void
+}
+
 /** 发请求并按上游规则合并响应 cookie 的基类（PC、Creator 共用）。 */
-export class Session {
+export abstract class Session {
   readonly http: HttpClient
   readonly jar: CookieJar
+  /** 签名状态（上游 PcDeviceProfile / CreatorDeviceProfile），由子类创建。 */
+  abstract state: CookieState
 
   constructor(
     readonly ctx: HandlerContext,
@@ -302,13 +313,38 @@ export class Session {
     }
   }
 
-  /** 子类在响应 cookie 合并后同步状态。 */
-  protected afterResponse(): void {}
+  /** 共享 cookie 变化同步到签名状态（上游 update_cookies 的副作用：loadts / ets / websectiga / gid）。 */
+  sync(): void {
+    const updates: Record<string, string> = {}
+    for (const [k, v] of Object.entries(this.shared())) if (this.state.cookies[k] !== v) updates[k] = v
+    this.state.updateCookies(updates)
+  }
+
+  /** 响应 cookie 合并后同步签名状态。 */
+  protected afterResponse(): void {
+    this.sync()
+  }
+
+  /**
+   * as.xiaohongshu.com 的 ds 接口（上游 xhs_pc/dsl.py、xhs_creator/dsl.py）：返回整段程序和其中 getdss() 的值。
+   * 缓存由调用方做（PC 只存 _dsl，创作者中心连程序一起存）。
+   */
+  protected async fetchDs(appId: string, referer: string): Promise<{ dsl: string | undefined; program: string }> {
+    const res = await this.send({
+      url: `${AS}/api/sec/v1/ds?appId=${appId}`,
+      headers: [
+        ['User-Agent', UA],
+        ['Referer', referer],
+        ['Accept', '*/*'],
+        ['accept-encoding', 'gzip, deflate, br, zstd'],
+      ],
+    })
+    const program = await res.text()
+    return { dsl: getdss(program), program }
+  }
 
   async json<T = any>(req: HttpRequest, appendShared: string[] = [], bare = false): Promise<XhsJson<T>> {
-    const res = await this.send(req, appendShared, bare)
-    checkStatus(res)
-    return parseJson<XhsJson<T>>(res)
+    return jsonOf<XhsJson<T>>(await this.send(req, appendShared, bare))
   }
 
   /** 业务码检查（AGENTS 6.4），返回 data。 */
@@ -317,14 +353,30 @@ export class Session {
     const code = body.code
     const message = String(body.msg ?? (body as any).message ?? '')
     if (isAuthFailure(body)) throw authError(this.ctx, message || undefined)
-    if (code === 300012 || code === 300013 || code === 300015 || code === 461 || code === 471 || /验证|captcha/i.test(message)) {
-      throw new CatbusError('RISK_CONTROL', `小红书风控：${message || code}`, { detail: { kind: 'captcha', code, message } })
-    }
-    if (code === 300011 || /频繁|异常/.test(message)) {
-      throw new CatbusError('RISK_CONTROL', `小红书风控：${message || code}`, { detail: { kind: 'blocked', code, message } })
-    }
+    const kind = riskOf(code, message)
+    if (kind) throw new CatbusError('RISK_CONTROL', `小红书风控：${message || code}`, { detail: { kind, code, message } })
     throw new CatbusError('UPSTREAM', message || `小红书返回错误 ${code}`, { detail: { code, message } })
   }
+}
+
+type RiskKind = 'captcha' | 'blocked'
+
+/** 风控业务码（AGENTS 6.4）：300012 / 300013 / 300015 与 461 / 471 要人机验证，300011 是账号被限制。 */
+const RISK_CODES: Record<number, RiskKind> = { 300012: 'captcha', 300013: 'captcha', 300015: 'captcha', 461: 'captcha', 471: 'captcha', 300011: 'blocked' }
+
+/**
+ * 没有风控业务码时只认明确的措辞：宽泛的「异常」「验证」「频繁」也出现在普通业务错误里（「服务异常」「验证码错误」），
+ * 会把本该降级处理的 UPSTREAM 错误当成风控（例如群聊列表取不到时只列单聊）。
+ */
+const RISK_WORDS: [RegExp, RiskKind][] = [
+  [/人机验证|滑块验证|安全验证|captcha/i, 'captcha'],
+  [/访问频次异常|访问(太|过于)频繁|操作(太|过于)频繁|请勿频繁操作/, 'blocked'],
+]
+
+/** 业务错误是不是风控，是的话返回 detail.kind。 */
+export function riskOf(code: unknown, message: string): RiskKind | null {
+  const byCode = typeof code === 'number' ? RISK_CODES[code] : undefined
+  return byCode ?? RISK_WORDS.find(([re]) => re.test(message))?.[1] ?? null
 }
 
 /** 登录墙 / 登录失效的业务响应：-100 / -101 / -104，或提示里说要登录。 */
@@ -350,6 +402,15 @@ export function checkStatus(res: HttpResponse, hint?: string): void {
   if (res.status === 406 || res.status === 429) {
     throw new CatbusError('RISK_CONTROL', `小红书拒绝了请求（HTTP ${res.status}），请稍后再试`, { hint, detail: { kind: 'rate_limit', status: res.status } })
   }
+}
+
+/**
+ * 响应 → JSON：先按状态码判风控（checkStatus），再解析，不是 JSON 时报 UPSTREAM。
+ * 业务请求（Session.json）、主站登录、创作者中心登录共用。
+ */
+export async function jsonOf<T = any>(res: HttpResponse, hint?: string): Promise<T> {
+  checkStatus(res, hint)
+  return parseJson<T>(res)
 }
 
 export class Pc extends Session {
@@ -379,17 +440,6 @@ export class Pc extends Session {
     this.credential.extra.user_id = id
   }
 
-  /** 共享 cookie 变化同步到签名状态（上游 update_cookies 的副作用：loadts / ets / websectiga / gid）。 */
-  sync(): void {
-    const updates: Record<string, string> = {}
-    for (const [k, v] of Object.entries(this.shared())) if (this.state.cookies[k] !== v) updates[k] = v
-    this.state.updateCookies(updates)
-  }
-
-  protected override afterResponse(): void {
-    this.sync()
-  }
-
   /** 持久化签名状态（localStorage / sessionStorage 的等价物）。 */
   save(): void {
     this.credential.device.pc = this.state.storage()
@@ -401,17 +451,7 @@ export class Pc extends Session {
   async dsl(force = false): Promise<string> {
     const cached = this.credential.extra.pc_dsl as { value: string; at: number } | undefined
     if (!force && cached?.value && rand.now() - cached.at < DSL_TTL) return cached.value
-    const res = await this.send({
-      url: `${AS}/api/sec/v1/ds?appId=xhs-pc-web`,
-      headers: [
-        ['User-Agent', UA],
-        ['Referer', `${WEB}/`],
-        ['Accept', '*/*'],
-        ['accept-encoding', 'gzip, deflate, br, zstd'],
-      ],
-      cookies: false,
-    })
-    const value = GETDSS.exec(await res.text())?.[1]
+    const value = (await this.fetchDs('xhs-pc-web', `${WEB}/`)).dsl
     if (!value) {
       if (cached?.value) return cached.value
       throw new CatbusError('UPSTREAM', '小红书 ds 接口没有返回 getdss()，无法签名')
@@ -550,11 +590,3 @@ export function loginOrder(headers: Headers, kind: 'post' | 'get' | 'get-login-m
   if (!Object.keys(headers).some((k) => k.toLowerCase() === 'content-type')) order = order.filter((k) => k !== 'content-type')
   return order
 }
-
-/** 当前命令是否以游客身份访问（凭证 method 为 guest）。 */
-export const guestOf = (ctx: HandlerContext) => isGuest(ctx)
-
-/** 凭证某个 scope 是否有 cookie。 */
-export const hasScope = (credential: Credential, name: string) => (credential.scopes[name]?.cookies.length ?? 0) > 0
-
-export { pyStr, scope }

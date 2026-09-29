@@ -10,7 +10,6 @@ import { CREATOR_REFERENCE, PC_REFERENCE } from './profile.js'
  */
 
 export const DS_REFRESH_MS = 15 * 60 * 1000
-export const TIGA_REFRESH_MS = 5 * 60 * 1000
 
 export type Storage = Record<string, string>
 

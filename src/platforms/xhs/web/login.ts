@@ -1,10 +1,11 @@
-import { CatbusError } from '../../../core/errors.js'
-import { createHash } from 'node:crypto'
-import * as rand from '../../../core/rand.js'
 import { crc32 } from 'node:zlib'
-import { checkStatus, loginOrder, type Pc, secHeaders, splice } from './client.js'
+import { CatbusError } from '../../../core/errors.js'
+import { md5Hex } from '../../../core/hash.js'
+import { parseJson } from '../../../core/http.js'
+import * as rand from '../../../core/rand.js'
+import { checkStatus, getdss, jsonOf as parseResponse, loginOrder, type Pc, splice } from './client.js'
 import { acceptSsk, createHandshake, generateWebsectiga, pcProfileData } from './js.js'
-import { AS, EDITH, type Headers, LOGIN_LANG, navigationHeaders, orderedHeaders, PC_ORDER, PC_REFERENCE, SEM, SEC_CH_UA, UA, WEB, XHR_ACCEPT } from './profile.js'
+import { AS, EDITH, type Headers, LOGIN_LANG, navigationHeaders, orderedHeaders, PC_ORDER, PC_REFERENCE, SEM, WEB, XHR_ACCEPT } from './profile.js'
 import { normalizeEts } from './state.js'
 
 /**
@@ -16,7 +17,6 @@ import { normalizeEts } from './state.js'
  */
 
 const A1_CHARSET = 'abcdefghijklmnopqrstuvwxyz1234567890'
-const GETDSS = /function\s+getdss\s*\(\s*\)\s*\{\s*return\s+'(\d+)'/
 
 /** 上游 common_util.generate_a1：时间戳十六进制 + 30 位随机 + '50000' + crc32，截到 52 位。 */
 export function generateA1(): string {
@@ -24,7 +24,7 @@ export function generateA1(): string {
   return (part + String(crc32(Buffer.from(part)) >>> 0)).slice(0, 52)
 }
 
-export const generateWebId = (a1: string) => createHash('md5').update(a1).digest('hex')
+export const generateWebId = (a1: string) => md5Hex(a1)
 
 type Kind = Parameters<typeof loginOrder>[1]
 
@@ -38,14 +38,8 @@ async function send(p: Pc, method: 'GET' | 'POST', url: string, headers: Headers
 /** 登录接口触发风控时，退回到浏览器登录后导入 cookie。 */
 const COOKIE_HINT = '在浏览器里登录小红书后导入 cookie：catbus xhs auth login --method cookie --cookie "<Cookie>"'
 
-async function jsonOf(res: Awaited<ReturnType<Pc['send']>>): Promise<any> {
-  checkStatus(res, COOKIE_HINT)
-  try {
-    return JSON.parse(await res.text())
-  } catch {
-    throw new CatbusError('UPSTREAM', `小红书返回的不是 JSON（HTTP ${res.status}）`, { detail: { status: res.status } })
-  }
-}
+/** 登录链路的响应 → JSON：461 / 471 / 406 / 429 报风控并提示改用 cookie 登录，不是 JSON 时报 UPSTREAM。 */
+const jsonOf = (res: Awaited<ReturnType<Pc['send']>>): Promise<any> => parseResponse(res, COOKIE_HINT)
 
 // ---------------------------------------------------------------- 安全初始化
 
@@ -97,7 +91,7 @@ async function initializeSecurity(p: Pc): Promise<void> {
   await send(p, 'GET', `${SEM}/data/sem_sdk`, sem.headers, 'sem', { cookieUrl: null })
 
   const ds = await scripting(p, { callFrom: 'web', callback: '', type: 'ds', appId: 'xhs-pc-web' }, '0201', 'security_initial')
-  const anchor = GETDSS.exec(String(ds?.data?.data ?? ''))?.[1]
+  const anchor = getdss(String(ds?.data?.data ?? ''))
   if (!anchor) throw new CatbusError('UPSTREAM', 'ds scripting 响应里没有 getdss()')
   p.setLoginDsl(anchor)
 
@@ -142,7 +136,9 @@ export async function webprofile(p: Pc): Promise<string> {
     profileData: pcProfileData(p.state.profileDataOptions(rand.now())),
   }
   const res = await security(p, '/api/sec/v1/shield/webprofile', data, { tier: '0301', mnsProfile: 'webprofile', includeB1: true })
-  const body = await jsonOf(res).catch(() => ({}))
+  // 风控状态码照常抛出；只有响应体不是 JSON 时按上报失败处理（上游 except 后返回 None）
+  checkStatus(res, COOKIE_HINT)
+  const body = await parseJson<any>(res).catch(() => ({}))
   const gid = p.shared().gid
   if (!res.ok || !(body?.success === true || body?.code === 0) || !gid) throw new CatbusError('RISK_CONTROL', 'webprofile 上报没有换到 gid', { detail: { kind: 'blocked' } })
   p.state.p1 += 1
@@ -205,18 +201,12 @@ export async function qrcodeFinish(p: Pc, qrId: string, code: string): Promise<v
   const body = await jsonOf(res)
   const d = body?.data ?? {}
   if (!body?.success || d.code_status !== 2) throw new CatbusError('AUTH_REQUIRED', body?.msg || '二维码登录状态无效')
+  // 上游 `cookies.pop(name); cookies[name] = value` 在 cookie dict 里挪到末尾，但 HostCookieStore 记住的发送顺序不变，
+  // 线上仍在原位，所以这里只改值
   const session = String(d.login_info?.session ?? '')
-  if (session) moveToEnd(p, 'web_session', session)
+  if (session) p.setCookie('web_session', session)
   else if (!p.shared().web_session || p.shared().web_session === visitor) throw new CatbusError('AUTH_REQUIRED', '二维码登录响应缺少正式 web_session')
   p.sync()
-}
-
-/**
- * 上游 `cookies.pop(name); cookies[name] = value`：cookie dict 里挪到末尾，但 HostCookieStore 记住的发送顺序不变，
- * 所以线上仍在原位（只改值）。
- */
-function moveToEnd(p: Pc, name: string, value: string): void {
-  p.setCookie(name, value)
 }
 
 export async function sendSmsCode(p: Pc, phone: string, zone = '86'): Promise<void> {
@@ -237,7 +227,7 @@ export async function smsLoginCode(p: Pc, phone: string, code: string, zone = '8
   const body = await jsonOf(await send(p, 'POST', EDITH + login, s2.headers, 'post', { body: s2.body }))
   const session = body?.data?.session
   if (!body?.success || !session) throw new CatbusError('AUTH_REQUIRED', body?.msg || '登录失败')
-  moveToEnd(p, 'web_session', String(session))
+  p.setCookie('web_session', String(session))
   p.sync()
 }
 
@@ -247,5 +237,3 @@ export async function loginUserMe(p: Pc): Promise<any> {
   const body = await jsonOf(await send(p, 'GET', `${EDITH}/api/sns/web/v2/user/me`, s.headers, 'get'))
   return body?.success ? (body.data ?? {}) : null
 }
-
-export { secHeaders, SEC_CH_UA, UA }
