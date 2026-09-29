@@ -573,7 +573,7 @@ describe('douyin 归一化：补齐的命令', () => {
         ],
       },
     }
-    expect(norm.liveStreams(body).map((m) => [m.id, m.url.split('/').at(-1), m.width, m.height])).toEqual([
+    expect(norm.liveStreams(body).map((m) => [m.id, m.url?.split('/').at(-1), m.width, m.height])).toEqual([
       ['origin.flv', 'stream-1_or4.flv', 1920, 1080],
       ['origin.hls', 'index.m3u8', 1920, 1080],
       ['SD1.flv', 'stream-1_ld.flv', null, null],

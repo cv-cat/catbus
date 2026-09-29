@@ -200,7 +200,7 @@ export async function mediaUpload(ctx: Ctx): Promise<Media> {
     w.requireLogin()
     // 还没发布的视频没有可播放的地址（转码结果只有截图），url 为空串；发布时用的是 id（media_id）
     const mediaId = String(await uploadVideoFile(w, file.data, false))
-    return n.media({ id: mediaId, type: 'video', url: '' })
+    return n.media({ id: mediaId, type: 'video', url: null })
   }
   const me = await self(w)
   const d = await api.uploadImage(w, me.uid, me.nick, file.data)

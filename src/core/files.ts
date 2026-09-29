@@ -56,6 +56,10 @@ export async function downloadMedia(ctx: HandlerContext, http: HttpClient, itemI
   await mkdir(dir, { recursive: true })
   const files: File[] = []
   for (const [i, m] of media.entries()) {
+    if (!m.url) {
+      ctx.log.warn(`第 ${i + 1} 个媒体没有可下载的地址，跳过`)
+      continue
+    }
     const ext = options.ext?.(m, i) ?? extFromUrl(m.url) ?? (m.type === 'image' ? 'jpg' : m.type === 'audio' ? 'm4a' : 'mp4')
     const path = join(dir, `${ctx.platform.id}_${itemId}_${i + 1}.${ext}`)
     const existing = await stat(path).catch(() => null)

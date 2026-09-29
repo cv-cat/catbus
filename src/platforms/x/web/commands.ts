@@ -329,7 +329,7 @@ export async function mediaUpload(ctx: Ctx): Promise<Media> {
   const file = await readMedia(x.http, ctx.args.file!)
   const { mediaId, mediaType, result } = await api.upload(x, file.data, file.filename)
   const img = result?.image ?? {}
-  return n.media({ id: mediaId, type: mediaType.startsWith('video/') ? 'video' : 'image', url: '', width: n.count(img.w), height: n.count(img.h) }, result)
+  return n.media({ id: mediaId, type: mediaType.startsWith('video/') ? 'video' : 'image', url: null, width: n.count(img.w), height: n.count(img.h) }, result)
 }
 
 // ================================================================ article（平台扩展，AGENTS 4.7）

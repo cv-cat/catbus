@@ -610,7 +610,7 @@ export async function mediaUpload(ctx: Ctx): Promise<Media> {
     const sts = await creator.uploadAuth(d)
     const v = await creator.uploadVideo(d, sts, file, await api.myUid(d).catch(() => ''))
     // VOD 只给 vid，没有可访问的地址；Media.url 在 schemas 里不能为 null，这里留空（id 就是 vid）
-    return n.media({ id: v.vid, type: 'video', url: '', width: v.width || null, height: v.height || null, duration: v.duration || null }, v.raw)
+    return n.media({ id: v.vid, type: 'video', url: null, width: v.width || null, height: v.height || null, duration: v.duration || null }, v.raw)
   }
   const sts = await creator.uploadAuth(d, creator.POST_IMAGE_REFERER)
   const info = await creator.uploadImage(d, sts, file, '')

@@ -614,7 +614,7 @@ export async function mediaUpload(ctx: Ctx): Promise<Media> {
       return n.media({ id: up.fileId, type: 'video', url: up.url }, up)
     }
     const img = await uploadImage(c, file)
-    return n.media({ id: img.fileId, type: 'image', url: img.url!, width: img.width, height: img.height }, img)
+    return n.media({ id: img.fileId, type: 'image', url: img.url ?? null, width: img.width, height: img.height }, img)
   })
 }
 

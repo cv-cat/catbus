@@ -482,7 +482,7 @@ describe('x 命令流程：其余读写命令', () => {
     const { requests, result, error } = await replay(c, () => cmd.mediaUpload(loggedCtx({ platform: 'x', args: { file } })))
     if (error) throw error
     expectRequests(requests, c.requests)
-    expect(result).toEqual({ id: MEDIA_ID, type: 'image', url: '', width: 1, height: 1, duration: null })
+    expect(result).toEqual({ id: MEDIA_ID, type: 'image', url: null, width: 1, height: 1, duration: null })
   })
 
   it('msg list：cookie 里没有 twid 时，查一次 Viewer 取自己的 id，不把自己当成对方', async () => {

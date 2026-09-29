@@ -157,7 +157,7 @@ export function user(v: Input<User, 'id'>, raw?: unknown): User {
   )
 }
 
-export function media(v: Partial<Media> & { url: string; type: Media['type'] }, raw?: unknown): Media {
+export function media(v: Partial<Media> & { url: string | null; type: Media['type'] }, raw?: unknown): Media {
   return attach({ id: v.id ?? null, type: v.type, url: v.url, width: v.width ?? null, height: v.height ?? null, duration: v.duration ?? null }, raw)
 }
 

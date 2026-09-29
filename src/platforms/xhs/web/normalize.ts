@@ -104,7 +104,7 @@ export function card(v: any): Item {
 
 /** 媒体地址（item media / download）：图片换成无水印 JPEG，视频用原始流。 */
 export function mediaOf(item: Item): Media[] {
-  return item.media.map((m) => (m.type === 'image' ? { ...m, url: noWaterImage(m.url) } : m))
+  return item.media.map((m) => (m.type === 'image' && m.url ? { ...m, url: noWaterImage(m.url) } : m))
 }
 
 /** 用户资料（user/otherinfo：{basic_info, interactions, tags}）。 */

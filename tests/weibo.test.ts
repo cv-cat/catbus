@@ -271,7 +271,7 @@ describe('weibo media upload', () => {
     const { requests, result, error } = await replay(c, () => cmd.mediaUpload(loggedCtx({ args: { file } })))
     if (error) throw error
     expectRequests(requests, c.requests)
-    expect(result).toEqual({ id: MEDIA_ID, type: 'video', url: '', width: null, height: null, duration: null })
+    expect(result).toEqual({ id: MEDIA_ID, type: 'video', url: null, width: null, height: null, duration: null })
   })
 
   it('上传接口返回 error 时报 UPSTREAM；视频要求实名认证时给出说明', async () => {

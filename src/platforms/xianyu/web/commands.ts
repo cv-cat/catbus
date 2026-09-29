@@ -202,6 +202,7 @@ async function uploadImage(x: Xianyu, input: string): Promise<{ media: Media; me
   const file = await readMedia(x.http, input)
   if (!file.contentType.startsWith('image/')) throw new CatbusError('UNSUPPORTED', `闲鱼私信只支持图片：${input}`)
   const media = norm.uploaded((await api.uploadMedia(x, file)).object)
+  if (!media.url) throw new CatbusError('UPSTREAM', '图片上传没有返回地址')
   return { media, message: { type: 'image', image_url: media.url, width: media.width ?? 0, height: media.height ?? 0 } }
 }
 

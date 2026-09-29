@@ -17,7 +17,8 @@ export interface Price {
 export interface Media {
   id: string | null
   type: 'image' | 'video' | 'audio'
-  url: string
+  /** 可访问的地址；刚上传、平台还没给出可访问地址时（例如视频转码前）为 null。 */
+  url: string | null
   width: number | null
   height: number | null
   duration: number | null
