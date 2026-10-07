@@ -8,15 +8,15 @@
 
 ### Added
 
-- 新增 `train`（12306 铁路）平台，支持公开只读查询功能：
+- 新增 `12306`（12306 铁路）平台，支持公开只读查询功能：
   - 车站检索（`station search`）：支持中文站名、拼音全拼/首字母前缀、电报码，车站字典本地缓存 24 小时
   - 余票查询（`ticket search`）：直达列车与余票信息，支持 `--date`、`--type`（车型过滤）、`--available`（只看有票），输出统一 `Ticket` 与 `Station` 对象及 12306 深链
   - 票价详情（`ticket price`）：各席别价格详情，输出标准 `Price { amount, currency }`
   - 经停时刻（`route get`）：全途经停站、到达/发车时间、停留时长
   - 中转方案（`transfer search`）：两段换乘方案，支持 `--via` 指定换乘站、`--limit` 限制方案数量，支持「同车换座」标记
 - 平台架构支持免登录（`guest: true`）模式，无需登录态直接调用查询命令
-- 新增 `train` 离线单元测试与在线 E2E 测试
-- 新增 `docs/platforms/train.md`，更新能力矩阵（`docs/capabilities.md`）、Agent 技能与多语言 README
+- 新增 `12306` 离线单元测试与在线 E2E 测试
+- 新增 `docs/platforms/12306.md`，更新能力矩阵（`docs/capabilities.md`）、Agent 技能与多语言 README
 
 ## [0.1.0] - 2026-10-06
 

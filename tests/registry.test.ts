@@ -22,9 +22,9 @@ describe('注册表', () => {
     for (const n of names) expect(GLOBAL_COMMANDS).not.toContain(n)
   })
 
-  it('所有平台 web 可用，app / pc 为 planned；除 train 外 web 端不支持游客态且除 auth 外都需要登录', () => {
+  it('所有平台 web 可用，app / pc 为 planned；除 12306 外 web 端不支持游客态且除 auth 外都需要登录', () => {
     for (const p of PLATFORMS) {
-      if (p.id === 'train') {
+      if (p.id === '12306') {
         expect(web(p).guest).toBe(true)
         for (const c of web(p).commands.values()) expect([p.id, c.key, c.auth]).toEqual([p.id, c.key, 'optional'])
       } else {
@@ -38,7 +38,7 @@ describe('注册表', () => {
   })
 
   /** 已经移植完的平台：上游有的（✓ / ◐）都有实现，○ 的都没有。移植完一个平台就加进来。 */
-  const PORTED = ['bilibili', 'taobao', 'weibo', 'x', 'kuaishou', 'xianyu', 'tiktok', 'jd', 'douyin', 'xhs', 'train']
+  const PORTED = ['bilibili', 'taobao', 'weibo', 'x', 'kuaishou', 'xianyu', 'tiktok', 'jd', 'douyin', 'xhs', '12306']
 
   it('已移植的平台：✓ / ◐ 的命令都已实现，○ 的都是 planned', () => {
     for (const p of PLATFORMS.filter((x) => PORTED.includes(x.id))) {
@@ -74,7 +74,7 @@ describe('注册表', () => {
       taobao: [],
       jd: ['cart count', 'coupon list', 'order list'],
       x: ['article delete', 'article publish'],
-      train: ['route get', 'station search', 'ticket price', 'ticket search', 'transfer search'],
+      '12306': ['route get', 'station search', 'ticket price', 'ticket search', 'transfer search'],
     })
   })
 

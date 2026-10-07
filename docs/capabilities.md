@@ -12,11 +12,11 @@
 | ○ | 平台有这个概念，上游没有，规划中 | planned | `NOT_IMPLEMENTED`，退出码 4 |
 | — | 平台没有这个概念 | 不注册 | `UNSUPPORTED`，退出码 2 |
 
-列顺序：xhs · douyin · tiktok · bilibili · kuaishou · weibo · xianyu · taobao · jd · x · train。
+列顺序：xhs · douyin · tiktok · bilibili · kuaishou · weibo · xianyu · taobao · jd · x · 12306。
 
 ## 登录方式
 
-|  | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | train |
+|  | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | qrcode | ✓ | ✓ |  | ✓ | ✓ |  | ✓ |  | ✓ |  |  |
 | sms | ✓ | ✓ |  | ✓ | ✓ |  |  |  | ✓ |  |  |
@@ -29,7 +29,7 @@
 
 `login` 见上表。`logout` / `list` / `use` 由 core 实现，所有平台都有；服务端登出只有 bilibili、kuaishou。
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | train |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | auth status | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | — |
 
@@ -37,7 +37,7 @@
 
 ## user
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | train |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | user get | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | ◐ | ◐ | ◐ | ✓ | — |
 | user search | ✓ | ✓ | ○ | ✓ | ✓ | ○ | — | — | — | ✓ | — |
@@ -65,7 +65,7 @@
 
 ## item
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | train |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | item get | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | ✓ | ✓ | — |
 | item search | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ○ | ○ | ✓ | ✓ | — |
@@ -124,7 +124,7 @@
 
 ## product 与商品评价
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | train |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | product get | ○ | ◐ | ✓ | — | ○ | — | — | — | — | — | — |
 
@@ -136,7 +136,7 @@
 
 ## comment
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | train |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | comment list | ◐ | ✓ | ✓ | ◐ | ◐ | ◐ | — | ○ | ◐ | ✓ | — |
 | comment replies | ✓ | ✓ | ✓ | ○ | ◐ | ○ | — | — | — | ○ | — |
@@ -159,7 +159,7 @@
 
 ## feed 与 keyword
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | train |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | feed list | ◐ | ◐ | ✓ | ◐ | ◐ | ○ | ○ | ○ | ○ | ◐ | — |
 | feed categories | ✓ | — | ○ | — | — | — | — | — | — | — | — |
@@ -176,7 +176,7 @@
 
 ## notice 与 msg
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | train |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | notice list | ✓ | ✓ | ✓ | ○ | ○ | ○ | — | — | — | ○ | — |
 | notice count | ✓ | ○ | ✓ | ○ | ✓ | ○ | — | — | — | ○ | — |
@@ -200,7 +200,7 @@
 
 ## media、folder、series、history、topic、poi
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | train |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | media upload | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | — |
 | folder list | ◐ | ✓ | ✓ | ◐ | ○ | ○ | — | — | — | ○ | — |
@@ -223,7 +223,7 @@
 
 ## live
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | train |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | live get | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — | — |
 | live list | ✓ | ○ | ✓ | ○ | ✓ | ○ | — | ○ | — | — | — |
@@ -266,4 +266,4 @@
 | bilibili | `item coin` ✓ · `item triple` ✓ · `item subtitles` ✓ · `danmaku list` ✓ · `danmaku send` ✓ · `dynamic publish` ✓ · `dynamic delete` ✓ · `article publish` ✓ · `draft get` ✓ · `draft delete` ✓ |
 | jd | `order list` ✓ · `cart count` ✓ · `coupon list` ✓ |
 | x | `article publish` ✓ · `article delete` ✓ |
-| train | `station search` ✓ · `ticket search` ✓ · `ticket price` ✓ · `route get` ✓ · `transfer search` ✓ |
+| 12306 | `station search` ✓ · `ticket search` ✓ · `ticket price` ✓ · `route get` ✓ · `transfer search` ✓ |

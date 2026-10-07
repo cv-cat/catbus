@@ -4,9 +4,9 @@ import { definePlatform, handlers } from '../../core/registry.js'
 const { impl } = handlers(() => import('./web/commands.js'))
 
 export default definePlatform({
-  id: 'train',
+  id: '12306',
   name: '12306 铁路',
-  aliases: ['12306'],
+  aliases: [],
   item: '车次',
   endpoints: {
     web: {

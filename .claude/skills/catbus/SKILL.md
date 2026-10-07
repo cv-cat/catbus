@@ -36,7 +36,7 @@ catbus（猫巴士）是一个命令行工具，用**同一套命令、同一种
 | 淘宝 | `taobao` | `tb` | 商品 | cookie | [platforms/taobao.md](platforms/taobao.md) |
 | 京东 | `jd` | `jingdong` | 商品 SKU | 扫码 | [platforms/jd.md](platforms/jd.md) |
 | X | `x` | `twitter` | 推文 | cookie | [platforms/x.md](platforms/x.md) |
-| 12306 铁路 | `train` | `12306` | 车次 | 免登录 | [platforms/train.md](platforms/train.md) |
+| 12306 铁路 | `12306` | — | 车次 | 免登录 | [platforms/12306.md](platforms/12306.md) |
 
 **还不支持**：Instagram、YouTube、Facebook、知乎、微信公众号、今日头条、得物、拼多多、美团、大众点评正在开发，现在执行会报「未知的平台」（`USAGE`）。用户问到时直接说还不支持，不要尝试调用，也不要拿别的平台凑数。
 

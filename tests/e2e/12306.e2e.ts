@@ -15,19 +15,19 @@ function futureDate(daysAhead = 3): string {
   return d.toISOString().slice(0, 10)
 }
 
-describe('train', () => {
+describe('12306', () => {
   const date = futureDate(3)
   let sampleTicket: any = null
 
   test('station search', async (ctx) => {
     await sleep(1000)
-    const r = await cli('train', 'station', 'search', '北京', '-q')
+    const r = await cli('12306', 'station', 'search', '北京', '-q')
     const env = r.env
     expect(env, r.stdout + r.stderr).toBeTruthy()
     if (env.error?.code === 'RISK_CONTROL') ctx.skip(`平台风控：${env.error.message}`)
 
     expect(env.ok, JSON.stringify(env.error)).toBe(true)
-    expect(env.platform).toBe('train')
+    expect(env.platform).toBe('12306')
     expect(Array.isArray(env.data)).toBe(true)
     expect(env.data.length).toBeGreaterThan(0)
 
@@ -41,13 +41,13 @@ describe('train', () => {
 
   test('ticket search', async (ctx) => {
     await sleep(1500)
-    const r = await cli('train', 'ticket', 'search', '北京', '上海', '--date', date, '-q')
+    const r = await cli('12306', 'ticket', 'search', '北京', '上海', '--date', date, '-q')
     const env = r.env
     expect(env, r.stdout + r.stderr).toBeTruthy()
     if (env.error?.code === 'RISK_CONTROL') ctx.skip(`平台风控：${env.error.message}`)
 
     expect(env.ok, JSON.stringify(env.error)).toBe(true)
-    expect(env.platform).toBe('train')
+    expect(env.platform).toBe('12306')
     expect(Array.isArray(env.data)).toBe(true)
     expect(env.data.length).toBeGreaterThan(0)
 
@@ -65,7 +65,7 @@ describe('train', () => {
     await sleep(1500)
 
     const r = await cli(
-      'train',
+      '12306',
       'ticket',
       'price',
       sampleTicket.train_no,
@@ -84,7 +84,7 @@ describe('train', () => {
     if (env.error?.code === 'RISK_CONTROL') ctx.skip(`平台风控：${env.error.message}`)
 
     expect(env.ok, JSON.stringify(env.error)).toBe(true)
-    expect(env.platform).toBe('train')
+    expect(env.platform).toBe('12306')
     const parsed = shapeOf('Fare').safeParse(env.data)
     expect(parsed.success, parsed.error ? JSON.stringify(parsed.error.issues.slice(0, 5)) : '').toBe(true)
   })
@@ -94,7 +94,7 @@ describe('train', () => {
     await sleep(1500)
 
     const r = await cli(
-      'train',
+      '12306',
       'route',
       'get',
       sampleTicket.train_no,
@@ -109,7 +109,7 @@ describe('train', () => {
     if (env.error?.code === 'RISK_CONTROL') ctx.skip(`平台风控：${env.error.message}`)
 
     expect(env.ok, JSON.stringify(env.error)).toBe(true)
-    expect(env.platform).toBe('train')
+    expect(env.platform).toBe('12306')
     expect(Array.isArray(env.data)).toBe(true)
     expect(env.data.length).toBeGreaterThan(1)
 
@@ -119,13 +119,13 @@ describe('train', () => {
 
   test('transfer search', async (ctx) => {
     await sleep(1500)
-    const r = await cli('train', 'transfer', 'search', '北京', '杭州', '--limit', '3', '--date', date, '-q')
+    const r = await cli('12306', 'transfer', 'search', '北京', '杭州', '--limit', '3', '--date', date, '-q')
     const env = r.env
     expect(env, r.stdout + r.stderr).toBeTruthy()
     if (env.error?.code === 'RISK_CONTROL') ctx.skip(`平台风控：${env.error.message}`)
 
     expect(env.ok, JSON.stringify(env.error)).toBe(true)
-    expect(env.platform).toBe('train')
+    expect(env.platform).toBe('12306')
     expect(Array.isArray(env.data)).toBe(true)
 
     const parsed = shapeOf('Transfer[]').safeParse(env.data)

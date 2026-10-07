@@ -14,7 +14,7 @@ export async function resolveStation(client: TrainClient, input: string): Promis
     stations.find((s) => s.city === q && s.name === s.city) ??
     stations.find((s) => s.city === q)
   if (!hit) {
-    throw new CatbusError('USAGE', `找不到车站：${input}`, { hint: 'catbus train station search <关键词>' })
+    throw new CatbusError('USAGE', `找不到车站：${input}`, { hint: 'catbus 12306 station search <关键词>' })
   }
   return hit
 }

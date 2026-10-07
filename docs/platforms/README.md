@@ -14,7 +14,7 @@
 | [淘宝](taobao.md) | `taobao` | `tb` | 商品 | **cookie** | 10（8 · 2） | 30 | [TaoBaoApis](https://github.com/cv-cat/TaoBaoApis) |
 | [京东](jd.md) | `jd` | `jingdong` | 商品 SKU | **扫码** · 短信 · cookie | 21（18 · 3） | 6 | [JdApis](https://github.com/cv-cat/JdApis) |
 | [X](x.md) | `x` | `twitter` | 推文 | **cookie** | 33（30 · 3） | 20 | [XApis](https://github.com/cv-cat/XApis) |
-| [12306 铁路](train.md) | `train` | `12306` | 车次 | **免登录** | 8（8 · 0） | 0 | 无（官方公开接口） |
+| [12306 铁路](12306.md) | `12306` | — | 车次 | **免登录** | 8（8 · 0） | 0 | 无（官方公开接口） |
 
 - 数字是 web 端注册表里的命令数，包含 `auth` 命令和平台扩展命令；平台没有这个概念的命令（矩阵里的 —）不计入。app / pc 端目前全部是规划中。
 - ✓ 上游已有；◐ 上游部分支持，限制写在各篇的说明里；○ 规划中，执行时返回 `NOT_IMPLEMENTED`（退出码 4）。

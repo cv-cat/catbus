@@ -96,7 +96,7 @@ export class TrainClient {
 
   async loadStations(): Promise<Station[]> {
     if (stationsMemo) return stationsMemo
-    const file = join(cacheDir('train'), 'stations.json')
+    const file = join(cacheDir('12306'), 'stations.json')
     try {
       const cached = JSON.parse(await readFile(file, 'utf8'))
       if (rand.now() - cached.fetched_at < STATION_TTL_MS) {
@@ -110,7 +110,7 @@ export class TrainClient {
       throw new CatbusError('UPSTREAM', '车站字典为空', { hint: '接口格式可能已变更' })
     }
     try {
-      await mkdir(cacheDir('train'), { recursive: true })
+      await mkdir(cacheDir('12306'), { recursive: true })
       await writeFile(file, JSON.stringify({ fetched_at: rand.now(), stations }))
     } catch {}
     stationsMemo = stations
