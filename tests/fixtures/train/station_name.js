@@ -1,0 +1,1 @@
+var station_names ='@bji|北京|BJP|beijing|bj|2|0357|北京|||@bjn|北京南|VNP|beijingnan|bjn|3|0357|北京|||@sha|上海|SHH|shanghai|sh|20|0712|上海|||@shq|上海虹桥|AOH|shanghaihongqiao|shhq|22|0712|上海|||@heb|哈尔滨|HBB|haerbin|heb|72|0034|哈尔滨|||@hzd|杭州东|HGH|hangzhoudong|hzd|87|0904|杭州|||@hzh|杭州|HZH|hangzhou|hz|88|0904|杭州|||@njn|南京南|NKH|nanjingnan|njn|121|0705|南京|||';

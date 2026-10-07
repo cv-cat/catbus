@@ -1,0 +1,9 @@
+official: https://kyfw.12306.cn
+endpoints:
+  init: /otn/leftTicket/init
+  stations: /otn/resources/js/framework/station_name.js
+  leftTicket: /otn/leftTicket/queryG (动态提取自 CLeftTicketUrl)
+  price: /otn/leftTicket/queryTicketPrice
+  route: /otn/czxx/queryByTrainNo
+  transfer: /lcquery/queryG
+note: 无上游开源仓库，直接对接 12306 官方公开只读查询接口

@@ -1,0 +1,1 @@
+CLeftTicketUrl = 'leftTicket/queryG'
