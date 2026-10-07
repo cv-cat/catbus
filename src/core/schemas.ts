@@ -217,11 +217,94 @@ export interface Coupon {
   end_at: string | null
 }
 
+export interface Station {
+  id: string
+  name: string
+  code: string
+  pinyin: string
+  abbr: string
+  city: string
+  url: string | null
+}
+
+export interface TicketStation {
+  code: string
+  name: string
+  no: string
+}
+
+export type TicketRemaining = number | { min: number }
+
+export interface Ticket {
+  id: string
+  url: string
+  train_no: string
+  type: string
+  from: TicketStation
+  to: TicketStation
+  depart: string
+  arrive: string
+  duration: string
+  date: string
+  bookable: boolean
+  has_ticket: boolean
+  seats: Record<string, string>
+  remaining: Record<string, TicketRemaining>
+  prices: Record<string, Price>
+  seat_types: string
+}
+
+export interface Stop {
+  id: string
+  url: string | null
+  station: string
+  arrive: string
+  depart: string
+  stopover: string
+  in_range: boolean
+}
+
+export interface Fare {
+  id: string
+  url: string | null
+  train_no: string
+  date: string
+  prices: Record<string, Price>
+}
+
+export interface TransferLeg {
+  id: string
+  url: string | null
+  train_no: string
+  from: string
+  to: string
+  depart: string
+  arrive: string
+  duration: string
+  seats: Record<string, string>
+  remaining: Record<string, TicketRemaining>
+  prices: Record<string, Price>
+}
+
+export interface Transfer {
+  id: string
+  url: string | null
+  via: string
+  same_station: boolean
+  same_train: boolean
+  kind: '同车换座' | '换乘'
+  depart: string
+  arrive: string
+  duration_minutes: number
+  wait: string
+  legs: TransferLeg[]
+}
+
 /** 输出类型名，注册表的 `output` 只能用这些（加 `[]` 表示数组），或 `{...}` 形式的内联结构。 */
 export const OUTPUT_TYPES = new Set([
   'User', 'Item', 'Comment', 'Folder', 'Series', 'Category', 'Keyword', 'Topic', 'Poi', 'Live', 'Event', 'Gift',
   'Rank', 'Conversation', 'Message', 'Notice', 'NoticeCount', 'Media', 'AuthStatus', 'Account', 'File', 'Subtitle',
-  'Danmaku', 'Order', 'Coupon',
+  'Danmaku', 'Order', 'Coupon', 'Station', 'Ticket', 'Stop', 'Fare', 'Transfer',
 ])
 
 /** 归一化对象上挂平台原始对象，`--raw` 时用它替换。JSON 序列化会忽略 symbol 键。 */

@@ -61,7 +61,7 @@ export interface CommandDecl extends Partial<CommandSpec> {
 
 export interface LoginDecl {
   methods: LoginMethod[]
-  default: LoginMethod
+  default: LoginMethod | '—'
   /** 需要单独登录的子站点。 */
   scopes?: string[]
 }
@@ -198,7 +198,7 @@ function resolveCommands(decl: PlatformDecl, e: EndpointDecl): Map<string, Comma
       }
     }
     if (key === 'auth login') {
-      options.method = z.enum(e.login.methods).default(e.login.default).describe('登录方式')
+      options.method = z.enum(e.login.methods as [LoginMethod, ...LoginMethod[]]).default(e.login.default as LoginMethod).describe('登录方式')
       if (e.login.scopes?.length) options.scope = z.enum(e.login.scopes).optional().describe('子站点')
     }
     const output = spec.output.replace(/\[\]$/, '')

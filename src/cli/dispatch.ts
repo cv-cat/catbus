@@ -278,6 +278,7 @@ function validate(platform: Platform, command: Command, words: string[], given: 
     }
     const standard = STANDARD_VALUES[key]
     if (!standard) continue
+    if (command.extension && !describeOption(command.options[key]!).values?.some((v) => standard.includes(v))) continue
     const value = String(given[key])
     const flag = `--${flagName(key)}`
     if (!standard.includes(value)) {
@@ -351,7 +352,7 @@ async function resolveIdentity(
   if (command.args.some((a) => a.name === 'user' && args[a.name] === 'me')) {
     throw new CatbusError('AUTH_REQUIRED', 'me 表示当前账号，需要先登录', { hint: login })
   }
-  if (g.account !== GUEST) {
+  if (g.account !== GUEST && ep.login.methods.length > 0) {
     log.info(`未登录 ${p} (${endpoint})，本次以游客身份访问，结果可能不完整；很多操作需要登录。登录：${login}`)
   }
   return { account: GUEST, credential: await guest() }
