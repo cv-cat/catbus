@@ -1,0 +1,39 @@
+# 12306 铁路（train）
+
+| | |
+|---|---|
+| id / 别名 | `train` · `12306` |
+| `item` 是 | 车次 |
+| 登录 | **无需登录**（公开只读查询接口，游客态直接可用） |
+
+## 能做
+
+- 车站检索：`station search <keyword>`
+- 直达余票查询：`ticket search <from> <to>`
+- 票价查询：`ticket price <train>`
+- 经停站与时刻：`route get <train> <from> <to>`
+- 中转方案搜索：`transfer search <from> <to>`
+
+## 做不到
+
+- 登录、下单、支付、退票、改签、候补提交：购票等写操作由用户本人在 12306 官方 APP 完成。
+
+## 参数
+
+- 车站参数（`<from>`、`<to>`、`<keyword>`）：支持中文站名（如 `北京南`、`上海虹桥`）、城市名（如 `北京`、`上海`）、拼音全拼或首字母前缀（如 `beijing`、`bj`）、电报码（如 `BJP`、`VNP`）。城市名会解析为同名代表站。
+- 车次编号（`<train>`）：为 12306 内部 `train_no`（如 `240000G53106`），取自 `ticket search` 输出中的 `train_no` 字段，不是日常车次号（如 `G531`）。
+
+## 坑
+
+- **过去日期**：`--date` 不能小于今天（北京时间），超出 12306 预售期（约 15 天）时接口会返回错误或非 JSON。
+- **频控限制**：频繁请求可能触发 12306 风控（HTTP 302/429/403），遇到时需降低查询频率稍后重试。
+
+## 示例
+
+```bash
+catbus train station search 杭州
+catbus train ticket search 北京 上海 --date 2026-10-10 --available
+catbus train ticket price 240000G53106 --from-no 01 --to-no 13 --seat-types 9MOO --date 2026-10-10
+catbus train route get 240000G53106 北京南 上海虹桥 --date 2026-10-10
+catbus train transfer search 北京 杭州 --via 南京南 --limit 5 --date 2026-10-10
+```

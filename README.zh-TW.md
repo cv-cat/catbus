@@ -4,8 +4,8 @@
 
 <br>
 
-**一個指令，開往 10 個平台。**<br>
-小紅書 · 抖音 · TikTok · 嗶哩嗶哩 · 快手 · 微博 · 閒魚 · 淘寶 · 京東 · X
+**一個指令，開往 11 個平台。**<br>
+小紅書 · 抖音 · TikTok · 嗶哩嗶哩 · 快手 · 微博 · 閒魚 · 淘寶 · 京東 · X · 12306
 <br>
 <sub>即將上車：Instagram · YouTube · Facebook · 知乎 · 微信公眾號 · 今日頭條 · 得物 · 拼多多 · 美團 · 大眾點評</sub>
 
@@ -15,7 +15,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-A6E3A1?style=for-the-badge)](LICENSE)
 [![Node](https://img.shields.io/badge/node-22%20%7C%2024%20%7C%2026-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](package.json)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](tsconfig.json)
-[![Platforms](https://img.shields.io/badge/platforms-10-F38BA8?style=for-the-badge)](docs/platforms/README.md)
+[![Platforms](https://img.shields.io/badge/platforms-11-F38BA8?style=for-the-badge)](docs/platforms/README.md)
 [![Agent Ready](https://img.shields.io/badge/AI%20Agent-ready-CBA6F7?style=for-the-badge)](.claude/skills/catbus/SKILL.md)
 
 [简体中文](README.md) · [English](README.en.md) · **繁體中文** · [日本語](README.ja.md) · [한국어](README.ko.md)
@@ -30,7 +30,7 @@
 
 ## ✨ catbus 是什麼
 
-catbus（貓巴士）是一個命令列工具，用**統一的語法**呼叫 10 個中國大陸及國際主流平台的 web 端功能：搜尋、詳細資料、留言、使用者、推薦動態、下載、發佈、私訊、直播彈幕……
+catbus（貓巴士）是一個命令列工具，用**統一的語法**呼叫 11 個中國大陸及國際主流平台的 web 端功能：搜尋、詳細資料、留言、使用者、推薦動態、下載、發佈、私訊、直播彈幕、列車餘票票價……
 
 ```bash
 catbus xhs      item search 露营 --sort latest
@@ -39,7 +39,7 @@ catbus bilibili item search 露营 --sort latest
 catbus x        item search camping --sort latest
 ```
 
-四個平台，四條幾乎一樣的指令，輸出**同一種結構**的 JSON。筆記、作品、影片、推文一律叫 `item`，搜尋一律叫 `search`，按讚一律叫 `like`。學一次，十個平台都會用。
+四個平台，四條幾乎一樣的指令，輸出**同一種結構**的 JSON。筆記、作品、影片、推文一律叫 `item`，搜尋一律叫 `search`，按讚一律叫 `like`。學一次，11 個平台都會用。
 
 <p align="center">
   <img src="assets/platforms.svg" width="100%" alt="已支援的 10 個平台與開發中的 10 個平台">
@@ -98,7 +98,7 @@ QR Code 掃描、簡訊、cookie 匯入都支援，憑證依 **平台 × 端 × 
 
 | 🚌 平台 | ⌨️ 已實作指令 | 🧪 比對資料 | ✅ 離線測試 | 💻 目標系統 |
 |:---:|:---:|:---:|:---:|:---:|
-| **10** | **300+** | **560+** | **940+** | **8** |
+| **11** | **300+** | **560+** | **960+** | **8** |
 
 </div>
 

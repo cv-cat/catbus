@@ -1,11 +1,11 @@
 ---
 name: catbus
-description: 用 catbus CLI 读取或操作小红书（RedNote）、抖音、TikTok、B 站（Bilibili）、快手、微博、闲鱼、淘宝、京东、X（Twitter）这 10 个平台：搜索、详情、评论、用户、推荐流、下载、发布、点赞关注、私信、直播弹幕，输出统一的 JSON。用户要查询、采集、导出、监听或操作这些平台上的内容和账号时使用。
+description: 用 catbus CLI 读取或操作小红书（RedNote）、抖音、TikTok、B 站（Bilibili）、快手、微博、闲鱼、淘宝、京东、X（Twitter）、12306 铁路这 11 个平台：搜索、详情、评论、用户、推荐流、下载、发布、点赞关注、私信、直播弹幕、列车余票票价，输出统一的 JSON。用户要查询、采集、导出、监听或操作这些平台上的内容和账号时使用。
 ---
 
 # catbus
 
-catbus（猫巴士）是一个命令行工具，用**同一套命令、同一种 JSON** 调用 10 个平台的 web 端接口。stdout 只有 JSON，日志、提示、二维码都在 stderr。
+catbus（猫巴士）是一个命令行工具，用**同一套命令、同一种 JSON** 调用 11 个平台的 web 端接口。stdout 只有 JSON，日志、提示、二维码都在 stderr。
 
 先确认它能用：`catbus version`、`catbus doctor`。找不到 `catbus` 命令时告诉用户安装（`npm i -g catbus-cli`），不要自己去装。
 
@@ -36,6 +36,7 @@ catbus（猫巴士）是一个命令行工具，用**同一套命令、同一种
 | 淘宝 | `taobao` | `tb` | 商品 | cookie | [platforms/taobao.md](platforms/taobao.md) |
 | 京东 | `jd` | `jingdong` | 商品 SKU | 扫码 | [platforms/jd.md](platforms/jd.md) |
 | X | `x` | `twitter` | 推文 | cookie | [platforms/x.md](platforms/x.md) |
+| 12306 铁路 | `train` | `12306` | 车次 | 免登录 | [platforms/train.md](platforms/train.md) |
 
 **还不支持**：Instagram、YouTube、Facebook、知乎、微信公众号、今日头条、得物、拼多多、美团、大众点评正在开发，现在执行会报「未知的平台」（`USAGE`）。用户问到时直接说还不支持，不要尝试调用，也不要拿别的平台凑数。
 

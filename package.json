@@ -1,7 +1,7 @@
 {
   "name": "catbus-cli",
   "version": "0.1.0",
-  "description": "catbus（猫巴士）：上车，开往任何平台。一个命令操作小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X。",
+  "description": "catbus（猫巴士）：上车，开往任何平台。一个命令操作小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X、12306。",
   "keywords": [
     "cli",
     "xiaohongshu",
@@ -13,7 +13,8 @@
     "xianyu",
     "taobao",
     "jd",
-    "twitter"
+    "twitter",
+    "12306"
   ],
   "author": "cv-cat",
   "license": "MIT",

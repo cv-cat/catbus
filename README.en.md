@@ -4,8 +4,8 @@
 
 <br>
 
-**One command. Ten platforms.**<br>
-RedNote (Xiaohongshu) · Douyin · TikTok · Bilibili · Kuaishou · Weibo · Xianyu · Taobao · JD.com · X
+**One command. Eleven platforms.**<br>
+RedNote (Xiaohongshu) · Douyin · TikTok · Bilibili · Kuaishou · Weibo · Xianyu · Taobao · JD.com · X · 12306
 <br>
 <sub>Coming soon: Instagram · YouTube · Facebook · Zhihu · WeChat Official Accounts · Toutiao · Poizon (Dewu) · Pinduoduo · Meituan · Dianping</sub>
 
@@ -15,7 +15,7 @@ RedNote (Xiaohongshu) · Douyin · TikTok · Bilibili · Kuaishou · Weibo · Xi
 [![License: MIT](https://img.shields.io/badge/license-MIT-A6E3A1?style=for-the-badge)](LICENSE)
 [![Node](https://img.shields.io/badge/node-22%20%7C%2024%20%7C%2026-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](package.json)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](tsconfig.json)
-[![Platforms](https://img.shields.io/badge/platforms-10-F38BA8?style=for-the-badge)](docs/platforms/README.md)
+[![Platforms](https://img.shields.io/badge/platforms-11-F38BA8?style=for-the-badge)](docs/platforms/README.md)
 [![Agent Ready](https://img.shields.io/badge/AI%20Agent-ready-CBA6F7?style=for-the-badge)](.claude/skills/catbus/SKILL.md)
 
 [简体中文](README.md) · **English** · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
@@ -30,7 +30,7 @@ RedNote (Xiaohongshu) · Douyin · TikTok · Bilibili · Kuaishou · Weibo · Xi
 
 ## ✨ What is catbus
 
-catbus (猫巴士) is a command-line tool that drives the web endpoints of 10 major Chinese and global platforms through **one unified syntax**: search, details, comments, users, feeds, downloads, publishing, direct messages, live-stream chat and more.
+catbus (猫巴士) is a command-line tool that drives the web endpoints of 11 major Chinese and global platforms through **one unified syntax**: search, details, comments, users, feeds, downloads, publishing, direct messages, live-stream chat, train tickets and more.
 
 ```bash
 catbus xhs      item search 露营 --sort latest
@@ -39,7 +39,7 @@ catbus bilibili item search 露营 --sort latest
 catbus x        item search camping --sort latest
 ```
 
-Four platforms, four nearly identical commands, and JSON output with **the same structure**. Notes, posts, videos and tweets are all just `item`; searching is always `search`; liking is always `like`. Learn it once, and you can use all ten platforms.
+Four platforms, four nearly identical commands, and JSON output with **the same structure**. Notes, posts, videos and tweets are all just `item`; searching is always `search`; liking is always `like`. Learn it once, and you can use all 11 platforms.
 
 <p align="center">
   <img src="assets/platforms.svg" width="100%" alt="10 supported platforms and 10 more in progress">
@@ -98,7 +98,7 @@ TLS / HTTP2 fingerprints that match real Chrome, upstream signing JS running unm
 
 | 🚌 Platforms | ⌨️ Implemented commands | 🧪 Golden files | ✅ Offline tests | 💻 Target systems |
 |:---:|:---:|:---:|:---:|:---:|
-| **10** | **300+** | **560+** | **940+** | **8** |
+| **11** | **300+** | **560+** | **960+** | **8** |
 
 </div>
 

@@ -4,8 +4,8 @@
 
 <br>
 
-**명령어 하나로, 10개 플랫폼까지.**<br>
-샤오훙수 · 더우인 · TikTok · 빌리빌리 · 콰이서우 · 웨이보 · 셴위 · 타오바오 · 징둥 · X
+**명령어 하나로, 11개 플랫폼까지.**<br>
+샤오훙수 · 더우인 · TikTok · 빌리빌리 · 콰이서우 · 웨이보 · 셴위 · 타오바오 · 징둥 · X · 12306
 <br>
 <sub>곧 탑승: Instagram · YouTube · Facebook · 즈후 · 위챗 공식 계정 · 진르터우탸오 · 더우 · 핀둬둬 · 메이퇀 · 다중뎬핑</sub>
 
@@ -15,7 +15,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-A6E3A1?style=for-the-badge)](LICENSE)
 [![Node](https://img.shields.io/badge/node-22%20%7C%2024%20%7C%2026-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](package.json)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](tsconfig.json)
-[![Platforms](https://img.shields.io/badge/platforms-10-F38BA8?style=for-the-badge)](docs/platforms/README.md)
+[![Platforms](https://img.shields.io/badge/platforms-11-F38BA8?style=for-the-badge)](docs/platforms/README.md)
 [![Agent Ready](https://img.shields.io/badge/AI%20Agent-ready-CBA6F7?style=for-the-badge)](.claude/skills/catbus/SKILL.md)
 
 [简体中文](README.md) · [English](README.en.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md) · **한국어**
@@ -30,7 +30,7 @@
 
 ## ✨ catbus란?
 
-catbus(猫巴士)는 중국과 해외의 주요 플랫폼 10곳의 web 엔드포인트 기능을 **통일된 문법**으로 호출하는 커맨드라인 도구입니다. 검색, 상세 정보, 댓글, 사용자, 추천 피드, 다운로드, 게시, DM, 라이브 방송 탄막……
+catbus(猫巴士)는 중국과 해외의 주요 플랫폼 11곳의 web 엔드포인트 기능을 **통일된 문법**으로 호출하는 커맨드라인 도구입니다. 검색, 상세 정보, 댓글, 사용자, 추천 피드, 다운로드, 게시, DM, 라이브 방송 탄막, 열차 잔여석 및 운임 조회……
 
 ```bash
 catbus xhs      item search 露营 --sort latest
@@ -39,7 +39,7 @@ catbus bilibili item search 露营 --sort latest
 catbus x        item search camping --sort latest
 ```
 
-플랫폼 4곳, 거의 똑같은 명령어 4줄, 그리고 **같은 구조**의 JSON 출력. 노트, 작품, 동영상, 트윗 모두 `item`이고, 검색은 언제나 `search`, 좋아요는 언제나 `like`입니다. 한 번 배우면 10개 플랫폼 모두에서 쓸 수 있습니다.
+플랫폼 4곳, 거의 똑같은 명령어 4줄, 그리고 **같은 구조**의 JSON 출력. 노트, 작품, 동영상, 트윗 모두 `item`이고, 검색은 언제나 `search`, 좋아요는 언제나 `like`입니다. 한 번 배우면 11개 플랫폼 모두에서 쓸 수 있습니다.
 
 <p align="center">
   <img src="assets/platforms.svg" width="100%" alt="지원하는 10개 플랫폼과 개발 중인 10개 플랫폼">
@@ -98,7 +98,7 @@ QR 코드, SMS, cookie 가져오기를 모두 지원합니다. 인증 정보는 
 
 | 🚌 플랫폼 | ⌨️ 구현된 명령어 | 🧪 골든 데이터 | ✅ 오프라인 테스트 | 💻 대상 시스템 |
 |:---:|:---:|:---:|:---:|:---:|
-| **10** | **300+** | **560+** | **940+** | **8** |
+| **11** | **300+** | **560+** | **960+** | **8** |
 
 </div>
 
