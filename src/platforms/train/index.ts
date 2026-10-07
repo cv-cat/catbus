@@ -11,7 +11,7 @@ export default definePlatform({
   endpoints: {
     web: {
       guest: true,
-      login: { methods: [], default: '—' },
+      login: { methods: [] },
       commands: {
         'station search': impl('full', 'stationSearch', {
           summary: '车站搜索',
