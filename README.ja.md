@@ -4,8 +4,8 @@
 
 <br>
 
-**ひとつのコマンドで、10 のプラットフォームへ。**<br>
-小紅書（RED） · 抖音 · TikTok · ビリビリ · 快手 · 微博 · 閑魚 · タオバオ · 京東 · X
+**ひとつのコマンドで、11 のプラットフォームへ。**<br>
+小紅書（RED） · 抖音 · TikTok · ビリビリ · 快手 · 微博 · 閑魚 · タオバオ · 京東 · X · 12306
 <br>
 <sub>まもなく対応：Instagram · YouTube · Facebook · 知乎 · WeChat 公式アカウント · 今日頭条 · 得物 · 拼多多 · 美団 · 大衆点評</sub>
 
@@ -15,7 +15,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-A6E3A1?style=for-the-badge)](LICENSE)
 [![Node](https://img.shields.io/badge/node-22%20%7C%2024%20%7C%2026-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](package.json)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](tsconfig.json)
-[![Platforms](https://img.shields.io/badge/platforms-10-F38BA8?style=for-the-badge)](docs/platforms/README.md)
+[![Platforms](https://img.shields.io/badge/platforms-11-F38BA8?style=for-the-badge)](docs/platforms/README.md)
 [![Agent Ready](https://img.shields.io/badge/AI%20Agent-ready-CBA6F7?style=for-the-badge)](.claude/skills/catbus/SKILL.md)
 
 [简体中文](README.md) · [English](README.en.md) · [繁體中文](README.zh-TW.md) · **日本語** · [한국어](README.ko.md)
@@ -47,7 +47,7 @@
 
 ## ✨ catbus とは
 
-catbus（猫巴士）は、中国内外の主要 10 プラットフォームの web エンドポイントを**統一された構文**で操作できるコマンドラインツールです。検索、詳細、コメント、ユーザー、おすすめフィード、ダウンロード、投稿、DM、ライブ配信の弾幕コメント……。
+catbus（猫巴士）は、中国内外の主要 11 プラットフォームの web エンドポイントを**統一された構文**で操作できるコマンドラインツールです。検索、詳細、コメント、ユーザー、おすすめフィード、ダウンロード、投稿、DM、ライブ配信の弾幕コメント、列車の空席照会・運賃……。
 
 ```bash
 catbus xhs      item search 露营 --sort latest
@@ -56,7 +56,7 @@ catbus bilibili item search 露营 --sort latest
 catbus x        item search camping --sort latest
 ```
 
-4 つのプラットフォームに、ほぼ同じ 4 つのコマンド。出力される JSON は**すべて同じ構造**です。ノートも作品も動画もポストも、すべて `item`。検索は必ず `search`、いいねは必ず `like`。一度覚えれば、10 のプラットフォームすべてで使えます。
+4 つのプラットフォームに、ほぼ同じ 4 つのコマンド。出力される JSON は**すべて同じ構造**です。ノートも作品も動画もポストも、すべて `item`。検索は必ず `search`、いいねは必ず `like`。一度覚えれば、11 のプラットフォームすべてで使えます。
 
 <p align="center">
   <img src="assets/platforms.svg" width="100%" alt="対応済みの 10 プラットフォームと開発中の 10 プラットフォーム">
@@ -115,7 +115,7 @@ QR コード、SMS、cookie のインポートに対応。認証情報は **プ�
 
 | 🚌 プラットフォーム | ⌨️ 実装済みコマンド | 🧪 ゴールデンデータ | ✅ オフラインテスト | 💻 ターゲット環境 |
 |:---:|:---:|:---:|:---:|:---:|
-| **10** | **300+** | **560+** | **940+** | **8** |
+| **11** | **300+** | **560+** | **960+** | **8** |
 
 </div>
 

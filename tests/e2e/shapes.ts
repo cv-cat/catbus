@@ -129,9 +129,88 @@ const Coupon = z.strictObject({
   end_at: ntime,
 })
 
+const Station = z.strictObject({
+  id: str,
+  name: str,
+  code: str,
+  pinyin: str,
+  abbr: str,
+  city: str,
+  url: nstr,
+})
+
+const TicketStation = z.strictObject({ code: str, name: str, no: str })
+const TicketRemaining = z.union([z.number().int(), z.strictObject({ min: z.number().int() })])
+
+const Ticket = z.strictObject({
+  id: str,
+  url: str,
+  train_no: str,
+  type: str,
+  from: TicketStation,
+  to: TicketStation,
+  depart: str,
+  arrive: str,
+  duration: str,
+  date: str,
+  bookable: z.boolean(),
+  has_ticket: z.boolean(),
+  seats: z.record(str, str),
+  remaining: z.record(str, TicketRemaining),
+  prices: z.record(str, Price),
+  seat_types: str,
+})
+
+const Stop = z.strictObject({
+  id: str,
+  url: nstr,
+  station: str,
+  arrive: str,
+  depart: str,
+  stopover: str,
+  in_range: z.boolean(),
+})
+
+const Fare = z.strictObject({
+  id: str,
+  url: nstr,
+  train_no: str,
+  date: str,
+  prices: z.record(str, Price),
+})
+
+const TransferLeg = z.strictObject({
+  id: str,
+  url: nstr,
+  train_no: str,
+  from: str,
+  to: str,
+  depart: str,
+  arrive: str,
+  duration: str,
+  seats: z.record(str, str),
+  remaining: z.record(str, TicketRemaining),
+  prices: z.record(str, Price),
+})
+
+const Transfer = z.strictObject({
+  id: str,
+  url: nstr,
+  via: str,
+  same_station: z.boolean(),
+  same_train: z.boolean(),
+  kind: z.enum(['同车换座', '换乘']),
+  depart: str,
+  arrive: str,
+  duration_minutes: z.number().int(),
+  wait: str,
+  legs: z.array(TransferLeg),
+})
+
 export const SHAPES: Record<string, z.ZodType> = {
   User, Item, Comment, Folder, Series: Folder, Category, Keyword, Topic, Poi, Live, Event, Gift, Rank,
   Conversation, Message, Notice, NoticeCount, Media, AuthStatus, Account, Subtitle, Danmaku, Order, Coupon,
+  Station, Ticket, Stop, Fare, Transfer,
 }
 
 /** 按注册表的 output（如 `Item[]`、`{count}`）取校验器；内联结构只校验是对象。 */

@@ -4,8 +4,8 @@
 
 <br>
 
-**一个命令，开往 10 个平台。**<br>
-小红书 · 抖音 · TikTok · B 站 · 快手 · 微博 · 闲鱼 · 淘宝 · 京东 · X
+**一个命令，开往 11 个平台。**<br>
+小红书 · 抖音 · TikTok · B 站 · 快手 · 微博 · 闲鱼 · 淘宝 · 京东 · X · 12306
 <br>
 <sub>即将上车：Instagram · YouTube · Facebook · 知乎 · 微信公众号 · 今日头条 · 得物 · 拼多多 · 美团 · 大众点评</sub>
 
@@ -15,7 +15,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-A6E3A1?style=for-the-badge)](LICENSE)
 [![Node](https://img.shields.io/badge/node-22%20%7C%2024%20%7C%2026-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](package.json)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](tsconfig.json)
-[![Platforms](https://img.shields.io/badge/platforms-10-F38BA8?style=for-the-badge)](docs/platforms/README.md)
+[![Platforms](https://img.shields.io/badge/platforms-11-F38BA8?style=for-the-badge)](docs/platforms/README.md)
 [![Agent Ready](https://img.shields.io/badge/AI%20Agent-ready-CBA6F7?style=for-the-badge)](.claude/skills/catbus/SKILL.md)
 
 **简体中文** · [English](README.en.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
@@ -47,7 +47,7 @@
 
 ## ✨ catbus 是什么
 
-catbus（猫巴士）是一个命令行工具，用**统一的语法**调用 10 个中外主流平台的 web 端能力：搜索、详情、评论、用户、推荐流、下载、发布、私信、直播弹幕……
+catbus（猫巴士）是一个命令行工具，用**统一的语法**调用 11 个中外主流平台的 web 端能力：搜索、详情、评论、用户、推荐流、下载、发布、私信、直播弹幕、列车余票票价……
 
 ```bash
 catbus xhs      item search 露营 --sort latest
@@ -115,7 +115,7 @@ stdout 只有 JSON，退出码稳定，错误里带着下一步该执行的命�
 
 | 🚌 平台 | ⌨️ 已实现命令 | 🧪 对拍数据 | ✅ 离线测试 | 💻 目标系统 |
 |:---:|:---:|:---:|:---:|:---:|
-| **10** | **300+** | **560+** | **940+** | **8** |
+| **11** | **300+** | **560+** | **960+** | **8** |
 
 </div>
 

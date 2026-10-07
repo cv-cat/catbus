@@ -96,7 +96,7 @@ function listedEndpoint(platform: Platform, endpoint: Endpoint): { ep: Available
 
 export function platformHelp(platform: Platform, endpoint: Endpoint): string {
   const { ep, notice } = listedEndpoint(platform, endpoint)
-  const login = ep.login.methods.map((m) => (m === ep.login.default ? `${m}（默认）` : m)).join(' · ')
+  const login = ep.login.methods.map((m) => (m === ep.login.default ? `${m}（默认）` : m)).join(' · ') || '无需登录'
   const scopes = ep.login.scopes?.length ? `；子站点：${ep.login.scopes.join('、')}` : ''
   const groups = new Map<string, string[]>()
   for (const c of sortCommands(ep.commands.values())) {

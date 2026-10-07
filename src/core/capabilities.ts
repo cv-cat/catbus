@@ -64,7 +64,7 @@ function loginTable(platforms: Platform[]): string[] {
   for (const method of ['qrcode', 'sms', 'password', 'cookie'] as const) {
     lines.push(row([method, ...logins.map((l) => (l.methods.includes(method) ? '✓' : ''))]))
   }
-  lines.push(row(['默认', ...logins.map((l) => l.default)]))
+  lines.push(row(['默认', ...logins.map((l) => l.default ?? '—')]))
   if (logins.some((l) => l.scopes?.length)) lines.push(row(['子站点', ...logins.map((l) => (l.scopes ?? []).join('、'))]))
   return lines
 }

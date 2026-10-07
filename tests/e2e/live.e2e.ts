@@ -182,6 +182,7 @@ for (const platform of PLATFORMS) {
   const web = platform.endpoints.web
   if (web === 'planned') continue
   const p = platform.id
+  if (p === '12306') continue // 12306 为免登录铁路平台，在专门的 12306.e2e.ts 中按铁路业务链路测试
   const commands = sortCommands(web.commands.values())
     .filter((c) => c.status === 'implemented' && !c.stream && !SKIP.has(c.key) && READ_ACTIONS.has(c.action))
     .map((c, i) => ({ c, i }))

@@ -31,7 +31,7 @@ describe('全局命令', () => {
 
   it('platforms 列出全部平台，带参数时返回单个对象（接受别名）', async () => {
     const all = await cli('platforms')
-    expect(all.env.data.map((p: any) => p.id)).toEqual(['xhs', 'douyin', 'tiktok', 'bilibili', 'kuaishou', 'weibo', 'xianyu', 'taobao', 'jd', 'x'])
+    expect(all.env.data.map((p: any) => p.id)).toEqual(['xhs', 'douyin', 'tiktok', 'bilibili', 'kuaishou', 'weibo', 'xianyu', 'taobao', 'jd', 'x', '12306'])
     const one = await cli('platforms', 'rednote')
     expect(one.env.data.id).toBe('xhs')
     expect(one.env.data.endpoints).toEqual({ web: 'available', app: 'planned', pc: 'planned' })
