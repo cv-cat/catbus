@@ -15,9 +15,9 @@
 
 ## 各平台
 
-[platforms/](platforms/README.md)：10 个平台各一篇，写清楚登录方式、支持的命令、私有选项、参数格式、常用示例和已知限制。
+[platforms/](platforms/README.md)：12 个平台各一篇，写清楚登录方式、支持的命令、私有选项、参数格式、常用示例和已知限制。
 
-[小红书](platforms/xhs.md) · [抖音](platforms/douyin.md) · [TikTok](platforms/tiktok.md) · [B 站](platforms/bilibili.md) · [快手](platforms/kuaishou.md) · [微博](platforms/weibo.md) · [闲鱼](platforms/xianyu.md) · [淘宝](platforms/taobao.md) · [京东](platforms/jd.md) · [X](platforms/x.md)
+[小红书](platforms/xhs.md) · [抖音](platforms/douyin.md) · [TikTok](platforms/tiktok.md) · [B 站](platforms/bilibili.md) · [快手](platforms/kuaishou.md) · [微博](platforms/weibo.md) · [闲鱼](platforms/xianyu.md) · [淘宝](platforms/taobao.md) · [京东](platforms/jd.md) · [X](platforms/x.md) · [知乎](platforms/zhihu.md) · [12306 铁路](platforms/12306.md)
 
 ## 示例脚本
 
@@ -27,7 +27,7 @@
 
 | 文档 | 内容 |
 |---|---|
-| [capabilities.md](capabilities.md) | 能力矩阵：10 个平台 web 端每条命令的支持情况、登录方式、筛选取值和限制。由注册表生成，也可以运行 `catbus platforms <platform>` 查看 |
+| [capabilities.md](capabilities.md) | 能力矩阵：12 个平台 web 端每条命令的支持情况、登录方式、筛选取值和限制。由注册表生成，也可以运行 `catbus platforms <platform>` 查看 |
 | [upstream-map.md](upstream-map.md) | 上游移植对照：每个上游仓库的鉴权、登录、API 方法、签名 JS 与 catbus 命令的对应关系，以及 Python → TypeScript 的依赖替换 |
 
 ## 规范

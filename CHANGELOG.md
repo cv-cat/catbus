@@ -8,6 +8,12 @@
 
 ### Added
 
+- 新增 `zhihu`（知乎）平台的最小登录切片：
+  - Cookie 导入要求 `d_c0` 与 `z_c0`，缺失时在联网前拒绝；
+  - 使用知乎网页自身的 `/api/v4/me` 在线校验登录，支持 `auth status`；
+  - 支持 `user get me`，输出统一的 `User` 结构；内容、评论与发布能力暂不声明。
+- 新增知乎脱敏命令测试；测试 fixture 只含假 Cookie、假用户与 `.invalid` URL。
+- 新增 `docs/platforms/zhihu.md`、Agent 技能平台说明，并更新能力矩阵与多语言 README。
 - 新增 `12306`（12306 铁路）平台，支持公开只读查询功能：
   - 车站检索（`station search`）：支持中文站名、拼音全拼/首字母前缀、电报码，车站字典本地缓存 24 小时
   - 余票查询（`ticket search`）：直达列车与余票信息，支持 `--date`、`--type`（车型过滤）、`--available`（只看有票），输出统一 `Ticket` 与 `Station` 对象及 12306 深链

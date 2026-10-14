@@ -10,7 +10,7 @@
 | 端 | web ✓ · app ○ 规划中 · pc ○ 规划中 |
 | 命令（web） | 已实现 48 条（✓ 41 · ◐ 7），规划中 ○ 30 条 |
 
-B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 个平台里登录方式最全的。命令表由注册表生成，与 `catbus platforms bilibili` 一致；选项以 `catbus bilibili <resource> <action> --help` 为准。通用的命令语法、输出结构见 [AGENTS.md 第 4 节](../../AGENTS.md#4-命令规范)。
+B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是内容平台里登录方式最全的。命令表由注册表生成，与 `catbus platforms bilibili` 一致；选项以 `catbus bilibili <resource> <action> --help` 为准。通用的命令语法、输出结构见 [AGENTS.md 第 4 节](../../AGENTS.md#4-命令规范)。
 
 ## 登录
 

@@ -76,7 +76,7 @@ catbus/
 
 ### references/：上游仓库，只读
 
-`references/` 里是作者 [cv-cat](https://github.com/cv-cat) 的 10 个上游仓库（平台 id 与仓库名的对应见 AGENTS 第 3 节）。它不进本仓库的版本控制，需要时自己克隆，并切到 `src/platforms/<p>/UPSTREAM` 记录的 commit（记有 `branch` 的，就在那个分支上）：
+`references/` 里是作者 [cv-cat](https://github.com/cv-cat) 的 11 个上游仓库（平台 id 与仓库名的对应见 AGENTS 第 3 节）。它不进本仓库的版本控制，需要时自己克隆，并切到 `src/platforms/<p>/UPSTREAM` 记录的 commit（记有 `branch` 的，就在那个分支上）：
 
 ```bash
 git clone https://github.com/cv-cat/BilibiliApis references/BilibiliApis

@@ -7,8 +7,8 @@
 
 做**一个 CLI —— 操作各大平台接口的统一入口**。
 
-- 一个命令 `catbus`，按统一的命令规范调用 10 个平台：小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X。
-- 能力来源是作者 [cv-cat](https://github.com/cv-cat) 的 10 个开源仓库，已克隆到 `references/`，作为**只读的原始来源**。
+- 一个命令 `catbus`，按统一的命令规范调用 11 个内容与电商平台：小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X、知乎。
+- 能力来源是作者 [cv-cat](https://github.com/cv-cat) 的 11 个开源仓库，已克隆到 `references/`，作为**只读的原始来源**。
 - 所有平台都在本仓库里**用 TypeScript 重写**，不在运行时调用上游的 Python。
 - **用户只需要安装 Node**（版本见 7.1）。不需要 Python，不需要 C/C++ 编译器，也不需要其他系统依赖。
   - `npm i -g catbus-cli` 装完就能离线使用。
@@ -37,7 +37,7 @@
 
 ## 2. 范围
 
-- 目前支持第 3 节的 11 个平台的 web 端（10 个内容与电商平台 + 12306 铁路平台 `12306`）；app / pc 端在注册表里为 planned（见 4.3）。
+- 目前支持第 3 节的 12 个平台的 web 端（11 个内容与电商平台 + 12306 铁路平台 `12306`）；app / pc 端在注册表里为 planned（见 4.3）。
 - 矩阵里的 ○（平台有这个概念、上游没有的能力）只占位：注册为 planned，执行时返回 NOT_IMPLEMENTED，有需要时再实现。移植中发现矩阵与上游不符（上游其实没有、或只是占位）的能力，按上游实际情况标为 ○ 或 ◐，以 `docs/capabilities.md` 为准。
 - 新平台开始移植时，先把平台 id、别名、`item` 叫法等登记到第 3 节、4.2 和 4.5，再进注册表；在那之前 `catbus <平台>` 是未知平台（`USAGE`）。
 - 改规范先改本文件，再写代码。
@@ -56,6 +56,7 @@
 | taobao | TaoBaoApis | `taobao_apis.py`、`taobao_live.py`、`utils/taobao_utils.py` |
 | jd | JdApis | `jd_apis/jd_api.py`、`jd_apis/jd_login_api.py`、`builder/auth.py` |
 | x | XApis | `x_apis/x_api.py`、`x_apis/x_write_api.py`、`x_apis/login_api.py` |
+| zhihu | ZhihuApis | `README.md`、`apis/zhihu_apis.py`、`utils/zhihu_utils.py` |
 | 12306 | （无上游仓库，直接对接 12306 官方公开接口） | `https://kyfw.12306.cn`（接口端点见 `src/platforms/12306/UPSTREAM`） |
 
 参考资料：
@@ -112,6 +113,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | `taobao` | `tb` |
 | `jd` | `jingdong` |
 | `x` | `twitter` |
+| `zhihu` | `zh` |
 | `12306` | — |
 
 目录名、配置键、输出里的 `platform` 字段一律使用**规范 id**。只有平台有别名；resource 和 action 没有别名。
@@ -179,6 +181,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | xianyu | 闲置商品 |
 | taobao | 商品 |
 | jd | 商品 SKU |
+| zhihu | 内容 |
 
 各动作的说明：
 - `item list`：当前账号自己发布的内容，带审核状态，数据来自创作者中心。
