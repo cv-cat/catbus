@@ -8,7 +8,7 @@
 
 ## 1. 通用
 
-- 10 个上游都是 Python。
+- 11 个上游都是 Python。
   - HTTP 以 `curl_cffi` 为主，用来模拟 Chrome 的 TLS / JA3 与 HTTP/2 指纹。
   - Weibo、Xianyu、Taobao 用的是 `requests`。
 - 签名 JS 在上游里有两种调用方式：
@@ -154,7 +154,7 @@
   - `builder/auth.py` 的 `BiliAuth`：`from_cookie`、`from_qrcode_login`、`from_sms_login`、`from_session(path)`（读 session.json，支持自动刷新）、`anonymous`。
   - `is_login` 看 `SESSDATA`，csrf 取自 `bili_jct`。
 - **登录**：`apis/bili_login_apis.py` 的 `BiliLoginApi`：`qrcode_login`、`sms_login`、`password_login`、`refresh_cookies`、`logout`。
-  - `refresh_cookies` 对应 catbus 的自动刷新；`logout` 对应 `auth logout` 的服务端登出（10 个平台里有服务端登出的只有 B 站和快手）。
+  - `refresh_cookies` 对应 catbus 的自动刷新；`logout` 对应 `auth logout` 的服务端登出（内容与电商平台里有服务端登出的只有 B 站和快手）。
 - **上游凭证来源**：仓库根目录的 `session.json`（`utils/session.py` 写入），`cookies.txt` 是兼容镜像。
 - **API**（静态方法，第一个参数为 `auth`）
   - `apis/bili_apis.py` 的 `BiliApi`：`get_nav`、`search_type`、`get_video_info(bvid/aid)`、`get_video_detail`、`get_play_url`、`get_player_info`、`get_danmaku_seg`、`get_replies(oid)`、`get_user_info(mid)`、`get_user_videos`、`get_all_user_videos`、`get_rcmd_feed`、`get_popular`、`report_heartbeat`
@@ -320,3 +320,16 @@
   - `static/ui_metrics.js`
   - `static/graphql.json`（GraphQL 操作表）、`static/transaction_l1.json`
   - 调用这些 JS 的 Python：`utils/castle_token.py`、`utils/ui_metrics.py`
+
+### zhihu — ZhihuApis
+
+- **鉴权**
+  - 上游 README 要求从已登录的 `www.zhihu.com` 请求头导入完整 Cookie；`d_c0` 用于 `x-zse-96` 签名，`z_c0` 表示登录会话。
+  - catbus 当前只移植 Cookie 登录；缺少 `d_c0` 或 `z_c0` 时在联网前报 `USAGE`。
+- **登录与账号校验**
+  - 上游没有登录流程或当前账号接口。catbus 用知乎网页创作中心自身调用的 `GET /api/v4/me` 在线校验 Cookie，并归一化为 `UserRef` / `User`；这是非上游请求，由命令测试覆盖。
+  - `user get` 当前只支持 `me`，不把未移植的任意用户查询包装成已支持能力。
+- **上游 API（本次未移植）**
+  - `apis/zhihu_apis.py` 的文章 / 回答一级评论与楼中楼评论。
+  - `utils/zhihu_utils.py` 的 Cookie 解析与 `x-zse-96` 签名，签名脚本在 `static/zhihu.js`。
+  - 这些评论能力与签名资产留给后续独立 PR；本次登录切片不复制未使用的 JS，也不声明评论命令。

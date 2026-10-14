@@ -11,7 +11,7 @@
 - **读**：`item search` / `get` / `related` / `media` / `download` / `list` / `categories` / `subtitles`（字幕，带时间轴）；`user get` / `search` / `items`（`--keyword` 过滤）；`comment list`（稿件、专栏、动态）；`feed list`；`live get` / `search` / `categories` / `listen` / `history` / `gifts` / `media`；`folder list` / `items`；`danmaku list`；`draft get`。
 - **写**：`item like` / `unlike` / `collect` / `uncollect`（`--folder`）/ `publish` / `delete`；`item coin`、`item triple`；`comment add` / `delete`；`danmaku send`；`dynamic publish` / `delete`；`article publish`（专栏）/ `draft delete`；`live send` / `start` / `stop`；`media upload`。
 
-B 站写操作是 10 个平台里验证最充分的：点赞、收藏、评论增删、发弹幕、专栏草稿都已真机通过。
+B 站写操作是内容平台里验证最充分的：点赞、收藏、评论增删、发弹幕、专栏草稿都已真机通过。
 
 ## 做不到
 

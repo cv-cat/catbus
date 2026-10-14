@@ -283,7 +283,7 @@ Alpine 容器里跑不了 JS action（arm64 尤其如此），所以 musl 两项
 | `version` | 退出码 0，报告的 Node 版本就是当前的 Node |
 | `doctor` | 全部检查项通过：Node 版本、数据目录可写且权限正确、签名 vm 能执行、wreq-js / @napi-rs/canvas / onnxruntime-web 能加载、两个模型包就位 |
 | 模型包 | `doctor` 的 `assets-jd`、`assets-ocr` 两项通过 |
-| `platforms` | 返回 10 个平台 |
+| `platforms` | 返回 12 个平台 |
 | `--help` | 输出里有 `catbus <platform> <resource> <action>` |
 | planned 端 | `catbus xianyu item get x -e app` 报 `NOT_IMPLEMENTED`，退出码 4 |
 | `auth list` | 返回数组 |

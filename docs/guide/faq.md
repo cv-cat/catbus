@@ -4,9 +4,9 @@
 
 ### catbus 和 cv-cat 的那些 Python 仓库是什么关系？
 
-catbus 的能力来自 [cv-cat](https://github.com/cv-cat) 的 10 个开源仓库（Spider_XHS、DouYin_Spider、TiktokApis、BilibiliApis、KuaiShou-Spider、WeiboApis、XianYuApis、TaoBaoApis、JdApis、XApis）。catbus 把它们的请求构造、签名和解析逻辑**用 TypeScript 重写**，并用对拍测试保证同样的输入产出逐字节相同的请求。运行时不调用上游的 Python。
+catbus 的能力来自 [cv-cat](https://github.com/cv-cat) 的 11 个开源仓库（Spider_XHS、DouYin_Spider、TiktokApis、BilibiliApis、KuaiShou-Spider、WeiboApis、XianYuApis、TaoBaoApis、JdApis、XApis、ZhihuApis）。catbus 把它们的请求构造、签名和解析逻辑**用 TypeScript 重写**，并用对拍测试保证同样的输入产出逐字节相同的请求。运行时不调用上游的 Python。
 
-区别在于：catbus 是一个统一的命令行，10 个平台用同一套命令、参数和 JSON 输出；上游是各自独立的 Python 库。每个平台基于哪个上游 commit，记录在 `src/platforms/<platform>/UPSTREAM`。
+区别在于：catbus 是一个统一的命令行，12 个平台用同一套命令、参数和 JSON 输出；其中 11 个内容与电商平台各自对应一个上游仓库，12306 是独立接入。每个平台基于哪个上游 commit，记录在 `src/platforms/<platform>/UPSTREAM`。
 
 ### 需要装 Python 吗？
 

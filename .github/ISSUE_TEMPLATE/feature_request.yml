@@ -28,6 +28,8 @@ body:
         - taobao
         - jd
         - x
+        - zhihu
+        - 12306
         - core（所有平台通用）
         - 其他
     validations:
