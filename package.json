@@ -62,7 +62,7 @@
     "onnxruntime-web": "^1.30.0",
     "protobufjs": "^8.8.0",
     "qrcode": "^1.5.4",
-    "smol-toml": "^1.9.0",
+    "smol-toml": "^1.9.1",
     "wreq-js": "^3.2.0",
     "zod": "^4.6.5"
   },
