@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { RequestError } from 'wreq-js'
 import { fakeResponse, type HeaderPairs, type HttpResponse, mockSender, type PreparedRequest } from '../src/core/http.js'
+import * as rand from '../src/core/rand.js'
 import { resetSession } from '../src/platforms/12306/web/client.js'
 import { hasTicket, parseStations, parseYp } from '../src/platforms/12306/web/normalize.js'
 import { cli, useTempHome } from './helpers.js'
@@ -58,14 +59,15 @@ function mockTrain(overrides: Record<string, (p: PreparedRequest, u: URL) => Htt
 
 describe('12306 平台（web）', () => {
   useTempHome()
+  let restoreClock: () => void
 
   beforeEach(() => {
-    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-10-07T10:00:00+08:00') })
+    restoreClock = rand.deterministic({ now: new Date('2026-10-07T10:00:00+08:00').getTime() })
     resetSession()
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    restoreClock()
   })
 
   describe('信封（catbus AGENTS 6.1）', () => {

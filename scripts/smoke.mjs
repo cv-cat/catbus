@@ -57,9 +57,17 @@ check('模型包（assets-jd、assets-ocr）', () => {
   }
 })
 
+// 平台清单的精确断言在 tests/cli.test.ts；冒烟只确认装好的包能列出平台，所以加平台时不用改这里。
+// 失败信息只写摘要：platforms 的完整输出有好几万字符，整段打进日志既难读，也可能被 CI 截断。
 check('platforms', () => {
   const r = catbus('platforms')
-  assert(r.code === 0 && r.env?.data?.length === 10, r.stdout + r.stderr)
+  const list = r.env?.data
+  assert(r.code === 0 && Array.isArray(list), `退出码 ${r.code}；${r.stderr.slice(0, 300) || r.stdout.slice(0, 300)}`)
+  const ids = list.map((p) => p.id)
+  for (const id of ['xhs', 'douyin', 'bilibili']) assert(ids.includes(id), `缺少平台 ${id}；实际：${ids.join(' ')}`)
+  const broken = list.filter((p) => !p.name || !p.endpoints?.web || !Array.isArray(p.commands) || p.commands.length === 0)
+  assert(broken.length === 0, `这些平台的信息不完整：${broken.map((p) => p.id).join(' ')}`)
+  console.log(`      ${ids.length} 个平台：${ids.join(' ')}`)
 })
 
 check('--help', () => {
@@ -80,5 +88,6 @@ check('auth list', () => {
 rmSync(home, { recursive: true, force: true })
 if (failed) {
   console.log(`${failed} 项失败`)
-  process.exit(1)
+  // 不用 process.exit(1)：stdout 是管道时，它会把还没写完的输出直接丢掉，日志里就看不到后面的检查结果
+  process.exitCode = 1
 }
