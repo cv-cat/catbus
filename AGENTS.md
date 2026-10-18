@@ -149,7 +149,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | resource | 含义 | action |
 |---|---|---|
 | `auth` | 登录态 | `login` `status` `logout` `list` `use` |
-| `user` | 用户 | `get` `search` `items` `likes` `collects` `reposts` `followers` `following` `follow` `unfollow` |
+| `user` | 用户 | `get` `search` `items` `likes` `collects` `reposts` `followers` `following` `follow` `unfollow` `update` |
 | `item` | 平台的**主内容单元**（见下表） | `get` `search` `related` `list` `media` `download` `like` `unlike` `collect` `uncollect` `repost` `unrepost` `publish` `delete` `categories` |
 | `product` | 内容平台里挂的商品（抖音 / TikTok 商城等） | `get` |
 | `comment` | 评论，也包括商品评价 | `list` `replies` `add` `delete` `like` `unlike` |
@@ -187,6 +187,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - `item download`：下载到本地。
 - `item categories`：发布和搜索时 `--category` 的取值。
 - `feed list --kind recommend|hot|following`：默认 `recommend`。
+- `user update`：修改当前账号的资料（昵称、头像、简介），只改给出的字段。
 - `live listen`：弹幕 / 礼物 / 进场等事件流。
 - `live history`：最近的弹幕。
 - `live media`：直播流地址。
@@ -287,7 +288,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 
 | resource | 形式 |
 |---|---|
-| user | `get` / `items` / `follow` / `unfollow <user>`；`likes` / `collects` / `reposts` / `followers` / `following [user]`，省略时为 `me`；`search <kw>` |
+| user | `get` / `items` / `follow` / `unfollow <user>`；`likes` / `collects` / `reposts` / `followers` / `following [user]`，省略时为 `me`；`search <kw>`；`update` 不带位置参数，只改当前账号 |
 | item | `get` / `related` / `media` / `download` / `like` / `unlike` / `collect` / `uncollect` / `repost` / `unrepost` / `delete <item>`；`search <kw>`；`list`、`categories`、`publish` 不带位置参数 |
 | product | `get <product>` |
 | comment | `list <item>`；`replies` / `delete` / `like` / `unlike <item> <comment>`；`add <item> <text> [--reply-to <comment>]` |
@@ -366,6 +367,16 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 
 本地文件会自动上传，不需要先调 `media upload`。
 
+**资料**（`user update`）：
+
+| 选项 | 说明 |
+|---|---|
+| `--name <str>` | 昵称 |
+| `--avatar <path\|url>` | 头像图片，本地文件自动上传 |
+| `--bio <str>` | 简介 / 签名，传空字符串表示清空 |
+
+三个至少给一个，没给的保持原值。平台在注册表里用 `supports` 声明支持哪几个；平台对修改次数、冷却期、审核的限制，按平台返回的错误报 `UPSTREAM`，`hint` 写明限制。
+
 **下载**：
 - `--dir <目录>`：默认当前目录。文件名为 `<platform>_<id>_<序号>.<ext>`。
 - `--overwrite`：覆盖已有文件，默认跳过已有文件。
@@ -403,7 +414,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 以下操作执行前需要确认：
 - 所有 `delete`；
 - `msg revoke`；
-- bilibili 的 `item coin` / `item triple`；
+- bilibili 的 `item coin` / `item triple`，以及带 `--name` 的 `user update`（改昵称扣硬币）；
 - `live send --gift`。
 
 确认方式：
@@ -727,6 +738,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | `media upload` | Media |
 | `item download` | File[] |
 | `folder create` / `update` | Folder |
+| `user update` | User，修改后的当前账号 |
 | `live start` | `{id push{url key}}`，推流地址 |
 
 全局命令的返回：

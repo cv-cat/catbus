@@ -49,6 +49,7 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `user search` | ✓ | 搜索用户。 |
 | `user items` | ✓ | 用户发布的稿件。取值：`--sort` latest / views / collects。私有选项 `--keyword`。 |
 | `user collects`、`user followers`、`user following`、`user follow`、`user unfollow` | ○ | 规划中 |
+| `user update` | ◐ | 修改当前账号的昵称（`--name`）、头像（`--avatar`）、签名（`--bio`）。非上游，请求按网页端个人中心补的。改昵称每次扣 6 个硬币（从没设过昵称的账号免费一次），需要确认；签名最多 70 字，改完要审核；头像只收 png / jpg，不超过 2MB。 |
 
 ### item
 
