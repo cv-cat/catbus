@@ -95,7 +95,7 @@ describe('注册表', () => {
     }
     expect([...confirm].sort()).toEqual([
       'bilibili draft delete', 'bilibili dynamic delete', 'bilibili item coin', 'bilibili item triple',
-      'comment delete', 'folder delete', 'item delete', 'live send', 'msg delete', 'msg revoke', 'x article delete',
+      'comment delete', 'folder delete', 'item delete', 'live send', 'msg delete', 'msg revoke', 'user update', 'x article delete',
     ])
     const send = VOCAB['live send']!.confirm as (o: object) => boolean
     expect([send({}), send({ gift: 'g1' })]).toEqual([false, true])
