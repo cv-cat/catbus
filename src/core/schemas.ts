@@ -300,11 +300,22 @@ export interface Transfer {
   legs: TransferLeg[]
 }
 
+/** 知乎的问题：回答挂在问题下面，问题本身不是 item。 */
+export interface Question {
+  id: string
+  url: string | null
+  title: string | null
+  text: string | null
+  author: UserRef | null
+  created_at: string | null
+  stats: { views: number | null; answers: number | null; followers: number | null; comments: number | null }
+}
+
 /** 输出类型名，注册表的 `output` 只能用这些（加 `[]` 表示数组），或 `{...}` 形式的内联结构。 */
 export const OUTPUT_TYPES = new Set([
   'User', 'Item', 'Comment', 'Folder', 'Series', 'Category', 'Keyword', 'Topic', 'Poi', 'Live', 'Event', 'Gift',
   'Rank', 'Conversation', 'Message', 'Notice', 'NoticeCount', 'Media', 'AuthStatus', 'Account', 'File', 'Subtitle',
-  'Danmaku', 'Order', 'Coupon', 'Station', 'Ticket', 'Stop', 'Fare', 'Transfer',
+  'Danmaku', 'Order', 'Coupon', 'Station', 'Ticket', 'Stop', 'Fare', 'Transfer', 'Question',
 ])
 
 /** 归一化对象上挂平台原始对象，`--raw` 时用它替换。JSON 序列化会忽略 symbol 键。 */

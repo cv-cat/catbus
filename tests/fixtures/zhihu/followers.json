@@ -1,0 +1,19 @@
+{
+ "paging": {
+  "is_end": false,
+  "next": "http://www.zhihu.com/api/v4/members/catbus-tester/followers?include=data&limit=20&offset=20"
+ },
+ "data": [
+  {
+   "id": "ffff0000ffff0000ffff0000ffff0000",
+   "url_token": "reader-1",
+   "name": "读者一号",
+   "headline": "",
+   "avatar_url": "https://pic1.zhimg.com/r1.jpg",
+   "type": "people",
+   "answer_count": 0,
+   "articles_count": 0,
+   "follower_count": 3
+  }
+ ]
+}

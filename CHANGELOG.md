@@ -19,6 +19,11 @@
 - 平台架构支持免登录（`guest: true`）模式，无需登录态直接调用查询命令
 - 新增 `12306` 离线单元测试与在线 E2E 测试
 - 新增 `docs/platforms/12306.md`，更新能力矩阵（`docs/capabilities.md`）、Agent 技能与多语言 README
+- 新增 `zhihu`（知乎）平台的 web 端，cookie 登录。直接对接知乎 web 接口，`x-zse-96` 签名用 TypeScript 实现，与知乎线上 JS 逐字节对照：
+  - 读：`item search` / `get`（回答、文章、想法）、`comment list`（`--sort popular|latest`）/ `replies`、`user get` / `search` / `items` / `followers` / `following`、`feed list`（推荐、热榜、关注）、`keyword suggest` / `hot`、`folder list` / `items`、`topic search`
+  - 写：`item like` / `unlike`（赞同回答、文章、想法）、`user follow` / `unfollow`
+  - 扩展命令 `question get` / `question answers`，新增输出类型 `Question`
+  - 离线测试（fixture 回放与签名向量）、`docs/platforms/zhihu.md`、Agent 技能
 
 ## [0.1.0] - 2026-10-06
 

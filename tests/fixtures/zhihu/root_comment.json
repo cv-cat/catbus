@@ -1,0 +1,49 @@
+{
+ "data": [
+  {
+   "id": "10001",
+   "type": "comment",
+   "resource_type": "answer",
+   "content": "<p>好用！&nbsp;支持一下</p>",
+   "created_time": 1790000600,
+   "is_delete": false,
+   "author": {
+    "id": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+    "url_token": "catbus-tester",
+    "name": "猫巴士",
+    "avatar_url": "https://picx.zhimg.com/v2-fakeavatar_l.jpg",
+    "type": "people"
+   },
+   "like_count": 5,
+   "child_comment_count": 2,
+   "reply_comment_id": "0",
+   "child_comments": []
+  },
+  {
+   "id": "10002",
+   "type": "comment",
+   "resource_type": "answer",
+   "content": "第二条",
+   "created_time": 1790000700,
+   "author": {
+    "id": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+    "url_token": "catbus-tester",
+    "name": "猫巴士",
+    "avatar_url": "https://picx.zhimg.com/v2-fakeavatar_l.jpg",
+    "type": "people"
+   },
+   "like_count": 0,
+   "child_comment_count": 0,
+   "reply_comment_id": "0"
+  }
+ ],
+ "paging": {
+  "is_end": false,
+  "next": "https://www.zhihu.com/api/v4/comment_v5/answers/1234567890/root_comment?limit=20&offset=fake_offset_2&order_by=score",
+  "previous": "",
+  "totals": 32
+ },
+ "counts": {
+  "total_counts": 32
+ }
+}

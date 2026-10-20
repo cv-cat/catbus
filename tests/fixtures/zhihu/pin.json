@@ -1,0 +1,40 @@
+{
+ "id": "2092973041173251769",
+ "type": "pin",
+ "url": "/pins/2092973041173251769",
+ "author": {
+  "id": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+  "url_token": "catbus-tester",
+  "name": "猫巴士",
+  "avatar_url": "https://picx.zhimg.com/v2-fakeavatar_l.jpg",
+  "headline": "上车，开往任何平台",
+  "type": "people",
+  "user_type": "people",
+  "gender": 1,
+  "follower_count": 1234
+ },
+ "content": [
+  {
+   "content": "今天的猫巴士&lt;准点&gt;发车。",
+   "fold_type": "raw",
+   "own_text": "今天的猫巴士<准点>发车。",
+   "type": "text"
+  },
+  {
+   "original_url": "https://pic3.zhimg.com/50/v2-pin_qhd.jpg",
+   "url": "https://pic3.zhimg.com/50/v2-pin_qhd.jpg",
+   "thumbnail": "",
+   "height": 1500,
+   "width": 1125,
+   "type": "image",
+   "is_gif": false
+  }
+ ],
+ "created": 1791783694,
+ "updated": 1791783694,
+ "like_count": 16,
+ "comment_count": 2,
+ "reaction_count": 16,
+ "repin_count": 3,
+ "excerpt_title": "今天的猫巴士准点发车。"
+}

@@ -1,0 +1,41 @@
+{
+ "data": [
+  {
+   "id": "20001",
+   "type": "comment",
+   "content": "同意",
+   "created_time": 1790000800,
+   "author": {
+    "id": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+    "url_token": "catbus-tester",
+    "name": "猫巴士",
+    "avatar_url": "https://picx.zhimg.com/v2-fakeavatar_l.jpg",
+    "type": "people"
+   },
+   "like_count": 1,
+   "child_comment_count": 0,
+   "reply_comment_id": "0"
+  },
+  {
+   "id": "20002",
+   "type": "comment",
+   "content": "回复楼上",
+   "created_time": 1790000900,
+   "author": {
+    "id": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+    "url_token": "catbus-tester",
+    "name": "猫巴士",
+    "avatar_url": "https://picx.zhimg.com/v2-fakeavatar_l.jpg",
+    "type": "people"
+   },
+   "like_count": 0,
+   "child_comment_count": 0,
+   "reply_comment_id": "20001"
+  }
+ ],
+ "paging": {
+  "is_end": true,
+  "next": "https://www.zhihu.com/api/v4/comment_v5/comment/10001/child_comment?limit=20&offset=x&order_by=ts",
+  "totals": 2
+ }
+}

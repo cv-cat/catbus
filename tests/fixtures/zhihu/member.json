@@ -1,0 +1,26 @@
+{
+ "id": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+ "url_token": "catbus-tester",
+ "name": "猫巴士",
+ "use_default_avatar": false,
+ "avatar_url": "https://pic1.zhimg.com/v2-fakeavatar_xl.jpg?source=32738c0c&needBackground=1",
+ "is_org": false,
+ "type": "people",
+ "url": "https://www.zhihu.com/api/v4/people/catbus-tester",
+ "user_type": "people",
+ "headline": "上车，开往任何平台",
+ "headline_render": "上车，开往任何平台",
+ "gender": 1,
+ "is_advertiser": false,
+ "ip_info": "IP 属地北京",
+ "vip_info": {
+  "is_vip": false
+ },
+ "follower_count": 4321,
+ "following_count": 56,
+ "answer_count": 78,
+ "articles_count": 9,
+ "voteup_count": 10000,
+ "is_following": false,
+ "is_followed": false
+}

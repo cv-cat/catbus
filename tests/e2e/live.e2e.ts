@@ -15,7 +15,7 @@ import { shapeOf } from './shapes.js'
 const READ_ACTIONS = new Set([
   'status', 'get', 'search', 'related', 'list', 'media', 'categories', 'items', 'likes', 'collects', 'reposts',
   'followers', 'following', 'replies', 'history', 'rank', 'gifts', 'products', 'replays', 'suggest', 'hot', 'count',
-  'subtitles',
+  'subtitles', 'answers',
 ])
 const SKIP = new Set(['auth login', 'auth use', 'auth logout'])
 
@@ -26,7 +26,7 @@ const MAY_BE_EMPTY = new Set(['tiktok live list'])
 
 const KEYWORD: Record<string, string> = { tiktok: 'cat', x: 'cat', xianyu: '键盘', taobao: '键盘', jd: '键盘' }
 /** 命令之间的间隔（毫秒）。小红书对连续请求更敏感：1.5 秒间隔下评论接口触发过 461。 */
-const INTERVAL: Record<string, number> = { xhs: 4000 }
+const INTERVAL: Record<string, number> = { xhs: 4000, zhihu: 3000 }
 const DEFAULT_INTERVAL = 1500
 
 type Obj = Record<string, any>
@@ -73,6 +73,11 @@ function argValue(p: string, cmd: Command, name: string, pool: Pool, commentItem
     case 'room': {
       const o = first(pool.lives, (x) => x.status === 'live')
       return o && ref(o)
+    }
+    case 'question': {
+      // 知乎：回答的链接里带着问题
+      const o = pool.items.find((x) => /\/question\/\d+/.test(x.url ?? ''))
+      return o?.url
     }
     case 'conversation':
       return pool.conversations[0]?.id
