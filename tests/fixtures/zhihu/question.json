@@ -1,0 +1,28 @@
+{
+ "type": "question",
+ "id": 19550225,
+ "title": "如何评价猫巴士？",
+ "question_type": "normal",
+ "created": 1700000000,
+ "updated_time": 1700000100,
+ "url": "https://www.zhihu.com/api/v4/questions/19550225",
+ "answer_count": 321,
+ "visit_count": 987654,
+ "comment_count": 12,
+ "follower_count": 4567,
+ "detail": "<p>一个命令开往<br/>任何平台</p>",
+ "excerpt": "一个命令开往任何平台",
+ "author": {
+  "id": "0",
+  "url_token": "",
+  "name": "匿名用户",
+  "avatar_url": "https://picx.zhimg.com/v2-anon_l.jpg",
+  "type": "people"
+ },
+ "topics": [
+  {
+   "id": "19550517",
+   "name": "命令行"
+  }
+ ]
+}

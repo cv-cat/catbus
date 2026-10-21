@@ -1,0 +1,15 @@
+{
+ "suggest": [
+  {
+   "query": "知乎直答",
+   "id": -447640144045216604,
+   "raw_id": "-447640144045216604",
+   "type": "query",
+   "tab_type": "general"
+  },
+  {
+   "query": "",
+   "type": "query"
+  }
+ ]
+}

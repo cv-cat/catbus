@@ -1,0 +1,26 @@
+{
+ "id": 26319034,
+ "type": "article",
+ "title": "猫巴士的设计",
+ "url": "https://zhuanlan.zhihu.com/p/26319034",
+ "author": {
+  "id": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+  "url_token": "catbus-tester",
+  "name": "猫巴士",
+  "avatar_url": "https://picx.zhimg.com/v2-fakeavatar_l.jpg",
+  "headline": "上车，开往任何平台",
+  "type": "people",
+  "user_type": "people",
+  "gender": 1,
+  "follower_count": 1234
+ },
+ "image_url": "https://pic3.zhimg.com/v2-cover_720w.jpg",
+ "title_image": "https://pic3.zhimg.com/v2-cover_r.jpg",
+ "excerpt": "这篇文章介绍…",
+ "content": "<p>这篇文章介绍<b>猫巴士</b>的设计。</p><img src=\"https://pic2.zhimg.com/v2-inline_b.jpg\" data-original=\"https://pic2.zhimg.com/v2-inline_r.jpg\">",
+ "created": 1780000000,
+ "updated": 1780000100,
+ "voteup_count": 88,
+ "comment_count": 6,
+ "favlists_count": 233
+}

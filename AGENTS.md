@@ -37,7 +37,7 @@
 
 ## 2. 范围
 
-- 目前支持第 3 节的 11 个平台的 web 端（10 个内容与电商平台 + 12306 铁路平台 `12306`）；app / pc 端在注册表里为 planned（见 4.3）。
+- 目前支持第 3 节的 12 个平台的 web 端（11 个内容与电商平台 + 12306 铁路平台 `12306`）；app / pc 端在注册表里为 planned（见 4.3）。
 - 矩阵里的 ○（平台有这个概念、上游没有的能力）只占位：注册为 planned，执行时返回 NOT_IMPLEMENTED，有需要时再实现。移植中发现矩阵与上游不符（上游其实没有、或只是占位）的能力，按上游实际情况标为 ○ 或 ◐，以 `docs/capabilities.md` 为准。
 - 新平台开始移植时，先把平台 id、别名、`item` 叫法等登记到第 3 节、4.2 和 4.5，再进注册表；在那之前 `catbus <平台>` 是未知平台（`USAGE`）。
 - 改规范先改本文件，再写代码。
@@ -56,6 +56,7 @@
 | taobao | TaoBaoApis | `taobao_apis.py`、`taobao_live.py`、`utils/taobao_utils.py` |
 | jd | JdApis | `jd_apis/jd_api.py`、`jd_apis/jd_login_api.py`、`builder/auth.py` |
 | x | XApis | `x_apis/x_api.py`、`x_apis/x_write_api.py`、`x_apis/login_api.py` |
+| zhihu | （无上游仓库，直接对接知乎 web 端接口） | `https://www.zhihu.com/api/v4`（接口端点与签名说明见 `src/platforms/zhihu/UPSTREAM`） |
 | 12306 | （无上游仓库，直接对接 12306 官方公开接口） | `https://kyfw.12306.cn`（接口端点见 `src/platforms/12306/UPSTREAM`） |
 
 参考资料：
@@ -70,6 +71,7 @@
 - `references/` 不进入本仓库的版本控制，它们各自是独立的 git 仓库。
 - 每个平台的移植基于哪个上游 commit，记录在 `src/platforms/<p>/UPSTREAM`。
 - `12306` 平台直接对接 12306 官方公开接口，无上游 `references/` 仓库，基准与接口说明见 `src/platforms/12306/UPSTREAM`；离线测试不采用 Python 对拍（golden），改用基于真实响应裁剪的 fixture，通过 `mockSender` / `fakeResponse` 回放测试。
+- `zhihu` 平台同样没有上游仓库，直接对接知乎 web 端接口（`x-zse-96` 签名在 `src/platforms/zhihu/web/sign.ts` 用 TS 实现，与知乎线上 JS 的加密模块逐字节对照过）；离线测试的方式与 `12306` 相同，签名另有向量测试。
 
 ## 4. 命令规范
 
@@ -112,6 +114,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | `taobao` | `tb` |
 | `jd` | `jingdong` |
 | `x` | `twitter` |
+| `zhihu` | `zh` |
 | `12306` | — |
 
 目录名、配置键、输出里的 `platform` 字段一律使用**规范 id**。只有平台有别名；resource 和 action 没有别名。
@@ -176,6 +179,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | kuaishou | 作品 |
 | weibo | 微博 |
 | x | 推文 |
+| zhihu | 回答 / 文章 / 想法 |
 | xianyu | 闲置商品 |
 | taobao | 商品 |
 | jd | 商品 SKU |
@@ -265,6 +269,8 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | x | `item publish [--thread <text> ...]` | 私有选项：发 thread。`--text` 是第一条，每个 `--thread` 是后面的一条，依次回复上一条；`--image` / `--video` / `--quote` 只作用于第一条。返回第一条 | Item |
 | x | `article publish --text [--title] [--cover]` | 发文章（Premium 长文）：`--text` 是 Markdown，依次建草稿、写标题、正文、封面，再发布。不给 `--title` 时取正文第一行的 `# 标题`。独占一行的 `![](图片)` 上传成插图，相对路径按 `--text @file` 的文件所在目录解析（直接给正文时按当前目录） | `{id url}` |
 | x | `article delete <article>` | 删文章：草稿或已发布的都可以，已发布的连同文章推文一起删 | `{id}` |
+| zhihu | `question get <question>` | 问题详情。知乎的问题不是 item（回答才是），所以单独成一个 resource | Question |
+| zhihu | `question answers <question> [--sort general\|latest]` | 问题下的回答。`--sort` 为标准选项，`general` 默认排序、`latest` 按时间 | Item[] |
 | 12306 | `station search <keyword>` | 车站搜索（支持站名、拼音前缀、电报码） | Station[] |
 | 12306 | `ticket search <from> <to> [--date <YYYY-MM-DD>] [--type <G,D...>] [--available]` | 直达车次与余票（`--date` 默认今天；`--type` 过滤车型；`--available` 只看有票车次） | Ticket[] |
 | 12306 | `ticket price <train> --from-no <序号> --to-no <序号> --seat-types <编码> [--date <YYYY-MM-DD>]` | 票价详情（参数取自 ticket search 输出的 train_no、from.no、to.no、seat_types） | Fare |
@@ -307,6 +313,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
   - 传纯 ID 时要加 `--product`，否则按 item 处理。
 - `msg send --item <item>`：对商品卖家 / 客服发消息（闲鱼、淘宝、京东）。
 - `msg send --to <user> --item <item>`：就这件商品给指定用户发消息（闲鱼：卖家主动联系买家）。不支持的平台报 `UNSUPPORTED`。
+- zhihu 的 item 有回答、文章、想法三种，纯数字 ID 按回答处理；文章和想法的 `id` 带类型前缀（`article:<id>`、`pin:<id>`），也接受各自的链接。问题用 `question:<id>`、问题 ID 或问题链接，只用于 `question` 命令。用户接受 url_token、主页链接或 `me`。
 - taobao 没有按用户查询、按用户发起会话的接口：`user get <user>` 的 `<user>` 只接受商品链接，返回这件商品的卖家；`msg send` 不支持 `--to`（报 `UNSUPPORTED`）。
 
 ### 4.9 选项
@@ -650,6 +657,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | Fare | `id train_no date prices url:null` |
 | Transfer | `id via same_station same_train kind depart arrive duration_minutes wait legs url:null` |
 | TransferLeg | `id train_no from to depart arrive duration seats remaining prices url:null` |
+| Question | `id url title text author:UserRef\|null created_at stats{views answers followers comments}`（知乎问题，`id` 为 `question:<问题 ID>`） |
 
 **铁路与出行扩展字段说明**：
 - `Ticket.url` 为 12306 官方余票查询深链（`https://kyfw.12306.cn/otn/leftTicket/init?...`），可直接在浏览器打开。
@@ -850,6 +858,7 @@ wreq-js 默认会读 `HTTP(S)_PROXY` 环境变量和 Windows 系统代理。为�
   3. 重新生成对拍数据；
   4. 更新 UPSTREAM。
 - **12306 平台离线与在线测试**：`12306` 平台直接对接 12306 官方公开接口，无 Python 参考实现与 golden 对拍数据。离线测试在 `tests/12306.test.ts` 中采用真实响应裁剪的 fixture，配合 `mockSender` / `fakeResponse` 覆盖信封、退出码、字段解析与降级容错；在线测试在 `tests/e2e/12306.e2e.ts` 中覆盖免登录查询全链路。
+- **zhihu 平台离线测试**：`tests/zhihu.test.ts` 用手工整理的 fixture（结构取自知乎接口的真实响应，内容为假数据）回放，检查请求构造（URL、签名头、x-xsrftoken）、归一化和错误映射；`x-zse-96` 的加密另用知乎线上 JS 算出的向量逐字节比对。在线测试走通用的 `live.e2e.ts`。
 - **在线测试**：`npm run test:e2e`，用单独的配置 `tests/e2e/vitest.config.ts`，不在 `npm test` 和 CI 里。使用开发者本机 `~/.catbus` 里的登录态，没登录的平台整组跳过；`npm run test:e2e -- -t <platform>` 只跑一个平台（`-t` 按名字前缀匹配，x 要写成 `-t '^x '`，否则会连 xhs、xianyu 一起跑）。
   - 只跑只读命令：从注册表枚举每个平台已实现的读取类命令，前面命令返回的对象（item、用户、评论、直播间、会话、收藏夹……）的 `url` 或 `id` 作为后面命令的参数，逐条校验信封和 6.2 的字段结构。写操作、下载、长连接不跑。
   - 命令之间默认间隔 1.5 秒，小红书 4 秒，避免触发风控。以下记为跳过：子站点没登录（`AUTH_REQUIRED`）、平台风控（`RISK_CONTROL`）、默认参数落在规划中的取值上（`NOT_IMPLEMENTED`）、注册表 note 写明的限制（有 note 的命令报 `UNSUPPORTED`）。

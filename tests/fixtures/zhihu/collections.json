@@ -1,0 +1,32 @@
+{
+ "paging": {
+  "is_end": true,
+  "totals": 1,
+  "next": "http://www.zhihu.com/api/v4/people/catbus-tester/collections?offset=20"
+ },
+ "data": [
+  {
+   "id": 777,
+   "title": "命令行工具",
+   "url": "https://api.zhihu.com/collections/777",
+   "answer_count": 3,
+   "item_count": 5,
+   "follower_count": 2,
+   "is_public": true,
+   "creator": {
+    "id": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+    "url_token": "catbus-tester",
+    "name": "猫巴士",
+    "avatar_url": "https://picx.zhimg.com/v2-fakeavatar_l.jpg",
+    "headline": "上车，开往任何平台",
+    "type": "people",
+    "user_type": "people",
+    "gender": 1,
+    "follower_count": 1234
+   },
+   "created_time": 1780000000,
+   "updated_time": 1790000000,
+   "description": ""
+  }
+ ]
+}

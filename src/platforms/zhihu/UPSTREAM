@@ -1,0 +1,13 @@
+official: https://www.zhihu.com
+endpoints:
+  me: /api/v4/me
+  member: /api/v4/members/<url_token>（answers、articles、followers、followees）
+  content: /api/v4/answers/<id>、/api/v4/articles/<id>、/api/v4/pins/<id>
+  vote: /api/v4/answers/<id>/voters、/api/v4/articles/<id>/voters
+  question: /api/v4/questions/<id>、/api/v4/questions/<id>/feeds
+  comment: /api/v4/comment_v5/<type>/<id>/root_comment、/api/v4/comment_v5/comment/<id>/child_comment
+  search: /api/v4/search_v3、/api/v4/search/suggest、/api/v4/search/top_search
+  feed: /api/v3/feed/topstory/recommend、/api/v3/feed/topstory/hot-lists/total、/api/v3/moments
+  collection: /api/v4/people/<url_token>/collections、/api/v4/collections/<id>/items
+signature: x-zse-93 = 101_3_3.0；x-zse-96 = 2.0_ + encrypt(md5(源串))，对照 static.zhihu.com/heifetz 的 webpack 模块 1514（2026-10-14 线上版本）
+note: 无上游开源仓库，直接对接知乎 web 端接口

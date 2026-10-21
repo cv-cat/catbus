@@ -1,0 +1,69 @@
+{
+ "data": [
+  {
+   "type": "hot_list_feed",
+   "style_type": "1",
+   "id": "0_1791962494.682734",
+   "card_id": "Q_2093427934316814825",
+   "feed_specific": {
+    "answer_count": 337
+   },
+   "target": {
+    "title_area": {
+     "text": "猫巴士上热榜了？"
+    },
+    "excerpt_area": {
+     "text": "一个命令开往任何平台。"
+    },
+    "image_area": {
+     "url": "https://picx.zhimg.com/80/v2-hot_1440w.webp?source=1def8aca"
+    },
+    "metrics_area": {
+     "text": "648 万热度"
+    },
+    "label_area": {
+     "type": "trend"
+    },
+    "link": {
+     "url": "https://www.zhihu.com/question/2093427934316814825"
+    }
+   },
+   "attached_info": "fake"
+  },
+  {
+   "type": "hot_list_feed",
+   "style_type": "1",
+   "id": "0_1790000000.4",
+   "card_id": "Q_19550225",
+   "detail_text": "1234 万热度",
+   "target": {
+    "id": 19550225,
+    "title": "如何评价猫巴士？",
+    "url": "https://api.zhihu.com/questions/19550225",
+    "type": "question",
+    "created": 1700000000,
+    "answer_count": 321,
+    "follower_count": 4567,
+    "author": {
+     "id": "0",
+     "url_token": "",
+     "name": "匿名用户",
+     "avatar_url": "https://picx.zhimg.com/v2-anon_l.jpg",
+     "type": "people"
+    },
+    "comment_count": 12,
+    "excerpt": "一个命令开往任何平台"
+   },
+   "children": [
+    {
+     "type": "answer",
+     "thumbnail": "https://pic1.zhimg.com/hot_thumb.jpg"
+    }
+   ]
+  }
+ ],
+ "paging": {
+  "is_end": true,
+  "next": "https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total?limit=50&offset=50"
+ }
+}

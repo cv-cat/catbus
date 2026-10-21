@@ -38,7 +38,7 @@ describe('注册表', () => {
   })
 
   /** 已经移植完的平台：上游有的（✓ / ◐）都有实现，○ 的都没有。移植完一个平台就加进来。 */
-  const PORTED = ['bilibili', 'taobao', 'weibo', 'x', 'kuaishou', 'xianyu', 'tiktok', 'jd', 'douyin', 'xhs', '12306']
+  const PORTED = ['bilibili', 'taobao', 'weibo', 'x', 'kuaishou', 'xianyu', 'tiktok', 'jd', 'douyin', 'xhs', 'zhihu', '12306']
 
   it('已移植的平台：✓ / ◐ 的命令都已实现，○ 的都是 planned', () => {
     for (const p of PLATFORMS.filter((x) => PORTED.includes(x.id))) {
@@ -74,6 +74,7 @@ describe('注册表', () => {
       taobao: [],
       jd: ['cart count', 'coupon list', 'order list'],
       x: ['article delete', 'article publish'],
+      zhihu: ['question answers', 'question get'],
       '12306': ['route get', 'station search', 'ticket price', 'ticket search', 'transfer search'],
     })
   })

@@ -78,6 +78,7 @@ catbus platforms douyin
 | taobao | 淘宝 Taobao | tb | product | cookie |
 | jd | 京东 JD | jingdong | product SKU | qrcode, sms, cookie |
 | x | X | twitter | tweet | cookie |
+| zhihu | 知乎 Zhihu | zh | answer / article / pin (questions use the `question` extension) | cookie |
 
 Per-platform command support: [docs/capabilities.md](docs/capabilities.md), or `catbus platforms <platform>` (JSON: each command's `status` is `implemented` or `planned`, `auth`, `upstream` = full / partial / none, and `note`).
 

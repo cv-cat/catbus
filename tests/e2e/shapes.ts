@@ -207,10 +207,20 @@ const Transfer = z.strictObject({
   legs: z.array(TransferLeg),
 })
 
+const Question = z.strictObject({
+  id: str,
+  url: nstr,
+  title: nstr,
+  text: nstr,
+  author: UserRef.nullable(),
+  created_at: ntime,
+  stats: z.strictObject({ views: nint, answers: nint, followers: nint, comments: nint }),
+})
+
 export const SHAPES: Record<string, z.ZodType> = {
   User, Item, Comment, Folder, Series: Folder, Category, Keyword, Topic, Poi, Live, Event, Gift, Rank,
   Conversation, Message, Notice, NoticeCount, Media, AuthStatus, Account, Subtitle, Danmaku, Order, Coupon,
-  Station, Ticket, Stop, Fare, Transfer,
+  Station, Ticket, Stop, Fare, Transfer, Question,
 }
 
 /** 按注册表的 output（如 `Item[]`、`{count}`）取校验器；内联结构只校验是对象。 */

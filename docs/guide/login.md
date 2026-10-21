@@ -78,7 +78,7 @@ printf '%s' "$BILI_PASSWORD" | catbus bilibili auth login --method password --us
 
 ## 导入浏览器 cookie
 
-tiktok、weibo、taobao、x 只能用这种方式；其他平台在扫码被风控时也可以用它。
+tiktok、weibo、taobao、x、zhihu 只能用这种方式；其他平台在扫码被风控时也可以用它。
 
 ### 怎么复制
 
@@ -127,6 +127,7 @@ pbpaste | catbus x auth login --cookie -       # 从 stdin 读（macOS 剪贴板
 | taobao | https://www.taobao.com | `unb`，以及 `_m_h5_tk`、`cookie2` |
 | jd | https://www.jd.com | `thor`（或 `pt_key`）与 `pin` |
 | x | https://x.com | `auth_token`、`ct0` |
+| zhihu | https://www.zhihu.com | `z_c0`；`d_c0`、`_xsrf` 缺了会自动补 |
 
 缺少时报 `USAGE` 并说明缺了哪个。复制整条 Cookie 请求头最省事，不要自己挑。
 
