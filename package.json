@@ -55,7 +55,7 @@
   "dependencies": {
     "@cv-cat/catbus-assets-jd": "0.1.0",
     "@cv-cat/catbus-assets-ocr": "0.1.0",
-    "@napi-rs/canvas": "^1.0.9",
+    "@napi-rs/canvas": "^1.0.11",
     "@techstark/opencv-js": "^5.0.0-release.1",
     "crypto-js": "^4.2.0",
     "jsdom": "^30.1.1",
