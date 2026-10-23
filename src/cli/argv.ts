@@ -9,6 +9,8 @@ export const GLOBAL_FLAGS = {
   endpoint: { type: 'string', short: 'e' },
   output: { type: 'string', short: 'o' },
   raw: { type: 'boolean' },
+  fields: { type: 'string' },
+  'dry-run': { type: 'boolean' },
   proxy: { type: 'string' },
   verbose: { type: 'boolean', short: 'v' },
   quiet: { type: 'boolean', short: 'q' },
@@ -22,6 +24,8 @@ export interface GlobalFlags {
   endpoint?: string
   output?: string
   raw?: boolean
+  fields?: string
+  'dry-run'?: boolean
   proxy?: string
   verbose?: boolean
   quiet?: boolean
@@ -44,7 +48,7 @@ export interface Parsed {
 export function collectOptionKinds(platforms: Platform[]): Map<string, OptionKind> {
   const kinds = new Map<string, OptionKind>()
   const add = (key: string, schema: Parameters<typeof describeOption>[0], where: string) => {
-    if (key in GLOBAL_FLAGS) throw new Error(`选项 --${flagName(key)}（${where}）与全局选项重名`)
+    if (flagName(key) in GLOBAL_FLAGS) throw new Error(`选项 --${flagName(key)}（${where}）与全局选项重名`)
     const kind = describeOption(schema).kind
     const prev = kinds.get(key)
     if (prev && prev !== kind) throw new Error(`选项 --${flagName(key)}（${where}）的类型 ${kind} 与别处的 ${prev} 不一致`)

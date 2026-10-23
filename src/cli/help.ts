@@ -32,6 +32,8 @@ const GLOBAL_OPTIONS = [
   ['-e, --endpoint <端>', 'web | app | pc，默认 web'],
   ['-o, --output <格式>', 'json | jsonl，默认 json'],
   ['    --raw', '用平台原始对象代替归一化对象'],
+  ['    --fields <路径,...>', '只输出这些字段，如 id,url,author.name'],
+  ['    --dry-run', '只校验参数、选项和登录态，不执行'],
   ['    --proxy <url>', '本次调用使用的代理'],
   ['-v, --verbose', '在 stderr 输出调试日志（已脱敏）'],
   ['-q, --quiet', '不输出提示和进度，只保留错误'],

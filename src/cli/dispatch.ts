@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { checkAccountName, endpointFlag, getCurrent, GUEST, newCredential, readCredential, writeCredential } from '../core/auth-store.js'
 import { resolveNetwork } from '../core/config.js'
 import { CatbusError, toCatbusError } from '../core/errors.js'
-import { createLogger, type Logger } from '../core/log.js'
+import { createLogger, type Logger, redact } from '../core/log.js'
 import { describeOption, flagName, PAGING, parseDuration, STANDARD_VALUES } from '../core/options.js'
 import {
   type AvailableEndpoint,
@@ -28,7 +28,7 @@ import { version } from './commands/version.js'
 import { confirm } from './confirm.js'
 import { nativeHint } from './hints.js'
 import { commandHelp, GLOBAL_HELP, platformHelp, resourceHelp, rootHelp } from './help.js'
-import { FORMATS, type Format, Output } from './output.js'
+import { FORMATS, type Format, Output, parseFields } from './output.js'
 
 z.config(z.locales.zhCN())
 
@@ -50,6 +50,7 @@ export async function run(argv: string[]): Promise<number> {
       out.format = g.output as Format
     }
     out.raw = g.raw ?? false
+    if (g.fields != null) out.fields = parseFields(g.fields)
     const log = createLogger({ verbose: g.verbose, quiet: g.quiet })
 
     const [first, ...rest] = parsed.positionals
@@ -74,6 +75,7 @@ async function runGlobal(name: string, words: string[], parsed: Parsed, out: Out
   const action = words[0] ?? null
   out.meta = { platform: null, endpoint: null, resource: name, action: null, account: null }
   if (parsed.global.help) return printHelp(GLOBAL_HELP[name]!)
+  if (parsed.global['dry-run']) throw new CatbusError('USAGE', '--dry-run 只用于平台命令', { hint: `catbus ${name} --help` })
   const extra = Object.keys(parsed.options)
   if (extra.length) throw new CatbusError('USAGE', `catbus ${name} 不接受选项 --${flagName(extra[0]!)}`, { hint: `catbus ${name} --help` })
   const noArgs = () => {
@@ -207,6 +209,12 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
   out.meta.account = identity.account ?? (key === 'auth login' ? 'default' : null)
 
   const needConfirm = typeof command.confirm === 'function' ? command.confirm(options) : command.confirm === true
+  // --dry-run：检查到这里为止，不确认、不读文件、不联网（AGENTS 6.1）
+  if (g['dry-run']) {
+    out.fields = null
+    out.result({ args, options: redact(options), confirm: needConfirm })
+    return 0
+  }
   if (needConfirm) await confirm(`catbus ${p} ${key} ${argWords.join(' ')}`.trim(), g.yes ?? false)
 
   await readFileOptions(options)

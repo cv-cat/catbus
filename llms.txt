@@ -41,7 +41,7 @@ catbus <global-command>
 ```
 
 - Global commands: `platforms [platform]`, `doctor`, `auth list`, `config get|set|unset|list`, `version`.
-- Global options: `-a/--account <name>`, `-e/--endpoint web|app|pc` (default web), `-o/--output json|jsonl`, `--raw`, `--proxy <url>`, `-v`, `-q`, `-y/--yes`, `-h/--help`.
+- Global options: `-a/--account <name>`, `-e/--endpoint web|app|pc` (default web), `-o/--output json|jsonl`, `--raw`, `--fields <path,...>`, `--dry-run`, `--proxy <url>`, `-v`, `-q`, `-y/--yes`, `-h/--help`.
 - Paging: one page by default; `--limit N`, `--all`, `--cursor <page.cursor>`.
 - Standard filters: `--sort general|latest|popular|views|comments|collects|sales|price_asc|price_desc`, `--type all|video|image|text|article|goods`, `--time all|day|week|month|half_year|year`, `--kind recommend|hot|following` (feed list). Each platform supports a subset; a standard value the platform lacks returns `UNSUPPORTED`, a non-standard value returns `USAGE`.
 - Arguments accept IDs, URLs (including share short links), natural identifiers (Bilibili BV id, X handle) and `me` for users. Every output object has `id` and `url` that can be passed to the next command. For xhs, pass URLs (they carry `xsec_token`).
@@ -103,6 +103,8 @@ Envelope (exactly one per call with `-o json`):
 - List commands set `page: { cursor, has_more }`.
 - `-o jsonl`: one `data` entry per line on stdout; a summary envelope on stderr at the end.
 - `--raw`: platform original objects instead of normalized ones.
+- `--fields id,url,author.name`: keep only these fields of each `data` entry (dot paths; through arrays per element; missing → `null`). Applied after `--raw`.
+- `--dry-run`: run all checks (usage, implemented, local login) without calling the platform; `data` is `{args, options, confirm}`.
 - Normalized types: `User`, `Item`, `Comment`, `Live`, `Event`, `Message`, `Conversation`, `Notice`, `Media`, `Folder`, … — fields always present (`null` / `[]` when missing), IDs are strings, counts are integers, times are ISO 8601 with timezone. Full definitions: [AGENTS.md section 6](AGENTS.md).
 
 ## Exit codes

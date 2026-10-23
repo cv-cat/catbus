@@ -321,6 +321,8 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | `-e, --endpoint web\|app\|pc` | 端，默认 `web` |
 | `-o, --output json\|jsonl` | 输出格式，默认 `json`（见 6.1） |
 | `--raw` | 用平台原始对象代替归一化对象 |
+| `--fields <路径,...>` | 只输出 `data` 条目里的这些字段（见 6.1） |
+| `--dry-run` | 只校验、不执行（见 6.1） |
 | `--proxy <url>` | 本次调用使用的代理 |
 | `-v, --verbose` | stderr 输出调试日志（已脱敏） |
 | `-q, --quiet` | 不输出提示和进度，只保留错误 |
@@ -586,6 +588,18 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
   - 结束时在 stderr 写一行摘要信封，`data` 为 null，带 `page` 和 `error`，用来取 next cursor 或错误信息。
 
 `--raw`：用平台原始对象代替每个归一化对象，信封不变。
+
+`--fields <路径,...>`：只输出每个 `data` 条目里的这些字段，用来省掉不需要的数据。
+- 逗号分隔，用点号进入嵌套对象，例如 `--fields id,url,author.name,stats.likes`。路径经过数组时作用到数组的每个元素（`media.url`）。
+- 列表命令作用到每一条，非列表命令作用到 `data` 本身；`data` 不是对象时（如 `config get`）不变。json 和 jsonl 都适用，信封的其他字段不变。
+- 输出保留嵌套结构，键按 `--fields` 里的顺序；条目里没有的路径输出 null。同时给出 `author` 和 `author.name` 时输出整个 `author`。
+- 在 `--raw` 之后生效，路径按原始对象的字段写。
+- 路径为空或有空段（`a..b`）时报 `USAGE`。
+
+`--dry-run`：做完执行前的全部检查就停下，不调用平台接口、不联网、不确认、不写凭证。
+- 检查的内容和顺序与真正执行时一样：参数和选项（`USAGE` / `UNSUPPORTED`）、是否已实现（`NOT_IMPLEMENTED`）、身份（`AUTH_REQUIRED`，只看本地有没有账号，不在线校验登录态）。
+- 通过时退出码 0，`data` 为 DryRun `{args options confirm}`：`args` 是位置参数，`options` 是校验后的选项（含默认值，凭证类的值打码；`--text @file` 等不读文件内容，原样给出），`confirm` 表示真正执行时是否需要危险操作确认。`page` 为 null，不受 `--fields` 影响。
+- 只用于平台命令；用在全局命令上报 `USAGE`。和 `-h` 一起用时输出帮助。
 
 ### 6.2 归一化类型
 
