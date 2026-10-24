@@ -45,6 +45,11 @@ export interface DownloadOptions {
   headers?: HeaderInit
   /** 指定扩展名，例如 B 站 DASH 的音视频分轨。 */
   ext?: (media: Media, index: number) => string | undefined
+  /**
+   * 分段下载：返回总字节数和每段的地址时，按段（每段 `bytes` 字节）依次请求再拼起来。
+   * 用于不接受整文件请求的服务器（YouTube 的 googlevideo 整文件 GET 回 403，且不分段会被限速）。返回 undefined 时整文件下载。
+   */
+  chunked?: (media: Media) => { total: number; bytes: number; url: (start: number, end: number) => string } | undefined
 }
 
 /**
@@ -69,12 +74,25 @@ export async function downloadMedia(ctx: HandlerContext, http: HttpClient, itemI
       continue
     }
     ctx.log.info(`下载 ${i + 1}/${media.length}：${basename(path)}`)
-    const res = await http.request({ url: m.url, headers: options.headers })
-    if (!res.ok) throw new CatbusError('UPSTREAM', `下载失败：HTTP ${res.status}`, { detail: { status: res.status, url: m.url } })
     const tmp = `${path}.part`
+    const chunks = options.chunked?.(m)
     try {
-      if (res.body) await pipeline(Readable.fromWeb(res.body as unknown as WebReadableStream), createWriteStream(tmp))
-      else await pipeline(Readable.from([Buffer.from(await res.arrayBuffer())]), createWriteStream(tmp))
+      if (chunks) {
+        // 分段：依次请求 [start, end]，追加写入同一个临时文件
+        await rm(tmp, { force: true })
+        for (let start = 0; start < chunks.total; start += chunks.bytes) {
+          const end = Math.min(start + chunks.bytes, chunks.total) - 1
+          const url = chunks.url(start, end)
+          const res = await http.request({ url, headers: options.headers })
+          if (!res.ok) throw new CatbusError('UPSTREAM', `下载失败：HTTP ${res.status}`, { detail: { status: res.status, url, range: [start, end] } })
+          await pipeline(res.body ? Readable.fromWeb(res.body as unknown as WebReadableStream) : Readable.from([Buffer.from(await res.arrayBuffer())]), createWriteStream(tmp, { flags: 'a' }))
+        }
+      } else {
+        const res = await http.request({ url: m.url, headers: options.headers })
+        if (!res.ok) throw new CatbusError('UPSTREAM', `下载失败：HTTP ${res.status}`, { detail: { status: res.status, url: m.url } })
+        if (res.body) await pipeline(Readable.fromWeb(res.body as unknown as WebReadableStream), createWriteStream(tmp))
+        else await pipeline(Readable.from([Buffer.from(await res.arrayBuffer())]), createWriteStream(tmp))
+      }
       await rename(tmp, path)
     } catch (err) {
       await rm(tmp, { force: true })

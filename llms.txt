@@ -1,7 +1,7 @@
 # catbus
 
-> catbus (猫巴士, "all aboard, every platform") is a TypeScript CLI that drives the web APIs of 10 Chinese and global platforms — Xiaohongshu (xhs), Douyin, TikTok, Bilibili, Kuaishou, Weibo, Xianyu, Taobao, JD and X — through one uniform command syntax and one JSON output format.
-> Capabilities are ported from cv-cat's open-source Python projects and rewritten in TypeScript. Only Node is required at runtime. Version 0.1.0; web endpoints of all 10 platforms are ported; app / pc endpoints are planned.
+> catbus (猫巴士, "all aboard, every platform") is a TypeScript CLI that drives the web APIs of 12 Chinese and global platforms — Xiaohongshu (xhs), Douyin, TikTok, Bilibili, Kuaishou, Weibo, Xianyu, Taobao, JD, X, YouTube and 12306 (China Railway) — through one uniform command syntax and one JSON output format.
+> Capabilities are ported from cv-cat's open-source Python projects and rewritten in TypeScript; YouTube and 12306 talk to the official web APIs directly. Only Node is required at runtime. Version 0.1.0; web endpoints of all 12 platforms are available; app / pc endpoints are planned.
 
 ## What catbus does
 
@@ -78,12 +78,14 @@ catbus platforms douyin
 | taobao | 淘宝 Taobao | tb | product | cookie |
 | jd | 京东 JD | jingdong | product SKU | qrcode, sms, cookie |
 | x | X | twitter | tweet | cookie |
+| youtube | YouTube | yt | video | cookie (read commands also work without login) |
+| 12306 | 12306 铁路 China Railway | — | train | none (public read-only queries, no login) |
 
 Per-platform command support: [docs/capabilities.md](docs/capabilities.md), or `catbus platforms <platform>` (JSON: each command's `status` is `implemented` or `planned`, `auth`, `upstream` = full / partial / none, and `note`).
 
 ## Login
 
-- All web commands except `auth` require login; otherwise `AUTH_REQUIRED` (exit 3) with the login command in `error.hint`.
+- All web commands except `auth` require login; otherwise `AUTH_REQUIRED` (exit 3) with the login command in `error.hint`. Exceptions: youtube (search, video details, comments, channels, playlists and live chat work as a guest; account actions still need login) and 12306 (no login at all).
 - QR code: `catbus <platform> auth login` draws the QR code on stderr and saves a PNG to `~/.catbus/cache/<platform>/`.
 - Cookie: `catbus <platform> auth login --method cookie --cookie "<Cookie>"` (`--method` can be omitted on tiktok, weibo, taobao, x, where cookie is the only method). `--cookie` accepts a string, `@file`, `-` (stdin), or an exported cookie JSON array; douyin / tiktok also accept a JSON object with device data (tickets, certificates, private keys) needed for writes. Copy the full `Cookie` request header from DevTools → Network; `document.cookie` misses HttpOnly session cookies.
 - Accounts: `-a <name>` selects an account; `catbus <platform> auth list|use|status|logout`; `catbus auth list` for all platforms.

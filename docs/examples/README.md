@@ -4,7 +4,7 @@
 
 | 脚本 | 做什么 | 依赖 |
 |---|---|---|
-| [search-to-jsonl.sh](search-to-jsonl.sh) | 跨平台搜索同一个关键词，每个平台取 N 条，合并成一个 jsonl（每行加上 `platform` 字段）。默认搜索「`item search` 已实现、并且本机登录过」的平台；某个平台失败时跳过，平台之间 sleep | bash、jq |
+| [search-to-jsonl.sh](search-to-jsonl.sh) | 跨平台搜索同一个关键词，每个平台取 N 条，合并成一个 jsonl（每行加上 `platform` 字段）。默认搜索「`item search` 已实现、并且本机登录过或不登录也能搜（如 youtube）」的平台；某个平台失败时跳过，平台之间 sleep | bash、jq |
 | [comments-export.sh](comments-export.sh) | 导出一条内容的全部评论到 jsonl。分批翻页，批与批之间把游标存到 `<输出文件>.cursor`；遇到 `RISK_CONTROL` / `NETWORK` 停下，再运行就从断点继续。`REPLIES=1` 时顺带导出评论的回复 | bash、jq |
 | [user-items-backup.sh](user-items-backup.sh) | 备份一个用户发布的全部内容：`user items --all` 的元数据写成 `items.jsonl`，再逐条 `item download --dir` 下载媒体。已下载的记在 `downloaded.txt`，中断后续跑；平台还不支持下载时只备份元数据 | bash、jq |
 | [live-to-file.sh](live-to-file.sh) | 把直播间的弹幕、礼物、进场等事件 `live listen --duration` 一段时间写到文件；Ctrl-C 也能正常收尾，结束时按事件类型和礼物统计 | bash（jq 可选，用于统计） |

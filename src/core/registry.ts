@@ -73,7 +73,7 @@ export interface EndpointDecl {
   logout?: HandlerLoader
   /**
    * 该端是否支持游客态（AGENTS 5.2）。默认 false：所有命令都需要登录（auth 命令除外）。
-   * web 端不登录几乎看不到内容，都不支持；游客态留给 app / pc 端。
+   * 多数平台的 web 端不登录几乎看不到内容，不支持；公开内容不登录也能读的端（12306、youtube）声明 true。
    */
   guest?: boolean
   /** 词表里的命令可以只写 `'full' | 'partial' | 'none'`；矩阵里 — 的命令不写。 */

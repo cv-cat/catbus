@@ -1,0 +1,13 @@
+official: https://www.youtube.com
+innertube: https://www.youtube.com/youtubei/v1/<path>（WEB 客户端，clientVersion 与 visitorData 取自首页 ytcfg）
+endpoints:
+  bootstrap: GET /（ytcfg：INNERTUBE_CLIENT_VERSION、VISITOR_DATA、LOGGED_IN）
+  search: /youtubei/v1/search（params 为筛选 protobuf 的 base64）
+  next: /youtubei/v1/next（watch 页：推荐、评论入口、直播聊天入口；continuation 翻评论 / 回复 / 推荐）
+  player: /youtubei/v1/player（videoDetails、microformat）
+  browse: /youtubei/v1/browse（频道 UC…、频道 tab params、播放列表 VL…）
+  resolve: /youtubei/v1/navigation/resolve_url（@handle、/c/、/user/ → 频道 ID）
+  live chat: /youtubei/v1/live_chat/get_live_chat
+  account: /youtubei/v1/account/account_menu（登录校验）
+  suggest: https://suggestqueries-clients6.youtube.com/complete/search
+note: 无上游开源仓库，直接对接 YouTube web 端的 InnerTube 接口；协议细节参考 yt-dlp 与 YouTube.js 的公开实现（只参考，不移植代码）

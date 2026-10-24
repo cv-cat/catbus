@@ -7,7 +7,7 @@
 
 做**一个 CLI —— 操作各大平台接口的统一入口**。
 
-- 一个命令 `catbus`，按统一的命令规范调用 10 个平台：小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X。
+- 一个命令 `catbus`，按统一的命令规范调用 10 个平台：小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X。另有直接对接官方接口的 12306 和 YouTube（见第 3 节）。
 - 能力来源是作者 [cv-cat](https://github.com/cv-cat) 的 10 个开源仓库，已克隆到 `references/`，作为**只读的原始来源**。
 - 所有平台都在本仓库里**用 TypeScript 重写**，不在运行时调用上游的 Python。
 - **用户只需要安装 Node**（版本见 7.1）。不需要 Python，不需要 C/C++ 编译器，也不需要其他系统依赖。
@@ -37,7 +37,7 @@
 
 ## 2. 范围
 
-- 目前支持第 3 节的 11 个平台的 web 端（10 个内容与电商平台 + 12306 铁路平台 `12306`）；app / pc 端在注册表里为 planned（见 4.3）。
+- 目前支持第 3 节的 12 个平台的 web 端（10 个内容与电商平台 + 12306 铁路平台 `12306` + YouTube `youtube`）；app / pc 端在注册表里为 planned（见 4.3）。
 - 矩阵里的 ○（平台有这个概念、上游没有的能力）只占位：注册为 planned，执行时返回 NOT_IMPLEMENTED，有需要时再实现。移植中发现矩阵与上游不符（上游其实没有、或只是占位）的能力，按上游实际情况标为 ○ 或 ◐，以 `docs/capabilities.md` 为准。
 - 新平台开始移植时，先把平台 id、别名、`item` 叫法等登记到第 3 节、4.2 和 4.5，再进注册表；在那之前 `catbus <平台>` 是未知平台（`USAGE`）。
 - 改规范先改本文件，再写代码。
@@ -57,6 +57,7 @@
 | jd | JdApis | `jd_apis/jd_api.py`、`jd_apis/jd_login_api.py`、`builder/auth.py` |
 | x | XApis | `x_apis/x_api.py`、`x_apis/x_write_api.py`、`x_apis/login_api.py` |
 | 12306 | （无上游仓库，直接对接 12306 官方公开接口） | `https://kyfw.12306.cn`（接口端点见 `src/platforms/12306/UPSTREAM`） |
+| youtube | （无上游仓库，直接对接 YouTube web 端的 InnerTube 接口） | `https://www.youtube.com/youtubei/v1/`（接口端点见 `src/platforms/youtube/UPSTREAM`） |
 
 参考资料：
 - 每个仓库的鉴权、登录、API 方法、JS 资产、游客态生成位置，以及 Python → JS 的替换对照，见 [docs/upstream-map.md](docs/upstream-map.md)。
@@ -69,7 +70,7 @@
   - **不能修改其中任何受版本控制的文件**。
 - `references/` 不进入本仓库的版本控制，它们各自是独立的 git 仓库。
 - 每个平台的移植基于哪个上游 commit，记录在 `src/platforms/<p>/UPSTREAM`。
-- `12306` 平台直接对接 12306 官方公开接口，无上游 `references/` 仓库，基准与接口说明见 `src/platforms/12306/UPSTREAM`；离线测试不采用 Python 对拍（golden），改用基于真实响应裁剪的 fixture，通过 `mockSender` / `fakeResponse` 回放测试。
+- 没有上游仓库的平台（`12306`、`youtube`）直接对接官方接口：`UPSTREAM` 记录对接的服务端点与接口说明；离线测试不采用 Python 对拍（golden），改用基于真实响应裁剪的 fixture，通过 `mockSender` / `fakeResponse` 回放测试。
 
 ## 4. 命令规范
 
@@ -113,6 +114,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | `jd` | `jingdong` |
 | `x` | `twitter` |
 | `12306` | — |
+| `youtube` | `yt` |
 
 目录名、配置键、输出里的 `platform` 字段一律使用**规范 id**。只有平台有别名；resource 和 action 没有别名。
 
@@ -179,6 +181,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | xianyu | 闲置商品 |
 | taobao | 商品 |
 | jd | 商品 SKU |
+| youtube | 视频 |
 
 各动作的说明：
 - `item list`：当前账号自己发布的内容，带审核状态，数据来自创作者中心。
@@ -459,7 +462,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - `-a` 指定的账号不存在时，报 `AUTH_REQUIRED`，`hint` 为 `catbus <p> auth login -a <name>`。
 
 **游客态只在声明了 `guest: true` 的端上存在**（见 7.6）。不支持游客态的端上没有 `guest.json`：`auth status` 等 auth 命令没有账号时，用一份只在内存里的空凭证，不落盘。
-- **web 端除 `12306` 外都不支持游客态**：各内容与电商平台的 web 端不登录几乎看不到内容，所以 web 端除 `auth` 命令外全部需要登录，未登录时直接报 `AUTH_REQUIRED` 并提示登录命令。游客态主要留给 app 端。**特例**：12306（`12306`）的车站、余票、票价、经停、中转查询均为公开免登录接口，其 web 端声明 `guest: true`，查询命令为 `auth: optional`，无需登录即可直接使用；且不提供 `auth login`。
+- **web 端默认不支持游客态**：各内容与电商平台的 web 端不登录几乎看不到内容，所以 web 端默认 `guest: false`，除 `auth` 命令外全部需要登录，未登录时直接报 `AUTH_REQUIRED` 并提示登录命令。游客态主要留给 app 端。公开内容不登录也能读的平台在 web 端声明 `guest: true`，目前是 `12306` 和 `youtube`：读取命令沿用词表默认的 `auth: optional`，写操作和只看自己的命令仍为 `required`；不需要登录的端可以不提供 `auth login`（如 `12306`）。各平台具体哪些命令免登录、支持哪些登录方式，见注册表和 `docs/platforms/<p>.md`。
 - 支持游客态的端上，很多平台匿名访问也需要设备 cookie 或 token（例如 xhs 的 `a1`、抖音的 `ttwid`、B 站的 `buvid`、X 的 guest token）。catbus 自动生成这些数据，缓存到 `guest.json`，过期后重新生成；各平台的生成方式见 upstream-map。
 - 登录流程本身仍会先生成这些设备数据（很多平台的登录接口要求先有设备 cookie），这与游客态无关。
 
@@ -847,13 +850,13 @@ wreq-js 默认会读 `HTTP(S)_PROXY` 环境变量和 Windows 系统代理。为�
   - HTTP 用 `core/http.ts` 的 `HttpClient`（`toolkit.httpClient(ctx)`），请求头按上游顺序显式给出；cookie 在凭证的 cookie 罐里，Set-Cookie 自动写回，命令结束时由 core 落盘。
   - 签名 JS 复制到 `static/<p>/`，用 `core/vm.ts` 的 `loadScript` / `callScript` 执行。
   - 业务错误映射到 6.4 的错误码：登录墙 → `toolkit.authError`，风控 → `RISK_CONTROL`，其余 → `UPSTREAM`（原始错误码放 `detail`）。
-- **上游基线**：`src/platforms/<p>/UPSTREAM` 记录上游仓库地址和 commit。无上游仓库的平台（如 `12306`）记录对接的官方服务端点与接口说明。
+- **上游基线**：`src/platforms/<p>/UPSTREAM` 记录上游仓库地址和 commit。无上游仓库的平台（如 `12306`、`youtube`）记录对接的官方服务端点与接口说明。
 - **上游更新时**：
   1. 用 `git -C references/<repo> log <commit>..` 查看变更；
   2. 同步移植；
   3. 重新生成对拍数据；
   4. 更新 UPSTREAM。
-- **12306 平台离线与在线测试**：`12306` 平台直接对接 12306 官方公开接口，无 Python 参考实现与 golden 对拍数据。离线测试在 `tests/12306.test.ts` 中采用真实响应裁剪的 fixture，配合 `mockSender` / `fakeResponse` 覆盖信封、退出码、字段解析与降级容错；在线测试在 `tests/e2e/12306.e2e.ts` 中覆盖免登录查询全链路。
+- **无上游平台的离线与在线测试**：`12306`、`youtube` 没有 Python 参考实现与 golden 对拍数据。离线测试（`tests/<p>.test.ts`）采用真实响应裁剪的 fixture，配合 `mockSender` / `fakeResponse` 覆盖信封、退出码、字段解析与降级容错；`12306` 的在线测试在 `tests/e2e/12306.e2e.ts` 中覆盖免登录查询全链路。
 - **在线测试**：`npm run test:e2e`，用单独的配置 `tests/e2e/vitest.config.ts`，不在 `npm test` 和 CI 里。使用开发者本机 `~/.catbus` 里的登录态，没登录的平台整组跳过；`npm run test:e2e -- -t <platform>` 只跑一个平台（`-t` 按名字前缀匹配，x 要写成 `-t '^x '`，否则会连 xhs、xianyu 一起跑）。
   - 只跑只读命令：从注册表枚举每个平台已实现的读取类命令，前面命令返回的对象（item、用户、评论、直播间、会话、收藏夹……）的 `url` 或 `id` 作为后面命令的参数，逐条校验信封和 6.2 的字段结构。写操作、下载、长连接不跑。
   - 命令之间默认间隔 1.5 秒，小红书 4 秒，避免触发风控。以下记为跳过：子站点没登录（`AUTH_REQUIRED`）、平台风控（`RISK_CONTROL`）、默认参数落在规划中的取值上（`NOT_IMPLEMENTED`）、注册表 note 写明的限制（有 note 的命令报 `UNSUPPORTED`）。
@@ -892,7 +895,7 @@ export default definePlatform({
 - 命令的值可以是 `'full' | 'partial' | 'none'` 的简写，也可以是对象。
 - 矩阵里 — 的命令不写。
 - `auth list` / `use` / `logout` 由 core 自动注册。
-- 端的字段：`login`（登录方式与子站点）、`logout?`（服务端登出）、`guest?`（是否支持游客态，默认 false）、`commands`。`guest` 为 false 时，除 `auth` 外的命令一律按 `auth: required` 处理，声明 `optional` 会在启动时报错。web 端都不设 `guest`。
+- 端的字段：`login`（登录方式与子站点）、`logout?`（服务端登出）、`guest?`（是否支持游客态，默认 false）、`commands`。`guest` 为 false 时，除 `auth` 外的命令一律按 `auth: required` 处理，声明 `optional` 会在启动时报错。web 端只有公开内容不登录也能读的平台设 `guest: true`（见 5.2）。
 
 命令的字段：
 
