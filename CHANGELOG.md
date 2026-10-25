@@ -6,7 +6,20 @@
 
 ## [Unreleased]
 
-（暂无）
+### Added
+
+- 新增 `jimeng`（即梦，别名 `dreamina`）平台：管理即梦官方 CLI `dreamina` 的多账号登录态，不注册生成类命令
+  - `auth login`：浏览器授权（新登录方式 `oauth`），由 `dreamina` 发起设备码授权，把钥匙串里的登录态存到账号名下
+  - `auth use`：把目标账号的登录态写回钥匙串，之后直接运行 `dreamina` 就是这个账号
+  - `auth status`：用 `dreamina user_credit` 在线校验；`auth logout`：钥匙串里正是这个账号时同时 `dreamina logout`
+  - `dreamina` 自己刷新 token 后，catbus 在下次改写钥匙串前把最新值存回所属账号
+  - 只支持 macOS，需要先安装 `dreamina`
+- core：端声明新增 `use` 钩子，`auth use` 设置当前账号前调用（AGENTS 5.3、5.6）
+- 新增 `docs/platforms/jimeng.md`、AGENTS.md 5.6，更新能力矩阵、登录指南、Agent 技能和 llms.txt
+
+### Fixed
+
+- 能力矩阵的「登录方式」表按 `LOGIN_METHODS` 生成，不再写死 4 种方式
 
 ## [0.2.1] - 2026-10-22
 

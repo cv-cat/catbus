@@ -3,25 +3,26 @@
 各平台的 web 端不登录几乎看不到内容，所以 catbus 在 web 端除 `auth` 以外的命令都需要登录。未登录时命令报 `AUTH_REQUIRED`（退出码 3），`hint` 里就是该执行的登录命令。
 
 ```bash
-catbus <platform> auth login [-a <账号名>] [--method qrcode|sms|password|cookie] [--scope <子站点>]
+catbus <platform> auth login [-a <账号名>] [--method qrcode|sms|password|cookie|oauth] [--scope <子站点>]
 ```
 
 规范见 [AGENTS.md 5.2、5.3](../../AGENTS.md#53-登录与登出)。
 
 ## 各平台支持的方式
 
-| 平台 | 扫码 | 短信 | 账密 | cookie | 默认 |
-|---|---|---|---|---|---|
-| xhs | ✓ | ✓ |  | ✓ | qrcode |
-| douyin | ✓ | ✓ |  | ✓ | qrcode |
-| tiktok |  |  |  | ✓ | cookie |
-| bilibili | ✓ | ✓ | ✓ | ✓ | qrcode |
-| kuaishou | ✓ | ✓ |  | ✓ | qrcode |
-| weibo |  |  |  | ✓ | cookie |
-| xianyu | ✓ |  |  | ✓ | qrcode |
-| taobao |  |  |  | ✓ | cookie |
-| jd | ✓ | ✓ |  | ✓ | qrcode |
-| x |  |  |  | ✓ | cookie |
+| 平台 | 扫码 | 短信 | 账密 | cookie | 浏览器授权 | 默认 |
+|---|---|---|---|---|---|---|
+| xhs | ✓ | ✓ |  | ✓ |  | qrcode |
+| douyin | ✓ | ✓ |  | ✓ |  | qrcode |
+| tiktok |  |  |  | ✓ |  | cookie |
+| bilibili | ✓ | ✓ | ✓ | ✓ |  | qrcode |
+| kuaishou | ✓ | ✓ |  | ✓ |  | qrcode |
+| weibo |  |  |  | ✓ |  | cookie |
+| xianyu | ✓ |  |  | ✓ |  | qrcode |
+| taobao |  |  |  | ✓ |  | cookie |
+| jd | ✓ | ✓ |  | ✓ |  | qrcode |
+| x |  |  |  | ✓ |  | cookie |
+| jimeng |  |  |  |  | ✓ | oauth |
 
 表格来自注册表，以 `catbus <platform> auth login --help` 为准。不支持的方式报 `UNSUPPORTED`，`hint` 列出可选的方式。
 
@@ -188,6 +189,14 @@ catbus tiktok auth login --cookie @tiktok-session.json
 - `cookie` 必须是 Cookie 字符串，其余字段原样存进凭证文件的 `device`。
 - 写操作至少要有 `ticket_guard_private_key`、`ticket_guard_encrypt_ticket`、`ticket_guard_ts_sign`；缺哪个，报错里会列出来。
 - `device_id` 不给时，catbus 依次从 localStorage 的 Tea 缓存、`multi_sids` 里找，再没有就请求一次首页取服务端分配的值。
+
+## 浏览器授权（仅 jimeng）
+
+```bash
+catbus jimeng auth login -a work
+```
+
+stderr 里打出授权链接。在已登录要保存的那个即梦账号的浏览器里打开，点「同意」，命令等到授权完成后保存。保存的是即梦官方 CLI `dreamina` 的登录态，之后用 `catbus jimeng auth use <账号>` 切换，直接运行 `dreamina` 就是这个账号。只支持 macOS，需要先装好 `dreamina`。详见 [即梦](../platforms/jimeng.md)。
 
 ## 多账号
 

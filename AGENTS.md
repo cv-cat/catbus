@@ -37,7 +37,8 @@
 
 ## 2. 范围
 
-- 目前支持第 3 节的 11 个平台的 web 端（10 个内容与电商平台 + 12306 铁路平台 `12306`）；app / pc 端在注册表里为 planned（见 4.3）。
+- 目前支持第 3 节的 12 个平台的 web 端（10 个内容与电商平台 + 12306 铁路平台 `12306` + 即梦 `jimeng`）；app / pc 端在注册表里为 planned（见 4.3）。
+- `jimeng` 不调用平台接口，只保存和切换即梦官方 CLI `dreamina` 的登录态，是第 1 节「只需要 Node」「支持全部目标系统」的例外：需要另外安装 `dreamina`，只支持 macOS（见 5.6）。
 - 矩阵里的 ○（平台有这个概念、上游没有的能力）只占位：注册为 planned，执行时返回 NOT_IMPLEMENTED，有需要时再实现。移植中发现矩阵与上游不符（上游其实没有、或只是占位）的能力，按上游实际情况标为 ○ 或 ◐，以 `docs/capabilities.md` 为准。
 - 新平台开始移植时，先把平台 id、别名、`item` 叫法等登记到第 3 节、4.2 和 4.5，再进注册表；在那之前 `catbus <平台>` 是未知平台（`USAGE`）。
 - 改规范先改本文件，再写代码。
@@ -57,6 +58,7 @@
 | jd | JdApis | `jd_apis/jd_api.py`、`jd_apis/jd_login_api.py`、`builder/auth.py` |
 | x | XApis | `x_apis/x_api.py`、`x_apis/x_write_api.py`、`x_apis/login_api.py` |
 | 12306 | （无上游仓库，直接对接 12306 官方公开接口） | `https://kyfw.12306.cn`（接口端点见 `src/platforms/12306/UPSTREAM`） |
+| jimeng | （无上游仓库，封装即梦官方 CLI `dreamina` 的登录态） | `dreamina` 的子命令与钥匙串项（见 `src/platforms/jimeng/UPSTREAM`、5.6） |
 
 参考资料：
 - 每个仓库的鉴权、登录、API 方法、JS 资产、游客态生成位置，以及 Python → JS 的替换对照，见 [docs/upstream-map.md](docs/upstream-map.md)。
@@ -70,6 +72,7 @@
 - `references/` 不进入本仓库的版本控制，它们各自是独立的 git 仓库。
 - 每个平台的移植基于哪个上游 commit，记录在 `src/platforms/<p>/UPSTREAM`。
 - `12306` 平台直接对接 12306 官方公开接口，无上游 `references/` 仓库，基准与接口说明见 `src/platforms/12306/UPSTREAM`；离线测试不采用 Python 对拍（golden），改用基于真实响应裁剪的 fixture，通过 `mockSender` / `fakeResponse` 回放测试。
+- `jimeng` 平台没有上游仓库，也不发 HTTP 请求：`UPSTREAM` 记录验证过的 `dreamina` 版本、用到的子命令和钥匙串项；离线测试替换 `dreamina` 子进程和钥匙串读写（`tests/jimeng.test.ts`）。
 
 ## 4. 命令规范
 
@@ -113,6 +116,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | `jd` | `jingdong` |
 | `x` | `twitter` |
 | `12306` | — |
+| `jimeng` | `dreamina` |
 
 目录名、配置键、输出里的 `platform` 字段一律使用**规范 id**。只有平台有别名；resource 和 action 没有别名。
 
@@ -179,6 +183,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | xianyu | 闲置商品 |
 | taobao | 商品 |
 | jd | 商品 SKU |
+| jimeng | 作品（目前没有 item 命令） |
 
 各动作的说明：
 - `item list`：当前账号自己发布的内容，带审核状态，数据来自创作者中心。
@@ -485,7 +490,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 ### 5.3 登录与登出
 
 ```bash
-catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie] [--scope <scope>]
+catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth] [--scope <scope>]
 ```
 
 **账号名**：
@@ -501,6 +506,7 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie] [--scope
 | `sms` | `--phone`、`--code` | TTY 下先发验证码，再交互输入。非 TTY 下分两步：`--phone` 发验证码并保存中间态（10 分钟有效），再单独用 `--code` 完成登录 |
 | `password` | `--username`、`--password-stdin` | 密码只从 stdin 读取，TTY 下隐藏输入 |
 | `cookie` | `--cookie <str\|@file\|->` | 导入后调一次 `me` 校验。也接受浏览器导出的 cookie JSON 数组；douyin、tiktok 另外接受一个 JSON 对象，把 ticket、证书、私钥等设备数据一并导入（这两个平台的写操作需要它们） |
+| `oauth` | — | 浏览器授权（OAuth 设备码）：授权链接打到 stderr，用户在已登录该平台的浏览器里打开并同意，然后等待授权完成。目前只有 `jimeng`，由 `dreamina` 完成授权（见 5.6） |
 
 - **验证码**：上游能自动过的就自动过，过不了报 `RISK_CONTROL`（`detail.kind = captcha`），退出码 5。
 - **子站点**（创作者中心、直播、IM 等）：
@@ -509,7 +515,7 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie] [--scope
   - 命令缺少所需 scope 时，报 `AUTH_REQUIRED`，`hint` 带上 `--scope`。
 - **`auth status`**：在线校验，返回 AuthStatus。未登录或已失效时返回 `logged_in: false`，不报错。
 - **`auth logout`**：删除本地凭证文件（上游支持服务端登出的，同时调用服务端登出，目前有 B 站和快手），并清除指向它的 `_current`。
-- **`auth use <account>`**：设置 `_current`。
+- **`auth use <account>`**：设置 `_current`。端声明了 `use` 钩子的（目前只有 `jimeng`），先调用钩子，再设置 `_current`；钩子报错时不切换。
 - **`auth list`**：列出本平台、本端的账号。
 - **自动刷新**：会自动刷新的 token（如 B 站的 refresh）和响应里的 Set-Cookie，都会合并回凭证文件并原子写入。
 
@@ -522,7 +528,7 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie] [--scope
   "endpoint": "web",
   "account": "default",                  // 游客文件为 "guest"
   "user": { "id": "5f...", "name": "...", "url": "..." },   // UserRef；游客为 null
-  "method": "qrcode",                    // qrcode | sms | password | cookie | guest
+  "method": "qrcode",                    // qrcode | sms | password | cookie | oauth | guest
   "created_at": "2026-09-27T12:00:00+08:00",
   "updated_at": "2026-09-27T12:00:00+08:00",
   "scopes": {                            // 子站点分区；单站点平台只有 main
@@ -555,6 +561,20 @@ proxy = "socks5://..."            # 平台代理
 - 代理的优先级：`--proxy` > `<platform>.proxy` > `proxy`。
 - 不读取 `HTTP(S)_PROXY` 环境变量，代理只能显式配置。
 - `catbus config set xhs.proxy <url>`，用点号表示平台段。
+
+### 5.6 代管外部 CLI 的登录态
+
+有的平台已经有官方 CLI，生成、查询等能力直接用官方 CLI 更合适，catbus 只补上它缺少的多账号管理。目前只有 `jimeng`（即梦官方 CLI `dreamina`）。
+
+- **范围**：只注册 `auth` 命令（`login`、`status`，以及 core 提供的 `list`、`use`、`logout`），不注册 item 等业务命令；业务操作由用户直接运行官方 CLI。
+- **存储**：外部 CLI 自己的登录态存放位置（`dreamina` 是 macOS 钥匙串里的一项：service `dreamina`，account `byted_cli_user_token`）同一时间只有一个账号。catbus 把这一项的原值存进对应账号凭证的 `scopes.main.tokens.keyring`，凭证文件仍只由 core 读写（5.4）。
+- **当前账号与外部登录态一致**：`auth use` 通过端的 `use` 钩子把目标账号的登录态写回外部存储，之后直接运行官方 CLI 就是这个账号。`auth login`、`auth status` 会临时占用外部存储，结束时（包括失败）切回 `_current` 指向的账号。
+- **刷新回写**：外部 CLI 会自己刷新 token、改写外部存储。catbus 每次改写外部存储前，先按外部存储里的用户 id 找到所属账号，把最新值存回该账号的凭证。外部存储里的用户不属于任何账号时，在 stderr 警告它会被覆盖。
+- **登录**：`--method oauth`，由外部 CLI 发起设备码授权（`dreamina relogin --headless`，再 `dreamina login checklogin --poll`），授权链接打到 stderr。外部 CLI 发起登录时会先清掉外部存储里原来的登录态。
+- **校验**：`auth status` 用外部 CLI 的只读命令在线校验（`dreamina user_credit`），失效时返回 `logged_in: false`。
+- **登出**：`auth logout` 的服务端登出钩子只在外部存储里正是这个账号时调用外部 CLI 的登出（`dreamina logout`），再由 core 删除本地凭证。
+- **依赖与系统**：外部 CLI 由用户自己安装，找不到时报 `ERROR` 并提示安装。外部存储的读写按系统适配，未适配的系统报 `UNSUPPORTED`（`jimeng` 目前只支持 macOS）。
+- **限制**：同一时间只有一个账号生效，不能两个账号同时运行外部 CLI；不要绕过 catbus 用外部 CLI 自己的登录命令换账号，否则新登录的账号没有保存，下次切换时会被覆盖。
 
 ## 6. 输出
 
@@ -892,7 +912,7 @@ export default definePlatform({
 - 命令的值可以是 `'full' | 'partial' | 'none'` 的简写，也可以是对象。
 - 矩阵里 — 的命令不写。
 - `auth list` / `use` / `logout` 由 core 自动注册。
-- 端的字段：`login`（登录方式与子站点）、`logout?`（服务端登出）、`guest?`（是否支持游客态，默认 false）、`commands`。`guest` 为 false 时，除 `auth` 外的命令一律按 `auth: required` 处理，声明 `optional` 会在启动时报错。web 端都不设 `guest`。
+- 端的字段：`login`（登录方式与子站点）、`logout?`（服务端登出）、`use?`（`auth use` 设置当前账号前调用，见 5.3、5.6）、`guest?`（是否支持游客态，默认 false）、`commands`。`guest` 为 false 时，除 `auth` 外的命令一律按 `auth: required` 处理，声明 `optional` 会在启动时报错。web 端都不设 `guest`。
 
 命令的字段：
 

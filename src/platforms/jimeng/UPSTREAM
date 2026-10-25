@@ -1,0 +1,8 @@
+official: 即梦官方 CLI dreamina（https://jimeng.jianying.com）
+tested: dreamina 1.4.20（commit ac44792）
+keyring: macOS 钥匙串 service=dreamina account=byted_cli_user_token，值为 go-keyring-base64:<登录态 JSON>
+commands:
+  login: dreamina relogin --headless；dreamina login checklogin --device_code=<code> --poll=<秒>
+  status: dreamina user_credit
+  logout: dreamina logout
+note: 无上游开源仓库。catbus 只保存和切换 dreamina 的登录态，生成命令直接用 dreamina

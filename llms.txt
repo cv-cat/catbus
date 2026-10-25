@@ -78,6 +78,7 @@ catbus platforms douyin
 | taobao | 淘宝 Taobao | tb | product | cookie |
 | jd | 京东 JD | jingdong | product SKU | qrcode, sms, cookie |
 | x | X | twitter | tweet | cookie |
+| jimeng | 即梦 Jimeng (Dreamina) | dreamina | work | oauth (browser authorization; manages the login state of the official `dreamina` CLI, macOS only) |
 
 Per-platform command support: [docs/capabilities.md](docs/capabilities.md), or `catbus platforms <platform>` (JSON: each command's `status` is `implemented` or `planned`, `auth`, `upstream` = full / partial / none, and `note`).
 
@@ -86,6 +87,7 @@ Per-platform command support: [docs/capabilities.md](docs/capabilities.md), or `
 - All web commands except `auth` require login; otherwise `AUTH_REQUIRED` (exit 3) with the login command in `error.hint`.
 - QR code: `catbus <platform> auth login` draws the QR code on stderr and saves a PNG to `~/.catbus/cache/<platform>/`.
 - Cookie: `catbus <platform> auth login --method cookie --cookie "<Cookie>"` (`--method` can be omitted on tiktok, weibo, taobao, x, where cookie is the only method). `--cookie` accepts a string, `@file`, `-` (stdin), or an exported cookie JSON array; douyin / tiktok also accept a JSON object with device data (tickets, certificates, private keys) needed for writes. Copy the full `Cookie` request header from DevTools → Network; `document.cookie` misses HttpOnly session cookies.
+- Jimeng: catbus only stores and switches the login state of the official `dreamina` CLI. `catbus jimeng auth login -a <name>` prints an authorization link on stderr; open it in a browser logged in to that Jimeng account. `catbus jimeng auth use <name>` makes plain `dreamina ...` commands (image / video generation, credits) run as that account. One account is active at a time.
 - Accounts: `-a <name>` selects an account; `catbus <platform> auth list|use|status|logout`; `catbus auth list` for all platforms.
 - `CATBUS_HOME` overrides `~/.catbus`. Directories 0700, files 0600.
 - Proxy: `catbus config set proxy <url>`, `catbus config set <platform>.proxy <url>`, or `--proxy`. `HTTP(S)_PROXY` is not read.

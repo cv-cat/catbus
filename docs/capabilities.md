@@ -12,42 +12,43 @@
 | ○ | 平台有这个概念，上游没有，规划中 | planned | `NOT_IMPLEMENTED`，退出码 4 |
 | — | 平台没有这个概念 | 不注册 | `UNSUPPORTED`，退出码 2 |
 
-列顺序：xhs · douyin · tiktok · bilibili · kuaishou · weibo · xianyu · taobao · jd · x · 12306。
+列顺序：xhs · douyin · tiktok · bilibili · kuaishou · weibo · xianyu · taobao · jd · x · 12306 · jimeng。
 
 ## 登录方式
 
-|  | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| qrcode | ✓ | ✓ |  | ✓ | ✓ |  | ✓ |  | ✓ |  |  |
-| sms | ✓ | ✓ |  | ✓ | ✓ |  |  |  | ✓ |  |  |
-| password |  |  |  | ✓ |  |  |  |  |  |  |  |
-| cookie | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |
-| 默认 | qrcode | qrcode | cookie | qrcode | qrcode | cookie | qrcode | cookie | qrcode | cookie | — |
-| 子站点 | creator |  |  |  |  |  |  |  |  |  |  |
+|  | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 | jimeng |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| qrcode | ✓ | ✓ |  | ✓ | ✓ |  | ✓ |  | ✓ |  |  |  |
+| sms | ✓ | ✓ |  | ✓ | ✓ |  |  |  | ✓ |  |  |  |
+| password |  |  |  | ✓ |  |  |  |  |  |  |  |  |
+| cookie | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |
+| oauth |  |  |  |  |  |  |  |  |  |  |  | ✓ |
+| 默认 | qrcode | qrcode | cookie | qrcode | qrcode | cookie | qrcode | cookie | qrcode | cookie | — | oauth |
+| 子站点 | creator |  |  |  |  |  |  |  |  |  |  |  |
 
 ## auth
 
-`login` 见上表。`logout` / `list` / `use` 由 core 实现，所有平台都有；服务端登出只有 bilibili、kuaishou。
+`login` 见上表。`logout` / `list` / `use` 由 core 实现，所有平台都有；服务端登出只有 bilibili、kuaishou、jimeng。
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| auth status | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | — |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 | jimeng |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| auth status | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | — | ✓ |
 
 - taobao `auth status`：上游没有取当前用户的接口：换一次私信 token 校验，账号信息取自 cookie 里的 unb 和昵称
 
 ## user
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| user get | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | ◐ | ◐ | ◐ | ✓ | — |
-| user search | ✓ | ✓ | ○ | ✓ | ✓ | ○ | — | — | — | ✓ | — |
-| user items | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | ○ | — | ✓ | — |
-| user likes | ✓ | ✓ | ○ | — | ✓ | ○ | — | — | — | ○ | — |
-| user collects | ✓ | ○ | ✓ | ○ | ✓ | ○ | ○ | ○ | ✓ | ○ | — |
-| user reposts | — | — | ✓ | — | — | ○ | — | — | — | ○ | — |
-| user followers | ○ | ✓ | ✓ | ○ | ✓ | ○ | — | — | — | ○ | — |
-| user following | ◐ | ✓ | ✓ | ○ | ✓ | ○ | — | — | — | ○ | — |
-| user follow / unfollow | ○ | ○ | ✓ | ○ | ○ | ○ | ○ | — | — | ✓ | — |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 | jimeng |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| user get | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | ◐ | ◐ | ◐ | ✓ | — | — |
+| user search | ✓ | ✓ | ○ | ✓ | ✓ | ○ | — | — | — | ✓ | — | — |
+| user items | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | ○ | — | ✓ | — | — |
+| user likes | ✓ | ✓ | ○ | — | ✓ | ○ | — | — | — | ○ | — | — |
+| user collects | ✓ | ○ | ✓ | ○ | ✓ | ○ | ○ | ○ | ✓ | ○ | — | — |
+| user reposts | — | — | ✓ | — | — | ○ | — | — | — | ○ | — | — |
+| user followers | ○ | ✓ | ✓ | ○ | ✓ | ○ | — | — | — | ○ | — | — |
+| user following | ◐ | ✓ | ✓ | ○ | ✓ | ○ | — | — | — | ○ | — | — |
+| user follow / unfollow | ○ | ○ | ✓ | ○ | ○ | ○ | ○ | — | — | ✓ | — | — |
 
 - tiktok `user get`：me 部分支持
 - xianyu `user get`：只支持 me；查询他人规划中
@@ -65,20 +66,20 @@
 
 ## item
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| item get | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | ✓ | ✓ | — |
-| item search | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ○ | ○ | ✓ | ✓ | — |
-| item related | ○ | ○ | ✓ | ✓ | ✓ | — | ○ | ○ | ◐ | — | — |
-| item list | ✓ | ◐ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — | — |
-| item media | ✓ | ✓ | ◐ | ✓ | ✓ | ○ | — | — | — | ✓ | — |
-| item download | ✓ | ✓ | ◐ | ✓ | ✓ | ○ | — | — | — | ✓ | — |
-| item like / unlike | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — | ✓ | — |
-| item collect / uncollect | ○ | ✓ | ✓ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | — |
-| item repost / unrepost | — | — | ○ | — | — | ○ | — | — | — | ✓ | — |
-| item publish | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | — | — | ✓ | — |
-| item delete | ○ | ○ | ○ | ◐ | ○ | ○ | ○ | — | — | ✓ | — |
-| item categories | — | — | — | ✓ | — | — | ○ | — | — | — | — |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 | jimeng |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| item get | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | ✓ | ✓ | — | — |
+| item search | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ○ | ○ | ✓ | ✓ | — | — |
+| item related | ○ | ○ | ✓ | ✓ | ✓ | — | ○ | ○ | ◐ | — | — | — |
+| item list | ✓ | ◐ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — | — | — |
+| item media | ✓ | ✓ | ◐ | ✓ | ✓ | ○ | — | — | — | ✓ | — | — |
+| item download | ✓ | ✓ | ◐ | ✓ | ✓ | ○ | — | — | — | ✓ | — | — |
+| item like / unlike | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — | ✓ | — | — |
+| item collect / uncollect | ○ | ✓ | ✓ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | — | — |
+| item repost / unrepost | — | — | ○ | — | — | ○ | — | — | — | ✓ | — | — |
+| item publish | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | — | — | ✓ | — | — |
+| item delete | ○ | ○ | ○ | ◐ | ○ | ○ | ○ | — | — | ✓ | — | — |
+| item categories | — | — | — | ✓ | — | — | ○ | — | — | — | — | — |
 
 - douyin `item search`：--type video 走视频频道搜索，其余走综合频道；--type image 只要图文
 - kuaishou `item search`：没有筛选（--sort / --type / --time），只按关键词搜
@@ -124,9 +125,9 @@
 
 ## product 与商品评价
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| product get | ○ | ◐ | ✓ | — | ○ | — | — | — | — | — | — |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 | jimeng |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| product get | ○ | ◐ | ✓ | — | ○ | — | — | — | — | — | — | — |
 
 - douyin `product get`：上游的商品接口只给详情图、规格和跳转链接：只有标题、图片和价格，其余字段为空
 
@@ -136,13 +137,13 @@
 
 ## comment
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| comment list | ◐ | ✓ | ✓ | ◐ | ◐ | ◐ | — | ○ | ◐ | ✓ | — |
-| comment replies | ✓ | ✓ | ✓ | ◐ | ◐ | ○ | — | — | — | ○ | — |
-| comment add | ○ | ✓ | ✓ | ◐ | ○ | ○ | — | — | — | ✓ | — |
-| comment delete | ○ | ○ | ○ | ◐ | ○ | ○ | — | — | — | ✓ | — |
-| comment like / unlike | ○ | ○ | ○ | ○ | ○ | ○ | — | — | — | ✓ | — |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 | jimeng |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| comment list | ◐ | ✓ | ✓ | ◐ | ◐ | ◐ | — | ○ | ◐ | ✓ | — | — |
+| comment replies | ✓ | ✓ | ✓ | ◐ | ◐ | ○ | — | — | — | ○ | — | — |
+| comment add | ○ | ✓ | ✓ | ◐ | ○ | ○ | — | — | — | ✓ | — | — |
+| comment delete | ○ | ○ | ○ | ◐ | ○ | ○ | — | — | — | ✓ | — | — |
+| comment like / unlike | ○ | ○ | ○ | ○ | ○ | ○ | — | — | — | ✓ | — | — |
 
 - xhs `comment list`：--product 规划中
 - bilibili `comment list`：支持视频、专栏、纯文字 / 转发动态及图文动态；图文动态通过非上游动态详情接口获取相簿评论区 ID，没有对拍
@@ -160,12 +161,12 @@
 
 ## feed 与 keyword
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| feed list | ◐ | ◐ | ✓ | ◐ | ◐ | ○ | ○ | ○ | ○ | ◐ | — |
-| feed categories | ✓ | — | ○ | — | — | — | — | — | — | — | — |
-| keyword suggest | ✓ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ○ | — |
-| keyword hot | ✓ | ○ | ○ | ○ | ○ | ○ | — | — | ✓ | ○ | — |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 | jimeng |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| feed list | ◐ | ◐ | ✓ | ◐ | ◐ | ○ | ○ | ○ | ○ | ◐ | — | — |
+| feed categories | ✓ | — | ○ | — | — | — | — | — | — | — | — | — |
+| keyword suggest | ✓ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ○ | — | — |
+| keyword hot | ✓ | ○ | ○ | ○ | ○ | ○ | — | — | ✓ | ○ | — | — |
 
 - xhs `feed list`：following 规划中
 - douyin `feed list`：hot、following 规划中
@@ -177,15 +178,15 @@
 
 ## notice 与 msg
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| notice list | ✓ | ✓ | ✓ | ○ | ○ | ○ | — | — | — | ○ | — |
-| notice count | ✓ | ○ | ✓ | ○ | ✓ | ○ | — | — | — | ○ | — |
-| msg list | ✓ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ◐ | — |
-| msg history | ✓ | ○ | ✓ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ◐ | — |
-| msg send | ✓ | ✓ | ◐ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ○ | — |
-| msg listen | ✓ | ✓ | ✓ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ○ | — |
-| msg read / revoke / delete | ✓ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | — |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 | jimeng |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| notice list | ✓ | ✓ | ✓ | ○ | ○ | ○ | — | — | — | ○ | — | — |
+| notice count | ✓ | ○ | ✓ | ○ | ✓ | ○ | — | — | — | ○ | — | — |
+| msg list | ✓ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ◐ | — | — |
+| msg history | ✓ | ○ | ✓ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ◐ | — | — |
+| msg send | ✓ | ✓ | ◐ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ○ | — | — |
+| msg listen | ✓ | ✓ | ✓ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ○ | — | — |
+| msg read / revoke / delete | ✓ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | — | — |
 
 - xhs `msg list`：含群聊，群聊会话 id 为 group:<群 id>
 - x `msg list`：只取收件箱首页（最近 20 个会话），上游没有翻页
@@ -201,18 +202,18 @@
 
 ## media、folder、series、history、topic、poi
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| media upload | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | — |
-| folder list | ◐ | ✓ | ✓ | ◐ | ○ | ○ | — | — | — | ○ | — |
-| folder items | ○ | ○ | ✓ | ◐ | ○ | ○ | — | — | — | ○ | — |
-| folder create / update | ○ | ○ | ✓ | ○ | ○ | — | — | — | — | ○ | — |
-| folder delete | ○ | ○ | ○ | ○ | ○ | — | — | — | — | ○ | — |
-| series list | ○ | ○ | ✓ | ○ | ○ | — | — | — | — | — | — |
-| series items | ○ | ○ | ○ | ○ | ○ | — | — | — | — | — | — |
-| history list | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ✓ | — | — |
-| topic search | ✓ | ○ | ○ | ○ | ○ | ○ | — | — | — | — | — |
-| poi search | ✓ | ○ | ◐ | — | ○ | ○ | — | — | — | — | — |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 | jimeng |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| media upload | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | — |
+| folder list | ◐ | ✓ | ✓ | ◐ | ○ | ○ | — | — | — | ○ | — | — |
+| folder items | ○ | ○ | ✓ | ◐ | ○ | ○ | — | — | — | ○ | — | — |
+| folder create / update | ○ | ○ | ✓ | ○ | ○ | — | — | — | — | ○ | — | — |
+| folder delete | ○ | ○ | ○ | ○ | ○ | — | — | — | — | ○ | — | — |
+| series list | ○ | ○ | ✓ | ○ | ○ | — | — | — | — | — | — | — |
+| series items | ○ | ○ | ○ | ○ | ○ | — | — | — | — | — | — | — |
+| history list | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ✓ | — | — | — |
+| topic search | ✓ | ○ | ○ | ○ | ○ | ○ | — | — | — | — | — | — |
+| poi search | ✓ | ○ | ◐ | — | ○ | ○ | — | — | — | — | — | — |
 
 - xhs `folder list`：只列公开的收藏夹（上游只有这一个接口），收藏夹里的笔记上游没有
 - bilibili `folder list`：只列用户自己创建的收藏夹，一次返回全部
@@ -224,21 +225,21 @@
 
 ## live
 
-| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| live get | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — | — |
-| live list | ✓ | ○ | ✓ | ○ | ✓ | ○ | — | ○ | — | — | — |
-| live search | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | ○ | — | — | — |
-| live categories | ✓ | ○ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — | — |
-| live listen | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — | — |
-| live history | ○ | ◐ | ◐ | ✓ | ○ | ○ | — | ○ | — | — | — |
-| live send | ◐ | ◐ | ◐ | ✓ | ○ | ○ | — | ○ | — | — | — |
-| live like / rank | ○ | ✓ | ✓ | ○ | ○ | ○ | — | ○ | — | — | — |
-| live gifts | ✓ | ○ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — | — |
-| live products | ✓ | ✓ | ○ | — | ○ | ○ | — | ○ | — | — | — |
-| live media | ○ | ◐ | ◐ | ✓ | ○ | ○ | — | ○ | — | — | — |
-| live replays | — | ○ | — | ○ | ✓ | ○ | — | ○ | — | — | — |
-| live start / stop | ○ | ○ | ○ | ✓ | ○ | ○ | — | ○ | — | — | — |
+| 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 | jimeng |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| live get | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — | — | — |
+| live list | ✓ | ○ | ✓ | ○ | ✓ | ○ | — | ○ | — | — | — | — |
+| live search | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | ○ | — | — | — | — |
+| live categories | ✓ | ○ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — | — | — |
+| live listen | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — | — | — |
+| live history | ○ | ◐ | ◐ | ✓ | ○ | ○ | — | ○ | — | — | — | — |
+| live send | ◐ | ◐ | ◐ | ✓ | ○ | ○ | — | ○ | — | — | — | — |
+| live like / rank | ○ | ✓ | ✓ | ○ | ○ | ○ | — | ○ | — | — | — | — |
+| live gifts | ✓ | ○ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — | — | — |
+| live products | ✓ | ✓ | ○ | — | ○ | ○ | — | ○ | — | — | — | — |
+| live media | ○ | ◐ | ◐ | ✓ | ○ | ○ | — | ○ | — | — | — | — |
+| live replays | — | ○ | — | ○ | ✓ | ○ | — | ○ | — | — | — | — |
+| live start / stop | ○ | ○ | ○ | ✓ | ○ | ○ | — | ○ | — | — | — | — |
 
 - tiktok `live list`：只有关注的人里正在直播的（上游 get_webcast_feed 是直播页侧栏的关注列表）；没关注的人在播时为空
 - douyin `live history`：只有进房时 im/fetch 带回的最近 15 条

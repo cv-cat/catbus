@@ -15,6 +15,7 @@
 | [京东](jd.md) | `jd` | `jingdong` | 商品 SKU | **扫码** · 短信 · cookie | 21（18 · 3） | 6 | [JdApis](https://github.com/cv-cat/JdApis) |
 | [X](x.md) | `x` | `twitter` | 推文 | **cookie** | 33（30 · 3） | 20 | [XApis](https://github.com/cv-cat/XApis) |
 | [12306 铁路](12306.md) | `12306` | — | 车次 | **免登录** | 8（8 · 0） | 0 | 无（官方公开接口） |
+| [即梦](jimeng.md) | `jimeng` | `dreamina` | 作品 | **浏览器授权**（只管 `dreamina` 的登录态，仅 macOS） | 5（5 · 0） | 0 | 无（即梦官方 CLI `dreamina`） |
 
 - 数字是 web 端注册表里的命令数，包含 `auth` 命令和平台扩展命令；平台没有这个概念的命令（矩阵里的 —）不计入。app / pc 端目前全部是规划中。
 - ✓ 上游已有；◐ 上游部分支持，限制写在各篇的说明里；○ 规划中，执行时返回 `NOT_IMPLEMENTED`（退出码 4）。
@@ -24,4 +25,5 @@
 
 - **扫码**最省事：xhs、douyin、bilibili、kuaishou、xianyu、jd 默认就是扫码，二维码画在终端（stderr）里，同时存一份 PNG 到 `~/.catbus/cache/<platform>/`。小红书扫码后常被要求人机验证，目前建议改用 cookie。
 - **cookie** 是 tiktok、weibo、taobao、x 唯一的方式，其他平台加 `--method cookie` 也能用。一定要从 DevTools → Network 复制请求头里完整的 Cookie：登录态的关键 cookie 大多是 HttpOnly 的，`document.cookie` 拿不到。
+- **浏览器授权**只有 jimeng：在已登录即梦的浏览器里打开 stderr 里的链接并同意，保存的是即梦官方 CLI `dreamina` 的登录态，多个账号之间用 `auth use` 切换，见 [即梦](jimeng.md)。
 - 抖音、TikTok 的写操作还需要浏览器里的设备 / 票据数据，只有 cookie 时写操作会在本地被拦下。详见各自的页面和 [登录指南](../guide/login.md)。

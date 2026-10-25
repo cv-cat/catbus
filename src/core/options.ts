@@ -18,7 +18,7 @@ export const FILTER_VALUES = {
 export type FilterName = keyof typeof FILTER_VALUES
 type FilterValue<N extends FilterName> = (typeof FILTER_VALUES)[N][number]
 
-export const LOGIN_METHODS = ['qrcode', 'sms', 'password', 'cookie'] as const
+export const LOGIN_METHODS = ['qrcode', 'sms', 'password', 'cookie', 'oauth'] as const
 export type LoginMethod = (typeof LOGIN_METHODS)[number]
 
 export const VISIBILITY_VALUES = ['public', 'private', 'friends', 'fans'] as const

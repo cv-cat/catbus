@@ -71,6 +71,8 @@ export interface EndpointDecl {
   login: LoginDecl
   /** 服务端登出：`auth logout` 删除本地凭证前调用（AGENTS 5.3）。 */
   logout?: HandlerLoader
+  /** `auth use` 设置当前账号前调用，ctx 的账号和凭证是要切换到的那个（AGENTS 5.3）。 */
+  use?: HandlerLoader
   /**
    * 该端是否支持游客态（AGENTS 5.2）。默认 false：所有命令都需要登录（auth 命令除外）。
    * web 端不登录几乎看不到内容，都不支持；游客态留给 app / pc 端。
@@ -109,6 +111,7 @@ export interface Command extends CommandSpec {
 export interface AvailableEndpoint {
   login: LoginDecl
   logout?: HandlerLoader
+  use?: HandlerLoader
   /** 是否支持游客态（AGENTS 5.2）。 */
   guest: boolean
   commands: Map<string, Command>
@@ -152,7 +155,7 @@ export function definePlatform(decl: PlatformDecl): Platform {
   for (const endpoint of ENDPOINTS) {
     const e = decl.endpoints[endpoint]
     endpoints[endpoint] =
-      e === 'planned' ? 'planned' : { login: e.login, logout: e.logout, guest: e.guest ?? false, commands: resolveCommands(decl, e) }
+      e === 'planned' ? 'planned' : { login: e.login, logout: e.logout, use: e.use, guest: e.guest ?? false, commands: resolveCommands(decl, e) }
   }
   return {
     id: decl.id,
