@@ -1095,3 +1095,82 @@ describe('bilibili 纯算', () => {
     expect(geetest.csCipher('abcdef', null, '')).toBe('abcdef')
   })
 })
+
+describe('bilibili user update（非上游，没有对拍）', () => {
+  const CSRF = 'fakecsrf0123456789abcdef01234567'
+  const ACCOUNT = 'https://api.bilibili.com/x/member/web/account'
+  const MESSAGE = 'https://api.bilibili.com/x/member/uname/update/message'
+  const space = (over: object = {}) => ({ mid: 10001, name: '旧名', face: 'http://i0.hdslb.com/bfs/face/a.jpg', sign: '旧签名', ...over })
+  const route = (over: Record<string, unknown> = {}) => (url: string) => {
+    for (const [k, v] of Object.entries(over)) if (url.includes(k)) return v
+    if (url.startsWith(MESSAGE)) return ok({ allow: true, uname_message: '' })
+    if (url.startsWith(ACCOUNT)) return ok({ mid: 10001, uname: '旧名', sign: '旧签名', sex: '男', birthday: '2000-01-02', nick_free: false })
+    if (url.includes('/x/space/wbi/acc/info')) return ok(space())
+    return { code: 0, message: '0', ttl: 1 }
+  }
+
+  it('只给 --bio：走签名接口，不碰昵称；返回自己的资料，签名用提交的值', async () => {
+    const { urls, bodies, result, error } = await runCommand('userUpdate', { options: { bio: '新签名' } }, route())
+    expect(error).toBeUndefined()
+    expect(urls[0]).toBe('https://api.bilibili.com/x/member/web/sign/update')
+    expect(bodies[0]).toBe(`user_sign=${encodeURIComponent('新签名')}&csrf=${CSRF}`)
+    expect(urls.some((u) => u.includes('/x/member/web/update') || u.startsWith(MESSAGE))).toBe(false)
+    expect(urls).toHaveLength(2)
+    expect(urls[1]).toContain('/x/space/wbi/acc/info?mid=10001')
+    // 签名要审核：空间资料还是旧的，返回的是提交的值
+    expect(result).toMatchObject({ id: '10001', name: '旧名', bio: '新签名', url: 'https://space.bilibili.com/10001' })
+  })
+
+  it('--name：先查资格，再把当前的性别、生日连同签名整表提交', async () => {
+    const { urls, bodies, error } = await runCommand('userUpdate', { options: { name: '新名' } }, route())
+    expect(error).toBeUndefined()
+    expect(urls.slice(0, 3)).toEqual([MESSAGE, ACCOUNT, 'https://api.bilibili.com/x/member/web/update'])
+    expect(bodies[2]).toBe(`uname=${encodeURIComponent('新名')}&usersign=${encodeURIComponent('旧签名')}&sex=${encodeURIComponent('男')}&birthday=2000-01-02&source=profile_web&csrf=${CSRF}`)
+    // 同时给 --bio 时签名跟着整表一起提交，不再单独调签名接口
+    const both = await runCommand('userUpdate', { options: { name: '新名', bio: '新签名' } }, route())
+    expect(both.bodies[2]).toContain(`usersign=${encodeURIComponent('新签名')}`)
+    expect(both.urls.some((u) => u.includes('sign/update'))).toBe(false)
+  })
+
+  it('--name：不允许改名时不提交；昵称重复（data.code 40014）报 UPSTREAM，hint 给推荐昵称', async () => {
+    const denied = await runCommand('userUpdate', { options: { name: '新名' } }, route({ [MESSAGE]: ok({ allow: false, uname_message: '30 天内只能改一次' }) }))
+    expect(denied.error).toMatchObject({ code: 'UPSTREAM', message: expect.stringContaining('30 天内只能改一次') })
+    expect(denied.urls).toEqual([MESSAGE])
+    const taken = await runCommand('userUpdate', { options: { name: '新名' } }, route({ '/x/member/web/update': ok({ code: 40014, name_list: ['新名_1', '新名2026'] }) }))
+    expect(taken.error).toMatchObject({ code: 'UPSTREAM', message: '昵称已被占用', hint: '可用的昵称：新名_1、新名2026', detail: { code: 40014 } })
+    const long = await runCommand('userUpdate', { options: { bio: 'x'.repeat(80) } }, route({ 'sign/update': { code: 40022, message: '签名过长' } }))
+    expect(long.error).toMatchObject({ code: 'UPSTREAM', message: '签名太长，最多 70 字', detail: { code: 40022 } })
+    // data.code 不在表里时用 data.message，不用顶层的 '0'
+    const other = await runCommand('userUpdate', { options: { name: '新名' } }, route({ '/x/member/web/update': ok({ code: 40099, message: '昵称不合规' }) }))
+    expect(other.error).toMatchObject({ code: 'UPSTREAM', message: '昵称不合规', detail: { code: 40099 } })
+  })
+
+  it('--avatar：图片 multipart 直传，csrf 在 query 里；格式不对报 USAGE，不发请求', async () => {
+    const { requests, result, error } = await runCommand(
+      'userUpdate',
+      { options: { avatar: IMAGE_FILE } },
+      route({ 'face/update': { code: 0, message: 'OK', ttl: 1, data: 'http://i2.hdslb.com/bfs/face/new.jpg' } }),
+    )
+    expect(error).toBeUndefined()
+    expect(requests[0]!.url).toBe(`https://api.bilibili.com/x/member/web/face/update?csrf=${CSRF}`)
+    // 头像用接口返回的新地址，不等空间资料刷新
+    expect(result.avatar).toBe('https://i2.hdslb.com/bfs/face/new.jpg')
+    expect(requests[0]!.multipart!.map((m) => [m.name, m.filename ?? null, m.contentType ?? null])).toEqual([
+      ['dopost', null, null],
+      ['DisplayRank', null, null],
+      ['face', 'pic.png', 'image/png'],
+    ])
+    const txt = join(FIXTURES, 'face.txt')
+    writeFileSync(txt, 'not an image')
+    const bad = await runCommand('userUpdate', { options: { avatar: txt } }, route())
+    expect(bad.error).toMatchObject({ code: 'USAGE' })
+    expect(bad.urls).toEqual([])
+  })
+
+  it('注册表：非上游，带 --name 时需要确认', () => {
+    const c = web().commands.get('user update')!
+    expect(c).toMatchObject({ upstream: 'partial', note: expect.stringContaining('非上游') })
+    const confirm = c.confirm as (o: object) => boolean
+    expect([confirm({ bio: 'x' }), confirm({ avatar: 'a.png' }), confirm({ name: 'n' })]).toEqual([false, false, true])
+  })
+})

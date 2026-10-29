@@ -257,6 +257,62 @@ export function followingFeed(b: Bili, offset = '') {
   return b.get(`${API}/x/polymer/web-dynamic/v1/feed/all`, { headers: h.get(), query })
 }
 
+// ================================================================ 个人资料（非上游）
+
+/*
+ * 上游没有改资料的接口，请求按网页端个人中心 account.bilibili.com 补的（资料页 /account/setting、头像页 /account/face/upload），没有对拍。
+ * 三个写接口返回整个 JSON、不检查业务码：错误码要由 commands 换成可读的说明，昵称重复还放在 data.code 里。
+ */
+
+const SETTING_PAGE = `${ORIGIN.account}/account/setting`
+
+/** 当前账号的资料：uname、sign、sex、birthday、nick_free（还能免费改一次昵称）。 */
+export function memberAccount(b: Bili) {
+  const h = headers('GET', { origin: ORIGIN.account }).referer(SETTING_PAGE)
+  return b.get(`${API}/x/member/web/account`, { headers: h.get() })
+}
+
+/** 改昵称前的资格：allow 为 false 时不能改，uname_message 是原因（例如冷却期、要绑手机）。 */
+export function unameUpdateMessage(b: Bili) {
+  const h = headers('GET', { origin: ORIGIN.account }).referer(SETTING_PAGE)
+  return b.get(`${API}/x/member/uname/update/message`, { headers: h.get() })
+}
+
+/** 资料页的整表提交：昵称、签名、性别、生日一起发，网页端每次都带全。改昵称要扣硬币（nick_free 时免费一次）。 */
+export function updateMember(b: Bili, v: { uname: string; usersign: string; sex: string; birthday: string }) {
+  const h = headers('FORM', { origin: ORIGIN.account }).referer(SETTING_PAGE)
+  const form: Pairs = [
+    ['uname', v.uname],
+    ['usersign', v.usersign],
+    ['sex', v.sex],
+    ['birthday', v.birthday],
+    ['source', 'profile_web'],
+    ['csrf', b.csrf],
+  ]
+  return b.json({ method: 'POST', url: `${API}/x/member/web/update`, headers: h.get(), form })
+}
+
+/** 只改签名，提交后要审核。 */
+export function updateSign(b: Bili, sign: string) {
+  const h = headers('FORM', { origin: ORIGIN.account }).referer(SETTING_PAGE)
+  const form: Pairs = [
+    ['user_sign', sign],
+    ['csrf', b.csrf],
+  ]
+  return b.json({ method: 'POST', url: `${API}/x/member/web/sign/update`, headers: h.get(), form })
+}
+
+/** 换头像：图片直接 multipart 上传，不用先传 bfs。 */
+export function updateFace(b: Bili, data: Uint8Array, filename: string, contentType: string) {
+  const h = headers('GET', { origin: ORIGIN.account }).referer(`${ORIGIN.account}/account/face/upload`)
+  const multipart: MultipartPart[] = [
+    { name: 'dopost', data: 'save' },
+    { name: 'DisplayRank', data: '10000' },
+    { name: 'face', filename, data, contentType },
+  ]
+  return b.json({ method: 'POST', url: `${API}/x/member/web/face/update`, headers: h.get(), query: [['csrf', b.csrf]], multipart, timeout: 120 })
+}
+
 // ================================================================ 互动（BiliInteractApi）
 
 function playerFields(paused = false, played = 0): Pairs {

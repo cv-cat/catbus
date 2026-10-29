@@ -38,7 +38,7 @@ describe('注册表', () => {
   })
 
   /** 已经移植完的平台：上游有的（✓ / ◐）都有实现，○ 的都没有。移植完一个平台就加进来。 */
-  const PORTED = ['bilibili', 'taobao', 'weibo', 'x', 'kuaishou', 'xianyu', 'tiktok', 'jd', 'douyin', 'xhs', '12306']
+  const PORTED = ['bilibili', 'taobao', 'weibo', 'x', 'kuaishou', 'xianyu', 'tiktok', 'jd', 'douyin', 'xhs', '12306', 'jimeng']
 
   it('已移植的平台：✓ / ◐ 的命令都已实现，○ 的都是 planned', () => {
     for (const p of PLATFORMS.filter((x) => PORTED.includes(x.id))) {
@@ -75,6 +75,7 @@ describe('注册表', () => {
       jd: ['cart count', 'coupon list', 'order list'],
       x: ['article delete', 'article publish'],
       '12306': ['route get', 'station search', 'ticket price', 'ticket search', 'transfer search'],
+      jimeng: [],
     })
   })
 
@@ -95,7 +96,7 @@ describe('注册表', () => {
     }
     expect([...confirm].sort()).toEqual([
       'bilibili draft delete', 'bilibili dynamic delete', 'bilibili item coin', 'bilibili item triple',
-      'comment delete', 'folder delete', 'item delete', 'live send', 'msg delete', 'msg revoke', 'x article delete',
+      'comment delete', 'folder delete', 'item delete', 'live send', 'msg delete', 'msg revoke', 'user update', 'x article delete',
     ])
     const send = VOCAB['live send']!.confirm as (o: object) => boolean
     expect([send({}), send({ gift: 'g1' })]).toEqual([false, true])

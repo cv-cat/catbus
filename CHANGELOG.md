@@ -8,6 +8,16 @@
 
 ### Added
 
+- 新增 `jimeng`（即梦，别名 `dreamina`）平台：管理即梦官方 CLI `dreamina` 的多账号登录态，不注册生成类命令
+  - `auth login`：浏览器授权（新登录方式 `oauth`），由 `dreamina` 发起设备码授权，把钥匙串里的登录态存到账号名下
+  - `auth use`：把目标账号的登录态写回钥匙串，之后直接运行 `dreamina` 就是这个账号
+  - `auth status`：用 `dreamina user_credit` 在线校验；`auth logout`：钥匙串里正是这个账号时同时 `dreamina logout`
+  - `dreamina` 自己刷新 token 后，catbus 在下次改写钥匙串前把最新值存回所属账号
+  - 只支持 macOS，需要先安装 `dreamina`
+- core：端声明新增 `use` 钩子，`auth use` 设置当前账号前调用（AGENTS 5.3、5.6）
+- 新增 `docs/platforms/jimeng.md`、AGENTS.md 5.6，更新能力矩阵、登录指南、Agent 技能和 llms.txt
+- `user update`：修改当前账号的昵称（`--name`）、头像（`--avatar`）、简介（`--bio`），只改给出的字段，返回修改后的 User
+- bilibili：`user update`，接口按网页端个人中心 `account.bilibili.com` 补（`x/member/web/sign/update`、`face/update`、`web/update`），上游没有，没有对拍。改昵称前先查 `uname/update/message` 的资格；改昵称扣硬币，带 `--name` 时需要确认
 - `catbus tui`：全屏交互界面（Ink + React）。平台、命令、参数表单、登录要求都从注册表读，新增平台自动出现；`/` 命令面板跨平台搜命令；结果页左列表右详情，自动翻页；底部始终显示等价的命令行，按 `c` 复制
 - 界面里登录：二维码画在界面里（黑码白底，固定色，纠错等级 M），短信验证码、密码（隐藏输入）、cookie 在界面里输入；`a` 账号页可切换、在线检查、登出、登录新账号。`core/login.ts` 增加 `LoginUi` 钩子，CLI 行为不变
 - 界面里监听：`live listen`、`msg listen` 显示成滚动事件流，可暂停、按类型过滤，带 `--duration` 倒计时和每分钟事件数
@@ -21,6 +31,10 @@
 ### Changed
 
 - 内部：命令执行里的校验、身份解析、凭证落盘、handler 上下文抽到 `src/cli/exec.ts`，CLI 与 TUI 共用，CLI 行为不变
+
+### Fixed
+
+- 能力矩阵的「登录方式」表按 `LOGIN_METHODS` 生成，不再写死 4 种方式
 
 ## [0.2.1] - 2026-10-22
 

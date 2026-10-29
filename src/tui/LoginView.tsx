@@ -15,6 +15,7 @@ const METHOD_LABEL: Record<LoginMethod, string> = {
   sms: '短信验证码',
   password: '账号密码',
   cookie: '导入 cookie',
+  oauth: '浏览器授权',
 }
 
 export interface SetupState {

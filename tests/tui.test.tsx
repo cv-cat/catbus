@@ -57,8 +57,8 @@ describe('catbus tui', () => {
     const { restore } = mockTrain()
     try {
       const s = await open()
-      // 平台栏移到最后一个（12306），进入命令栏，展开 station，选 search
-      for (let i = 0; i < PLATFORMS.length - 1; i++) await s.press(KEYS.down)
+      // 平台栏移到 12306（按 id 找下标，平台增减不影响），进入命令栏，展开 station，选 search
+      for (let i = 0; i < PLATFORMS.findIndex((p) => p.id === '12306'); i++) await s.press(KEYS.down)
       expect(text(s)).toContain('命令 › 12306 铁路')
       await s.press(KEYS.right)
       expect(text(s)).toContain('station')

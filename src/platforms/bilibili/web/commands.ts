@@ -137,6 +137,78 @@ export async function userSearch(ctx: Ctx) {
   return paged(list, p + 1, p < Number(d.numPages ?? 0))
 }
 
+const FACE_TYPES = new Set(['image/jpeg', 'image/png'])
+const FACE_MAX = 2 * 1024 * 1024
+
+/** 改资料返回的业务码：顶层 code 为 0 时，昵称重复等错误还可能放在 data.code 里。 */
+const PROFILE_ERRORS: Record<number, string> = {
+  40012: '头像格式不对，只支持 png / jpg',
+  40013: '头像超过 2MB',
+  40014: '昵称已被占用',
+  40015: '签名含敏感词',
+  40021: '签名不能含表情图片',
+  40022: '签名太长，最多 70 字',
+  61001: '改昵称需要先绑定手机',
+  61002: '改昵称需要换绑非 170 / 171 号段的手机',
+}
+
+function checkProfile(ctx: Ctx, body: any): void {
+  const top = Number(body?.code ?? 0)
+  const bad = top !== 0 ? top : Number(body?.data?.code ?? 0)
+  if (bad === 0) return
+  const known = PROFILE_ERRORS[bad]
+  // 表里没有的顶层错误码交给通用的 check（登录失效、风控等）
+  if (top !== 0 && !known) check(ctx, body)
+  const names: string[] = (body?.data?.name_list ?? []).map(String)
+  throw new CatbusError('UPSTREAM', known ?? String(body?.data?.message || `B 站返回错误 ${bad}`), {
+    hint: names.length ? `可用的昵称：${names.join('、')}` : undefined,
+    detail: { code: bad, message: body?.data?.message ?? body?.message ?? null },
+  })
+}
+
+/**
+ * 改当前账号的资料（非上游）。只给 --bio 时走签名接口；给了 --name 时先查改名资格，再按网页端的做法整表提交（签名、性别、生日原样带上）。
+ * 签名改完要审核，空间页和个人中心都要过一会儿才变：返回的昵称、签名用提交的值，其余取自空间资料。
+ */
+export async function userUpdate(ctx: Ctx) {
+  const b = await bili(ctx)
+  b.requireLogin()
+  const o = ctx.options as { name?: string; avatar?: string; bio?: string }
+  let face: string | null = null
+  if (o.avatar != null) {
+    const file = await readMedia(b.http, o.avatar)
+    if (!FACE_TYPES.has(file.contentType)) throw new CatbusError('USAGE', `头像只支持 png / jpg：${o.avatar}`)
+    if (file.data.length > FACE_MAX) throw new CatbusError('USAGE', `头像超过 2MB：${o.avatar}`)
+    const r = await api.updateFace(b, file.data, file.filename, file.contentType)
+    checkProfile(ctx, r)
+    // data 是新头像的地址（bfs 按内容寻址，传同一张图地址不变）
+    face = n.url(r?.data)
+  }
+  if (o.name != null) {
+    const allow = await api.unameUpdateMessage(b)
+    if (allow?.allow === false) {
+      throw new CatbusError('UPSTREAM', `现在不能改昵称：${allow.uname_message || '平台没有说明原因'}`, { detail: { code: null, message: allow.uname_message ?? null } })
+    }
+    const cur = await api.memberAccount(b)
+    checkProfile(
+      ctx,
+      await api.updateMember(b, {
+        uname: o.name,
+        usersign: o.bio ?? String(cur?.sign ?? ''),
+        sex: String(cur?.sex ?? '保密'),
+        birthday: String(cur?.birthday ?? ''),
+      }),
+    )
+  } else if (o.bio != null) {
+    checkProfile(ctx, await api.updateSign(b, o.bio))
+  }
+  const user = norm.spaceUser(await api.userInfo(b, b.mid))
+  if (o.name != null) user.name = o.name
+  if (o.bio != null) user.bio = o.bio
+  if (face) user.avatar = face
+  return user
+}
+
 const USER_ORDER: Record<string, string> = { latest: 'pubdate', views: 'click', collects: 'stow' }
 
 export async function userItems(ctx: Ctx) {
