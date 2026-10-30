@@ -86,6 +86,22 @@ export default definePlatform({
             allowReprint: z.boolean().optional().describe('允许转载，默认禁止'),
           },
         }),
+        'item edit': impl('full', 'itemEdit', {
+          summary: '编辑稿件：更换视频，或改标题、简介、封面、标签、分区',
+          args: [item],
+          auth: 'required',
+          output: 'Item',
+          options: {
+            video: z.string().optional().describe('新视频文件；给出时替换原视频'),
+            title: z.string().optional().describe('新标题，缺省沿用原标题'),
+            text: z.string().optional().describe('新简介，缺省沿用原简介'),
+            cover: z.string().optional().describe('新封面图片路径，缺省沿用原封面'),
+            tag: z.array(z.string()).optional().describe('新标签，可重复；缺省沿用原标签'),
+            category: z.string().optional().describe('新分区 id，缺省沿用原分区'),
+            visibility: visibility('public', 'private'),
+          },
+          note: '更换视频 + 可选改标题/简介/封面/标签/分区；提交后进入重新审核',
+        }),
         'item delete': impl('partial', 'itemDelete', { note: '需要人机验证（极验点选），catbus 还不能自动通过，会报 RISK_CONTROL' }),
         'item categories': impl('full', 'itemCategories'),
 

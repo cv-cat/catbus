@@ -499,6 +499,45 @@ export interface ArchiveInput {
   noReprint?: number
 }
 
+/** 稿件详情：优先返回审核中的 arc_audits，其次返回已发布 archives。 */
+export function archiveDetail(b: Bili, aid: number) {
+  const h = headers('GET', { origin: ORIGIN.member, sameOrigin: true })
+  return b.get(`${MEMBER}/x/web/archives`, { headers: h.get(), query: [['aid', aid]] })
+}
+
+/** 编辑已投稿件（含更换视频）。videos 里的 cid 是上传返回的 biz_id。 */
+export function editArchive(b: Bili, a: ArchiveInput & { aid: number }) {
+  const h = headers('POST', { origin: ORIGIN.member, sameOrigin: true }).referer(UPLOAD_PAGE)
+  const body = {
+    aid: a.aid,
+    copyright: a.copyright ?? 1,
+    source: a.source ?? '',
+    cover: a.cover ?? '',
+    title: a.title,
+    tid: a.tid,
+    tag: a.tag,
+    desc: a.desc ?? '',
+    desc_format_id: 0,
+    dynamic: a.dynamic ?? '',
+    recreate: -1,
+    interactive: 0,
+    act_reserve_create: 0,
+    no_reprint: a.noReprint ?? 1,
+    subtitle: { open: 0, lan: '' },
+    videos: a.videos.map((v) => ({ filename: v.filename, title: v.title || a.title, desc: v.desc ?? '', cid: v.biz_id ?? null })),
+    web_os: 1,
+    csrf: b.csrf,
+  }
+  return b.post(`${MEMBER}/x/vu/web/edit`, {
+    headers: h.get(),
+    query: [
+      ['t', rand.now()],
+      ['csrf', b.csrf],
+    ],
+    json: body,
+  })
+}
+
 export function submitArchive(b: Bili, a: ArchiveInput) {
   const h = headers('POST', { origin: ORIGIN.member, sameOrigin: true }).referer(UPLOAD_PAGE)
   const body = {

@@ -9,7 +9,7 @@
 ## 能做
 
 - **读**：`item search` / `get` / `related` / `media` / `download` / `list` / `categories` / `subtitles`（字幕，带时间轴）；`user get` / `search` / `items`（`--keyword` 过滤）；`comment list`（稿件、专栏、纯文字 / 转发 / 图文动态）；`comment replies`（视频、专栏、图文动态根评论下的可见楼中楼）；`feed list`（`--kind recommend|hot|following`，following 只列关注的人的视频投稿，需要登录）；`live get` / `search` / `categories` / `listen` / `history` / `gifts` / `media`；`folder list` / `items`；`danmaku list`；`draft get`。
-- **写**：`item like` / `unlike` / `collect` / `uncollect`（`--folder`）/ `publish` / `delete`；`item coin`、`item triple`；`comment add` / `delete`；`danmaku send`；`dynamic publish` / `delete`；`article publish`（专栏）/ `draft delete`；`live send` / `start` / `stop`；`media upload`。
+- **写**：`item like` / `unlike` / `collect` / `uncollect`（`--folder`）/ `publish` / `edit`（换视频、改资料）/ `delete`；`item coin`、`item triple`；`comment add` / `delete`；`danmaku send`；`dynamic publish` / `delete`；`article publish`（专栏）/ `draft delete`；`live send` / `start` / `stop`；`media upload`。
 
 B 站写操作是 10 个平台里验证最充分的：点赞、收藏、评论增删、发弹幕、专栏草稿都已真机通过。
 

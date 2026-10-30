@@ -301,6 +301,32 @@ export async function itemPublish(ctx: Ctx) {
   return n.item({ id: d.bvid, kind: 'video', url: norm.videoUrl(d.bvid), title: o.title, text: o.text ?? null, cover: cover || null, status: 'reviewing' }, d)
 }
 
+export async function itemEdit(ctx: Ctx) {
+  const b = await bili(ctx)
+  b.requireLogin()
+  const o = ctx.options as Record<string, any>
+  const { aid, bvid } = await resolveItem(b, ctx.args.item!)
+  const aidNum = Number(aid)
+  if (!o.video) throw new CatbusError('USAGE', 'B 站编辑稿件需要 --video 替换视频', { hint: 'catbus bilibili item edit <BV> --video <文件> [--title ... --text ... --tag ...]' })
+  const info: any = await api.archiveDetail(b, aidNum)
+  const A = info?.data?.arc_audits?.[0]?.Archive ?? info?.data?.archives?.find((x: any) => x.aid === aidNum)
+  if (!A) throw new CatbusError('UPSTREAM', '找不到这条稿件（可能是审核中且不在 audits 里）')
+  const video = await uploadVideo(b, await readMedia(b.http, o.video))
+  const cover = o.cover ? await uploadCover(b, o.cover) : String(A.cover ?? '')
+  const d = await api.editArchive(b, {
+    aid: aidNum,
+    videos: [{ filename: video.filename, biz_id: video.biz_id, title: A.title, desc: '' }],
+    title: o.title ?? A.title,
+    tid: o.category ? Number(o.category) : Number(A.tid),
+    tag: Array.isArray(o.tag) && o.tag.length ? o.tag.join(',') : String(A.tag ?? ''),
+    desc: o.text ?? String(A.desc ?? ''),
+    cover,
+    copyright: Number(A.copyright ?? 1),
+    private: o.visibility === 'private',
+  })
+  return n.item({ id: d.bvid || bvid, kind: 'video', url: norm.videoUrl(d.bvid || bvid), title: o.title ?? A.title, text: o.text ?? A.desc ?? null, cover: cover || null, status: 'reviewing' }, d)
+}
+
 /** 上传投稿封面，返回图片地址（上游 post_video 里的 upload_cover）。data URL 的类型取扩展名，缺省 jpeg。 */
 export async function uploadCover(b: Bili, input: string): Promise<string> {
   const img = await readMedia(b.http, input)
