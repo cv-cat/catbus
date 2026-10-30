@@ -1,0 +1,16 @@
+official: https://www.youtube.com
+innertube: https://www.youtube.com/youtubei/v1/<path>（WEB 客户端，clientVersion 与 visitorData 取自首页 ytcfg）
+endpoints:
+  bootstrap: GET /（ytcfg：INNERTUBE_CLIENT_VERSION、VISITOR_DATA、LOGGED_IN）
+  search: /youtubei/v1/search（params 为筛选 protobuf 的 base64）
+  next: /youtubei/v1/next（watch 页：推荐、评论入口、直播聊天入口；continuation 翻评论 / 回复 / 推荐）
+  player: /youtubei/v1/player（videoDetails、microformat；媒体地址用 VISIONOS 客户端请求）
+  studio: https://studio.youtube.com/youtubei/v1/<path>（WEB_CREATOR 客户端，ytcfg 取自 Studio 首页，含 delegation context）：creator/list_creator_videos；写操作的会话：att/get（CREATOR_STUDIO_ACTION、UNBOUND）、att/esr、security/get_web_reauth_url、ars/grst；写操作：upload/createvideo、video_manager/metadata_update、video/delete（写请求的 context.request 带 sessionInfo.token，createvideo 另带 attestationResponseData）
+  botguard: att/get 返回的 bgChallenge.interpreterUrl 指向的 interpreter 脚本，由 Node 取回，在无头 Chromium 的 Studio 页面里求值并计算校验结果（AGENTS 5.7）
+  upload: https://upload.youtube.com/upload/studio（resumable：start → upload → upload, finalize）
+  browse: /youtubei/v1/browse（频道 UC…、频道 tab params、播放列表 VL…）
+  resolve: /youtubei/v1/navigation/resolve_url（@handle、/c/、/user/ → 频道 ID）
+  live chat: /youtubei/v1/live_chat/get_live_chat
+  account: /youtubei/v1/account/account_menu（登录校验）
+  suggest: https://suggestqueries-clients6.youtube.com/complete/search
+note: 无上游开源仓库，直接对接 YouTube web 端的 InnerTube 接口；协议细节参考 yt-dlp 与 YouTube.js 的公开实现（只参考，不移植代码）

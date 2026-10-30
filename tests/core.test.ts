@@ -173,6 +173,10 @@ describe('config', () => {
     expect(parseKey('proxy', resolve)).toEqual(['proxy'])
     expect(parseKey('rednote.proxy', resolve)).toEqual(['xhs', 'proxy'])
     expect(() => parseKey('xhs.timeout', resolve)).toThrow()
+    // browser 键只给 youtube 用（AGENTS 5.7）
+    const resolveYt = (n: string) => ({ yt: 'youtube', youtube: 'youtube', xhs: 'xhs' })[n]
+    expect(parseKey('yt.browser', resolveYt)).toEqual(['youtube', 'browser'])
+    expect(() => parseKey('xhs.browser', resolveYt)).toThrow()
   })
 
   it('代理优先级：--proxy > <platform>.proxy > proxy；不读 HTTP(S)_PROXY', async () => {

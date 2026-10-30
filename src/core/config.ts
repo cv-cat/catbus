@@ -1,13 +1,15 @@
+import { accessSync, constants, statSync } from 'node:fs'
+import { isAbsolute } from 'node:path'
 import { parse, stringify } from 'smol-toml'
 import { CatbusError } from './errors.js'
 import { readTextIfExists, writeFileAtomic } from './fsutil.js'
 import { configFile } from './paths.js'
 
-/** config.toml（AGENTS 5.5）：proxy、timeout、<platform>.proxy。 */
+/** config.toml（AGENTS 5.5、5.7）：proxy、timeout、<platform>.proxy、youtube.browser。 */
 
 export const DEFAULT_TIMEOUT = 30
 const PROXY_SCHEMES = ['http:', 'https:', 'socks4:', 'socks5:', 'socks5h:']
-const KEYS_HINT = '可用的配置项：proxy、timeout、<platform>.proxy'
+const KEYS_HINT = '可用的配置项：proxy、timeout、<platform>.proxy、youtube.browser'
 
 type Table = Record<string, unknown>
 
@@ -24,6 +26,23 @@ export function checkProxy(value: string): string {
   return value
 }
 
+function executable(path: string): boolean {
+  try {
+    accessSync(path, constants.X_OK)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** youtube.browser：本地 Chromium 的可执行文件，要求是已存在的绝对路径（AGENTS 5.7）。 */
+export function checkBrowser(value: string): string {
+  if (!isAbsolute(value) || !statSync(value, { throwIfNoEntry: false })?.isFile() || !executable(value)) {
+    throw new CatbusError('USAGE', `浏览器路径不存在、不是绝对路径，或者不可执行：${value}`, { hint: '填 Chromium 可执行文件的绝对路径' })
+  }
+  return value
+}
+
 function checkTimeout(value: unknown): number {
   const n = typeof value === 'string' ? Number(value) : value
   if (typeof n !== 'number' || !Number.isFinite(n) || n <= 0) {
@@ -35,12 +54,13 @@ function checkTimeout(value: unknown): number {
 /**
  * 解析配置键，平台段用规范 id。`resolvePlatform` 把平台 id 或别名映射成规范 id。
  */
-export function parseKey(key: string, resolvePlatform: (name: string) => string | undefined): [string] | [string, 'proxy'] {
+export function parseKey(key: string, resolvePlatform: (name: string) => string | undefined): [string] | [string, 'proxy' | 'browser'] {
   if (key === 'proxy' || key === 'timeout') return [key]
-  const m = /^([^.]+)\.proxy$/.exec(key)
+  const m = /^([^.]+)\.(proxy|browser)$/.exec(key)
   const id = m && resolvePlatform(m[1]!)
-  if (!id) throw new CatbusError('USAGE', `未知的配置项：${key}`, { hint: KEYS_HINT })
-  return [id, 'proxy']
+  // browser 目前只有 youtube 用到（AGENTS 5.7）
+  if (!m || !id || (m[2] === 'browser' && id !== 'youtube')) throw new CatbusError('USAGE', `未知的配置项：${key}`, { hint: KEYS_HINT })
+  return [id, m[2] as 'proxy' | 'browser']
 }
 
 export async function loadConfig(): Promise<Table> {
@@ -70,7 +90,7 @@ export async function getConfig(path: string[]): Promise<unknown> {
 
 export async function setConfig(path: string[], raw: string): Promise<{ key: string; value: unknown }> {
   const key = path.join('.')
-  const value = key === 'timeout' ? checkTimeout(raw) : checkProxy(raw)
+  const value = key === 'timeout' ? checkTimeout(raw) : path[1] === 'browser' ? checkBrowser(raw) : checkProxy(raw)
   const config = await loadConfig()
   if (path.length === 1) config[path[0]!] = value
   else {

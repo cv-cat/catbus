@@ -31,7 +31,7 @@ describe('全局命令', () => {
 
   it('platforms 列出全部平台，带参数时返回单个对象（接受别名）', async () => {
     const all = await cli('platforms')
-    expect(all.env.data.map((p: any) => p.id)).toEqual(['xhs', 'douyin', 'tiktok', 'bilibili', 'kuaishou', 'weibo', 'xianyu', 'taobao', 'jd', 'x', '12306', 'jimeng'])
+    expect(all.env.data.map((p: any) => p.id)).toEqual(['xhs', 'douyin', 'tiktok', 'bilibili', 'kuaishou', 'weibo', 'xianyu', 'taobao', 'jd', 'x', 'youtube', '12306', 'jimeng'])
     const one = await cli('platforms', 'rednote')
     expect(one.env.data.id).toBe('xhs')
     expect(one.env.data.endpoints).toEqual({ web: 'available', app: 'planned', pc: 'planned' })
@@ -57,6 +57,10 @@ describe('全局命令', () => {
     expect((await cli('config', 'get', 'proxy')).env.data).toBeNull()
     expect((await cli('config', 'list')).env.data).toEqual({ timeout: 12, 'xhs.proxy': 'socks5://127.0.0.1:1080' })
     expect((await cli('config', 'unset', 'xhs.proxy')).env.data).toEqual({ key: 'xhs.proxy', value: null })
+    // youtube.browser：本地 Chromium 的绝对路径（AGENTS 5.7），平台别名 yt 也接受
+    expect((await cli('config', 'set', 'yt.browser', process.execPath)).env.data).toEqual({ key: 'youtube.browser', value: process.execPath })
+    expect((await cli('config', 'get', 'youtube.browser')).env.data).toBe(process.execPath)
+    expect((await cli('config', 'unset', 'youtube.browser')).env.data).toEqual({ key: 'youtube.browser', value: null })
     expect((await cli('config', 'list')).env.data).toEqual({ timeout: 12 })
   })
 
@@ -64,6 +68,9 @@ describe('全局命令', () => {
     expect((await cli('config', 'set', 'proxy', 'ftp://x')).env.error.code).toBe('USAGE')
     expect((await cli('config', 'set', 'timeout', '0')).env.error.code).toBe('USAGE')
     expect((await cli('config', 'set', 'nope.proxy', 'http://x')).env.error.code).toBe('USAGE')
+    expect((await cli('config', 'set', 'youtube.browser', 'relative/chrome')).env.error.code).toBe('USAGE')
+    expect((await cli('config', 'set', 'youtube.browser', join(home.dir, 'missing'))).env.error.code).toBe('USAGE')
+    expect((await cli('config', 'set', 'xhs.browser', process.execPath)).env.error.code).toBe('USAGE')
     expect((await cli('config', 'get', 'foo')).code).toBe(2)
     expect(existsSync(join(home.dir, 'config.toml'))).toBe(false)
   })

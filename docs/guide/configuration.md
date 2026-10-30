@@ -62,7 +62,7 @@ catbus config list                                     # 只列出已设置的�
  "data":{"proxy":"http://127.0.0.1:7890","timeout":60,"xhs.proxy":"socks5://127.0.0.1:1080"},"page":null,"error":null}
 ```
 
-- 可设置的键只有 `proxy`、`timeout`、`<platform>.proxy`，其他键报 `USAGE`。
+- 可设置的键只有 `proxy`、`timeout`、`<platform>.proxy`，以及 `youtube.browser`（YouTube 的 `item publish` / `item delete` 用的本地 Chromium，见 AGENTS 5.7），其他键报 `USAGE`。
 - `timeout` 必须是大于 0 的秒数。
 - 手动编辑 `config.toml` 出现格式错误时，命令报 `ERROR` 并在 `hint` 里给出文件路径。
 

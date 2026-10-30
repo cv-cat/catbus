@@ -8,6 +8,16 @@
 
 ### Added
 
+- 新增 `youtube`（YouTube，别名 `yt`）平台的 web 端。没有上游仓库，直接对接 YouTube 网页背后的 InnerTube 接口（`/youtubei/v1/`），接口说明见 `src/platforms/youtube/UPSTREAM`：
+  - 不登录可用：`item get` / `search`（`--sort general|popular`、`--time`、`--type`）/ `related` / `media` / `download`，`comment list` / `replies`，`user get` / `search` / `items`，`series list` / `items`（播放列表），`keyword suggest`，`live get` / `search` / `history` / `listen`（直播聊天）
+  - 需要登录：`feed list`（首页推荐、订阅流），`history list`，`notice list` / `count`，`user likes` / `collects`（稍后观看）/ `following`（只能看自己的），`item like` / `unlike` / `collect` / `uncollect`，`user follow` / `unfollow`（订阅），`comment add`（含 `--reply-to`）/ `delete` / `like` / `unlike`
+  - 登录只支持导入浏览器 cookie；支持多账号（`-a`、`auth use`）。没有开 YouTube 频道的 Google 账号以 Google 账号 ID 作为用户 ID
+  - `item media` / `download` 走 VISIONOS 客户端、不带登录，给出最清晰的视频轨和音频轨两个文件；同一出口 IP 请求过多时 YouTube 会要求人机验证（`RISK_CONTROL`）
+  - `item list`（自己上传的视频，数据来自 YouTube Studio）；`live send`：发直播聊天文字消息；`channel create`：给账号开频道
+  - `item publish`（◐ 部分支持）：发布视频（标题、简介、标签、`--visibility public|private`、`--schedule` 定时发布）。自定义封面（`--cover`）未经真机验证，可能需要已验证的账号；`item delete`：删除自己的视频（需要确认，2026-10-30 实测通过）。两者走 YouTube Studio：建视频和删除要求网页端 BotGuard 校验，由本机的无头 Chromium 计算，其余请求都由 Node 发出。Chromium 按 `catbus config set youtube.browser <路径>`、环境变量 `CATBUS_YOUTUBE_BROWSER`、Playwright 缓存的顺序查找，不使用系统里的 Google Chrome（AGENTS.md 5.7）
+  - core：配置项新增 `youtube.browser`（AGENTS.md 5.5）
+- 平台规范：YouTube 的 web 端声明 `guest: true`（AGENTS.md 5.2 的特例），读取命令不登录可用
+- 新增 `docs/platforms/youtube.md`，更新 Agent 技能、多语言 README 与 llms.txt
 - 新增 `jimeng`（即梦，别名 `dreamina`）平台：管理即梦官方 CLI `dreamina` 的多账号登录态，不注册生成类命令
   - `auth login`：浏览器授权（新登录方式 `oauth`），由 `dreamina` 发起设备码授权，把钥匙串里的登录态存到账号名下
   - `auth use`：把目标账号的登录态写回钥匙串，之后直接运行 `dreamina` 就是这个账号

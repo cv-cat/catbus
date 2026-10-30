@@ -14,6 +14,7 @@
 | [淘宝](taobao.md) | `taobao` | `tb` | 商品 | **cookie** | 10（8 · 2） | 30 | [TaoBaoApis](https://github.com/cv-cat/TaoBaoApis) |
 | [京东](jd.md) | `jd` | `jingdong` | 商品 SKU | **扫码** · 短信 · cookie | 21（18 · 3） | 6 | [JdApis](https://github.com/cv-cat/JdApis) |
 | [X](x.md) | `x` | `twitter` | 推文 | **cookie** | 33（30 · 3） | 20 | [XApis](https://github.com/cv-cat/XApis) |
+| [YouTube](youtube.md) | `youtube` | `yt` | 视频 | **cookie**；读取命令可免登录 | 44（41 · 3） | 0 | 无（官方 InnerTube 接口） |
 | [12306 铁路](12306.md) | `12306` | — | 车次 | **免登录** | 8（8 · 0） | 0 | 无（官方公开接口） |
 | [即梦](jimeng.md) | `jimeng` | `dreamina` | 作品 | **浏览器授权**（只管 `dreamina` 的登录态，仅 macOS） | 5（5 · 0） | 0 | 无（即梦官方 CLI `dreamina`） |
 
@@ -24,6 +25,6 @@
 ## 怎么选登录方式
 
 - **扫码**最省事：xhs、douyin、bilibili、kuaishou、xianyu、jd 默认就是扫码，二维码画在终端（stderr）里，同时存一份 PNG 到 `~/.catbus/cache/<platform>/`。小红书扫码后常被要求人机验证，目前建议改用 cookie。
-- **cookie** 是 tiktok、weibo、taobao、x 唯一的方式，其他平台加 `--method cookie` 也能用。一定要从 DevTools → Network 复制请求头里完整的 Cookie：登录态的关键 cookie 大多是 HttpOnly 的，`document.cookie` 拿不到。
+- **cookie** 是 tiktok、weibo、taobao、x、youtube 唯一的方式，其他平台加 `--method cookie` 也能用。一定要从 DevTools → Network 复制请求头里完整的 Cookie：登录态的关键 cookie 大多是 HttpOnly 的，`document.cookie` 拿不到。
 - **浏览器授权**只有 jimeng：在已登录即梦的浏览器里打开 stderr 里的链接并同意，保存的是即梦官方 CLI `dreamina` 的登录态，多个账号之间用 `auth use` 切换，见 [即梦](jimeng.md)。
 - 抖音、TikTok 的写操作还需要浏览器里的设备 / 票据数据，只有 cookie 时写操作会在本地被拦下。详见各自的页面和 [登录指南](../guide/login.md)。

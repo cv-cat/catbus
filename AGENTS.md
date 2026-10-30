@@ -7,10 +7,10 @@
 
 做**一个 CLI —— 操作各大平台接口的统一入口**。
 
-- 一个命令 `catbus`，按统一的命令规范调用 10 个平台：小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X。
+- 一个命令 `catbus`，按统一的命令规范调用 10 个平台：小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X。另有直接对接官方接口的 12306 和 YouTube（见第 3 节）。
 - 能力来源是作者 [cv-cat](https://github.com/cv-cat) 的 10 个开源仓库，已克隆到 `references/`，作为**只读的原始来源**。
 - 所有平台都在本仓库里**用 TypeScript 重写**，不在运行时调用上游的 Python。
-- **用户只需要安装 Node**（版本见 7.1）。不需要 Python，不需要 C/C++ 编译器，也不需要其他系统依赖。
+- **用户只需要安装 Node**（版本见 7.1）。不需要 Python，不需要 C/C++ 编译器，也不需要其他系统依赖。例外：`youtube` 的 `item publish` / `item delete` 需要本机的 Chromium（见 5.7）。
   - `npm i -g catbus-cli` 装完就能离线使用。
   - 必须支持全部目标系统（见 7.2）。
 - 以 **npm 包**分发，不发 PyPI。安装体积不是约束，优先保证开箱即用。
@@ -37,8 +37,8 @@
 
 ## 2. 范围
 
-- 目前支持第 3 节的 12 个平台的 web 端（10 个内容与电商平台 + 12306 铁路平台 `12306` + 即梦 `jimeng`）；app / pc 端在注册表里为 planned（见 4.3）。
-- `jimeng` 不调用平台接口，只保存和切换即梦官方 CLI `dreamina` 的登录态，是第 1 节「只需要 Node」「支持全部目标系统」的例外：需要另外安装 `dreamina`，只支持 macOS（见 5.6）。
+- 目前支持第 3 节的 13 个平台的 web 端（10 个内容与电商平台 + 12306 铁路平台 `12306` + YouTube `youtube` + 即梦 `jimeng`）；app / pc 端在注册表里为 planned（见 4.3）。
+- `jimeng` 不调用平台接口，只保存和切换即梦官方 CLI `dreamina` 的登录态，是第 1 节「只需要 Node」「支持全部目标系统」的例外：需要另外安装 `dreamina`，只支持 macOS（见 5.6）。`youtube` 的 `item publish` / `item delete` 同样是「只需要 Node」的例外，需要本机的 Chromium（见 5.7）。
 - 矩阵里的 ○（平台有这个概念、上游没有的能力）只占位：注册为 planned，执行时返回 NOT_IMPLEMENTED，有需要时再实现。移植中发现矩阵与上游不符（上游其实没有、或只是占位）的能力，按上游实际情况标为 ○ 或 ◐，以 `docs/capabilities.md` 为准。
 - 新平台开始移植时，先把平台 id、别名、`item` 叫法等登记到第 3 节、4.2 和 4.5，再进注册表；在那之前 `catbus <平台>` 是未知平台（`USAGE`）。
 - 改规范先改本文件，再写代码。
@@ -58,6 +58,7 @@
 | jd | JdApis | `jd_apis/jd_api.py`、`jd_apis/jd_login_api.py`、`builder/auth.py` |
 | x | XApis | `x_apis/x_api.py`、`x_apis/x_write_api.py`、`x_apis/login_api.py` |
 | 12306 | （无上游仓库，直接对接 12306 官方公开接口） | `https://kyfw.12306.cn`（接口端点见 `src/platforms/12306/UPSTREAM`） |
+| youtube | （无上游仓库，直接对接 YouTube web 端的 InnerTube 接口） | `https://www.youtube.com/youtubei/v1/`（接口端点见 `src/platforms/youtube/UPSTREAM`） |
 | jimeng | （无上游仓库，封装即梦官方 CLI `dreamina` 的登录态） | `dreamina` 的子命令与钥匙串项（见 `src/platforms/jimeng/UPSTREAM`、5.6） |
 
 参考资料：
@@ -71,7 +72,7 @@
   - **不能修改其中任何受版本控制的文件**。
 - `references/` 不进入本仓库的版本控制，它们各自是独立的 git 仓库。
 - 每个平台的移植基于哪个上游 commit，记录在 `src/platforms/<p>/UPSTREAM`。
-- `12306` 平台直接对接 12306 官方公开接口，无上游 `references/` 仓库，基准与接口说明见 `src/platforms/12306/UPSTREAM`；离线测试不采用 Python 对拍（golden），改用基于真实响应裁剪的 fixture，通过 `mockSender` / `fakeResponse` 回放测试。
+- 没有上游仓库的平台（`12306`、`youtube`）直接对接官方接口：`UPSTREAM` 记录对接的服务端点与接口说明；离线测试不采用 Python 对拍（golden），改用基于真实响应裁剪的 fixture，通过 `mockSender` / `fakeResponse` 回放测试。
 - `jimeng` 平台没有上游仓库，也不发 HTTP 请求：`UPSTREAM` 记录验证过的 `dreamina` 版本、用到的子命令和钥匙串项；离线测试替换 `dreamina` 子进程和钥匙串读写（`tests/jimeng.test.ts`）。
 
 ## 4. 命令规范
@@ -116,6 +117,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | `jd` | `jingdong` |
 | `x` | `twitter` |
 | `12306` | — |
+| `youtube` | `yt` |
 | `jimeng` | `dreamina` |
 
 目录名、配置键、输出里的 `platform` 字段一律使用**规范 id**。只有平台有别名；resource 和 action 没有别名。
@@ -183,6 +185,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | xianyu | 闲置商品 |
 | taobao | 商品 |
 | jd | 商品 SKU |
+| youtube | 视频 |
 | jimeng | 作品（目前没有 item 命令） |
 
 各动作的说明：
@@ -271,6 +274,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | x | `item publish [--thread <text> ...]` | 私有选项：发 thread。`--text` 是第一条，每个 `--thread` 是后面的一条，依次回复上一条；`--image` / `--video` / `--quote` 只作用于第一条。返回第一条 | Item |
 | x | `article publish --text [--title] [--cover]` | 发文章（Premium 长文）：`--text` 是 Markdown，依次建草稿、写标题、正文、封面，再发布。不给 `--title` 时取正文第一行的 `# 标题`。独占一行的 `![](图片)` 上传成插图，相对路径按 `--text @file` 的文件所在目录解析（直接给正文时按当前目录） | `{id url}` |
 | x | `article delete <article>` | 删文章：草稿或已发布的都可以，已发布的连同文章推文一起删 | `{id}` |
+| youtube | `channel create [--name <名称>] [--handle <handle>]` | 给当前 Google 账号开 YouTube 频道（上传、评论、直播聊天都要求有频道）。名称默认用账号名，handle 默认用 YouTube 推荐的；已有频道时报 `USAGE` | User |
 | 12306 | `station search <keyword>` | 车站搜索（支持站名、拼音前缀、电报码） | Station[] |
 | 12306 | `ticket search <from> <to> [--date <YYYY-MM-DD>] [--type <G,D...>] [--available]` | 直达车次与余票（`--date` 默认今天；`--type` 过滤车型；`--available` 只看有票车次） | Ticket[] |
 | 12306 | `ticket price <train> --from-no <序号> --to-no <序号> --seat-types <编码> [--date <YYYY-MM-DD>]` | 票价详情（参数取自 ticket search 输出的 train_no、from.no、to.no、seat_types） | Fare |
@@ -475,7 +479,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - `-a` 指定的账号不存在时，报 `AUTH_REQUIRED`，`hint` 为 `catbus <p> auth login -a <name>`。
 
 **游客态只在声明了 `guest: true` 的端上存在**（见 7.6）。不支持游客态的端上没有 `guest.json`：`auth status` 等 auth 命令没有账号时，用一份只在内存里的空凭证，不落盘。
-- **web 端除 `12306` 外都不支持游客态**：各内容与电商平台的 web 端不登录几乎看不到内容，所以 web 端除 `auth` 命令外全部需要登录，未登录时直接报 `AUTH_REQUIRED` 并提示登录命令。游客态主要留给 app 端。**特例**：12306（`12306`）的车站、余票、票价、经停、中转查询均为公开免登录接口，其 web 端声明 `guest: true`，查询命令为 `auth: optional`，无需登录即可直接使用；且不提供 `auth login`。
+- **web 端默认不支持游客态**：各内容与电商平台的 web 端不登录几乎看不到内容，所以 web 端默认 `guest: false`，除 `auth` 命令外全部需要登录，未登录时直接报 `AUTH_REQUIRED` 并提示登录命令。游客态主要留给 app 端。公开内容不登录也能读的平台在 web 端声明 `guest: true`，目前是 `12306` 和 `youtube`：读取命令沿用词表默认的 `auth: optional`，写操作和只看自己的命令仍为 `required`；不需要登录的端可以不提供 `auth login`（如 `12306`）。各平台具体哪些命令免登录、支持哪些登录方式，见注册表和 `docs/platforms/<p>.md`。
 - 支持游客态的端上，很多平台匿名访问也需要设备 cookie 或 token（例如 xhs 的 `a1`、抖音的 `ttwid`、B 站的 `buvid`、X 的 guest token）。catbus 自动生成这些数据，缓存到 `guest.json`，过期后重新生成；各平台的生成方式见 upstream-map。
 - 登录流程本身仍会先生成这些设备数据（很多平台的登录接口要求先有设备 cookie），这与游客态无关。
 
@@ -567,11 +571,15 @@ timeout = 30                      # 单次请求超时（秒）
 
 [xhs]
 proxy = "socks5://..."            # 平台代理
+
+[youtube]
+browser = "/path/to/chromium"     # 发布与删除用的本地 Chromium（见 5.7）
 ```
 
 - 代理的优先级：`--proxy` > `<platform>.proxy` > `proxy`。
 - 不读取 `HTTP(S)_PROXY` 环境变量，代理只能显式配置。
 - `catbus config set xhs.proxy <url>`，用点号表示平台段。
+- `youtube.browser` 只接受已存在的绝对路径（`checkBrowser`），不接受代理地址。
 
 ### 5.6 代管外部 CLI 的登录态
 
@@ -586,6 +594,28 @@ proxy = "socks5://..."            # 平台代理
 - **登出**：`auth logout` 的服务端登出钩子只在外部存储里正是这个账号时调用外部 CLI 的登出（`dreamina logout`），再由 core 删除本地凭证。
 - **依赖与系统**：外部 CLI 由用户自己安装，找不到时报 `ERROR` 并提示安装。外部存储的读写按系统适配，未适配的系统报 `UNSUPPORTED`（`jimeng` 目前只支持 macOS）。
 - **限制**：同一时间只有一个账号生效，不能两个账号同时运行外部 CLI；不要绕过 catbus 用外部 CLI 自己的登录命令换账号，否则新登录的账号没有保存，下次切换时会被覆盖。
+
+### 5.7 YouTube Studio 写操作与本地 Chromium
+
+`youtube` 的 `item publish` 与 `item delete` 走 YouTube Studio（studio.youtube.com）。Studio 的写请求要在 `context.request` 里带两样 Google 的网页环境校验结果，catbus 在 Node 里生不成，所以这两个命令是「只需要 Node」的例外（见第 1 节）。
+
+- **分工**：无头 Chromium 只负责在 Studio 页面里计算 BotGuard（`src/platforms/youtube/web/botguard.ts` 的 `runBotGuard`，经 CDP 的 `Runtime.evaluate` 注入）。其余请求全部由 Node 发出：`att/get`、`att/esr`、reauth、`ars/grst`、上传（`upload.youtube.com`）、`upload/createvideo`、`video_manager/metadata_update`、`video/delete`。浏览器只用来算校验，不用来点页面。
+- **CDP 传输**：用 `--remote-debugging-pipe`，协议消息走 fd 3 / fd 4，以 `\0` 分隔，不开调试端口。调试端口会让同机其他进程拿到会话 cookie，所以不用。因为 CDP 不走 WebSocket，这里不涉及第 7.3 节的 WebSocket 选型。
+- **顺序**：每个写命令内，先开浏览器，再 `att/get`（CREATOR_STUDIO_ACTION）→ BotGuard → `att/esr` 换 `sessionToken`（esr 要求 reauth 时再走 `security/get_web_reauth_url` 与 `ars/grst`），拿到令牌之后才开始上传。这样浏览器启动失败或 reauth 被拒绝时，不会白传一遍视频。上传期间浏览器保持打开，上传完成后用它对 UNBOUND 挑战加上 `scottyResourceId` 算一次 BotGuard，放进 `attestationResponseData`。写请求带 `sessionInfo.token`。
+- **interpreter 白名单**：BotGuard 的 interpreter 地址来自 `att/get` 的响应，取回后要在已登录的 Studio 页面里执行，所以只允许 `https` 协议、主机在白名单里（目前只有 `www.google.com`，即实测出现过的 `//www.google.com/js/th/…`）。取回时不跟随重定向，跳转目标不在白名单里直接拒绝；最终地址也要再校验一次。新的 Google 静态域要先确认是真实出现过，再加进白名单。
+- **找浏览器**，按顺序：`catbus config set youtube.browser <绝对路径>` → 环境变量 `CATBUS_YOUTUBE_BROWSER`（同样要求绝对路径）→ Playwright 缓存里最新的 `chromium-<版本>`（`npx playwright install chromium` 装的；macOS 在 `~/Library/Caches/ms-playwright`，Linux 在 `~/.cache/ms-playwright`，Windows 在 `%LOCALAPPDATA%\ms-playwright`，`PLAYWRIGHT_BROWSERS_PATH` 优先）。指定的路径必须是可以执行的文件（`X_OK`），否则报 `ERROR`；都没有时也报 `ERROR`。
+  - 不扫描系统里的 Google Chrome：那是用户日常在用的浏览器，catbus 不占用它。
+  - 不用 `chromium_headless_shell`：它过不了 Studio 的浏览器检查。
+- **浏览器启动参数**：每次命令用独立的临时 profile，用完删除（删除失败时打 warn 并给出路径）；UA 与 Node 侧请求一致，不带 `HeadlessChrome`。
+  - **代理**：与 Node 侧使用同一个代理（`--proxy` / `<platform>.proxy` / `proxy`）。没有配置代理时传 `--proxy-server=direct://`，不读取系统代理。浏览器的子进程环境里去掉 `*_PROXY` 变量，与第 5.5 节「不读取 `HTTP(S)_PROXY`」一致。Chromium 的 `--proxy-server` 放不下认证信息，代理带账号密码时报 `USAGE`。
+  - **进程**：非 Windows 上放进独立的进程组，结束时整组发信号（先 SIGTERM，超时 SIGKILL），等进程组结束后才删除临时 profile。
+- **cookie**：打开页面前把凭证里的全部 cookie 注入浏览器（设置失败的个数会 warn）；命令结束时，把浏览器里的 cookie 按「名字 + 域 + 路径」写回凭证，覆盖注入时的全部域。写回的条件：浏览器的值与注入时不同（浏览器确实轮换过），并且 Node 侧这一份在这期间没有被改过。两边都改过同一个 cookie 时，取 `expires` 较新的那个；相同时保留 Node 侧的值（它是最后经过 Set-Cookie 确认的）。
+- **重试**：会话相关的请求（att/get、att/esr、reauth、ars/grst）和 interpreter 下载，网络出错时再试一次；页面导航也重试（只读）。上传分段在网络出错或状态码可重试（429、5xx）时，用同一个 offset 重发同一段，最多三次。`metadata_update` 是幂等的，网络出错时再试一次。
+- **不重试的写请求**：`upload/createvideo` 与 `video/delete` 遇到网络错误时，请求可能已经生效，报 `UPSTREAM`，hint 写「可能已经生效，先到 Studio 或用 `item list` 确认，不要直接重试」。建视频没有返回视频 ID 时，如果是上传被拒（`uploadFeedbackItemRenderer` 里 `REJECTED`），按原因报错（限流报 `RISK_CONTROL`）；否则报 `UPSTREAM`。
+- **视频建好之后**：任何失败（包括 `metadata_update` 的网络错误、AUTH 类错误）一律报 `UPSTREAM` 并附上视频 ID，hint 写「不要重新发布，视频已存在」。不透传 `NETWORK` 或 `AUTH_EXPIRED`，否则调用方会以为能重试整条发布，结果产生重复视频。
+- **大文件**：本地视频按段从磁盘读取，不整个读进内存；URL 形式的 `--video` 先下载到内存（只有这种情况）。
+- **错误**：找不到或无法执行浏览器 → `ERROR`；浏览器启动后立即退出或超时 → `ERROR`；浏览器打开页面后跳到 Google 登录页 → `AUTH_EXPIRED`；reauth 被拒绝或没有发放令牌 → `RISK_CONTROL`（`detail.kind` 为 `blocked`）；BotGuard 在页面里报错 → `UPSTREAM`；interpreter 不在白名单、或跳转 → `UPSTREAM`。
+- **测试**：离线测试替换 `browser.open`（假浏览器只记录 BotGuard 的 binding）和 Studio 的响应；`findChrome` 的路径按 darwin / linux / win32 的目录布局做单测；`runBotGuard` 在 `node:vm` 里独立运行；`openBrowser` 的失败路径（不可执行、启动后立即退出、超时）用假的可执行脚本测，并检查临时目录被清理。真机验证只在测试账号上做，视频一律私享，测完用 `item delete` 删掉。
 
 ## 6. 输出
 
@@ -879,13 +909,13 @@ wreq-js 默认会读 `HTTP(S)_PROXY` 环境变量和 Windows 系统代理。为�
   - HTTP 用 `core/http.ts` 的 `HttpClient`（`toolkit.httpClient(ctx)`），请求头按上游顺序显式给出；cookie 在凭证的 cookie 罐里，Set-Cookie 自动写回，命令结束时由 core 落盘。
   - 签名 JS 复制到 `static/<p>/`，用 `core/vm.ts` 的 `loadScript` / `callScript` 执行。
   - 业务错误映射到 6.4 的错误码：登录墙 → `toolkit.authError`，风控 → `RISK_CONTROL`，其余 → `UPSTREAM`（原始错误码放 `detail`）。
-- **上游基线**：`src/platforms/<p>/UPSTREAM` 记录上游仓库地址和 commit。无上游仓库的平台（如 `12306`）记录对接的官方服务端点与接口说明。
+- **上游基线**：`src/platforms/<p>/UPSTREAM` 记录上游仓库地址和 commit。无上游仓库的平台（如 `12306`、`youtube`）记录对接的官方服务端点与接口说明。
 - **上游更新时**：
   1. 用 `git -C references/<repo> log <commit>..` 查看变更；
   2. 同步移植；
   3. 重新生成对拍数据；
   4. 更新 UPSTREAM。
-- **12306 平台离线与在线测试**：`12306` 平台直接对接 12306 官方公开接口，无 Python 参考实现与 golden 对拍数据。离线测试在 `tests/12306.test.ts` 中采用真实响应裁剪的 fixture，配合 `mockSender` / `fakeResponse` 覆盖信封、退出码、字段解析与降级容错；在线测试在 `tests/e2e/12306.e2e.ts` 中覆盖免登录查询全链路。
+- **无上游平台的离线与在线测试**：`12306`、`youtube` 没有 Python 参考实现与 golden 对拍数据。离线测试（`tests/<p>.test.ts`）采用真实响应裁剪的 fixture，配合 `mockSender` / `fakeResponse` 覆盖信封、退出码、字段解析与降级容错；`12306` 的在线测试在 `tests/e2e/12306.e2e.ts` 中覆盖免登录查询全链路。
 - **在线测试**：`npm run test:e2e`，用单独的配置 `tests/e2e/vitest.config.ts`，不在 `npm test` 和 CI 里。使用开发者本机 `~/.catbus` 里的登录态，没登录的平台整组跳过；`npm run test:e2e -- -t <platform>` 只跑一个平台（`-t` 按名字前缀匹配，x 要写成 `-t '^x '`，否则会连 xhs、xianyu 一起跑）。
   - 只跑只读命令：从注册表枚举每个平台已实现的读取类命令，前面命令返回的对象（item、用户、评论、直播间、会话、收藏夹……）的 `url` 或 `id` 作为后面命令的参数，逐条校验信封和 6.2 的字段结构。写操作、下载、长连接不跑。
   - 命令之间默认间隔 1.5 秒，小红书 4 秒，避免触发风控。以下记为跳过：子站点没登录（`AUTH_REQUIRED`）、平台风控（`RISK_CONTROL`）、默认参数落在规划中的取值上（`NOT_IMPLEMENTED`）、注册表 note 写明的限制（有 note 的命令报 `UNSUPPORTED`）。
@@ -924,7 +954,7 @@ export default definePlatform({
 - 命令的值可以是 `'full' | 'partial' | 'none'` 的简写，也可以是对象。
 - 矩阵里 — 的命令不写。
 - `auth list` / `use` / `logout` 由 core 自动注册。
-- 端的字段：`login`（登录方式与子站点）、`logout?`（服务端登出）、`use?`（`auth use` 设置当前账号前调用，见 5.3、5.6）、`guest?`（是否支持游客态，默认 false）、`commands`。`guest` 为 false 时，除 `auth` 外的命令一律按 `auth: required` 处理，声明 `optional` 会在启动时报错。web 端都不设 `guest`。
+- 端的字段：`login`（登录方式与子站点）、`logout?`（服务端登出）、`use?`（`auth use` 设置当前账号前调用，见 5.3、5.6）、`guest?`（是否支持游客态，默认 false）、`commands`。`guest` 为 false 时，除 `auth` 外的命令一律按 `auth: required` 处理，声明 `optional` 会在启动时报错。web 端只有公开内容不登录也能读的平台设 `guest: true`（见 5.2）。
 
 命令的字段：
 

@@ -228,6 +228,7 @@ export const GLOBAL_HELP: Record<string, string> = {
       ['proxy', '全局代理，例如 http://127.0.0.1:7890、socks5://127.0.0.1:1080'],
       ['timeout', '单次请求超时（秒），默认 30'],
       ['<platform>.proxy', '平台代理，例如 xhs.proxy'],
+      ['youtube.browser', 'YouTube 发布与删除用的本地 Chromium 可执行文件（绝对路径），见 AGENTS 5.7'],
     ]),
     '',
     '代理的优先级：--proxy > <platform>.proxy > proxy。不读取 HTTP(S)_PROXY 环境变量。',
