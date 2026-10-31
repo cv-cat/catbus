@@ -622,6 +622,40 @@ describe('jd 归一化与解析', () => {
     expect(JSON.parse(JSON.stringify(orders[0]))).not.toHaveProperty('skus')
   })
 
+  it('订单（新版 pcorder_center_list JSON）：解析金额、状态、商品与 SKU', () => {
+    const raw = api.parseOrderCenterList({
+      success: true,
+      data: {
+        orderList: [
+          {
+            orderId: '300000000010',
+            dateSubmit: '2026-10-25 12:00:00',
+            itemPayInfo: { price: 29.9, totalPrice: 29.9, shouldPay: 19.9, paymentTypeName: '在线支付' },
+            consigneeInfo: { customerName: '张*' },
+            statusInfo: { orderState: 18, orderStateName: '已完成' },
+            wareList: [
+              { name: '假商品 D', num: 1, productId: 100087543376 },
+              { name: '赠品无SKU', num: 1, productId: 0 },
+            ],
+          },
+        ],
+      },
+    })
+    expect(raw).toHaveLength(1)
+    const o = norm.order(raw[0]!)
+    expect(o).toMatchObject({
+      id: '300000000010',
+      status: '已完成',
+      total: { amount: 19.9, currency: 'CNY' },
+      created_at: '2026-10-25T12:00:00+08:00',
+    })
+    expect(o.items.map((i) => [i.id, i.title, i.url])).toEqual([
+      [SKU, '假商品 D', `https://item.jd.com/${SKU}.html`],
+      ['', '赠品无SKU', null],
+    ])
+    expect(JSON.parse(JSON.stringify(raw[0]))).not.toHaveProperty('skus')
+  })
+
   it('订单：商品名与 SKU 取自同一个链接，全球购链接、空名链接、认不出的链接都不会让后面的商品错位', () => {
     const name = (href: string, text: string) => `<div class="p-name"><a href="${href}" target="_blank">${text}</a></div>`
     const html =
