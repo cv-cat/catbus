@@ -7,6 +7,7 @@
     "strict": true,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
+    "jsx": "react-jsx",
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "types": ["node"],

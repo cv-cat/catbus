@@ -18,6 +18,19 @@
 - 新增 `docs/platforms/jimeng.md`、AGENTS.md 5.6，更新能力矩阵、登录指南、Agent 技能和 llms.txt
 - `user update`：修改当前账号的昵称（`--name`）、头像（`--avatar`）、简介（`--bio`），只改给出的字段，返回修改后的 User
 - bilibili：`user update`，接口按网页端个人中心 `account.bilibili.com` 补（`x/member/web/sign/update`、`face/update`、`web/update`），上游没有，没有对拍。改昵称前先查 `uname/update/message` 的资格；改昵称扣硬币，带 `--name` 时需要确认
+- `catbus tui`：全屏交互界面（Ink + React）。平台、命令、参数表单、登录要求都从注册表读，新增平台自动出现；`/` 命令面板跨平台搜命令；结果页左列表右详情，自动翻页；底部始终显示等价的命令行，按 `c` 复制
+- 界面里登录：二维码画在界面里（黑码白底，固定色，纠错等级 M），短信验证码、密码（隐藏输入）、cookie 在界面里输入，即梦的浏览器授权链接显示在界面里；`a` 账号页可切换（与 `auth use` 一样调用端的切换钩子）、在线检查、登出、登录新账号。`core/login.ts` 增加 `LoginUi` 钩子，CLI 行为不变
+- 界面里监听：`live listen`、`msg listen` 显示成滚动事件流，可暂停、按类型过滤，带 `--duration` 倒计时和每分钟事件数
+- 结果页 `Enter`：列出可以接着做的命令（评论、作者、监听、12306 的票价与经停站），参数已按 4.8 填好；`Esc` 回到上一页结果
+- 像素版猫巴士吉祥物和约 1 秒的启动动画（任意键跳过）；Windows 上默认不动（控制台整屏重绘会闪），`CATBUS_TUI_ANIMATE=1` 打开
+- 配色：Catppuccin Mocha / Latte，文字对底色对比度不低于 4.5:1；`T` 键运行中切换；`NO_COLOR`、`CATBUS_TUI_THEME`、`CATBUS_TUI_ASCII`（终端把 ● │ 显示成两列宽时用）
+- `catbus doctor` 新增 `tui` 检查项：在子进程里用假 TTY 把真实界面跑一遍（渲染、布局、按键），CI 的冒烟测试借此在每个目标系统上覆盖界面
+- 冒烟测试（`scripts/smoke.mjs`）增加三项 `catbus tui` 检查：非交互环境报 `USAGE`、离屏渲染自检、伪终端里启动与退出（POSIX 且有 python3 时，`scripts/smoke-tui.py`）
+- 文档：`docs/guide/tui.md`
+
+### Changed
+
+- 内部：命令执行里的校验、身份解析、凭证落盘、handler 上下文抽到 `src/cli/exec.ts`，CLI 与 TUI 共用，CLI 行为不变
 
 ### Fixed
 

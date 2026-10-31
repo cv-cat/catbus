@@ -66,6 +66,7 @@ jobs:
           path: |
             *.tgz
             scripts/smoke.mjs
+            scripts/smoke-tui.py
           if-no-files-found: error
 
   # 在全部目标系统上安装打好的包并运行冒烟测试（AGENTS 7.2、7.5）

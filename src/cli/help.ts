@@ -60,6 +60,7 @@ export function rootHelp(): string {
       ['auth list', '所有平台、所有端的账号'],
       ['config get|set|unset|list', '读写配置（~/.catbus/config.toml）'],
       ['version', '版本、Node 版本、系统与架构'],
+      ['tui', '全屏交互界面（需要交互式终端）'],
     ]),
     '',
     '全局选项:',
@@ -206,7 +207,7 @@ export const GLOBAL_HELP: Record<string, string> = {
   doctor: [
     '用法: catbus doctor',
     '',
-    '逐项检查运行环境：Node 版本、~/.catbus 权限、签名 vm、HTTP 库、canvas、onnx、京东模型包、OCR 模型包。',
+    '逐项检查运行环境：Node 版本、~/.catbus 权限、签名 vm、HTTP 库、canvas、onnx、终端界面（ink）、京东模型包、OCR 模型包。',
     '有检查项不通过时退出码为 1，data 里仍是完整的检查结果。',
   ].join('\n'),
   auth: [
@@ -231,6 +232,20 @@ export const GLOBAL_HELP: Record<string, string> = {
     ]),
     '',
     '代理的优先级：--proxy > <platform>.proxy > proxy。不读取 HTTP(S)_PROXY 环境变量。',
+  ].join('\n'),
+  tui: [
+    '用法: catbus tui',
+    '',
+    '全屏交互界面：选平台、选命令、填参数、看结果。需要交互式终端（stdin 和 stdout 都是 TTY），至少 80 × 24。',
+    '界面里只运行读取类命令；写入、登录、监听请复制界面底部的等价命令到终端执行。',
+    '',
+    '环境变量:',
+    table([
+      ['CATBUS_TUI_THEME=light|dark', '强制浅色或深色配色（默认按 COLORFGBG 判断，没有就用深色）'],
+      ['CATBUS_TUI_ASCII=1', '用纯 ASCII 边框和标记（终端把 ● ○ │ 显示成两列宽时用）'],
+      ['CATBUS_TUI_ANIMATE=0|1', '吉祥物动画；Windows 默认关，其余系统默认开'],
+      ['NO_COLOR=1', '不使用颜色'],
+    ]),
   ].join('\n'),
   version: ['用法: catbus version（或 catbus --version）', '', '输出 catbus 版本、Node 版本、系统与架构。'].join('\n'),
 }

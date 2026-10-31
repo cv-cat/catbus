@@ -399,10 +399,11 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | 命令 | 输出 |
 |---|---|
 | `catbus platforms [platform]` | 能力矩阵：平台 × 端 × resource.action 及其状态，数据来自注册表 |
-| `catbus doctor` | 逐项检查：Node 版本；原生依赖能否加载（HTTP 库、canvas、onnx）；`@cv-cat/catbus-assets-jd`、`@cv-cat/catbus-assets-ocr` 是否就位；`~/.catbus` 的权限；签名 vm 能否运行 |
+| `catbus doctor` | 逐项检查：Node 版本；原生依赖能否加载（HTTP 库、canvas、onnx、`catbus tui` 用的 ink）；`@cv-cat/catbus-assets-jd`、`@cv-cat/catbus-assets-ocr` 是否就位；`~/.catbus` 的权限；签名 vm 能否运行 |
 | `catbus auth list` | 所有平台、所有端下的账号 |
 | `catbus config get\|set\|unset\|list` | 读写 `config.toml`（见 5.5） |
 | `catbus version`（或 `--version`） | 版本、Node 版本、系统与架构 |
+| `catbus tui` | 全屏交互界面（见 4.13）。这是唯一不输出 JSON 信封的命令；非 TTY 下报 `USAGE` |
 
 帮助：
 - 不带参数的 `catbus` 等同于 `catbus --help`。
@@ -444,6 +445,25 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - 12306（`12306`）的登录、下单、候补提交、退票改签：购票由用户本人在 12306 APP 完成，catbus 仅提供免登录的只读查询能力。
 
 如果某条命令内部需要其中的能力（例如心跳），由实现内部调用。
+
+### 4.13 终端界面（`catbus tui`）
+
+给人用的全屏界面。CLI 和 Agent 的接口不变，TUI 只是同一份注册表、同一批 handler 的另一个入口。
+
+- **启动条件**：stdin 和 stdout 都是 TTY，且终端不小于 80 × 24。否则报 `USAGE`，`hint` 为 `catbus --help`；这是 6.1 "stdout 只输出结果" 的唯一例外，界面本身画在 stdout 的备用屏幕上，退出后终端恢复原样。
+- **不另写业务**：平台、命令、参数、选项、登录要求、状态全部读注册表，新增平台或命令时界面自动出现，不手写菜单。命令在进程内调用，不起子进程，也不解析自己输出的 JSON。
+- **能在界面里运行的命令**：读取类（动作是 `get` `list` `search` `related` `media` `items` `replies` `categories` `suggest` `hot` `count` `history` `status` `price` `likes` `collects` `reposts` `followers` `following` `rank` `gifts` `products` `replays` `subtitles`）、长连接的 `listen`，以及账号管理（`auth login` `auth use` `auth logout` `auth status`，在账号页里做）。其余命令（写入、成对动作、`delete`、`publish`、`download`、`upload`、`send`、`coin`、`triple`、`start`、`stop`、`revoke`、`read`）在命令栏里显示为 `○`，选中时显示等价的 CLI 命令，不能在界面里执行。这样 4.11 的危险操作确认不需要在 TUI 里重做。
+- **登录在界面里完成**（5.3 的流程不变）：二维码画在界面里（黑码白底，固定色，不随主题；放不下时提示并可按 `o` 用系统图片查看器打开 `cache/<p>/qrcode.png`），短信验证码、密码（隐藏输入）、人机验证和浏览器授权（`oauth`）的链接、cookie 导入都在界面里输入。实现上 `core/login.ts` 提供 `LoginUi` 钩子（`setLoginUi`）：二维码、浏览器链接、提问、是否可交互四处走钩子，CLI 里默认走 stderr 和 readline，TUI 里换成界面。TUI 运行期间，钩子之外的任何提问都报 `USAGE`，不会去抢 stdin。
+- **监听在界面里运行**：`live listen`、`msg listen` 显示成滚动的事件流，可暂停、按类型过滤，`--duration` 变成倒计时，`Esc` 停止（与 Ctrl-C 一样走同一个 AbortSignal）。界面不保存事件；要录制用 `-o jsonl`。
+- **下一步与返回**：结果页选中一项后，`Enter` 列出可以接着做的命令（同一平台里首个参数是这类对象的读取类命令，参数已按 4.8 的规则填好：优先 URL，其次 ID），选中即运行；`Esc` 回到上一页结果。这是 4.8 “输出里的 `id` 和 `url` 可以直接作为下一条命令的参数” 在界面里的对应。
+- **账号页**（`a`）：列出本平台的账号，切换当前账号（与 `auth use` 走同一个 handler，端的 `use` 钩子照常调用）、在线检查登录态、登出（界面内确认）、登录新账号。登出前的确认在界面里做，不再走 4.11 的 stderr 提问。
+- **启动动画**：猫巴士开进来，不超过 1 秒，任意键跳过。`CATBUS_TUI_ANIMATE=0`、Windows（默认）、`NO_COLOR`、`CATBUS_TUI_ASCII` 下不出现。
+- **等价命令**：任何时候界面底部都显示当前选择对应的 CLI 命令，按 `c` 复制。TUI 帮人学会命令行，也方便把同一条命令交给 Agent 重放。
+- **按键**：纯键盘即可完整使用。方向键和 `j k h l` 移动，`Tab` 换栏，`/` 命令面板，`Enter` 运行，`Esc` 返回，`c` 复制命令，`a` 账号页，`T` 切换浅色 / 深色，`?` 帮助，`q` 退出。
+- **日志不乱屏**：TUI 运行期间，读取类命令用到的日志（`ctx.log`）和直接写 `process.stderr` 的提示，都改道到界面内的日志区，不直接写终端。
+- **配色**：沿用 Catppuccin（与 logo 同色板），深色 Mocha，浅色 Latte。文字对背景的对比度不低于 4.5:1。遵守 `NO_COLOR`；终端不支持真彩色时降级到 256 色。
+- **宽字符**：宽度一律按 `string-width` 计算，模糊宽度字符（`●` `○` `│` 等）默认按 1 列；终端把它们显示成 2 列时，用 `CATBUS_TUI_ASCII=1` 切到纯 ASCII 边框和标记。
+- **系统**：在 darwin 和 win32 上必须可用（Windows Terminal、PowerShell 7、cmd；macOS 的 Terminal.app、iTerm2），linux 同样要求。Windows 控制台遇到占满整屏的帧时，Ink 每帧都会清屏重绘，所以 Windows 上默认限制帧率并关掉吉祥物动画（`CATBUS_TUI_ANIMATE=1` 打开）；Windows 上不依赖 ANSI 以外的终端能力，复制命令优先用系统剪贴板命令（macOS `pbcopy`、Windows PowerShell 的 `Set-Clipboard`、Linux `wl-copy` / `xclip` / `xsel`），都不可用时退回 OSC 52，再不可用就只显示命令不报错。macOS 自带的 Terminal.app 不支持 OSC 52，所以不能只靠它。
 
 ## 5. 登录态
 
@@ -848,6 +868,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | 参数解析 | `node:util` 的 `parseArgs`，加上注册表。不用 CLI 框架 |
 | 配置 | smol-toml |
 | 终端二维码 | qrcode |
+| 终端界面（`catbus tui`，见 4.13） | Ink + React。依赖树全是纯 JS（Yoga 以内嵌 WASM 分发），没有 install 脚本。只在 `catbus tui` 里动态加载，其他命令不付启动成本。OpenTUI 在 Node 上要求 26.4+ 加 `--experimental-ffi`，与 7.1 的 engines 冲突，不用 |
 | 日志 | 自己写的 stderr logger，负责给凭证打码 |
 
 
@@ -894,7 +915,8 @@ wreq-js 默认会读 `HTTP(S)_PROXY` 环境变量和 Windows 系统代理。为�
   - 安装包；
   - 运行 `version`、`doctor`、`platforms`；
   - 跑一次签名 vm；
-  - 加载原生依赖。
+  - 加载原生依赖；
+  - `catbus tui`：非交互环境报 `USAGE`（顺带加载整个界面模块）；用包里的离屏渲染跑一遍真实界面（Ink、React、Yoga WASM 在该系统上能算出布局、响应按键）；POSIX 且有 python3 时，再在真实伪终端里启动、进出备用屏幕、退出（Windows 没有可用的伪终端，Alpine 没有 python，跳过并说明）。
 
 ### 7.6 能力注册表
 
@@ -972,6 +994,7 @@ All-In-One/
 ├── references/                     # 上游仓库：只读，不进版本控制
 ├── src/
 │   ├── cli/                        # 入口 main.ts、argv 解析、帮助、信封输出、确认
+│   ├── tui/                        # 终端界面（4.13）：只依赖 core/、cli/exec.ts 和平台注册表（platforms/index.ts），不依赖具体平台
 │   ├── core/                       # registry、auth store、config、errors、http、schemas、signing(vm)、log
 │   ├── platforms/_shared/          # 多个平台共用、但不属于 core 的实现，例如 impaas.ts（闲鱼、淘宝的钉钉 IMPaaS 私信长连）
 │   └── platforms/<p>/

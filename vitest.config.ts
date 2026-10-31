@@ -2,11 +2,12 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/**/*.test.{ts,tsx}'],
     setupFiles: ['tests/setup.ts'],
     // 对拍用例在 vm 里跑上游的签名 JS，慢的 CI 机器上单个用例可能超过默认的 5 秒
     testTimeout: 60_000,
+    // FORCE_COLOR：终端界面的测试要读到真实的颜色序列（非 TTY 时 chalk 默认不上色，NO_COLOR 之类的测试就成了空转）
     // 对拍数据在北京时间下生成（签名里常有按本地时间格式化的时间戳，如京东 h5st），测试固定同一时区
-    env: { TZ: 'Asia/Shanghai' },
+    env: { TZ: 'Asia/Shanghai', FORCE_COLOR: '3' },
   },
 })

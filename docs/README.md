@@ -10,6 +10,7 @@
 | [guide/login.md](guide/login.md) | 登录：扫码 / 短信 / 账密 / cookie，从 DevTools 复制 cookie，抖音和 TikTok 的会话 JSON，多账号，子站点 `--scope`，登出 |
 | [guide/output.md](guide/output.md) | 输出：信封、json / jsonl、`--raw`、归一化类型、分页与游标、退出码与错误处理（含 jq 示例） |
 | [guide/configuration.md](guide/configuration.md) | 配置：`config.toml`、代理优先级、超时、`CATBUS_HOME`、数据目录结构 |
+| [guide/tui.md](guide/tui.md) | 终端界面 `catbus tui`：三栏布局、命令面板、按键、环境变量、复制与配色问题 |
 | [guide/docker.md](guide/docker.md) | 用 Docker / Docker Compose 运行：构建镜像、登录态卷、代理、长时间监听直播 |
 | [guide/faq.md](guide/faq.md) | 常见问题：为什么要登录、`RISK_CONTROL` 怎么办、`NOT_IMPLEMENTED` 是什么、支持哪些系统等 |
 

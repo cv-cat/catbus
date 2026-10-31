@@ -7,7 +7,7 @@ import { definePlatform, type Platform, type PlatformDecl } from '../src/core/re
 import { VOCAB } from '../src/core/vocab.js'
 import { PLATFORMS } from '../src/platforms/index.js'
 
-const GLOBAL_COMMANDS = ['platforms', 'doctor', 'auth', 'config', 'version']
+const GLOBAL_COMMANDS = ['platforms', 'doctor', 'auth', 'config', 'version', 'tui']
 
 function web(p: Platform) {
   const ep = p.endpoints.web
