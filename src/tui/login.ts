@@ -1,4 +1,4 @@
-import { GUEST, checkAccountName, getCurrent, listAccounts, readCredential } from '../core/auth-store.js'
+import { GUEST, checkAccountName, getCurrent, listAccounts } from '../core/auth-store.js'
 import { resolveNetwork } from '../core/config.js'
 import { CatbusError } from '../core/errors.js'
 import { type LoginUi, setLoginUi } from '../core/login.js'
@@ -16,7 +16,7 @@ export type LoginView =
   | { type: 'working'; text: string }
   | { type: 'qrcode'; content: string; png: string; hint: string }
   | { type: 'prompt'; question: string; hidden: boolean }
-  | { type: 'link'; url: string; hint: string }
+  | { type: 'link'; url: string; hint: string; title: string }
   | { type: 'done'; account: Account }
   | { type: 'error'; error: CatbusError }
 
@@ -81,7 +81,7 @@ export function startLogin(req: LoginRequest, emit: (v: LoginView) => void): Log
     interactive: true,
     signal: controller.signal,
     qrcode: (content, png, hint) => onView({ type: 'qrcode', content, png, hint }),
-    link: (url, hint) => onView({ type: 'link', url, hint }),
+    link: (url, hint, title) => onView({ type: 'link', url, hint, title }),
     prompt: (question, options) =>
       new Promise<string>((resolve, reject) => {
         waiting = resolve
@@ -150,11 +150,9 @@ export async function accountsOf(platform: Platform): Promise<AccountRow[]> {
   return list.map((a) => ({ ...a, active: a.current }))
 }
 
-export async function useAccount(platform: Platform, account: string): Promise<void> {
-  const { setCurrent } = await import('../core/auth-store.js')
-  const cred = await readCredential(platform.id, 'web', account)
-  if (!cred) throw new CatbusError('AUTH_REQUIRED', `账号 ${account} 不存在`)
-  await setCurrent(platform.id, 'web', account)
+/** 切换当前账号：与 CLI 的 `auth use` 走同一个 handler，端声明了 `use` 钩子的（如即梦写回钥匙串）一并调用（AGENTS 5.3）。 */
+export async function useAccount(platform: Platform, account: string, log: Logger): Promise<void> {
+  await runAuth(platform, 'auth use', null, log, [account])
 }
 
 export async function currentAccount(platform: Platform): Promise<string | null> {
@@ -163,14 +161,18 @@ export async function currentAccount(platform: Platform): Promise<string | null>
 
 export { GUEST }
 
-/** 运行一条 auth 命令（status / logout）。账号用 `-a` 的方式指定；auth 命令只解析账号名，不做登录检查。 */
-async function runAuth(platform: Platform, key: 'auth status' | 'auth logout', account: string, log: Logger): Promise<unknown> {
+/**
+ * 运行一条 auth 命令（status / logout / use）。account 按 `-a` 的方式指定，null 时与 CLI 不带 -a 一样取当前账号；
+ * words 是位置参数。auth 命令只解析账号名，不做登录检查。
+ */
+async function runAuth(platform: Platform, key: 'auth status' | 'auth logout' | 'auth use', account: string | null, log: Logger, words: string[] = []): Promise<unknown> {
   const endpoint = 'web' as const
   const ep = webEndpoint(platform)
   const command = ep?.commands.get(key)
   if (!ep || !command || command.status !== 'implemented') throw new CatbusError('NOT_IMPLEMENTED', `${platform.id} 没有 ${key}`)
-  const { args, options } = validate(platform, command, [], {})
-  const identity = await resolveIdentity(platform, endpoint, command, args, { account: checkAccountName(account, { allowGuest: false }) }, log)
+  const { args, options } = validate(platform, command, words, {})
+  const g = account == null ? {} : { account: checkAccountName(account, { allowGuest: false }) }
+  const identity = await resolveIdentity(platform, endpoint, command, args, g, log)
   const network = await resolveNetwork(platform.id, undefined)
   const handler = await command.handler!()
   const ctx = createHandlerContext({ platform, endpoint, command, args, options, identity, network, log, raw: false, signal: new AbortController().signal })

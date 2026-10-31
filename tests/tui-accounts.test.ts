@@ -24,7 +24,7 @@ describe('tui 账号管理', () => {
     await setCurrent('bilibili', 'web', 'work')
     let rows = await accountsOf(bili)
     expect(rows.map((r) => [r.account, r.active])).toEqual([['home', false], ['work', true]])
-    await useAccount(bili, 'home')
+    await useAccount(bili, 'home', log)
     expect(await currentAccount(bili)).toBe('home')
     rows = await accountsOf(bili)
     expect(rows.find((r) => r.account === 'home')!.active).toBe(true)
@@ -33,7 +33,7 @@ describe('tui 账号管理', () => {
   it('切换到不存在的账号报 AUTH_REQUIRED，当前账号不变', async () => {
     await seed('work')
     await setCurrent('bilibili', 'web', 'work')
-    await expect(useAccount(bili, 'nobody')).rejects.toMatchObject({ code: 'AUTH_REQUIRED' })
+    await expect(useAccount(bili, 'nobody', log)).rejects.toMatchObject({ code: 'AUTH_REQUIRED' })
     expect(await currentAccount(bili)).toBe('work')
   })
 

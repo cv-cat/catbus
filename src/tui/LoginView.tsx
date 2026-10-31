@@ -163,7 +163,7 @@ export function ProgressView({
       {view.type === 'qrcode' ? <QrBlock content={view.content} png={view.png} hint={view.hint} cols={cols - 2} rows={rows - 2} spin={spin} /> : null}
       {view.type === 'link' ? (
         <Box flexDirection="column" paddingLeft={2} paddingTop={1}>
-          <T bold>需要在浏览器里完成人机验证</T>
+          <T bold>{view.title}</T>
           <Box paddingTop={1}>
             <T c="sub">{view.hint}</T>
           </Box>

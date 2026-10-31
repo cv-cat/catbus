@@ -1,8 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { findPlatform } from '../src/platforms/index.js'
 import { keyringUser, sys } from '../src/platforms/jimeng/web/dreamina.js'
+import { currentAccount, useAccount } from '../src/tui/login.js'
+import { bufferLogger, LogBuffer } from '../src/tui/logs.js'
 import { cli, useTempHome } from './helpers.js'
+import { KEYS, start } from './tui-harness.js'
 
 // 即梦只封装 dreamina 的登录态（AGENTS 5.6）。这里用内存里的「钥匙串」和假的 dreamina 代替真实环境。
 
@@ -150,5 +154,47 @@ describe('jimeng：dreamina 登录态', () => {
     await cli('jimeng', 'auth', 'logout', '-a', 'a', '-y')
     expect(calls.some((c) => c[0] === 'logout')).toBe(true)
     expect(keyring).toBeNull()
+  })
+})
+
+describe('jimeng：终端界面', () => {
+  const jimeng = findPlatform('jimeng')!
+
+  it('账号页切换账号：和 auth use 一样把账号写进钥匙串', async () => {
+    await login('a', '1001')
+    await login('b', '1002')
+    await useAccount(jimeng, 'b', bufferLogger(new LogBuffer()))
+    expect(await currentAccount(jimeng)).toBe('b')
+    expect(keyring).toBe(blob('1002'))
+  })
+
+  it('浏览器授权：链接显示在界面里；Esc 取消时结束 dreamina 的等待，钥匙串切回当前账号', async () => {
+    await login('a', '1001')
+    // 用户一直不授权：dreamina 的等待只会被取消信号结束
+    const base = vi.mocked(sys.dreamina).getMockImplementation()!
+    let aborted = false
+    vi.mocked(sys.dreamina).mockImplementation((args, signal) => {
+      if (args[0] !== 'login') return base(args, signal)
+      calls.push(args)
+      return new Promise((_, reject) =>
+        signal!.addEventListener('abort', () => ((aborted = true), reject(new Error('aborted'))), { once: true }),
+      )
+    })
+    const s = await start({ platforms: [jimeng], columns: 100, rows: 28 })
+    try {
+      await s.press('a', 'n', KEYS.enter)
+      await s.settle(200)
+      const t = s.screen().join('\n')
+      expect(t).toContain('在浏览器里授权登录即梦')
+      expect(t).toContain('https://jimeng.example/cli-auth?code=1')
+      expect(keyring).toBeNull() // relogin 清掉了钥匙串
+      await s.press(KEYS.esc)
+      await s.settle(100)
+      expect(aborted).toBe(true)
+      expect(keyring).toBe(blob('1001'))
+      expect(s.screen().join('\n')).toContain('登录方式')
+    } finally {
+      s.stop()
+    }
   })
 })

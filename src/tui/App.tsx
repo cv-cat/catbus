@@ -455,7 +455,7 @@ function Shell({ logs, platforms, toggleTheme }: { logs: LogBuffer; platforms: P
     if (input === 'n') return openSetup()
     if (!row) return
     if (key.return) {
-      void useAccount(platform, row.account)
+      void useAccount(platform, row.account, bufferLogger(logs))
         .then(() => reloadAccounts().then(() => setNote(`当前账号：${row.account}`)))
         .catch((e) => setNote((e as Error).message))
       return

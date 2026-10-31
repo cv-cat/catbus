@@ -453,10 +453,10 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - **启动条件**：stdin 和 stdout 都是 TTY，且终端不小于 80 × 24。否则报 `USAGE`，`hint` 为 `catbus --help`；这是 6.1 "stdout 只输出结果" 的唯一例外，界面本身画在 stdout 的备用屏幕上，退出后终端恢复原样。
 - **不另写业务**：平台、命令、参数、选项、登录要求、状态全部读注册表，新增平台或命令时界面自动出现，不手写菜单。命令在进程内调用，不起子进程，也不解析自己输出的 JSON。
 - **能在界面里运行的命令**：读取类（动作是 `get` `list` `search` `related` `media` `items` `replies` `categories` `suggest` `hot` `count` `history` `status` `price` `likes` `collects` `reposts` `followers` `following` `rank` `gifts` `products` `replays` `subtitles`）、长连接的 `listen`，以及账号管理（`auth login` `auth use` `auth logout` `auth status`，在账号页里做）。其余命令（写入、成对动作、`delete`、`publish`、`download`、`upload`、`send`、`coin`、`triple`、`start`、`stop`、`revoke`、`read`）在命令栏里显示为 `○`，选中时显示等价的 CLI 命令，不能在界面里执行。这样 4.11 的危险操作确认不需要在 TUI 里重做。
-- **登录在界面里完成**（5.3 的流程不变）：二维码画在界面里（黑码白底，固定色，不随主题；放不下时提示并可按 `o` 用系统图片查看器打开 `cache/<p>/qrcode.png`），短信验证码、密码（隐藏输入）、人机验证的浏览器链接、cookie 导入都在界面里输入。实现上 `core/login.ts` 提供 `LoginUi` 钩子（`setLoginUi`）：二维码、提问、是否可交互三处走钩子，CLI 里默认走 stderr 和 readline，TUI 里换成界面。TUI 运行期间，钩子之外的任何提问都报 `USAGE`，不会去抢 stdin。
+- **登录在界面里完成**（5.3 的流程不变）：二维码画在界面里（黑码白底，固定色，不随主题；放不下时提示并可按 `o` 用系统图片查看器打开 `cache/<p>/qrcode.png`），短信验证码、密码（隐藏输入）、人机验证和浏览器授权（`oauth`）的链接、cookie 导入都在界面里输入。实现上 `core/login.ts` 提供 `LoginUi` 钩子（`setLoginUi`）：二维码、浏览器链接、提问、是否可交互四处走钩子，CLI 里默认走 stderr 和 readline，TUI 里换成界面。TUI 运行期间，钩子之外的任何提问都报 `USAGE`，不会去抢 stdin。
 - **监听在界面里运行**：`live listen`、`msg listen` 显示成滚动的事件流，可暂停、按类型过滤，`--duration` 变成倒计时，`Esc` 停止（与 Ctrl-C 一样走同一个 AbortSignal）。界面不保存事件；要录制用 `-o jsonl`。
 - **下一步与返回**：结果页选中一项后，`Enter` 列出可以接着做的命令（同一平台里首个参数是这类对象的读取类命令，参数已按 4.8 的规则填好：优先 URL，其次 ID），选中即运行；`Esc` 回到上一页结果。这是 4.8 “输出里的 `id` 和 `url` 可以直接作为下一条命令的参数” 在界面里的对应。
-- **账号页**（`a`）：列出本平台的账号，切换当前账号、在线检查登录态、登出（界面内确认）、登录新账号。登出前的确认在界面里做，不再走 4.11 的 stderr 提问。
+- **账号页**（`a`）：列出本平台的账号，切换当前账号（与 `auth use` 走同一个 handler，端的 `use` 钩子照常调用）、在线检查登录态、登出（界面内确认）、登录新账号。登出前的确认在界面里做，不再走 4.11 的 stderr 提问。
 - **启动动画**：猫巴士开进来，不超过 1 秒，任意键跳过。`CATBUS_TUI_ANIMATE=0`、Windows（默认）、`NO_COLOR`、`CATBUS_TUI_ASCII` 下不出现。
 - **等价命令**：任何时候界面底部都显示当前选择对应的 CLI 命令，按 `c` 复制。TUI 帮人学会命令行，也方便把同一条命令交给 Agent 重放。
 - **按键**：纯键盘即可完整使用。方向键和 `j k h l` 移动，`Tab` 换栏，`/` 命令面板，`Enter` 运行，`Esc` 返回，`c` 复制命令，`a` 账号页，`T` 切换浅色 / 深色，`?` 帮助，`q` 退出。

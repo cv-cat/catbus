@@ -24,8 +24,8 @@ export interface LoginUi {
   /** 展示二维码。content 是二维码内容，png 是已经写好的图片路径。 */
   qrcode(content: string, png: string, hint: string): void
   prompt(question: string, options: { hidden?: boolean }): Promise<string>
-  /** 需要用户在浏览器里完成的一步（极验人机验证）：显示链接，等用户操作；完成后平台流程自己继续。 */
-  link(url: string, hint: string): void
+  /** 需要用户在浏览器里完成的一步（极验人机验证、即梦授权）：显示链接，等用户操作；完成后平台流程自己继续。 */
+  link(url: string, hint: string, title: string): void
   /** 取消登录：轮询和等待输入都会在这个信号触发时结束。 */
   signal: AbortSignal
 }
@@ -109,11 +109,11 @@ export function cookieCredential(ctx: HandlerContext, defaultDomain: string): Cr
 }
 
 /**
- * 请用户在浏览器里打开一个链接（人机验证）。界面里走钩子：链接单独显示、可按 o 打开，hint 是不含链接的说明；
- * CLI 里原样写到 stderr（-q 也显示，这一步必须由用户操作），文案由调用方给出，保持和以前逐字一致。
+ * 请用户在浏览器里打开一个链接（人机验证、浏览器授权）。界面里走钩子：链接单独显示、可按 o 打开，title 是页面标题，
+ * hint 是不含链接的说明；CLI 里原样写到 stderr（-q 也显示，这一步必须由用户操作），文案由调用方给出，保持和以前逐字一致。
  */
-export function showLink(url: string, hint: string, cliLine: string): void {
-  if (ui) ui.link(url, hint)
+export function showLink(url: string, hint: string, cliLine: string, title = '需要在浏览器里完成人机验证'): void {
+  if (ui) ui.link(url, hint, title)
   else process.stderr.write(`[catbus] ${cliLine}\n`)
 }
 
