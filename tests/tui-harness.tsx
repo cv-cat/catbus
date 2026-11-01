@@ -91,6 +91,8 @@ export interface Session {
   type(text: string): Promise<void>
   resize(columns: number, rows: number): Promise<void>
   settle(ms?: number): Promise<void>
+  /** 等屏幕上出现某段文字，最长 timeout 毫秒；慢机器上异步操作（读写凭证等）的耗时不固定，别用固定的 settle 去猜。 */
+  waitForText(text: string, timeout?: number): Promise<void>
   logs: LogBuffer
   stop(): void
 }
@@ -138,6 +140,13 @@ export async function start(options: { columns?: number; rows?: number; env?: En
       await settle(80)
     },
     settle,
+    async waitForText(text, timeout = 3000) {
+      const deadline = Date.now() + timeout
+      while (!lastFrame(out).replace(SGR, '').includes(text)) {
+        if (Date.now() > deadline) throw new Error(`等了 ${timeout}ms，屏幕上还是没有「${text}」：\n${lastFrame(out).replace(SGR, '')}`)
+        await wait(25)
+      }
+    },
     logs,
     stop: () => app.unmount(),
   }

@@ -183,16 +183,15 @@ describe('jimeng：终端界面', () => {
     const s = await start({ platforms: [jimeng], columns: 100, rows: 28 })
     try {
       await s.press('a', 'n', KEYS.enter)
-      await s.settle(200)
+      await s.waitForText('在浏览器里授权登录即梦')
       const t = s.screen().join('\n')
-      expect(t).toContain('在浏览器里授权登录即梦')
       expect(t).toContain('https://jimeng.example/cli-auth?code=1')
       expect(keyring).toBeNull() // relogin 清掉了钥匙串
       await s.press(KEYS.esc)
-      await s.settle(100)
+      await s.waitForText('登录方式')
+      // 钥匙串是取消之后在 authLogin 的 finally 里异步切回的，等它本身而不是猜时间
+      await vi.waitFor(() => expect(keyring).toBe(blob('1001')))
       expect(aborted).toBe(true)
-      expect(keyring).toBe(blob('1001'))
-      expect(s.screen().join('\n')).toContain('登录方式')
     } finally {
       s.stop()
     }

@@ -341,14 +341,12 @@ describe('mteam：终端界面登录', () => {
     const s = await start({ platforms: [findPlatform('mteam')!], columns: 100, rows: 28 })
     try {
       await s.press('a', 'n', KEYS.enter) // 账号页 → 登录新账号 → 开始
-      await s.settle(200)
-      expect(s.screen().join('\n')).toContain('M-Team API Key')
+      await s.waitForText('M-Team API Key')
       await s.type(KEY)
       expect(s.screen().join('\n')).not.toContain(KEY)
       expect(s.raw()).not.toContain(KEY)
       await s.press(KEYS.enter)
-      await s.settle(300)
-      expect(s.screen().join('\n')).toContain('已登录')
+      await s.waitForText('已登录')
       expect(seen).toEqual(['/api/member/profile'])
       const saved = JSON.parse(readFileSync(join(home.dir, 'auth/mteam/web/default.json'), 'utf8'))
       expect(saved).toMatchObject({ method: 'apikey', user: { id: profile.id } })

@@ -162,14 +162,13 @@ describe('tui 登录 / 监听 / 账号', () => {
     expect(text()).toContain('one')
     expect(text()).toContain('用户two')
     await s!.press(KEYS.down, KEYS.enter) // 选中 two，设为当前
-    await s!.settle(150)
-    expect(text()).toContain('当前账号：two')
+    await s!.waitForText('当前账号：two')
     await s!.press('x')
     expect(text()).toContain('登出 two？')
     await s!.press('n') // 其他键 = 取消
     expect(await readCredential('demo', 'web', 'two')).not.toBeNull()
     await s!.press('x', 'y')
-    await s!.settle(200)
+    await s!.waitForText('已登出 two')
     expect(await readCredential('demo', 'web', 'two')).toBeNull()
   })
 
