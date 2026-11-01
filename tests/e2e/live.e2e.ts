@@ -114,6 +114,7 @@ function harvest(pool: Pool, cmd: Command, argv: string[], data: unknown): void 
   const list = (Array.isArray(data) ? data : [data]).filter((x): x is Obj => x != null && typeof x === 'object')
   for (const o of list) {
     switch (type) {
+      case 'Torrent':
       case 'Item':
         if (cmd.key === 'live products' || cmd.key === 'product get') pool.products.push(o)
         else pool.items.push(o)
