@@ -8,6 +8,7 @@ import {
   API_URL,
   APPID_DONGDONG,
   APPID_PC_ITEM,
+  APPID_PC_ORDER,
   APPID_PC_SEARCH,
   basic,
   CHAT_ORIGIN,
@@ -15,6 +16,7 @@ import {
   CLIENT_IMH5,
   CLIENT_PC_ITEM,
   CLIENT_PC_ITEM_V3,
+  CLIENT_PC_ORDER,
   CLIENT_PC_SEARCH,
   CLIENT_WH5,
   ITEM_ORIGIN,
@@ -323,7 +325,7 @@ export interface RawOrder {
   skus?: (string | null)[]
 }
 
-/** 订单列表（get_order_list）：订单中心是 HTML 页面，逐个 `<tbody id="tb-<订单号>">` 解析。 */
+/** 订单列表（get_order_list）：旧版订单中心是服务端渲染的 HTML（`<tbody id="tb-<订单号>">`），新版改为 SPA（`pc_orderList`）调 `pcorder_center_list`。 */
 export async function orderList(jd: Jd, page = 1, dateRange = '1'): Promise<{ orders: RawOrder[]; count: number; page: number; _error?: string }> {
   const res = await jd.send({
     url: ORDER_URL,
@@ -340,8 +342,55 @@ export async function orderList(jd: Jd, page = 1, dateRange = '1'): Promise<{ or
   if (head.includes('passport.jd.com') && head.includes('login')) {
     return { orders: [], count: 0, page, _error: '被跳到登录页，登录态失效了' }
   }
-  const orders = parseOrders(html)
+  let orders = parseOrders(html)
+  if (!orders.length && html.includes('pc_orderList')) {
+    const d = Number(dateRange)
+    const apiRes = await orderCenterList(jd, page, Number.isFinite(d) ? d : dateRange)
+    if (String(apiRes?.code ?? '') === '3') {
+      return { orders: [], count: 0, page, _error: '被跳到登录页，登录态失效了' }
+    }
+    orders = parseOrderCenterList(apiRes)
+  }
   return { orders, count: orders.length, page }
+}
+
+/** 新版订单中心接口（pcorder_center_list）。 */
+export function orderCenterList(jd: Jd, page = 1, dateRange: number | string = 1) {
+  return jd.call('pcorder_center_list', {
+    path: '/api',
+    client: CLIENT_PC_ORDER,
+    appId: APPID_PC_ORDER,
+    extra: [['source', 'pc_order_center']],
+    body: { page, d: dateRange, s: 4096 },
+    origin: 'https://order.jd.com',
+    referer: ORDER_URL,
+    method: 'POST',
+  })
+}
+
+export function parseOrderCenterList(data: any): RawOrder[] {
+  const list = Array.isArray(data?.data?.orderList) ? data.data.orderList : []
+  return list.map((item: any) => {
+    const orderId = String(item?.orderId ?? '')
+    const wares = (Array.isArray(item?.wareList) ? item.wareList : [])
+      .map((w: any) => ({ name: String(w?.name ?? '').trim(), sku: w?.productId != null && w.productId !== 0 ? String(w.productId) : null }))
+      .filter((w: { name: string }) => w.name)
+      .slice(0, 10)
+    const pay = item?.itemPayInfo ?? {}
+    const amountVal = pay.shouldPay ?? pay.totalPrice ?? pay.price
+    const order: RawOrder = {
+      orderId,
+      time: String(item?.dateSubmit ?? ''),
+      consignee: String(item?.consigneeInfo?.customerName ?? ''),
+      amount: amountVal != null ? String(amountVal) : '',
+      payType: String(pay.paymentTypeName ?? ''),
+      status: String(item?.statusInfo?.orderStateName ?? ''),
+      products: wares.map((w: { name: string }) => w.name),
+      url: `https://details.jd.com/normal/item.action?orderid=${orderId}`,
+    }
+    Object.defineProperty(order, 'skus', { value: wares.map((w: { sku: string | null }) => w.sku), enumerable: false })
+    return order
+  })
 }
 
 export function parseOrders(html: string): RawOrder[] {
