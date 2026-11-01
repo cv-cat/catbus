@@ -3,7 +3,7 @@
 各平台的 web 端不登录几乎看不到内容，所以 catbus 在 web 端除 `auth` 以外的命令都需要登录。未登录时命令报 `AUTH_REQUIRED`（退出码 3），`hint` 里就是该执行的登录命令。
 
 ```bash
-catbus <platform> auth login [-a <账号名>] [--method qrcode|sms|password|cookie|oauth] [--scope <子站点>]
+catbus <platform> auth login [-a <账号名>] [--method qrcode|sms|password|cookie|oauth|apikey] [--scope <子站点>]
 ```
 
 规范见 [AGENTS.md 5.2、5.3](../../AGENTS.md#53-登录与登出)。

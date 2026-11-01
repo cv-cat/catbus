@@ -27,6 +27,11 @@
 - `catbus doctor` 新增 `tui` 检查项：在子进程里用假 TTY 把真实界面跑一遍（渲染、布局、按键），CI 的冒烟测试借此在每个目标系统上覆盖界面
 - 冒烟测试（`scripts/smoke.mjs`）增加三项 `catbus tui` 检查：非交互环境报 `USAGE`、离屏渲染自检、伪终端里启动与退出（POSIX 且有 python3 时，`scripts/smoke-tui.py`）
 - 文档：`docs/guide/tui.md`
+- 新增 `maoyan`（猫眼演出）平台，web 端免登录只读查询：
+  - 城市热门演出（`feed list`）：私有选项 `--city`（城市名或演出城市 ID，默认北京），`--category` 本地筛选
+  - 演出分类（`feed categories`）、演出城市检索（`poi search`）：内置数据，不联网
+  - 演出详情（`item get`）：场次时间、城市、场馆、票价档、售卖状态逐行写进 `text`；详情接口要 H5guard 的 `mtgsig`，在本地 vm 里出签
+  - 离线测试（真实响应裁剪的 fixture）与在线 E2E 测试；平台文档、能力矩阵、Agent 技能与多语言 README
 
 ### Changed
 
