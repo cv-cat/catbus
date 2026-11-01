@@ -23,6 +23,7 @@ catbus <platform> auth login [-a <账号名>] [--method qrcode|sms|password|cook
 | jd | ✓ | ✓ |  | ✓ |  | qrcode |
 | x |  |  |  | ✓ |  | cookie |
 | jimeng |  |  |  |  | ✓ | oauth |
+| maoyan | ✓ |  |  | ✓ |  | qrcode |
 
 表格来自注册表，以 `catbus <platform> auth login --help` 为准。不支持的方式报 `UNSUPPORTED`，`hint` 列出可选的方式。
 

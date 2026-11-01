@@ -49,4 +49,13 @@ describe('maoyan', () => {
     expect(r.env.data.id).toBe(sample.id)
     expect(r.env.data.text).toContain('时间：')
   })
+
+  test('item get --tickets', async (ctx) => {
+    if (!sample) ctx.skip('feed list 没有返回演出')
+    await sleep(1500)
+    const r = await cli('maoyan', 'item', 'get', sample.url, '--tickets', '-q')
+    if (r.env.error?.code === 'AUTH_REQUIRED' || r.env.error?.code === 'AUTH_EXPIRED') ctx.skip('没有登录 maoyan')
+    ok(r.env, ctx.skip)
+    shape('Item', r.env.data)
+  })
 })
