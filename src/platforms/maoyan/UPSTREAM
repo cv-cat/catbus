@@ -1,0 +1,7 @@
+official: https://yanchu.maoyan.com、https://m.dianping.com
+endpoints:
+  hotShows: https://yanchu.maoyan.com/my/ianvs/movie/hotShows（免登录、免签名；不能带 sellChannel）
+  detail: https://m.dianping.com/my/odea/project/detail（免登录，要 mtgsig）
+sign: H5guard 1.2.0（static/maoyan/H5guard.js、package-1.2.0.js，horn 配置离线），环境补丁 static/maoyan/env.js、env_core.js
+cities: static/maoyan/cities.json，演出 cityId 与城市名的对照（2026-11-01 核对）
+note: 无上游开源仓库，直接对接猫眼演出的公开只读接口

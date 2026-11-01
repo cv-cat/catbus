@@ -18,6 +18,11 @@
 - 新增 `docs/platforms/jimeng.md`、AGENTS.md 5.6，更新能力矩阵、登录指南、Agent 技能和 llms.txt
 - `user update`：修改当前账号的昵称（`--name`）、头像（`--avatar`）、简介（`--bio`），只改给出的字段，返回修改后的 User
 - bilibili：`user update`，接口按网页端个人中心 `account.bilibili.com` 补（`x/member/web/sign/update`、`face/update`、`web/update`），上游没有，没有对拍。改昵称前先查 `uname/update/message` 的资格；改昵称扣硬币，带 `--name` 时需要确认
+- 新增 `maoyan`（猫眼演出）平台，web 端免登录只读查询：
+  - 城市热门演出（`feed list`）：私有选项 `--city`（城市名或演出城市 ID，默认北京），`--category` 本地筛选
+  - 演出分类（`feed categories`）、演出城市检索（`poi search`）：内置数据，不联网
+  - 演出详情（`item get`）：场次时间、城市、场馆、票价档、售卖状态逐行写进 `text`；详情接口要 H5guard 的 `mtgsig`，在本地 vm 里出签
+  - 离线测试（真实响应裁剪的 fixture）与在线 E2E 测试；平台文档、能力矩阵、Agent 技能与多语言 README
 
 ### Fixed
 

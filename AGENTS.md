@@ -37,7 +37,7 @@
 
 ## 2. 范围
 
-- 目前支持第 3 节的 12 个平台的 web 端（10 个内容与电商平台 + 12306 铁路平台 `12306` + 即梦 `jimeng`）；app / pc 端在注册表里为 planned（见 4.3）。
+- 目前支持第 3 节的 13 个平台的 web 端（10 个内容与电商平台 + 12306 铁路平台 `12306` + 即梦 `jimeng` + 猫眼演出 `maoyan`）；app / pc 端在注册表里为 planned（见 4.3）。
 - `jimeng` 不调用平台接口，只保存和切换即梦官方 CLI `dreamina` 的登录态，是第 1 节「只需要 Node」「支持全部目标系统」的例外：需要另外安装 `dreamina`，只支持 macOS（见 5.6）。
 - 矩阵里的 ○（平台有这个概念、上游没有的能力）只占位：注册为 planned，执行时返回 NOT_IMPLEMENTED，有需要时再实现。移植中发现矩阵与上游不符（上游其实没有、或只是占位）的能力，按上游实际情况标为 ○ 或 ◐，以 `docs/capabilities.md` 为准。
 - 新平台开始移植时，先把平台 id、别名、`item` 叫法等登记到第 3 节、4.2 和 4.5，再进注册表；在那之前 `catbus <平台>` 是未知平台（`USAGE`）。
@@ -59,6 +59,7 @@
 | x | XApis | `x_apis/x_api.py`、`x_apis/x_write_api.py`、`x_apis/login_api.py` |
 | 12306 | （无上游仓库，直接对接 12306 官方公开接口） | `https://kyfw.12306.cn`（接口端点见 `src/platforms/12306/UPSTREAM`） |
 | jimeng | （无上游仓库，封装即梦官方 CLI `dreamina` 的登录态） | `dreamina` 的子命令与钥匙串项（见 `src/platforms/jimeng/UPSTREAM`、5.6） |
+| maoyan | （无上游仓库，直接对接猫眼演出公开接口） | `https://yanchu.maoyan.com`、`https://m.dianping.com`（接口端点见 `src/platforms/maoyan/UPSTREAM`） |
 
 参考资料：
 - 每个仓库的鉴权、登录、API 方法、JS 资产、游客态生成位置，以及 Python → JS 的替换对照，见 [docs/upstream-map.md](docs/upstream-map.md)。
@@ -71,7 +72,7 @@
   - **不能修改其中任何受版本控制的文件**。
 - `references/` 不进入本仓库的版本控制，它们各自是独立的 git 仓库。
 - 每个平台的移植基于哪个上游 commit，记录在 `src/platforms/<p>/UPSTREAM`。
-- `12306` 平台直接对接 12306 官方公开接口，无上游 `references/` 仓库，基准与接口说明见 `src/platforms/12306/UPSTREAM`；离线测试不采用 Python 对拍（golden），改用基于真实响应裁剪的 fixture，通过 `mockSender` / `fakeResponse` 回放测试。
+- `12306`、`maoyan` 平台直接对接官方公开接口，无上游 `references/` 仓库，基准与接口说明见 `src/platforms/<p>/UPSTREAM`；离线测试不采用 Python 对拍（golden），改用基于真实响应裁剪的 fixture，通过 `mockSender` / `fakeResponse` 回放测试。
 - `jimeng` 平台没有上游仓库，也不发 HTTP 请求：`UPSTREAM` 记录验证过的 `dreamina` 版本、用到的子命令和钥匙串项；离线测试替换 `dreamina` 子进程和钥匙串读写（`tests/jimeng.test.ts`）。
 
 ## 4. 命令规范
@@ -117,6 +118,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | `x` | `twitter` |
 | `12306` | — |
 | `jimeng` | `dreamina` |
+| `maoyan` | — |
 
 目录名、配置键、输出里的 `platform` 字段一律使用**规范 id**。只有平台有别名；resource 和 action 没有别名。
 
@@ -184,6 +186,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | taobao | 商品 |
 | jd | 商品 SKU |
 | jimeng | 作品（目前没有 item 命令） |
+| maoyan | 演出项目 |
 
 各动作的说明：
 - `item list`：当前账号自己发布的内容，带审核状态，数据来自创作者中心。
@@ -272,6 +275,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | x | `item publish [--thread <text> ...]` | 私有选项：发 thread。`--text` 是第一条，每个 `--thread` 是后面的一条，依次回复上一条；`--image` / `--video` / `--quote` 只作用于第一条。返回第一条 | Item |
 | x | `article publish --text [--title] [--cover]` | 发文章（Premium 长文）：`--text` 是 Markdown，依次建草稿、写标题、正文、封面，再发布。不给 `--title` 时取正文第一行的 `# 标题`。独占一行的 `![](图片)` 上传成插图，相对路径按 `--text @file` 的文件所在目录解析（直接给正文时按当前目录） | `{id url}` |
 | x | `article delete <article>` | 删文章：草稿或已发布的都可以，已发布的连同文章推文一起删 | `{id}` |
+| maoyan | `feed list [--city <城市>]` | 私有选项：城市，城市名或演出城市 ID（`poi search` 输出的 `id`），默认北京 | Item[] |
 | 12306 | `station search <keyword>` | 车站搜索（支持站名、拼音前缀、电报码） | Station[] |
 | 12306 | `ticket search <from> <to> [--date <YYYY-MM-DD>] [--type <G,D...>] [--available]` | 直达车次与余票（`--date` 默认今天；`--type` 过滤车型；`--available` 只看有票车次） | Ticket[] |
 | 12306 | `ticket price <train> --from-no <序号> --to-no <序号> --seat-types <编码> [--date <YYYY-MM-DD>]` | 票价详情（参数取自 ticket search 输出的 train_no、from.no、to.no、seat_types） | Fare |
@@ -316,6 +320,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - bilibili 的 `comment list` / `replies` 读取图文动态时，先用非上游的动态详情接口取 `basic.comment_type=11` 与 `comment_id_str`（相簿 ID），不能把动态 ID 当作评论区 oid；输出 `Comment.item_id` 仍为动态 ID。同一条命令翻页时复用解析结果。`comment add` / `delete` 仍只支持纯文字和转发动态。
 - `msg send --item <item>`：对商品卖家 / 客服发消息（闲鱼、淘宝、京东）。
 - `msg send --to <user> --item <item>`：就这件商品给指定用户发消息（闲鱼：卖家主动联系买家）。不支持的平台报 `UNSUPPORTED`。
+- maoyan：演出（item）的场次时间、城市、场馆、票价档、售卖状态没有对应的 Item 字段，按「键：值」逐行写进 `text`，原始字段用 `--raw`。`poi search` 只搜演出城市，`id` 是 `feed list --city` 的取值。
 - taobao 没有按用户查询、按用户发起会话的接口：`user get <user>` 的 `<user>` 只接受商品链接，返回这件商品的卖家；`msg send` 不支持 `--to`（报 `UNSUPPORTED`）。
 
 ### 4.9 选项
@@ -442,7 +447,8 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - 抖音的 PK / 连麦 / 评论标签；
 - TikTok 的 story 和收藏夹移动；
 - xhs 的蒲公英（达人）和千帆（分销达人）：只对开通了的品牌 / 机构账号有用，普通账号访问会被拒，被拒后几分钟内主站的评论等接口还会要求人机验证；
-- 12306（`12306`）的登录、下单、候补提交、退票改签：购票由用户本人在 12306 APP 完成，catbus 仅提供免登录的只读查询能力。
+- 12306（`12306`）的登录、下单、候补提交、退票改签：购票由用户本人在 12306 APP 完成，catbus 仅提供免登录的只读查询能力；
+- 猫眼演出（`maoyan`）的场次、票档、余票（要 App 登录态），以及下单、抢票：catbus 只提供免登录的只读查询。
 
 如果某条命令内部需要其中的能力（例如心跳），由实现内部调用。
 
@@ -476,7 +482,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - `-a` 指定的账号不存在时，报 `AUTH_REQUIRED`，`hint` 为 `catbus <p> auth login -a <name>`。
 
 **游客态只在声明了 `guest: true` 的端上存在**（见 7.6）。不支持游客态的端上没有 `guest.json`：`auth status` 等 auth 命令没有账号时，用一份只在内存里的空凭证，不落盘。
-- **web 端除 `12306` 外都不支持游客态**：各内容与电商平台的 web 端不登录几乎看不到内容，所以 web 端除 `auth` 命令外全部需要登录，未登录时直接报 `AUTH_REQUIRED` 并提示登录命令。游客态主要留给 app 端。**特例**：12306（`12306`）的车站、余票、票价、经停、中转查询均为公开免登录接口，其 web 端声明 `guest: true`，查询命令为 `auth: optional`，无需登录即可直接使用；且不提供 `auth login`。
+- **web 端除 `12306`、`maoyan` 外都不支持游客态**：各内容与电商平台的 web 端不登录几乎看不到内容，所以 web 端除 `auth` 命令外全部需要登录，未登录时直接报 `AUTH_REQUIRED` 并提示登录命令。游客态主要留给 app 端。**特例**：12306（`12306`）的车站、余票、票价、经停、中转查询均为公开免登录接口，其 web 端声明 `guest: true`，查询命令为 `auth: optional`，无需登录即可直接使用；且不提供 `auth login`。猫眼演出（`maoyan`）的城市热门演出、演出详情同样是免登录接口，web 端同样声明 `guest: true`、不提供 `auth login`。
 - 支持游客态的端上，很多平台匿名访问也需要设备 cookie 或 token（例如 xhs 的 `a1`、抖音的 `ttwid`、B 站的 `buvid`、X 的 guest token）。catbus 自动生成这些数据，缓存到 `guest.json`，过期后重新生成；各平台的生成方式见 upstream-map。
 - 登录流程本身仍会先生成这些设备数据（很多平台的登录接口要求先有设备 cookie），这与游客态无关。
 
@@ -886,6 +892,7 @@ wreq-js 默认会读 `HTTP(S)_PROXY` 环境变量和 Windows 系统代理。为�
   2. 同步移植；
   3. 重新生成对拍数据；
   4. 更新 UPSTREAM。
+- **maoyan 平台**：H5guard（mtgsig）和它的环境补丁放在 `static/maoyan/`，在同一个 vm context 里依次执行 `env_core.js`、`env.js`、`H5guard.js`。`env.js` 为 vm 改写过（不读文件、不用 `process`，页面 cookie 只含设备数据、不含登录态），其余原样。离线测试在 `tests/maoyan.test.ts`，fixture 来自真实响应裁剪；在线测试在 `tests/e2e/maoyan.e2e.ts`。
 - **12306 平台离线与在线测试**：`12306` 平台直接对接 12306 官方公开接口，无 Python 参考实现与 golden 对拍数据。离线测试在 `tests/12306.test.ts` 中采用真实响应裁剪的 fixture，配合 `mockSender` / `fakeResponse` 覆盖信封、退出码、字段解析与降级容错；在线测试在 `tests/e2e/12306.e2e.ts` 中覆盖免登录查询全链路。
 - **在线测试**：`npm run test:e2e`，用单独的配置 `tests/e2e/vitest.config.ts`，不在 `npm test` 和 CI 里。使用开发者本机 `~/.catbus` 里的登录态，没登录的平台整组跳过；`npm run test:e2e -- -t <platform>` 只跑一个平台（`-t` 按名字前缀匹配，x 要写成 `-t '^x '`，否则会连 xhs、xianyu 一起跑）。
   - 只跑只读命令：从注册表枚举每个平台已实现的读取类命令，前面命令返回的对象（item、用户、评论、直播间、会话、收藏夹……）的 `url` 或 `id` 作为后面命令的参数，逐条校验信封和 6.2 的字段结构。写操作、下载、长连接不跑。
