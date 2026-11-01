@@ -16,6 +16,7 @@ const METHOD_LABEL: Record<LoginMethod, string> = {
   password: '账号密码',
   cookie: '导入 cookie',
   oauth: '浏览器授权',
+  apikey: 'API Key',
 }
 
 export interface SetupState {
