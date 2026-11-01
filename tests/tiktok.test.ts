@@ -1126,4 +1126,37 @@ describe('tiktok 补齐的能力：翻页、参数与解析', () => {
     expect(Object.keys(web.commands.get('item publish')!.options)).toEqual(expect.arrayContaining(['allowComment', 'allowDuet', 'allowStitch', 'allowContentReuse', 'allowAiRemix']))
     expect(web.commands.get('live media')!.status).toBe('implemented')
   })
+
+  it('item search：兼容 AI 提示横幅伴随的 status_code=403（含有效 data）与空结果 status_code=203', async () => {
+    const { itemSearch } = await import('../src/platforms/tiktok/web/commands.js')
+    const item = { id: AWEME, desc: 'Google AI Studio', author: { id: '1', uniqueId: 'creator' } }
+    const bannerBody = {
+      status_code: 403,
+      data: [{ type: 1, item }],
+      cursor: 12,
+      has_more: 1,
+      suicide_prevent: { issue_name: 'ai_medialit' },
+    }
+    const ctx = sessionCtx({ platform: 'tiktok', args: { keyword: 'Google AI Studio' } })
+    const r1 = await withBodies([JSON.stringify(bannerBody)], async () => itemSearch(ctx))
+    expect((r1.result as any).data).toMatchObject([{ id: AWEME, text: 'Google AI Studio' }])
+    expect((r1.result as any).page).toEqual({ cursor: '12', has_more: true })
+
+    const r2 = await withBodies([JSON.stringify({ status_code: 203, cursor: 0, has_more: 0 })], async () => itemSearch(ctx))
+    expect((r2.result as any).data).toEqual([])
+    expect((r2.result as any).page).toEqual({ cursor: null, has_more: false })
+
+    // 真正的无数据 403 仍照常报 UPSTREAM
+    await expect(withBodies([JSON.stringify({ status_code: 403 })], async () => itemSearch(ctx))).rejects.toMatchObject({ code: 'UPSTREAM' })
+  })
+
+  it('msToken：优先取随 Set-Cookie 轮换的 cookie，避免被会话 JSON 里过期的 storage msToken 覆盖', () => {
+    const ctx = sessionCtx({ platform: 'tiktok' })
+    ctx.credential.device.session_storage = { msToken: 'stale_session_storage_token' }
+    ctx.credential.device.local_storage = { msToken: 'stale_local_storage_token' }
+    const t = new TikTok(ctx)
+    expect(t.msToken).toBe(t.cookie('msToken'))
+    t.jar.set('msToken', 'fresh_rotated_cookie_token', '.tiktok.com')
+    expect(t.msToken).toBe('fresh_rotated_cookie_token')
+  })
 })
