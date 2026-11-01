@@ -155,9 +155,9 @@ export class TikTok {
     return (this.device.web_id_last_time = String(rand.nowSeconds()))
   }
 
-  /** 查询签名用的 msToken：sessionStorage > localStorage > cookie。 */
+  /** 查询签名用的 msToken：优先取随 Set-Cookie 轮换的 cookie，其次取导入会话时的 sessionStorage / localStorage。 */
   get msToken(): string {
-    return this.device.session_storage?.msToken || this.device.local_storage?.msToken || this.cookie('msToken')
+    return this.cookie('msToken') || this.device.session_storage?.msToken || this.device.local_storage?.msToken || ''
   }
 
   get ttwid(): string {
@@ -358,7 +358,7 @@ export class TikTok {
     } catch {
       throw new CatbusError('UPSTREAM', `TikTok 返回的不是 JSON（HTTP ${res.status}）`, { detail: { status: res.status, path: o.path, body: text.slice(0, 300) } })
     }
-    check(this.ctx, body)
+    check(this.ctx, body, o.path)
     if (res.status >= 400) throw new CatbusError('UPSTREAM', `TikTok 返回 HTTP ${res.status}`, { detail: { status: res.status, path: o.path, body: text.slice(0, 300) } })
     return body as T
   }
@@ -373,13 +373,17 @@ export class TikTok {
 }
 
 /** 业务状态码：status_code / statusCode 非 0 时报错。 */
-export function check(ctx: HandlerContext, body: any): void {
+export function check(ctx: HandlerContext, body: any, path?: string): void {
   if (!body || typeof body !== 'object' || Array.isArray(body)) return
   const code = body.status_code ?? body.statusCode
   // privacy config 这类接口用 statusCode: 200 表示成功
   if (code == null || code === 0 || code === '0' || code === 200) return
   const message = String(body.status_msg ?? body.statusMsg ?? body.message ?? '')
   const c = Number(code)
+  // 搜索接口在触发 AI 媒体素养等提示横幅（suicide_prevent）时会同时返回完整 data 列表与 status_code=403；无匹配结果时返回 status_code=203
+  if (path?.includes('/api/search/') && ((Array.isArray(body.data) && body.data.length > 0) || (c === 203 && body.data == null))) {
+    return
+  }
   // 8：Login expired；20003：webcast 的 User doesn't login
   if (c === 8 || c === 20003) throw authError(ctx, isGuest(ctx) ? undefined : message || undefined)
   if (c === 10000) {
