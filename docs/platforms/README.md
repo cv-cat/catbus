@@ -24,8 +24,6 @@
 
 ## 怎么选登录方式
 
-- **API Key** 用于 M-Team：在 MT 的“控制台 → 实验室 → 存取令牌”生成，执行 `catbus mteam auth login` 隐藏输入，或 `--api-key-file <文件>` 导入。见 [M-Team](mteam.md)。
-
 - **扫码**最省事：xhs、douyin、bilibili、kuaishou、xianyu、jd 默认就是扫码，二维码画在终端（stderr）里，同时存一份 PNG 到 `~/.catbus/cache/<platform>/`。小红书扫码后常被要求人机验证，目前建议改用 cookie。
 - **cookie** 是 tiktok、weibo、taobao、x 唯一的方式，其他平台加 `--method cookie` 也能用。一定要从 DevTools → Network 复制请求头里完整的 Cookie：登录态的关键 cookie 大多是 HttpOnly 的，`document.cookie` 拿不到。
 - **浏览器授权**只有 jimeng：在已登录即梦的浏览器里打开 stderr 里的链接并同意，保存的是即梦官方 CLI `dreamina` 的登录态，多个账号之间用 `auth use` 切换，见 [即梦](jimeng.md)。

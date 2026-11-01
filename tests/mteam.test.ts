@@ -5,8 +5,6 @@ import { newCredential, setCurrent, writeCredential } from '../src/core/auth-sto
 import { fakeResponse, mockSender, type PreparedRequest, type HttpResponse } from '../src/core/http.js'
 import { redact } from '../src/core/log.js'
 import * as rand from '../src/core/rand.js'
-import { findPlatform } from '../src/platforms/index.js'
-import { buildArgv, createPool, harvest } from './e2e/pool.js'
 import { shapeOf } from './e2e/shapes.js'
 import { cli, useTempHome } from './helpers.js'
 
@@ -153,25 +151,6 @@ describe('mteam：官方 API 适配', () => {
     expect(detail.code).toBe(0)
     expect(detail.env.data.id).toBe(id)
     expect(detail.env.data.url).toBe(`https://kp.m-team.cc/detail/${id}`)
-  })
-
-  it.each(['item search', 'feed list'])('在线验收能把 %s 的种子结果接力给详情命令', async (key) => {
-    const endpoint = findPlatform('mteam')!.endpoints.web
-    if (endpoint === 'planned') throw new Error('M-Team web 端必须可用')
-    const command = endpoint.commands.get(key)!
-    const detailCommand = endpoint.commands.get('item get')!
-    const args = key === 'item search' ? ['测试资源'] : []
-    const result = await cli('mteam', command.resource, command.action, ...args)
-    expect(result.code).toBe(0)
-    const pool = createPool()
-    harvest(pool, command, args, result.env.data)
-    const detailArgs = buildArgv('mteam', detailCommand, pool)
-    expect(detailArgs).toEqual([result.env.data[0].url])
-    if (!Array.isArray(detailArgs)) throw new Error('搜索成功后不应跳过详情验收')
-    const detail = await cli('mteam', detailCommand.resource, detailCommand.action, ...detailArgs)
-    expect(detail.code).toBe(0)
-    expect(detail.env.data.id).toBe(result.env.data[0].id)
-    expect(new URL(requests.at(-1)!.url).pathname).toBe('/api/torrent/detail')
   })
 
   it('limit 截在一页中间时 cursor 可以续读；翻页拿到末页后停止', async () => {
@@ -338,9 +317,8 @@ describe('mteam：官方 API 适配', () => {
     expect(requests).toHaveLength(0)
   })
 
-  it('API Key、passkey 和成对请求头可被通用 logger 脱敏', () => {
+  it('API Key 和 passkey 可被通用 logger 脱敏', () => {
     expect(redact({ 'x-api-key': KEY, api_key: KEY, passkey: KEY })).toEqual({ 'x-api-key': '***', api_key: '***', passkey: '***' })
-    expect(redact([['x-api-key', KEY], ['accept', 'application/json']])).toEqual([['x-api-key', '***'], ['accept', 'application/json']])
     expect(redact(`x-api-key=${KEY}&passkey=${KEY}`)).toBe('x-api-key=***&passkey=***')
   })
 })

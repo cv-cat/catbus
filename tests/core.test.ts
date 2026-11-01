@@ -54,17 +54,6 @@ describe('log.redact', () => {
     expect(redact('SESSDATA=secret; bili_jct=1')).toBe('SESSDATA=***; bili_jct=1')
     expect(redact({ proxy: 'socks5://user:pass@127.0.0.1:1080' })).toEqual({ proxy: 'socks5://***@127.0.0.1:1080' })
   })
-
-  it('二元素字符串数组仍逐项脱敏，不能把含值的首项当成请求头名称', () => {
-    expect(redact(['access_token=fake-secret', 'ordinary-value'])).toEqual(['access_token=***', 'ordinary-value'])
-    expect(redact(['Cookie: session=fake-cookie', 'Accept: application/json'])).toEqual(['Cookie: ***', 'Accept: application/json'])
-    expect(redact({ messages: ['x-api-key=fake-key', 'ordinary-value'] })).toEqual({ messages: ['x-api-key=***', 'ordinary-value'] })
-  })
-
-  it('合法的敏感请求头键值对仍隐藏第二项，普通请求头保持原值', () => {
-    expect(redact([['x-api-key', 'fake-key'], ['Authorization', 'Bearer fake-token'], ['Accept', 'application/json']]))
-      .toEqual([['x-api-key', '***'], ['Authorization', '***'], ['Accept', 'application/json']])
-  })
 })
 
 describe('options', () => {

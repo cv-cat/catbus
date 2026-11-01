@@ -15,10 +15,11 @@ export async function ensureDir(dir: string): Promise<void> {
 export async function writeFileAtomic(file: string, data: string | Uint8Array, options: { overwrite?: boolean } = {}): Promise<void> {
   await ensureDir(dirname(file))
   const tmp = `${file}.${process.pid}.${randomBytes(4).toString('hex')}.tmp`
+  await writeFile(tmp, data, { mode: 0o600 })
   try {
-    await writeFile(tmp, data, { mode: 0o600 })
     if (options.overwrite === false) {
       await link(tmp, file)
+      await rm(tmp, { force: true })
       return
     }
     // Windows 上目标文件被其他进程短暂占用时 rename 会失败，重试几次。
@@ -32,8 +33,9 @@ export async function writeFileAtomic(file: string, data: string | Uint8Array, o
         await sleep(20 * (i + 1))
       }
     }
-  } finally {
+  } catch (err) {
     await rm(tmp, { force: true })
+    throw err
   }
 }
 

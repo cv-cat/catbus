@@ -394,7 +394,6 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 **下载**：
 - `--dir <目录>`：默认当前目录。文件名为 `<platform>_<id>_<序号>.<ext>`。
 - `--overwrite`：覆盖已有文件，默认跳过已有文件。
-- mteam 的默认下载在最终发布文件时使用原子排他操作；下载期间新出现的同名文件也保留并跳过。
 
 **长连接**：`listen` 总是输出 jsonl，断线自动重连。`--duration <秒|10m|1h>` 指定运行时长，Ctrl-C 正常退出，退出码 0。
 

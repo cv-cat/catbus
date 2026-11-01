@@ -1,7 +1,7 @@
 # catbus
 
-> catbus (猫巴士, "all aboard, every platform") is a TypeScript CLI with 13 registered platforms: Xiaohongshu (xhs), Douyin, TikTok, Bilibili, Kuaishou, Weibo, Xianyu, Taobao, JD, X, 12306, Jimeng and M-Team. It provides uniform command syntax and JSON output. Jimeng manages the external dreamina CLI's accounts only.
-> The original 10 platforms are ported from cv-cat's Python projects. 12306 and M-Team use official APIs. Node is required at runtime; Jimeng additionally needs dreamina on macOS. Version 0.2.1; app / pc endpoints are planned.
+> catbus (猫巴士, "all aboard, every platform") is a TypeScript CLI that drives the web APIs of 10 Chinese and global platforms — Xiaohongshu (xhs), Douyin, TikTok, Bilibili, Kuaishou, Weibo, Xianyu, Taobao, JD and X — through one uniform command syntax and one JSON output format.
+> Capabilities are ported from cv-cat's open-source Python projects and rewritten in TypeScript. Only Node is required at runtime. Version 0.1.0; web endpoints of all 10 platforms are ported; app / pc endpoints are planned.
 
 ## What catbus does
 
