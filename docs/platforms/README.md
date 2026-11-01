@@ -16,12 +16,15 @@
 | [X](x.md) | `x` | `twitter` | 推文 | **cookie** | 33（30 · 3） | 20 | [XApis](https://github.com/cv-cat/XApis) |
 | [12306 铁路](12306.md) | `12306` | — | 车次 | **免登录** | 8（8 · 0） | 0 | 无（官方公开接口） |
 | [即梦](jimeng.md) | `jimeng` | `dreamina` | 作品 | **浏览器授权**（只管 `dreamina` 的登录态，仅 macOS） | 5（5 · 0） | 0 | 无（即梦官方 CLI `dreamina`） |
+| [M-Team](mteam.md) | `mteam` | `mt` `m-team` `mantou` | 种子资源 | **API Key** | 11（10 · 1） | 0 | 无（官方 API） |
 
 - 数字是 web 端注册表里的命令数，包含 `auth` 命令和平台扩展命令；平台没有这个概念的命令（矩阵里的 —）不计入。app / pc 端目前全部是规划中。
 - ✓ 上游已有；◐ 上游部分支持，限制写在各篇的说明里；○ 规划中，执行时返回 `NOT_IMPLEMENTED`（退出码 4）。
 - 命令表以注册表为准：`catbus platforms <platform>` 输出同样的数据（JSON），`catbus <platform> <resource> <action> --help` 列出每条命令的参数和选项。
 
 ## 怎么选登录方式
+
+- **API Key** 用于 M-Team：在 MT 的“控制台 → 实验室 → 存取令牌”生成，执行 `catbus mteam auth login` 隐藏输入，或 `--api-key-file <文件>` 导入。见 [M-Team](mteam.md)。
 
 - **扫码**最省事：xhs、douyin、bilibili、kuaishou、xianyu、jd 默认就是扫码，二维码画在终端（stderr）里，同时存一份 PNG 到 `~/.catbus/cache/<platform>/`。小红书扫码后常被要求人机验证，目前建议改用 cookie。
 - **cookie** 是 tiktok、weibo、taobao、x 唯一的方式，其他平台加 `--method cookie` 也能用。一定要从 DevTools → Network 复制请求头里完整的 Cookie：登录态的关键 cookie 大多是 HttpOnly 的，`document.cookie` 拿不到。

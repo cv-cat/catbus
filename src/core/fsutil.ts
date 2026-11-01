@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto'
-import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
+import { link, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { setTimeout as sleep } from 'node:timers/promises'
 
@@ -8,12 +8,19 @@ export async function ensureDir(dir: string): Promise<void> {
   await mkdir(dir, { recursive: true, mode: 0o700 })
 }
 
-/** 原子写入：先写同目录的临时文件（0600），再 rename 覆盖。 */
-export async function writeFileAtomic(file: string, data: string | Uint8Array): Promise<void> {
+/**
+ * 先写同目录临时文件（0600），默认 rename 覆盖。
+ * overwrite=false 时用 hard link 原子发布完整文件；目标存在则抛 EEXIST，绝不覆盖。
+ */
+export async function writeFileAtomic(file: string, data: string | Uint8Array, options: { overwrite?: boolean } = {}): Promise<void> {
   await ensureDir(dirname(file))
   const tmp = `${file}.${process.pid}.${randomBytes(4).toString('hex')}.tmp`
-  await writeFile(tmp, data, { mode: 0o600 })
   try {
+    await writeFile(tmp, data, { mode: 0o600 })
+    if (options.overwrite === false) {
+      await link(tmp, file)
+      return
+    }
     // Windows 上目标文件被其他进程短暂占用时 rename 会失败，重试几次。
     for (let i = 0; ; i++) {
       try {
@@ -25,9 +32,8 @@ export async function writeFileAtomic(file: string, data: string | Uint8Array): 
         await sleep(20 * (i + 1))
       }
     }
-  } catch (err) {
+  } finally {
     await rm(tmp, { force: true })
-    throw err
   }
 }
 

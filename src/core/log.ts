@@ -1,7 +1,8 @@
-const SENSITIVE = /cookie|token|authorization|password|secret|ticket|sessdata|ct0/i
+const SENSITIVE = /cookie|token|authorization|password|secret|ticket|sessdata|ct0|api[-_]?key|passkey/i
+const HEADER_NAME = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/
 const URL_USERINFO = /\/\/[^/\s:@]+:[^/\s@]+@/g
 const COOKIE_HEADER = /\b((?:set-)?cookie)(["']?\s*:\s*)[^\n]*/gi
-const SENSITIVE_PAIR = /\b(authorization|[\w-]*token|password|secret|ticket|sessdata|ct0)(["']?\s*[:=]\s*)((?:bearer|basic)\s+)?("[^"]*"|'[^']*'|[^\s,;&]+)/gi
+const SENSITIVE_PAIR = /\b(authorization|[\w-]*token|password|secret|ticket|sessdata|ct0|[\w-]*api[-_]?key|passkey)(["']?\s*[:=]\s*)((?:bearer|basic)\s+)?("[^"]*"|'[^']*'|[^\s,;&]+)/gi
 
 /**
  * 给凭证打码：对象里键名敏感的值换成 ***；字符串里的 Cookie 头整行打码，key=value / key: value 只打码值，
@@ -11,7 +12,10 @@ export function redact(value: unknown): unknown {
   if (typeof value === 'string') {
     return value.replace(URL_USERINFO, '//***@').replace(COOKIE_HEADER, '$1$2***').replace(SENSITIVE_PAIR, '$1$2$3***')
   }
-  if (Array.isArray(value)) return value.map(redact)
+  if (Array.isArray(value)) {
+    if (value.length === 2 && typeof value[0] === 'string' && HEADER_NAME.test(value[0]) && SENSITIVE.test(value[0])) return [redact(value[0]), '***']
+    return value.map(redact)
+  }
   if (value && typeof value === 'object') {
     const out: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(value)) out[k] = SENSITIVE.test(k) && v != null ? '***' : redact(v)

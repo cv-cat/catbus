@@ -1,0 +1,25 @@
+service: M-Team official API
+api: https://api.m-team.cc/api
+web: https://kp.m-team.cc/brows
+reference: https://wiki.m-team.cc/api
+checked: 2026-11-01
+
+auth: x-api-key header; API Access Token obtained in 控制台 → 实验室 → 存取令牌
+No Python upstream or signature JS. This is an original TypeScript adapter for the official API.
+
+Verified with an authenticated account (read-only; no real data kept in repository):
+- POST /member/profile: empty form, response data.id / username / memberCount
+- POST /torrent/search: JSON {mode,categories,keyword,pageNumber,pageSize}; response data {pageNumber,pageSize,total,totalPages,data[]}
+- POST /torrent/detail: form {id}; response is a torrent object
+- POST /torrent/categoryList: empty form; response data.list[] contains id/nameChs/nameCht/nameEng/parent
+
+Download request contract cross-checked against maintained client implementations; tested offline:
+- POST /torrent/genDlToken: form {id}; response data is a temporary download URL
+- GET the returned HTTPS M-Team URL without forwarding x-api-key, save .torrent only
+- No BT client integration, Tracker announce, upload, or automatic seeding
+
+Additional primary implementation references for protocol cross-checks (no source copied):
+- https://github.com/Jackett/Jackett/blob/master/src/Jackett.Common/Indexers/Definitions/MTeamTp.cs (blob 0323ec0d976e44d13f39a08d354f3d6ed7f33f81)
+- https://github.com/pt-plugins/PT-depiler/blob/master/src/packages/site/definitions/mteam.ts (blob 8bd37832d18f08d7ff4901c8fcf6a758a1212bac)
+
+Offline tests use synthetic responses and fake keys. No credentials, signed URLs, private torrent metadata, or account details are fixtures.

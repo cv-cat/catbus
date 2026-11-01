@@ -37,7 +37,7 @@
 
 ## 2. 范围
 
-- 目前支持第 3 节的 12 个平台的 web 端（10 个内容与电商平台 + 12306 铁路平台 `12306` + 即梦 `jimeng`）；app / pc 端在注册表里为 planned（见 4.3）。
+- 目前支持第 3 节的 13 个平台的 web 端（10 个内容与电商平台 + 12306 铁路平台 `12306` + 即梦 `jimeng` + M-Team `mteam`）；app / pc 端在注册表里为 planned（见 4.3）。
 - `jimeng` 不调用平台接口，只保存和切换即梦官方 CLI `dreamina` 的登录态，是第 1 节「只需要 Node」「支持全部目标系统」的例外：需要另外安装 `dreamina`，只支持 macOS（见 5.6）。
 - 矩阵里的 ○（平台有这个概念、上游没有的能力）只占位：注册为 planned，执行时返回 NOT_IMPLEMENTED，有需要时再实现。移植中发现矩阵与上游不符（上游其实没有、或只是占位）的能力，按上游实际情况标为 ○ 或 ◐，以 `docs/capabilities.md` 为准。
 - 新平台开始移植时，先把平台 id、别名、`item` 叫法等登记到第 3 节、4.2 和 4.5，再进注册表；在那之前 `catbus <平台>` 是未知平台（`USAGE`）。
@@ -59,6 +59,7 @@
 | x | XApis | `x_apis/x_api.py`、`x_apis/x_write_api.py`、`x_apis/login_api.py` |
 | 12306 | （无上游仓库，直接对接 12306 官方公开接口） | `https://kyfw.12306.cn`（接口端点见 `src/platforms/12306/UPSTREAM`） |
 | jimeng | （无上游仓库，封装即梦官方 CLI `dreamina` 的登录态） | `dreamina` 的子命令与钥匙串项（见 `src/platforms/jimeng/UPSTREAM`、5.6） |
+| mteam | （无上游仓库，直接对接 M-Team 官方 API） | `https://api.m-team.cc/api`（来源与验证范围见 `src/platforms/mteam/UPSTREAM`） |
 
 参考资料：
 - 每个仓库的鉴权、登录、API 方法、JS 资产、游客态生成位置，以及 Python → JS 的替换对照，见 [docs/upstream-map.md](docs/upstream-map.md)。
@@ -73,6 +74,7 @@
 - 每个平台的移植基于哪个上游 commit，记录在 `src/platforms/<p>/UPSTREAM`。
 - `12306` 平台直接对接 12306 官方公开接口，无上游 `references/` 仓库，基准与接口说明见 `src/platforms/12306/UPSTREAM`；离线测试不采用 Python 对拍（golden），改用基于真实响应裁剪的 fixture，通过 `mockSender` / `fakeResponse` 回放测试。
 - `jimeng` 平台没有上游仓库，也不发 HTTP 请求：`UPSTREAM` 记录验证过的 `dreamina` 版本、用到的子命令和钥匙串项；离线测试替换 `dreamina` 子进程和钥匙串读写（`tests/jimeng.test.ts`）。
+- `mteam` 平台通过官方 API Key 调用接口，无 Python 上游；离线测试使用假凭证与合成响应，通过 `mockSender` / `fakeResponse` 校验请求和输出，不保存真实账号数据。
 
 ## 4. 命令规范
 
@@ -117,6 +119,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | `x` | `twitter` |
 | `12306` | — |
 | `jimeng` | `dreamina` |
+| `mteam` | `mt`, `m-team`, `mantou` |
 
 目录名、配置键、输出里的 `platform` 字段一律使用**规范 id**。只有平台有别名；resource 和 action 没有别名。
 
@@ -184,6 +187,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | taobao | 商品 |
 | jd | 商品 SKU |
 | jimeng | 作品（目前没有 item 命令） |
+| mteam | 种子资源（输出 Torrent，含统一 Item 字段及 PT 元数据） |
 
 各动作的说明：
 - `item list`：当前账号自己发布的内容，带审核状态，数据来自创作者中心。
@@ -223,6 +227,9 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 
 | 平台 | 命令 | 说明 | 输出 |
 |---|---|---|---|
+| mteam | `auth login [--api-key-file <文件> \| --api-key-stdin]` | 官方 API Key 登录，默认 `--method apikey`；TTY 下省略选项时隐藏输入。凭证写入 `scopes.main.tokens.api_key`，不接受命令行明文 Key | Account |
+| mteam | `item search <kw>` / `feed list` `[--mode normal\|movie\|tvshow\|music\|anime\|adult] [--category <id>] [--free]` | 资源搜索 / 浏览，默认综合区 normal；`--free` 只看免费资源；沿用 `--limit` / `--cursor` / `--all`。`feed list` 表示浏览最新资源，`item list` 仍保留“自己的投稿”语义 | Torrent[] |
+| mteam | `item get <item>` / `item categories` / `item download <item>` | 详情 / 分类 / 下载 `.torrent` 文件；下载沿用 `--dir` / `--overwrite`，不添加下载客户端任务。文件可能包含 Tracker 凭证，权限 0600，输出 File.url 为 null，不输出临时下载链接 | Torrent / Category[] / File[] |
 | tiktok | `folder add <folder> <item>` | 把视频加入收藏夹（一次一个视频）。TikTok 只能把已收藏的视频加进收藏夹 | `{id}`（视频 id） |
 | tiktok | `folder create <name> [--visibility public\|private]` | 收藏夹公开 / 私密：用 4.9 的标准选项 `--visibility`，只取 `public`、`private`；默认 `private`（与上游一致） | Folder |
 | tiktok | `folder update <folder> [--name <name>] [--visibility public\|private]` | 同上。`--name`、`--visibility` 至少给一个，没给的保持原值 | Folder |
@@ -387,6 +394,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 **下载**：
 - `--dir <目录>`：默认当前目录。文件名为 `<platform>_<id>_<序号>.<ext>`。
 - `--overwrite`：覆盖已有文件，默认跳过已有文件。
+- mteam 的默认下载在最终发布文件时使用原子排他操作；下载期间新出现的同名文件也保留并跳过。
 
 **长连接**：`listen` 总是输出 jsonl，断线自动重连。`--duration <秒|10m|1h>` 指定运行时长，Ctrl-C 正常退出，退出码 0。
 
@@ -501,7 +509,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 ### 5.3 登录与登出
 
 ```bash
-catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth] [--scope <scope>]
+catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth|apikey] [--scope <scope>]
 ```
 
 **账号名**：
@@ -518,6 +526,7 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth] [-
 | `password` | `--username`、`--password-stdin` | 密码只从 stdin 读取，TTY 下隐藏输入 |
 | `cookie` | `--cookie <str\|@file\|->` | 导入后调一次 `me` 校验。也接受浏览器导出的 cookie JSON 数组；douyin、tiktok 另外接受一个 JSON 对象，把 ticket、证书、私钥等设备数据一并导入（这两个平台的写操作需要它们） |
 | `oauth` | — | 浏览器授权（OAuth 设备码）：授权链接打到 stderr，用户在已登录该平台的浏览器里打开并同意，然后等待授权完成。目前只有 `jimeng`，由 `dreamina` 完成授权（见 5.6） |
+| `apikey` | `--api-key-file`、`--api-key-stdin`（mteam 私有选项） | 从本地文件或 stdin 读取官方访问令牌，TTY 可隐藏输入；先在线校验，再由 core 保存到账号凭证。令牌只发到官方 API，不传给重定向目标 |
 
 - **验证码**：上游能自动过的就自动过，过不了报 `RISK_CONTROL`（`detail.kind = captcha`），退出码 5。
 - **子站点**（创作者中心、直播、IM 等）：
@@ -539,7 +548,7 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth] [-
   "endpoint": "web",
   "account": "default",                  // 游客文件为 "guest"
   "user": { "id": "5f...", "name": "...", "url": "..." },   // UserRef；游客为 null
-  "method": "qrcode",                    // qrcode | sms | password | cookie | oauth | guest
+  "method": "qrcode",                    // qrcode | sms | password | cookie | oauth | apikey | guest
   "created_at": "2026-09-27T12:00:00+08:00",
   "updated_at": "2026-09-27T12:00:00+08:00",
   "scopes": {                            // 子站点分区；单站点平台只有 main
@@ -636,6 +645,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 |---|---|
 | User | `id name handle avatar url bio stats{followers following items likes}` |
 | Item | `id kind url title text author:UserRef created_at cover media:Media[] stats{views likes comments collects shares} price:Price\|null status\|null` |
+| Torrent | Item 的全部字段（`kind: torrent`），另有 `size file_count category_id seeders leechers completed discount`；大小为字节，计数为整数或 null，优惠为站点代码或 null |
 | Comment | `id item_id parent_id author:UserRef text created_at stats{likes replies}` |
 | Folder / Series | `id name count url` |
 | Category | `id name parent_id` |
@@ -696,7 +706,8 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 
 | 字段 | 取值 |
 |---|---|
-| Item.kind | `video` `image` `text` `article` `goods` |
+| Item.kind | `video` `image` `text` `article` `goods` `torrent` |
+| File.type | `image` `video` `audio` `torrent` |
 | Item.status | `published` `reviewing` `rejected` `private` `draft`；商品另有 `on_sale` `sold` `off_shelf`。只有自己的内容和商品才有，其余为 null |
 | Media.type | `image` `video` `audio` |
 | Live.status | `live` `offline` |
@@ -714,7 +725,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 
 ### 6.3 各命令的输出
 
-读取类命令按资源返回对应类型。列表类命令返回数组，并带 `page`。
+读取类命令按资源返回对应类型。列表类命令返回数组，并带 `page`。mteam 的 `item get` 返回 Torrent，`item search` / `feed list` 返回 Torrent[]；`user get` 首版只支持 me。
 
 | 命令 | data |
 |---|---|

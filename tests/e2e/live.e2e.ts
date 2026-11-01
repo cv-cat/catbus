@@ -4,6 +4,7 @@ import { afterAll, describe, expect, test } from 'vitest'
 import { type Command, sortCommands } from '../../src/core/registry.js'
 import { PLATFORMS } from '../../src/platforms/index.js'
 import { cli } from '../helpers.js'
+import { buildArgv, createPool, harvest, type Obj } from './pool.js'
 import { shapeOf } from './shapes.js'
 
 /**
@@ -24,80 +25,9 @@ const NON_EMPTY = new Set(['item search', 'user search', 'feed list', 'keyword h
 /** 取决于账号关注了谁的列表：可以为空。 */
 const MAY_BE_EMPTY = new Set(['tiktok live list'])
 
-const KEYWORD: Record<string, string> = { tiktok: 'cat', x: 'cat', xianyu: '键盘', taobao: '键盘', jd: '键盘' }
 /** 命令之间的间隔（毫秒）。小红书对连续请求更敏感：1.5 秒间隔下评论接口触发过 461。 */
 const INTERVAL: Record<string, number> = { xhs: 4000 }
 const DEFAULT_INTERVAL = 1500
-
-type Obj = Record<string, any>
-
-/** 前面命令拿到的对象。 */
-interface Pool {
-  items: Obj[]
-  products: Obj[]
-  users: Obj[]
-  lives: Obj[]
-  comments: { comment: Obj; item: string }[]
-  conversations: Obj[]
-  folders: Obj[]
-  series: Obj[]
-}
-
-const ref = (o: Obj): string => o.url ?? o.id
-const first = <T>(list: T[], prefer: (x: T) => boolean): T | undefined => list.find(prefer) ?? list[0]
-
-/** 按参数名取值；缺少前置对象时返回 undefined（跳过这条命令）。 */
-function argValue(p: string, cmd: Command, name: string, pool: Pool, commentItem: string | undefined): string | undefined {
-  switch (name) {
-    case 'keyword':
-    case 'prefix':
-      return KEYWORD[p] ?? '猫'
-    case 'item': {
-      if (commentItem) return commentItem
-      const o = cmd.resource === 'comment' ? first(pool.items, (x) => x.stats?.comments > 0) : pool.items[0]
-      return o && ref(o)
-    }
-    case 'product': {
-      const o = pool.products[0]
-      return o && ref(o)
-    }
-    case 'user': {
-      // 直播间的主播优先；快手的主播 id 和主页 id 是两套（见 docs/platforms/kuaishou.md 的已知限制），用主页用户
-      if (cmd.resource === 'live' && p !== 'kuaishou') {
-        const host = pool.lives.find((l) => l.host)?.host
-        if (host) return ref(host)
-      }
-      const o = pool.users[0]
-      return o && ref(o)
-    }
-    case 'room': {
-      const o = first(pool.lives, (x) => x.status === 'live')
-      return o && ref(o)
-    }
-    case 'conversation':
-      return pool.conversations[0]?.id
-    case 'folder':
-      return first(pool.folders, (x) => x.count > 0)?.id
-    case 'series':
-      return first(pool.series, (x) => x.count > 0)?.id
-  }
-  return undefined
-}
-
-/** 命令行参数；缺少前置对象时返回缺的参数名。 */
-function buildArgv(p: string, cmd: Command, pool: Pool): string[] | { missing: string } {
-  const argv: string[] = []
-  const needsComment = cmd.args.some((a) => a.name === 'comment')
-  const c = needsComment ? first(pool.comments, (x) => x.comment.stats?.replies > 0) : undefined
-  if (needsComment && !c) return { missing: 'comment' }
-  for (const a of cmd.args) {
-    if (a.optional) continue
-    const v = a.name === 'comment' ? c!.comment.id : argValue(p, cmd, a.name, pool, c?.item)
-    if (v == null) return { missing: a.name }
-    argv.push(v)
-  }
-  return argv
-}
 
 /** 执行顺序：auth status → 不依赖别的对象的命令 → 依赖 item / 用户 / 直播间等的命令 → 依赖评论的命令。 */
 function phase(cmd: Command): number {
@@ -106,39 +36,6 @@ function phase(cmd: Command): number {
   if (names.includes('comment')) return 3
   if (names.some((n) => n !== 'keyword' && n !== 'prefix')) return 2
   return 1
-}
-
-/** 把结果里的对象收进 pool。 */
-function harvest(pool: Pool, cmd: Command, argv: string[], data: unknown): void {
-  const type = cmd.output.replace(/\[\]$/, '')
-  const list = (Array.isArray(data) ? data : [data]).filter((x): x is Obj => x != null && typeof x === 'object')
-  for (const o of list) {
-    switch (type) {
-      case 'Item':
-        if (cmd.key === 'live products' || cmd.key === 'product get') pool.products.push(o)
-        else pool.items.push(o)
-        if (o.author) pool.users.push(o.author)
-        break
-      case 'User':
-        if (cmd.key !== 'user get' || argv[0] !== 'me') pool.users.push(o)
-        break
-      case 'Live':
-        pool.lives.push(o)
-        break
-      case 'Comment':
-        if (cmd.key === 'comment list') pool.comments.push({ comment: o, item: argv[0]! })
-        break
-      case 'Conversation':
-        pool.conversations.push(o)
-        break
-      case 'Folder':
-        pool.folders.push(o)
-        break
-      case 'Series':
-        pool.series.push(o)
-        break
-    }
-  }
 }
 
 /** 在所有元素里都没取到值（null 或 []）的字段，用来发现归一化漏取的字段。 */
@@ -190,9 +87,7 @@ for (const platform of PLATFORMS) {
     .map((x) => x.c)
 
   describe(p, () => {
-    const pool: Pool = {
-      items: [], products: [], users: [], lives: [], comments: [], conversations: [], folders: [], series: [],
-    }
+    const pool = createPool()
     const entries: Entry[] = []
     reports.set(p, entries)
     let loggedIn = true
