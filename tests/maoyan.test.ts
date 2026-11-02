@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { fakeResponse, type HeaderPairs, type HttpResponse, mockSender, type PreparedRequest } from '../src/core/http.js'
 import * as rand from '../src/core/rand.js'
 import { resolveCity, resolveProject } from '../src/platforms/maoyan/web/resolve.js'
+import { mockGuard, PCLOGIN_UA } from '../src/platforms/maoyan/web/loginSign.js'
 import { mtgsig, WEBDFPID } from '../src/platforms/maoyan/web/sign.js'
 import { cli, useTempHome } from './helpers.js'
 import { readCredential } from '../src/core/auth-store.js'
@@ -221,23 +222,57 @@ describe('maoyan 平台（web）', () => {
       '/mlogin/dp/api/v1/qrlogin/check': check,
       '/api/account/v1/getUserInfoByToken': USER,
     })
+    // 扫码接口走 pclogin 页的 H5guard 4.3.0：真实实现不好离线测（指纹与时间绑定），换桩
+    const FP = 'H5dfp_4.3.0_tttt_test+/u=='
+    /** h5_fingerprint 的编码值：buildUrl 用 urlencode（quote_plus），+、/、= 都要转义。 */
+    const FP_Q = 'H5dfp_4.3.0_tttt_test%2B%2Fu%3D%3D'
+    const LOGIN_HEADERS = ['User-Agent', 'Content-Type', 'Referer', 'mtgsig']
+    let restoreGuard: (() => void) | undefined
+    let signedUrls: string[] = []
+    const installGuard = (): void => {
+      signedUrls = []
+      restoreGuard = mockGuard(() => ({
+        fingerprint: FP,
+        sign: async (url: string) => {
+          signedUrls.push(url)
+          return '{"a1":"1.2"}'
+        },
+        stop() {},
+      }))
+    }
+
+    afterEach(() => {
+      restoreGuard?.()
+      restoreGuard = undefined
+    })
 
     it('扫码：二维码内容由 qruuid 拼成，确认后保存 dper，凭证里不留 qruuid', async () => {
       const seq = [status(200), status(201), status(202, ['dper=fake-dper; Path=/; Domain=.dianping.com'])]
       const { calls } = mock(loginRoutes(() => seq.shift()!))
+      installGuard()
       const r = await cli('maoyan', 'auth', 'login')
       expect(r.code).toBe(0)
       expect(r.env.data).toMatchObject({ platform: 'maoyan', account: 'default', method: 'qrcode', user: { id: '12345', name: '测试用户' } })
       expect(r.stderr).toContain('大众点评 App')
       expect(r.stderr).toContain('已扫码')
-      expect(calls[0]!.url).toBe('https://accountapi.dianping.com/mlogin/dp/api/v1/qrlogin/getQrCodeImg?risk_app=216&risk_partner=26&risk_platform=2&h5_fingerprint=')
-      expect(calls[1]!.url).toBe(`https://accountapi.dianping.com/mlogin/dp/api/v1/qrlogin/check?qruuid=${QRUUID}&risk_app=216&risk_partner=26&risk_platform=2&h5_fingerprint=`)
+      // 请求照抄 account.dianping.com/pclogin 页：3 个 risk 参数 + 缓存整页的 h5_fingerprint + H5guard 公共参数，顺序一致
+      expect(calls[0]!.url).toBe(
+        `https://accountapi.dianping.com/mlogin/dp/api/v1/qrlogin/getQrCodeImg?risk_app=216&risk_partner=26&risk_platform=2&h5_fingerprint=${FP_Q}&yodaReady=h5&csecplatform=4&csecversion=4.3.0`,
+      )
+      expect(calls[1]!.url).toBe(
+        `https://accountapi.dianping.com/mlogin/dp/api/v1/qrlogin/check?qruuid=${QRUUID}&risk_app=216&risk_partner=26&risk_platform=2&h5_fingerprint=${FP_Q}&yodaReady=h5&csecplatform=4&csecversion=4.3.0`,
+      )
+      // 头部顺序照抄网页的 GET：mtgsig 在最后，没有 Origin；轮询期间每个 check 的 URL 都重新出签
+      expect(calls[0]!.headers.map(([k]) => k)).toEqual(LOGIN_HEADERS)
+      expect(calls[0]!.headers).toContainEqual(['User-Agent', PCLOGIN_UA])
+      expect(signedUrls).toEqual(calls.slice(0, -1).map((c) => c.url))
       expect(calls.at(-1)!.url).toBe('https://usercenter-inf.maoyan.com/api/account/v1/getUserInfoByToken?token=fake-dper')
       const saved = await readCredential('maoyan', 'web', 'default')
       expect(saved!.scopes.main!.cookies.map((c) => c.name)).toEqual(['dper'])
     })
 
     it('二维码过期报 AUTH_REQUIRED，有风险报 RISK_CONTROL', async () => {
+      installGuard()
       mock(loginRoutes(() => json('{"error":{"code":101208,"message":"二维码不存在或过期"}}')))
       const expired = await cli('maoyan', 'auth', 'login')
       expect(expired.code).toBe(3)
@@ -250,6 +285,7 @@ describe('maoyan 平台（web）', () => {
     })
 
     it('确认后响应里没有 dper 时报 UPSTREAM，不保存凭证', async () => {
+      installGuard()
       mock(loginRoutes(() => status(202)))
       const r = await cli('maoyan', 'auth', 'login')
       expect(r.code).toBe(7)
