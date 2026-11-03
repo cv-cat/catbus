@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- 抖音：扫码后 2046（「为保障你的账号安全，请前往抖音APP完成验证后再进行登录」）把登录流程白白中断。2046 是 passport 新加的二次验证风控门，不再报错：catbus 默认选短信验证，按登录页验证组件的请求形状直接调 `/passport/web/send_code/` 发码（stderr 提示发往的掩码手机号），验证码从 stdin 读一行（支持管道喂给 AI），`/passport/web/validate_code/` 校验通过后用同一个二维码 token 继续轮询等放行；回车跳过短信或决策里没有短信选项时，退回「等 App 端验证」的原有轮询，超时与过期逻辑不变，全程无浏览器
+
 ### Added
 
 - 新增 `jimeng`（即梦，别名 `dreamina`）平台：管理即梦官方 CLI `dreamina` 的多账号登录态，不注册生成类命令

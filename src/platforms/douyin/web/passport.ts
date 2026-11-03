@@ -5,8 +5,9 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { CatbusError } from '../../../core/errors.js'
+import { writeFileAtomic } from '../../../core/fsutil.js'
 import type { HttpResponse } from '../../../core/http.js'
-import { staticFile } from '../../../core/paths.js'
+import { cacheDir, staticFile } from '../../../core/paths.js'
 import { compactJson, jsonDumps, jsonLoads, parseQsl, quote, urlencode } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import * as api from './api.js'
@@ -15,6 +16,7 @@ import { clientDataCookie, clientDataV2Cookie, generateEcKey } from './crypto.js
 import { DTRAIT_BROKEN } from './dtrait.js'
 import { commonBehavior, commonReport } from './mssdk.js'
 import { headers as baseHeaders, LOGIN, Params, PROFILE, WWW } from './profile.js'
+import { hasSmsWay, sendSms, smsMobile, validateSms } from './second-verify.js'
 import { aidSign, md5Hex, passportEncrypt, passportSign, sdkTs, spliceUrl, svWebId, uaAesUrlsafe } from './sign.js'
 
 /**
@@ -95,6 +97,41 @@ const MIX_ALPHABET = '1234567890qwertyuiopasdfghjklzxcvbnm'
 const POLL_INTERVAL = 5200
 const QR_TTL = 55_000
 const THROTTLE_GIVEUP = 120_000
+/** 扫码后风控要求二次验证（error_code 2046）时给用户的 stderr 提示。 */
+const QR_2046_HINT = '已扫码，抖音风控要求二次验证：请在抖音 App 上完成验证，然后回到手机点击确认登录。catbus 会继续等待，不需要重新扫码'
+/** 验证组件脚本地址的落盘位置（跳过短信或无短信选项时，供人工排查用）。 */
+const verifyScriptFile = join(cacheDir('douyin'), 'second-verify-script-url.txt')
+
+/** 读一行 stdin（非交互时读到 EOF）。空行或 Ctrl-C 返回空串。 */
+function promptStdin(signal: AbortSignal): Promise<string> {
+  return new Promise((resolve) => {
+    let buf = ''
+    const onAbort = () => {
+      cleanup()
+      resolve('')
+    }
+    const onData = (c: Buffer) => {
+      buf += c.toString('utf8')
+      if (buf.includes('\n') || buf.includes('\r')) {
+        cleanup()
+        resolve(buf.trim())
+      }
+    }
+    const onEnd = () => {
+      cleanup()
+      resolve(buf.trim())
+    }
+    const cleanup = () => {
+      process.stdin.off('data', onData)
+      process.stdin.off('end', onEnd)
+      signal.removeEventListener('abort', onAbort)
+    }
+    if (signal.aborted) return resolve('')
+    signal.addEventListener('abort', onAbort, { once: true })
+    process.stdin.on('data', onData)
+    process.stdin.on('end', onEnd)
+  })
+}
 const MS_COMMON_INTERVAL = 300_000
 
 /** 登录过程中的会话状态（上游挂在 DouyinAuth 上的那些字段）。 */
@@ -707,7 +744,9 @@ export class Passport {
       const mix = this.get('passport_auth_mix_state')
       if (mix && mix.length !== 32) this.d.setCookie('passport_auth_mix_state', mixState(32))
     }
-    if (body.data?.error_code !== 7) raiseIfBlocked('check_qrconnect/', body)
+    // 2046 是风控的二次验证门：真实登录页不把它当错误（error_code 2046 → 显示提示后
+    // 用同一个 token 继续轮询），其余非 7 的码照旧交给 raiseIfBlocked。
+    if (body.data?.error_code !== 7 && body.data?.error_code !== 2046) raiseIfBlocked('check_qrconnect/', body)
     return body
   }
 
@@ -726,6 +765,7 @@ export class Passport {
     let wait = POLL_INTERVAL
     let throttledSince: number | null = null
     let scanned = false
+    let verify2046Started = false
     let firstStatusAt: number | null = null
     let commonDone = false
     let nextBehavior = started + MS_COMMON_INTERVAL
@@ -744,7 +784,11 @@ export class Passport {
         if (token && fresh && !scanned && rand.now() - born > QR_TTL) {
           const last = (await this.checkQrcode(token)).data ?? {}
           if (last.status === 'confirmed') return this.finish(last.redirect_url)
-          if (last.status === 'scanned') {
+          if (last.error_code === 2046) {
+            // 换码检查撞上 2046：不再换新码，标记已扫码，提示由下面的轮询分支统一给出
+            scanned = true
+            fresh = false
+          } else if (last.status === 'scanned') {
             scanned = true
             d.ctx.log.info('换码前发现已扫码，请在手机上确认')
             pending = last
@@ -774,6 +818,40 @@ export class Passport {
         }
         throttledSince = null
         wait = POLL_INTERVAL
+        if (info.error_code === 2046) {
+          // 2046「为保障你的账号安全，请前往抖音APP完成验证后再进行登录」：
+          // 真实登录页遇到它不丢弃二维码，显示提示后用同一个 token 继续轮询
+          //（838.b031aa6c.js 的 QR 组件：2046 → 提示，随后 Ae() 原地续 poll）。
+          // 带验证决策时是浏览器内 MFA（ato_web：短信 / 密码 / 人脸）；catbus 默认选
+          // 短信验证，直接调 passport 的 MFA 接口发码，验证码从 stdin 读（AI 可管道喂），
+          // 校验通过后轮询同一个 token 等风控放行（见 second-verify.ts）。
+          scanned = true
+          fresh = false
+          if (!verify2046Started) {
+            verify2046Started = true
+            if (hasSmsWay(info)) {
+              const mobile = smsMobile(info)
+              d.ctx.log.info(`已扫码，抖音风控要求二次验证。catbus 选择短信验证${mobile ? `（发往 ${mobile}）` : ''}，正在发送验证码…`)
+              await sendSms(d, info)
+              d.ctx.log.info('验证码已发送，请输入短信验证码（6 位；直接回车跳过，改为等待 App 端验证）：')
+              const code = await promptStdin(d.ctx.signal)
+              if (code) {
+                const ok = await validateSms(d, info, code)
+                d.ctx.log.info(ok ? '验证码校验通过，等待登录放行…' : '验证码校验未通过，将继续等待（也可在 App 上完成验证）')
+              } else {
+                d.ctx.log.info(`已跳过短信验证，改为等待。也可以用浏览器打开验证组件页完成（脚本地址已落盘 ${verifyScriptFile}）`)
+                await writeFileAtomic(verifyScriptFile, `${String(info.url ?? info.verify_url ?? '')}\n`)
+              }
+            } else {
+              d.ctx.log.info(`已扫码，抖音风控要求二次验证，但本会话没有短信验证选项。请在抖音 App 上完成验证；或用浏览器加载验证组件（脚本地址已落盘 ${verifyScriptFile}）`)
+              await writeFileAtomic(verifyScriptFile, `${String(info.url ?? info.verify_url ?? '')}\n`)
+            }
+            const wants = [verifyMaterial2046(info), info.check_token != null ? 'check_token' : null, info.uid != null ? 'uid' : null].filter((x) => x)
+            if (wants.length) d.ctx.log.debug(`check_qrconnect 2046 附带验证材料：${wants.join(', ')}`)
+          }
+          await rand.sleep(Math.max(wait, 3000), d.ctx.signal)
+          continue
+        }
         const status = info.status
         fresh = Boolean(status)
         if (fresh && firstStatusAt == null) firstStatusAt = rand.now()
@@ -783,6 +861,7 @@ export class Passport {
           token = null
           scanned = false
           fresh = false
+          verify2046Started = false
           if (!commonDone) firstStatusAt = null
           continue
         }
@@ -1183,9 +1262,16 @@ async function jsonOrRaw(res: HttpResponse): Promise<any> {
   }
 }
 
+/** 2046 响应里密盾决策材料的字段名；真实浏览器据此在页面内走验证组件，不一定要碰手机。 */
+function verifyMaterial2046(info: any): string | null {
+  if (info?.verify_center_decision_conf != null) return 'verify_center_decision_conf'
+  if (info?.verify_decision != null) return 'verify_decision'
+  if (info?.decisions != null) return 'decisions'
+  return null
+}
+
 /** passport 的风控错误码（上游 _raise_if_blocked）。 */
-function raiseIfBlocked(api: string, res: any): void {
-  const code = res?.data?.error_code
+function raiseIfBlocked(api: string, res: any): void {  const code = res?.data?.error_code
   if (code === 0 || code == null) return
   const desc = res.data?.description ?? res.message ?? ''
   if (code === 4031) throw new CatbusError('RISK_CONTROL', `${api} 返回 4031「网站存在安全风险」：${desc}`, { detail: { kind: 'blocked', code } })
