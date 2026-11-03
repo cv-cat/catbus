@@ -12,9 +12,14 @@ export default definePlatform({
   endpoints: {
     web: {
       guest: true,
-      login: { methods: [] },
+      login: { methods: ['qrcode', 'cookie'], default: 'qrcode' },
       commands: {
-        'item get': impl('full', 'itemGet', { note: '场次时间、场馆、票价档、售卖状态写在 text 里；场次 / 票档 / 余票要 App 登录态，不提供' }),
+        'auth login': impl('full', 'authLogin', { note: '用大众点评 App 扫码；cookie 导入要包含 .dianping.com 的 dper' }),
+        'auth status': impl('full', 'authStatus'),
+        'item get': impl('full', 'itemGet', {
+          note: '场次时间、场馆、票价档、售卖状态写在 text 里；--tickets 需要登录',
+          options: { tickets: z.boolean().optional().describe('同时查场次、票档、实售价、余票（需要登录）') },
+        }),
         'item search': 'none',
         'feed list': impl('full', 'feedList', {
           summary: '城市热门演出（在售 / 预售）',

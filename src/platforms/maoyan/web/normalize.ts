@@ -79,8 +79,25 @@ function detailImages(html: unknown): Media[] {
   }))
 }
 
-/** project/detail 的 data。 */
-export function detailItem(d: any): Item {
+/** 场次一行，票档各一行。`--tickets` 用，不显示的票档（shouldDisplay 为 false）跳过。 */
+function showLines(shows: any[]): string[] {
+  return shows.flatMap((s) => [
+    `场次：${s.showName ?? s.showId}`,
+    ...(s.tickets ?? [])
+      .filter((t: any) => t.shouldDisplay !== false)
+      .map((t: any) => {
+        const parts = [t.ticketName ?? t.ticketId]
+        const sell = t.ticketPriceVO?.sellPrice
+        if (sell != null) parts.push(`实售价 ${sell}`)
+        if (t.remainingStock != null) parts.push(`余票 ${t.remainingStock}`)
+        if (t.showStatus === 2) parts.push('售罄')
+        return `票档：${parts.join('，')}`
+      }),
+  ])
+}
+
+/** project/detail 的 data；`shows` 是 `--tickets` 查到的场次和票档，放进原始对象。 */
+export function detailItem(d: any, shows?: any[]): Item {
   const b = d.baseProjectVO ?? {}
   const shop = d.shopVO ?? {}
   const id = String(b.performanceId)
@@ -91,13 +108,19 @@ export function detailItem(d: any): Item {
       kind: 'goods',
       url: projectUrl(id),
       title: b.name ?? null,
-      text: lines([
-        ['时间', b.showTimeRange],
-        ['城市', b.cityName],
-        ['场馆', venue],
-        ['票价', (d.priceVO?.sellPriceList ?? []).join('、')],
-        ['状态', b.buttonContext?.message],
-      ]),
+      text:
+        [
+          lines([
+            ['时间', b.showTimeRange],
+            ['城市', b.cityName],
+            ['场馆', venue],
+            ['票价', (d.priceVO?.sellPriceList ?? []).join('、')],
+            ['状态', b.buttonContext?.message],
+          ]),
+          ...showLines(shows ?? []),
+        ]
+          .filter(Boolean)
+          .join('\n') || null,
       author: null,
       created_at: null,
       cover: b.posterUrl ?? null,
@@ -106,7 +129,7 @@ export function detailItem(d: any): Item {
       price: price(b.lowestPrice),
       status: null,
     },
-    d,
+    shows ? { ...d, shows } : d,
   )
 }
 

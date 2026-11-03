@@ -18,13 +18,13 @@
 
 |  | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 | jimeng | maoyan | mteam |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| qrcode | ✓ | ✓ |  | ✓ | ✓ |  | ✓ |  | ✓ |  |  |  |  |  |
+| qrcode | ✓ | ✓ |  | ✓ | ✓ |  | ✓ |  | ✓ |  |  |  | ✓ |  |
 | sms | ✓ | ✓ |  | ✓ | ✓ |  |  |  | ✓ |  |  |  |  |  |
 | password |  |  |  | ✓ |  |  |  |  |  |  |  |  |  |  |
-| cookie | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |  |  |
+| cookie | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  | ✓ |  |
 | oauth |  |  |  |  |  |  |  |  |  |  |  | ✓ |  |  |
 | apikey |  |  |  |  |  |  |  |  |  |  |  |  |  | ✓ |
-| 默认 | qrcode | qrcode | cookie | qrcode | qrcode | cookie | qrcode | cookie | qrcode | cookie | — | oauth | — | apikey |
+| 默认 | qrcode | qrcode | cookie | qrcode | qrcode | cookie | qrcode | cookie | qrcode | cookie | — | oauth | qrcode | apikey |
 | 子站点 | creator |  |  |  |  |  |  |  |  |  |  |  |  |  |
 
 ## auth
@@ -33,7 +33,7 @@
 
 | 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | 12306 | jimeng | maoyan | mteam |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| auth status | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | — | ✓ | — | ✓ |
+| auth status | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | — | ✓ | ✓ | ✓ |
 
 - taobao `auth status`：上游没有取当前用户的接口：换一次私信 token 校验，账号信息取自 cookie 里的 unb 和昵称
 
@@ -85,7 +85,7 @@
 | item delete | ○ | ○ | ○ | ◐ | ○ | ○ | ○ | — | — | ✓ | — | — | — | — |
 | item categories | — | — | — | ✓ | — | — | ○ | — | — | — | — | — | — | ✓ |
 
-- maoyan `item get`：场次时间、场馆、票价档、售卖状态写在 text 里；场次 / 票档 / 余票要 App 登录态，不提供
+- maoyan `item get`：场次时间、场馆、票价档、售卖状态写在 text 里；--tickets 需要登录
 - douyin `item search`：--type video 走视频频道搜索，其余走综合频道；--type image 只要图文
 - kuaishou `item search`：没有筛选（--sort / --type / --time），只按关键词搜
 - weibo `item search`：只能取第一页（m.weibo.cn 的访客从第二页起要求登录）
@@ -99,6 +99,7 @@
 - x `item publish`：正文超过 280 权重时自动按长推发（需要 Premium）；--thread 发 thread
 - bilibili `item delete`：需要人机验证（极验点选），catbus 还不能自动通过，会报 RISK_CONTROL
 - `item get --area`：jd
+- `item get --tickets`：maoyan
 - `item search --sort` 取值：xhs general / latest / popular / comments / collects；douyin general / popular / latest；bilibili general / views / latest / collects；jd general / sales / price_asc / price_desc / comments；x general / latest
 - `item search --type` 取值：xhs all / video / image；douyin all / video / image；bilibili video / article；x all / video / image
 - `item search --time` 取值：xhs all / day / week / half_year；douyin all / day / week / half_year

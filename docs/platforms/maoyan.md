@@ -8,15 +8,21 @@
 | 上游仓库 | 无（直接对接猫眼演出的公开接口） |
 | 接口来源 | 记录在 [`src/platforms/maoyan/UPSTREAM`](../../src/platforms/maoyan/UPSTREAM) |
 | 端 | web ✓ · app ○ 规划中 · pc ○ 规划中 |
-| 命令（web） | 已实现 7 条（✓ 6 · ◐ 1），规划中 ○ 1 条 |
+| 命令（web） | 已实现 9 条（✓ 8 · ◐ 1），规划中 ○ 1 条 |
 
-猫眼演出平台提供城市热门演出和演出详情的只读查询。用到的接口都不需要登录，web 端以游客态直接运行。演出详情接口要带美团 H5guard 的 `mtgsig` 签名，catbus 在本地的 vm 里出签，不需要另起服务。
+猫眼演出平台提供城市热门演出和演出详情的只读查询，这些命令不需要登录，web 端以游客态直接运行；场次、票档和余票（`item get --tickets`）需要登录。演出详情等接口要带美团 H5guard 的 `mtgsig` 签名，catbus 在本地的 vm 里出签，不需要另起服务。
 
-**刻意边界**：场次、票档、余票要猫眼 App 的登录态，不提供；下单、抢票、预约也不提供。
+**刻意边界**：下单、抢票、预约不提供。
 
 ## 登录
 
-猫眼演出为**免登录平台**，没有 `auth login`，直接执行查询命令即可。
+查询命令不需要登录。只有 `item get --tickets` 要求登录，登录态是 `.dianping.com` 的 `dper` cookie，约七天有效。
+
+```bash
+catbus maoyan auth login                                           # 默认扫码：用大众点评 App 扫终端里的二维码，不用打开浏览器
+catbus maoyan auth login --method cookie --cookie "dper=<值>"       # 导入已有的 dper
+catbus maoyan auth status
+```
 
 ## 支持的命令
 
@@ -26,6 +32,8 @@
 
 | 命令 | 状态 | 说明 |
 |---|---|---|
+| `auth login` | ✓ | 登录：扫码（默认）或 cookie 导入。 |
+| `auth status` | ✓ | 在线校验登录态。 |
 | `auth list` | ✓ | 本平台、本端的账号（由 core 提供）。 |
 | `auth use` | ✓ | 切换当前账号（由 core 提供）。 |
 | `auth logout` | ✓ | 登出并清理凭证（由 core 提供）。 |
@@ -34,7 +42,7 @@
 
 | 命令 | 状态 | 说明 |
 |---|---|---|
-| `item get <item>` | ✓ | 演出详情。场次时间、城市、场馆、票价档、售卖状态没有对应的 Item 字段，按「键：值」逐行写进 `text`；`price` 是最低价；介绍里的图片在 `media`。 |
+| `item get <item>` | ✓ | 演出详情。场次时间、城市、场馆、票价档、售卖状态没有对应的 Item 字段，按「键：值」逐行写进 `text`；`price` 是最低价；介绍里的图片在 `media`。私有选项 `--tickets`（需要登录）同时查场次和票档，逐行追加「场次：…」「票档：名称，实售价 N，余票 N」，原始字段在 `--raw` 的 `shows`。 |
 | `item search <kw>` | ○ | 规划中。 |
 
 ### feed
@@ -64,6 +72,9 @@ catbus maoyan feed list --city 上海 --category 1
 # 演出详情；场次和场馆在 text 里
 catbus maoyan item get 514992
 
+# 场次、票档、实售价、余票（需要登录）
+catbus maoyan item get 514992 --tickets
+
 # 要结构化的原始字段时用 --raw
 catbus maoyan item get 514992 --raw
 
@@ -75,4 +86,4 @@ catbus maoyan poi search 无锡
 
 - 设备指纹（`WEBDFPID`，mtgsig 的 `a3`）目前是写死的，所有用户共用：服务端校验它的合法性，不能随机生成。请求里的 `uuid` 每次随机，也不带 Cookie。
 - 列表接口的 `ticketStatus` 不可靠；售卖状态以 `item get` 的「状态」（详情的 `buttonContext`）为准。
-- 请求太频繁会被拒（`RISK_CONTROL`），降低频率后再试。
+- 请求太频繁会被拒（`RISK_CONTROL`），降低频率后再试。`--tickets` 每个场次多一次请求，场次之间间隔 1 秒。
