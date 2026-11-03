@@ -31,7 +31,7 @@
 - 账密登录在新设备上会返回两步验证（邮箱方式）。非 TTY 下分两次执行：第一次带 `--email <绑定邮箱>`，站点把验证码发到邮箱；第二次带 `--code <验证码>`，两次都从 stdin 读密码。中间态 10 分钟有效。密码只从 stdin 读，不要放进命令行参数。
 - 登录令牌约 30 天有效，过期后报 `AUTH_EXPIRED`，按上面的流程重新登录。
 - 站内信只认账密登录的令牌，API Key 会话调用报 `UNSUPPORTED`。`msg history` 不会把站内信标记为已读。
-- 搜索 / 浏览支持 `--mode normal|movie|tvshow|music|anime|adult`、`--category <ID>`、`--free`，不提供通用排序或内容类型筛选。
+- 搜索 / 浏览支持 `--mode normal|movie|tvshow|music|anime|adult`、`--category <ID>`、`--free`，私有选项 `--order-by date|size|seeders|leechers|name`（默认降序，`--asc` 升序；站点置顶的资源总在最前）。
 - 资源返回 `Torrent`，含大小、文件数、做种人数、下载人数、完成人次和优惠信息。分页沿用 `--limit` / `--all` / `--cursor`。
 - 下载的种子文件含个人 Tracker passkey：不展示、转发或上传种子文件。临时下载地址不会写入 JSON 或日志。`--qbit` 推送时 qBittorrent 回复已存在只在 stderr 警告。
 - 下载大文件或非免费种前，先把大小、优惠和做种人数告诉用户；下载会影响分享率和新人考核。

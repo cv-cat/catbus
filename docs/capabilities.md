@@ -111,6 +111,8 @@
 - `item search --mode`：mteam
 - `item search --category`：mteam
 - `item search --free`：mteam
+- `item search --order-by`：mteam
+- `item search --asc`：mteam
 - `item related --area`：jd
 - `item download --qbit`：mteam
 - `item download --qbit-category`：mteam
@@ -194,6 +196,8 @@
 - `feed list --city`：maoyan
 - `feed list --mode`：mteam
 - `feed list --free`：mteam
+- `feed list --order-by`：mteam
+- `feed list --asc`：mteam
 
 ## notice 与 msg
 

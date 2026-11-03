@@ -65,7 +65,7 @@ catbus mteam item get https://kp.m-team.cc/detail/12345
 catbus mteam user get me
 ```
 
-`--mode` 支持 `normal`（默认综合区）、`movie`、`tvshow`、`music`、`anime`、`adult`。`--category` 支持分类 ID，多个用逗号分隔；`--free` 将搜索限定为免费资源。分类以 `item categories` 的实时输出为准。
+`--mode` 支持 `normal`（默认综合区）、`movie`、`tvshow`、`music`、`anime`、`adult`。`--category` 支持分类 ID，多个用逗号分隔；`--free` 将搜索限定为免费资源。`--order-by` 按 `date`、`size`、`seeders`、`leechers`、`name` 排序，默认降序，加 `--asc` 升序；站点置顶的资源总排在最前。分类以 `item categories` 的实时输出为准。
 
 `feed list` 浏览最新资源；`item list` 仍保留跨平台的“我发布的内容”语义，MT 首版没有实现该命令。用户资料只支持 `me`；`user get me --raw` 可查看上传量、下载量等原始账号字段。
 

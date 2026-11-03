@@ -7,6 +7,8 @@ const searchOptions = {
   mode: modeOption,
   category: z.string().regex(/^\d+(,\d+)*$/, '分类须为数字 ID，多个用逗号分隔').optional().describe('分类 ID，来自 item categories，多个用逗号分隔'),
   free: z.boolean().optional().describe('只看免费资源'),
+  orderBy: z.enum(['date', 'size', 'seeders', 'leechers', 'name']).optional().describe('排序字段：date 发布时间、size 大小、seeders 做种数、leechers 下载数、name 名称；默认按站点置顶与发布时间'),
+  asc: z.boolean().optional().describe('配合 --order-by 升序排列，默认降序'),
 }
 
 export default definePlatform({

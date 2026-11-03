@@ -9,6 +9,9 @@ export interface SearchPage { pageNumber: number | string; pageSize: number | st
 /** 每页条数（search / getUserTorrentList / credit/logs / msg/search 一致）。 */
 export const PAGE_SIZE = 20
 
+/** --order-by → 站点 sortField（前端种子列表的列排序）。 */
+const SORT_FIELDS: Record<string, string> = { date: 'CREATED_DATE', size: 'SIZE', seeders: 'SEEDERS', leechers: 'LEECHERS', name: 'NAME' }
+
 /** 站内信信箱：收件箱 1、系统通知 -2、发件箱 -1（站点前端的路由参数）。 */
 export const BOXES = { inbox: '1', system: '-2', sent: '-1' } as const
 
@@ -30,6 +33,7 @@ export class Api {
       keyword,
       ...(this.ctx.options.free ? { discount: 'FREE' } : {}),
       ...(options.onlyFav ? { onlyFav: 1 } : {}),
+      ...(this.ctx.options.orderBy ? { sortField: SORT_FIELDS[String(this.ctx.options.orderBy)], sortDirection: this.ctx.options.asc ? 'ASC' : 'DESC' } : {}),
       pageNumber: pageNumber(this.ctx.cursor), pageSize: PAGE_SIZE,
     } })
     return checkPage(value, '搜索')

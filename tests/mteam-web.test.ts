@@ -271,4 +271,14 @@ describe('mteam：网页账密会话', () => {
     mock({ '/api/torrent/genDlToken': () => ok('https://fr1.halomt.com/?sign=fake') })
     expect((await cli('mt', 'item', 'download', '1001', '--dir', home.dir, '--overwrite')).env.error.code).toBe('UPSTREAM')
   })
+
+  it('搜索 --order-by / --asc 转成站点的 sortField / sortDirection', async () => {
+    await webAccount()
+    await cli('mt', 'feed', 'list', '--free', '--order-by', 'leechers')
+    expect(body(requests.at(-1)!)).toMatchObject({ discount: 'FREE', sortField: 'LEECHERS', sortDirection: 'DESC' })
+    await cli('mt', 'item', 'search', 'x', '--order-by', 'seeders', '--asc')
+    expect(body(requests.at(-1)!)).toMatchObject({ keyword: 'x', sortField: 'SEEDERS', sortDirection: 'ASC' })
+    await cli('mt', 'feed', 'list')
+    expect(body(requests.at(-1)!)).not.toHaveProperty('sortField')
+  })
 })
