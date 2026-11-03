@@ -77,7 +77,7 @@ describe('注册表', () => {
       '12306': ['route get', 'station search', 'ticket price', 'ticket search', 'transfer search'],
       jimeng: [],
       maoyan: [],
-      mteam: [],
+      mteam: ['bonus get', 'bonus history', 'exam get', 'seed list', 'seed stats'],
     })
   })
 

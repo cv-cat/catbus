@@ -2,7 +2,7 @@ service: M-Team official API
 api: https://api.m-team.cc/api
 web: https://kp.m-team.cc/brows
 reference: https://wiki.m-team.cc/api
-checked: 2026-11-01
+checked: 2026-11-03
 
 auth: x-api-key header; API Access Token obtained in 控制台 → 实验室 → 存取令牌
 No Python upstream or signature JS. This is an original TypeScript adapter for the official API.
@@ -13,7 +13,7 @@ Verified with an authenticated account (read-only; no real data kept in reposito
 - POST /torrent/detail: form {id}; response is a torrent object
 - POST /torrent/categoryList: empty form; response data.list[] contains id/nameChs/nameCht/nameEng/parent
 
-Download request contract cross-checked against maintained client implementations; tested offline:
+Download request contract cross-checked against maintained client implementations; real download verified 2026-11-03:
 - POST /torrent/genDlToken: form {id}; response data is a temporary download URL
 - GET the returned HTTPS M-Team URL without forwarding x-api-key, save .torrent only
 - No BT client integration, Tracker announce, upload, or automatic seeding
@@ -23,3 +23,17 @@ Additional primary implementation references for protocol cross-checks (no sourc
 - https://github.com/pt-plugins/PT-depiler/blob/master/src/packages/site/definitions/mteam.ts (blob 8bd37832d18f08d7ff4901c8fcf6a758a1212bac)
 
 Offline tests use synthetic responses and fake keys. No credentials, signed URLs, private torrent metadata, or account details are fixtures.
+
+Web session (added 2026-11-03, verified with a real account; no real data kept in repository):
+- Source: site frontend https://kp.m-team.cc (static.m-team.cc/static/js/main.*.js and route chunks)
+- Signing (axios interceptor): body gets _timestamp=<ms> and _sgin=base64(HMAC-SHA1("POST&/api<path>&<ms>", "HLkPcWmycL57mfJt"));
+  headers ts=<s>, visitorId=<client id>, version=2.0.0, webVersion=2000, authorization=<JWT>, did=<device id>
+- POST /login: form {username,password,turnstile:""[,otpCode|emailCode|tgCode]}; code 0 → response headers authorization (JWT, ~30 days) and did;
+  1001 → data lists verify methods (otp/email/tg); 1002 → account email must be verified in browser
+- POST /member/sendLoginEmailVerifyCode: form {username,email}; only valid right after a /login that returned 1001
+- POST /torrent/collection: form {id,make}
+- POST /torrent/search: JSON with onlyFav=1 lists bookmarks
+- POST /member/getUserTorrentList: JSON {userid,type:SEEDING|LEECHING|COMPLETED|INCOMPLETE|UPLOADED,pageNumber,pageSize}; rows {torrent,peer}
+- POST /credit/logs: JSON {uid,pageNumber,pageSize,type:null}; rows {operation,bonus,uploaded,downloaded,text,createdDate,relatedId}
+- POST /msg/search: form {box:1|-2|-1,keyword,pageNumber,pageSize}; POST /msg/read: form {msgId} (does not mark read; /msg/markRead is separate)
+- Download: /torrent/genDlToken URL (api.m-team.cc/api/rss/dlv2) 302-redirects to https://fr1.halomt.com/...; real download verified
