@@ -5,8 +5,10 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { CatbusError } from '../../../core/errors.js'
+import { writeFileAtomic } from '../../../core/fsutil.js'
+import { interactive } from '../../../core/login.js'
 import type { HttpResponse } from '../../../core/http.js'
-import { staticFile } from '../../../core/paths.js'
+import { cacheDir, staticFile } from '../../../core/paths.js'
 import { compactJson, jsonDumps, jsonLoads, parseQsl, quote, urlencode } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import * as api from './api.js'
@@ -99,7 +101,9 @@ const THROTTLE_GIVEUP = 120_000
 /** 扫码后风控要求二次验证（error_code 2046）时给用户的 stderr 提示。 */
 const QR_2046_HINT = '已扫码，抖音风控要求二次验证：请在抖音 App 上完成验证，然后回到手机点击确认登录。catbus 会继续等待，不需要重新扫码'
 /** 2046 带验证 URL（浏览器内 MFA 组件）时的 stderr 提示。 */
-const QR_2046_URL_HINT = '已扫码，抖音风控要求二次验证。请在浏览器打开下面的链接完成验证（短信 / 密码 / 人脸任选其一），验证通过后 catbus 会自动继续登录：'
+const QR_2046_URL_HINT = '已扫码，抖音风控要求二次验证。请在浏览器打开下面的验证页完成验证（短信 / 密码 / 人脸任选其一），验证通过后 catbus 会自动继续登录：'
+/** 二次验证页地址的落盘位置（对齐二维码 PNG 的 cache 模式）。 */
+const verifyPageFile = join(cacheDir('douyin'), 'second-verify-url.txt')
 const MS_COMMON_INTERVAL = 300_000
 
 /** 登录过程中的会话状态（上游挂在 DouyinAuth 上的那些字段）。 */
@@ -798,9 +802,12 @@ export class Passport {
           fresh = false
           const verifyUrl = info.url ?? info.verify_url ?? null
           if (verifyUrl && !verify2046Server) {
-            // 只起一次；组件内部的验证进度由弹窗自己管理，验证通过后回传本进程
+            // 只起一次；组件内部的验证进度由弹窗自己管理，验证通过后回传本进程。
+            // 交互式终端才自动开浏览器；URL 同时落盘，人和 Agent 都能拿到。
             verify2046Server = await serveSecondVerify(d, info, { signal: d.ctx.signal })
-            d.ctx.log.info(`${QR_2046_URL_HINT}\n  ${verify2046Server.url}\n  （已尝试自动打开浏览器；如果没开，手动复制上面的地址）`)
+            const opened = interactive()
+            await writeFileAtomic(verifyPageFile, `${verify2046Server.url}\n`)
+            d.ctx.log.info(`${QR_2046_URL_HINT}\n  ${verify2046Server.url}\n  地址已写入：${verifyPageFile}${opened ? '（已在浏览器打开）' : '（未自动打开浏览器：当前不是交互式终端）'}`)
           } else if (!verifyUrl && !verify2046Hint) {
             d.ctx.log.info(QR_2046_HINT)
           }

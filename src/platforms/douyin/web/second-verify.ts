@@ -2,6 +2,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { spawn } from 'node:child_process'
 import type { AddressInfo } from 'node:net'
 import { CatbusError } from '../../../core/errors.js'
+import { interactive } from '../../../core/login.js'
 import type { Douyin } from './client.js'
 
 /**
@@ -261,6 +262,8 @@ export async function serveSecondVerify(
     server.closeAllConnections()
     await new Promise<void>((resolve) => server.close(() => resolve()))
   }
-  if (options.open !== false) openBrowser(url)
+  // 只在交互式终端自动打开浏览器；非交互（Agent / 脚本）一律不弹，URL 由调用方写到
+  // stderr 与 cache 文件，谁消费由使用者决定（对齐二维码 PNG 落盘的模式）。
+  if (options.open === true || (options.open === undefined && interactive())) openBrowser(url)
   return { url, result, close }
 }
