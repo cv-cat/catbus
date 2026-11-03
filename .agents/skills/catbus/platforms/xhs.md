@@ -28,7 +28,7 @@
 ## 坑
 
 - **风控最严**：命令之间间隔 4 秒以上，不要并发。评论接口会间歇性要求人机验证（HTTP 461），报 `RISK_CONTROL` 就停，把 `error.hint` 里的验证链接交给用户，让他在登录了同一账号的浏览器里完成验证，之后再重试。
-- 扫码登录常在最后一步被要求验证（HTTP 471），让用户改用 cookie 导入；cookie 里要有 `a1` 和 `web_session`。
+- 扫码登录可能在最后一步被要求验证（HTTP 471）。短信验证时 stderr 提示「验证码已发送」，向用户要 6 位验证码，从 stdin 写入一行（非交互时 catbus 从 stdin 读）；其他验证方式报 `RISK_CONTROL`，让用户改用 cookie 导入，cookie 里要有 `a1` 和 `web_session`。
 - 发布走创作者中心，catbus 自动用主站登录态换取；`--image` 与 `--video` 二选一，视频必须带 `--cover`；地点先 `poi search` 再 `--poi-name <名称>`（可配 `--poi <id>`）。`--visibility` 只有 `public` / `private`。
 - **发出去删不掉**（`item delete` 未实现），测试一定用 `--visibility private`。
 - 列表里的 `stats.views`、`keyword hot` 的 `heat` 恒为 null。
