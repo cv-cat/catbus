@@ -64,6 +64,19 @@ export interface Torrent extends Item {
   discount: string | null
 }
 
+/** PT 站魔力值明细的一条记录（mteam bonus history）。 */
+export interface BonusRecord {
+  id: string
+  time: string | null
+  type: string | null
+  before: number | null
+  after: number | null
+  change: number | null
+  user: UserRef | null
+  note: string | null
+  url: string | null
+}
+
 export interface Comment {
   id: string
   item_id: string
@@ -316,7 +329,7 @@ export interface Transfer {
 export const OUTPUT_TYPES = new Set([
   'User', 'Item', 'Comment', 'Folder', 'Series', 'Category', 'Keyword', 'Topic', 'Poi', 'Live', 'Event', 'Gift',
   'Rank', 'Conversation', 'Message', 'Notice', 'NoticeCount', 'Media', 'AuthStatus', 'Account', 'File', 'Subtitle',
-  'Danmaku', 'Order', 'Coupon', 'Station', 'Ticket', 'Stop', 'Fare', 'Transfer', 'Torrent',
+  'Danmaku', 'Order', 'Coupon', 'Station', 'Ticket', 'Stop', 'Fare', 'Transfer', 'Torrent', 'BonusRecord',
 ])
 
 /** 归一化对象上挂平台原始对象，`--raw` 时用它替换。JSON 序列化会忽略 symbol 键。 */

@@ -20,7 +20,7 @@
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | qrcode | ✓ | ✓ |  | ✓ | ✓ |  | ✓ |  | ✓ |  |  |  | ✓ |  |
 | sms | ✓ | ✓ |  | ✓ | ✓ |  |  |  | ✓ |  |  |  |  |  |
-| password |  |  |  | ✓ |  |  |  |  |  |  |  |  |  |  |
+| password |  |  |  | ✓ |  |  |  |  |  |  |  |  |  | ✓ |
 | cookie | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  | ✓ |  |
 | oauth |  |  |  |  |  |  |  |  |  |  |  | ✓ |  |  |
 | apikey |  |  |  |  |  |  |  |  |  |  |  |  |  | ✓ |
@@ -45,7 +45,7 @@
 | user search | ✓ | ✓ | ○ | ✓ | ✓ | ○ | — | — | — | ✓ | — | — | — | — |
 | user items | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | ○ | — | ✓ | — | — | — | — |
 | user likes | ✓ | ✓ | ○ | — | ✓ | ○ | — | — | — | ○ | — | — | — | — |
-| user collects | ✓ | ○ | ✓ | ○ | ✓ | ○ | ○ | ○ | ✓ | ○ | — | — | — | — |
+| user collects | ✓ | ○ | ✓ | ○ | ✓ | ○ | ○ | ○ | ✓ | ○ | — | — | — | ◐ |
 | user reposts | — | — | ✓ | — | — | ○ | — | — | — | ○ | — | — | — | — |
 | user followers | ○ | ✓ | ✓ | ○ | ✓ | ○ | — | — | — | ○ | — | — | — | — |
 | user following | ◐ | ✓ | ✓ | ○ | ✓ | ○ | — | — | — | ○ | — | — | — | — |
@@ -58,6 +58,7 @@
 - jd `user get`：只支持 me
 - mteam `user get`：只支持 me；PT 上传量、下载量等账号字段可用 --raw 查看
 - kuaishou `user likes`：只支持 me
+- mteam `user collects`：只支持 me；按分区列出（--mode）
 - kuaishou `user followers`：只支持 me
 - xhs `user following`：只支持 me
 - kuaishou `user following`：只支持 me
@@ -67,6 +68,7 @@
 - `user items --sort` 取值：bilibili latest / views / collects
 - `user items --keyword`：bilibili
 - `user collects --area`：jd
+- `user collects --mode`：mteam
 
 ## item
 
@@ -79,7 +81,7 @@
 | item media | ✓ | ✓ | ◐ | ✓ | ✓ | ○ | — | — | — | ✓ | — | — | — | — |
 | item download | ✓ | ✓ | ◐ | ✓ | ✓ | ○ | — | — | — | ✓ | — | — | — | ✓ |
 | item like / unlike | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — | ✓ | — | — | — | — |
-| item collect / uncollect | ○ | ✓ | ✓ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | — | — | — | — |
+| item collect / uncollect | ○ | ✓ | ✓ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | — | — | — | ✓ |
 | item repost / unrepost | — | — | ○ | — | — | ○ | — | — | — | ✓ | — | — | — | — |
 | item publish | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | — | — | ✓ | — | — | — | — |
 | item delete | ○ | ○ | ○ | ◐ | ○ | ○ | ○ | — | — | ✓ | — | — | — | — |
@@ -94,7 +96,7 @@
 - douyin `item list`：取发布页的作品预览（work_list）；定时未发布的作品 status 为 draft
 - tiktok `item media`：媒体地址取自视频详情（video.playAddr，图文取 imagePost），上游没有单独的解析接口
 - tiktok `item download`：媒体地址同 item media
-- mteam `item download`：只保存种子文件；不启动 BT 下载。临时下载链接不输出
+- mteam `item download`：种子文件含个人 passkey，权限 0600，临时下载链接不输出；--qbit 推送到本机 qBittorrent Web UI（CATBUS_MTEAM_QBIT_URL，默认 http://127.0.0.1:25254）
 - kuaishou `item publish`：不支持 --cover、--mention、--poi、--category、--price；--image 1～31 张（每张不超过 15MB），与 --video 二选一
 - x `item publish`：正文超过 280 权重时自动按长推发（需要 Premium）；--thread 发 thread
 - bilibili `item delete`：需要人机验证（极验点选），catbus 还不能自动通过，会报 RISK_CONTROL
@@ -110,6 +112,9 @@
 - `item search --category`：mteam
 - `item search --free`：mteam
 - `item related --area`：jd
+- `item download --qbit`：mteam
+- `item download --qbit-category`：mteam
+- `item download --qbit-paused`：mteam
 - `item collect --folder`：douyin、bilibili
 - `item uncollect --folder`：douyin、bilibili
 - `item publish` 不支持的标准选项：xhs --mention --category --price；douyin --category --price；tiktok --title --poi --category --schedule --price；bilibili --image --topic --mention --poi --schedule --price；kuaishou --cover --mention --poi --category --price；weibo --title --cover --tag --mention --poi --category --schedule --price；xianyu --video --cover --tag --topic --mention --poi --category --schedule；x --title --cover --tag --topic --mention --poi --category --schedule --price
@@ -196,20 +201,23 @@
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | notice list | ✓ | ✓ | ✓ | ○ | ○ | ○ | — | — | — | ○ | — | — | — | — |
 | notice count | ✓ | ○ | ✓ | ○ | ✓ | ○ | — | — | — | ○ | — | — | — | — |
-| msg list | ✓ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ◐ | — | — | — | — |
-| msg history | ✓ | ○ | ✓ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ◐ | — | — | — | — |
+| msg list | ✓ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ◐ | — | — | — | ◐ |
+| msg history | ✓ | ○ | ✓ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ◐ | — | — | — | ◐ |
 | msg send | ✓ | ✓ | ◐ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ○ | — | — | — | — |
 | msg listen | ✓ | ✓ | ✓ | ○ | ○ | ○ | ✓ | ✓ | ✓ | ○ | — | — | — | — |
 | msg read / revoke / delete | ✓ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | — | — | — | — |
 
 - xhs `msg list`：含群聊，群聊会话 id 为 group:<群 id>
 - x `msg list`：只取收件箱首页（最近 20 个会话），上游没有翻页
+- mteam `msg list`：只读，需要账密登录；--box 选收件箱 / 系统通知 / 发件箱
 - xhs `msg history`：单聊传对方 id，群聊传 group:<群 id>
 - x `msg history`：消息端到端加密，只给出占位消息
+- mteam `msg history`：<conversation> 为 msg list 输出的 id；不会标记为已读
 - tiktok `msg send`：只支持文本，只能发给已有会话的用户（上游不能新建会话）
 - xianyu `msg send`：--to 不带 --item 时按上游的默认商品建会话；--to 加 --item 就这件商品联系对方（卖家可以联系买家）
 - taobao `msg send`：--item 联系商品卖家，--conversation 回复已有会话；不支持 --to（没有按用户发起会话的接口）
 - `notice list --group`：douyin
+- `msg list --box`：mteam
 - `msg send --file`：douyin
 - `msg send --share`：douyin
 - `msg send --order`：jd
@@ -284,3 +292,4 @@
 | jd | `order list` ✓ · `cart count` ✓ · `coupon list` ✓ |
 | x | `article publish` ✓ · `article delete` ✓ |
 | 12306 | `station search` ✓ · `ticket search` ✓ · `ticket price` ✓ · `route get` ✓ · `transfer search` ✓ |
+| mteam | `seed list` ✓ · `seed stats` ✓ · `exam get` ✓ · `bonus get` ✓ · `bonus history` ✓ |
