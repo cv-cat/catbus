@@ -97,6 +97,8 @@ const QR_TTL = 55_000
 const THROTTLE_GIVEUP = 120_000
 /** 扫码后风控要求二次验证（error_code 2046）时给用户的 stderr 提示。 */
 const QR_2046_HINT = '已扫码，抖音风控要求二次验证：请在抖音 App 上完成验证，然后回到手机点击确认登录。catbus 会继续等待，不需要重新扫码'
+/** 2046 带验证 URL（浏览器内 MFA 组件）时的 stderr 提示。 */
+const QR_2046_URL_HINT = '已扫码，抖音风控要求二次验证。请在浏览器打开下面的链接完成验证（短信 / 密码 / 人脸任选其一），验证通过后 catbus 会自动继续登录：'
 const MS_COMMON_INTERVAL = 300_000
 
 /** 登录过程中的会话状态（上游挂在 DouyinAuth 上的那些字段）。 */
@@ -786,19 +788,22 @@ export class Passport {
         if (info.error_code === 2046) {
           // 2046「为保障你的账号安全，请前往抖音APP完成验证后再进行登录」：
           // 真实登录页遇到它不丢弃二维码，显示提示后用同一个 token 继续轮询
-          //（838.b031aa6c.js 的 QR 组件：2046 → 提示，随后 Ae() 原地续 poll），
-          // 等用户在手机上完成验证再确认登录，这里一次只提示一句。
+          //（838.b031aa6c.js 的 QR 组件：2046 → 提示，随后 Ae() 原地续 poll）。
+          // 带验证 URL 时是浏览器内 MFA（ato_web：短信 / 密码 / 人脸），
+          // 提示用户在浏览器完成；手机端不会弹任何东西。
           scanned = true
           fresh = false
           if (!verify2046Hint) {
             verify2046Hint = true
-            d.ctx.log.info(QR_2046_HINT)
-            // 文案是服务端固定的；实际的验证材料在不在响应里决定真实浏览器走在哪条分支
-            //（页面里：密盾无感 captcha / uc 验证组件均在浏览器内，不一定要碰手机）。
-            // 打出来供风控取证：纯轮询能不能自愈，还是必须实现页面内验证链。
+            const verifyUrl = info.url ?? info.verify_url ?? null
+            if (verifyUrl) {
+              d.ctx.log.info(`${QR_2046_URL_HINT}\n  ${verifyUrl}`)
+            } else {
+              d.ctx.log.info(QR_2046_HINT)
+            }
+            // 供风控取证：验证材料决定真实浏览器走在哪条分支
             const wants = [
-              info.url,
-              info.verify_url,
+              verifyUrl ? 'verify_url' : null,
               verifyMaterial2046(info),
               info.check_token != null ? 'check_token' : null,
               info.uid != null ? 'uid' : null,
@@ -817,6 +822,7 @@ export class Passport {
           token = null
           scanned = false
           fresh = false
+          verify2046Hint = false
           if (!commonDone) firstStatusAt = null
           continue
         }
