@@ -15,6 +15,7 @@ import { clientDataCookie, clientDataV2Cookie, generateEcKey } from './crypto.js
 import { DTRAIT_BROKEN } from './dtrait.js'
 import { commonBehavior, commonReport } from './mssdk.js'
 import { headers as baseHeaders, LOGIN, Params, PROFILE, WWW } from './profile.js'
+import { serveSecondVerify, type ManualVerifyServer } from './second-verify.js'
 import { aidSign, md5Hex, passportEncrypt, passportSign, sdkTs, spliceUrl, svWebId, uaAesUrlsafe } from './sign.js'
 
 /**
@@ -733,6 +734,7 @@ export class Passport {
     let throttledSince: number | null = null
     let scanned = false
     let verify2046Hint = false
+    let verify2046Server: ManualVerifyServer | null = null
     let firstStatusAt: number | null = null
     let commonDone = false
     let nextBehavior = started + MS_COMMON_INTERVAL
@@ -789,18 +791,21 @@ export class Passport {
           // 2046「为保障你的账号安全，请前往抖音APP完成验证后再进行登录」：
           // 真实登录页遇到它不丢弃二维码，显示提示后用同一个 token 继续轮询
           //（838.b031aa6c.js 的 QR 组件：2046 → 提示，随后 Ae() 原地续 poll）。
-          // 带验证 URL 时是浏览器内 MFA（ato_web：短信 / 密码 / 人脸），
-          // 提示用户在浏览器完成；手机端不会弹任何东西。
+          // 带验证 URL 时是浏览器内 MFA（ato_web：短信 / 密码 / 人脸）：起本地壳页
+          // 加载官方组件渲染弹窗，业务请求经 catbus 代发（CORS 只放行 www.douyin.com，
+          // 本地页无法直连 passport 接口，实测见 second-verify.ts 注释）。
           scanned = true
           fresh = false
+          const verifyUrl = info.url ?? info.verify_url ?? null
+          if (verifyUrl && !verify2046Server) {
+            // 只起一次；组件内部的验证进度由弹窗自己管理，验证通过后回传本进程
+            verify2046Server = await serveSecondVerify(d, info, { signal: d.ctx.signal })
+            d.ctx.log.info(`${QR_2046_URL_HINT}\n  ${verify2046Server.url}\n  （已尝试自动打开浏览器；如果没开，手动复制上面的地址）`)
+          } else if (!verifyUrl && !verify2046Hint) {
+            d.ctx.log.info(QR_2046_HINT)
+          }
           if (!verify2046Hint) {
             verify2046Hint = true
-            const verifyUrl = info.url ?? info.verify_url ?? null
-            if (verifyUrl) {
-              d.ctx.log.info(`${QR_2046_URL_HINT}\n  ${verifyUrl}`)
-            } else {
-              d.ctx.log.info(QR_2046_HINT)
-            }
             // 供风控取证：验证材料决定真实浏览器走在哪条分支
             const wants = [
               verifyUrl ? 'verify_url' : null,
@@ -835,6 +840,7 @@ export class Passport {
       throw new CatbusError('AUTH_REQUIRED', '扫码登录超时', { hint: '重新执行 catbus douyin auth login' })
     } finally {
       d.msPinned = false
+      if (verify2046Server) await verify2046Server.close().catch(() => {})
     }
   }
 
