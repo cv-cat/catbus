@@ -36,7 +36,7 @@ catbus xhs auth login --method qrcode
 - 二维码画在终端（stderr）上，同时保存成 PNG：`~/.catbus/cache/<platform>/qrcode.png`（权限 0600），终端显示不全时打开这张图扫。
 - 用对应的 App 扫码，并在手机上确认。扫码后终端会提示「已扫码，请在手机上确认」。
 - 要在几分钟内完成（各平台 2～5 分钟不等），超时或二维码失效时报 `AUTH_REQUIRED`，重新执行即可。
-- **小红书**：扫码确认后，服务端可能要求做一次人机验证（HTTP 471），catbus 和上游都还不能自动通过，会报 `RISK_CONTROL`，`hint` 建议改用 cookie 导入。见 [小红书的已知限制](../platforms/xhs.md#已知限制)。
+- **小红书**：扫码确认后，服务端可能要求做一次人机验证（HTTP 471）。短信验证由 catbus 发码、你输入验证码后继续登录；其他验证方式报 `RISK_CONTROL`，`hint` 建议改用 cookie 导入。见 [小红书的已知限制](../platforms/xhs.md#已知限制)。
 
 ## 短信
 
