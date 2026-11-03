@@ -96,7 +96,7 @@
 - douyin `item list`：取发布页的作品预览（work_list）；定时未发布的作品 status 为 draft
 - tiktok `item media`：媒体地址取自视频详情（video.playAddr，图文取 imagePost），上游没有单独的解析接口
 - tiktok `item download`：媒体地址同 item media
-- mteam `item download`：种子文件含个人 passkey，权限 0600，临时下载链接不输出；--qbit 推送到本机 qBittorrent Web UI（CATBUS_MTEAM_QBIT_URL，默认 http://127.0.0.1:25254）
+- mteam `item download`：种子文件含个人 passkey，权限 0600，临时下载链接不输出；--qbit 推送到本机 qBittorrent Web UI（CATBUS_MTEAM_QBIT_URL，默认 http://127.0.0.1:25254），--qbit-savepath 指定保存目录
 - kuaishou `item publish`：不支持 --cover、--mention、--poi、--category、--price；--image 1～31 张（每张不超过 15MB），与 --video 二选一
 - x `item publish`：正文超过 280 权重时自动按长推发（需要 Premium）；--thread 发 thread
 - bilibili `item delete`：需要人机验证（极验点选），catbus 还不能自动通过，会报 RISK_CONTROL
@@ -117,6 +117,7 @@
 - `item download --qbit`：mteam
 - `item download --qbit-category`：mteam
 - `item download --qbit-paused`：mteam
+- `item download --qbit-savepath`：mteam
 - `item collect --folder`：douyin、bilibili
 - `item uncollect --folder`：douyin、bilibili
 - `item publish` 不支持的标准选项：xhs --mention --category --price；douyin --category --price；tiktok --title --poi --category --schedule --price；bilibili --image --topic --mention --poi --schedule --price；kuaishou --cover --mention --poi --category --price；weibo --title --cover --tag --mention --poi --category --schedule --price；xianyu --video --cover --tag --topic --mention --poi --category --schedule；x --title --cover --tag --topic --mention --poi --category --schedule --price

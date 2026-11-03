@@ -31,6 +31,18 @@ function form(request: PreparedRequest): Record<string, string> {
 function body(request: PreparedRequest): Record<string, any> {
   return String(request.body).startsWith('{') ? JSON.parse(String(request.body)) : form(request)
 }
+/** 解析 multipart 请求体，返回 [字段名, 值] 列表。 */
+function parseMultipart(request: PreparedRequest): Array<[string, Buffer]> {
+  const type = Object.fromEntries(request.headers)['content-type'] ?? ''
+  const boundary = /boundary=(.+)$/.exec(type)?.[1]
+  if (!boundary) throw new Error('不是 multipart 请求')
+  const raw = Buffer.from(request.body as Uint8Array).toString('latin1')
+  return raw.split(`--${boundary}`).slice(1, -1).map((chunk) => {
+    const [head, ...rest] = chunk.replace(/^\r\n/, '').split('\r\n\r\n')
+    const name = /name="([^"]+)"/.exec(head!)![1]!
+    return [name, Buffer.from(rest.join('\r\n\r\n').replace(/\r\n$/, ''), 'latin1')]
+  })
+}
 const header = (request: PreparedRequest, name: string) => Object.fromEntries(request.headers)[name]
 
 describe('mteam：网页账密会话', () => {
@@ -237,8 +249,11 @@ describe('mteam：网页账密会话', () => {
     expect(paths).toEqual(['/api/torrent/genDlToken', '/api/rss/dl', '/api/v2/torrents/categories', '/api/v2/torrents/createCategory', '/api/v2/torrents/add'])
     expect(header(requests[1]!, 'authorization')).toBeUndefined()
     const add = requests.at(-1)!
-    expect(add.multipart!.map((p) => [p.name, typeof p.data === 'string' ? p.data : 'bytes'])).toEqual([['torrents', 'bytes'], ['category', 'pt'], ['paused', 'true'], ['stopped', 'true']])
-    expect(Buffer.from(add.multipart![0]!.data as Uint8Array)).toEqual(torrentBytes)
+    const parts = parseMultipart(add)
+    expect(parts.map(([name, value]) => [name, name === 'torrents' ? 'bytes' : value.toString()])).toEqual([['torrents', 'bytes'], ['category', 'pt'], ['paused', 'true'], ['stopped', 'true']])
+    expect(parts[0]![1]).toEqual(torrentBytes)
+    // 结尾边界后带 CRLF（qBittorrent 需要）
+    expect(Buffer.from(add.body as Uint8Array).subarray(-4).toString()).toBe('--\r\n')
     mock({ '/api/v2/torrents/add': () => fakeResponse('Fails.') })
     const dup = await cli('mt', 'item', 'download', '1001', '--dir', home.dir, '--qbit')
     expect(dup.code).toBe(0)
@@ -280,5 +295,14 @@ describe('mteam：网页账密会话', () => {
     expect(body(requests.at(-1)!)).toMatchObject({ keyword: 'x', sortField: 'SEEDERS', sortDirection: 'ASC' })
     await cli('mt', 'feed', 'list')
     expect(body(requests.at(-1)!)).not.toHaveProperty('sortField')
+  })
+
+  it('--qbit-savepath 作为 savepath 字段推送', async () => {
+    await webAccount()
+    const result = await cli('mt', 'item', 'download', '1001', '--dir', home.dir, '--qbit', '--qbit-savepath', '/data/盒/mteam')
+    expect(result.code).toBe(0)
+    const add = requests.at(-1)!
+    expect(parseMultipart(add).find(([name]) => name === 'savepath')?.[1].toString()).toBe('/data/盒/mteam')
+    expect(result.stderr).toContain('保存到 /data/盒/mteam')
   })
 })

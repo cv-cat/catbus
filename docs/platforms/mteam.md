@@ -103,7 +103,7 @@ catbus mteam item download 12345 --dir ./torrents --overwrite
 catbus mteam item download 12345 --dir ./torrents --qbit --qbit-category movie --qbit-paused
 ```
 
-保存 `mteam_<id>_1.torrent`。已有文件默认跳过，不申请新的下载链接；`--overwrite` 覆盖文件。`--qbit` 把种子推送到本机 qBittorrent Web UI（地址用 `CATBUS_MTEAM_QBIT_URL` 指定，默认 `http://127.0.0.1:25254`，直连、不走代理；Web UI 需要对本机地址免认证），默认分类 `mteam`，分类不存在时自动创建；`--qbit-paused` 推送后先暂停。qBittorrent 里已有同一个种子时只在 stderr 警告。
+保存 `mteam_<id>_1.torrent`。已有文件默认跳过，不申请新的下载链接；`--overwrite` 覆盖文件。`--qbit` 把种子推送到本机 qBittorrent Web UI（地址用 `CATBUS_MTEAM_QBIT_URL` 指定，默认 `http://127.0.0.1:25254`，直连、不走代理；Web UI 需要对本机地址免认证），默认分类 `mteam`，分类不存在时自动创建；`--qbit-paused` 推送后先暂停；`--qbit-savepath <目录>` 指定保存目录（qBittorrent 所在机器上的路径），不给时由 qBittorrent 决定（关闭自动种子管理时，分类的保存路径不生效）。qBittorrent 里已有同一个种子时只在 stderr 警告。
 
 下载链接由 `api.m-team.cc` 跳转到下载节点 `*.halomt.com`；catbus 只跟随这两类 HTTPS 地址。
 

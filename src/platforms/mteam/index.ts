@@ -39,11 +39,12 @@ export default definePlatform({
         'item categories': impl('full', 'itemCategories'),
         'item download': impl('full', 'itemDownload', {
           summary: '下载种子文件（.torrent），可选推送到 qBittorrent',
-          note: '种子文件含个人 passkey，权限 0600，临时下载链接不输出；--qbit 推送到本机 qBittorrent Web UI（CATBUS_MTEAM_QBIT_URL，默认 http://127.0.0.1:25254）',
+          note: '种子文件含个人 passkey，权限 0600，临时下载链接不输出；--qbit 推送到本机 qBittorrent Web UI（CATBUS_MTEAM_QBIT_URL，默认 http://127.0.0.1:25254），--qbit-savepath 指定保存目录',
           options: {
             qbit: z.boolean().optional().describe('下载后推送到 qBittorrent'),
             qbitCategory: z.string().optional().describe('qBittorrent 分类，默认 mteam'),
             qbitPaused: z.boolean().optional().describe('推送后先暂停'),
+            qbitSavepath: z.string().optional().describe('qBittorrent 保存目录（qBittorrent 所在机器上的绝对路径），默认用 qBittorrent 的设置'),
           },
         }),
         'item collect': impl('full', 'itemCollect'),

@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto'
 import { readFile, stat } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { text as readStdin } from 'node:stream/consumers'
@@ -262,6 +263,25 @@ function isTorrent(bytes: Uint8Array): boolean {
 
 const QBIT_DEFAULT = 'http://127.0.0.1:25254'
 
+/**
+ * 自己拼 multipart/form-data：FormData 序列化的结尾边界后没有 CRLF，qBittorrent 4.x 会把结尾边界
+ * 当成最后一个字段值的一部分（例如 savepath 变成「路径\r\n--boundary--」）。
+ */
+export function multipartBody(fields: Array<[string, string]>, file: { name: string; filename: string; data: Uint8Array }): { body: Buffer; contentType: string } {
+  const boundary = `----catbus${randomBytes(12).toString('hex')}`
+  const quote = (v: string) => v.replace(/["\r\n]/g, (c) => encodeURIComponent(c))
+  const chunks: Buffer[] = [
+    Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="${quote(file.name)}"; filename="${quote(file.filename)}"\r\nContent-Type: application/x-bittorrent\r\n\r\n`),
+    Buffer.from(file.data),
+    Buffer.from('\r\n'),
+  ]
+  for (const [name, value] of fields) {
+    chunks.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="${quote(name)}"\r\n\r\n${value}\r\n`))
+  }
+  chunks.push(Buffer.from(`--${boundary}--\r\n`))
+  return { body: Buffer.concat(chunks), contentType: `multipart/form-data; boundary=${boundary}` }
+}
+
 /** 推送到本机 qBittorrent Web UI：直连，不走 catbus 的代理设置。 */
 async function pushToQbit(ctx: HandlerContext, name: string, bytes: Uint8Array): Promise<void> {
   const base = (process.env.CATBUS_MTEAM_QBIT_URL || QBIT_DEFAULT).replace(/\/+$/, '')
@@ -269,6 +289,7 @@ async function pushToQbit(ctx: HandlerContext, name: string, bytes: Uint8Array):
   const headers = { referer: base, origin: base }
   const category = String(ctx.options.qbitCategory ?? 'mteam')
   const paused = ctx.options.qbitPaused ? 'true' : 'false'
+  const savepath = ctx.options.qbitSavepath ? String(ctx.options.qbitSavepath) : null
   let res
   try {
     const cats = await http.request({ url: `${base}/api/v2/torrents/categories`, headers, cookies: false })
@@ -276,14 +297,10 @@ async function pushToQbit(ctx: HandlerContext, name: string, bytes: Uint8Array):
     if (cats.ok && category && !(category in ((await cats.json()) as object))) {
       await http.request({ method: 'POST', url: `${base}/api/v2/torrents/createCategory`, headers, cookies: false, form: { category, savePath: '' } })
     }
+    const fields: Array<[string, string]> = [['category', category], ['paused', paused], ['stopped', paused], ...(savepath ? [['savepath', savepath] as [string, string]] : [])]
+    const form = multipartBody(fields, { name: 'torrents', filename: name, data: bytes })
     res = await http.request({
-      method: 'POST', url: `${base}/api/v2/torrents/add`, headers, cookies: false,
-      multipart: [
-        { name: 'torrents', data: bytes, filename: name, contentType: 'application/x-bittorrent' },
-        { name: 'category', data: category },
-        { name: 'paused', data: paused },
-        { name: 'stopped', data: paused },
-      ],
+      method: 'POST', url: `${base}/api/v2/torrents/add`, headers: { ...headers, 'content-type': form.contentType }, cookies: false, body: form.body,
     })
   } catch (error) {
     if (error instanceof CatbusError && error.code === 'ERROR') throw error
@@ -293,7 +310,7 @@ async function pushToQbit(ctx: HandlerContext, name: string, bytes: Uint8Array):
   }
   const body = (await res.text()).trim()
   if (res.ok && body === 'Ok.') {
-    ctx.log.info(`已推送到 qBittorrent（分类 ${category}${ctx.options.qbitPaused ? '，暂停' : ''}）`)
+    ctx.log.info(`已推送到 qBittorrent（分类 ${category}${savepath ? `，保存到 ${savepath}` : ''}${ctx.options.qbitPaused ? '，暂停' : ''}）`)
     return
   }
   if (res.ok && body === 'Fails.') {
