@@ -6,7 +6,6 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { CatbusError } from '../../../core/errors.js'
 import { writeFileAtomic } from '../../../core/fsutil.js'
-import { interactive } from '../../../core/login.js'
 import type { HttpResponse } from '../../../core/http.js'
 import { cacheDir, staticFile } from '../../../core/paths.js'
 import { compactJson, jsonDumps, jsonLoads, parseQsl, quote, urlencode } from '../../../core/py.js'
@@ -17,7 +16,7 @@ import { clientDataCookie, clientDataV2Cookie, generateEcKey } from './crypto.js
 import { DTRAIT_BROKEN } from './dtrait.js'
 import { commonBehavior, commonReport } from './mssdk.js'
 import { headers as baseHeaders, LOGIN, Params, PROFILE, WWW } from './profile.js'
-import { serveSecondVerify, type ManualVerifyServer } from './second-verify.js'
+import { hasSmsWay, sendSms, smsMobile, validateSms } from './second-verify.js'
 import { aidSign, md5Hex, passportEncrypt, passportSign, sdkTs, spliceUrl, svWebId, uaAesUrlsafe } from './sign.js'
 
 /**
@@ -100,10 +99,39 @@ const QR_TTL = 55_000
 const THROTTLE_GIVEUP = 120_000
 /** 扫码后风控要求二次验证（error_code 2046）时给用户的 stderr 提示。 */
 const QR_2046_HINT = '已扫码，抖音风控要求二次验证：请在抖音 App 上完成验证，然后回到手机点击确认登录。catbus 会继续等待，不需要重新扫码'
-/** 2046 带验证 URL（浏览器内 MFA 组件）时的 stderr 提示。 */
-const QR_2046_URL_HINT = '已扫码，抖音风控要求二次验证。请在浏览器打开下面的验证页完成验证（短信 / 密码 / 人脸任选其一），验证通过后 catbus 会自动继续登录：'
-/** 二次验证页地址的落盘位置（对齐二维码 PNG 的 cache 模式）。 */
-const verifyPageFile = join(cacheDir('douyin'), 'second-verify-url.txt')
+/** 验证组件脚本地址的落盘位置（跳过短信或无短信选项时，供人工排查用）。 */
+const verifyScriptFile = join(cacheDir('douyin'), 'second-verify-script-url.txt')
+
+/** 读一行 stdin（非交互时读到 EOF）。空行或 Ctrl-C 返回空串。 */
+function promptStdin(signal: AbortSignal): Promise<string> {
+  return new Promise((resolve) => {
+    let buf = ''
+    const onAbort = () => {
+      cleanup()
+      resolve('')
+    }
+    const onData = (c: Buffer) => {
+      buf += c.toString('utf8')
+      if (buf.includes('\n') || buf.includes('\r')) {
+        cleanup()
+        resolve(buf.trim())
+      }
+    }
+    const onEnd = () => {
+      cleanup()
+      resolve(buf.trim())
+    }
+    const cleanup = () => {
+      process.stdin.off('data', onData)
+      process.stdin.off('end', onEnd)
+      signal.removeEventListener('abort', onAbort)
+    }
+    if (signal.aborted) return resolve('')
+    signal.addEventListener('abort', onAbort, { once: true })
+    process.stdin.on('data', onData)
+    process.stdin.on('end', onEnd)
+  })
+}
 const MS_COMMON_INTERVAL = 300_000
 
 /** 登录过程中的会话状态（上游挂在 DouyinAuth 上的那些字段）。 */
@@ -737,8 +765,7 @@ export class Passport {
     let wait = POLL_INTERVAL
     let throttledSince: number | null = null
     let scanned = false
-    let verify2046Hint = false
-    let verify2046Server: ManualVerifyServer | null = null
+    let verify2046Started = false
     let firstStatusAt: number | null = null
     let commonDone = false
     let nextBehavior = started + MS_COMMON_INTERVAL
@@ -795,31 +822,31 @@ export class Passport {
           // 2046「为保障你的账号安全，请前往抖音APP完成验证后再进行登录」：
           // 真实登录页遇到它不丢弃二维码，显示提示后用同一个 token 继续轮询
           //（838.b031aa6c.js 的 QR 组件：2046 → 提示，随后 Ae() 原地续 poll）。
-          // 带验证 URL 时是浏览器内 MFA（ato_web：短信 / 密码 / 人脸）：起本地壳页
-          // 加载官方组件渲染弹窗，业务请求经 catbus 代发（CORS 只放行 www.douyin.com，
-          // 本地页无法直连 passport 接口，实测见 second-verify.ts 注释）。
+          // 带验证决策时是浏览器内 MFA（ato_web：短信 / 密码 / 人脸）；catbus 默认选
+          // 短信验证，直接调 passport 的 MFA 接口发码，验证码从 stdin 读（AI 可管道喂），
+          // 校验通过后轮询同一个 token 等风控放行（见 second-verify.ts）。
           scanned = true
           fresh = false
-          const verifyUrl = info.url ?? info.verify_url ?? null
-          if (verifyUrl && !verify2046Server) {
-            // 只起一次；组件内部的验证进度由弹窗自己管理，验证通过后回传本进程。
-            // 交互式终端才自动开浏览器；URL 同时落盘，人和 Agent 都能拿到。
-            verify2046Server = await serveSecondVerify(d, info, { signal: d.ctx.signal })
-            const opened = interactive()
-            await writeFileAtomic(verifyPageFile, `${verify2046Server.url}\n`)
-            d.ctx.log.info(`${QR_2046_URL_HINT}\n  ${verify2046Server.url}\n  地址已写入：${verifyPageFile}${opened ? '（已在浏览器打开）' : '（未自动打开浏览器：当前不是交互式终端）'}`)
-          } else if (!verifyUrl && !verify2046Hint) {
-            d.ctx.log.info(QR_2046_HINT)
-          }
-          if (!verify2046Hint) {
-            verify2046Hint = true
-            // 供风控取证：验证材料决定真实浏览器走在哪条分支
-            const wants = [
-              verifyUrl ? 'verify_url' : null,
-              verifyMaterial2046(info),
-              info.check_token != null ? 'check_token' : null,
-              info.uid != null ? 'uid' : null,
-            ].filter((x) => x)
+          if (!verify2046Started) {
+            verify2046Started = true
+            if (hasSmsWay(info)) {
+              const mobile = smsMobile(info)
+              d.ctx.log.info(`已扫码，抖音风控要求二次验证。catbus 选择短信验证${mobile ? `（发往 ${mobile}）` : ''}，正在发送验证码…`)
+              await sendSms(d, info)
+              d.ctx.log.info('验证码已发送，请输入短信验证码（6 位；直接回车跳过，改为等待 App 端验证）：')
+              const code = await promptStdin(d.ctx.signal)
+              if (code) {
+                const ok = await validateSms(d, info, code)
+                d.ctx.log.info(ok ? '验证码校验通过，等待登录放行…' : '验证码校验未通过，将继续等待（也可在 App 上完成验证）')
+              } else {
+                d.ctx.log.info(`已跳过短信验证，改为等待。也可以用浏览器打开验证组件页完成（脚本地址已落盘 ${verifyScriptFile}）`)
+                await writeFileAtomic(verifyScriptFile, `${String(info.url ?? info.verify_url ?? '')}\n`)
+              }
+            } else {
+              d.ctx.log.info(`已扫码，抖音风控要求二次验证，但本会话没有短信验证选项。请在抖音 App 上完成验证；或用浏览器加载验证组件（脚本地址已落盘 ${verifyScriptFile}）`)
+              await writeFileAtomic(verifyScriptFile, `${String(info.url ?? info.verify_url ?? '')}\n`)
+            }
+            const wants = [verifyMaterial2046(info), info.check_token != null ? 'check_token' : null, info.uid != null ? 'uid' : null].filter((x) => x)
             if (wants.length) d.ctx.log.debug(`check_qrconnect 2046 附带验证材料：${wants.join(', ')}`)
           }
           await rand.sleep(Math.max(wait, 3000), d.ctx.signal)
@@ -834,7 +861,7 @@ export class Passport {
           token = null
           scanned = false
           fresh = false
-          verify2046Hint = false
+          verify2046Started = false
           if (!commonDone) firstStatusAt = null
           continue
         }
@@ -847,7 +874,6 @@ export class Passport {
       throw new CatbusError('AUTH_REQUIRED', '扫码登录超时', { hint: '重新执行 catbus douyin auth login' })
     } finally {
       d.msPinned = false
-      if (verify2046Server) await verify2046Server.close().catch(() => {})
     }
   }
 
