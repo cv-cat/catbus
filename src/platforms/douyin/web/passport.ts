@@ -95,6 +95,8 @@ const MIX_ALPHABET = '1234567890qwertyuiopasdfghjklzxcvbnm'
 const POLL_INTERVAL = 5200
 const QR_TTL = 55_000
 const THROTTLE_GIVEUP = 120_000
+/** 扫码后风控要求二次验证（error_code 2046）时给用户的 stderr 提示。 */
+const QR_2046_HINT = '已扫码，抖音风控要求二次验证：请在抖音 App 上完成验证，然后回到手机点击确认登录。catbus 会继续等待，不需要重新扫码'
 const MS_COMMON_INTERVAL = 300_000
 
 /** 登录过程中的会话状态（上游挂在 DouyinAuth 上的那些字段）。 */
@@ -707,7 +709,9 @@ export class Passport {
       const mix = this.get('passport_auth_mix_state')
       if (mix && mix.length !== 32) this.d.setCookie('passport_auth_mix_state', mixState(32))
     }
-    if (body.data?.error_code !== 7) raiseIfBlocked('check_qrconnect/', body)
+    // 2046 是风控的二次验证门：真实登录页不把它当错误（error_code 2046 → 显示提示后
+    // 用同一个 token 继续轮询），其余非 7 的码照旧交给 raiseIfBlocked。
+    if (body.data?.error_code !== 7 && body.data?.error_code !== 2046) raiseIfBlocked('check_qrconnect/', body)
     return body
   }
 
@@ -726,6 +730,7 @@ export class Passport {
     let wait = POLL_INTERVAL
     let throttledSince: number | null = null
     let scanned = false
+    let verify2046Hint = false
     let firstStatusAt: number | null = null
     let commonDone = false
     let nextBehavior = started + MS_COMMON_INTERVAL
@@ -744,7 +749,11 @@ export class Passport {
         if (token && fresh && !scanned && rand.now() - born > QR_TTL) {
           const last = (await this.checkQrcode(token)).data ?? {}
           if (last.status === 'confirmed') return this.finish(last.redirect_url)
-          if (last.status === 'scanned') {
+          if (last.error_code === 2046) {
+            // 换码检查撞上 2046：不再换新码，标记已扫码，提示由下面的轮询分支统一给出
+            scanned = true
+            fresh = false
+          } else if (last.status === 'scanned') {
             scanned = true
             d.ctx.log.info('换码前发现已扫码，请在手机上确认')
             pending = last
@@ -774,6 +783,20 @@ export class Passport {
         }
         throttledSince = null
         wait = POLL_INTERVAL
+        if (info.error_code === 2046) {
+          // 2046「为保障你的账号安全，请前往抖音APP完成验证后再进行登录」：
+          // 真实登录页遇到它不丢弃二维码，显示提示后用同一个 token 继续轮询
+          //（838.b031aa6c.js 的 QR 组件：2046 → 提示，随后 Ae() 原地续 poll），
+          // 等用户在手机上完成验证再确认登录，这里一次只提示一句。
+          scanned = true
+          fresh = false
+          if (!verify2046Hint) {
+            verify2046Hint = true
+            d.ctx.log.info(QR_2046_HINT)
+          }
+          await rand.sleep(Math.max(wait, 3000), d.ctx.signal)
+          continue
+        }
         const status = info.status
         fresh = Boolean(status)
         if (fresh && firstStatusAt == null) firstStatusAt = rand.now()

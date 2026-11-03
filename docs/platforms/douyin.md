@@ -21,6 +21,7 @@
 | cookie | `catbus douyin auth login --method cookie --cookie @dy-cookie.txt` | 从 www.douyin.com 的 DevTools → Network 复制完整的 Cookie 请求头 |
 
 - cookie 里要有登录态的 `sessionid`（或 `sessionid_ss`），导入后 catbus 在线校验一次。缺 `UIFID` 时会自动请求一次推荐流取回，不用自己找。
+- 扫码后 catbus 提示「风控要求二次验证」并停在等待时（接口返回 2046），不用重新扫码：在抖音 App 上完成验证，再回到手机点击确认，catbus 会继续轮询同一个二维码，验证通过后照常登录。这与真实登录页的行为一致；超时仍按 5 分钟计。
 - 只导入 cookie 时，只读命令正常；发布、评论、私信等写操作还需要与 cookie **同一次登录**的 ticket / ts_sign / 私钥，缺了会在本地拦下并报 `AUTH_REQUIRED`。已经有这些凭证时，`--cookie` 也接受一个 JSON 对象一并导入：`{"cookie": "...", "ticket": "...", "ts_sign": "...", "client_cert": "...", "private_key": "...", "dtrait_blob": "..."}`，字段说明见 [登录指南：抖音](../guide/login.md#抖音连同-ticket-与设备素材一起导入)。
 - 没有子站点：创作者中心（发布、`item list`）用主站登录态。
 
