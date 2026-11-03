@@ -793,6 +793,17 @@ export class Passport {
           if (!verify2046Hint) {
             verify2046Hint = true
             d.ctx.log.info(QR_2046_HINT)
+            // 文案是服务端固定的；实际的验证材料在不在响应里决定真实浏览器走在哪条分支
+            //（页面里：密盾无感 captcha / uc 验证组件均在浏览器内，不一定要碰手机）。
+            // 打出来供风控取证：纯轮询能不能自愈，还是必须实现页面内验证链。
+            const wants = [
+              info.url,
+              info.verify_url,
+              verifyMaterial2046(info),
+              info.check_token != null ? 'check_token' : null,
+              info.uid != null ? 'uid' : null,
+            ].filter((x) => x)
+            if (wants.length) d.ctx.log.debug(`check_qrconnect 2046 附带验证材料：${wants.join(', ')}`)
           }
           await rand.sleep(Math.max(wait, 3000), d.ctx.signal)
           continue
@@ -1206,9 +1217,16 @@ async function jsonOrRaw(res: HttpResponse): Promise<any> {
   }
 }
 
+/** 2046 响应里密盾决策材料的字段名；真实浏览器据此在页面内走验证组件，不一定要碰手机。 */
+function verifyMaterial2046(info: any): string | null {
+  if (info?.verify_center_decision_conf != null) return 'verify_center_decision_conf'
+  if (info?.verify_decision != null) return 'verify_decision'
+  if (info?.decisions != null) return 'decisions'
+  return null
+}
+
 /** passport 的风控错误码（上游 _raise_if_blocked）。 */
-function raiseIfBlocked(api: string, res: any): void {
-  const code = res?.data?.error_code
+function raiseIfBlocked(api: string, res: any): void {  const code = res?.data?.error_code
   if (code === 0 || code == null) return
   const desc = res.data?.description ?? res.message ?? ''
   if (code === 4031) throw new CatbusError('RISK_CONTROL', `${api} 返回 4031「网站存在安全风险」：${desc}`, { detail: { kind: 'blocked', code } })
