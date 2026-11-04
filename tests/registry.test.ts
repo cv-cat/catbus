@@ -65,7 +65,7 @@ describe('注册表', () => {
       douyin: [],
       tiktok: ['folder add'],
       bilibili: [
-        'article publish', 'danmaku list', 'danmaku send', 'draft delete', 'draft get', 'dynamic delete', 'dynamic publish', 'item coin', 'item edit', 'item subtitles',
+        'article publish', 'comment pin', 'comment unpin', 'danmaku list', 'danmaku send', 'draft delete', 'draft get', 'dynamic delete', 'dynamic publish', 'item coin', 'item edit', 'item subtitles',
         'item triple',
       ],
       kuaishou: [],

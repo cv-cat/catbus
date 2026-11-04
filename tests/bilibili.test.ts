@@ -1096,6 +1096,33 @@ describe('bilibili 纯算', () => {
   })
 })
 
+describe('bilibili 评论置顶', () => {
+  it('comment pin / unpin：只发 type、oid、rpid、action 与 csrf', async () => {
+    const pin = await runCommand('commentPin', { args: { item: BVID, comment: '123456' } }, () => ({ code: 0, message: '0', ttl: 1 }))
+    expect(pin.error).toBeUndefined()
+    expect(pin.urls[0]).toBe('https://api.bilibili.com/x/v2/reply/top')
+    expect(Object.fromEntries(new URLSearchParams(pin.bodies[0] as string))).toEqual({
+      type: '1',
+      oid: '80433022',
+      rpid: '123456',
+      action: '1',
+      csrf: 'fakecsrf0123456789abcdef01234567',
+    })
+    expect(pin.result).toEqual({ id: '123456' })
+
+    const unpin = await runCommand('commentUnpin', { args: { item: BVID, comment: '123456' } }, () => ({ code: 0, message: '0', ttl: 1 }))
+    expect(unpin.error).toBeUndefined()
+    expect(new URLSearchParams(unpin.bodies[0] as string).get('action')).toBe('0')
+  })
+
+  it('专栏走 type=12，动态走 type=17', async () => {
+    const cv = await runCommand('commentPin', { args: { item: 'https://www.bilibili.com/read/cv12345', comment: '9' } }, () => ({ code: 0, message: '0', ttl: 1 }))
+    expect(new URLSearchParams(cv.bodies[0] as string).get('type')).toBe('12')
+    const dyn = await runCommand('commentPin', { args: { item: 'dyn:987654321098765432', comment: '9' } }, () => ({ code: 0, message: '0', ttl: 1 }))
+    expect(new URLSearchParams(dyn.bodies[0] as string).get('type')).toBe('17')
+  })
+})
+
 describe('bilibili user update（非上游，没有对拍）', () => {
   const CSRF = 'fakecsrf0123456789abcdef01234567'
   const ACCOUNT = 'https://api.bilibili.com/x/member/web/account'

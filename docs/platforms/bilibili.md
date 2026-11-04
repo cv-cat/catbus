@@ -79,6 +79,7 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `comment list` | ◐ | 评论列表。支持视频、专栏、纯文字 / 转发动态及图文动态；图文动态通过非上游动态详情接口获取相簿评论区 ID，没有对拍。取值：`--sort` popular / latest。 |
 | `comment add` | ◐ | 发表评论。动态只支持纯文字和转发：图文动态（带图）的评论区挂在相簿上，上游没有查相簿 ID 的接口；稿件、专栏不受影响。私有选项 `--root`。 |
 | `comment delete` | ◐ | 删除评论。动态只支持纯文字和转发：图文动态（带图）的评论区挂在相簿上，上游没有查相簿 ID 的接口；稿件、专栏不受影响。危险操作，需要确认。 |
+| `comment pin` / `unpin` | ✓ | 置顶 / 取消置顶一级评论。平台扩展，接口 `x/v2/reply/top`；只能置顶自己管理的评论区里的一级评论，已有置顶时再置顶报 12029。 |
 | `comment replies <item> <comment>` | ◐ | 视频、专栏、图文动态根评论下的可见楼中楼。`<comment>` 为 `comment list` 返回的根评论 ID。使用非上游的楼中楼及动态详情接口，没有对拍；纯文字和转发动态的楼中楼尚未验证，不支持。支持 `--limit`、`--cursor`、`--all`、jsonl 和 `--raw`。 |
 | `comment like`、`comment unlike` | ○ | 规划中 |
 

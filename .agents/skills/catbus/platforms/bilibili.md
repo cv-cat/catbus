@@ -13,6 +13,8 @@
 
 B 站写操作是 10 个平台里验证最充分的：点赞、收藏、评论增删、发弹幕、专栏草稿都已真机通过。
 
+- **评论置顶**：`comment pin` / `unpin`（只能置顶自己管理的评论区里的一级评论）。
+
 ## 做不到
 
 私信（`msg` 全部）、通知（`notice`）、`keyword`、`user followers` / `following` / `follow`、`comment replies`、`live list`。

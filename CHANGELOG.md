@@ -32,6 +32,7 @@
   - 演出详情（`item get`）：场次时间、城市、场馆、票价档、售卖状态逐行写进 `text`；详情接口要 H5guard 的 `mtgsig`，在本地 vm 里出签
   - 离线测试（真实响应裁剪的 fixture）与在线 E2E 测试；平台文档、能力矩阵、Agent 技能与多语言 README
 - `maoyan`：新增 `auth login`（大众点评 App 扫码，不用打开浏览器；或 `--method cookie` 导入 `dper`）、`auth status`，以及 `item get --tickets`（需要登录）：把场次、票档、实售价、余票逐行追加到 `text`，原始字段在 `--raw` 的 `shows`
+- bilibili：`comment pin` / `comment unpin`，置顶 / 取消置顶自己作品评论区里的一级评论（`x/v2/reply/top`，平台扩展，AGENTS 4.7）
 
 ### Fixed
 
