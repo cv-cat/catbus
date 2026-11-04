@@ -1174,3 +1174,33 @@ describe('bilibili user update（非上游，没有对拍）', () => {
     expect([confirm({ bio: 'x' }), confirm({ avatar: 'a.png' }), confirm({ name: 'n' })]).toEqual([false, false, true])
   })
 })
+
+describe('bilibili 定时发布', () => {
+  it('submitArchive：给了 dtime 才写进 body', async () => {
+    const requests: PreparedRequest[] = []
+    const restore = mockSender((p) => {
+      requests.push(p)
+      return fakeResponse({ code: 0, message: '0', data: { bvid: BVID } }, { headers: [['content-type', 'application/json']], url: p.url })
+    })
+    try {
+      await logged((b) => api.submitArchive(b, { videos: [{ filename: 'n1', biz_id: 9 }], title: 't', tid: 17, tag: 'a', dtime: 1790090000 }))
+      await logged((b) => api.submitArchive(b, { videos: [{ filename: 'n1', biz_id: 9 }], title: 't', tid: 17, tag: 'a' }))
+    } finally {
+      restore()
+    }
+    const bodies = requests.map((p) => JSON.parse(Buffer.from(p.body as Uint8Array).toString('utf8')))
+    expect(bodies[0].dtime).toBe(1790090000)
+    expect(bodies[1]).not.toHaveProperty('dtime')
+  })
+
+  it('item publish：--schedule 早于 2 小时后时报 USAGE，不发请求', async () => {
+    const soon = new Date(NOW + 3600_000).toISOString()
+    const { error, urls } = await runCommand(
+      'itemPublish',
+      { options: { video: COVER_FILE, title: 't', tag: ['a'], category: '17', schedule: soon } },
+      () => ({ code: 0, message: '0', data: { bvid: BVID } }),
+    )
+    expect(error).toMatchObject({ code: 'USAGE' })
+    expect(urls).toEqual([])
+  })
+})

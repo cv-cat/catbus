@@ -347,6 +347,17 @@ export async function itemUncollect(ctx: Ctx) {
   return { id: bvid }
 }
 
+/** `--schedule`：B 站定时发布要求时间在 2 小时后、15 天内，转成 unix 秒。 */
+function scheduleSeconds(input: string): number {
+  const sec = Math.floor(Date.parse(input) / 1000)
+  if (!Number.isFinite(sec)) throw new CatbusError('USAGE', `无法识别的时间：${input}`, { hint: 'ISO 8601 带时区，例如 2026-11-05T20:00:00+08:00' })
+  const now = Math.floor(rand.now() / 1000)
+  if (sec < now + 2 * 3600 || sec > now + 15 * 86400) {
+    throw new CatbusError('USAGE', '定时发布时间要在当前时间 2 小时后、15 天内', { hint: 'B 站对定时发布的限制；换个时间，或者去掉 --schedule 直接发布' })
+  }
+  return sec
+}
+
 export async function itemPublish(ctx: Ctx) {
   const b = await bili(ctx)
   b.requireLogin()
@@ -355,6 +366,7 @@ export async function itemPublish(ctx: Ctx) {
   if (!o.title) throw new CatbusError('USAGE', 'B 站投稿需要 --title')
   if (!o.tag?.length) throw new CatbusError('USAGE', 'B 站投稿至少需要一个 --tag')
   if (!o.category) throw new CatbusError('USAGE', 'B 站投稿需要 --category（分区 id）', { hint: 'catbus bilibili item categories' })
+  const dtime = o.schedule ? scheduleSeconds(o.schedule) : undefined
   const video = await uploadVideo(b, await readMedia(b.http, o.video))
   const cover = o.cover ? await uploadCover(b, o.cover) : ''
   const d = await api.submitArchive(b, {
@@ -368,6 +380,7 @@ export async function itemPublish(ctx: Ctx) {
     source: o.source ?? '',
     private: o.visibility === 'private',
     dynamic: o.dynamic ?? '',
+    dtime,
     noReprint: o.allowReprint ? 0 : 1,
   })
   return n.item({ id: d.bvid, kind: 'video', url: norm.videoUrl(d.bvid), title: o.title, text: o.text ?? null, cover: cover || null, status: 'reviewing' }, d)
@@ -383,6 +396,7 @@ export async function itemEdit(ctx: Ctx) {
   const info: any = await api.archiveDetail(b, aidNum)
   const A = info?.data?.arc_audits?.[0]?.Archive ?? info?.data?.archives?.find((x: any) => x.aid === aidNum)
   if (!A) throw new CatbusError('UPSTREAM', '找不到这条稿件（可能是审核中且不在 audits 里）')
+  const dtime = o.schedule ? scheduleSeconds(o.schedule) : undefined
   const video = await uploadVideo(b, await readMedia(b.http, o.video))
   const cover = o.cover ? await uploadCover(b, o.cover) : String(A.cover ?? '')
   const d = await api.editArchive(b, {

@@ -38,7 +38,7 @@ B 站写操作是 10 个平台里验证最充分的：点赞、收藏、评论�
 - `item coin` 会真的花掉硬币、`item triple` 包含投币，都是危险操作，要用户同意后才加 `-y`。
 - `user update --name` 每次扣 6 个硬币（从没设过昵称的账号免费一次），要用户同意后才加 `-y`；`--bio` 最多 70 字，改完要审核，返回的资料里可能还是旧签名；`--avatar` 只收 png / jpg，不超过 2MB。
 - `dynamic publish` 没有仅自己可见，发出去就公开。
-- `item publish` 只能发视频；`--category` 取自 `item categories`；`--visibility` 只有 `public` / `private`。
+- `item publish` 只能发视频；`--category` 取自 `item categories`；`--visibility` 只有 `public` / `private`；`--schedule` 定时发布，时间要在 2 小时后、15 天内（B 站限制）。
 - `user get` 的 `stats` 恒为 null（接口不给计数）。
 - `comment add` / `delete` 的动态目标仍只支持纯文字和转发；图文动态只开放读取。视频 / 专栏动态请直接传 BV / cv 号。
 
