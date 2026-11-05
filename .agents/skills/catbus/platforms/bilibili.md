@@ -35,7 +35,7 @@ B 站写操作是 10 个平台里验证最充分的：点赞、收藏、评论�
 - `item delete` 需要极验点选，catbus 过不了，会报 `RISK_CONTROL`：让用户在网页端撤稿。
 - `item coin` 会真的花掉硬币、`item triple` 包含投币，都是危险操作，要用户同意后才加 `-y`。
 - `dynamic publish` 没有仅自己可见，发出去就公开。
-- `item publish` 只能发视频；`--category` 取自 `item categories`；`--visibility` 只有 `public` / `private`。
+- `item publish` 只能发视频；`--category` 取自 `item categories`；`--visibility` 只有 `public` / `private`；`--schedule` 定时发布（2 小时后、15 天内）。
 - `user get` 的 `stats` 恒为 null（接口不给计数）。
 - 图文动态（带图）的评论区不支持，纯文字和转发动态可以。
 

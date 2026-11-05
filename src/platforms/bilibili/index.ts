@@ -82,7 +82,7 @@ export default definePlatform({
         'item collect': impl('full', 'itemCollect', { options: { folder: FOLDER } }),
         'item uncollect': impl('full', 'itemUncollect', { options: { folder: FOLDER } }),
         'item publish': impl('full', 'itemPublish', {
-          supports: ['title', 'text', 'video', 'cover', 'tag', 'category', 'visibility'],
+          supports: ['title', 'text', 'video', 'cover', 'tag', 'category', 'visibility', 'schedule'],
           options: {
             visibility: visibility('public', 'private'),
             source: z.string().optional().describe('转载来源；给出时按转载投稿，不给为自制'),

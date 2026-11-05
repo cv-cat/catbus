@@ -551,6 +551,8 @@ export interface ArchiveInput {
   private?: boolean
   /** 同步到动态的文案。 */
   dynamic?: string
+  /** 定时发布的时间戳（unix 秒）；B 站要求 2 小时后、15 天内。 */
+  dtime?: number
   /** 1 禁止转载。 */
   noReprint?: number
 }
@@ -610,6 +612,7 @@ export function submitArchive(b: Bili, a: ArchiveInput) {
     interactive: 0,
     no_reprint: a.noReprint ?? 1,
     subtitle: { open: 0, lan: '' },
+    ...(a.dtime !== undefined ? { dtime: a.dtime } : {}),
     videos: a.videos.map((v) => ({ filename: v.filename, title: v.title || a.title, desc: v.desc ?? '', cid: v.biz_id ?? null })),
     human_type2: 0,
     topic_id: 0,

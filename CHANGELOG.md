@@ -13,6 +13,7 @@
 
 ### Added
 
+- bilibili：`item publish --schedule <ISO 时间>`，定时发布（`x/vu/web/add/v3` 的 `dtime`），时间按 B 站限制校验在 2 小时后、15 天内
 - mteam：网页账密登录（`--method password`），请求带网页前端的 HMAC 签名；新设备的两步验证支持邮箱验证码（`--email` 发码、`--code` 完成，非 TTY 分两次执行）和 TOTP
 - mteam：`item collect` / `uncollect`、`user collects`、`item download --qbit`（推送到本机 qBittorrent，`--qbit-savepath` 指定保存目录；multipart 自己拼，结尾边界带 CRLF，避免 qBittorrent 把结尾边界读进最后一个字段）、`seed list`、`seed stats`、`exam get`（考核进度）、`bonus get`（时魔）、`bonus history`（新扩展类型 `BonusRecord`）、`msg list` / `history`（站内信只读，只支持账密登录）；`item search` / `feed list` 新增私有选项 `--order-by` / `--asc`
 - 新增 `jimeng`（即梦，别名 `dreamina`）平台：管理即梦官方 CLI `dreamina` 的多账号登录态，不注册生成类命令

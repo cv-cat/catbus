@@ -65,7 +65,7 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `item unlike` | ✓ | 取消点赞。 |
 | `item collect` | ✓ | 收藏。私有选项 `--folder`。 |
 | `item uncollect` | ✓ | 取消收藏。私有选项 `--folder`。 |
-| `item publish` | ✓ | 发布稿件。必须给 `--video`、`--title`、至少一个 `--tag` 和 `--category`（取值见 `item categories`）。取值：`--visibility` public / private。不支持 `--image`、`--topic`、`--mention`、`--poi`、`--schedule`、`--price`。私有选项 `--source`、`--dynamic`、`--allow-reprint`。 |
+| `item publish` | ✓ | 发布稿件。必须给 `--video`、`--title`、至少一个 `--tag` 和 `--category`（取值见 `item categories`）。取值：`--visibility` public / private。支持 `--schedule` 定时发布（ISO 时间，B 站要求 2 小时后、15 天内）。不支持 `--image`、`--topic`、`--mention`、`--poi`、`--price`。私有选项 `--source`、`--dynamic`、`--allow-reprint`。 |
 | `item delete` | ◐ | 删除稿件。需要人机验证（极验点选），catbus 还不能自动通过，会报 `RISK_CONTROL`。危险操作，需要确认。 |
 | `item categories` | ✓ | 稿件分类，即 `--category` 的取值。 |
 | `item coin` | ✓ | 投币。平台扩展。危险操作，需要确认。 |
