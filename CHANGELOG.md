@@ -6,11 +6,15 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-05
+
 ### Fixed
 
 - bilibili：`item edit` 一执行就报「找不到这条稿件」。`archiveDetail` 返回的已经是接口的 `data`，原实现又按 `data.archives` 取了一层，永远取不到原稿；改为按编辑页的 `x/vupre/web/archive/view` 取稿件
 - mteam：`item download` 被拒（「下载地址不属于受支持的官方 HTTPS 域名」）。`api.m-team.cc` 的下载地址会 302 到下载节点 `*.halomt.com`，现在允许跳转到这个域名（第一跳仍须是 MT 自己的域名）
 - 抖音：扫码后 2046（「为保障你的账号安全，请前往抖音APP完成验证后再进行登录」）把登录流程白白中断。2046 是 passport 新加的二次验证风控门，不再报错：catbus 默认选短信验证，按登录页验证组件的请求形状直接调 `/passport/web/send_code/` 发码（stderr 提示发往的掩码手机号），验证码从 stdin 读一行（支持管道喂给 AI），`/passport/web/validate_code/` 校验通过后用同一个二维码 token 继续轮询等放行；回车跳过短信或决策里没有短信选项时，退回「等 App 端验证」的原有轮询，超时与过期逻辑不变，全程无浏览器
+- 能力矩阵的「登录方式」表按 `LOGIN_METHODS` 生成，不再写死 4 种方式
+- xhs：扫码确认后被要求短信人机验证（HTTP 471，`verifyType 120`）时不再直接失败：向账号绑定的手机发验证码，在终端输入（非交互时从 stdin 读一行）后继续登录
 
 ### Added
 
@@ -37,11 +41,6 @@
   - 离线测试（真实响应裁剪的 fixture）与在线 E2E 测试；平台文档、能力矩阵、Agent 技能与多语言 README
 - `maoyan`：新增 `auth login`（大众点评 App 扫码，不用打开浏览器；或 `--method cookie` 导入 `dper`）、`auth status`，以及 `item get --tickets`（需要登录）：把场次、票档、实售价、余票逐行追加到 `text`，原始字段在 `--raw` 的 `shows`
 - bilibili：`comment pin` / `comment unpin`，置顶 / 取消置顶自己作品评论区里的一级评论（`x/v2/reply/top`，平台扩展，AGENTS 4.7）
-
-### Fixed
-
-- 能力矩阵的「登录方式」表按 `LOGIN_METHODS` 生成，不再写死 4 种方式
-- xhs：扫码确认后被要求短信人机验证（HTTP 471，`verifyType 120`）时不再直接失败：向账号绑定的手机发验证码，在终端输入（非交互时从 stdin 读一行）后继续登录
 
 ## [0.2.1] - 2026-10-22
 
