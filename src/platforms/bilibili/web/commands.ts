@@ -565,6 +565,18 @@ export async function commentDelete(ctx: Ctx) {
   return { id: ctx.args.comment! }
 }
 
+async function pinComment(ctx: Ctx, on: boolean) {
+  const b = await bili(ctx)
+  b.requireLogin()
+  const t = await resolveReplyTarget(b, ctx.args.item!)
+  const rpid = ctx.args.comment!
+  await onReplies(t, () => api.pinReply(b, t.oid, rpid, on, t.type))
+  return { id: rpid }
+}
+
+export const commentPin = (ctx: Ctx) => pinComment(ctx, true)
+export const commentUnpin = (ctx: Ctx) => pinComment(ctx, false)
+
 // ================================================================ 弹幕（扩展）
 
 /** 解 DmSegMobileReply：elems=1，每条 id=1 progress=2 ctime=8 content=7 idStr=12。 */

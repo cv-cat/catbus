@@ -456,6 +456,19 @@ export function deleteReply(b: Bili, oid: string, rpid: string, type = 1) {
   return b.post(`${API}/x/v2/reply/del`, { headers: h.get(), form })
 }
 
+/** 置顶 / 取消置顶一级评论（`x/v2/reply/top`）。只能在自己管理的评论区里操作，且只能置顶一级评论。 */
+export function pinReply(b: Bili, oid: string, rpid: string, on: boolean, type = 1) {
+  const h = headers('FORM').referer(`${MAIN}/`)
+  const form: Pairs = [
+    ['type', type],
+    ['oid', oid],
+    ['rpid', rpid],
+    ['action', on ? 1 : 0],
+    ['csrf', b.csrf],
+  ]
+  return b.post(`${API}/x/v2/reply/top`, { headers: h.get(), form })
+}
+
 /** 弹幕的 rnd：会话内自增序号（上游 itertools.count(1)），每条命令从 1 开始。 */
 let dmSeq = 0
 

@@ -125,6 +125,22 @@ export default definePlatform({
           check: (_a, o) => (o.root != null && o.replyTo == null ? '--root 要和 --reply-to 一起用' : undefined),
         }),
         'comment delete': impl('partial', 'commentDelete', { note: DYNAMIC_REPLY_NOTE, args: [replyTarget, { name: 'comment', summary: '评论 ID' }] }),
+        'comment pin': {
+          upstream: 'full',
+          summary: '置顶评论',
+          args: [replyTarget, { name: 'comment', summary: '评论 ID（comment list 输出的 id）' }],
+          auth: 'required',
+          output: '{id}',
+          handler: h('commentPin'),
+        },
+        'comment unpin': {
+          upstream: 'full',
+          summary: '取消置顶评论',
+          args: [replyTarget, { name: 'comment', summary: '评论 ID（comment list 输出的 id）' }],
+          auth: 'required',
+          output: '{id}',
+          handler: h('commentUnpin'),
+        },
         'comment like': 'none',
         'comment unlike': 'none',
 
