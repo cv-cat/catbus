@@ -131,6 +131,7 @@
 - `item publish --allow-stitch`：tiktok
 - `item publish --allow-content-reuse`：tiktok
 - `item publish --allow-ai-remix`：tiktok
+- `item publish --cover43`：bilibili
 - `item publish --source`：bilibili
 - `item publish --dynamic`：bilibili
 - `item publish --allow-reprint`：bilibili

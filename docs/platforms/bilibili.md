@@ -65,7 +65,8 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `item unlike` | ✓ | 取消点赞。 |
 | `item collect` | ✓ | 收藏。私有选项 `--folder`。 |
 | `item uncollect` | ✓ | 取消收藏。私有选项 `--folder`。 |
-| `item publish` | ✓ | 发布稿件。必须给 `--video`、`--title`、至少一个 `--tag` 和 `--category`（取值见 `item categories`）。取值：`--visibility` public / private。支持 `--schedule` 定时发布（ISO 时间，B 站要求 2 小时后、15 天内）。不支持 `--image`、`--topic`、`--mention`、`--poi`、`--price`。私有选项 `--source`、`--dynamic`、`--allow-reprint`。 |
+| `item publish` | ✓ | 发布稿件。必须给 `--video`、`--title`、至少一个 `--tag` 和 `--category`（取值见 `item categories`）。取值：`--visibility` public / private。支持 `--schedule` 定时发布（ISO 时间，B 站要求 2 小时后、15 天内）。不支持 `--image`、`--topic`、`--mention`、`--poi`、`--price`。私有选项 `--source`、`--dynamic`、`--allow-reprint`、`--cover43`。 |
+| `item edit` | ✓ | 编辑已投稿件。不给 `--video` 时只改资料，按编辑页接口取原稿的分 P（`filename` + `cid`）；`--cover` 是 16:9（播放页）、`--cover43` 是 4:3（稿件列表页），缺省沿用原图；`--schedule` 改期 / `none` 取消定时，缺省沿用原稿；不给 `--visibility` 时沿用原稿的可见性。提交后进入重新审核。平台扩展。 |
 | `item delete` | ◐ | 删除稿件。需要人机验证（极验点选），catbus 还不能自动通过，会报 `RISK_CONTROL`。危险操作，需要确认。 |
 | `item categories` | ✓ | 稿件分类，即 `--category` 的取值。 |
 | `item coin` | ✓ | 投币。平台扩展。危险操作，需要确认。 |
@@ -166,11 +167,13 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `user items <user>` | `--keyword <词>` | 只看投稿里匹配关键词的 |
 | `item collect` / `uncollect` | `--folder <收藏夹 id>` | 收藏进 / 移出指定收藏夹，多个用逗号分隔，取值来自 `folder list`。不给时收藏进第一个收藏夹，取消时从所有收着它的收藏夹移出 |
 | `item publish` | `--source <来源>`、`--dynamic <文案>`、`--allow-reprint` | `--source` 表示转载并给出来源，不给为自制；`--dynamic` 是同步到动态的文案；默认禁止转载，`--allow-reprint` 允许 |
+| `item publish` / `item edit` | `--cover <图片>`、`--cover43 <图片>` | B 站封面有两套比例：`--cover` 是播放页的 16:9，`--cover43` 是稿件列表页的 4:3，各传一张；只给其中一张时另一张沿用原图（发布时为空，由平台自己截） |
 | `comment add <item> <text>` | `--reply-to <评论>`、`--root <评论>` | 回复楼中楼时 `--root` 给根评论、`--reply-to` 给被回复的那条；不给 `--root` 时 `--reply-to` 就是根评论 |
 | `live send <room> <text>` | `--color`、`--font-size`、`--position`、`--reply-user <用户>` | 弹幕样式同 `danmaku send`；`--reply-user` 为回复的观众（UID 或空间链接） |
 
 | 扩展命令 | 说明 | 输出 |
 |---|---|---|
+| `item edit <item> [--video <文件>] [--title <标题>] [--text <简介>] [--cover <16:9 图>] [--cover43 <4:3 图>] [--tag <标签>...] [--category <分区 id>] [--visibility public\|private]` | 编辑已投稿件：换视频、改资料、换封面；提交后重新审核 | Item |
 | `item coin <item> [--count 1\|2] [--like]` | 投币，默认 1 个；`--like` 同时点赞。**会真的花掉硬币**，需要确认 | `{id}` |
 | `item triple <item>` | 一键三连，需要确认 | `{id}` |
 | `item subtitles <item>` | 字幕：每种语言一条，带时间轴（`lines[{from to text}]`） | Subtitle[] |

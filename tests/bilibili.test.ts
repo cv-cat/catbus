@@ -1231,3 +1231,82 @@ describe('bilibili 定时发布', () => {
     expect(urls).toEqual([])
   })
 })
+
+describe('bilibili 双封面（16:9 + 4:3）与只改资料', () => {
+  const VIEW = 'https://member.bilibili.com/x/vupre/web/archive/view'
+  const COVER_UP = 'https://member.bilibili.com/x/vu/web/cover/up'
+  const EDIT = 'https://member.bilibili.com/x/vu/web/edit'
+  /** 原稿的定时发布时间（unix 秒），编辑不给 --schedule 时应当沿用。 */
+  const DTIME = 1790090000
+
+  /** 编辑页数据按请求里的 aid 回；分 P 带 filename 与 cid，x/vu/web/edit 需要这两项。 */
+  const route = (extra: Record<string, unknown> = {}) => (url: string) => {
+    for (const [k, v] of Object.entries(extra)) if (url.includes(k)) return v
+    if (url.startsWith(VIEW)) {
+      const aid = Number(new URL(url).searchParams.get('aid'))
+      return ok({
+        archive: { aid, bvid: BVID, title: '旧标题', tid: 231, tag: '旧标签', desc: '旧简介', cover: 'https://x/old16x9.jpg', cover43: 'https://x/old4x3.jpg', copyright: 1, is_only_self: 1, dtime: DTIME },
+        videos: [{ cid: 43291905898, filename: 'n230101abc', index: 1, title: '旧标题', desc: '', duration: 0 }],
+      })
+    }
+    if (url === COVER_UP) return ok({ url: 'https://archive.biliimg.com/bfs/archive/new.jpg' })
+    if (url.startsWith(EDIT)) return ok({ bvid: BVID })
+    return { code: 0, message: '0', ttl: 1 }
+  }
+
+  const editBody = (bodies: unknown[]) => {
+    const raw = bodies.find((b) => typeof b === 'string' && b.includes('"videos"'))
+    return JSON.parse(String(raw))
+  }
+
+  it('不给 --video：沿用原稿分 P，只换 16:9 与 4:3 两张封面', async () => {
+    const { bodies, urls, error } = await runCommand('itemEdit', { args: { item: BVID }, options: { cover: COVER_FILE, cover43: COVER_FILE } }, route())
+    expect(error).toBeUndefined()
+    const body = editBody(bodies)
+    expect(body).toMatchObject({ aid: expect.any(Number), cover: 'https://archive.biliimg.com/bfs/archive/new.jpg', cover43: 'https://archive.biliimg.com/bfs/archive/new.jpg' })
+    expect(body.videos).toEqual([{ filename: 'n230101abc', title: '旧标题', desc: '', cid: 43291905898 }])
+    // 两张封面各上传一次，没有上传视频
+    expect(urls.filter((u) => u === COVER_UP)).toHaveLength(2)
+    expect(urls.some((u) => u.includes('upos'))).toBe(false)
+  })
+
+  it('只改标题：封面沿用原稿的 16:9 与 4:3，不上传任何封面', async () => {
+    const { bodies, urls, error } = await runCommand('itemEdit', { args: { item: BVID }, options: { title: '新标题' } }, route())
+    expect(error).toBeUndefined()
+    const body = editBody(bodies)
+    expect(body).toMatchObject({ title: '新标题', cover: 'https://x/old16x9.jpg', cover43: 'https://x/old4x3.jpg', is_only_self: 1 })
+    expect(urls).not.toContain(COVER_UP)
+  })
+
+  it('什么都不给：报 USAGE，不发请求', async () => {
+    const { error, urls } = await runCommand('itemEdit', { args: { item: BVID }, options: {} }, route())
+    expect(error).toMatchObject({ code: 'USAGE' })
+    expect(urls).toEqual([])
+  })
+
+  it('submitArchive / editArchive：不给 4:3 封面时不写 cover43（保持原请求形状）', async () => {
+    const requests: PreparedRequest[] = []
+    const restore = mockSender((p) => {
+      requests.push(p)
+      return fakeResponse({ code: 0, message: '0', data: { bvid: BVID } }, { headers: [['content-type', 'application/json']], url: p.url })
+    })
+    try {
+      await logged((b) => api.submitArchive(b, { videos: [{ filename: 'n1', biz_id: 9 }], title: 't', tid: 17, tag: 'a', cover: 'https://x/c.jpg' }))
+      await logged((b) => api.submitArchive(b, { videos: [{ filename: 'n1', biz_id: 9 }], title: 't', tid: 17, tag: 'a', cover: 'https://x/c.jpg', cover43: 'https://x/c43.jpg' }))
+      await logged((b) => api.editArchive(b, { aid: 1, videos: [{ filename: '', biz_id: 9 }], title: 't', tid: 17, tag: 'a', cover: 'https://x/c.jpg', cover43: 'https://x/c43.jpg' }))
+    } finally {
+      restore()
+    }
+    const bodies = requests.map((p) => JSON.parse(Buffer.from(p.body as Uint8Array).toString('utf8')))
+    expect(bodies[0]).not.toHaveProperty('cover43')
+    expect(bodies[1]).toMatchObject({ cover: 'https://x/c.jpg', cover43: 'https://x/c43.jpg' })
+    expect(bodies[2]).toMatchObject({ aid: 1, cover43: 'https://x/c43.jpg' })
+  })
+
+  it('--schedule：不给时沿用原稿的定时，none 取消定时', async () => {
+    const keep = await runCommand('itemEdit', { args: { item: BVID }, options: { title: '新标题' } }, route())
+    expect(editBody(keep.bodies).dtime).toBe(DTIME)
+    const cancel = await runCommand('itemEdit', { args: { item: BVID }, options: { schedule: 'none' } }, route())
+    expect(editBody(cancel.bodies).dtime).toBe(0)
+  })
+})
