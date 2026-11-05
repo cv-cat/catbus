@@ -34,7 +34,7 @@ export interface User {
   stats: { followers: number | null; following: number | null; items: number | null; likes: number | null }
 }
 
-export type ItemKind = 'video' | 'image' | 'text' | 'article' | 'goods'
+export type ItemKind = 'video' | 'image' | 'text' | 'article' | 'goods' | 'torrent'
 export type ItemStatus = 'published' | 'reviewing' | 'rejected' | 'private' | 'draft' | 'on_sale' | 'sold' | 'off_shelf'
 
 export interface Item {
@@ -50,6 +50,31 @@ export interface Item {
   stats: { views: number | null; likes: number | null; comments: number | null; collects: number | null; shares: number | null }
   price: Price | null
   status: ItemStatus | null
+}
+
+/** PT 资源：保留通用 Item 字段，补充跨 Tracker 通用的种子信息。 */
+export interface Torrent extends Item {
+  kind: 'torrent'
+  size: number | null
+  file_count: number | null
+  category_id: string | null
+  seeders: number | null
+  leechers: number | null
+  completed: number | null
+  discount: string | null
+}
+
+/** PT 站魔力值明细的一条记录（mteam bonus history）。 */
+export interface BonusRecord {
+  id: string
+  time: string | null
+  type: string | null
+  before: number | null
+  after: number | null
+  change: number | null
+  user: UserRef | null
+  note: string | null
+  url: string | null
 }
 
 export interface Comment {
@@ -180,7 +205,7 @@ export interface Account {
 
 export interface File {
   path: string
-  type: 'image' | 'video' | 'audio'
+  type: 'image' | 'video' | 'audio' | 'torrent'
   url: string | null
   size: number
 }
@@ -304,7 +329,7 @@ export interface Transfer {
 export const OUTPUT_TYPES = new Set([
   'User', 'Item', 'Comment', 'Folder', 'Series', 'Category', 'Keyword', 'Topic', 'Poi', 'Live', 'Event', 'Gift',
   'Rank', 'Conversation', 'Message', 'Notice', 'NoticeCount', 'Media', 'AuthStatus', 'Account', 'File', 'Subtitle',
-  'Danmaku', 'Order', 'Coupon', 'Station', 'Ticket', 'Stop', 'Fare', 'Transfer',
+  'Danmaku', 'Order', 'Coupon', 'Station', 'Ticket', 'Stop', 'Fare', 'Transfer', 'Torrent', 'BonusRecord',
 ])
 
 /** 归一化对象上挂平台原始对象，`--raw` 时用它替换。JSON 序列化会忽略 symbol 键。 */

@@ -5,7 +5,7 @@
 <br>
 
 **One command. Twelve platforms.**<br>
-RedNote (Xiaohongshu) · Douyin · TikTok · Bilibili · Kuaishou · Weibo · Xianyu · Taobao · JD.com · X · YouTube · 12306
+RedNote (Xiaohongshu) · Douyin · TikTok · Bilibili · Kuaishou · Weibo · Xianyu · Taobao · JD.com · X · YouTube · 12306 · Maoyan
 <br>
 <sub>Coming soon: Instagram · Facebook · Zhihu · WeChat Official Accounts · Toutiao · Poizon (Dewu) · Pinduoduo · Meituan · Dianping</sub>
 
@@ -47,7 +47,7 @@ RedNote (Xiaohongshu) · Douyin · TikTok · Bilibili · Kuaishou · Weibo · Xi
 
 ## ✨ What is catbus
 
-catbus (猫巴士) is a command-line tool that drives the web endpoints of 12 major Chinese and global platforms through **one unified syntax**: search, details, comments, users, feeds, downloads, publishing, direct messages, live-stream chat, train tickets and more.
+catbus (猫巴士) is a command-line tool that drives the web endpoints of 12 major Chinese and global platforms through **one unified syntax**: search, details, comments, users, feeds, downloads, publishing, direct messages, live-stream chat, train tickets, concert listings and more.
 
 ```bash
 catbus xhs      item search 露营 --sort latest

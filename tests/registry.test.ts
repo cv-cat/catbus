@@ -36,11 +36,11 @@ describe('注册表', () => {
   })
 
   it('web 端支持游客态的平台（AGENTS 5.2）', () => {
-    expect(PLATFORMS.filter((p) => web(p).guest).map((p) => p.id)).toEqual(['youtube', '12306'])
+    expect(PLATFORMS.filter((p) => web(p).guest).map((p) => p.id)).toEqual(['youtube', '12306', 'maoyan'])
   })
 
   /** 已经移植完的平台：上游有的（✓ / ◐）都有实现，○ 的都没有。移植完一个平台就加进来。 */
-  const PORTED = ['bilibili', 'taobao', 'weibo', 'x', 'kuaishou', 'xianyu', 'tiktok', 'jd', 'douyin', 'xhs', '12306', 'youtube', 'jimeng']
+  const PORTED = ['bilibili', 'taobao', 'weibo', 'x', 'kuaishou', 'xianyu', 'tiktok', 'jd', 'douyin', 'xhs', '12306', 'youtube', 'jimeng', 'maoyan', 'mteam']
 
   it('已移植的平台：✓ / ◐ 的命令都已实现，○ 的都是 planned', () => {
     for (const p of PLATFORMS.filter((x) => PORTED.includes(x.id))) {
@@ -67,7 +67,7 @@ describe('注册表', () => {
       douyin: [],
       tiktok: ['folder add'],
       bilibili: [
-        'article publish', 'danmaku list', 'danmaku send', 'draft delete', 'draft get', 'dynamic delete', 'dynamic publish', 'item coin', 'item subtitles',
+        'article publish', 'comment pin', 'comment unpin', 'danmaku list', 'danmaku send', 'draft delete', 'draft get', 'dynamic delete', 'dynamic publish', 'item coin', 'item edit', 'item subtitles',
         'item triple',
       ],
       kuaishou: [],
@@ -79,6 +79,8 @@ describe('注册表', () => {
       youtube: ['channel create'],
       '12306': ['route get', 'station search', 'ticket price', 'ticket search', 'transfer search'],
       jimeng: [],
+      maoyan: [],
+      mteam: ['bonus get', 'bonus history', 'exam get', 'seed list', 'seed stats'],
     })
   })
 

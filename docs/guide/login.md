@@ -3,7 +3,7 @@
 各平台的 web 端不登录几乎看不到内容，所以 catbus 在 web 端除 `auth` 以外的命令都需要登录。未登录时命令报 `AUTH_REQUIRED`（退出码 3），`hint` 里就是该执行的登录命令。
 
 ```bash
-catbus <platform> auth login [-a <账号名>] [--method qrcode|sms|password|cookie|oauth] [--scope <子站点>]
+catbus <platform> auth login [-a <账号名>] [--method qrcode|sms|password|cookie|oauth|apikey] [--scope <子站点>]
 ```
 
 规范见 [AGENTS.md 5.2、5.3](../../AGENTS.md#53-登录与登出)。
@@ -23,6 +23,7 @@ catbus <platform> auth login [-a <账号名>] [--method qrcode|sms|password|cook
 | jd | ✓ | ✓ |  | ✓ |  | qrcode |
 | x |  |  |  | ✓ |  | cookie |
 | jimeng |  |  |  |  | ✓ | oauth |
+| maoyan | ✓ |  |  | ✓ |  | qrcode |
 
 表格来自注册表，以 `catbus <platform> auth login --help` 为准。不支持的方式报 `UNSUPPORTED`，`hint` 列出可选的方式。
 
@@ -36,7 +37,7 @@ catbus xhs auth login --method qrcode
 - 二维码画在终端（stderr）上，同时保存成 PNG：`~/.catbus/cache/<platform>/qrcode.png`（权限 0600），终端显示不全时打开这张图扫。
 - 用对应的 App 扫码，并在手机上确认。扫码后终端会提示「已扫码，请在手机上确认」。
 - 要在几分钟内完成（各平台 2～5 分钟不等），超时或二维码失效时报 `AUTH_REQUIRED`，重新执行即可。
-- **小红书**：扫码确认后，服务端可能要求做一次人机验证（HTTP 471），catbus 和上游都还不能自动通过，会报 `RISK_CONTROL`，`hint` 建议改用 cookie 导入。见 [小红书的已知限制](../platforms/xhs.md#已知限制)。
+- **小红书**：扫码确认后，服务端可能要求做一次人机验证（HTTP 471）。短信验证由 catbus 发码、你输入验证码后继续登录；其他验证方式报 `RISK_CONTROL`，`hint` 建议改用 cookie 导入。见 [小红书的已知限制](../platforms/xhs.md#已知限制)。
 
 ## 短信
 

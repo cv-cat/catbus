@@ -333,6 +333,67 @@ describe('douyin 对拍：登录', () => {
     expect(d.tokens).toMatchObject({ ticket: c.result.ticket, ts_sign: c.result.ts_sign, client_cert: c.result.client_cert })
   }, 60_000)
 
+  it('扫码：风控要求二次验证（2046）不中断，同一个 token 轮询直到确认', async () => {
+    // 真机实录：扫码后 check_qrconnect 返回 2046「为保障你的账号安全，请前往抖音APP完成验证」。
+    // 真实登录页不把它当失败：显示提示后用同一个 token 继续轮询（838.b031aa6c.js），
+    // 用户在 App 完成验证后状态回到 scanned / confirmed。
+    const base = loadCase('douyin', 'login_qrcode')
+    const c = JSON.parse(JSON.stringify(base)) as GoldenCase
+    const scannedIdx = c.responses.findIndex((r) => JSON.stringify(r.body ?? {}).includes('"status":"scanned"'))
+    expect(scannedIdx).toBeGreaterThan(0)
+    const blocked = {
+      status: 200,
+      headers: c.responses[scannedIdx]!.headers,
+      body: { message: 'success', data: { error_code: 2046, description: '为保障你的账号安全，请前往抖音APP完成验证后再进行登录' } },
+    }
+    c.responses.splice(scannedIdx, 0, blocked, { ...blocked })
+    const d = new Douyin(loginCtx(c))
+    const p = new Passport(d)
+    const { requests, error } = await replayBin(c, () => p.qrcodeLogin(async () => {}))
+    if (error) throw error
+    // new → 2046 ×2 → scanned → confirmed，全程同一个二维码 token
+    const polls = requests.filter((r) => r.url.includes('check_qrconnect'))
+    expect(polls).toHaveLength(5)
+    const tokenOf = (r: GoldenRequest) => (typeof r.body === 'string' ? new URLSearchParams(r.body).get('token') : null)
+    const tokens = new Set(polls.map(tokenOf))
+    expect([...tokens]).toEqual(['fake-qr-token'])
+    expect(Object.fromEntries(d.cookies())).toEqual(c.result.cookies)
+    expect(d.tokens).toMatchObject({ ticket: c.result.ticket, ts_sign: c.result.ts_sign, client_cert: c.result.client_cert })
+  }, 60_000)
+
+  it('扫码：2046 带浏览器内 MFA 验证 URL 时，不中断并继续轮询同一 token 直到确认', async () => {
+    // 2026-11-03 真机实录：2046 响应的 data.url 是 second_verification_web 组件页
+    //（ato_web：短信 / 密码 / 人脸任选其一），验证发生在浏览器内，手机端什么都不弹。
+    // catbus 把 URL 打到 stderr 让用户去浏览器完成，轮询同一 token 等风控放行。
+    const base = loadCase('douyin', 'login_qrcode')
+    const c = JSON.parse(JSON.stringify(base)) as GoldenCase
+    const scannedIdx = c.responses.findIndex((r) => JSON.stringify(r.body ?? {}).includes('"status":"scanned"'))
+    const blocked = {
+      status: 200,
+      headers: c.responses[scannedIdx]!.headers,
+      body: {
+        message: 'success',
+        data: {
+          error_code: 2046,
+          description: '为保障你的账号安全，请前往抖音APP完成验证后再进行登录',
+          url: 'https://auth.zijieapi.com/ucenter_web/app/second_verification_web/dist/index.umd.production.js?error_code=2046&std_verify_template=ato_web&std_verify_token=fake-token',
+        },
+      },
+    }
+    c.responses.splice(scannedIdx, 0, blocked, { ...blocked })
+    const d = new Douyin(loginCtx(c))
+    const p = new Passport(d)
+    const { requests, error } = await replayBin(c, () => p.qrcodeLogin(async () => {}))
+    if (error) throw error
+    // new → 2046 ×2 → scanned → confirmed，全程同一个二维码 token
+    const polls = requests.filter((r) => r.url.includes('check_qrconnect'))
+    expect(polls).toHaveLength(5)
+    const tokenOf = (r: GoldenRequest) => (typeof r.body === 'string' ? new URLSearchParams(r.body).get('token') : null)
+    expect(new Set(polls.map(tokenOf))).toEqual(new Set(['fake-qr-token']))
+    expect(Object.fromEntries(d.cookies())).toEqual(c.result.cookies)
+    expect(d.tokens).toMatchObject({ ticket: c.result.ticket, ts_sign: c.result.ts_sign, client_cert: c.result.client_cert })
+  }, 60_000)
+
   it('短信（严格）：bootstrap → 发验证码 → 验证码登录', async () => {
     const c = loadCase('douyin', 'login_sms')
     const d = new Douyin(loginCtx(c))

@@ -3,6 +3,7 @@ import { brotliDecompressSync, inflateSync } from 'node:zlib'
 import { GUEST } from '../../../core/auth-store.js'
 import { CatbusError } from '../../../core/errors.js'
 import { downloadMedia, readMedia } from '../../../core/files.js'
+import { imageSize } from '../../../core/image.js'
 import { parseJson } from '../../../core/http.js'
 import { cookieCredential, finishLogin, freshCredential, loginContext, poll, readPassword, showQrcode, smsLogin } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
@@ -347,6 +348,17 @@ export async function itemUncollect(ctx: Ctx) {
   return { id: bvid }
 }
 
+/** `--schedule`：B 站定时发布要求时间在 2 小时后、15 天内，转成 unix 秒。 */
+function scheduleSeconds(input: string): number {
+  const sec = Math.floor(Date.parse(input) / 1000)
+  if (!Number.isFinite(sec)) throw new CatbusError('USAGE', `无法识别的时间：${input}`, { hint: 'ISO 8601 带时区，例如 2026-11-05T20:00:00+08:00' })
+  const now = Math.floor(rand.now() / 1000)
+  if (sec < now + 2 * 3600 || sec > now + 15 * 86400) {
+    throw new CatbusError('USAGE', '定时发布时间要在当前时间 2 小时后、15 天内', { hint: 'B 站对定时发布的限制；换个时间，或者去掉 --schedule 直接发布' })
+  }
+  return sec
+}
+
 export async function itemPublish(ctx: Ctx) {
   const b = await bili(ctx)
   b.requireLogin()
@@ -355,29 +367,92 @@ export async function itemPublish(ctx: Ctx) {
   if (!o.title) throw new CatbusError('USAGE', 'B 站投稿需要 --title')
   if (!o.tag?.length) throw new CatbusError('USAGE', 'B 站投稿至少需要一个 --tag')
   if (!o.category) throw new CatbusError('USAGE', 'B 站投稿需要 --category（分区 id）', { hint: 'catbus bilibili item categories' })
+  const dtime = o.schedule ? scheduleSeconds(o.schedule) : undefined
   const video = await uploadVideo(b, await readMedia(b.http, o.video))
-  const cover = o.cover ? await uploadCover(b, o.cover) : ''
+  const cover = o.cover ? await uploadCover(b, o.cover, '16:9') : ''
+  const cover43 = o.cover43 ? await uploadCover(b, o.cover43, '4:3') : ''
   const d = await api.submitArchive(b, {
     videos: [video],
     title: o.title,
     tid: Number(o.category),
     tag: (o.tag as string[]).join(','),
     cover,
+    cover43,
     desc: o.text ?? '',
     copyright: o.source ? 2 : 1,
     source: o.source ?? '',
     private: o.visibility === 'private',
     dynamic: o.dynamic ?? '',
+    dtime,
     noReprint: o.allowReprint ? 0 : 1,
   })
   return n.item({ id: d.bvid, kind: 'video', url: norm.videoUrl(d.bvid), title: o.title, text: o.text ?? null, cover: cover || null, status: 'reviewing' }, d)
 }
 
+export async function itemEdit(ctx: Ctx) {
+  const b = await bili(ctx)
+  b.requireLogin()
+  const o = ctx.options as Record<string, any>
+  const { aid, bvid } = await resolveItem(b, ctx.args.item!)
+  const aidNum = Number(aid)
+  if (!['video', 'title', 'text', 'cover', 'cover43', 'schedule', 'tag', 'category', 'visibility'].some((k) => o[k] != null)) {
+    throw new CatbusError('USAGE', '没有要改的内容', {
+      hint: 'catbus bilibili item edit <BV> [--cover <16:9>] [--cover43 <4:3>] [--title ...] [--text ...] [--tag ...] [--schedule <ISO 时间>|none]；给出 --video 时替换视频',
+    })
+  }
+  const view: any = await api.archiveView(b, aidNum)
+  const A = view?.archive
+  if (!A) throw new CatbusError('UPSTREAM', '找不到这条稿件（可能已被删除）')
+  const videos = o.video ? [await replaceVideo(b, o.video, A)] : keepVideos(view?.videos, A)
+  const cover = o.cover ? await uploadCover(b, o.cover, '16:9') : String(A.cover ?? '')
+  const cover43 = o.cover43 ? await uploadCover(b, o.cover43, '4:3') : String(A.cover43 ?? '')
+  const dtime = o.schedule == null ? Number(A.dtime) || undefined : o.schedule === 'none' ? 0 : scheduleSeconds(o.schedule)
+  const d = await api.editArchive(b, {
+    aid: aidNum,
+    videos,
+    title: o.title ?? A.title,
+    tid: o.category ? Number(o.category) : Number(A.tid),
+    tag: Array.isArray(o.tag) && o.tag.length ? o.tag.join(',') : String(A.tag ?? ''),
+    desc: o.text ?? String(A.desc ?? ''),
+    cover,
+    cover43,
+    dtime,
+    copyright: Number(A.copyright ?? 1),
+    onlySelf: o.visibility == null ? Number(A.is_only_self ?? 0) : o.visibility === 'private' ? 1 : 0,
+  })
+  return n.item({ id: d.bvid || bvid, kind: 'video', url: norm.videoUrl(d.bvid || bvid), title: o.title ?? A.title, text: o.text ?? A.desc ?? null, cover: cover || null, status: 'reviewing' }, d)
+}
+
+/** 换视频：先上传，拿到 filename 与 cid（biz_id）。 */
+async function replaceVideo(b: Bili, input: string, A: any): Promise<{ filename: string; biz_id: unknown; title: string; desc: string }> {
+  const video = await uploadVideo(b, await readMedia(b.http, input))
+  return { filename: video.filename, biz_id: video.biz_id, title: A.title, desc: '' }
+}
+
+/**
+ * 只改资料时沿用原稿的分 P：`x/vu/web/edit` 要求每个分 P 带 filename（上传记录名）与 cid，
+ * 这两个值来自编辑页的 `x/vupre/web/archive/view`。
+ */
+function keepVideos(parts: any[] | undefined, A: any): { filename: string; biz_id: unknown; title: string; desc: string }[] {
+  if (!parts?.length) throw new CatbusError('UPSTREAM', '读不到原稿的分 P 列表', { hint: '换视频请加 --video' })
+  return parts.map((v: any) => ({ filename: String(v.filename ?? ''), biz_id: v.cid, title: String(v.title ?? A.title), desc: String(v.desc ?? '') }))
+}
+
 /** 上传投稿封面，返回图片地址（上游 post_video 里的 upload_cover）。data URL 的类型取扩展名，缺省 jpeg。 */
-export async function uploadCover(b: Bili, input: string): Promise<string> {
+export async function uploadCover(b: Bili, input: string, expected?: '16:9' | '4:3'): Promise<string> {
   const img = await readMedia(b.http, input)
   const suffix = extname(img.filename).slice(1).toLowerCase() || 'jpeg'
+  if (expected) coverRatioHint(b, img.data, input, expected)
   return String((await api.uploadCover(b, img.data, suffix))?.url ?? '')
+}
+
+/** 比例对不上只提醒、不中止：B 站会按自己的槽位裁切。 */
+function coverRatioHint(b: Bili, data: Uint8Array, input: string, expected: '16:9' | '4:3'): void {
+  const size = imageSize(data)
+  if (!size?.width || !size.height) return
+  const want = expected === '4:3' ? 4 / 3 : 16 / 9
+  const got = size.width / size.height
+  if (Math.abs(got - want) / want > 0.12) b.ctx.log.warn(`封面 ${input} 的比例是 ${got.toFixed(2)}:1，不是 ${expected}；B 站会按自己的槽位裁切`)
 }
 
 /**
@@ -524,6 +599,18 @@ export async function commentDelete(ctx: Ctx) {
   await onReplies(t, () => api.deleteReply(b, t.oid, ctx.args.comment!, t.type))
   return { id: ctx.args.comment! }
 }
+
+async function pinComment(ctx: Ctx, on: boolean) {
+  const b = await bili(ctx)
+  b.requireLogin()
+  const t = await resolveReplyTarget(b, ctx.args.item!)
+  const rpid = ctx.args.comment!
+  await onReplies(t, () => api.pinReply(b, t.oid, rpid, on, t.type))
+  return { id: rpid }
+}
+
+export const commentPin = (ctx: Ctx) => pinComment(ctx, true)
+export const commentUnpin = (ctx: Ctx) => pinComment(ctx, false)
 
 // ================================================================ 弹幕（扩展）
 

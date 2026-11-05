@@ -27,6 +27,7 @@ export const APPID_PASSPORT = '73806'
 export const APPID_DONGDONG = '2b51e'
 export const APPID_PC_ITEM = 'fb5df'
 export const APPID_PC_SEARCH = 'f06cc'
+export const APPID_PC_ORDER = '7cffe'
 
 export type ClientPreset = Record<string, string>
 export const CLIENT_WH5: ClientPreset = { appid: 'wh5', client: 'wh5', clientVersion: '1.0.0', loginType: '3' }
@@ -34,6 +35,7 @@ export const CLIENT_IMH5: ClientPreset = { client: 'imh5', appid: 'imh5', client
 export const CLIENT_PC_ITEM: ClientPreset = { appid: 'pc-item-soa', client: 'pc', clientVersion: '1.0.0', loginType: '3' }
 export const CLIENT_PC_ITEM_V3: ClientPreset = { appid: 'item-v3', client: 'pc', clientVersion: '1.0.0', loginType: '3' }
 export const CLIENT_PC_SEARCH: ClientPreset = { appid: 'search-pc-java', client: 'pc', clientVersion: '1.0.0', loginType: '3' }
+export const CLIENT_PC_ORDER: ClientPreset = { appid: 'order-jd-com', client: 'pc', clientVersion: '1.0.0', loginType: '3' }
 
 export const DEFAULT_AREA = '1_2800_55812_0'
 

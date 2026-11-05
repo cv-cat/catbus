@@ -122,15 +122,117 @@ async function loginQrcode(ctx: Ctx) {
   await login.webprofile(p)
   await showQrcode(ctx, qr.url, '请用小红书 App 扫码并确认')
   let last = -1
-  await poll(async () => {
-    const s = await login.qrcodeStatus(p, qr.qrId, qr.code)
-    if (s === 2) return true
-    if (s === 3) throw new CatbusError('AUTH_REQUIRED', '二维码已过期', { hint: '重新执行 catbus xhs auth login' })
-    if (s === 1 && last !== 1) ctx.log.info('已扫码，请在手机上确认')
-    last = s
-    return undefined
-  })
+  try {
+    await poll(async () => {
+      const s = await login.qrcodeStatus(p, qr.qrId, qr.code)
+      if (s === 2) return true
+      if (s === 3) throw new CatbusError('AUTH_REQUIRED', '二维码已过期', { hint: '重新执行 catbus xhs auth login' })
+      if (s === 1 && last !== 1) ctx.log.info('已扫码，请在手机上确认')
+      last = s
+      return undefined
+    })
+  } catch (err) {
+    // 确认后 qrcode/status 回 471 + verifyType 120：过短信验证，再用同一组 qr_id / code 换登录态
+    const verify = smsVerifyOf(err)
+    if (!verify) throw err
+    await passSmsVerify(ctx, p, verify)
+    await login.qrcodeFinish(p, qr.qrId, qr.code)
+  }
   return completeLogin(ctx, p)
+}
+
+/** 461 / 471 且 verifyType 为 120（短信验证码）的风控错误 → 验证材料；其余返回 null。 */
+export function smsVerifyOf(err: unknown): login.Verify | null {
+  if (!(err instanceof CatbusError) || err.code !== 'RISK_CONTROL') return null
+  const d = (err.detail ?? {}) as Record<string, unknown>
+  if (String(d.verify_type ?? '') !== '120' || !d.verify_uuid || !d.status) return null
+  return { uuid: String(d.verify_uuid), type: '120', biz: String(d.status) }
+}
+
+/** 等验证码的最长时间：验证页的验证码有效期之外留些余量。 */
+const VERIFY_CODE_TIMEOUT = 5 * 60_000
+const VERIFY_CODE_TRIES = 3
+
+/**
+ * 小红书的短信人机验证（网页验证页 SmsCaptcha）：vc/init → vc/send 向账号绑定的手机发码 → 读验证码 → vc/check。
+ * 交互时在终端里输入；非交互时从 stdin 读一行（脚本或 AI 可以管道喂）。验证码错了可以重输，空行放弃。
+ */
+export async function passSmsVerify(
+  ctx: Ctx,
+  p: Pc,
+  verify: login.Verify,
+  o: { read?: (ctx: Ctx) => Promise<string>; session?: (p: Pc) => Promise<Pc> } = {},
+): Promise<void> {
+  const read = o.read ?? readVerifyCode
+  ctx.log.info('小红书要求短信验证（verifyType 120），正在准备验证…')
+  const v = await (o.session ?? login.verifySession)(p)
+  const phone = await login.smsVerifyInit(v, verify)
+  const rid = await login.smsVerifySend(v, verify)
+  ctx.log.info(`验证码已发送${phone ? `到 ${phone}` : '到账号绑定的手机'}，请输入 6 位短信验证码（空行放弃）：`)
+  for (let i = 1; ; i++) {
+    const code = (await read(ctx)).trim()
+    if (!code) throw new CatbusError('RISK_CONTROL', '没有输入短信验证码，已放弃验证', { hint: COOKIE_LOGIN_HINT, detail: { kind: 'captcha', verify_type: verify.type } })
+    try {
+      await login.smsVerifyCheck(v, verify, rid, code)
+      ctx.log.info('短信验证通过，继续登录')
+      return
+    } catch (err) {
+      if (i >= VERIFY_CODE_TRIES || !(err instanceof CatbusError && err.code === 'RISK_CONTROL')) throw err
+      ctx.log.info(`${err.message}，请重新输入（还剩 ${VERIFY_CODE_TRIES - i} 次）：`)
+    }
+  }
+}
+
+const COOKIE_LOGIN_HINT = '在浏览器里登录小红书后导入 cookie：catbus xhs auth login --method cookie --cookie "<Cookie>"'
+
+/** 非交互时 stdin 的读取状态：一次读到多行时剩下的留给下一次（重输验证码），读到 EOF 后不再等。 */
+const stdinLines = { rest: '', ended: false }
+
+/** 读一行验证码：交互时在 stderr 上提问，否则从 stdin 读一行；EOF、超时或 Ctrl-C 返回空串。 */
+async function readVerifyCode(ctx: Ctx): Promise<string> {
+  if (interactive()) return prompt('验证码：')
+  const take = (): string | null => {
+    const nl = stdinLines.rest.search(/[\r\n]/)
+    if (nl < 0) return null
+    const line = stdinLines.rest.slice(0, nl)
+    stdinLines.rest = stdinLines.rest.slice(nl + 1).replace(/^\n/, '')
+    return line
+  }
+  const ready = take()
+  if (ready !== null) return ready
+  if (stdinLines.ended) {
+    const last = stdinLines.rest
+    stdinLines.rest = ''
+    return last
+  }
+  return new Promise((resolve) => {
+    const done = (value: string) => {
+      clearTimeout(timer)
+      process.stdin.off('data', onData)
+      process.stdin.off('end', onEnd)
+      ctx.signal.removeEventListener('abort', onAbort)
+      process.stdin.pause()
+      resolve(value)
+    }
+    const onData = (c: Buffer) => {
+      stdinLines.rest += c.toString('utf8')
+      const line = take()
+      if (line !== null) done(line)
+    }
+    const onEnd = () => {
+      stdinLines.ended = true
+      const last = stdinLines.rest
+      stdinLines.rest = ''
+      done(last)
+    }
+    const onAbort = () => done('')
+    const timer = setTimeout(() => done(''), VERIFY_CODE_TIMEOUT)
+    if (ctx.signal.aborted) return done('')
+    ctx.signal.addEventListener('abort', onAbort, { once: true })
+    process.stdin.on('data', onData)
+    process.stdin.on('end', onEnd)
+    process.stdin.resume()
+  })
 }
 
 async function loginSms(ctx: Ctx) {

@@ -18,6 +18,25 @@
   - core：配置项新增 `youtube.browser`（AGENTS.md 5.5）
 - 平台规范：YouTube 的 web 端声明 `guest: true`（AGENTS.md 5.2 的特例），读取命令不登录可用
 - 新增 `docs/platforms/youtube.md`，更新 Agent 技能、多语言 README 与 llms.txt
+
+## [0.3.0] - 2026-11-05
+
+### Fixed
+
+- bilibili：`item edit` 一执行就报「找不到这条稿件」。`archiveDetail` 返回的已经是接口的 `data`，原实现又按 `data.archives` 取了一层，永远取不到原稿；改为按编辑页的 `x/vupre/web/archive/view` 取稿件
+- mteam：`item download` 被拒（「下载地址不属于受支持的官方 HTTPS 域名」）。`api.m-team.cc` 的下载地址会 302 到下载节点 `*.halomt.com`，现在允许跳转到这个域名（第一跳仍须是 MT 自己的域名）
+- 抖音：扫码后 2046（「为保障你的账号安全，请前往抖音APP完成验证后再进行登录」）把登录流程白白中断。2046 是 passport 新加的二次验证风控门，不再报错：catbus 默认选短信验证，按登录页验证组件的请求形状直接调 `/passport/web/send_code/` 发码（stderr 提示发往的掩码手机号），验证码从 stdin 读一行（支持管道喂给 AI），`/passport/web/validate_code/` 校验通过后用同一个二维码 token 继续轮询等放行；回车跳过短信或决策里没有短信选项时，退回「等 App 端验证」的原有轮询，超时与过期逻辑不变，全程无浏览器
+- 能力矩阵的「登录方式」表按 `LOGIN_METHODS` 生成，不再写死 4 种方式
+- xhs：扫码确认后被要求短信人机验证（HTTP 471，`verifyType 120`）时不再直接失败：向账号绑定的手机发验证码，在终端输入（非交互时从 stdin 读一行）后继续登录
+
+### Added
+
+- bilibili：`item publish --schedule <ISO 时间>`，定时发布（`x/vu/web/add/v3` 的 `dtime`），时间按 B 站限制校验在 2 小时后、15 天内
+- bilibili：`item edit --schedule <ISO 时间>|none`，改期 / 取消定时（`x/vu/web/edit` 的 `dtime`）；不给时沿用原稿的定时，避免编辑封面时把定时稿变成立即发布
+- bilibili：`item publish` 支持 B 站双封面，新增私有选项 `--cover43`（稿件列表页的 4:3 封面），与 `--cover`（播放页的 16:9）各传一张，提交时一起写进 `x/vu/web/add/v3` 的 `cover` / `cover43`
+- bilibili：`item edit` 支持只改资料，`--video` 不再必填；新增 `--cover43`。不给 `--video` 时按编辑页接口 `x/vupre/web/archive/view` 取原稿的分 P（`filename` + `cid`，`x/vu/web/edit` 两个都要），只换 16:9 / 4:3 封面不用重传视频、不丢原分 P；`--cover` / `--cover43` 缺省沿用原图。编辑时沿用原稿的 `is_only_self`，不给 `--visibility` 不会把「仅自己可见」的稿改成公开
+- mteam：网页账密登录（`--method password`），请求带网页前端的 HMAC 签名；新设备的两步验证支持邮箱验证码（`--email` 发码、`--code` 完成，非 TTY 分两次执行）和 TOTP
+- mteam：`item collect` / `uncollect`、`user collects`、`item download --qbit`（推送到本机 qBittorrent，`--qbit-savepath` 指定保存目录；multipart 自己拼，结尾边界带 CRLF，避免 qBittorrent 把结尾边界读进最后一个字段）、`seed list`、`seed stats`、`exam get`（考核进度）、`bonus get`（时魔）、`bonus history`（新扩展类型 `BonusRecord`）、`msg list` / `history`（站内信只读，只支持账密登录）；`item search` / `feed list` 新增私有选项 `--order-by` / `--asc`
 - 新增 `jimeng`（即梦，别名 `dreamina`）平台：管理即梦官方 CLI `dreamina` 的多账号登录态，不注册生成类命令
   - `auth login`：浏览器授权（新登录方式 `oauth`），由 `dreamina` 发起设备码授权，把钥匙串里的登录态存到账号名下
   - `auth use`：把目标账号的登录态写回钥匙串，之后直接运行 `dreamina` 就是这个账号
@@ -28,10 +47,13 @@
 - 新增 `docs/platforms/jimeng.md`、AGENTS.md 5.6，更新能力矩阵、登录指南、Agent 技能和 llms.txt
 - `user update`：修改当前账号的昵称（`--name`）、头像（`--avatar`）、简介（`--bio`），只改给出的字段，返回修改后的 User
 - bilibili：`user update`，接口按网页端个人中心 `account.bilibili.com` 补（`x/member/web/sign/update`、`face/update`、`web/update`），上游没有，没有对拍。改昵称前先查 `uname/update/message` 的资格；改昵称扣硬币，带 `--name` 时需要确认
-
-### Fixed
-
-- 能力矩阵的「登录方式」表按 `LOGIN_METHODS` 生成，不再写死 4 种方式
+- 新增 `maoyan`（猫眼演出）平台，web 端免登录只读查询：
+  - 城市热门演出（`feed list`）：私有选项 `--city`（城市名或演出城市 ID，默认北京），`--category` 本地筛选
+  - 演出分类（`feed categories`）、演出城市检索（`poi search`）：内置数据，不联网
+  - 演出详情（`item get`）：场次时间、城市、场馆、票价档、售卖状态逐行写进 `text`；详情接口要 H5guard 的 `mtgsig`，在本地 vm 里出签
+  - 离线测试（真实响应裁剪的 fixture）与在线 E2E 测试；平台文档、能力矩阵、Agent 技能与多语言 README
+- `maoyan`：新增 `auth login`（大众点评 App 扫码，不用打开浏览器；或 `--method cookie` 导入 `dper`）、`auth status`，以及 `item get --tickets`（需要登录）：把场次、票档、实售价、余票逐行追加到 `text`，原始字段在 `--raw` 的 `shows`
+- bilibili：`comment pin` / `comment unpin`，置顶 / 取消置顶自己作品评论区里的一级评论（`x/v2/reply/top`，平台扩展，AGENTS 4.7）
 
 ## [0.2.1] - 2026-10-22
 
