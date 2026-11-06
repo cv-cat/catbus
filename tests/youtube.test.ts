@@ -501,6 +501,21 @@ describe('youtube 平台（web）', () => {
       expect([w.env.error.code, likes]).toEqual(['NETWORK', 1])
     })
 
+    it('user get me：凭证里还是 Google 账号 ID（登录时没有频道）时，查到频道后把频道 ID 写回凭证', async () => {
+      const noChannel = { actions: [{ openPopupAction: { popup: { multiPageMenuRenderer: { header: { activeAccountHeaderRenderer: { accountName: { simpleText: 'Test User' } } } } } } }] }
+      const accounts = { contents: [{ accountItem: { isSelected: true, serviceEndpoint: { selectActiveIdentityEndpoint: { supportedTokens: [{ accountStateToken: { hasChannel: false, obfuscatedGaiaId: '123456789012345678901' } }] } } } }] }
+      await withYt({ 'account/account_menu': () => noChannel, 'account/accounts_list': () => accounts }, () => cli('youtube', 'auth', 'login', '--cookie', COOKIE))
+      const file = join(home.dir, 'auth/youtube/web/default.json')
+      expect(JSON.parse(readFileSync(file, 'utf8')).user.id).toBe('123456789012345678901')
+      const r = await withYt({ 'account/account_menu': () => ACCOUNT_MENU, browse: () => json('channel') }, async (calls) => {
+        const r = await cli('youtube', 'user', 'get', 'me')
+        expect(calls.find((c) => c.path === 'browse')!.body.browseId).toBe(ME)
+        return r
+      })
+      expect(r.env.ok).toBe(true)
+      expect(JSON.parse(readFileSync(file, 'utf8')).user).toEqual({ id: ME, name: 'Test User', url: `https://www.youtube.com/channel/${ME}` })
+    })
+
     it('auth status：在线校验；cookie 失效（401）时为 logged_in false，不报错', async () => {
       await login()
       const ok = await withYt({ 'account/account_menu': () => ACCOUNT_MENU }, () => cli('youtube', 'auth', 'status'))
@@ -798,6 +813,7 @@ describe('youtube 平台（web）', () => {
           '/session/1': () => fakeResponse('{"scottyResourceId":"SCOTTY1"}', { headers: [['content-type', 'application/json']] }),
           'studio:upload/createvideo': () => ({ videoId: VIDEO_ID }),
           'studio:video/delete': () => ({ success: true }),
+          'studio:creator/get_creator_channels': () => ({ channels: [{ channelId: ME, features: { customThumbnails: { status: 'CREATOR_FEATURE_STATUS_ENABLED' } } }] }),
           ...extra,
         }
       }
@@ -865,6 +881,44 @@ describe('youtube 平台（web）', () => {
         )
         expect(r.env.error).toMatchObject({ code: 'UPSTREAM', message: `视频 ${VIDEO_ID} 已建好，但封面没有设置成功（YouTube 返回 SOME_ERRORS）`, detail: { failed: ['封面'] } })
         expect(r.env.error.hint).toMatch(/自定义封面/)
+      })
+
+      it('publish --cover：频道没开通自定义封面时上传前就报错，不开浏览器、不上传', async () => {
+        // 2026-11-06 真机：新开、未做手机验证的频道 customThumbnails 为 DISABLED，videoStill 返回 SOME_ERRORS
+        const b = fakeBrowser()
+        const disabled = { channels: [{ channelId: ME, features: { customThumbnails: { status: 'CREATOR_FEATURE_STATUS_DISABLED' } } }] }
+        await withYt(studioRoutes({ 'studio:creator/get_creator_channels': () => disabled }), async (calls) => {
+          const r = await cli('youtube', 'item', 'publish', '--video', video, '--title', 't', '--cover', cover)
+          expect(r.env.error).toMatchObject({ code: 'UPSTREAM', detail: { feature: 'customThumbnails', status: 'CREATOR_FEATURE_STATUS_DISABLED' } })
+          expect(r.env.error.hint).toMatch(/youtube\.com\/verify/)
+          const features = calls.find((c) => c.path === 'studio:creator/get_creator_channels')!
+          expect(features.body).toMatchObject({ channelIds: [ME], mask: { features: { all: true } } })
+          expect(calls.some((c) => c.path === '/upload/studio')).toBe(false)
+          expect(b.opened).toHaveLength(0)
+        })
+        // 不带 --cover 不查
+        await withYt(studioRoutes({ 'studio:creator/get_creator_channels': () => disabled }), async (calls) => {
+          const r = await cli('youtube', 'item', 'publish', '--video', video, '--title', 't')
+          expect(r.env.ok).toBe(true)
+          expect(calls.some((c) => c.path === 'studio:creator/get_creator_channels')).toBe(false)
+        })
+        // 查询失败时不拦，照常发布
+        await withYt(studioRoutes({ 'studio:creator/get_creator_channels': () => fakeResponse('{}', { status: 500 }), 'studio:video_manager/metadata_update': () => ({ overallResult: { resultCode: 'UPDATE_SUCCESS' } }) }), async () => {
+          const r = await cli('youtube', 'item', 'publish', '--video', video, '--title', 't', '--cover', cover)
+          expect(r.env.ok).toBe(true)
+        })
+      })
+
+      it('publish --cover：查询频道功能时登录态失效（401）照常报 AUTH_EXPIRED，不上传', async () => {
+        const b = fakeBrowser()
+        const unauthorized = () => fakeResponse({ error: { code: 401, message: 'Request is missing required authentication credential.' } }, { status: 401 })
+        await withYt(studioRoutes({ 'studio:creator/get_creator_channels': unauthorized }), async (calls) => {
+          const r = await cli('youtube', 'item', 'publish', '--video', video, '--title', 't', '--cover', cover)
+          expect(r.code).toBe(3)
+          expect(r.env.error.code).toBe('AUTH_EXPIRED')
+          expect(calls.some((c) => c.path === '/upload/studio')).toBe(false)
+          expect(b.opened).toHaveLength(0)
+        })
       })
 
       it('publish：上传被拒（当天上传数超限）时报 RISK_CONTROL，并说明 YouTube 给的原因，不说「没有建成」', async () => {
@@ -1213,6 +1267,43 @@ describe('youtube 平台（web）', () => {
       })
       const r = await withYt({ 'channel/get_channel_creation_form': () => ({}), 'account/account_menu': () => ACCOUNT_MENU }, () => cli('youtube', 'channel', 'create'))
       expect(r.env.error).toMatchObject({ code: 'USAGE', message: `这个账号已经有频道了：${ME}` })
+    })
+
+    it('channel create：新频道过几秒才出现在头像菜单里时重试；凭证里的 Google 账号 ID 换成频道 ID', async () => {
+      // 2026-11-06 真机：create_channel 成功后立即查头像菜单还没有「你的频道」，稍后才有
+      const noChannel = { actions: [{ openPopupAction: { popup: { multiPageMenuRenderer: { header: { activeAccountHeaderRenderer: { accountName: { simpleText: 'No Channel' } } } } } } }] }
+      const accounts = { contents: [{ accountItem: { isSelected: true, serviceEndpoint: { selectActiveIdentityEndpoint: { supportedTokens: [{ accountStateToken: { hasChannel: false, obfuscatedGaiaId: '123456789012345678901' } }] } } } }] }
+      await withYt({ 'account/account_menu': () => noChannel, 'account/accounts_list': () => accounts }, () => cli('youtube', 'auth', 'login', '-a', 'fresh', '--cookie', COOKIE))
+      const file = join(home.dir, 'auth/youtube/web/fresh.json')
+      const form = {
+        actions: [{ openPopupAction: { popup: { channelCreationDialogRenderer: {
+          name: 'No Channel',
+          channelCreationEndpoint: { channelCreationServiceEndpoint: { channelCreationToken: 'TOKEN' } },
+          channelHandleInput: { channelHandleInputRenderer: { handle: 'NoChannel-w7k' } },
+        } } } }],
+      }
+      let menus = 0
+      const r = await withYt(
+        { 'channel/get_channel_creation_form': () => form, 'channel/create_channel': () => ({ accountStateToken: 'x' }), 'account/account_menu': () => (++menus < 3 ? noChannel : ACCOUNT_MENU), browse: () => json('channel') },
+        () => cli('youtube', 'channel', 'create', '-a', 'fresh'),
+      )
+      expect(r.env.ok).toBe(true)
+      expect(menus).toBe(3)
+      expect(JSON.parse(readFileSync(file, 'utf8')).user).toEqual({ id: ME, name: 'No Channel', url: `https://www.youtube.com/channel/${ME}` })
+
+      // 一直查不到：UPSTREAM，凭证不变
+      writeFileSync(file, readFileSync(file, 'utf8').replace(ME, '123456789012345678901'))
+      const never = await withYt(
+        { 'channel/get_channel_creation_form': () => form, 'channel/create_channel': () => ({ accountStateToken: 'x' }), 'account/account_menu': () => noChannel },
+        () => cli('youtube', 'channel', 'create', '-a', 'fresh'),
+      )
+      expect(never.env.error).toMatchObject({ code: 'UPSTREAM', message: '开频道的请求已提交，但还查不到新频道' })
+      expect(JSON.parse(readFileSync(file, 'utf8')).user.id).toBe('123456789012345678901')
+
+      // 之后再跑 channel create：已有频道时报 USAGE，同时把频道 ID 写回凭证
+      const again = await withYt({ 'channel/get_channel_creation_form': () => ({}), 'account/account_menu': () => ACCOUNT_MENU }, () => cli('youtube', 'channel', 'create', '-a', 'fresh'))
+      expect(again.env.error.code).toBe('USAGE')
+      expect(JSON.parse(readFileSync(file, 'utf8')).user.id).toBe(ME)
     })
 
     it('comment like / delete：action 带上视频所属频道；delete 需要确认', async () => {

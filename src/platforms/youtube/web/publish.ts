@@ -13,7 +13,7 @@ import { type AttestRequest, type BrowserSession, browser, findChrome } from './
 import { retryNetwork, STUDIO_ORIGIN, type YtClient, yt } from './client.js'
 import * as norm from './normalize.js'
 import { videoId } from './resolve.js'
-import { dataUri, type MediaSource, type StudioConfig, studio, studioConfig, uploadVideo } from './studio.js'
+import { channelFeatures, dataUri, type MediaSource, type StudioConfig, studio, studioConfig, uploadVideo } from './studio.js'
 
 /**
  * YouTube Studio 的写操作：建视频（item publish）与删视频（item delete）。
@@ -295,6 +295,7 @@ export async function itemPublish(ctx: Ctx) {
   const executable = await locateChrome()
   const cfg = await studioConfig(c)
   const cover = o.cover ? await readMedia(c.http, o.cover) : null
+  if (cover) await requireCustomThumbnails(c, cfg)
   const privacy = schedule != null ? 'PRIVATE' : PRIVACY[o.visibility as keyof typeof PRIVACY]
   const media = await localVideo(c, o.video)
 
@@ -347,6 +348,28 @@ export async function itemPublish(ctx: Ctx) {
     text: o.text ?? null,
     author: norm.channelUser(cfg.channelId, null),
     status: privacy === 'PUBLIC' ? 'reviewing' : 'private',
+  })
+}
+
+/**
+ * --cover 的前置检查：频道没开通自定义封面（未做手机验证的频道 customThumbnails 为 DISABLED）时，
+ * metadata_update 的 videoStill 必然失败（实测 2026-11-06 返回 SOME_ERRORS），在上传前就报错，不留下半成品视频。
+ * 查询本身失败或没有这一项时不拦，交给 metadata_update 的结果判断。
+ */
+async function requireCustomThumbnails(c: YtClient, cfg: StudioConfig): Promise<void> {
+  const status = await channelFeatures(c, cfg).then(
+    (f) => f.customThumbnails?.status,
+    (err: unknown) => {
+      // 登录态问题照常报出（上传同样会失败）；其余查询失败不拦，交给上传时的封面接口判断
+      if (err instanceof CatbusError && (err.code === 'AUTH_REQUIRED' || err.code === 'AUTH_EXPIRED')) throw err
+      c.ctx.log.debug(`查询频道功能失败，跳过自定义封面的检查：${err instanceof Error ? err.message : String(err)}`)
+      return undefined
+    },
+  )
+  if (status !== 'CREATOR_FEATURE_STATUS_DISABLED') return
+  throw new CatbusError('UPSTREAM', '这个频道还不能用自定义封面（--cover）：YouTube 要求先验证账号', {
+    hint: '到 https://www.youtube.com/verify 完成手机验证后重试，或去掉 --cover',
+    detail: { feature: 'customThumbnails', status },
   })
 }
 
@@ -418,7 +441,7 @@ async function setMetadata(c: YtClient, cfg: StudioConfig, token: string, id: st
     const failed = Object.entries(FIELD_NAMES).filter(([k]) => res?.[k]?.success === false).map(([, v]) => v)
     const what = failed.length ? failed.join('、') : '标签 / 封面 / 定时发布'
     throw new CatbusError('UPSTREAM', `视频 ${id} 已建好，但${what}没有设置成功（YouTube 返回 ${result}）`, {
-      hint: failed.includes('封面') ? `${hint}。自定义封面未验证，可能需要已验证的账号` : hint,
+      hint: failed.includes('封面') ? `${hint}。自定义封面要求频道已完成手机验证（https://www.youtube.com/verify）` : hint,
       detail: { id, failed, result: res.overallResult },
     })
   }

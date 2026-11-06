@@ -78,6 +78,16 @@ export async function studio<T = any>(c: YtClient, cfg: StudioConfig, path: stri
   return parseJson<T>(res)
 }
 
+/**
+ * 频道的功能开关（creator/get_creator_channels 的 features），如 customThumbnails 自定义封面。
+ * 每项为 `{status: 'CREATOR_FEATURE_STATUS_ENABLED' | 'CREATOR_FEATURE_STATUS_DISABLED', ...}`。只读。
+ */
+export async function channelFeatures(c: YtClient, cfg: StudioConfig): Promise<Record<string, { status?: string } | undefined>> {
+  const res = await studio<any>(c, cfg, 'creator/get_creator_channels', { channelIds: [cfg.channelId], mask: { features: { all: true } } })
+  const ch = (res?.channels ?? []).find((x: any) => x?.channelId === cfg.channelId)
+  return ch?.features ?? {}
+}
+
 /** 要上传的视频：按段读取，不把整个文件放进内存。 */
 export interface MediaSource {
   filename: string

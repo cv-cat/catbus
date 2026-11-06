@@ -46,13 +46,25 @@ async function me(c: YtClient, channelOnly = false): Promise<UserRef | null> {
   return gaia ? n.userRef({ id: gaia, name, url: null }) : null
 }
 
-/** 当前账号的频道 ID：登录时已存进凭证；凭证里不是频道 ID（登录时还没开频道）时再问一次头像菜单。 */
+/** 当前账号的频道 ID：登录时已存进凭证；凭证里不是频道 ID（登录时还没开频道）时再问一次头像菜单，查到后写回凭证。 */
 async function meChannel(c: YtClient): Promise<string> {
   const saved = c.ctx.credential.user?.id
-  const id = saved?.startsWith('UC') ? saved : (await me(c, true))?.id
-  if (!id) throw new CatbusError('UPSTREAM', '这个账号还没有 YouTube 频道', { hint: '在 youtube.com 上先创建频道' })
-  return id
+  if (saved?.startsWith('UC')) return saved
+  const found = await me(c, true)
+  if (!found) throw new CatbusError('UPSTREAM', '这个账号还没有 YouTube 频道', { hint: 'catbus youtube channel create' })
+  saveChannel(c.ctx, found)
+  return found.id
 }
+
+/** 凭证里的用户换成频道（AGENTS 5.3：有频道时以频道 ID 为准）；由 core 在命令结束时落盘。 */
+function saveChannel(ctx: Ctx, channel: UserRef, name?: string) {
+  const user = ctx.credential.user
+  if (!user || user.id === channel.id) return
+  ctx.credential.user = { ...user, id: channel.id, name: name ?? channel.name ?? user.name, url: channel.url }
+}
+
+/** 开频道后头像菜单要过几秒才出现新频道（实测 2026-11-06 立即查不到）：最多等这么久。 */
+const CHANNEL_WAIT = [2000, 3000, 5000, 10000]
 
 /** `<user>`：me 为当前账号的频道，其余按频道 ID / @handle / 链接解析。 */
 function userChannel(c: YtClient, ctx: Ctx): Promise<string> {
@@ -650,7 +662,10 @@ export async function channelCreate(ctx: Ctx) {
   const token = dialog?.channelCreationEndpoint?.channelCreationServiceEndpoint?.channelCreationToken
   if (typeof token !== 'string') {
     const existing = await me(c, true)
-    if (existing) throw new CatbusError('USAGE', `这个账号已经有频道了：${existing.id}`, { hint: 'catbus youtube user get me' })
+    if (existing) {
+      saveChannel(ctx, existing)
+      throw new CatbusError('USAGE', `这个账号已经有频道了：${existing.id}`, { hint: 'catbus youtube user get me' })
+    }
     throw new CatbusError('UPSTREAM', '没有拿到开频道的表单', { hint: '到 https://www.youtube.com/create_channel 手动开频道' })
   }
   const o = ctx.options as { name?: string; handle?: string }
@@ -658,9 +673,14 @@ export async function channelCreate(ctx: Ctx) {
   const handle = o.handle?.trim().replace(/^@/, '') || norm.first(dialog.channelHandleInput, 'channelHandleInputRenderer')?.handle
   if (!name || !handle) throw new CatbusError('USAGE', '需要 --name 和 --handle', { hint: 'catbus youtube channel create --name <名称> --handle <handle>' })
   checkWrite(await api.createChannel(c, token, name, handle), '开频道')
-  // create_channel 只回 accountStateToken，不带频道 ID：再查一次「你的频道」（实测 2026-10-30 立即可查到）
-  const id = (await me(c, true))?.id
-  if (!id) throw new CatbusError('UPSTREAM', '开频道的请求已提交，但还查不到新频道', { hint: '稍后用 catbus youtube user get me 确认' })
-  if (ctx.credential.user) ctx.credential.user = { ...ctx.credential.user, id, name }
-  return norm.channel(await api.browse(c, id))
+  // create_channel 只回 accountStateToken，不带频道 ID：再查「你的频道」。新频道有时要过几秒才出现在头像菜单里
+  let created = await me(c, true)
+  for (const ms of CHANNEL_WAIT) {
+    if (created) break
+    await rand.sleep(ms, ctx.signal)
+    created = await me(c, true)
+  }
+  if (!created) throw new CatbusError('UPSTREAM', '开频道的请求已提交，但还查不到新频道', { hint: '稍后用 catbus youtube user get me 确认' })
+  saveChannel(ctx, created, name)
+  return norm.channel(await api.browse(c, created.id))
 }
