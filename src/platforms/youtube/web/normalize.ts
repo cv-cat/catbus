@@ -140,6 +140,21 @@ function lockupRows(v: any): string[] {
 }
 
 /**
+ * 元数据行里频道名的链接（`text.commandRuns[].onTap…browseEndpoint`）。订阅流里频道头像是 decoratedAvatarViewModel、
+ * 点击跳到视频，没有频道链接，只能从这里取；只认 UC 开头的频道 ID。
+ */
+function lockupRunsChannel(md: any): any {
+  const rows: any[] = md?.metadata?.contentMetadataViewModel?.metadataRows ?? []
+  for (const part of rows.flatMap((r) => r.metadataParts ?? [])) {
+    for (const run of part?.text?.commandRuns ?? []) {
+      const endpoint = first(run?.onTap, 'browseEndpoint')
+      if (typeof endpoint?.browseId === 'string' && endpoint.browseId.startsWith('UC')) return endpoint
+    }
+  }
+  return undefined
+}
+
+/**
  * 新版列表（推荐、频道视频、播放列表）里的 lockupViewModel，contentType 为 VIDEO 时是视频。
  * 元数据行没有字段名：带 `views` / `watching` 的是播放量，带 `ago` 的是时间，其余第一个是频道名。
  * `author` 取不到时用 fallback（频道页里列表项不带频道）。
@@ -151,7 +166,8 @@ export function lockupVideo(v: any, fallback: UserRef | null = null): Item {
   const views = rows.find((r) => /views?$|watching/i.test(r) || /^[\d.,]+[KMB]?$/i.test(r))
   const ago = rows.find((r) => /\bago\b/i.test(r))
   const name = rows.find((r) => r !== views && r !== ago)
-  const author = channelRef({ browseEndpoint: first(md?.image, 'browseEndpoint') }, name) ?? fallback
+  const author =
+    channelRef({ browseEndpoint: first(md?.image, 'browseEndpoint') }, name) ?? channelRef({ browseEndpoint: lockupRunsChannel(md) }, name) ?? fallback
   return n.item(
     {
       id,

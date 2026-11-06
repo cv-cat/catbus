@@ -115,7 +115,7 @@
 - youtube `item uncollect`：移出稍后观看
 - kuaishou `item publish`：不支持 --cover、--mention、--poi、--category、--price；--image 1～31 张（每张不超过 15MB），与 --video 二选一
 - x `item publish`：正文超过 280 权重时自动按长推发（需要 Premium）；--thread 发 thread
-- youtube `item publish`：走 YouTube Studio：分段上传，建视频要求 BotGuard 校验，需要本地 Chromium（见 AGENTS 5.7）。账号要先开频道；--schedule 先建成私享，到点转公开。自定义封面（--cover）未验证（可能需要已验证的账号）
+- youtube `item publish`：走 YouTube Studio：分段上传，建视频要求 BotGuard 校验，需要本地 Chromium（见 AGENTS 5.7）。账号要先开频道；--schedule 先建成私享，到点转公开。视频上传已真机验证。--cover 要求频道已开通自定义缩略图（手机验证），没开通时上传前报错
 - bilibili `item delete`：需要人机验证（极验点选），catbus 还不能自动通过，会报 RISK_CONTROL
 - youtube `item delete`：只能删自己的视频；同样需要本地 Chromium（BotGuard 校验）
 - `item get --area`：jd

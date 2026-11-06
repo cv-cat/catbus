@@ -599,7 +599,7 @@ export async function commentAdd(ctx: Ctx) {
   const to = (ctx.options.replyTo as string | undefined)?.trim()
   const root = to?.split('.')[0]
   const res = root ? await api.createReply(c, ctx.args.text!, createReplyParams(id, root)) : await api.createComment(c, ctx.args.text!, createCommentParams(id))
-  checkWrite(res, '发表评论', '常见原因：账号没有开 YouTube 频道；视频关闭了评论；视频正在直播（只有直播聊天）')
+  checkWrite(res, '发表评论', '常见原因：账号没有开 YouTube 频道；视频关闭了评论；视频正在直播（只有直播聊天）；视频是私享的（YouTube 不支持评论私享视频）')
   const created = norm.comments(res, id)[0]
   if (!created) throw new CatbusError('UPSTREAM', '评论已提交，但返回里没有新评论', { hint: `用 catbus youtube comment list ${id} 确认`, detail: { keys: Object.keys(res ?? {}) } })
   return created

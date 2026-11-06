@@ -51,7 +51,7 @@ export default definePlatform({
         'item publish': studioWrite.impl('partial', 'itemPublish', {
           supports: ['title', 'text', 'video', 'cover', 'tag', 'visibility', 'schedule'],
           options: { visibility: visibility('public', 'private') },
-          note: '走 YouTube Studio：分段上传，建视频要求 BotGuard 校验，需要本地 Chromium（见 AGENTS 5.7）。账号要先开频道；--schedule 先建成私享，到点转公开。自定义封面（--cover）未验证（可能需要已验证的账号）',
+          note: '走 YouTube Studio：分段上传，建视频要求 BotGuard 校验，需要本地 Chromium（见 AGENTS 5.7）。账号要先开频道；--schedule 先建成私享，到点转公开。视频上传已真机验证。--cover 要求频道已开通自定义缩略图（手机验证），没开通时上传前报错',
         }),
         'item delete': studioWrite.impl('full', 'itemDelete', { note: '只能删自己的视频；同样需要本地 Chromium（BotGuard 校验）' }),
 

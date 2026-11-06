@@ -501,6 +501,58 @@ describe('youtube 平台（web）', () => {
       expect([w.env.error.code, likes]).toEqual(['NETWORK', 1])
     })
 
+    it('keyword suggest：网络出错时重试一次（只读）', async () => {
+      let tries = 0
+      const r = await withYt(
+        { suggest: () => (++tries === 1 ? (() => { throw new RequestError('connection reset') })() : fakeResponse(fixture('suggest.txt'))) },
+        () => cli('youtube', 'keyword', 'suggest', 'lofi'),
+      )
+      expect([r.env.ok, tries]).toEqual([true, 2])
+      expect(r.env.data[0]).toEqual({ text: 'lofi', heat: null })
+    })
+
+    it('feed list --kind following：订阅流的频道头像不带频道链接，author 取自元数据行里频道名的链接', async () => {
+      // 2026-11 真机：订阅流的 lockupViewModel 里 image 是 decoratedAvatarViewModel、点击是 watchEndpoint（裁剪、ID 已替换）
+      const channel = 'UCcccccccccccccccccccccc'
+      const lockup = {
+        contentId: 'subsVideo01',
+        contentType: 'LOCKUP_CONTENT_TYPE_VIDEO',
+        metadata: {
+          lockupMetadataViewModel: {
+            title: { content: 'New upload' },
+            image: { decoratedAvatarViewModel: { avatar: { avatarViewModel: {} }, rendererContext: { commandContext: { onTap: { innertubeCommand: { watchEndpoint: { videoId: 'subsVideo01' } } } } } } },
+            metadata: {
+              contentMetadataViewModel: {
+                metadataRows: [
+                  {
+                    metadataParts: [
+                      {
+                        text: {
+                          content: 'Some Channel',
+                          commandRuns: [{ startIndex: 0, length: 12, onTap: { innertubeCommand: { browseEndpoint: { browseId: channel, canonicalBaseUrl: '/@somechannel' } } } }],
+                        },
+                      },
+                    ],
+                  },
+                  { metadataParts: [{ text: { content: '1.2K views' } }, { text: { content: '3 hours ago' } }] },
+                ],
+              },
+            },
+          },
+        },
+      }
+      // commandRuns 里不是频道（UC 开头）的链接不算
+      const other: any = structuredClone(lockup)
+      other.contentId = 'subsVideo02'
+      other.metadata.lockupMetadataViewModel.metadata.contentMetadataViewModel.metadataRows[0].metadataParts[0].text.commandRuns[0].onTap.innertubeCommand.browseEndpoint.browseId = 'FEsomething'
+      const res = { contents: { twoColumnBrowseResultsRenderer: { tabs: [{ tabRenderer: { content: { richGridRenderer: { contents: [lockup, other].map((l) => ({ richItemRenderer: { content: { lockupViewModel: l } } })) } } } }] } } }
+      await login()
+      const r = await withYt({ browse: () => res }, () => cli('youtube', 'feed', 'list', '--kind', 'following'))
+      expect(r.env.data[0]).toMatchObject({ id: 'subsVideo01', author: { id: channel, name: 'Some Channel', url: `https://www.youtube.com/channel/${channel}` }, stats: { views: 1200 } })
+      expect(r.env.data[0].created_at).toMatch(/^\d{4}-/)
+      expect(r.env.data[1].author).toBeNull()
+    })
+
     it('user get me：凭证里还是 Google 账号 ID（登录时没有频道）时，查到频道后把频道 ID 写回凭证', async () => {
       const noChannel = { actions: [{ openPopupAction: { popup: { multiPageMenuRenderer: { header: { activeAccountHeaderRenderer: { accountName: { simpleText: 'Test User' } } } } } } }] }
       const accounts = { contents: [{ accountItem: { isSelected: true, serviceEndpoint: { selectActiveIdentityEndpoint: { supportedTokens: [{ accountStateToken: { hasChannel: false, obfuscatedGaiaId: '123456789012345678901' } }] } } } }] }
@@ -637,6 +689,7 @@ describe('youtube 平台（web）', () => {
       const r = await withYt({ 'comment/create_comment': () => failed }, () => cli('youtube', 'comment', 'add', 'dQw4w9WgXcQ', 'hello'))
       expect(r.env.error).toMatchObject({ code: 'UPSTREAM', message: '发表评论失败：Comment failed to post.' })
       expect(r.env.error.hint).toContain('频道')
+      expect(r.env.error.hint).toContain('私享')
     })
 
     it('comment add：create_comment 的 actionResult 为 STATUS_FAILED 时报 UPSTREAM', async () => {

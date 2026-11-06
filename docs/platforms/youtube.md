@@ -91,7 +91,7 @@ catbus config set youtube.proxy http://127.0.0.1:7890
 | `item collect` | ✓ | 加入「稍后观看」。需要登录。 |
 | `item uncollect` | ✓ | 移出「稍后观看」。需要登录。 |
 | `item list` | ✓ | 自己频道上传的视频（含私享、草稿），按发布时间倒序，数据来自 YouTube Studio。需要登录。 |
-| `item publish` | ◐ | 发布视频：`--video`、`--title` 必填；`--text` 为简介；`--tag`（可重复）、`--cover`（图片）、`--visibility public / private`（默认 public）、`--schedule`（ISO 时间，先建成私享，到点转公开）。走 YouTube Studio，建视频要 BotGuard 校验，需要本机的 Chromium（见「已知限制」）。账号要先开频道。**自定义封面（`--cover`）未验证**，可能需要已验证的账号。 |
+| `item publish` | ◐ | 发布视频：`--video`、`--title` 必填；`--text` 为简介；`--tag`（可重复）、`--cover`（图片）、`--visibility public / private`（默认 public）、`--schedule`（ISO 时间，先建成私享，到点转公开）。走 YouTube Studio，建视频要 BotGuard 校验，需要本机的 Chromium（见「已知限制」）。账号要先开频道。`--cover` 要求频道已开通自定义封面（YouTube 要求先完成手机验证）：没开通时在上传前就报 `UPSTREAM`，不会留下半成品视频。 |
 | `item delete` | ✓ | 删除自己的视频（需要确认，`-y`）。走 YouTube Studio，同样需要本机的 Chromium（见「已知限制」）。2026-10-30 实测通过。 |
 
 ### comment
@@ -124,7 +124,7 @@ catbus config set youtube.proxy http://127.0.0.1:7890
 ### channel
 | 命令 | 状态 | 说明 |
 |---|---|---|
-| `channel create` | ✓ | 给当前账号开 YouTube 频道：`--name` 默认用账号名，`--handle` 默认用 YouTube 推荐的。上传、发评论、发直播聊天都要求账号有频道；已有频道时报 `USAGE`。需要登录。 |
+| `channel create` | ✓ | 给当前账号开 YouTube 频道：`--name` 默认用账号名，`--handle` 默认用 YouTube 推荐的。上传、发评论、发直播聊天都要求账号有频道；已有频道时报 `USAGE`。新频道有时要过几秒才查得到，命令会等最多约 20 秒；开好后（或已有频道时）凭证里的用户 ID 换成频道 ID。需要登录。 |
 
 ### keyword / notice / series / history
 
@@ -179,12 +179,12 @@ catbus youtube comment add dQw4w9WgXcQ "Nice video"
 - **列表里看不到的视频**：有些视频（实测是一个「面向儿童」的合集）点赞、加入稍后观看都成功，但 YouTube 在点赞列表、稍后观看列表里把它隐藏（页面提示「1 unavailable video is hidden」），`user likes` / `user collects` 里也就没有它。
 - **只能看自己的列表**：`user likes`、`user collects`、`user following` 只接受 `me`，YouTube 不公开别人的点赞、稍后观看和订阅。
 - **没有频道的 Google 账号**：`user get me` 报错；YouTube 不允许没有频道的账号发评论。点赞、订阅、稍后观看不受影响。这样的账号登录时 `user.id` 是 Google 账号 ID；之后开了频道，再登录到同一个账号名会被当成另一个用户拒绝，先 `auth logout -a <name>` 再登录。
-- **Shorts 没有作者**：搜索结果、频道页里 Shorts 栏目的条目，YouTube 不给频道信息，`author` 为 null；要作者时对这条再 `item get`。普通视频（包括多人合作的视频）都有作者，合作视频取第一个合作者（上传者）。
+- **Shorts 没有作者和发布时间**：列表（`feed list`、`item search`，以及频道页的 Shorts 栏目）里的 Shorts，YouTube 不给频道和时间，`author`、`created_at` 为 null；需要的话对这条再 `item get`。普通视频（包括多人合作的视频、订阅流里的视频）都有作者，合作视频取第一个合作者（上传者）。
 - **相对时间是近似值**：列表里的 `created_at` 由页面上的「3 days ago」这类相对时间推算；`item get` 的发布时间是精确的。计数如 `1.2M` 按显示值换算，有舍入。
 - **页面语言固定为英文**（`hl=en`），只影响 YouTube 自己生成的文字，标题和简介保持原文。
 - **没有私信**：YouTube 2019 年已下线私信，`msg` 命令都不支持。
 - **没有热门**：YouTube 已下线「趋势」页，`feed list --kind hot`、`keyword hot` 都不支持。
 - **发布与删除需要本机的 Chromium**：Studio 要求网页端的 BotGuard 校验，catbus 在无头 Chromium 的 Studio 页面里算这个结果，其余请求都由 Node 发出。找浏览器的顺序：`catbus config set youtube.browser <路径>` → 环境变量 `CATBUS_YOUTUBE_BROWSER` → Playwright 缓存里最新的 Chromium。没有时先装：`npx playwright install chromium`。不使用系统里的 Google Chrome，也不使用 headless shell。每次命令用临时 profile，用完删除。详见 AGENTS.md 5.7。
-- **自定义封面未验证**：`--cover` 在 2026-10-30 的真机测试里失败（16:9 的 PNG 与 JPEG 都报 `videoStill` 失败，错误里会列出「封面」）。当天测试账号的上传配额已用完，之后没有复测。自定义封面可能需要已验证的账号，这一点没有证实。标签、定时发布、正文已在真机通过。
+- **自定义封面要求频道已验证**：没完成手机验证的频道，Studio 里的「自定义缩略图」功能是关闭的，`videoStill` 会失败。`item publish --cover` 会先查频道的这项功能，没开通时直接报错并提示到 https://www.youtube.com/verify 验证。已开通自定义封面的频道上 `--cover` 还没有真机验证过。发布（私享）、标签、删除已在真机通过；定时发布、正文在更早的真机测试里通过。
 - **发布会产生真实内容**：`item publish` 发出去的视频在频道里可见（取决于 `--visibility`）；测试一律用 `--visibility private`。`item delete` 会永久删除视频，需要确认（`-y`）。2026-10-30 实测：发布、删除均通过。
 - 修改频道资料（`user update`）还不支持。

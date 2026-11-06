@@ -175,15 +175,18 @@ export class YtClient {
 
   /** 搜索联想词在单独的域名上，返回 JSONP：`window.google.ac.h([...])`。 */
   async suggest(prefix: string): Promise<any[]> {
-    const res = await this.http.request({
-      url: 'https://suggestqueries-clients6.youtube.com/complete/search',
-      query: { client: 'youtube', ds: 'yt', q: prefix, hl: HL, gl: GL.toLowerCase() },
-      headers: [
-        ['User-Agent', UA],
-        ['Accept', '*/*'],
-        ['Referer', `${ORIGIN}/`],
-      ],
-    })
+    // 只读请求：经代理时偶发连接被重置，同 InnerTube 读取请求一样重试
+    const res = await retryNetwork(this.ctx, () =>
+      this.http.request({
+        url: 'https://suggestqueries-clients6.youtube.com/complete/search',
+        query: { client: 'youtube', ds: 'yt', q: prefix, hl: HL, gl: GL.toLowerCase() },
+        headers: [
+          ['User-Agent', UA],
+          ['Accept', '*/*'],
+          ['Referer', `${ORIGIN}/`],
+        ],
+      }),
+    )
     await this.check(res, 'suggest')
     return jsonpOf<any[]>(res)
   }
