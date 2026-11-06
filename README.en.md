@@ -5,9 +5,9 @@
 <br>
 
 **One command. Twelve platforms.**<br>
-RedNote (Xiaohongshu) · Douyin · TikTok · Bilibili · Kuaishou · Weibo · Xianyu · Taobao · JD.com · X · 12306 · Maoyan
+RedNote (Xiaohongshu) · Douyin · TikTok · Bilibili · Kuaishou · Weibo · Xianyu · Taobao · JD.com · X · YouTube · 12306 · Maoyan
 <br>
-<sub>Coming soon: Instagram · YouTube · Facebook · Zhihu · WeChat Official Accounts · Toutiao · Poizon (Dewu) · Pinduoduo · Meituan · Dianping</sub>
+<sub>Coming soon: Instagram · Facebook · Zhihu · WeChat Official Accounts · Toutiao · Poizon (Dewu) · Pinduoduo · Meituan · Dianping</sub>
 
 <br>
 

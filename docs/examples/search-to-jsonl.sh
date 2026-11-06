@@ -9,7 +9,7 @@
 #   PLATFORMS="xhs bilibili x" docs/examples/search-to-jsonl.sh <keyword>
 #
 # 环境变量：
-#   PLATFORMS  要搜索的平台，空格分隔。默认：item search 已实现、并且本机有 web 账号的平台
+#   PLATFORMS  要搜索的平台，空格分隔。默认：item search 已实现、并且本机有 web 账号或者不登录也能搜的平台
 #              （由 catbus platforms 和 catbus auth list 得出，两者都不联网）
 #   SLEEP      平台之间的间隔秒数，默认 3
 #   CATBUS     catbus 命令，默认 catbus；从源码运行时可设为 "node /path/to/catbus/dist/cli/main.js"
@@ -49,8 +49,12 @@ if [[ -z ${PLATFORMS:-} ]]; then
   implemented=$(cb platforms | jq -r '.data[]
     | select(any(.commands[]; .endpoint == "web" and .resource == "item" and .action == "search" and .status == "implemented"))
     | .id')
+  # 不登录也能搜的平台（如 youtube，item search 为 auth: optional）不需要本机有账号
+  guest_ok=$(cb platforms | jq -r '.data[]
+    | select(any(.commands[]; .endpoint == "web" and .resource == "item" and .action == "search" and .status == "implemented" and .auth == "optional"))
+    | .id')
   logged_in=$(cb auth list | jq -r '.data[] | select(.endpoint == "web") | .platform' | sort -u)
-  PLATFORMS=$(printf '%s\n' "$implemented" | grep -Fx -f <(printf '%s\n' "$logged_in") | tr '\n' ' ' || true)
+  PLATFORMS=$(printf '%s\n' "$implemented" | grep -Fx -f <(printf '%s\n' "$logged_in" "$guest_ok") | tr '\n' ' ' || true)
   if [[ -z ${PLATFORMS// /} ]]; then
     echo "没有可以搜索的平台：先登录，例如 catbus bilibili auth login；或者用 PLATFORMS=\"xhs bilibili\" 指定" >&2
     exit 1
