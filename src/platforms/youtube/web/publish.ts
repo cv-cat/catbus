@@ -39,6 +39,8 @@ const PRIVACY = { public: 'PUBLIC', private: 'PRIVATE' } as const
  * 其他主机一律拒绝，避免把 Studio 的会话挑战交给一个不相干的地址去执行。
  */
 const INTERPRETER_HOSTS = new Set(['www.google.com'])
+/** 重新验证链接只认这些域（本身或子域），其余不转述给用户。 */
+const REAUTH_DOMAINS = ['google.com', 'youtube.com']
 
 /** 定时发布：先建成私享，到点由 YouTube 转公开。返回 Unix 秒。 */
 function scheduleSec(iso: string): number {
@@ -183,6 +185,17 @@ class Attestor {
         botguardResponse: web,
       })
       if (!rr.encodedReauthProofToken) {
+        // 只给 webReauthUrl：Google 要求在网页上重新输入密码，不是风控
+        // 链接不在白名单或解析不了时，hint 只指向 Studio，不转述上游给的地址
+        const rawReauth = rr?.webReauthUrl
+        if (rawReauth != null && rawReauth !== '') {
+          const reauthUrl = webReauthUrl(rawReauth)
+          const where = reauthUrl ? `${reauthUrl}（或 ${STUDIO_ORIGIN}）` : STUDIO_ORIGIN
+          throw new CatbusError('AUTH_REQUIRED', 'YouTube Studio 要求重新验证身份（重新输入密码）', {
+            hint: `在浏览器里用这个账号打开 ${where}，按提示重新输入密码，完成后重试本命令；不需要重新导入 cookie`,
+            detail: { url: reauthUrl },
+          })
+        }
         throw new CatbusError('RISK_CONTROL', 'YouTube 没有接受这次 BotGuard 校验（reauth 被拒绝）', {
           hint: '稍后重试，或换一个代理出口；仍然失败时到 https://studio.youtube.com 上传',
           detail: { kind: 'blocked', keys: Object.keys(rr ?? {}) },
@@ -244,6 +257,31 @@ export async function fetchInterpreter(c: YtClient, url: string): Promise<string
 function unwrap(v: unknown, key: string): string | null {
   const inner = (v as Record<string, unknown> | null | undefined)?.[key]
   return typeof inner === 'string' && inner ? inner : null
+}
+
+/**
+ * security/get_web_reauth_url 返回的重新验证地址：可能是字符串，也可能包在对象里（TrustedResourceUrl 包装或 { url }）。
+ * 相对地址按 Studio 补全，`//` 开头的补上 https；只返回 https 地址，取不到时为 null。
+ */
+function webReauthUrl(v: unknown): string | null {
+  const raw =
+    typeof v === 'string'
+      ? v
+      : (unwrap(v, 'privateDoNotAccessOrElseTrustedResourceUrlWrappedValue') ??
+        unwrap(v, 'privateDoNotAccessOrElseSafeUrlWrappedValue') ??
+        unwrap(v, 'url') ??
+        unwrap(v, 'value'))
+  const s = raw?.trim()
+  if (!s) return null
+  try {
+    const u = new URL(s.startsWith('//') ? `https:${s}` : s, STUDIO_ORIGIN)
+    if (u.protocol === 'http:') u.protocol = 'https:'
+    if (u.protocol !== 'https:') return null
+    const h = u.hostname.toLowerCase()
+    return REAUTH_DOMAINS.some((d) => h === d || h.endsWith(`.${d}`)) ? u.toString() : null
+  } catch {
+    return null
+  }
 }
 
 /** 发布视频：读取文件 → 开浏览器拿会话令牌 → 上传 → 建视频（标题、简介、可见范围、校验）→ 标签、封面、定时发布。 */

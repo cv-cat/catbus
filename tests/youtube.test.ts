@@ -978,6 +978,77 @@ describe('youtube 平台（web）', () => {
         expect(b.state.closed).toBe(1)
       })
 
+      it('只给 webReauthUrl 时报 AUTH_REQUIRED 并带上链接', async () => {
+        const REAUTH = 'https://accounts.google.com/v3/signin/challenge/pwd?continue=https%3A%2F%2Fstudio.youtube.com%2Freauth'
+        const cases: [unknown, string][] = [
+          [REAUTH, REAUTH],
+          // 包在对象里、缺协议
+          [{ privateDoNotAccessOrElseTrustedResourceUrlWrappedValue: REAUTH.replace('https:', '') }, REAUTH],
+          // 相对地址按 Studio 补全
+          ['/reauth?flow=1', 'https://studio.youtube.com/reauth?flow=1'],
+        ]
+        for (const [raw, want] of cases) {
+          const b = fakeBrowser()
+          const r = await withYt(
+            studioRoutes({
+              'studio:att/esr': () => ({ shouldFetchReauthSessionToken: true, ctx: 'IVCTX' }),
+              'studio:security/get_web_reauth_url': () => ({ webReauthUrl: raw }),
+            }),
+            async (calls) => {
+              const res = await cli('youtube', 'item', 'delete', VIDEO_ID, '-y')
+              expect(calls.some((c) => c.path === 'studio:ars/grst')).toBe(false)
+              return res
+            },
+          )
+          expect(r.code).toBe(3)
+          expect(r.env.error).toMatchObject({ code: 'AUTH_REQUIRED', message: expect.stringContaining('重新验证身份'), detail: { url: want } })
+          expect(r.env.error.hint).toContain(want)
+          expect(r.env.error.hint).toContain('不需要重新导入 cookie')
+          expect(b.state.closed).toBe(1)
+        }
+      })
+
+      it('webReauthUrl 是 http 的 Google 地址时升级为 https', async () => {
+        fakeBrowser()
+        const r = await withYt(
+          studioRoutes({
+            'studio:att/esr': () => ({ shouldFetchReauthSessionToken: true, ctx: 'IVCTX' }),
+            'studio:security/get_web_reauth_url': () => ({ webReauthUrl: 'http://accounts.google.com/v3/signin/challenge/pwd?x=1' }),
+          }),
+          () => cli('youtube', 'item', 'delete', VIDEO_ID, '-y'),
+        )
+        const want = 'https://accounts.google.com/v3/signin/challenge/pwd?x=1'
+        expect(r.code).toBe(3)
+        expect(r.env.error).toMatchObject({ code: 'AUTH_REQUIRED', detail: { url: want } })
+        expect(r.env.error.hint).toContain(want)
+        expect(r.env.error.hint).not.toContain('http://')
+      })
+
+      it('webReauthUrl 不是 Google / YouTube 的地址时仍报 AUTH_REQUIRED，但不转述链接，只指向 Studio', async () => {
+        const bad: unknown[] = [
+          'https://evil.example/x',
+          'https://notgoogle.com/x',
+          'https://google.com.evil.example/x',
+          'javascript:alert(1)',
+          { privateDoNotAccessOrElseTrustedResourceUrlWrappedValue: 'https://evil.example/x' },
+          { unknownKey: 'https://accounts.google.com/x' },
+        ]
+        for (const raw of bad) {
+          fakeBrowser()
+          const r = await withYt(
+            studioRoutes({
+              'studio:att/esr': () => ({ shouldFetchReauthSessionToken: true, ctx: 'IVCTX' }),
+              'studio:security/get_web_reauth_url': () => ({ webReauthUrl: raw }),
+            }),
+            () => cli('youtube', 'item', 'delete', VIDEO_ID, '-y'),
+          )
+          expect(r.code).toBe(3)
+          expect(r.env.error).toMatchObject({ code: 'AUTH_REQUIRED', detail: { url: null } })
+          expect(r.env.error.hint).toContain('https://studio.youtube.com')
+          expect(JSON.stringify(r.env.error)).not.toMatch(/evil|notgoogle|javascript/)
+        }
+      })
+
       it('delete：删除请求带会话令牌；未确认时拒绝且不打开浏览器', async () => {
         const b = fakeBrowser()
         await withYt(studioRoutes(), async (calls) => {
