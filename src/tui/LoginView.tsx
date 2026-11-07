@@ -4,20 +4,12 @@ import type { LoginMethod } from '../core/options.js'
 import type { Platform } from '../core/registry.js'
 import { splitAtCursor, type TextState } from './input.js'
 import { fieldsFor, type LoginView as View } from './login.js'
+import { METHOD_LABEL } from './model.js'
 import { qrCells, qrSize } from './qr.js'
 import { Keys, Pane, T, useGlyphs, useLook } from './ui.js'
 import { clip } from './text.js'
 
 // 登录页（AGENTS 4.13）：选方式、填账号名和必要字段，然后显示二维码或验证码输入。
-
-const METHOD_LABEL: Record<LoginMethod, string> = {
-  qrcode: '扫码',
-  sms: '短信验证码',
-  password: '账号密码',
-  cookie: '导入 cookie',
-  oauth: '浏览器授权',
-  apikey: 'API Key',
-}
 
 export interface SetupState {
   methods: LoginMethod[]

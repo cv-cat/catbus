@@ -1,5 +1,5 @@
 import { getCurrent } from '../core/auth-store.js'
-import { describeOption, flagName, PAGING } from '../core/options.js'
+import { describeOption, flagName, type LoginMethod, PAGING } from '../core/options.js'
 import { type AvailableEndpoint, type Command, type Platform, sortCommands } from '../core/registry.js'
 import { PLATFORMS } from '../platforms/index.js'
 
@@ -8,8 +8,18 @@ import { PLATFORMS } from '../platforms/index.js'
 /** 界面里能运行的动作（AGENTS 4.13）。其余命令只显示等价的 CLI 命令。 */
 export const READ_ACTIONS: ReadonlySet<string> = new Set([
   'get', 'list', 'search', 'related', 'media', 'items', 'replies', 'categories', 'suggest', 'hot', 'count', 'history',
-  'status', 'price', 'likes', 'collects', 'reposts', 'followers', 'following', 'rank', 'gifts', 'products', 'replays', 'subtitles',
+  'status', 'price', 'likes', 'collects', 'reposts', 'followers', 'following', 'rank', 'gifts', 'products', 'replays', 'subtitles', 'stats',
 ])
+
+/** 登录方式的中文名（登录页的选项、账号页的方式列）。 */
+export const METHOD_LABEL: Record<LoginMethod, string> = {
+  qrcode: '扫码',
+  sms: '短信验证码',
+  password: '账号密码',
+  cookie: '导入 cookie',
+  oauth: '浏览器授权',
+  apikey: 'API Key',
+}
 
 /** 能在界面里一次取回结果：已实现、动作在读取类集合里，且不是长连接、不需要确认。 */
 export function runnable(command: Command): boolean {

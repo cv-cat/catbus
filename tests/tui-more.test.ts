@@ -77,6 +77,9 @@ describe('tui 命令状态', () => {
     expect(availability(cmd('bilibili', 'item delete'))).toBe('cli-only') // 实现了，但是危险操作，界面里不运行
     expect(availability(cmd('xhs', 'item delete'))).toBe('planned') // 没实现的就是 planned，不是 cli-only
   })
+  it('扩展里的只读统计（mteam seed stats）也能在界面里运行', () => {
+    expect(availability(cmd('mteam', 'seed stats'))).toBe('run')
+  })
 })
 
 describe('tui 二维码', () => {

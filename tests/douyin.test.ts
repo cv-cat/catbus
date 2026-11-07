@@ -394,6 +394,63 @@ describe('douyin 对拍：登录', () => {
     expect(d.tokens).toMatchObject({ ticket: c.result.ticket, ts_sign: c.result.ts_sign, client_cert: c.result.client_cert })
   }, 60_000)
 
+  it('扫码：2046 带短信验证选项时，验证码经 core/login 的 prompt 读取（终端界面可接管），校验后继续轮询同一 token', async () => {
+    // 2046 决策里有 mobile_sms_verify：catbus 发码（send_code）→ 读验证码 → 校验（validate_code）→ 继续轮询。
+    // 验证码的读取走 core/login 的 interactive() / prompt()：TUI 登录时设了界面钩子，验证码就在界面里输入，不会去抢 stdin。
+    const { setLoginUi } = await import('../src/core/login.js')
+    const base = loadCase('douyin', 'login_qrcode')
+    const c = JSON.parse(JSON.stringify(base)) as GoldenCase
+    const scannedIdx = c.responses.findIndex((r) => JSON.stringify(r.body ?? {}).includes('"status":"scanned"'))
+    const headers = c.responses[scannedIdx]!.headers
+    const blocked = {
+      status: 200,
+      headers,
+      body: {
+        message: 'success',
+        data: {
+          error_code: 2046,
+          description: '为保障你的账号安全，请前往抖音APP完成验证后再进行登录',
+          verify_ticket: 'fake-verify-ticket',
+          encrypt_uid: 'fake-encrypt-uid',
+          verify_ways: [{ verify_way: 'mobile_sms_verify', mobile: '138****0000', is_safe_mobile: true }],
+        },
+      },
+    }
+    const sent = { status: 200, headers, body: { message: 'success', error_code: 0, data: {} } }
+    const validated = { status: 200, headers, body: { message: 'success', error_code: 0, data: { ticket: 'fake-mfa-ticket' } } }
+    // 2046 → send_code → validate_code → 2046（已在验证中，只等待）→ scanned → confirmed
+    c.responses.splice(scannedIdx, 0, blocked, sent, validated, { ...blocked })
+    const questions: string[] = []
+    const ctl = new AbortController()
+    const restore = setLoginUi({
+      interactive: true,
+      signal: ctl.signal,
+      qrcode() {},
+      link() {},
+      prompt: async (q) => {
+        questions.push(q)
+        return ' 123456 '
+      },
+    })
+    try {
+      const d = new Douyin(loginCtx(c))
+      const p = new Passport(d)
+      const { requests, error } = await replayBin(c, () => p.qrcodeLogin(async () => undefined))
+      if (error) throw error
+      expect(questions).toHaveLength(1)
+      expect(questions[0]).toContain('短信验证码')
+      const form = (r: GoldenRequest | undefined, key: string) => (r && typeof r.body === 'string' ? new URLSearchParams(r.body).get(key) : null)
+      expect(form(requests.find((r) => r.url.includes('/passport/web/send_code/')), 'std_verify_way')).toBe('mobile_sms_verify')
+      expect(form(requests.find((r) => r.url.includes('/passport/web/validate_code/')), 'code')).toBe('123456')
+      const polls = requests.filter((r) => r.url.includes('check_qrconnect'))
+      expect(polls).toHaveLength(5)
+      expect(new Set(polls.map((r) => form(r, 'token')))).toEqual(new Set(['fake-qr-token']))
+      expect(Object.fromEntries(d.cookies())).toEqual(c.result.cookies)
+    } finally {
+      restore()
+    }
+  }, 60_000)
+
   it('短信（严格）：bootstrap → 发验证码 → 验证码登录', async () => {
     const c = loadCase('douyin', 'login_sms')
     const d = new Douyin(loginCtx(c))

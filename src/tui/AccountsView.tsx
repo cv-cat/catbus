@@ -1,6 +1,7 @@
 import { Box } from 'ink'
 import type { Platform } from '../core/registry.js'
 import type { AuthStatus, AccountRow } from './login.js'
+import { METHOD_LABEL } from './model.js'
 import { Keys, Pane, Row, T, useGlyphs } from './ui.js'
 import { clip } from './text.js'
 
@@ -16,7 +17,7 @@ export interface AccountsState {
   loading: boolean
 }
 
-const METHOD: Record<string, string> = { qrcode: '扫码', sms: '短信', password: '账密', cookie: 'cookie', guest: '游客' }
+const METHOD: Record<string, string> = { ...METHOD_LABEL, guest: '游客' }
 
 export function AccountsView({ platform, state, cols, rows, canLogin, note }: { platform: Platform; state: AccountsState; cols: number; rows: number; canLogin: boolean; note: string | null }) {
   const g = useGlyphs()

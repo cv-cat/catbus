@@ -158,9 +158,10 @@ npm i -g catbus-cli
 catbus doctor                 # check your environment
 catbus bilibili auth login    # log in by scanning a QR code
 catbus bilibili item search 猫 --limit 20
+catbus tui      # don't want to memorize commands? use the full-screen UI
 ```
 
-You can also use [Docker](docs/guide/docker.md) or install from source; see [Quick start](docs/guide/quick-start.md) for the full steps.
+You can also use [Docker](docs/guide/docker.md) or install from source; see [Quick start](docs/guide/quick-start.md) for the full steps and [Terminal UI](docs/guide/tui.md) for the full-screen interface.
 
 ## 📚 Documentation
 
