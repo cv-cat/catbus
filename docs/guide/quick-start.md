@@ -35,7 +35,7 @@ catbus version
 catbus doctor
 ```
 
-`doctor` 逐项检查 Node 版本、`~/.catbus` 的权限、签名 vm、HTTP 库、canvas、onnx 和两个模型包，每项输出 `{name, ok, message}`。有一项不通过时退出码为 1，看 `message` 里的提示处理。
+`doctor` 逐项检查 Node 版本、`~/.catbus` 的权限、签名 vm、HTTP 库、canvas、onnx、终端界面（ink）和两个模型包，每项输出 `{name, ok, message}`。有一项不通过时退出码为 1，看 `message` 里的提示处理。
 
 ```bash
 catbus doctor | jq -r '.data[] | select(.ok | not) | "\(.name): \(.message)"'
@@ -143,5 +143,6 @@ jq -r '[.id, .title, .stats.views] | @tsv' items.jsonl
 
 - [login.md](login.md)：各平台登录方式、cookie 导入、多账号、子站点
 - [output.md](output.md)：信封、归一化类型、分页、退出码与错误处理
+- [tui.md](tui.md)：`catbus tui` 全屏界面，不想记命令时用
 - [configuration.md](configuration.md)：代理、超时、数据目录
 - [faq.md](faq.md)：常见问题

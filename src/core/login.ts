@@ -14,6 +14,41 @@ import type { Account, Credential, UserRef } from './schemas.js'
 
 /** 登录流程的公共部分（AGENTS 5.3）。各平台的 `auth login` handler 调用这些函数。 */
 
+/**
+ * 界面钩子（AGENTS 4.13）：二维码、提问、是否可交互三处可以被终端界面接管。
+ * CLI 里没有钩子，走 stderr 和 readline；TUI 运行登录时设上，把二维码和提问画在界面里。
+ */
+export interface LoginUi {
+  /** 界面里随时可以提问。 */
+  interactive: true
+  /** 展示二维码。content 是二维码内容，png 是已经写好的图片路径。 */
+  qrcode(content: string, png: string, hint: string): void
+  prompt(question: string, options: { hidden?: boolean }): Promise<string>
+  /** 需要用户在浏览器里完成的一步（极验人机验证、即梦授权）：显示链接，等用户操作；完成后平台流程自己继续。 */
+  link(url: string, hint: string, title: string): void
+  /** 取消登录：轮询和等待输入都会在这个信号触发时结束。 */
+  signal: AbortSignal
+}
+
+let ui: LoginUi | null = null
+const uiStack: LoginUi[] = []
+
+/**
+ * 设上界面钩子，返回撤销函数。用栈而不是“恢复上一个”：重新扫码时旧会话的撤销晚于新会话的设置，
+ * 如果撤销时去恢复“设置前的值”，新会话结束后会把已取消的旧钩子又装回来。
+ */
+export function setLoginUi(next: LoginUi | null): () => void {
+  if (next) uiStack.push(next)
+  ui = uiStack.at(-1) ?? null
+  return () => {
+    if (next) {
+      const i = uiStack.indexOf(next)
+      if (i >= 0) uiStack.splice(i, 1)
+    }
+    ui = uiStack.at(-1) ?? null
+  }
+}
+
 /** 登录到哪个账号：`-a` > 当前账号 > `default`。 */
 export function loginTarget(ctx: HandlerContext): string {
   return ctx.account ?? 'default'
@@ -73,10 +108,24 @@ export function cookieCredential(ctx: HandlerContext, defaultDomain: string): Cr
   return credential
 }
 
+/**
+ * 请用户在浏览器里打开一个链接（人机验证、浏览器授权）。界面里走钩子：链接单独显示、可按 o 打开，title 是页面标题，
+ * hint 是不含链接的说明；CLI 里原样写到 stderr（-q 也显示，这一步必须由用户操作），文案由调用方给出，保持和以前逐字一致。
+ */
+export function showLink(url: string, hint: string, cliLine: string, title = '需要在浏览器里完成人机验证'): void {
+  if (ui) ui.link(url, hint, title)
+  else process.stderr.write(`[catbus] ${cliLine}\n`)
+}
+
 /** 二维码：画到 stderr，同时把 PNG 存到 cache/<p>/qrcode.png。 */
 export async function showQrcode(ctx: HandlerContext, content: string, hint = '请用 App 扫码'): Promise<string> {
   const png = join(cacheDir(ctx.platform.id), 'qrcode.png')
   await writeFileAtomic(png, await QRCode.toBuffer(content, { margin: 2, scale: 8 }))
+  if (ui) {
+    ui.qrcode(content, png, hint)
+    ctx.log.info(`${hint}。二维码图片：${png}`)
+    return png
+  }
   const art = await QRCode.toString(content, { type: 'terminal', small: true })
   process.stderr.write(art + '\n')
   ctx.log.info(`${hint}。二维码图片：${png}`)
@@ -92,6 +141,7 @@ export async function poll<T>(fn: () => Promise<T | undefined>, options: { inter
   // 扫码要等几分钟，期间偶发的网络错误（连接被重置、本机地址暂不可用等）不该让整个登录失败；连续失败才放弃
   let networkErrors = 0
   for (;;) {
+    if (ui?.signal.aborted) throw new CatbusError('AUTH_REQUIRED', '已取消登录')
     let result: T | undefined
     try {
       result = await fn()
@@ -102,17 +152,19 @@ export async function poll<T>(fn: () => Promise<T | undefined>, options: { inter
     }
     if (result !== undefined) return result
     if (now() >= deadline) throw new CatbusError('AUTH_REQUIRED', `${options.what ?? '登录'}超时`, { hint: '重新执行登录命令' })
-    await sleep(options.interval ?? 2000)
+    await sleep(options.interval ?? 2000, ui?.signal)
   }
 }
 
 /** 是否可以交互输入（stdin 与 stderr 都是 TTY）。 */
 export function interactive(): boolean {
+  if (ui) return ui.interactive
   return Boolean(process.stdin.isTTY && process.stderr.isTTY)
 }
 
 /** 在 stderr 上提问，读一行。hidden 时不回显（密码）。 */
 export async function prompt(question: string, options: { hidden?: boolean } = {}): Promise<string> {
+  if (ui) return ui.prompt(question, options)
   const rl = createInterface({ input: process.stdin, output: process.stderr, terminal: true })
   if (options.hidden) {
     const write = (rl as unknown as { _writeToOutput: (s: string) => void })._writeToOutput
@@ -130,12 +182,12 @@ export async function prompt(question: string, options: { hidden?: boolean } = {
 
 /** `--password-stdin`：TTY 下隐藏输入，否则读完整个 stdin。 */
 export async function readPassword(ctx: HandlerContext): Promise<string> {
-  if (!ctx.options.passwordStdin) {
+  if (!ui && !ctx.options.passwordStdin) {
     throw new CatbusError('USAGE', '密码只从 stdin 读取，请加 --password-stdin', {
       hint: `catbus ${ctx.platform.id} auth login --method password --username <name> --password-stdin`,
     })
   }
-  const password = process.stdin.isTTY ? await prompt('密码：', { hidden: true }) : (await readStreamText(process.stdin)).replace(/\r?\n$/, '')
+  const password = ui || process.stdin.isTTY ? await prompt('密码：', { hidden: true }) : (await readStreamText(process.stdin)).replace(/\r?\n$/, '')
   if (!password) throw new CatbusError('USAGE', '密码为空')
   return password
 }

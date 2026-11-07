@@ -1,6 +1,6 @@
 import { endpointFlag, getCurrent, listAccounts, readCredential } from '../../../core/auth-store.js'
 import { CatbusError } from '../../../core/errors.js'
-import { finishLogin, freshCredential } from '../../../core/login.js'
+import { finishLogin, freshCredential, showLink } from '../../../core/login.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { Account, AuthStatus, Credential } from '../../../core/schemas.js'
 import { currentUser, keyringUser, requestLogin, sys, waitLogin } from './dreamina.js'
@@ -53,8 +53,11 @@ export async function authLogin(ctx: Ctx): Promise<Account> {
   await syncBack(ctx)
   try {
     const request = await requestLogin()
-    ctx.log.info(`请在浏览器里打开下面的链接，用要登录的即梦账号确认授权（${new Date(request.expiresAt).toLocaleTimeString()} 前有效）：\n${request.uri}`)
-    const output = await waitLogin(request)
+    const hint = `请在浏览器里打开下面的链接，用要登录的即梦账号确认授权（${new Date(request.expiresAt).toLocaleTimeString()} 前有效）`
+    // 界面里链接单独显示、可按 o 打开；CLI 里和以前一样打到 stderr
+    showLink(request.uri, hint, `${hint}：\n${request.uri}`, '在浏览器里授权登录即梦')
+    // 界面里取消登录时 ctx.signal 触发，结束 dreamina 的等待，finally 里把钥匙串切回当前账号
+    const output = await waitLogin(request, ctx.signal)
     const user = await currentUser()
     const value = await sys.readKeyring()
     if (!user || !value) {

@@ -158,9 +158,10 @@ npm i -g catbus-cli
 catbus doctor                 # 環境をチェック
 catbus bilibili auth login    # QR コードでログイン
 catbus bilibili item search 猫 --limit 20
+catbus tui      # コマンドを覚えたくない？全画面 UI を使う
 ```
 
-[Docker](docs/guide/docker.md) やソースからのインストールも可能です。詳しい手順は [クイックスタート](docs/guide/quick-start.md) をご覧ください。
+[Docker](docs/guide/docker.md) やソースからのインストールも可能です。詳しい手順は [クイックスタート](docs/guide/quick-start.md)、全画面 UI は [ターミナル UI](docs/guide/tui.md) をご覧ください。
 
 ## 📚 ドキュメント
 

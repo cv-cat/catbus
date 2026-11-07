@@ -158,9 +158,10 @@ npm i -g catbus-cli
 catbus doctor                 # 환경 점검
 catbus bilibili auth login    # QR 코드로 로그인
 catbus bilibili item search 猫 --limit 20
+catbus tui      # 명령을 외우기 싫다면 전체 화면 UI
 ```
 
-[Docker](docs/guide/docker.md)나 소스에서 설치할 수도 있습니다. 전체 절차는 [빠른 시작](docs/guide/quick-start.md)을 참고하세요.
+[Docker](docs/guide/docker.md)나 소스에서 설치할 수도 있습니다. 전체 절차는 [빠른 시작](docs/guide/quick-start.md), 전체 화면 UI는 [터미널 UI](docs/guide/tui.md)를 참고하세요.
 
 ## 📚 문서
 

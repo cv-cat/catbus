@@ -1,7 +1,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { CatbusError } from '../../../core/errors.js'
-import { interactive } from '../../../core/login.js'
+import { interactive, showLink } from '../../../core/login.js'
 import type { HandlerContext } from '../../../core/registry.js'
 
 /**
@@ -174,7 +174,8 @@ export async function manualGeetest(ctx: HandlerContext, gt: string, challenge: 
     })
   }
   const s = await serveManual(gt, challenge, { ...options, signal: ctx.signal })
-  process.stderr.write(`[catbus] 请在浏览器打开 ${s.url} 完成人机验证（${options.timeout ?? TIMEOUT} 秒内），完成后自动继续\n`)
+  const seconds = options.timeout ?? TIMEOUT
+  showLink(s.url, `请在浏览器打开下面的链接完成人机验证（${seconds} 秒内），完成后自动继续`, `请在浏览器打开 ${s.url} 完成人机验证（${seconds} 秒内），完成后自动继续`)
   try {
     return await s.result
   } finally {

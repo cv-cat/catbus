@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { CatbusError } from '../../../core/errors.js'
 import { writeFileAtomic } from '../../../core/fsutil.js'
+import { interactive, prompt } from '../../../core/login.js'
 import type { HttpResponse } from '../../../core/http.js'
 import { cacheDir, staticFile } from '../../../core/paths.js'
 import { compactJson, jsonDumps, jsonLoads, parseQsl, quote, urlencode } from '../../../core/py.js'
@@ -101,6 +102,15 @@ const THROTTLE_GIVEUP = 120_000
 const QR_2046_HINT = '已扫码，抖音风控要求二次验证：请在抖音 App 上完成验证，然后回到手机点击确认登录。catbus 会继续等待，不需要重新扫码'
 /** 验证组件脚本地址的落盘位置（跳过短信或无短信选项时，供人工排查用）。 */
 const verifyScriptFile = join(cacheDir('douyin'), 'second-verify-script-url.txt')
+
+/**
+ * 读一行验证码：可交互时（TTY，或终端界面接管了登录）在 stderr / 界面上提问；否则从 stdin 读一行（AI 可管道喂）。
+ * 空行、EOF 或 Ctrl-C 返回空串。
+ */
+async function readVerifyCode(signal: AbortSignal, question: string): Promise<string> {
+  if (interactive()) return (await prompt(question)).trim()
+  return promptStdin(signal)
+}
 
 /** 读一行 stdin（非交互时读到 EOF）。空行或 Ctrl-C 返回空串。 */
 function promptStdin(signal: AbortSignal): Promise<string> {
@@ -834,7 +844,7 @@ export class Passport {
               d.ctx.log.info(`已扫码，抖音风控要求二次验证。catbus 选择短信验证${mobile ? `（发往 ${mobile}）` : ''}，正在发送验证码…`)
               await sendSms(d, info)
               d.ctx.log.info('验证码已发送，请输入短信验证码（6 位；直接回车跳过，改为等待 App 端验证）：')
-              const code = await promptStdin(d.ctx.signal)
+              const code = await readVerifyCode(d.ctx.signal, '短信验证码（留空跳过，改为等待 App 端验证）：')
               if (code) {
                 const ok = await validateSms(d, info, code)
                 d.ctx.log.info(ok ? '验证码校验通过，等待登录放行…' : '验证码校验未通过，将继续等待（也可在 App 上完成验证）')

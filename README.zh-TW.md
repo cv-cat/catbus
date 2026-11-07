@@ -158,9 +158,10 @@ npm i -g catbus-cli
 catbus doctor                 # 檢查環境
 catbus bilibili auth login    # 掃描 QR Code 登入
 catbus bilibili item search 猫 --limit 20
+catbus tui      # 不想記命令？用全螢幕介面
 ```
 
-也可以用 [Docker](docs/guide/docker.md) 或從原始碼安裝，完整步驟請見 [快速上手](docs/guide/quick-start.md)。
+也可以用 [Docker](docs/guide/docker.md) 或從原始碼安裝，完整步驟請見 [快速上手](docs/guide/quick-start.md)，全螢幕介面請見 [終端介面](docs/guide/tui.md)。
 
 ## 📚 文件
 

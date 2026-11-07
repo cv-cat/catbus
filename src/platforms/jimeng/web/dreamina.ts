@@ -17,9 +17,9 @@ export interface RunResult {
   stderr: string
 }
 
-function run(file: string, args: string[], input?: string): Promise<RunResult> {
+function run(file: string, args: string[], input?: string, signal?: AbortSignal): Promise<RunResult> {
   return new Promise((resolve, reject) => {
-    const child = spawn(file, args)
+    const child = spawn(file, args, { signal })
     let stdout = ''
     let stderr = ''
     child.stdout.on('data', (d) => (stdout += d))
@@ -41,7 +41,7 @@ function checkSystem(): void {
 
 /** 子进程和钥匙串读写都经过这个对象，测试替换它的方法。 */
 export const sys = {
-  dreamina: (args: string[]) => run('dreamina', args),
+  dreamina: (args: string[], signal?: AbortSignal) => run('dreamina', args, undefined, signal),
 
   async readKeyring(): Promise<string | null> {
     checkSystem()
@@ -93,9 +93,9 @@ export async function requestLogin(): Promise<LoginRequest> {
   return { uri, deviceCode, expiresAt: Number.isNaN(expiresAt) ? Date.now() + 600_000 : expiresAt }
 }
 
-/** 等用户在浏览器里授权，最多等到授权链接过期。返回 dreamina 的输出。 */
-export async function waitLogin(request: LoginRequest): Promise<string> {
+/** 等用户在浏览器里授权，最多等到授权链接过期；signal 触发时结束 dreamina。返回 dreamina 的输出。 */
+export async function waitLogin(request: LoginRequest, signal?: AbortSignal): Promise<string> {
   const seconds = Math.max(1, Math.ceil((request.expiresAt - Date.now()) / 1000))
-  const r = await sys.dreamina(['login', 'checklogin', `--device_code=${request.deviceCode}`, `--poll=${seconds}`])
+  const r = await sys.dreamina(['login', 'checklogin', `--device_code=${request.deviceCode}`, `--poll=${seconds}`], signal)
   return r.stdout + r.stderr
 }
