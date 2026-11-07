@@ -58,7 +58,7 @@ TikTok、微博、淘宝的上游仓库只实现了 cookie 登录；X 的上游�
 
 ### 小红书扫码后报 RISK_CONTROL
 
-扫码确认后，小红书服务端可能要求做一次人机验证（HTTP 471）。这是平台风控，上游 Spider_XHS 同样失败，catbus 和上游都还不能自动通过。请按 `hint` 改用 cookie 导入：
+扫码确认后，小红书服务端可能要求做一次人机验证（HTTP 471）。如果是短信验证，catbus 会向账号绑定的手机发验证码，输入后继续登录，不会报这个错。其他验证方式 catbus 还不能完成，请按 `hint` 改用 cookie 导入：
 
 ```bash
 catbus xhs auth login --method cookie --cookie @xhs-cookie.txt

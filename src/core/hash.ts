@@ -9,3 +9,5 @@ export const md5Hex = (data: Data): string => createHash('md5').update(data).dig
 export const sha256Hex = (data: Data): string => createHash('sha256').update(data).digest('hex')
 
 export const hmacSha256Hex = (key: Data, data: Data): string => createHmac('sha256', key).update(data).digest('hex')
+
+export const sha1Hex = (data: Data): string => createHash('sha1').update(data).digest('hex')

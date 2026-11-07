@@ -1,10 +1,34 @@
+import { CatbusError } from '../../../core/errors.js'
 import type { HandlerContext } from '../../../core/registry.js'
-import type { Category, Item, Poi } from '../../../core/schemas.js'
-import { paged } from '../../../core/toolkit.js'
+import type { Account, AuthStatus, Category, Item, Poi } from '../../../core/schemas.js'
+import { authError, isGuest, jarOf, paged } from '../../../core/toolkit.js'
 import * as api from './api.js'
 import { MaoyanClient } from './client.js'
+import { cookieLogin, qrcodeLogin } from './login.js'
 import { CATEGORIES, category, cityPoi, detailItem, showItem } from './normalize.js'
 import { cityList, resolveCity, resolveProject } from './resolve.js'
+
+export async function authLogin(ctx: HandlerContext): Promise<Account> {
+  const method = ctx.options.method as string
+  if (method === 'cookie') return cookieLogin(ctx)
+  if (method === 'qrcode') return qrcodeLogin(ctx)
+  throw new CatbusError('USAGE', `不支持的登录方式：${method}`)
+}
+
+const token = (ctx: HandlerContext) => (isGuest(ctx) ? undefined : jarOf(ctx.credential).get('dper'))
+
+export async function authStatus(ctx: HandlerContext): Promise<AuthStatus> {
+  const empty: AuthStatus = { logged_in: false, user: null, method: null, expires_at: null }
+  const dper = token(ctx)
+  if (!dper) return empty
+  try {
+    const user = await api.currentUser(new MaoyanClient(ctx), dper)
+    return { logged_in: true, user, method: ctx.credential.method, expires_at: null }
+  } catch (e) {
+    if (e instanceof CatbusError && (e.code === 'AUTH_REQUIRED' || e.code === 'AUTH_EXPIRED')) return empty
+    throw e
+  }
+}
 
 export async function feedList(ctx: HandlerContext) {
   const client = new MaoyanClient(ctx)
@@ -19,8 +43,13 @@ export async function feedCategories(_ctx: HandlerContext): Promise<Category[]> 
 }
 
 export async function itemGet(ctx: HandlerContext): Promise<Item> {
+  const projectId = resolveProject(String(ctx.args.item))
+  const dper = ctx.options.tickets ? token(ctx) : undefined
+  if (ctx.options.tickets && !dper) throw authError(ctx, '查询场次、票档、余票需要登录')
   const client = new MaoyanClient(ctx)
-  return detailItem(await api.projectDetail(client, resolveProject(String(ctx.args.item))))
+  const detail = await api.projectDetail(client, projectId)
+  if (!dper) return detailItem(detail)
+  return detailItem(detail, await api.showsWithTickets(client, projectId, String(detail.baseProjectVO.cityId ?? 1), dper))
 }
 
 export async function poiSearch(ctx: HandlerContext) {

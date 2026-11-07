@@ -4,19 +4,19 @@
 |---|---|
 | id / 别名 | `maoyan`（无别名） · 端：web |
 | `item` 是 | 演出项目（演唱会、话剧、相声、体育赛事等） |
-| 登录 | **无需登录**（公开只读查询接口，游客态直接可用） |
+| 登录 | 查询**无需登录**；`item get --tickets` 需要登录（`catbus maoyan auth login`，用大众点评 App 扫码） |
 
 ## 能做
 
 - 城市热门演出（在售 / 预售）：`feed list`，用 `--city` 选城市、`--category` 选分类
 - 演出分类：`feed categories`
 - 演出详情：`item get <item>`
+- 场次、票档、实售价、余票：`item get <item> --tickets`（需要登录）
 - 演出城市检索：`poi search <keyword>`
 
 ## 做不到
 
 - 按关键词搜演出：`item search` 规划中（`NOT_IMPLEMENTED`）。要找某个演出，先 `feed list --city <城市>` 再按标题筛。
-- 场次、票档、余票：要 App 登录态，不提供。
 - 下单、抢票、预约：不提供。
 
 ## 参数
@@ -39,5 +39,6 @@ catbus maoyan feed list --city 上海 --category 1        # 上海的演唱会
 catbus maoyan feed categories
 catbus maoyan item get 514992
 catbus maoyan item get 514992 --raw
+catbus maoyan item get 514992 --tickets                  # 需要登录
 catbus maoyan poi search 无锡
 ```

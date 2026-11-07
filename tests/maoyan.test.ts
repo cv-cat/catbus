@@ -4,8 +4,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { fakeResponse, type HeaderPairs, type HttpResponse, mockSender, type PreparedRequest } from '../src/core/http.js'
 import * as rand from '../src/core/rand.js'
 import { resolveCity, resolveProject } from '../src/platforms/maoyan/web/resolve.js'
+import { mockGuard, PCLOGIN_UA } from '../src/platforms/maoyan/web/loginSign.js'
 import { mtgsig, WEBDFPID } from '../src/platforms/maoyan/web/sign.js'
 import { cli, useTempHome } from './helpers.js'
+import { readCredential } from '../src/core/auth-store.js'
 
 const fixture = (name: string) => readFileSync(join(import.meta.dirname, 'fixtures/maoyan', name), 'utf8')
 const NOW = new Date('2026-11-01T12:00:00+08:00').getTime()
@@ -64,7 +66,7 @@ describe('maoyan 平台（web）', () => {
       expect(r.code).toBe(0)
       expect(r.env).toMatchObject({ ok: true, platform: 'maoyan', resource: 'feed', action: 'list', account: 'guest', error: null })
       expect(r.env.page).toEqual({ cursor: null, has_more: false })
-      expect(r.stderr).toBe('')
+      expect(r.stderr).toContain('catbus maoyan auth login')
       expect(calls).toHaveLength(1)
       expect(calls[0]!.url).toBe('https://yanchu.maoyan.com/my/ianvs/movie/hotShows?cityId=2')
       expect(calls[0]!.headers).toEqual([
@@ -206,6 +208,200 @@ describe('maoyan 平台（web）', () => {
     const pois = await cli('maoyan', 'poi', 'search', '无锡')
     expect(pois.env.data).toEqual([{ id: '13', name: '无锡', address: null }])
     expect(calls).toHaveLength(0)
+  })
+
+  describe('登录', () => {
+    const QRUUID = '11111111-2222-3333-4444-555555555555'
+    const qrImage = () =>
+      fakeResponse('jpeg', { headers: [['content-type', 'image/jpeg'], ['set-cookie', `qruuid=${QRUUID}; Path=/; Domain=.dianping.com; Max-Age=604800`]] })
+    const status = (n: number, cookies: string[] = []) =>
+      fakeResponse(`{"code":0,"data":{"status":${n},"description":""}}`, { headers: [['content-type', 'application/json'], ...cookies.map((c): [string, string] => ['set-cookie', c])] })
+    const USER = () => json('{"success":true,"data":{"userId":12345,"nickName":"测试用户"}}')
+    const loginRoutes = (check: (p: PreparedRequest) => HttpResponse) => ({
+      '/mlogin/dp/api/v1/qrlogin/getQrCodeImg': qrImage,
+      '/mlogin/dp/api/v1/qrlogin/check': check,
+      '/api/account/v1/getUserInfoByToken': USER,
+    })
+    // 扫码接口走 pclogin 页的 H5guard 4.3.0：真实实现不好离线测（指纹与时间绑定），换桩
+    const FP = 'H5dfp_4.3.0_tttt_test+/u=='
+    /** h5_fingerprint 的编码值：buildUrl 用 urlencode（quote_plus），+、/、= 都要转义。 */
+    const FP_Q = 'H5dfp_4.3.0_tttt_test%2B%2Fu%3D%3D'
+    const LOGIN_HEADERS = ['User-Agent', 'Content-Type', 'Referer', 'mtgsig']
+    let restoreGuard: (() => void) | undefined
+    let signedUrls: string[] = []
+    const installGuard = (): void => {
+      signedUrls = []
+      restoreGuard = mockGuard(() => ({
+        fingerprint: FP,
+        sign: async (url: string) => {
+          signedUrls.push(url)
+          return '{"a1":"1.2"}'
+        },
+        stop() {},
+      }))
+    }
+
+    afterEach(() => {
+      restoreGuard?.()
+      restoreGuard = undefined
+    })
+
+    it('扫码：二维码内容由 qruuid 拼成，确认后保存 dper，凭证里不留 qruuid', async () => {
+      const seq = [status(200), status(201), status(202, ['dper=fake-dper; Path=/; Domain=.dianping.com'])]
+      const { calls } = mock(loginRoutes(() => seq.shift()!))
+      installGuard()
+      const r = await cli('maoyan', 'auth', 'login')
+      expect(r.code).toBe(0)
+      expect(r.env.data).toMatchObject({ platform: 'maoyan', account: 'default', method: 'qrcode', user: { id: '12345', name: '测试用户' } })
+      expect(r.stderr).toContain('大众点评 App')
+      expect(r.stderr).toContain('已扫码')
+      // 请求照抄 account.dianping.com/pclogin 页：3 个 risk 参数 + 缓存整页的 h5_fingerprint + H5guard 公共参数，顺序一致
+      expect(calls[0]!.url).toBe(
+        `https://accountapi.dianping.com/mlogin/dp/api/v1/qrlogin/getQrCodeImg?risk_app=216&risk_partner=26&risk_platform=2&h5_fingerprint=${FP_Q}&yodaReady=h5&csecplatform=4&csecversion=4.3.0`,
+      )
+      expect(calls[1]!.url).toBe(
+        `https://accountapi.dianping.com/mlogin/dp/api/v1/qrlogin/check?qruuid=${QRUUID}&risk_app=216&risk_partner=26&risk_platform=2&h5_fingerprint=${FP_Q}&yodaReady=h5&csecplatform=4&csecversion=4.3.0`,
+      )
+      // 头部顺序照抄网页的 GET：mtgsig 在最后，没有 Origin；轮询期间每个 check 的 URL 都重新出签
+      expect(calls[0]!.headers.map(([k]) => k)).toEqual(LOGIN_HEADERS)
+      expect(calls[0]!.headers).toContainEqual(['User-Agent', PCLOGIN_UA])
+      expect(signedUrls).toEqual(calls.slice(0, -1).map((c) => c.url))
+      expect(calls.at(-1)!.url).toBe('https://usercenter-inf.maoyan.com/api/account/v1/getUserInfoByToken?token=fake-dper')
+      const saved = await readCredential('maoyan', 'web', 'default')
+      expect(saved!.scopes.main!.cookies.map((c) => c.name)).toEqual(['dper'])
+    })
+
+    it('二维码过期报 AUTH_REQUIRED，有风险报 RISK_CONTROL', async () => {
+      installGuard()
+      mock(loginRoutes(() => json('{"error":{"code":101208,"message":"二维码不存在或过期"}}')))
+      const expired = await cli('maoyan', 'auth', 'login')
+      expect(expired.code).toBe(3)
+      expect(expired.env.error.code).toBe('AUTH_REQUIRED')
+      restoreSender!()
+      mock(loginRoutes(() => json('{"error":{"code":101144,"message":"当前扫码登录存在风险"}}')))
+      const risk = await cli('maoyan', 'auth', 'login')
+      expect(risk.code).toBe(5)
+      expect(risk.env.error).toMatchObject({ code: 'RISK_CONTROL', detail: { kind: 'blocked' } })
+    })
+
+    it('确认后响应里没有 dper 时报 UPSTREAM，不保存凭证', async () => {
+      installGuard()
+      mock(loginRoutes(() => status(202)))
+      const r = await cli('maoyan', 'auth', 'login')
+      expect(r.code).toBe(7)
+      expect(await readCredential('maoyan', 'web', 'default').catch(() => null)).toBeNull()
+    })
+
+    it('cookie 导入要有 dper；令牌无效时不保存', async () => {
+      mock(loginRoutes(() => status(200)))
+      const none = await cli('maoyan', 'auth', 'login', '--method', 'cookie', '--cookie', 'a=b')
+      expect(none.code).toBe(2)
+      const ok = await cli('maoyan', 'auth', 'login', '--method', 'cookie', '--cookie', 'dper=fake-dper')
+      expect(ok.env.data).toMatchObject({ method: 'cookie', user: { id: '12345' } })
+      restoreSender!()
+      mock({ '/api/account/v1/getUserInfoByToken': () => json('{"error":{"code":10010101,"message":"登录令牌无效"},"success":false}') })
+      const bad = await cli('maoyan', 'auth', 'login', '-a', 'other', '--method', 'cookie', '--cookie', 'dper=bad')
+      expect(bad.code).toBe(3)
+      expect(await readCredential('maoyan', 'web', 'other').catch(() => null)).toBeNull()
+    })
+
+    it('auth status：未登录不联网；令牌失效时 logged_in 为 false', async () => {
+      const { calls } = mock({ '/api/account/v1/getUserInfoByToken': USER })
+      const guest = await cli('maoyan', 'auth', 'status')
+      expect(guest.env.data).toEqual({ logged_in: false, user: null, method: null, expires_at: null })
+      expect(calls).toHaveLength(0)
+      await cli('maoyan', 'auth', 'login', '--method', 'cookie', '--cookie', 'dper=fake-dper')
+      const on = await cli('maoyan', 'auth', 'status')
+      expect(on.env.data).toMatchObject({ logged_in: true, method: 'cookie', user: { id: '12345' } })
+      restoreSender!()
+      mock({ '/api/account/v1/getUserInfoByToken': () => json('{"error":{"code":10010101,"message":"登录令牌无效"},"success":false}') })
+      const off = await cli('maoyan', 'auth', 'status')
+      expect(off.code).toBe(0)
+      expect(off.env.data.logged_in).toBe(false)
+    })
+  })
+
+  describe('item get --tickets', () => {
+    const SHOWS = () => json('{"success":true,"data":{"showListVO":[{"showId":11,"showName":"2026-12-12 星期六 19:30"},{"showId":12,"showName":"2026-12-13 星期日 19:30"}]}}')
+    const TICKETS = () =>
+      json(
+        '{"success":true,"data":{"ticketsVO":[{"ticketId":1,"ticketName":"380元","ticketPriceVO":{"sellPrice":342},"remainingStock":12,"showStatus":1,"shouldDisplay":true},' +
+          '{"ticketId":2,"ticketName":"980元","ticketPriceVO":{"sellPrice":980},"remainingStock":0,"showStatus":2,"shouldDisplay":true},' +
+          '{"ticketId":3,"ticketName":"隐藏","shouldDisplay":false}]}}',
+      )
+    const USER = () => json('{"success":true,"data":{"userId":12345,"nickName":"测试用户"}}')
+    const onSale = () => json('{"success":false,"error":{"code":1007,"message":"该项目已经开售了~"}}')
+    const login = () => cli('maoyan', 'auth', 'login', '--method', 'cookie', '--cookie', 'dper=fake-dper')
+
+    it('未登录报 AUTH_REQUIRED，不发请求', async () => {
+      const { calls } = mock()
+      const r = await cli('maoyan', 'item', 'get', '514992', '--tickets')
+      expect(r.code).toBe(3)
+      expect(r.env.error).toMatchObject({ code: 'AUTH_REQUIRED', hint: 'catbus maoyan auth login' })
+      expect(calls).toHaveLength(0)
+    })
+
+    it('已开售：preselect 返回 1007 后走带签名的 shows / tickets，token 在 query，不带 Cookie', async () => {
+      const { calls } = mock({
+        '/api/account/v1/getUserInfoByToken': USER,
+        '/my/odea/project/shows/preselect': onSale,
+        '/my/odea/project/shows': SHOWS,
+        '/my/odea/show/tickets': TICKETS,
+      })
+      await login()
+      const r = await cli('maoyan', 'item', 'get', '514992', '--tickets')
+      expect(r.code).toBe(0)
+      expect(r.env.data.text).toContain('状态：立即预定\n场次：2026-12-12 星期六 19:30\n票档：380元，实售价 342，余票 12\n票档：980元，实售价 980，余票 0，售罄\n场次：2026-12-13 星期日 19:30')
+      expect(r.env.data.text).not.toContain('隐藏')
+      expect(calls.filter((c) => c.path === '/my/odea/show/tickets').map((c) => new URL(c.url).searchParams.get('showId'))).toEqual(['11', '12'])
+
+      const pre = calls.find((c) => c.path === '/my/odea/project/shows/preselect')!
+      expect(pre.url).toBe('https://yanchu.maoyan.com/my/odea/project/shows/preselect?projectId=514992&cityId=2&token=fake-dper&cn_pt=RN')
+
+      const shows = calls.find((c) => c.path === '/my/odea/project/shows')!
+      const uuid = shows.headers.find(([k]) => k === 'uuid')![1]
+      expect(shows.url).toBe(
+        `https://m.dianping.com/my/odea/project/shows?optimus_risk_level=71&optimus_code=10&uuid=${uuid}&clientPlatform=3&sellChannel=1&cityId=2&token=fake-dper&yodaReady=h5&csecplatform=4&csecversion=4.2.4`,
+      )
+      expect(shows.headers.map(([k]) => k)).toEqual(['User-Agent', 'Accept', 'Content-Type', 'Referer', 'Origin', 'uuid', 'mtgsig'])
+      expect(shows.cookies).toEqual([])
+
+      const t = calls.find((c) => c.path === '/my/odea/show/tickets')!
+      const tu = t.headers.find(([k]) => k === 'uuid')![1]
+      expect(t.url).toBe(
+        `https://m.dianping.com/my/odea/show/tickets?showId=11&projectId=514992&clientPlatform=3&supportNewPromotion=true&optimus_risk_level=71&optimus_code=10&uuid=${tu}&sellChannel=1&cityId=2&token=fake-dper&yodaReady=h5&csecplatform=4&csecversion=4.2.4`,
+      )
+    })
+
+    it('未开售：走 preselect，不请求在售接口', async () => {
+      const { calls } = mock({
+        '/api/account/v1/getUserInfoByToken': USER,
+        '/my/odea/project/shows/preselect': SHOWS,
+        '/my/odea/show/tickets/preselect': TICKETS,
+      })
+      await login()
+      const r = await cli('maoyan', 'item', 'get', '514992', '--tickets')
+      expect(r.code).toBe(0)
+      expect(r.env.data.text).toContain('票档：380元')
+      expect(calls.map((c) => c.path)).not.toContain('/my/odea/project/shows')
+    })
+
+    it('--raw 带 shows；token 失效报 AUTH_EXPIRED', async () => {
+      mock({
+        '/api/account/v1/getUserInfoByToken': USER,
+        '/my/odea/project/shows/preselect': onSale,
+        '/my/odea/project/shows': SHOWS,
+        '/my/odea/show/tickets': TICKETS,
+      })
+      await login()
+      const raw = await cli('maoyan', 'item', 'get', '514992', '--tickets', '--raw')
+      expect(raw.env.data.shows[0].tickets[0].remainingStock).toBe(12)
+      restoreSender!()
+      mock({ '/my/odea/project/shows/preselect': () => json('{"success":false,"error":{"code":403,"message":"请先登录！"}}') })
+      const expired = await cli('maoyan', 'item', 'get', '514992', '--tickets')
+      expect(expired.code).toBe(3)
+      expect(expired.env.error.code).toBe('AUTH_EXPIRED')
+    })
   })
 
   it('item search 是规划中的命令', async () => {

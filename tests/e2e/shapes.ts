@@ -51,6 +51,11 @@ const Torrent = Item.extend({
   seeders: nint, leechers: nint, completed: nint, discount: nstr,
 })
 
+const BonusRecord = z.strictObject({
+  id: str, time: ntime, type: nstr, before: z.number().nullable(), after: z.number().nullable(), change: z.number().nullable(),
+  user: UserRef.nullable(), note: nstr, url: nstr,
+})
+
 const Comment = z.strictObject({
   id: str,
   item_id: str,
@@ -215,7 +220,7 @@ const Transfer = z.strictObject({
 export const SHAPES: Record<string, z.ZodType> = {
   User, Item, Comment, Folder, Series: Folder, Category, Keyword, Topic, Poi, Live, Event, Gift, Rank,
   Conversation, Message, Notice, NoticeCount, Media, AuthStatus, Account, Subtitle, Danmaku, Order, Coupon,
-  Station, Ticket, Stop, Fare, Transfer, Torrent,
+  Station, Ticket, Stop, Fare, Transfer, Torrent, BonusRecord,
 }
 
 /** 按注册表的 output（如 `Item[]`、`{count}`）取校验器；内联结构只校验是对象。 */

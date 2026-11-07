@@ -2,6 +2,11 @@ official: https://yanchu.maoyan.com、https://m.dianping.com
 endpoints:
   hotShows: https://yanchu.maoyan.com/my/ianvs/movie/hotShows（免登录、免签名；不能带 sellChannel）
   detail: https://m.dianping.com/my/odea/project/detail（免登录，要 mtgsig）
+qrlogin: https://accountapi.dianping.com/mlogin/dp/api/v1/qrlogin/getQrCodeImg、/check（请求照抄 account.dianping.com/pclogin 页：risk 三参数 + h5_fingerprint + yodaReady=h5 + csecplatform=4 + csecversion=4.3.0，带 mtgsig 头；qruuid 在 Set-Cookie 里，二维码内容为 https://m.dianping.com/mlogin/qrcodeconfirm?qruuid=<qruuid>）
+user: https://usercenter-inf.maoyan.com/api/account/v1/getUserInfoByToken
+shows: POST https://m.dianping.com/my/odea/project/shows、GET /my/odea/show/tickets（在售，token=dper，要 mtgsig）
+preselect: https://yanchu.maoyan.com/my/odea/project/shows/preselect、/my/odea/show/tickets/preselect（未开售，token=dper；已开售返回业务码 1007）
 sign: H5guard 1.2.0（static/maoyan/H5guard.js、package-1.2.0.js，horn 配置离线），环境补丁 static/maoyan/env.js、env_core.js
+sign-pclogin: H5guard 4.3.0（static/maoyan/H5guard-pclogin.js），来源 account.dianping.com/pclogin 页加载的 https://appsec-mobile.meituan.com/h5guard/H5guard.js，原样复制；在 jsdom 里 H5guard.init({}) 后用 getfp() / sign()（2026-11-02 真机页面核对）
 cities: static/maoyan/cities.json，演出 cityId 与城市名的对照（2026-11-01 核对）
-note: 无上游开源仓库，直接对接猫眼演出的公开只读接口
+note: 无上游开源仓库，直接对接猫眼演出的只读接口

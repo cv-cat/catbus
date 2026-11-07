@@ -5,9 +5,9 @@
 <br>
 
 **ひとつのコマンドで、12 のプラットフォームへ。**<br>
-小紅書（RED） · 抖音 · TikTok · ビリビリ · 快手 · 微博 · 閑魚 · タオバオ · 京東 · X · 12306 · 猫眼演出（Maoyan）
+小紅書（RED） · 抖音 · TikTok · ビリビリ · 快手 · 微博 · 閑魚 · タオバオ · 京東 · X · YouTube · 12306 · 猫眼演出（Maoyan）
 <br>
-<sub>まもなく対応：Instagram · YouTube · Facebook · 知乎 · WeChat 公式アカウント · 今日頭条 · 得物 · 拼多多 · 美団 · 大衆点評</sub>
+<sub>まもなく対応：Instagram · Facebook · 知乎 · WeChat 公式アカウント · 今日頭条 · 得物 · 拼多多 · 美団 · 大衆点評</sub>
 
 <br>
 

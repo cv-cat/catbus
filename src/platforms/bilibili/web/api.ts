@@ -456,6 +456,19 @@ export function deleteReply(b: Bili, oid: string, rpid: string, type = 1) {
   return b.post(`${API}/x/v2/reply/del`, { headers: h.get(), form })
 }
 
+/** 置顶 / 取消置顶一级评论（`x/v2/reply/top`）。只能在自己管理的评论区里操作，且只能置顶一级评论。 */
+export function pinReply(b: Bili, oid: string, rpid: string, on: boolean, type = 1) {
+  const h = headers('FORM').referer(`${MAIN}/`)
+  const form: Pairs = [
+    ['type', type],
+    ['oid', oid],
+    ['rpid', rpid],
+    ['action', on ? 1 : 0],
+    ['csrf', b.csrf],
+  ]
+  return b.post(`${API}/x/v2/reply/top`, { headers: h.get(), form })
+}
+
 /** 弹幕的 rnd：会话内自增序号（上游 itertools.count(1)），每条命令从 1 开始。 */
 let dmSeq = 0
 
@@ -542,23 +555,33 @@ export interface ArchiveInput {
   title: string
   tid: number
   tag: string
+  /** 播放页封面（16:9）。 */
   cover?: string
+  /** 稿件列表页封面（4:3），B 站双封面里的另一张；不传则沿用平台原有那张。 */
+  cover43?: string
   desc?: string
   /** 1 自制、2 转载。 */
   copyright?: number
   /** 转载来源，copyright 为 2 时必填。 */
   source?: string
   private?: boolean
+  /** 0 公开、1 仅自己可见；编辑时用原稿的值，避免把私密稿改公开。 */
+  onlySelf?: number
   /** 同步到动态的文案。 */
   dynamic?: string
+  /** 定时发布的时间戳（unix 秒）；B 站要求 2 小时后、15 天内。 */
+  dtime?: number
   /** 1 禁止转载。 */
   noReprint?: number
 }
 
-/** 稿件详情：优先返回审核中的 arc_audits，其次返回已发布 archives。 */
-export function archiveDetail(b: Bili, aid: number) {
-  const h = headers('GET', { origin: ORIGIN.member, sameOrigin: true })
-  return b.get(`${MEMBER}/x/web/archives`, { headers: h.get(), query: [['aid', aid]] })
+/**
+ * 编辑页的稿件数据（创作中心「编辑稿件」页首屏）：`archive` 带 title / tid / tag / desc / cover / cover43，
+ * `videos` 带每个分 P 的 filename 与 cid —— `x/vu/web/edit` 要求 filename 来自上传记录，只改资料也绕不开它。
+ */
+export function archiveView(b: Bili, aid: number) {
+  const h = headers('GET', { origin: ORIGIN.member, sameOrigin: true }).referer(UPLOAD_PAGE)
+  return b.get(`${MEMBER}/x/vupre/web/archive/view`, { headers: h.get(), query: [['topic_grey', 1], ['aid', aid]] })
 }
 
 /** 编辑已投稿件（含更换视频）。videos 里的 cid 是上传返回的 biz_id。 */
@@ -569,6 +592,7 @@ export function editArchive(b: Bili, a: ArchiveInput & { aid: number }) {
     copyright: a.copyright ?? 1,
     source: a.source ?? '',
     cover: a.cover ?? '',
+    ...(a.cover43 ? { cover43: a.cover43 } : {}),
     title: a.title,
     tid: a.tid,
     tag: a.tag,
@@ -580,7 +604,9 @@ export function editArchive(b: Bili, a: ArchiveInput & { aid: number }) {
     act_reserve_create: 0,
     no_reprint: a.noReprint ?? 1,
     subtitle: { open: 0, lan: '' },
+    ...(a.dtime !== undefined ? { dtime: a.dtime } : {}),
     videos: a.videos.map((v) => ({ filename: v.filename, title: v.title || a.title, desc: v.desc ?? '', cid: v.biz_id ?? null })),
+    is_only_self: a.onlySelf ?? 0,
     web_os: 1,
     csrf: b.csrf,
   }
@@ -600,6 +626,7 @@ export function submitArchive(b: Bili, a: ArchiveInput) {
     copyright: a.copyright ?? 1,
     source: a.source ?? '',
     cover: a.cover ?? '',
+    ...(a.cover43 ? { cover43: a.cover43 } : {}),
     title: a.title,
     tid: a.tid,
     tag: a.tag,
@@ -610,6 +637,7 @@ export function submitArchive(b: Bili, a: ArchiveInput) {
     interactive: 0,
     no_reprint: a.noReprint ?? 1,
     subtitle: { open: 0, lan: '' },
+    ...(a.dtime !== undefined ? { dtime: a.dtime } : {}),
     videos: a.videos.map((v) => ({ filename: v.filename, title: v.title || a.title, desc: v.desc ?? '', cid: v.biz_id ?? null })),
     human_type2: 0,
     topic_id: 0,
