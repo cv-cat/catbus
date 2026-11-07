@@ -7,7 +7,6 @@
 
 <div align="center">
 
-[![npm](https://img.shields.io/npm/v/catbus-cli?style=flat-square&logo=npm&logoColor=white&color=232838)](https://www.npmjs.com/package/catbus-cli)
 [![GitHub stars](https://img.shields.io/github/stars/cv-cat/catbus?style=flat-square&logo=github&color=232838)](https://github.com/cv-cat/catbus/stargazers)
 [![License: MIT](https://img.shields.io/badge/license-MIT-232838?style=flat-square)](LICENSE)
 [![Node](https://img.shields.io/badge/node-22%20%7C%2024%20%7C%2026-232838?style=flat-square&logo=nodedotjs&logoColor=white)](package.json)
