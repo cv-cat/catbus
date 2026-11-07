@@ -26,3 +26,9 @@ docs/roadmap.md
 
 # docker compose 的下载目录
 downloads/
+
+# gen:assets 下载的字体
+.cache/
+
+# vitest 的缓存
+.vitest/

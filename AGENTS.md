@@ -33,7 +33,7 @@
 | 许可证 | MIT（主包、assets-jd、assets-ocr 相同） |
 | 数据目录 | `~/.catbus/`，可用 `CATBUS_HOME` 覆盖 |
 | 环境变量前缀 | `CATBUS_` |
-| Logo | `assets/logo.svg`（图标）、`assets/logo-wordmark.svg`（横版）、`assets/banner.txt`（终端字符画）。猫巴士：车身就是一只橘猫，车头是猫脸和耳朵，车尾是尾巴，轮毂是肉垫；车顶路牌是终端提示符 `>_`；车窗里坐着小红书红、B 站粉、抖音青三只小猫乘客。会颠簸、转轮子、摇尾巴、眨眼、抖耳朵；字符画沿用 `( >ω_ )`。配色取自 Catppuccin Mocha |
+| Logo | 吉祥物是一位 Q 版的巴士车掌小姐（原创角色）：深藏青色短卷发、一侧小辫系红发带、琥珀色大眼睛，戴红色帽带和金色巴士徽章的车掌帽，藏青双排扣制服、红领结、白手套、棕色挎包，举着一张印着 `>_` 的车票，挎包里有时探出一只小黑猫；白边贴纸风格。图由图像模型生成，角色描述、画风和每张图的用途见 `scripts/assets/mascot.md`，新图沿用同一段角色描述。`assets/logo.png`（透明底）是主图，`assets/stickers/` 是 README 里的其他姿势，`assets/banner.txt` 是终端字符画（沿用 `( >ω_ )`）。配色取自吉祥物：藏青 `#232838`、红 `#E8414F`，不用橙色和紫色。README 里的图（`hero-<语言>-<主题>`、`platforms-<主题>`）和 `social-preview.png` 都由 `scripts/gen-assets.mjs` 生成（`npm run gen:assets`），不手改：首屏左边是字标 `catbus`、标题、副标题和安装命令 `npm i -g catbus-cli`，右边是吉祥物；字体都是 OFL（Nunito、Geist Mono、Noto Sans 的简中、日文、韩文），第一次运行时下载到 `.cache/fonts/`，图里的字全部转成轮廓，随语言变化的文案每种语言出一张图；平台图一律用各平台真实的图标（`scripts/assets/logos/`，来源见其中的 `SOURCES.txt`），在路上的平台同样是原色，只在右上角挂 `soon` 标签；图上的平台列表与注册表对账，不一致时生成脚本报错 |
 
 ## 2. 范围
 
@@ -1016,11 +1016,11 @@ export default definePlatform({
 ```
 All-In-One/
 ├── AGENTS.md  CLAUDE.md→AGENTS.md
-├── README.md（另有 en、zh-TW、ja、ko 译本）  CHANGELOG.md  llms.txt
+├── README.md（英文，默认；另有 zh-CN、ja、ko 译本）  CHANGELOG.md  llms.txt
 ├── package.json  tsconfig.json  tsconfig.build.json   # npm 主包 catbus-cli
 ├── Dockerfile  compose.yaml  Makefile  .dockerignore
 ├── .github/                        # 仓库治理：CONTRIBUTING、TESTING、SECURITY、PRIVACY、CODE_OF_CONDUCT
-├── assets/                         # logo、banner、README 用的图
+├── assets/                         # logo、banner、README 用的图（由 scripts/gen-assets.mjs 生成）
 ├── docs/
 │   ├── guide/  platforms/          # 用户指南、各平台说明
 │   ├── examples/                   # 组合 catbus 的示例脚本
@@ -1044,7 +1044,7 @@ All-In-One/
 └── tests/                          # vitest；golden/<p>/ 放对拍数据
 ```
 
-`.gitignore`：`references/`、`node_modules/`、`dist/`、`packages/assets-jd/`、`packages/assets-ocr/` 下的模型文件，以及内部文档 `docs/trouble.md`、`docs/roadmap.md`。
+`.gitignore`：`references/`、`node_modules/`、`dist/`、`packages/assets-jd/`、`packages/assets-ocr/` 下的模型文件，`gen:assets` 下载的字体 `.cache/`，以及内部文档 `docs/trouble.md`、`docs/roadmap.md`。
 
 ### 7.8 provider 协议（规划中）
 

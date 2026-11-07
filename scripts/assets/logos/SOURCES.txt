@@ -1,0 +1,44 @@
+# 平台图标的来源。名称、图标和商标归各自所有者所有，这里只用来标明 catbus 支持或计划支持哪些平台。
+# Simple Icons: https://simpleicons.org (CC0)
+12306	App Store
+xhs	App Store
+douyin	App Store
+tiktok	App Store
+bilibili	Simple Icons
+kuaishou	App Store
+weibo	App Store
+x	App Store
+youtube	App Store
+xianyu	goofish.com
+taobao	Simple Icons
+jd	jd.com
+maoyan	App Store
+jimeng	jimeng.jianying.com
+mteam	m-team.cc
+instagram	App Store
+facebook	App Store
+reddit	App Store
+telegram	App Store
+discord	App Store
+whatsapp	App Store
+linkedin	App Store
+amazon	App Store
+zhihu	App Store
+wechat	App Store
+toutiao	App Store
+hongguo	App Store
+feishu	App Store
+v2ex	Simple Icons
+meituan	App Store
+dianping	App Store
+trip	App Store
+pinduoduo	pinduoduo.com
+poizon	dewu.com
+zhuanzhuan	zhuanzhuan.com
+boss	App Store
+maimai	App Store
+nowcoder	nowcoder.com
+tonghuashun	App Store
+ziroom	App Store
+anjuke	anjuke.com
+beike	App Store
