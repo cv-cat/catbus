@@ -7,10 +7,9 @@
 
 <div align="center">
 
-[![npm](https://img.shields.io/npm/v/catbus-cli?style=flat-square&logo=npm&logoColor=white&color=232838)](https://www.npmjs.com/package/catbus-cli)
-[![GitHub stars](https://img.shields.io/github/stars/cv-cat/catbus?style=flat-square&logo=github&color=232838)](https://github.com/cv-cat/catbus/stargazers)
-[![License: MIT](https://img.shields.io/badge/license-MIT-232838?style=flat-square)](LICENSE)
-[![Node](https://img.shields.io/badge/node-22%20%7C%2024%20%7C%2026-232838?style=flat-square&logo=nodedotjs&logoColor=white)](package.json)
+[![GitHub stars](https://img.shields.io/github/stars/cv-cat/catbus?style=flat-square&logo=github&labelColor=232838&color=F0B429)](https://github.com/cv-cat/catbus/stargazers)
+[![License: MIT](https://img.shields.io/badge/license-MIT-2EA44F?style=flat-square&labelColor=232838)](LICENSE)
+[![Node](https://img.shields.io/badge/node-22%20%7C%2024%20%7C%2026-5FA04E?style=flat-square&logo=nodedotjs&logoColor=8CC84B&labelColor=232838)](package.json)
 
 **English** · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md)
 
