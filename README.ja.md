@@ -83,7 +83,7 @@ catbus 12306 ticket search beijing shanghai           # 列車の空席を検索
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/platforms-dark.svg">
-  <img src="assets/platforms-light.svg" alt="乗車済み 15 プラットフォーム、soon の 27 は準備中" width="100%">
+  <img src="assets/platforms-light.svg" alt="乗車済み 16 プラットフォーム、soon の 26 は準備中" width="100%">
 </picture>
 
 `soon` が付いているものは準備中です。目標はすべてのプラットフォーム。足りなければ [issue を立てる](https://github.com/cv-cat/catbus/issues)か、[自分で追加](.github/CONTRIBUTING.md)してください。1 プラットフォームは 1 ディレクトリです。各プラットフォームの対応状況は[機能一覧](docs/capabilities.md)にあります。

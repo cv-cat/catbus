@@ -24,8 +24,9 @@ catbus <platform> auth login [-a <账号名>] [--method qrcode|sms|password|cook
 | x |  |  |  | ✓ |  | cookie |
 | jimeng |  |  |  |  | ✓ | oauth |
 | maoyan | ✓ |  |  | ✓ |  | qrcode |
+| [discord](../platforms/discord.md) | ✓ |  | ✓ |  |  | qrcode |
 
-表格来自注册表，以 `catbus <platform> auth login --help` 为准。不支持的方式报 `UNSUPPORTED`，`hint` 列出可选的方式。
+Discord 还支持从文件或 stdin 导入已有 Authorization 凭证，以及在浏览器完成 hCaptcha 和 WebAuthn，见 [Discord 登录](../platforms/discord.md)。表格来自注册表，以 `catbus <platform> auth login --help` 为准。不支持的方式报 `UNSUPPORTED`，`hint` 列出可选的方式。
 
 ## 扫码
 
@@ -144,7 +145,7 @@ pbpaste | catbus x auth login --cookie -       # 从 stdin 读（macOS 剪贴板
   "ticket": "...",
   "ts_sign": "...",
   "client_cert": "...",
-  "private_key": "-----BEGIN PRIVATE KEY-----\n...",
+  "private_key": "<配套的 PEM 私钥内容，此处省略>",
   "dtrait_blob": "..."
 }
 ```
@@ -175,7 +176,7 @@ TikTok 只能导入 cookie。只导入 Cookie 字符串时，缺的设备数据�
   "local_storage": { "...": "..." },
   "session_storage": { "...": "..." },
   "browser_metrics": { "...": "..." },
-  "ticket_guard_private_key": "-----BEGIN PRIVATE KEY-----\n...",
+  "ticket_guard_private_key": "<配套的 PEM 私钥内容，此处省略>",
   "ticket_guard_encrypt_ticket": "...",
   "ticket_guard_ts_sign": "...",
   "ticket_guard_version": "...",

@@ -1,4 +1,4 @@
-import { readdir, rm } from 'node:fs/promises'
+import { lstat, readdir, rename, rm } from 'node:fs/promises'
 import { CatbusError } from './errors.js'
 import { isoNow, readTextIfExists, writeFileAtomic } from './fsutil.js'
 import { authDir } from './paths.js'
@@ -29,6 +29,24 @@ function credentialFile(platform: string, endpoint: Endpoint, account: string): 
   return authDir(platform, endpoint, `${account}.json`)
 }
 
+/** 早期 Discord 的 web 凭证实际使用桌面协议。原子移动整个端目录，连同当前账号指针。 */
+export async function migrateDiscordDesktopAuth(): Promise<void> {
+  const source = authDir('discord', 'web')
+  const destination = authDir('discord', 'pc')
+  const absent = (error: unknown) => (error as NodeJS.ErrnoException).code === 'ENOENT'
+  const exists = (path: string) => lstat(path).catch((error: unknown) => {
+    if (absent(error)) return null
+    throw error
+  })
+  if (!(await exists(source))?.isDirectory() || await exists(destination)) return
+  try {
+    await rename(source, destination)
+  } catch (error) {
+    // Another Catbus process may have finished migration or created a PC credential.
+    if (!absent(error) && !(await exists(destination))) throw error
+  }
+}
+
 export async function readCredential(platform: string, endpoint: Endpoint, account: string): Promise<Credential | null> {
   const file = credentialFile(platform, endpoint, account)
   const text = await readTextIfExists(file)
@@ -44,7 +62,11 @@ export async function readCredential(platform: string, endpoint: Endpoint, accou
       hint: account === GUEST ? `删除该文件后重试` : `catbus ${platform} auth logout -a ${account}${endpointFlag(endpoint)}`,
     })
   }
-  return parsed.data
+  const credential = parsed.data
+  if (platform === 'discord' && endpoint === 'pc' && credential.platform === platform && credential.endpoint === 'web' && credential.account === account) {
+    credential.endpoint = 'pc'
+  }
+  return credential
 }
 
 export async function writeCredential(credential: Credential): Promise<void> {

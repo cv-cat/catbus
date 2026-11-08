@@ -117,12 +117,12 @@ export function makeCtx(init: CtxInit): HandlerContext {
   const account = init.account === undefined ? 'default' : init.account
   const credential =
     init.credential ??
-    newCredential({ platform: platform.id, endpoint: 'web', account: account ?? 'guest', method: account === 'guest' ? 'guest' : 'cookie' })
+    newCredential({ platform: platform.id, endpoint: platform.defaultEndpoint, account: account ?? 'guest', method: account === 'guest' ? 'guest' : 'cookie' })
   if (init.cookies) credential.scopes.main!.cookies = parseCookieInput(init.cookies, init.cookieDomain ?? '')
   Object.assign(credential.extra, init.extra)
   return {
     platform,
-    endpoint: 'web',
+    endpoint: platform.defaultEndpoint,
     resource: '',
     action: '',
     args: init.args ?? {},

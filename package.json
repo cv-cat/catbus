@@ -1,7 +1,7 @@
 {
   "name": "catbus-cli",
   "version": "0.3.0",
-  "description": "catbus（猫巴士）：上车，开往任何平台。一个命令操作小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X、YouTube、12306、猫眼演出。",
+  "description": "catbus（猫巴士）：上车，开往任何平台。一个命令操作小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X、YouTube、12306、猫眼演出、Discord。",
   "keywords": [
     "cli",
     "xiaohongshu",
@@ -17,7 +17,8 @@
     "youtube",
     "12306",
     "maoyan",
-    "jimeng"
+    "jimeng",
+    "discord"
   ],
   "author": "cv-cat",
   "license": "MIT",
@@ -46,8 +47,8 @@
     "packages/assets-ocr"
   ],
   "scripts": {
-    "build": "node scripts/clean.mjs && tsc -p tsconfig.build.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "node scripts/clean.mjs && tsc -p tsconfig.build.json && tsc -p tsconfig.ui.json && node scripts/copy-ui.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.ui.json --noEmit",
     "test": "vitest run",
     "test:e2e": "vitest run -c tests/e2e/vitest.config.ts",
     "gen:capabilities": "npm run build && node scripts/gen-capabilities.mjs",

@@ -83,7 +83,7 @@ catbus 12306 ticket search beijing shanghai           # 기차표 검색
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/platforms-dark.svg">
-  <img src="assets/platforms-light.svg" alt="탑승 완료 15개 플랫폼, soon 표시 27개는 오는 중" width="100%">
+  <img src="assets/platforms-light.svg" alt="탑승 완료 16개 플랫폼, soon 표시 26개는 오는 중" width="100%">
 </picture>
 
 `soon` 표시가 있는 것은 오는 중입니다. 목표는 모든 플랫폼입니다. 찾는 플랫폼이 없다면 [issue를 열거나](https://github.com/cv-cat/catbus/issues) [직접 추가](.github/CONTRIBUTING.md)하세요. 플랫폼 하나는 디렉터리 하나입니다. 플랫폼별 지원 범위는 [기능 표](docs/capabilities.md)에서 볼 수 있습니다.

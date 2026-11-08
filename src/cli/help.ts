@@ -29,7 +29,7 @@ function table(rows: string[][], indent = '  '): string {
 
 const GLOBAL_OPTIONS = [
   ['-a, --account <name>', '使用哪个账号'],
-  ['-e, --endpoint <端>', 'web | app | pc，默认 web'],
+  ['-e, --endpoint <端>', 'web | app | pc，省略时用平台的默认端'],
   ['-o, --output <格式>', 'json | jsonl，默认 json'],
   ['    --raw', '用平台原始对象代替归一化对象'],
   ['    --proxy <url>', '本次调用使用的代理'],
@@ -60,6 +60,7 @@ export function rootHelp(): string {
       ['auth list', '所有平台、所有端的账号'],
       ['config get|set|unset|list', '读写配置（~/.catbus/config.toml）'],
       ['version', '版本、Node 版本、系统与架构'],
+      ['ui', '本机 Web 面板：在浏览器里使用全部能力'],
     ]),
     '',
     '全局选项:',
@@ -76,7 +77,10 @@ export function rootHelp(): string {
 }
 
 function endpointsLine(platform: Platform): string {
-  return ENDPOINTS.map((e) => (platform.endpoints[e] === 'planned' ? `${e} ○ planned` : `${e} ✓`)).join(' · ')
+  return ENDPOINTS.map((e) => {
+    const ep = platform.endpoints[e]
+    return ep === 'planned' ? `${e} ○ planned` : `${e}${ep.label ? `（${ep.label}）` : ''} ✓${e !== 'web' && e === platform.defaultEndpoint ? ' 默认' : ''}`
+  }).join(' · ')
 }
 
 function title(platform: Platform): string {
@@ -84,13 +88,13 @@ function title(platform: Platform): string {
   return `${platform.name} (${platform.id})${aliases}`
 }
 
-/** 请求的端还是 planned 时，列出 web 端的命令作参考。 */
+/** 请求的端还是 planned 时，列出平台默认端的命令作参考。 */
 function listedEndpoint(platform: Platform, endpoint: Endpoint): { ep: AvailableEndpoint; notice: string | null } {
   const ep = platform.endpoints[endpoint]
   if (ep !== 'planned') return { ep, notice: null }
   return {
-    ep: platform.endpoints.web as AvailableEndpoint,
-    notice: `${endpoint} 端尚未实现，所有命令都返回 NOT_IMPLEMENTED。下面是 web 端的命令。`,
+    ep: platform.endpoints[platform.defaultEndpoint] as AvailableEndpoint,
+    notice: `${endpoint} 端尚未实现，所有命令都返回 NOT_IMPLEMENTED。下面是 ${platform.defaultEndpoint} 端的命令。`,
   }
 }
 
@@ -145,7 +149,7 @@ function optionUsage(key: string, command: Command): string {
 
 export function commandHelp(platform: Platform, endpoint: Endpoint, command: Command): string {
   const p = platform.id
-  const e = endpoint === 'web' ? '' : ` -e ${endpoint}`
+  const e = endpoint === platform.defaultEndpoint ? '' : ` -e ${endpoint}`
   const argUsage = command.args.map((a) => (a.optional ? `[${a.name}]` : `<${a.name}>`))
   const optionKeys = Object.keys(command.options)
   const requiredOptions = optionKeys.filter((k) => describeOption(command.options[k]!).required)
@@ -153,7 +157,7 @@ export function commandHelp(platform: Platform, endpoint: Endpoint, command: Com
     const ep = platform.endpoints[name]
     if (ep === 'planned') return `${name} ○ planned`
     const c = ep.commands.get(command.key)
-    return !c ? `${name} —` : c.status === 'planned' ? `${name} ○ planned` : `${name} ✓`
+    return !c ? `${name} —` : c.status === 'planned' ? `${name} ○ planned` : `${name}${ep.label ? `（${ep.label}）` : ''} ✓${name !== 'web' && name === platform.defaultEndpoint ? ' 默认' : ''}`
   })
   const confirm = command.confirm === true ? '危险操作，执行前需要确认；-y 跳过' : command.confirm ? '部分情况需要确认（见选项）；-y 跳过' : null
 
@@ -229,9 +233,17 @@ export const GLOBAL_HELP: Record<string, string> = {
       ['timeout', '单次请求超时（秒），默认 30'],
       ['<platform>.proxy', '平台代理，例如 xhs.proxy'],
       ['youtube.browser', 'YouTube 发布与删除用的本地 Chromium 可执行文件（绝对路径），见 AGENTS 5.7'],
+      ['discord.browser', 'Discord WebAuthn 用的本地 Chromium 可执行文件（绝对路径），见 AGENTS 5.8'],
     ]),
     '',
     '代理的优先级：--proxy > <platform>.proxy > proxy。不读取 HTTP(S)_PROXY 环境变量。',
   ].join('\n'),
   version: ['用法: catbus version（或 catbus --version）', '', '输出 catbus 版本、Node 版本、系统与架构。'].join('\n'),
+  ui: [
+    '用法: catbus ui',
+    '',
+    '在 127.0.0.1 上启动本机 Web 面板并打开浏览器：按平台和命令填表执行，结果排版展示，',
+    '账号、登录、设置都在页面上完成。每次执行都在后台运行一条等价的 catbus 命令。',
+    '地址打到 stderr，stdout 输出 {url}；Ctrl-C 退出。',
+  ].join('\n'),
 }

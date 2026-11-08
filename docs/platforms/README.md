@@ -19,6 +19,7 @@
 | [即梦](jimeng.md) | `jimeng` | `dreamina` | 作品 | **浏览器授权**（只管 `dreamina` 的登录态，仅 macOS） | 5（5 · 0） | 0 | 无（即梦官方 CLI `dreamina`） |
 | [猫眼演出](maoyan.md) | `maoyan` | — | 演出项目 | **免登录** | 7（6 · 1） | 1 | 无（官方公开接口） |
 | [M-Team](mteam.md) | `mteam` | `mt` `m-team` `mantou` | 种子资源 | **API Key** | 11（10 · 1） | 0 | 无（官方 API） |
+| [Discord](discord.md) | `discord` | — | 消息 | **扫码** · 账密 · 凭证导入 | 38（37 · 1） | 0 | 本地 `discord-cli` |
 
 - 数字是 web 端注册表里的命令数，包含 `auth` 命令和平台扩展命令；平台没有这个概念的命令（矩阵里的 —）不计入。app / pc 端目前全部是规划中。
 - ✓ 上游已有；◐ 上游部分支持，限制写在各篇的说明里；○ 规划中，执行时返回 `NOT_IMPLEMENTED`（退出码 4）。

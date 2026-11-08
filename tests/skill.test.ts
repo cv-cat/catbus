@@ -9,14 +9,18 @@ import { PLATFORMS } from '../src/platforms/index.js'
 // 这里对照注册表，防止注册表改了而技能没跟上。
 const SKILL = resolve(dirname(fileURLToPath(import.meta.url)), '../.claude/skills/catbus')
 const read = (rel: string) => readFileSync(join(SKILL, rel), 'utf8').replace(/\r\n/g, '\n')
+const skill = read('SKILL.md')
+// 技能文档单独维护：检查已收录的平台，新增 CLI 平台不要求同时发布 Agent 指令。
+const documentedIds = [...skill.matchAll(/^\|[^\n]*?\| `([a-z0-9]+)` \|/gm)].map((m) => m[1]!)
+const documentedPlatforms = PLATFORMS.filter((p) => documentedIds.includes(p.id))
 
 const RESOURCES = new Set(
-  PLATFORMS.flatMap((p) => [...web(p).commands.values()].map((c) => c.resource)),
+  PLATFORMS.flatMap((p) => [...primary(p).commands.values()].map((c) => c.resource)),
 )
 
-function web(p: Platform) {
-  const ep = p.endpoints.web
-  if (ep === 'planned') throw new Error(`${p.id} 的 web 端是 planned`)
+function primary(p: Platform) {
+  const ep = p.endpoints[p.defaultEndpoint]
+  if (ep === 'planned') throw new Error(`${p.id} 的默认端是 planned`)
   return ep
 }
 
@@ -47,10 +51,10 @@ function section(md: string, title: string): string {
 }
 
 describe('Agent 技能 .claude/skills/catbus', () => {
-  const skill = read('SKILL.md')
-
-  it('SKILL.md 的平台表列出了每个平台的 id、别名和平台文件', () => {
-    for (const p of PLATFORMS) {
+  it('SKILL.md 收录的平台均已注册，并列出正确的别名和平台文件', () => {
+    expect(documentedIds.length).toBeGreaterThan(0)
+    expect(documentedPlatforms.map((p) => p.id).sort()).toEqual([...documentedIds].sort())
+    for (const p of documentedPlatforms) {
       const row = skill.split('\n').find((l) => l.startsWith('| ') && l.includes(`| \`${p.id}\` |`))
       expect(row, p.id).toBeDefined()
       for (const alias of p.aliases) expect(row, `${p.id} 的别名 ${alias}`).toContain(`\`${alias}\``)
@@ -58,21 +62,21 @@ describe('Agent 技能 .claude/skills/catbus', () => {
     }
   })
 
-  it('description 提到了每个平台', () => {
+  it('description 提到了已收录的每个平台', () => {
     const description = skill.match(/^description: (.+)$/m)?.[1] ?? ''
-    for (const p of PLATFORMS) expect(description, p.id).toContain(p.name)
+    for (const p of documentedPlatforms) expect(description, p.id).toContain(p.name)
   })
 
-  it('平台文件与注册表一一对应', () => {
+  it('平台文件与技能目录一一对应', () => {
     const files = readdirSync(join(SKILL, 'platforms')).map((f) => f.replace(/\.md$/, ''))
-    expect(files.sort()).toEqual(PLATFORMS.map((p) => p.id).sort())
+    expect(files.sort()).toEqual([...documentedIds].sort())
   })
 
-  for (const p of PLATFORMS) {
+  for (const p of documentedPlatforms) {
     it(`platforms/${p.id}.md：「能做」恰好是已实现的命令，「做不到」里没有已实现的`, () => {
       const md = read(`platforms/${p.id}.md`)
       const implemented = new Set(
-        [...web(p).commands.values()]
+        [...primary(p).commands.values()]
           .filter((c) => c.status === 'implemented' && c.resource !== 'auth')
           .map((c) => `${c.resource} ${c.action}`),
       )

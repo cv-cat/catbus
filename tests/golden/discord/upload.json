@@ -1,0 +1,328 @@
+{
+  "input": {
+    "os": "Mac OS X",
+    "arch": "arm64",
+    "release": "25.0.0",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "launchId": "0123456789abcdef0123456789abcdef"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://discord.com/api/v9/channels/2002/attachments",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"macOS\""
+        ],
+        [
+          "x-debug-options",
+          "bugReporterEnabled"
+        ],
+        [
+          "accept-language",
+          "en-US"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not(A:Brand\";v=\"8\", \"Chromium\";v=\"148\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "x-discord-timezone",
+          "UTC"
+        ],
+        [
+          "x-super-properties",
+          "eyJvcyI6Ik1hYyBPUyBYIiwiYnJvd3NlciI6IkRpc2NvcmQgQ2xpZW50IiwicmVsZWFzZV9jaGFubmVsIjoic3RhYmxlIiwiY2xpZW50X3ZlcnNpb24iOiIwLjAuNDE5Iiwib3NfdmVyc2lvbiI6IjI1LjAuMCIsIm9zX2FyY2giOiJhcm02NCIsImFwcF9hcmNoIjoiYXJtNjQiLCJzeXN0ZW1fbG9jYWxlIjoiZW4tVVMiLCJoYXNfY2xpZW50X21vZHMiOmZhbHNlLCJjbGllbnRfbGF1bmNoX2lkIjoiMDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWYiLCJicm93c2VyX3VzZXJfYWdlbnQiOiJNb3ppbGxhLzUuMCAoTWFjaW50b3NoOyBJbnRlbCBNYWMgT1MgWCAxMF8xNV83KSBBcHBsZVdlYktpdC81MzcuMzYgKEtIVE1MLCBsaWtlIEdlY2tvKSBkaXNjb3JkLzAuMC40MTkgQ2hyb21lLzE0OC4wLjc3NzguMjgwIEVsZWN0cm9uLzQyLjExLjE1IFNhZmFyaS81MzcuMzYiLCJicm93c2VyX3ZlcnNpb24iOiI0Mi4xMS4xNSIsIm9zX3Nka192ZXJzaW9uIjoiMjUiLCJjbGllbnRfYnVpbGRfbnVtYmVyIjo2NDkzODksImNsaWVudF9ldmVudF9zb3VyY2UiOm51bGx9"
+        ],
+        [
+          "x-discord-locale",
+          "en-US"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) discord/0.0.419 Chrome/148.0.7778.280 Electron/42.11.15 Safari/537.36"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "origin",
+          "https://discord.com"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "referer",
+          "https://discord.com/login"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "Authorization",
+          "synthetic-discord-token"
+        ],
+        [
+          "content-type",
+          "application/json"
+        ]
+      ],
+      "cookies": [],
+      "body": "{\"files\":[{\"filename\":\"fake.txt\",\"file_size\":7,\"id\":\"94514d146fbb41f3\",\"description\":null}]}",
+      "multipart": null
+    },
+    {
+      "method": "PUT",
+      "url": "https://cdn.discordapp.com/synthetic-upload",
+      "headers": [
+        [
+          "Content-Type",
+          "application/octet-stream"
+        ],
+        [
+          "Accept",
+          "*/*"
+        ],
+        [
+          "User-Agent",
+          "discord-cli/0.1 Python-stdlib"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"macOS\""
+        ],
+        [
+          "x-debug-options",
+          "bugReporterEnabled"
+        ],
+        [
+          "accept-language",
+          "en-US"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not(A:Brand\";v=\"8\", \"Chromium\";v=\"148\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "x-discord-timezone",
+          "UTC"
+        ],
+        [
+          "x-super-properties",
+          "eyJvcyI6Ik1hYyBPUyBYIiwiYnJvd3NlciI6IkRpc2NvcmQgQ2xpZW50IiwicmVsZWFzZV9jaGFubmVsIjoic3RhYmxlIiwiY2xpZW50X3ZlcnNpb24iOiIwLjAuNDE5Iiwib3NfdmVyc2lvbiI6IjI1LjAuMCIsIm9zX2FyY2giOiJhcm02NCIsImFwcF9hcmNoIjoiYXJtNjQiLCJzeXN0ZW1fbG9jYWxlIjoiZW4tVVMiLCJoYXNfY2xpZW50X21vZHMiOmZhbHNlLCJjbGllbnRfbGF1bmNoX2lkIjoiMDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWYiLCJicm93c2VyX3VzZXJfYWdlbnQiOiJNb3ppbGxhLzUuMCAoTWFjaW50b3NoOyBJbnRlbCBNYWMgT1MgWCAxMF8xNV83KSBBcHBsZVdlYktpdC81MzcuMzYgKEtIVE1MLCBsaWtlIEdlY2tvKSBkaXNjb3JkLzAuMC40MTkgQ2hyb21lLzE0OC4wLjc3NzguMjgwIEVsZWN0cm9uLzQyLjExLjE1IFNhZmFyaS81MzcuMzYiLCJicm93c2VyX3ZlcnNpb24iOiI0Mi4xMS4xNSIsIm9zX3Nka192ZXJzaW9uIjoiMjUiLCJjbGllbnRfYnVpbGRfbnVtYmVyIjo2NDkzODksImNsaWVudF9ldmVudF9zb3VyY2UiOm51bGx9"
+        ],
+        [
+          "x-discord-locale",
+          "en-US"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) discord/0.0.419 Chrome/148.0.7778.280 Electron/42.11.15 Safari/537.36"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "origin",
+          "https://discord.com"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "referer",
+          "https://discord.com/login"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ]
+      ],
+      "cookies": [],
+      "body": "example",
+      "multipart": null
+    },
+    {
+      "method": "POST",
+      "url": "https://discord.com/api/v9/channels/2002/messages",
+      "headers": [
+        [
+          "sec-ch-ua-platform",
+          "\"macOS\""
+        ],
+        [
+          "x-debug-options",
+          "bugReporterEnabled"
+        ],
+        [
+          "accept-language",
+          "en-US"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Not(A:Brand\";v=\"8\", \"Chromium\";v=\"148\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "x-discord-timezone",
+          "UTC"
+        ],
+        [
+          "x-super-properties",
+          "eyJvcyI6Ik1hYyBPUyBYIiwiYnJvd3NlciI6IkRpc2NvcmQgQ2xpZW50IiwicmVsZWFzZV9jaGFubmVsIjoic3RhYmxlIiwiY2xpZW50X3ZlcnNpb24iOiIwLjAuNDE5Iiwib3NfdmVyc2lvbiI6IjI1LjAuMCIsIm9zX2FyY2giOiJhcm02NCIsImFwcF9hcmNoIjoiYXJtNjQiLCJzeXN0ZW1fbG9jYWxlIjoiZW4tVVMiLCJoYXNfY2xpZW50X21vZHMiOmZhbHNlLCJjbGllbnRfbGF1bmNoX2lkIjoiMDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWYiLCJicm93c2VyX3VzZXJfYWdlbnQiOiJNb3ppbGxhLzUuMCAoTWFjaW50b3NoOyBJbnRlbCBNYWMgT1MgWCAxMF8xNV83KSBBcHBsZVdlYktpdC81MzcuMzYgKEtIVE1MLCBsaWtlIEdlY2tvKSBkaXNjb3JkLzAuMC40MTkgQ2hyb21lLzE0OC4wLjc3NzguMjgwIEVsZWN0cm9uLzQyLjExLjE1IFNhZmFyaS81MzcuMzYiLCJicm93c2VyX3ZlcnNpb24iOiI0Mi4xMS4xNSIsIm9zX3Nka192ZXJzaW9uIjoiMjUiLCJjbGllbnRfYnVpbGRfbnVtYmVyIjo2NDkzODksImNsaWVudF9ldmVudF9zb3VyY2UiOm51bGx9"
+        ],
+        [
+          "x-discord-locale",
+          "en-US"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) discord/0.0.419 Chrome/148.0.7778.280 Electron/42.11.15 Safari/537.36"
+        ],
+        [
+          "accept",
+          "*/*"
+        ],
+        [
+          "origin",
+          "https://discord.com"
+        ],
+        [
+          "sec-fetch-site",
+          "same-origin"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "referer",
+          "https://discord.com/login"
+        ],
+        [
+          "accept-encoding",
+          "gzip, deflate, br, zstd"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "Authorization",
+          "synthetic-discord-token"
+        ],
+        [
+          "X-Context-Properties",
+          "eyJsb2NhdGlvbiI6ImNoYXRfaW5wdXQifQ=="
+        ],
+        [
+          "content-type",
+          "application/json"
+        ]
+      ],
+      "cookies": [],
+      "body": "{\"mobile_network_type\":\"unknown\",\"content\":\"\\u9644\\u4ef6\",\"nonce\":\"1551597201514299392\",\"tts\":false,\"flags\":0,\"attachments\":[{\"id\":\"0\",\"filename\":\"fake.txt\",\"uploaded_filename\":\"fake.txt\"}]}",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "attachments": [
+          {
+            "id": "0",
+            "upload_url": "https://cdn.discordapp.com/synthetic-upload",
+            "upload_filename": "fake.txt"
+          }
+        ]
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "base64": ""
+      }
+    },
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "id": "3003",
+        "channel_id": "2002",
+        "content": "你好 Discord",
+        "author": {
+          "id": "1001",
+          "username": "example",
+          "global_name": "测试账号"
+        },
+        "timestamp": "2026-10-25T12:00:00Z",
+        "attachments": []
+      }
+    }
+  ],
+  "result": {
+    "id": "3003",
+    "channel_id": "2002",
+    "content": "你好 Discord",
+    "author": {
+      "id": "1001",
+      "username": "example",
+      "global_name": "测试账号"
+    },
+    "timestamp": "2026-10-25T12:00:00Z",
+    "attachments": []
+  },
+  "error": null
+}

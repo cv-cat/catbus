@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { resolve as resolvePath } from 'node:path'
 import { text as readStdin } from 'node:stream/consumers'
 import { z } from 'zod'
-import { checkAccountName, endpointFlag, getCurrent, GUEST, newCredential, readCredential, writeCredential } from '../core/auth-store.js'
+import { checkAccountName, endpointFlag, getCurrent, GUEST, migrateDiscordDesktopAuth, newCredential, readCredential, writeCredential } from '../core/auth-store.js'
 import { resolveNetwork } from '../core/config.js'
 import { CatbusError, toCatbusError } from '../core/errors.js'
 import { createLogger, type Logger } from '../core/log.js'
@@ -32,7 +32,7 @@ import { FORMATS, type Format, Output } from './output.js'
 
 z.config(z.locales.zhCN())
 
-const GLOBAL_COMMANDS = ['platforms', 'doctor', 'auth', 'config', 'version']
+const GLOBAL_COMMANDS = ['platforms', 'doctor', 'auth', 'config', 'version', 'ui']
 
 function printHelp(text: string): number {
   process.stdout.write(text + '\n')
@@ -123,12 +123,18 @@ async function runGlobal(name: string, words: string[], parsed: Parsed, out: Out
       out.meta.action = action
       out.result(await config(action, words.slice(1)))
       return 0
+    case 'ui': {
+      noArgs()
+      const { runPanel } = await import('../ui/server.js')
+      await runPanel((url) => out.result({ url }), createLogger({ verbose: parsed.global.verbose, quiet: parsed.global.quiet }))
+      return 0
+    }
   }
   throw new CatbusError('ERROR', `未处理的全局命令：${name}`)
 }
 
-function parseEndpoint(value: string | undefined): Endpoint {
-  if (value == null) return 'web'
+function parseEndpoint(value: string | undefined, fallback: Endpoint): Endpoint {
+  if (value == null) return fallback
   if (!(ENDPOINTS as readonly string[]).includes(value)) {
     throw new CatbusError('USAGE', `不支持的端：${value}`, { hint: '-e web、-e app 或 -e pc' })
   }
@@ -167,7 +173,7 @@ function unsupported(platform: Platform, endpoint: Endpoint, resource: string, a
 
 async function runPlatform(platform: Platform, words: string[], parsed: Parsed, out: Output, log: Logger): Promise<number> {
   const g = parsed.global
-  const endpoint = parseEndpoint(g.endpoint)
+  const endpoint = parseEndpoint(g.endpoint, platform.defaultEndpoint)
   const p = platform.id
   const [resource, action, ...argWords] = words
   out.meta = { platform: p, endpoint, resource: resource ?? null, action: action ?? null, account: null }
@@ -177,7 +183,7 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
   const ep = platform.endpoints[endpoint]
   const known = hasResource(platform, resource)
   if (action == null || g.help) {
-    const listed = ep === 'planned' ? platform.endpoints.web : ep
+    const listed = ep === 'planned' ? platform.endpoints[platform.defaultEndpoint] : ep
     const found = action != null && listed !== 'planned' ? listed.commands.get(`${resource} ${action}`) : undefined
     if (found) return printHelp(commandHelp(platform, endpoint, found))
     if (known) return printHelp(resourceHelp(platform, endpoint, resource))
@@ -202,6 +208,7 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
     })
   }
 
+  if (p === 'discord' && endpoint === 'pc') await migrateDiscordDesktopAuth()
   const identity = await resolveIdentity(platform, endpoint, command, args, g, log)
   // auth login 没有当前账号时登录到 default（AGENTS 5.3），信封里写实际登录的账号
   out.meta.account = identity.account ?? (key === 'auth login' ? 'default' : null)

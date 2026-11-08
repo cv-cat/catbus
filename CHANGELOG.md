@@ -8,6 +8,13 @@
 
 ### Added
 
+- 新增 `discord` 平台：按 macOS 桌面协议连接，默认使用 `pc` 端，支持扫码、账号密码及 Token 登录、服务器与频道、消息与附件、好友和表情回应、实时消息。支持人工验证码与通行密钥验证；旧版 web 登录信息会迁移至 pc。验证范围与限制见 `docs/platforms/discord.md`。
+- 新增全局命令 `catbus ui`：本机 Web 面板。在 `127.0.0.1` 上启动页面并打开浏览器，面向不熟悉命令行的用户：
+  - 按「平台 → 命令」填表执行，表单由注册表生成；每次执行都是一条等价的 catbus 子进程，页面上的「车票」印着这条命令，可以复制
+  - 结果按统一类型排版（内容卡片、用户、评论、私信、直播事件、12306 车次等），对象之间可以点进下一步；分页「加载更多」、长连接实时列表与停止，启动即显示运行状态，运行记录和消息计数实时更新
+  - 账号管理（在线校验、切换、登出）、扫码登录在页面上显示二维码、短信 / 邮箱验证码两步登录、设置（代理、超时、本机 Chromium）、环境检查、任务记录
+  - 危险操作沿用 CLI 的 `CONFIRM_REQUIRED`：先不带 `-y` 执行，要求确认时弹框，确认后再带 `-y`；密码、cookie、API Key 只经 stdin 传给 catbus
+  - 安全：随机路径、校验 Host、写请求校验 Origin 与令牌、CSP；页面与图片随包分发，离线可用；浅色 / 深色主题、键盘可用、手机宽度可用
 - 新增 `youtube`（YouTube，别名 `yt`）平台的 web 端。没有上游仓库，直接对接 YouTube 网页背后的 InnerTube 接口（`/youtubei/v1/`），接口说明见 `src/platforms/youtube/UPSTREAM`：
   - 不登录可用：`item get` / `search`（`--sort general|popular`、`--time`、`--type`）/ `related` / `media` / `download`，`comment list` / `replies`，`user get` / `search` / `items`，`series list` / `items`（播放列表），`keyword suggest`，`live get` / `search` / `history` / `listen`（直播聊天）
   - 需要登录：`feed list`（首页推荐、订阅流），`history list`，`notice list` / `count`，`user likes` / `collects`（稍后观看）/ `following`（只能看自己的），`item like` / `unlike` / `collect` / `uncollect`，`user follow` / `unfollow`（订阅），`comment add`（含 `--reply-to`）/ `delete` / `like` / `unlike`

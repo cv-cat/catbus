@@ -1,0 +1,44 @@
+{
+  "input": {
+    "os": "Mac OS X",
+    "arch": "arm64",
+    "release": "25.0.0",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "launchId": "0123456789abcdef0123456789abcdef"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "GET",
+      "url": "https://cdn.discordapp.com/fake.txt",
+      "headers": [
+        [
+          "User-Agent",
+          "discord-cli/0.1 Python-stdlib"
+        ],
+        [
+          "Accept",
+          "*/*"
+        ]
+      ],
+      "cookies": [],
+      "body": null,
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "base64": "ZXhhbXBsZQ=="
+      }
+    }
+  ],
+  "result": {
+    "base64": "ZXhhbXBsZQ=="
+  },
+  "error": null
+}

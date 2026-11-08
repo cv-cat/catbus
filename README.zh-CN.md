@@ -83,7 +83,7 @@ catbus 12306 ticket search 北京 上海                  # 查火车票
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/platforms-dark.svg">
-  <img src="assets/platforms-light.svg" alt="已上车 15 个平台，标着 soon 的 27 个在路上" width="100%">
+  <img src="assets/platforms-light.svg" alt="已上车 16 个平台，标着 soon 的 26 个在路上" width="100%">
 </picture>
 
 标着 `soon` 的在路上，目标是所有平台。没有你要的？[提 issue](https://github.com/cv-cat/catbus/issues) 或者[自己加](.github/CONTRIBUTING.md)，一个平台就是一个目录。每个平台支持什么，见[能力矩阵](docs/capabilities.md)。

@@ -2,7 +2,7 @@ import { describeOption, FILTER_VALUES, flagName, LOGIN_METHODS, PAGING, STANDAR
 import { type AvailableEndpoint, type Command, type Platform, sortCommands, type Upstream } from './registry.js'
 import { VOCAB } from './vocab.js'
 
-/** 生成 docs/capabilities.md（web 端能力矩阵）。只由注册表决定，`npm run gen:capabilities` 写盘，测试检查是否最新。 */
+/** 生成 docs/capabilities.md（默认端能力矩阵）。只由注册表决定，`npm run gen:capabilities` 写盘，测试检查是否最新。 */
 
 const SYMBOL: Record<Upstream, string> = { full: '✓', partial: '◐', none: '○' }
 
@@ -19,7 +19,7 @@ const SECTIONS: Section[] = [
     resources: ['auth'],
     intro: (platforms) =>
       `\`login\` 见上表。\`logout\` / \`list\` / \`use\` 由 core 实现，所有平台都有；服务端登出只有 ${platforms
-        .filter((p) => web(p).logout)
+        .filter((p) => primary(p).logout)
         .map((p) => p.id)
         .join('、')}。`,
   },
@@ -44,9 +44,9 @@ const OMITTED = new Set(['auth login', 'auth logout', 'auth list', 'auth use'])
 
 const FILTERS = Object.keys(FILTER_VALUES)
 
-function web(platform: Platform): AvailableEndpoint {
-  const ep = platform.endpoints.web
-  if (ep === 'planned') throw new Error(`${platform.id} 的 web 端是 planned`)
+function primary(platform: Platform): AvailableEndpoint {
+  const ep = platform.endpoints[platform.defaultEndpoint]
+  if (ep === 'planned') throw new Error(`${platform.id} 的默认端是 planned`)
   return ep
 }
 
@@ -59,7 +59,7 @@ function header(first: string, platforms: Platform[]): string[] {
 }
 
 function loginTable(platforms: Platform[]): string[] {
-  const logins = platforms.map((p) => web(p).login)
+  const logins = platforms.map((p) => primary(p).login)
   const lines = [...header('', platforms)]
   for (const method of LOGIN_METHODS) {
     lines.push(row([method, ...logins.map((l) => (l.methods.includes(method) ? '✓' : ''))]))
@@ -81,7 +81,7 @@ function commandRows(platforms: Platform[], resources: string[]): Row[] {
   for (const key of Object.keys(VOCAB)) {
     const [resource, action] = key.split(' ') as [string, string]
     if (!resources.includes(resource) || OMITTED.has(key)) continue
-    const commands = platforms.map((p) => web(p).commands.get(key))
+    const commands = platforms.map((p) => primary(p).commands.get(key))
     const cells = commands.map((c) => (c?.upstream ? SYMBOL[c.upstream] : '—'))
     const notes = commands.map((c) => c?.note ?? null)
     const prev = rows.at(-1)
@@ -106,7 +106,7 @@ function footnotes(platforms: Platform[], rows: Row[]): string[] {
   }
   for (const r of rows) {
     for (const key of r.keys) {
-      const commands = platforms.map((p) => [p, web(p).commands.get(key)] as const).filter(([, c]) => c) as [Platform, Command][]
+      const commands = platforms.map((p) => [p, primary(p).commands.get(key)] as const).filter(([, c]) => c) as [Platform, Command][]
       // 词表给了、平台不支持的标准选项（用了报 UNSUPPORTED）
       const without = commands.filter(([, c]) => c.unsupported.length)
       if (without.length) {
@@ -139,7 +139,7 @@ function footnotes(platforms: Platform[], rows: Row[]): string[] {
 function extensions(platforms: Platform[]): string[] {
   const lines = [row(['平台', '命令']), '|---|---|']
   for (const p of platforms) {
-    const ext = sortCommands(web(p).commands.values()).filter((c) => c.extension)
+    const ext = sortCommands(primary(p).commands.values()).filter((c) => c.extension)
     if (ext.length) lines.push(row([p.id, ext.map((c) => `\`${c.key}\` ${SYMBOL[c.upstream!]}`).join(' · ')]))
   }
   return lines
@@ -149,10 +149,10 @@ export function renderCapabilities(platforms: Platform[]): string {
   const out: string[] = [
     '# 能力矩阵',
     '',
-    '各平台 web 端的能力。命令规范见 [AGENTS.md](../AGENTS.md) 第 4 节，上游代码位置见 [upstream-map.md](upstream-map.md)。',
+    '各平台默认端的能力。命令规范见 [AGENTS.md](../AGENTS.md) 第 4 节，上游代码位置见 [upstream-map.md](upstream-map.md)。',
     '',
     '- 本文件由注册表（`src/platforms/<p>/index.ts`）生成：`npm run gen:capabilities`。不要手改，测试会检查它是否最新。',
-    '- app / pc 端目前全部是 planned，不在本表列出。',
+    '- Discord 列为 macOS 桌面端（`pc`），其他平台列为 `web`。',
     '',
     '| 符号 | 含义 | 注册表 status | 执行结果 |',
     '|---|---|---|---|',

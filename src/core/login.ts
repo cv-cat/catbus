@@ -73,9 +73,14 @@ export function cookieCredential(ctx: HandlerContext, defaultDomain: string): Cr
   return credential
 }
 
+/** 扫码登录的二维码 PNG：cache/<p>/qrcode.png（Web 面板也从这里读，见 AGENTS 4.13）。 */
+export function qrcodeFile(platform: string): string {
+  return join(cacheDir(platform), 'qrcode.png')
+}
+
 /** 二维码：画到 stderr，同时把 PNG 存到 cache/<p>/qrcode.png。 */
 export async function showQrcode(ctx: HandlerContext, content: string, hint = '请用 App 扫码'): Promise<string> {
-  const png = join(cacheDir(ctx.platform.id), 'qrcode.png')
+  const png = qrcodeFile(ctx.platform.id)
   await writeFileAtomic(png, await QRCode.toBuffer(content, { margin: 2, scale: 8 }))
   const art = await QRCode.toString(content, { type: 'terminal', small: true })
   process.stderr.write(art + '\n')

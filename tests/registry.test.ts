@@ -9,8 +9,8 @@ import { PLATFORMS } from '../src/platforms/index.js'
 
 const GLOBAL_COMMANDS = ['platforms', 'doctor', 'auth', 'config', 'version']
 
-function web(p: Platform) {
-  const ep = p.endpoints.web
+function primary(p: Platform) {
+  const ep = p.endpoints[p.defaultEndpoint]
   if (ep === 'planned') throw new Error('planned')
   return ep
 }
@@ -22,29 +22,29 @@ describe('注册表', () => {
     for (const n of names) expect(GLOBAL_COMMANDS).not.toContain(n)
   })
 
-  it('所有平台 web 可用，app / pc 为 planned；不支持游客态的端除 auth 外都需要登录，支持的端上词表里需要登录的命令仍需要登录', () => {
+  it('Discord 的 pc 和其他平台的 web 可用；不支持游客态的端除 auth 外都需要登录，支持的端上词表里需要登录的命令仍需要登录', () => {
     for (const p of PLATFORMS) {
-      for (const c of web(p).commands.values()) {
+      for (const c of primary(p).commands.values()) {
         if (c.resource === 'auth') continue
-        if (!web(p).guest || VOCAB[c.key]?.auth === 'required') expect([p.id, c.key, c.auth]).toEqual([p.id, c.key, 'required'])
+        if (!primary(p).guest || VOCAB[c.key]?.auth === 'required') expect([p.id, c.key, c.auth]).toEqual([p.id, c.key, 'required'])
       }
-      if (web(p).guest) expect([...web(p).commands.values()].some((c) => c.resource !== 'auth' && c.auth === 'optional')).toBe(true)
-      expect(p.endpoints.web).not.toBe('planned')
+      if (primary(p).guest) expect([...primary(p).commands.values()].some((c) => c.resource !== 'auth' && c.auth === 'optional')).toBe(true)
+      expect(p.defaultEndpoint).toBe(p.id === 'discord' ? 'pc' : 'web')
       expect(p.endpoints.app).toBe('planned')
-      expect(p.endpoints.pc).toBe('planned')
+      expect(p.endpoints[p.id === 'discord' ? 'web' : 'pc']).toBe('planned')
     }
   })
 
   it('web 端支持游客态的平台（AGENTS 5.2）', () => {
-    expect(PLATFORMS.filter((p) => web(p).guest).map((p) => p.id)).toEqual(['youtube', '12306', 'maoyan'])
+    expect(PLATFORMS.filter((p) => primary(p).guest).map((p) => p.id)).toEqual(['youtube', '12306', 'maoyan'])
   })
 
   /** 已经移植完的平台：上游有的（✓ / ◐）都有实现，○ 的都没有。移植完一个平台就加进来。 */
-  const PORTED = ['bilibili', 'taobao', 'weibo', 'x', 'kuaishou', 'xianyu', 'tiktok', 'jd', 'douyin', 'xhs', '12306', 'youtube', 'jimeng', 'maoyan', 'mteam']
+  const PORTED = ['bilibili', 'taobao', 'weibo', 'x', 'kuaishou', 'xianyu', 'tiktok', 'jd', 'douyin', 'xhs', '12306', 'youtube', 'jimeng', 'maoyan', 'mteam', 'discord']
 
   it('已移植的平台：✓ / ◐ 的命令都已实现，○ 的都是 planned', () => {
     for (const p of PLATFORMS.filter((x) => PORTED.includes(x.id))) {
-      for (const c of web(p).commands.values()) {
+      for (const c of primary(p).commands.values()) {
         const expected = c.upstream === 'none' ? 'planned' : 'implemented'
         expect([p.id, c.key, c.status]).toEqual([p.id, c.key, expected])
       }
@@ -53,7 +53,7 @@ describe('注册表', () => {
 
   it('未移植的平台：除 core 的 auth list / use / logout 外都是 planned', () => {
     for (const p of PLATFORMS.filter((x) => !PORTED.includes(x.id))) {
-      for (const c of web(p).commands.values()) {
+      for (const c of primary(p).commands.values()) {
         const core = ['auth list', 'auth use', 'auth logout'].includes(c.key)
         expect([p.id, c.key, c.status]).toEqual([p.id, c.key, core ? 'implemented' : 'planned'])
       }
@@ -61,7 +61,7 @@ describe('注册表', () => {
   })
 
   it('扩展命令与 AGENTS 4.7 一致', () => {
-    const ext = Object.fromEntries(PLATFORMS.map((p) => [p.id, [...web(p).commands.values()].filter((c) => c.extension).map((c) => c.key).sort()]))
+    const ext = Object.fromEntries(PLATFORMS.map((p) => [p.id, [...primary(p).commands.values()].filter((c) => c.extension).map((c) => c.key).sort()]))
     expect(ext).toEqual({
       xhs: [],
       douyin: [],
@@ -81,27 +81,34 @@ describe('注册表', () => {
       jimeng: [],
       maoyan: [],
       mteam: ['bonus get', 'bonus history', 'exam get', 'seed list', 'seed stats'],
+      discord: [
+        'account settings', 'attachment download', 'channel create', 'channel delete', 'channel get', 'channel list',
+        'channel update', 'device register', 'friend accept', 'friend add', 'friend block', 'friend delete', 'friend unblock',
+        'gateway get', 'gateway listen', 'guild get', 'guild leave', 'guild list', 'msg get', 'msg pin', 'msg pins',
+        'msg purge', 'msg typing', 'msg unpin', 'msg update', 'reaction add', 'reaction clear', 'reaction delete', 'reaction list',
+      ],
     })
   })
 
   it('summary 里的 {item} 都已替换', () => {
     for (const p of PLATFORMS) {
-      for (const c of web(p).commands.values()) {
+      for (const c of primary(p).commands.values()) {
         expect(c.summary).not.toContain('{item}')
         for (const a of c.args) expect(a.summary).not.toContain('{item}')
       }
     }
-    expect(web(PLATFORMS[0]!).commands.get('item get')!.summary).toBe('笔记详情')
+    expect(primary(PLATFORMS[0]!).commands.get('item get')!.summary).toBe('笔记详情')
   })
 
   it('需要确认的命令（AGENTS 4.11）', () => {
     const confirm = new Set<string>()
     for (const p of PLATFORMS) {
-      for (const c of web(p).commands.values()) if (c.confirm) confirm.add(c.extension ? `${p.id} ${c.key}` : c.key)
+      for (const c of primary(p).commands.values()) if (c.confirm) confirm.add(c.extension ? `${p.id} ${c.key}` : c.key)
     }
     expect([...confirm].sort()).toEqual([
       'bilibili draft delete', 'bilibili dynamic delete', 'bilibili item coin', 'bilibili item triple',
-      'comment delete', 'folder delete', 'item delete', 'live send', 'msg delete', 'msg revoke', 'user update', 'x article delete',
+      'comment delete', 'discord channel delete', 'discord friend delete', 'discord guild leave', 'discord msg purge',
+      'discord reaction clear', 'discord reaction delete', 'folder delete', 'item delete', 'live send', 'msg delete', 'msg revoke', 'user update', 'x article delete',
     ])
     const send = VOCAB['live send']!.confirm as (o: object) => boolean
     expect([send({}), send({ gift: 'g1' })]).toEqual([false, true])

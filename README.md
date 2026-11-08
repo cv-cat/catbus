@@ -15,7 +15,7 @@
 
 </div>
 
-catbus is an open-source CLI that drives every platform with one set of commands: RedNote, Douyin, TikTok, Bilibili, X, YouTube and more. Search, read, download, publish and message, and get the same JSON back every time. Use it yourself, or hand it to an AI agent.
+catbus is an open-source CLI that drives every platform with one set of commands: RedNote, Douyin, TikTok, Bilibili, X, YouTube, Discord and more. Search, read, download, publish and message, and get the same JSON back every time. Use it yourself, or hand it to an AI agent.
 
 <div align="center">
 
@@ -83,7 +83,7 @@ Every command returns the same JSON shape (trimmed here):
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/platforms-dark.svg">
-  <img src="assets/platforms-light.svg" alt="15 platforms on board, and 27 more tagged soon" width="100%">
+  <img src="assets/platforms-light.svg" alt="16 platforms on board, and 26 more tagged soon" width="100%">
 </picture>
 
 Tagged `soon` means on the way: the goal is every platform. Missing yours? [Open an issue](https://github.com/cv-cat/catbus/issues) or [add it yourself](.github/CONTRIBUTING.md), a platform is one directory. See the [capability matrix](docs/capabilities.md) for what each one supports.

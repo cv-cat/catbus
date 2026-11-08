@@ -68,6 +68,8 @@ export interface LoginDecl {
 }
 
 export interface EndpointDecl {
+  /** 面向用户的端名称，例如 macOS 桌面端。 */
+  label?: string
   login: LoginDecl
   /** 服务端登出：`auth logout` 删除本地凭证前调用（AGENTS 5.3）。 */
   logout?: HandlerLoader
@@ -88,6 +90,7 @@ export interface PlatformDecl {
   aliases: string[]
   /** item 在该平台的叫法，替换 summary 里的 `{item}`。 */
   item: string
+  defaultEndpoint?: Endpoint
   /** 自动翻页的间隔（毫秒），默认 1000。 */
   pageInterval?: number
   endpoints: Record<Endpoint, EndpointDecl | 'planned'>
@@ -109,6 +112,7 @@ export interface Command extends CommandSpec {
 }
 
 export interface AvailableEndpoint {
+  label?: string
   login: LoginDecl
   logout?: HandlerLoader
   use?: HandlerLoader
@@ -122,6 +126,7 @@ export interface Platform {
   name: string
   aliases: string[]
   item: string
+  defaultEndpoint: Endpoint
   pageInterval: number
   endpoints: Record<Endpoint, AvailableEndpoint | 'planned'>
 }
@@ -151,17 +156,20 @@ export function handlers<M extends object>(load: () => Promise<M>, wrap?: (m: M,
 }
 
 export function definePlatform(decl: PlatformDecl): Platform {
+  const defaultEndpoint = decl.defaultEndpoint ?? 'web'
+  if (decl.endpoints[defaultEndpoint] === 'planned') throw new Error(`注册表错误 ${decl.id}：默认端 ${defaultEndpoint} 尚未实现`)
   const endpoints = {} as Platform['endpoints']
   for (const endpoint of ENDPOINTS) {
     const e = decl.endpoints[endpoint]
     endpoints[endpoint] =
-      e === 'planned' ? 'planned' : { login: e.login, logout: e.logout, use: e.use, guest: e.guest ?? false, commands: resolveCommands(decl, e) }
+      e === 'planned' ? 'planned' : { label: e.label, login: e.login, logout: e.logout, use: e.use, guest: e.guest ?? false, commands: resolveCommands(decl, e) }
   }
   return {
     id: decl.id,
     name: decl.name,
     aliases: decl.aliases,
     item: decl.item,
+    defaultEndpoint,
     pageInterval: decl.pageInterval ?? 1000,
     endpoints,
   }

@@ -414,7 +414,9 @@ export function toNetworkError(err: unknown): CatbusError {
 export function fakeResponse(body: string | Uint8Array | object, init: { status?: number; headers?: HeaderPairs; url?: string } = {}): HttpResponse {
   const text = typeof body === 'string' || body instanceof Uint8Array ? body : JSON.stringify(body)
   const headers = new globalThis.Headers(init.headers ?? [])
-  const res = new globalThis.Response(text as ConstructorParameters<typeof globalThis.Response>[0], { status: init.status ?? 200, headers })
+  const status = init.status ?? 200
+  const payload = [204, 205, 304].includes(status) ? null : text
+  const res = new globalThis.Response(payload as ConstructorParameters<typeof globalThis.Response>[0], { status, headers })
   Object.defineProperty(res, 'url', { value: init.url ?? '' })
   return res as unknown as HttpResponse
 }
