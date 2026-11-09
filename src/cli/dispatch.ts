@@ -17,7 +17,7 @@ import {
   type Platform,
 } from '../core/registry.js'
 import * as rand from '../core/rand.js'
-import type { AuthStatus, Credential } from '../core/schemas.js'
+import type { Account, AuthStatus, Credential } from '../core/schemas.js'
 import { type Args, type Options, VOCAB } from '../core/vocab.js'
 import { findPlatform, PLATFORMS } from '../platforms/index.js'
 import { collectOptionKinds, type GlobalFlags, type Parsed, parseArgv } from './argv.js'
@@ -202,6 +202,12 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
     })
   }
 
+  if (key === 'auth login' && options.autoBind) {
+    // --auto-bind 按登录的用户决定账号名（AGENTS 5.3），不能再指定账号或子站点
+    const hint = `catbus ${p} auth login --auto-bind${endpointFlag(endpoint)}`
+    if (g.account != null) throw new CatbusError('USAGE', '--auto-bind 会自动选择账号，不能和 -a 一起用', { hint })
+    if (options.scope != null) throw new CatbusError('USAGE', '--auto-bind 不能和 --scope 一起用：子站点要登录到已有账号，用 -a 指定', { hint: `catbus ${p} auth login -a <账号> --scope ${options.scope}${endpointFlag(endpoint)}` })
+  }
   const identity = await resolveIdentity(platform, endpoint, command, args, g, log)
   // auth login 没有当前账号时登录到 default（AGENTS 5.3），信封里写实际登录的账号
   out.meta.account = identity.account ?? (key === 'auth login' ? 'default' : null)
@@ -235,7 +241,8 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
   }
 
   // 不支持游客态的端上，游客凭证只在内存里（见 resolveIdentity）
-  const snapshot = ctx.credential.account === GUEST && !ep.guest ? null : JSON.stringify(ctx.credential)
+  // auth login 的新凭证由 finishLogin 落盘；结束时再写回目标账号的旧凭证会把它盖掉
+  const snapshot = key === 'auth login' || (ctx.credential.account === GUEST && !ep.guest) ? null : JSON.stringify(ctx.credential)
   try {
     if (command.stream) {
       out.format = 'jsonl'
@@ -243,9 +250,11 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
     } else if (command.paged) {
       await runPaged(platform, ctx, handler, out)
     } else {
-      const result = await handler(ctx)
+      const data = await handler(ctx)
+      // auth login 实际落盘的账号可能与目标不同（--auto-bind），信封里写实际的
+      if (key === 'auth login' && data && typeof (data as Account).account === 'string') out.meta.account = (data as Account).account
       // auth status 在线校验拿到的新昵称 / 头像合并回凭证，随下面的 persistCredential 落盘
-      out.result(key === 'auth status' && isAuthStatus(result) ? syncStatusUser(ctx.credential, result) : result)
+      out.result(key === 'auth status' && isAuthStatus(data) ? syncStatusUser(ctx.credential, data) : data)
     }
   } finally {
     await persistCredential(ctx.credential, snapshot)
@@ -264,7 +273,12 @@ function isAuthStatus(value: unknown): value is AuthStatus {
 async function persistCredential(credential: Credential, snapshot: string | null): Promise<void> {
   if (snapshot == null || JSON.stringify(credential) === snapshot) return
   const { platform, endpoint, account } = credential
-  if (account !== GUEST && !(await readCredential(platform, endpoint as Endpoint, account).catch(() => null))) return
+  if (account !== GUEST) {
+    const saved = await readCredential(platform, endpoint as Endpoint, account).catch(() => null)
+    // 已被删除（logout），或者命令执行期间文件换成了另一个用户（重新登录）：不用旧凭证覆盖
+    const before = (JSON.parse(snapshot) as Credential).user?.id ?? null
+    if (!saved || (saved.user?.id ?? null) !== before) return
+  }
   await writeCredential(credential)
 }
 
