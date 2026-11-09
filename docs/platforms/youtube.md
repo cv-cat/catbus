@@ -178,7 +178,7 @@ catbus youtube comment add dQw4w9WgXcQ "Nice video"
 - **媒体地址**：`item media` / `download` 用 YouTube 的 VISIONOS 客户端取地址，不带登录（登录后的 WEB 客户端只给 SABR 流，没有可直接下载的地址）。同一出口 IP 请求过多时，YouTube 会要求「Sign in to confirm you're not a bot」，catbus 报 `RISK_CONTROL`，过一段时间或换代理出口再试。年龄限制、会员专享、仅儿童可见等视频拿不到地址。下载得到的是视频轨和音频轨两个文件，需要的话自己用 ffmpeg 合流。下载按 10 MB 一段用 range 请求（整文件请求会被拒绝）。实测（2026-10-29）VISIONOS 的地址不带 PO token 也能完整下载；之前用的 ANDROID_VR 地址只给前约 1 分钟。
 - **列表里看不到的视频**：有些视频（实测是一个「面向儿童」的合集）点赞、加入稍后观看都成功，但 YouTube 在点赞列表、稍后观看列表里把它隐藏（页面提示「1 unavailable video is hidden」），`user likes` / `user collects` 里也就没有它。
 - **只能看自己的列表**：`user likes`、`user collects`、`user following` 只接受 `me`，YouTube 不公开别人的点赞、稍后观看和订阅。
-- **没有频道的 Google 账号**：`user get me` 报错；YouTube 不允许没有频道的账号发评论。点赞、订阅、稍后观看不受影响。这样的账号登录时 `user.id` 是 Google 账号 ID；之后开了频道，再登录到同一个账号名会被当成另一个用户拒绝，先 `auth logout -a <name>` 再登录。
+- **没有频道的 Google 账号**：`user get me` 报错；YouTube 不允许没有频道的账号发评论。点赞、订阅、稍后观看不受影响。这样的账号登录时 `user.id` 是 Google 账号 ID；之后开了频道，再登录到同一个账号名时 user.id 不同，旧凭证会被替换（stderr 有提示）；用 `--auto-bind` 会新增一个账号，而不是刷新原来的。
 - **Shorts 没有作者和发布时间**：列表（`feed list`、`item search`，以及频道页的 Shorts 栏目）里的 Shorts，YouTube 不给频道和时间，`author`、`created_at` 为 null；需要的话对这条再 `item get`。普通视频（包括多人合作的视频、订阅流里的视频）都有作者，合作视频取第一个合作者（上传者）。
 - **相对时间是近似值**：列表里的 `created_at` 由页面上的「3 days ago」这类相对时间推算；`item get` 的发布时间是精确的。计数如 `1.2M` 按显示值换算，有舍入。
 - **页面语言固定为英文**（`hl=en`），只影响 YouTube 自己生成的文字，标题和简介保持原文。

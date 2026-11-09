@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { createInterface } from 'node:readline'
 import { text as readStreamText } from 'node:stream/consumers'
 import QRCode from 'qrcode'
-import { endpointFlag, getCurrent, newCredential, readCredential, setCurrent, toAccount, writeCredential } from './auth-store.js'
+import { ACCOUNT_RE, GUEST, endpointFlag, getCurrent, listAccounts, newCredential, readCredential, setCurrent, toAccount, writeCredential } from './auth-store.js'
 import { parseCookieInput } from './cookies.js'
 import { CatbusError } from './errors.js'
 import { writeFileAtomic } from './fsutil.js'
@@ -32,21 +32,26 @@ export function freshCredential(ctx: HandlerContext, method: Credential['method'
 }
 
 /**
- * 登录成功后落盘：账号名下已经存了另一个用户时报 USAGE，新凭证不保存；
- * 还没有当前账号时，把它设为当前账号。
+ * 登录成功后落盘（AGENTS 5.3）。
+ *
+ * - 默认：写到目标账号（`-a` > 当前账号 > `default`）。那里原来存的是另一个用户时，视为先登出再登录：
+ *   旧凭证被替换，stderr 提示一行。
+ * - `--auto-bind`：不看目标账号，按用户 id 在本平台本端的账号里找。找到就刷新那个账号的凭证；
+ *   找不到就新增账号（`default` 没被占用时用 `default`，否则按用户 id 起名）。
+ *
+ * 两种方式下，还没有当前账号时都把它设为当前账号。
  */
 export async function finishLogin(ctx: HandlerContext, credential: Credential, user: UserRef): Promise<Account> {
   const p = ctx.platform.id
-  const account = loginTarget(ctx)
+  const account = ctx.options.autoBind ? await bindTarget(ctx, user) : loginTarget(ctx)
   const existing = await readCredential(p, ctx.endpoint, account).catch(() => null)
-  if (existing?.user && existing.user.id !== user.id) {
-    throw new CatbusError('USAGE', `账号名 ${account} 下已经保存了另一个用户（${existing.user.name ?? existing.user.id}）`, {
-      hint: `用 -a <新名字> 登录，或者先 catbus ${p} auth logout -a ${account}${endpointFlag(ctx.endpoint)}`,
-    })
+  const replaced = existing?.user && existing.user.id !== user.id ? existing.user : null
+  if (replaced) {
+    ctx.log.warn(`账号 ${account} 原来登录的是 ${replaced.name ?? replaced.id}，已替换为 ${user.name ?? user.id}`)
   }
   credential.account = account
   credential.user = user
-  if (existing) credential.created_at = existing.created_at
+  if (existing && !replaced) credential.created_at = existing.created_at
   await writeCredential(credential)
   let current = await getCurrent(p, ctx.endpoint)
   if (!current) {
@@ -55,6 +60,34 @@ export async function finishLogin(ctx: HandlerContext, credential: Credential, u
   }
   ctx.log.info(`已登录 ${ctx.platform.name}：${user.name ?? user.id}（账号 ${account}）`)
   return toAccount(credential, current === account)
+}
+
+/** `--auto-bind` 的目标账号：同一用户的已有账号 > `default` > 按用户 id 起的名字。 */
+async function bindTarget(ctx: HandlerContext, user: UserRef): Promise<string> {
+  const accounts = await listAccounts(ctx.platform.id, ctx.endpoint)
+  const same = accounts.find((a) => a.user?.id === user.id)
+  if (same) {
+    ctx.log.info(`${user.name ?? user.id} 已经保存在账号 ${same.account}，刷新它的登录态`)
+    return same.account
+  }
+  const taken = new Set(accounts.map((a) => a.account))
+  return taken.has('default') ? accountNameFor(user, taken) : 'default'
+}
+
+/** 按用户 id 起一个没被占用的账号名（AGENTS 5.1 的格式），起不出来时用 account-<n>。 */
+export function accountNameFor(user: UserRef, taken: ReadonlySet<string>): string {
+  const base = user.id
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/^[^a-z0-9]+/, '')
+    .slice(0, 32)
+  const free = (name: string) => ACCOUNT_RE.test(name) && name !== GUEST && !taken.has(name)
+  if (base && free(base)) return base
+  for (let n = 2; ; n++) {
+    const suffix = `-${n}`
+    const name = base ? base.slice(0, 32 - suffix.length) + suffix : `account${suffix}`
+    if (free(name)) return name
+  }
 }
 
 /** `--cookie <str|@file|->`：dispatch 已经把 @file 和 - 读成字符串。 */

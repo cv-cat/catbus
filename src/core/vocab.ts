@@ -86,6 +86,7 @@ export const VOCAB: Record<string, CommandSpec> = {
       username: z.string().optional().describe('用户名（password）'),
       passwordStdin: z.boolean().optional().describe('从 stdin 读取密码（password）'),
       cookie: z.string().optional().describe('cookie 字符串、@文件，或 - 表示从 stdin 读取（cookie）'),
+      autoBind: z.boolean().optional().describe('按登录的用户自动选账号：已保存过就刷新那个账号，否则新增（default 空着时用 default）'),
     },
   }),
   'auth status': read('在线校验登录态', [], 'AuthStatus'),
