@@ -41,7 +41,7 @@ const fake = definePlatform({
               const pw = await prompt('密码：', { hidden: true })
               if (!pw) throw new Error('空密码')
             }
-            return finishLogin(ctx, credential, { id: 'u1', name: '测试用户', url: null })
+            return finishLogin(ctx, credential, { id: 'u1', name: '测试用户', url: null, avatar: null })
           },
         },
         'auth status': 'full',
@@ -152,7 +152,7 @@ describe('tui 登录 / 监听 / 账号', () => {
     const { newCredential, setCurrent, writeCredential } = await import('../src/core/auth-store.js')
     for (const a of ['one', 'two']) {
       const c = newCredential({ platform: 'demo', endpoint: 'web', account: a, method: 'cookie' })
-      c.user = { id: 'id-' + a, name: '用户' + a, url: null }
+      c.user = { id: 'id-' + a, name: '用户' + a, url: null, avatar: null }
       await writeCredential(c)
     }
     await setCurrent('demo', 'web', 'one')
@@ -329,7 +329,7 @@ describe('人机验证的浏览器链接', () => {
                 const credential = freshCredential(ctx, 'sms' as never)
                 showLink('http://127.0.0.1:7777/verify', '请在浏览器打开下面的链接完成人机验证（180 秒内），完成后自动继续', 'cli 文案')
                 await poll(async () => undefined, { interval: 20 })
-                return finishLogin(ctx, credential, { id: 'u', name: 'n', url: null })
+                return finishLogin(ctx, credential, { id: 'u', name: 'n', url: null, avatar: null })
               },
             },
           },

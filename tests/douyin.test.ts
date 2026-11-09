@@ -505,7 +505,7 @@ describe('douyin 对拍：长连接', () => {
       ['enter', '观众C', null, null],
       ['follow', '观众D', null, null],
     ])
-    expect(events[0]!.user).toEqual({ id: 'MS4wLjABAAAAviewerA', name: '观众A', url: 'https://www.douyin.com/user/MS4wLjABAAAAviewerA' })
+    expect(events[0]!.user).toEqual({ id: 'MS4wLjABAAAAviewerA', name: '观众A', url: 'https://www.douyin.com/user/MS4wLjABAAAAviewerA', avatar: null })
   })
 
   it('私信：设备号 → frontier-im 地址（access_key）与握手头；推送帧转成 Message', async () => {
@@ -1007,7 +1007,7 @@ describe('douyin 审查修复：登录态与错误映射', () => {
     const ctx = () => {
       const c = makeCtx({ platform: 'douyin', cookies: 'sessionid=fake; ttwid=fake; s_v_web_id=fake', cookieDomain: '.douyin.com' })
       c.credential.scopes.main!.tokens.webid = '7400000000000000001'
-      c.credential.user = { id: SEC_UID, name: '我', url: `https://www.douyin.com/user/${SEC_UID}` }
+      c.credential.user = { id: SEC_UID, name: '我', url: `https://www.douyin.com/user/${SEC_UID}`, avatar: null }
       return c
     }
     const run = (queryUser: () => HttpResponse, userInfo: () => HttpResponse = () => fakeResponse({ user: { sec_uid: SEC_UID, nickname: '新昵称' } })) =>
@@ -1025,6 +1025,10 @@ describe('douyin 审查修复：登录态与错误映射', () => {
     expect(await run(() => fakeResponse({ status_code: 0, user_uid: '0' }))).toMatchObject({ logged_in: false })
     expect(await run(() => fakeResponse({ status_code: 0, user_uid: '97872126662' }))).toMatchObject({ logged_in: true, user: { id: SEC_UID, name: '新昵称' } })
     expect(await run(() => fakeResponse({ status_code: 0, user_uid: '97872126662' }), () => fakeResponse(''))).toMatchObject({ logged_in: true, user: { id: SEC_UID, name: '我' } })
+    // 头像：创作者中心 user/info 顺带给的 avatar_larger（不额外请求）；取不到 user/info 时沿用凭证里的（这里是 null）
+    const withAvatar = () => fakeResponse({ user: { sec_uid: SEC_UID, nickname: '新昵称', avatar_thumb: { url_list: ['https://p3.douyinpic.com/thumb.jpeg'] }, avatar_larger: { url_list: ['https://p3.douyinpic.com/large.jpeg'] } } })
+    expect(await run(() => fakeResponse({ status_code: 0, user_uid: '97872126662' }), withAvatar)).toMatchObject({ user: { id: SEC_UID, avatar: 'https://p3.douyinpic.com/large.jpeg' } })
+    expect(await run(() => fakeResponse({ status_code: 0, user_uid: '97872126662' }), () => fakeResponse(''))).toMatchObject({ user: { avatar: null } })
   })
 
   it('auth login --cookie：query/user 被风控时报 RISK_CONTROL，不再说成 cookie 无效', async () => {

@@ -530,6 +530,21 @@ describe('kuaishou 对拍：命令流程', () => {
     expect(saved.device.kwfcv1).toBe(g.result.kwfcv1)
   })
 
+  it('扫码登录的头像：userInfo 校验那次的 avatar 存进凭证（golden 里是 null 时为 null）', async () => {
+    const g = loadCase('kuaishou', 'qrcode_login_flow')
+    const i = g.responses.findIndex((r) => JSON.stringify(r.body).includes('"userInfo"'))
+    const body = structuredClone(g.responses[i]!.body) as any
+    body.data.userInfo.avatar = 'http://p2.a.yximgs.com/uhead/AB/fake.jpg'
+    const patched = { ...g, responses: g.responses.map((r, j) => (j === i ? { ...r, body } : r)) }
+    const { authLogin } = await import('../src/platforms/kuaishou/web/commands.js')
+    const { requests, result, error } = await replay(patched, () => authLogin(commandCtx({ method: 'qrcode' }, null)) as Promise<any>)
+    if (error) throw error
+    expectRequests(requests, g.requests)
+    expect((result as any).user).toEqual({ id: SELF_EID, name: '测试', url: expect.any(String), avatar: 'https://p2.a.yximgs.com/uhead/AB/fake.jpg' })
+    const { readCredential } = await import('../src/core/auth-store.js')
+    expect((await readCredential('kuaishou', 'web', 'default'))!.user!.avatar).toBe('https://p2.a.yximgs.com/uhead/AB/fake.jpg')
+  })
+
   it('图文发布：权限预检 → 编辑器预请求 → upload/pre → 分片上传 → single finish → 草稿 → finish → submit', async () => {
     const g = loadCase('kuaishou', 'publish_atlas_flow')
     const { itemPublish } = await import('../src/platforms/kuaishou/web/commands.js')

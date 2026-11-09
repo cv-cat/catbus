@@ -33,7 +33,7 @@
 | 许可证 | MIT（主包、assets-jd、assets-ocr 相同） |
 | 数据目录 | `~/.catbus/`，可用 `CATBUS_HOME` 覆盖 |
 | 环境变量前缀 | `CATBUS_` |
-| Logo | `assets/logo.svg`（图标）、`assets/logo-wordmark.svg`（横版）、`assets/banner.txt`（终端字符画）。猫巴士：车身就是一只橘猫，车头是猫脸和耳朵，车尾是尾巴，轮毂是肉垫；车顶路牌是终端提示符 `>_`；车窗里坐着小红书红、B 站粉、抖音青三只小猫乘客。会颠簸、转轮子、摇尾巴、眨眼、抖耳朵；字符画沿用 `( >ω_ )`。配色取自 Catppuccin Mocha |
+| Logo | 吉祥物是一位 Q 版的巴士车掌小姐（原创角色）：深藏青色短卷发、一侧小辫系红发带、琥珀色大眼睛，戴红色帽带和金色巴士徽章的车掌帽，藏青双排扣制服、红领结、白手套、棕色挎包，举着一张印着 `>_` 的车票，挎包里有时探出一只小黑猫；白边贴纸风格。图由图像模型生成，角色描述、画风和每张图的用途见 `scripts/assets/mascot.md`，新图沿用同一段角色描述。`assets/logo.png`（透明底）是主图，`assets/stickers/` 是 README 里的其他姿势，`assets/banner.txt` 是终端字符画（沿用 `( >ω_ )`）。配色取自吉祥物：藏青 `#232838`、红 `#E8414F`，不用橙色和紫色。README 里的图（`hero-<语言>-<主题>`、`platforms-<主题>`）和 `social-preview.png` 都由 `scripts/gen-assets.mjs` 生成（`npm run gen:assets`），不手改：首屏左边是字标 `catbus`、标题、副标题和安装命令 `npm i -g catbus-cli`，右边是吉祥物；字体都是 OFL（Nunito、Geist Mono、Noto Sans 的简中、日文、韩文），第一次运行时下载到 `.cache/fonts/`，图里的字全部转成轮廓，随语言变化的文案每种语言出一张图；平台图一律用各平台真实的图标（`scripts/assets/logos/`，来源见其中的 `SOURCES.txt`），在路上的平台同样是原色，只在右上角挂 `soon` 标签；图上的平台列表与注册表对账，不一致时生成脚本报错 |
 
 ## 2. 范围
 
@@ -354,6 +354,8 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | `-e, --endpoint web\|app\|pc` | 端，默认 `web` |
 | `-o, --output json\|jsonl` | 输出格式，默认 `json`（见 6.1） |
 | `--raw` | 用平台原始对象代替归一化对象 |
+| `--fields <路径,...>` | 只输出 `data` 条目里的这些字段（见 6.1） |
+| `--dry-run` | 只校验、不执行（见 6.1） |
 | `--proxy <url>` | 本次调用使用的代理 |
 | `-v, --verbose` | stderr 输出调试日志（已脱敏） |
 | `-q, --quiet` | 不输出提示和进度，只保留错误 |
@@ -555,7 +557,8 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth|api
 **账号名**：
 - 不带 `-a` 时：有当前账号就登录到当前账号，否则登录到 `default`。
 - 登录成功后，如果还没有当前账号，就把它设为当前账号。
-- 如果该名字下已经存了另一个用户，报 `USAGE`，`hint` 为"用 `-a <新名字>`，或者先 logout"，新凭证不保存。
+- 如果该名字下已经存了另一个用户，视为先登出再登录：旧凭证被新凭证替换，stderr 提示一行（不调用服务端登出）。
+- `--auto-bind`：不按账号名，而按登录的用户决定存到哪个账号。本平台本端已经有这个用户（`user.id` 相同）的账号时，刷新那个账号的凭证；没有时新增账号：`default` 没被占用就用 `default`，否则按用户 id 起名（转成 5.1 的格式，重名时加 `-2`、`-3`……）。不改变已有的当前账号；还没有当前账号时同样设为当前账号。不能和 `-a`、`--scope` 一起用（报 `USAGE`）。信封里的 `account` 是实际落盘的账号。
 
 **登录方式**：每个平台在注册表里声明支持哪些方式、默认用哪种，见 capabilities.md。
 
@@ -569,11 +572,13 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth|api
 | `apikey` | `--api-key-file`、`--api-key-stdin`（mteam 私有选项） | 从本地文件或 stdin 读取官方访问令牌，TTY 可隐藏输入；先在线校验，再由 core 保存到账号凭证。令牌只发到官方 API，不传给重定向目标 |
 
 - **验证码**：上游能自动过的就自动过，过不了报 `RISK_CONTROL`（`detail.kind = captcha`），退出码 5。
+- **登录中的人机验证**：平台在登录流程中途强制的短信验证码验证（例如 xhs 扫码确认后的 HTTP 471，`verifyType` 120 验证页链 / 213 主站登录强制链）由实现自动完成，手机号与验证码沿用 `--phone` / `--code` 或终端输入（非交互可从 stdin 逐行读，包括验证码发往的指定手机号）。验证通过后用同一组未完成的登录参数继续；验证失败与放弃按 `RISK_CONTROL` 报错。站点只接受账号绑定手机时，`hint` 写明。
 - **子站点**（创作者中心、直播、IM 等）：
   - 能自动换取的凭证，登录时或第一次用到时自动获取，不需要用户再登录一次（例如 xhs 的创作者中心：用主站登录态换取）；
   - 需要单独登录的，用 `--scope <name>` 登录，各平台可用的 scope 在注册表里声明；
   - 命令缺少所需 scope 时，报 `AUTH_REQUIRED`，`hint` 带上 `--scope`。
-- **`auth status`**：在线校验，返回 AuthStatus。未登录或已失效时返回 `logged_in: false`，不报错。
+- **`auth status`**：在线校验，返回 AuthStatus。未登录或已失效时返回 `logged_in: false`，不报错。校验成功且返回的是同一个用户时，新的昵称 / 头像由 core 回写到凭证文件。
+- **头像**（账号的头像；作者、评论者等 UserRef 的头像见 6.2）：登录、cookie 导入校验和 `auth status` 复用流程里本来就有的那次当前用户请求，取到头像就存进凭证的 `user.avatar`（统一成 https 绝对地址），不为头像额外发请求；取不到时为 null。旧凭证文件没有 `avatar` 时读成 null，不需要迁移。
 - **`auth logout`**：删除本地凭证文件（上游支持服务端登出的，同时调用服务端登出，目前有 B 站和快手），并清除指向它的 `_current`。
 - **`auth use <account>`**：设置 `_current`。端声明了 `use` 钩子的（目前只有 `jimeng`），先调用钩子，再设置 `_current`；钩子报错时不切换。
 - **`auth list`**：列出本平台、本端的账号。
@@ -587,7 +592,7 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth|api
   "platform": "xhs",
   "endpoint": "web",
   "account": "default",                  // 游客文件为 "guest"
-  "user": { "id": "5f...", "name": "...", "url": "..." },   // UserRef；游客为 null
+  "user": { "id": "5f...", "name": "...", "url": "...", "avatar": "https://..." },   // AccountUser；游客为 null
   "method": "qrcode",                    // qrcode | sms | password | cookie | oauth | apikey | guest
   "created_at": "2026-09-27T12:00:00+08:00",
   "updated_at": "2026-09-27T12:00:00+08:00",
@@ -693,6 +698,18 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 
 `--raw`：用平台原始对象代替每个归一化对象，信封不变。
 
+`--fields <路径,...>`：只输出每个 `data` 条目里的这些字段，用来省掉不需要的数据。
+- 逗号分隔，用点号进入嵌套对象，例如 `--fields id,url,author.name,stats.likes`。路径经过数组时作用到数组的每个元素（`media.url`）。
+- 列表命令作用到每一条，非列表命令作用到 `data` 本身；`data` 不是对象时（如 `config get`）不变。json 和 jsonl 都适用，信封的其他字段不变。
+- 输出保留嵌套结构，键按 `--fields` 里的顺序；条目里没有的路径输出 null。同时给出 `author` 和 `author.name` 时输出整个 `author`。
+- 在 `--raw` 之后生效，路径按原始对象的字段写。
+- 路径为空或有空段（`a..b`）时报 `USAGE`。
+
+`--dry-run`：做完执行前的全部检查就停下，不调用平台接口、不联网、不确认、不写凭证。
+- 检查的内容和顺序与真正执行时一样：参数和选项（`USAGE` / `UNSUPPORTED`）、是否已实现（`NOT_IMPLEMENTED`）、身份（`AUTH_REQUIRED`，只看本地有没有账号，不在线校验登录态）。
+- 通过时退出码 0，`data` 为 DryRun `{args options confirm}`：`args` 是位置参数，`options` 是校验后的选项（含默认值，凭证类的值打码；`--text @file` 等不读文件内容，原样给出），`confirm` 表示真正执行时是否需要危险操作确认。`page` 为 null，不受 `--fields` 影响。
+- 只用于平台命令；用在全局命令上报 `USAGE`。和 `-h` 一起用时输出帮助。
+
 ### 6.2 归一化类型
 
 所有平台的同一种对象都输出同一结构。
@@ -701,7 +718,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 
 | 类型 | 字段 |
 |---|---|
-| UserRef | `id name url` |
+| UserRef | `id name url avatar`。`avatar` 为头像的 https 绝对地址，从同一个原始对象里取，不为头像额外发请求；取不到时为 null |
 | Price | `amount currency`。`amount` 用货币主单位（元）的十进制数。虚拟货币也用它，`currency` 写平台货币代码 |
 | Media | `id type url width height duration`。`url` 在刚上传、平台还没给出可访问地址时（例如视频转码前）为 null |
 
@@ -713,7 +730,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | Item | `id kind url title text author:UserRef created_at cover media:Media[] stats{views likes comments collects shares} price:Price\|null status\|null` |
 | Torrent | Item 的全部字段（`kind: torrent`），另有 `size file_count category_id seeders leechers completed discount`；大小为字节，计数为整数或 null，优惠为站点代码或 null |
 | BonusRecord | `id time type before after change user:UserRef\|null note url`：PT 站魔力值明细的一条；`before` / `after` / `change` 为数字（变化量带符号），站点不提供时为 null；`url` 为相关链接，没有时为 null |
-| Comment | `id item_id parent_id author:UserRef text created_at stats{likes replies}` |
+| Comment | `id item_id parent_id author:UserRef text media:Media[] created_at stats{likes replies}` |
 | Folder / Series | `id name count url` |
 | Category | `id name parent_id` |
 | Keyword | `text heat` |
@@ -721,6 +738,8 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | Poi | `id name address` |
 
 `Comment.parent_id` 表示直接被回复的评论 ID；楼中楼回复可能指向另一条子回复，不能统一填成根评论 ID。bilibili 的原始 `root` / `parent` 通过 `--raw` 保留。
+
+`Comment.media` 是评论里附带的图片、表情包（贴纸）、商品评价的晒图，取自同一个原始评论对象，不为它额外发请求；动图（GIF、动态表情包）仍记为 `image`，只有平台给的是视频文件时（例如 X 回复里的视频和 GIF）才是 `video`。正文里的行内表情（如 B 站的 `[doge]`）仍是文本，不进 `media`。没有时为 `[]`。
 
 **直播**：
 
@@ -744,8 +763,9 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 
 | 类型 | 字段 |
 |---|---|
-| AuthStatus | `logged_in user:UserRef\|null method expires_at` |
-| Account | `platform endpoint account current user:UserRef\|null method updated_at` |
+| AccountUser | `id name url avatar`：字段与 UserRef 相同，只用于账号（Account、AuthStatus、凭证文件），保留这个类型名 |
+| AuthStatus | `logged_in user:AccountUser\|null method expires_at` |
+| Account | `platform endpoint account current user:AccountUser\|null method updated_at` |
 | File | `path type url size` |
 
 **扩展类型**（见 4.7）：
@@ -1038,11 +1058,11 @@ export default definePlatform({
 ```
 All-In-One/
 ├── AGENTS.md  CLAUDE.md→AGENTS.md
-├── README.md（另有 en、zh-TW、ja、ko 译本）  CHANGELOG.md  llms.txt
+├── README.md（英文，默认；另有 zh-CN、ja、ko 译本）  CHANGELOG.md  llms.txt
 ├── package.json  tsconfig.json  tsconfig.build.json   # npm 主包 catbus-cli
 ├── Dockerfile  compose.yaml  Makefile  .dockerignore
 ├── .github/                        # 仓库治理：CONTRIBUTING、TESTING、SECURITY、PRIVACY、CODE_OF_CONDUCT
-├── assets/                         # logo、banner、README 用的图
+├── assets/                         # logo、banner、README 用的图（由 scripts/gen-assets.mjs 生成）
 ├── docs/
 │   ├── guide/  platforms/          # 用户指南、各平台说明
 │   ├── examples/                   # 组合 catbus 的示例脚本
@@ -1067,7 +1087,7 @@ All-In-One/
 └── tests/                          # vitest；golden/<p>/ 放对拍数据
 ```
 
-`.gitignore`：`references/`、`node_modules/`、`dist/`、`packages/assets-jd/`、`packages/assets-ocr/` 下的模型文件，以及内部文档 `docs/trouble.md`、`docs/roadmap.md`。
+`.gitignore`：`references/`、`node_modules/`、`dist/`、`packages/assets-jd/`、`packages/assets-ocr/` 下的模型文件，`gen:assets` 下载的字体 `.cache/`，以及内部文档 `docs/trouble.md`、`docs/roadmap.md`。
 
 ### 7.8 provider 协议（规划中）
 

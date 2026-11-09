@@ -26,6 +26,8 @@ catbus <platform> <resource> <action> [参数...] [选项...]
 | `-e, --endpoint web\|app\|pc` | 端，默认 `web`（app / pc 尚未实现） |
 | `-o, --output json\|jsonl` | 输出格式，默认 `json` |
 | `--raw` | 用平台原始对象代替归一化对象 |
+| `--fields <路径,...>` | 只输出 `data` 条目里的这些字段，点号进嵌套、经过数组作用到每个元素，例如 `id,url,author.name`；没有的字段为 null |
+| `--dry-run` | 只做参数、选项和登录态检查，不执行；`data` 为 `{args options confirm}` |
 | `--proxy <url>` | 本次调用的代理 |
 | `-v, --verbose` | stderr 输出调试日志（已脱敏） |
 | `-q, --quiet` | 只保留错误 |
@@ -206,11 +208,12 @@ catbus <platform> <resource> <action> [参数...] [选项...]
 
 | 类型 | 字段 |
 |---|---|
-| UserRef | `id name url` |
+| UserRef | `id name url avatar`（作者、评论者、私信对方等；`avatar` 为 https 地址，平台不给时为 null） |
+| AccountUser | `id name url avatar`（字段与 UserRef 相同，用于 `auth list` / `status` / `login` 里账号的 user） |
 | User | `id name handle avatar url bio stats{followers following items likes}` |
 | Item | `id kind url title text author:UserRef created_at cover media:Media[] stats{views likes comments collects shares} price status` |
 | Media | `id type url width height duration` |
-| Comment | `id item_id parent_id author:UserRef text created_at stats{likes replies}` |
+| Comment | `id item_id parent_id author:UserRef text media:Media[] created_at stats{likes replies}` |
 | Live | `id url title status host:UserRef cover stats{viewers}` |
 | Event | `type time user:UserRef text gift{name count}` |
 | Conversation | `id peer:UserRef unread last_message updated_at` |

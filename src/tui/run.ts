@@ -50,7 +50,7 @@ export async function runCommand(req: RunRequest): Promise<RunResult> {
   const controller = new AbortController()
   req.signal?.addEventListener('abort', () => controller.abort(), { once: true })
   const ctx = createHandlerContext({ platform, endpoint, command, args, options, identity, network, log, raw: false, signal: controller.signal })
-  const snapshot = credentialSnapshot(ctx.credential, ep)
+  const snapshot = credentialSnapshot(ctx.credential, ep, command)
   try {
     if (command.paged) {
       // 界面一次取一页；翻页由界面按 page.cursor 继续。cursor 里的 #skip=N 与 CLI 的 --limit 截断约定相同。

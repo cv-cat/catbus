@@ -1,6 +1,7 @@
 import { Box } from 'ink'
 import type { Platform } from '../core/registry.js'
-import type { AuthStatus, AccountRow } from './login.js'
+import type { AccountRow } from './login.js'
+import type { AuthStatus } from '../core/schemas.js'
 import { METHOD_LABEL } from './model.js'
 import { Keys, Pane, Row, T, useGlyphs } from './ui.js'
 import { clip } from './text.js'

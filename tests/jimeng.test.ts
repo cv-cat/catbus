@@ -133,7 +133,7 @@ describe('jimeng：dreamina 登录态', () => {
     await login('b', '1002')
     refresh = true
     const r = await cli('jimeng', 'auth', 'status', '-a', 'b')
-    expect(r.env.data).toMatchObject({ logged_in: true, user: { id: '1002' }, method: 'oauth' })
+    expect(r.env.data).toMatchObject({ logged_in: true, user: { id: '1002', avatar: null }, method: 'oauth' })
     expect(saved('b')).toBe(blob('1002', 9))
     expect(keyring).toBe(blob('1001'))
   })

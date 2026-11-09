@@ -90,13 +90,13 @@ export function thumb(v: any): string | null {
 }
 
 /** 按频道 ID 的 UserRef；ID 为空时为 null。 */
-export function channelUser(id: unknown, name: unknown): UserRef | null {
-  return n.userRef({ id, name, url: id ? channelUrl(String(id)) : null })
+export function channelUser(id: unknown, name: unknown, avatar?: unknown): UserRef | null {
+  return n.userRef({ id, name, url: id ? channelUrl(String(id)) : null, avatar })
 }
 
-function channelRef(endpoint: any, name: unknown): UserRef | null {
+function channelRef(endpoint: any, name: unknown, avatar?: unknown): UserRef | null {
   const id = endpoint?.browseEndpoint?.browseId
-  return typeof id === 'string' && id.startsWith('UC') ? channelUser(id, name) : null
+  return typeof id === 'string' && id.startsWith('UC') ? channelUser(id, name, avatar) : null
 }
 
 /**
@@ -105,10 +105,12 @@ function channelRef(endpoint: any, name: unknown): UserRef | null {
  */
 function rendererOwner(v: any): UserRef | null {
   const run = v.ownerText?.runs?.[0] ?? v.longBylineText?.runs?.[0] ?? v.shortBylineText?.runs?.[0]
-  if (run?.navigationEndpoint?.browseEndpoint) return channelRef(run.navigationEndpoint, run.text)
+  // 频道头像：channelThumbnailSupportedRenderers 的 thumbnail（多人合作时是第一个频道的头像）
+  const avatar = thumb(first(v.channelThumbnailSupportedRenderers, 'thumbnail'))
+  if (run?.navigationEndpoint?.browseEndpoint) return channelRef(run.navigationEndpoint, run.text, avatar)
   const collaborator = first(run?.navigationEndpoint, 'listItemViewModel')
   const endpoint = first(collaborator, 'browseEndpoint') ?? first(v.channelThumbnailSupportedRenderers, 'browseEndpoint')
-  return channelRef({ browseEndpoint: endpoint }, text(collaborator?.title) ?? run?.text)
+  return channelRef({ browseEndpoint: endpoint }, text(collaborator?.title) ?? run?.text, avatar)
 }
 
 /**
@@ -166,8 +168,12 @@ export function lockupVideo(v: any, fallback: UserRef | null = null): Item {
   const views = rows.find((r) => /views?$|watching/i.test(r) || /^[\d.,]+[KMB]?$/i.test(r))
   const ago = rows.find((r) => /\bago\b/i.test(r))
   const name = rows.find((r) => r !== views && r !== ago)
+  // 频道头像：md.image 的 decoratedAvatarViewModel.avatar.avatarViewModel.image
+  const avatar = thumb(first(md?.image, 'avatarViewModel')?.image)
   const author =
-    channelRef({ browseEndpoint: first(md?.image, 'browseEndpoint') }, name) ?? channelRef({ browseEndpoint: lockupRunsChannel(md) }, name) ?? fallback
+    channelRef({ browseEndpoint: first(md?.image, 'browseEndpoint') }, name, avatar) ??
+    channelRef({ browseEndpoint: lockupRunsChannel(md) }, name, avatar) ??
+    fallback
   return n.item(
     {
       id,
@@ -337,7 +343,7 @@ export function comment(e: any, videoId: string): Comment {
       id,
       item_id: videoId,
       parent_id: parent,
-      author: channelUser(a.channelId, a.displayName),
+      author: channelUser(a.channelId, a.displayName, a.avatarThumbnailUrl),
       text: text(p.content) ?? '',
       created_at: relTime(p.publishedTime),
       stats: { likes: count(e.toolbar?.likeCountNotliked) ?? 0, replies: count(e.toolbar?.replyCount) ?? 0 },
@@ -380,7 +386,7 @@ export function chatEvent(action: any): Event | null {
   const item = action?.addChatItemAction?.item
   if (!item) return null
   const [kind, r] = Object.entries(item)[0] as [string, any]
-  const user = channelUser(r.authorExternalChannelId, text(r.authorName))
+  const user = channelUser(r.authorExternalChannelId, text(r.authorName), thumb(r.authorPhoto))
   const time = n.time(r.timestampUsec) ?? undefined
   switch (kind) {
     case 'liveChatTextMessageRenderer':
@@ -391,7 +397,7 @@ export function chatEvent(action: any): Event | null {
       return n.event({ type: 'gift', time, user, text: null, gift: { name: `Super Sticker ${text(r.purchaseAmountText) ?? ''}`.trim(), count: 1 } }, r)
     case 'liveChatSponsorshipsGiftPurchaseAnnouncementRenderer': {
       const h = r.header?.liveChatSponsorshipsHeaderRenderer ?? {}
-      const giftUser = channelUser(r.authorExternalChannelId, text(h.authorName))
+      const giftUser = channelUser(r.authorExternalChannelId, text(h.authorName), thumb(h.authorPhoto ?? r.authorPhoto))
       return n.event({ type: 'gift', time, user: giftUser, text: text(h.primaryText), gift: { name: 'Membership gift', count: count(h.primaryText) ?? 1 } }, r)
     }
     case 'liveChatMembershipItemRenderer':
@@ -490,7 +496,7 @@ function watchInfo(next: any) {
     views: n.count(views.originalViewCount) ?? count(views.viewCount),
     live: views.isLive === true,
     date: watchDate(p.dateText),
-    channel: channelRef(owner?.navigationEndpoint, text(owner?.title)),
+    channel: channelRef(owner?.navigationEndpoint, text(owner?.title), thumb(owner?.thumbnail)),
     description: text(s?.attributedDescription) ?? text(s?.description),
     likes: likeText ? count(likeText) : count(text(first(first(p, 'likeButtonViewModel'), 'title'))),
   }

@@ -61,7 +61,7 @@ async function completeLogin(ctx: Ctx, k: Ks, credential: Credential) {
   const eid = info?.eid ?? info?.id
   if (!eid) throw new CatbusError('AUTH_REQUIRED', '登录没有成功：cookie 无效或已过期')
   k.save(credential)
-  return finishLogin(ctx, credential, norm.ref(eid, info.name)!)
+  return finishLogin(ctx, credential, n.accountUser(norm.ref(eid, info.name)!, info.avatar))
 }
 
 /** 直播站子站点：passToken 换票 + userLogin，失败只提示（直播命令会再试一次）。 */
@@ -239,7 +239,7 @@ export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
     const eid = info?.eid ?? info?.id
     return {
       logged_in: Boolean(eid),
-      user: eid ? norm.ref(eid, info.name) : null,
+      user: eid ? n.accountUser(norm.ref(eid, info.name), info.avatar) : null,
       method: eid ? ctx.credential.method : null,
       expires_at: null,
     }

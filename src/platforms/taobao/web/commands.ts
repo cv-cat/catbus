@@ -47,7 +47,7 @@ export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
     throw err
   }
   const expires = ['cookie2', 'sgcookie', 'unb'].map((name) => tb.jar.cookies.find((c) => c.name === name)?.expires).find((e) => e != null)
-  return { logged_in: true, user: tb.me(), method: ctx.credential.method, expires_at: n.time(expires) }
+  return { logged_in: true, user: n.accountUser(tb.me(), null), method: ctx.credential.method, expires_at: n.time(expires) }
 }
 
 // ================================================================ user

@@ -37,7 +37,7 @@ catbus xhs auth login --method qrcode
 - 二维码画在终端（stderr）上，同时保存成 PNG：`~/.catbus/cache/<platform>/qrcode.png`（权限 0600），终端显示不全时打开这张图扫。
 - 用对应的 App 扫码，并在手机上确认。扫码后终端会提示「已扫码，请在手机上确认」。
 - 要在几分钟内完成（各平台 2～5 分钟不等），超时或二维码失效时报 `AUTH_REQUIRED`，重新执行即可。
-- **小红书**：扫码确认后，服务端可能要求做一次人机验证（HTTP 471）。短信验证由 catbus 发码、你输入验证码后继续登录；其他验证方式报 `RISK_CONTROL`，`hint` 建议改用 cookie 导入。见 [小红书的已知限制](../platforms/xhs.md#已知限制)。
+- **小红书**：扫码确认后，服务端可能要求做一次人机验证（HTTP 471）。短信验证时 catbus 会让你输入接收验证码的手机号（需与账号绑定手机一致，也可用 `--phone`）再发码，验证码输入后继续登录（验证码与手机号同样支持 stdin 逐行喂入）；其他验证方式报 `RISK_CONTROL`，`hint` 建议改用 cookie 导入。见 [小红书的已知限制](../platforms/xhs.md#已知限制)。
 
 ## 短信
 
@@ -214,7 +214,12 @@ catbus auth list                          # 所有平台、所有端的账号
 - 身份的选择顺序：`-a <name>` > 当前账号 > 未登录。`-a` 指定的账号不存在时报 `AUTH_REQUIRED`，`hint` 为 `catbus <p> auth login -a <name>`。
 - 不带 `-a` 登录时：有当前账号就登录到当前账号，否则登录到 `default`。第一次登录的账号自动成为当前账号。
 - 账号名只能用小写字母、数字、`_` 和 `-`，以字母或数字开头，最长 32 位。`guest` 是保留名。
-- 如果这个名字下已经存了另一个用户，登录报 `USAGE`，新凭证不保存：换一个 `-a`，或者先 `auth logout`。
+- 如果这个名字下已经存了另一个用户，相当于先登出再登录：旧账号的凭证被替换，stderr 会提示一行。要同时保留两个用户，用另一个 `-a`，或者用 `--auto-bind`。
+- `--auto-bind` 按登录的用户自动选账号：这个用户已经保存过就刷新那个账号，否则新增一个（`default` 空着时用 `default`，否则按用户 id 起名）。不能和 `-a`、`--scope` 一起用。
+
+```bash
+catbus xhs auth login --auto-bind         # 换号登录也不会覆盖已有账号
+```
 
 ## 子站点（--scope）
 
@@ -239,6 +244,7 @@ catbus xhs auth logout -a work
 ```
 
 - `auth status` 未登录或已失效时返回 `logged_in: false`，不报错；`expires_at` 取自登录 cookie 的过期时间，取不到时为 null。
+- 账号的 `user` 带头像 `avatar`（https 地址）：登录和 `auth status` 时顺带取到就保存，`auth status` 拿到新的昵称 / 头像会更新本地凭证；平台的校验接口不给头像时为 null（taobao、xianyu、jd、jimeng）。
 - 平台返回登录失效时，命令报 `AUTH_EXPIRED`（退出码 3），`hint` 是重新登录的命令。
 - 会自动刷新的 token（例如 B 站的 refresh_token）和响应里的 Set-Cookie，会自动合并回凭证文件。
 - `auth logout` 删除本地凭证文件，并清除指向它的当前账号。bilibili 和 kuaishou 会同时调用服务端登出；服务端登出失败时只删本地凭证。

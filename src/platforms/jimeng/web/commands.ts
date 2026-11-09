@@ -1,6 +1,7 @@
 import { endpointFlag, getCurrent, listAccounts, readCredential } from '../../../core/auth-store.js'
 import { CatbusError } from '../../../core/errors.js'
 import { finishLogin, freshCredential, showLink } from '../../../core/login.js'
+import * as n from '../../../core/normalize.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { Account, AuthStatus, Credential } from '../../../core/schemas.js'
 import { currentUser, keyringUser, requestLogin, sys, waitLogin } from './dreamina.js'
@@ -80,7 +81,8 @@ export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
   try {
     const user = await currentUser()
     await syncBack(ctx)
-    return user ? { logged_in: true, user, method: ctx.credential.method, expires_at: null } : off
+    // dreamina user_credit 只给 user_id / user_name，没有头像
+    return user ? { logged_in: true, user: n.accountUser(user, null), method: ctx.credential.method, expires_at: null } : off
   } finally {
     await activateCurrent(ctx)
   }

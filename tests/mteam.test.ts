@@ -49,7 +49,7 @@ describe('mteam：官方 API 适配', () => {
   }
 
   beforeEach(async () => {
-    const credential = newCredential({ platform: 'mteam', endpoint: 'web', account: 'default', method: 'apikey', user: { id: profile.id, name: profile.username, url: null } })
+    const credential = newCredential({ platform: 'mteam', endpoint: 'web', account: 'default', method: 'apikey', user: { id: profile.id, name: profile.username, url: null, avatar: null } })
     credential.scopes.main!.tokens.api_key = KEY
     await writeCredential(credential)
     await setCurrent('mteam', 'web', 'default')

@@ -20,7 +20,12 @@ import type { GlobalFlags } from './argv.js'
 export async function persistCredential(credential: Credential, snapshot: string | null): Promise<void> {
   if (snapshot == null || JSON.stringify(credential) === snapshot) return
   const { platform, endpoint, account } = credential
-  if (account !== GUEST && !(await readCredential(platform, endpoint as Endpoint, account).catch(() => null))) return
+  if (account !== GUEST) {
+    const saved = await readCredential(platform, endpoint as Endpoint, account).catch(() => null)
+    // 已被删除（logout），或者命令执行期间文件换成了另一个用户（重新登录）：不用旧凭证覆盖
+    const before = (JSON.parse(snapshot) as Credential).user?.id ?? null
+    if (!saved || (saved.user?.id ?? null) !== before) return
+  }
   await writeCredential(credential)
 }
 
@@ -184,7 +189,12 @@ export function createHandlerContext(init: {
   }
 }
 
-/** 凭证改动前的快照；不支持游客态的端上，游客凭证只在内存里，不落盘（返回 null）。 */
-export function credentialSnapshot(credential: Credential, ep: AvailableEndpoint): string | null {
+/**
+ * 凭证改动前的快照，命令结束时与之比较决定要不要落盘（persistCredential）。返回 null 表示不落盘：
+ * - 不支持游客态的端上，游客凭证只在内存里（见 resolveIdentity）；
+ * - `auth login` 的新凭证由 finishLogin 落盘，结束时再写回目标账号的旧凭证会把它盖掉。
+ */
+export function credentialSnapshot(credential: Credential, ep: AvailableEndpoint, command: Command): string | null {
+  if (command.key === 'auth login') return null
   return credential.account === GUEST && !ep.guest ? null : JSON.stringify(credential)
 }

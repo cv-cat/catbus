@@ -1,10 +1,12 @@
 import { z } from 'zod'
+import { endpointFlag, syncStatusUser } from '../core/auth-store.js'
 import { resolveNetwork } from '../core/config.js'
 import { CatbusError, toCatbusError } from '../core/errors.js'
-import { createLogger, type Logger } from '../core/log.js'
+import { createLogger, type Logger, redact } from '../core/log.js'
 import { flagName, parseDuration } from '../core/options.js'
 import { ENDPOINTS, type Endpoint, type HandlerContext, type Page, type Platform } from '../core/registry.js'
 import * as rand from '../core/rand.js'
+import type { Account, AuthStatus } from '../core/schemas.js'
 import { VOCAB } from '../core/vocab.js'
 import { findPlatform, PLATFORMS } from '../platforms/index.js'
 import { collectOptionKinds, type Parsed, parseArgv } from './argv.js'
@@ -16,7 +18,7 @@ import { confirm } from './confirm.js'
 import { createHandlerContext, credentialSnapshot, persistCredential, readFileOptions, resolveIdentity, splitCursor, validate } from './exec.js'
 import { nativeHint } from './hints.js'
 import { commandHelp, GLOBAL_HELP, platformHelp, resourceHelp, rootHelp } from './help.js'
-import { FORMATS, type Format, Output } from './output.js'
+import { FORMATS, type Format, Output, parseFields } from './output.js'
 
 z.config(z.locales.zhCN())
 
@@ -38,6 +40,7 @@ export async function run(argv: string[]): Promise<number> {
       out.format = g.output as Format
     }
     out.raw = g.raw ?? false
+    if (g.fields != null) out.fields = parseFields(g.fields)
     const log = createLogger({ verbose: g.verbose, quiet: g.quiet })
 
     const [first, ...rest] = parsed.positionals
@@ -62,6 +65,7 @@ async function runGlobal(name: string, words: string[], parsed: Parsed, out: Out
   const action = words[0] ?? null
   out.meta = { platform: null, endpoint: null, resource: name, action: null, account: null }
   if (parsed.global.help) return printHelp(GLOBAL_HELP[name]!)
+  if (parsed.global['dry-run']) throw new CatbusError('USAGE', '--dry-run 只用于平台命令', { hint: `catbus ${name} --help` })
   const extra = Object.keys(parsed.options)
   if (extra.length) throw new CatbusError('USAGE', `catbus ${name} 不接受选项 --${flagName(extra[0]!)}`, { hint: `catbus ${name} --help` })
   const noArgs = () => {
@@ -196,11 +200,23 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
     })
   }
 
+  if (key === 'auth login' && options.autoBind) {
+    // --auto-bind 按登录的用户决定账号名（AGENTS 5.3），不能再指定账号或子站点
+    const hint = `catbus ${p} auth login --auto-bind${endpointFlag(endpoint)}`
+    if (g.account != null) throw new CatbusError('USAGE', '--auto-bind 会自动选择账号，不能和 -a 一起用', { hint })
+    if (options.scope != null) throw new CatbusError('USAGE', '--auto-bind 不能和 --scope 一起用：子站点要登录到已有账号，用 -a 指定', { hint: `catbus ${p} auth login -a <账号> --scope ${options.scope}${endpointFlag(endpoint)}` })
+  }
   const identity = await resolveIdentity(platform, endpoint, command, args, g, log)
   // auth login 没有当前账号时登录到 default（AGENTS 5.3），信封里写实际登录的账号
   out.meta.account = identity.account ?? (key === 'auth login' ? 'default' : null)
 
   const needConfirm = typeof command.confirm === 'function' ? command.confirm(options) : command.confirm === true
+  // --dry-run：检查到这里为止，不确认、不读文件、不联网（AGENTS 6.1）
+  if (g['dry-run']) {
+    out.fields = null
+    out.result({ args, options: redact(options), confirm: needConfirm })
+    return 0
+  }
   if (needConfirm) await confirm(`catbus ${p} ${key} ${argWords.join(' ')}`.trim(), g.yes ?? false)
 
   await readFileOptions(options)
@@ -210,8 +226,7 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
   const controller = new AbortController()
   const ctx = createHandlerContext({ platform, endpoint, command, args, options, identity, network, log, raw: out.raw, signal: controller.signal })
 
-  // 不支持游客态的端上，游客凭证只在内存里（见 resolveIdentity）
-  const snapshot = credentialSnapshot(ctx.credential, ep)
+  const snapshot = credentialSnapshot(ctx.credential, ep, command)
   try {
     if (command.stream) {
       out.format = 'jsonl'
@@ -219,12 +234,20 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
     } else if (command.paged) {
       await runPaged(platform, ctx, handler, out)
     } else {
-      out.result(await handler(ctx))
+      const data = await handler(ctx)
+      // auth login 实际落盘的账号可能与目标不同（--auto-bind），信封里写实际的
+      if (key === 'auth login' && data && typeof (data as Account).account === 'string') out.meta.account = (data as Account).account
+      // auth status 在线校验拿到的新昵称 / 头像合并回凭证，随下面的 persistCredential 落盘
+      out.result(key === 'auth status' && isAuthStatus(data) ? syncStatusUser(ctx.credential, data) : data)
     }
   } finally {
     await persistCredential(ctx.credential, snapshot)
   }
   return 0
+}
+
+function isAuthStatus(value: unknown): value is AuthStatus {
+  return typeof value === 'object' && value != null && 'logged_in' in value && 'user' in value
 }
 
 /** 分页：默认一页；--limit N 翻到取满 N 条；--all 翻到没有更多。jsonl 时边翻边输出。 */

@@ -1,3 +1,4 @@
+import * as n from '../../../core/normalize.js'
 import { type Category, type Item, type Media, type Poi, type Price, type UserRef, withRaw } from '../../../core/schemas.js'
 import type { City } from './resolve.js'
 
@@ -31,7 +32,7 @@ function price(v: unknown): Price | null {
 }
 
 function performer(c: any): UserRef | null {
-  return c?.celebrityId != null ? { id: String(c.celebrityId), name: c.celebrityName ?? null, url: null } : null
+  return c?.celebrityId != null ? n.userRef({ id: c.celebrityId, name: c.celebrityName, url: null, avatar: c.headUrl }) : null
 }
 
 /** 场次、场馆、售卖状态没有对应的 Item 字段，按「键：值」逐行写进 text；原始字段用 --raw。 */

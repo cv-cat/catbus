@@ -6,9 +6,9 @@ import { itemUrl, userUrl } from './profile.js'
 
 /** 闲鱼原始对象 → 归一化类型（AGENTS 6.2）。 */
 
-function ref(id: unknown, name: unknown): UserRef | null {
+function ref(id: unknown, name: unknown, avatar?: unknown): UserRef | null {
   const s = plainId(id)
-  return n.userRef({ id: s || null, name, url: s ? userUrl(s) : null })
+  return n.userRef({ id: s || null, name, url: s ? userUrl(s) : null, avatar })
 }
 
 /** 商品状态：itemStatus 0 在售，1 已售出，其余下架。 */
@@ -37,7 +37,7 @@ export function item(d: any, myId = ''): Item {
       url: itemUrl(id),
       title: title ?? text,
       text,
-      author: ref(seller.sellerId ?? it.sellerId, seller.nick ?? seller.uniqueName),
+      author: ref(seller.sellerId ?? it.sellerId, seller.nick ?? seller.uniqueName, seller.portraitUrl ?? seller.avatar),
       created_at: n.time(it.gmtCreate),
       cover: media.find((m) => m.type === 'image')?.url ?? null,
       media,

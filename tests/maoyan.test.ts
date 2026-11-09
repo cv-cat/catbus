@@ -86,7 +86,12 @@ describe('maoyan 平台（web）', () => {
         url: 'https://show.maoyan.com/qqw#/detail/514992',
         title: '岳云鹏孙越相声专场演出',
         text: '分类：相声\n演出者：岳云鹏、孙越\n开售：已开售',
-        author: { id: '11399', name: '岳云鹏', url: null },
+        author: {
+          id: '11399',
+          name: '岳云鹏',
+          url: null,
+          avatar: 'https://p0.pipi.cn/mediaplus/bigdata_crawler_media/e429585bc8b05172a96b1be1357007abe3e59.jpg?imageMogr2/thumbnail/2500x2500%3E',
+        },
         created_at: null,
         cover: expect.stringContaining('https://p0.pipi.cn/'),
         media: [],
@@ -312,7 +317,7 @@ describe('maoyan 平台（web）', () => {
       expect(calls).toHaveLength(0)
       await cli('maoyan', 'auth', 'login', '--method', 'cookie', '--cookie', 'dper=fake-dper')
       const on = await cli('maoyan', 'auth', 'status')
-      expect(on.env.data).toMatchObject({ logged_in: true, method: 'cookie', user: { id: '12345' } })
+      expect(on.env.data).toMatchObject({ logged_in: true, method: 'cookie', user: { id: '12345', avatar: null } })
       restoreSender!()
       mock({ '/api/account/v1/getUserInfoByToken': () => json('{"error":{"code":10010101,"message":"登录令牌无效"},"success":false}') })
       const off = await cli('maoyan', 'auth', 'status')

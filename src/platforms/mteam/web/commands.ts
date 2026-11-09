@@ -34,7 +34,7 @@ export async function authLogin(ctx: HandlerContext) {
   const credential = freshCredential(ctx, 'apikey')
   scope(credential).tokens.api_key = key
   const api = new Api(loginContext(ctx, credential))
-  return finishLogin(ctx, credential, normalize.userRef(await api.profile()))
+  return finishLogin(ctx, credential, normalize.account(await api.profile()))
 }
 
 type Verify = 'otp' | 'email' | 'tg'
@@ -107,7 +107,7 @@ async function passwordLogin(ctx: HandlerContext): Promise<Account | { sent: tru
   }
   if (typeof scope(credential).tokens.auth !== 'string') throw new CatbusError('UPSTREAM', 'M-Team 登录成功但没有返回登录令牌')
   await smsState.clear(ctx)
-  return finishLogin(ctx, credential, normalize.userRef(await new Api(loginCtx).profile()))
+  return finishLogin(ctx, credential, normalize.account(await new Api(loginCtx).profile()))
 }
 
 /** JWT 的 exp（秒）→ ISO 时间；解析不了时为 null。 */
@@ -124,7 +124,7 @@ export async function authStatus(ctx: HandlerContext): Promise<AuthStatus> {
   if (isGuest(ctx)) return empty
   const method = ctx.credential.method === 'password' ? 'password' : 'apikey'
   try {
-    const user = normalize.userRef(await new Api(ctx).profile())
+    const user = normalize.account(await new Api(ctx).profile())
     return { logged_in: true, user, method, expires_at: method === 'password' ? tokenExpiry(scope(ctx.credential).tokens.auth) : null }
   } catch (error) {
     if (error instanceof CatbusError && ['AUTH_REQUIRED', 'AUTH_EXPIRED'].includes(error.code)) return { ...empty, method }

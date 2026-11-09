@@ -4,7 +4,7 @@ import { cookieCredential, finishLogin, loginContext } from '../../../core/login
 import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
-import { type AuthStatus, type Event, type Keyword, RAW, type UserRef } from '../../../core/schemas.js'
+import { type AccountUser, type AuthStatus, type Event, type Keyword, RAW, type UserRef } from '../../../core/schemas.js'
 import { reconnecting } from '../../../core/stream.js'
 import { authError, isGuest, paged } from '../../../core/toolkit.js'
 import * as api from './api.js'
@@ -34,16 +34,18 @@ const COOKIE_DOMAIN = '.youtube.com'
  * 当前账号：头像菜单里的名字，ID 取「你的频道」入口的频道 ID。没有开频道的 Google 账号没有频道 ID，
  * 改用账号列表里的 obfuscatedGaiaId（Google 账号 ID，不会变）。没登录或 cookie 失效时为 null。
  */
-async function me(c: YtClient, channelOnly = false): Promise<UserRef | null> {
+async function me(c: YtClient, channelOnly = false): Promise<AccountUser | null> {
   const res = await api.accountMenu(c)
   const header = norm.first(res, 'activeAccountHeaderRenderer')
   if (!header) return null
   const name = norm.text(header.accountName) ?? norm.text(header.channelHandle)
+  // 头像菜单本身带头像（accountPhoto），不需要额外请求
+  const avatar = norm.thumb(header.accountPhoto)
   const channel = norm.collect(res, 'browseEndpoint').map((e) => e.browseId).find((b) => typeof b === 'string' && b.startsWith('UC'))
-  if (channel || channelOnly) return norm.channelUser(channel, name)
+  if (channel || channelOnly) return n.accountUser(norm.channelUser(channel, name), avatar)
   const accounts = norm.collect(await api.accountsList(c), 'accountItem')
   const gaia = norm.first(accounts.find((a) => a.isSelected) ?? accounts[0], 'accountStateToken')?.obfuscatedGaiaId
-  return gaia ? n.userRef({ id: gaia, name, url: null }) : null
+  return n.accountUser(gaia ? n.userRef({ id: gaia, name, url: null }) : null, avatar)
 }
 
 /** 当前账号的频道 ID：登录时已存进凭证；凭证里不是频道 ID（登录时还没开频道）时再问一次头像菜单，查到后写回凭证。 */
@@ -72,7 +74,7 @@ function userChannel(c: YtClient, ctx: Ctx): Promise<string> {
 }
 
 /** 登录校验用：cookie 失效时接口可能直接回 401（AUTH_*），当作没登录。 */
-async function meOrNull(c: YtClient): Promise<UserRef | null> {
+async function meOrNull(c: YtClient): Promise<AccountUser | null> {
   try {
     return await me(c)
   } catch (err) {

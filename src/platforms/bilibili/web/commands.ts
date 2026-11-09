@@ -40,7 +40,7 @@ async function completeLogin(ctx: Ctx, b: Bili, refreshToken?: string) {
   const credential = b.ctx.credential
   if (refreshToken) scope(credential).tokens.refresh_token = refreshToken
   credential.extra.refresh_checked_at = rand.now()
-  return finishLogin(ctx, credential, norm.ref(nav.data.mid, nav.data.uname)!)
+  return finishLogin(ctx, credential, n.accountUser(norm.ref(nav.data.mid, nav.data.uname)!, nav.data.face))
 }
 
 export async function authLogin(ctx: Ctx) {
@@ -106,7 +106,7 @@ export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
   const sess = b.jar.cookies.find((c) => c.name === 'SESSDATA')
   return {
     logged_in: Boolean(d.isLogin),
-    user: d.isLogin ? norm.ref(d.mid, d.uname) : null,
+    user: d.isLogin ? n.accountUser(norm.ref(d.mid, d.uname), d.face) : null,
     method: d.isLogin ? ctx.credential.method : null,
     expires_at: d.isLogin && sess?.expires ? n.time(sess.expires) : null,
   }
@@ -831,7 +831,7 @@ export async function liveGet(ctx: Ctx) {
       url: norm.liveUrl(r.roomId),
       title: n.str(info.title),
       status: (info.live_status ?? r.status) === 1 ? 'live' : 'offline',
-      host: norm.ref(r.uid, host.uname),
+      host: norm.ref(r.uid, host.uname, host.face),
       cover: n.url(info.cover),
       stats: { viewers: n.count(info.online) },
     },

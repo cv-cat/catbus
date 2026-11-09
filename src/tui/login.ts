@@ -1,10 +1,10 @@
-import { GUEST, checkAccountName, getCurrent, listAccounts } from '../core/auth-store.js'
+import { GUEST, checkAccountName, getCurrent, listAccounts, syncStatusUser } from '../core/auth-store.js'
 import { resolveNetwork } from '../core/config.js'
 import { CatbusError } from '../core/errors.js'
 import { type LoginUi, setLoginUi } from '../core/login.js'
 import type { LoginMethod } from '../core/options.js'
 import type { Command, Platform } from '../core/registry.js'
-import type { Account } from '../core/schemas.js'
+import type { Account, AuthStatus } from '../core/schemas.js'
 import { createHandlerContext, credentialSnapshot, persistCredential, resolveIdentity, validate } from '../cli/exec.js'
 import type { Logger } from '../core/log.js'
 import { webEndpoint } from './model.js'
@@ -108,7 +108,7 @@ export function startLogin(req: LoginRequest, emit: (v: LoginView) => void): Log
       const network = await resolveNetwork(req.platform.id, undefined)
       const handler = await command.handler!()
       const ctx = createHandlerContext({ platform: req.platform, endpoint, command, args, options, identity, network, log: req.log, raw: false, signal: controller.signal })
-      const snapshot = credentialSnapshot(ctx.credential, ep)
+      const snapshot = credentialSnapshot(ctx.credential, ep, command)
       try {
         const result = (await handler(ctx)) as Account | { sent: true; phone: string }
         if ('sent' in result) {
@@ -176,19 +176,14 @@ async function runAuth(platform: Platform, key: 'auth status' | 'auth logout' | 
   const network = await resolveNetwork(platform.id, undefined)
   const handler = await command.handler!()
   const ctx = createHandlerContext({ platform, endpoint, command, args, options, identity, network, log, raw: false, signal: new AbortController().signal })
-  const snapshot = credentialSnapshot(ctx.credential, ep)
+  const snapshot = credentialSnapshot(ctx.credential, ep, command)
   try {
-    return await handler(ctx)
+    const data = await handler(ctx)
+    // 与 CLI 一致（dispatch.runPlatform）：auth status 在线校验拿到的新昵称 / 头像合并回凭证，随 persistCredential 落盘
+    return key === 'auth status' ? syncStatusUser(ctx.credential, data as AuthStatus) : data
   } finally {
     await persistCredential(ctx.credential, snapshot)
   }
-}
-
-export interface AuthStatus {
-  logged_in: boolean
-  user: { id: string; name: string | null } | null
-  method: string | null
-  expires_at: string | null
 }
 
 /** 在线检查账号的登录态。未登录或已失效返回 logged_in: false，不抛错。 */

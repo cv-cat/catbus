@@ -116,7 +116,7 @@ export async function startListen(req: ListenRequest, onEvent: (value: unknown) 
   const handler = await command.handler!()
   const controller = new AbortController()
   const ctx = createHandlerContext({ platform, endpoint, command, args, options, identity, network, log, raw: false, signal: controller.signal })
-  const snapshot = credentialSnapshot(ctx.credential, ep)
+  const snapshot = credentialSnapshot(ctx.credential, ep, command)
   const duration = typeof options.duration === 'string' ? parseDuration(options.duration) : null
   const timer = duration ? setTimeout(() => controller.abort(), duration) : null
   const endsAt = duration ? Date.now() + duration : null

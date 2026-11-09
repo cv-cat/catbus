@@ -218,6 +218,15 @@ describe('bilibili 对拍：上传的结果与动态配图', () => {
 })
 
 describe('bilibili 对拍：命令流程', () => {
+  it('auth status 头像：nav 的 face（不额外请求），统一成 https', async () => {
+    const c = loadCase('bilibili', 'nav')
+    const patched = { ...c, responses: [{ ...c.responses[0]!, body: { ...(c.responses[0]!.body as any), data: { ...(c.responses[0]!.body as any).data, face: 'http://i0.hdslb.com/bfs/face/fake.jpg' } } }] }
+    const { requests, result, error } = await replay(patched, () => commands.authStatus(loggedCtx()))
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect((result as any).user).toEqual({ id: '10001', name: '测试', url: 'https://space.bilibili.com/10001', avatar: 'https://i0.hdslb.com/bfs/face/fake.jpg' })
+  })
+
   it('游客 item get：匿名设备初始化（spi → bili_ticket → 指纹上报）后取稿件详情', async () => {
     const c = loadCase('bilibili', 'guest_item_get')
     const { itemGet } = await import('../src/platforms/bilibili/web/commands.js')
@@ -302,8 +311,8 @@ describe('bilibili comment replies：非上游楼中楼', () => {
     expect(requests[0]!.cookies).toContainEqual(['SESSDATA', 'fake-sessdata'])
     expect(result.data[0]).toEqual({
       id: '71002', item_id: THREAD_BVID, parent_id: '71001',
-      author: { id: '10002', name: '测试用户', url: 'https://space.bilibili.com/10002' },
-      text: '测试回复 71002', created_at: '2023-11-15T06:13:20+08:00', stats: { likes: 3, replies: 0 },
+      author: { id: '10002', name: '测试用户', url: 'https://space.bilibili.com/10002', avatar: null },
+      text: '测试回复 71002', media: [], created_at: '2023-11-15T06:13:20+08:00', stats: { likes: 3, replies: 0 },
     })
     expect(result.data[0][RAW]).toEqual(raw)
     expect(result.page).toEqual({ cursor: '2', has_more: true })

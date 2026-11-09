@@ -1,4 +1,4 @@
-import type { CatbusError } from '../core/errors.js'
+import { CatbusError } from '../core/errors.js'
 import type { Page } from '../core/registry.js'
 import { RAW } from '../core/schemas.js'
 
@@ -27,11 +27,13 @@ export interface Envelope extends Meta {
 export class Output {
   format: Format = 'json'
   raw = false
+  /** `--fields`：只输出这些字段，null 为全部。 */
+  fields: FieldTree | null = null
   meta: Meta = { platform: null, endpoint: null, resource: null, action: null, account: null }
 
   /** jsonl / 流式命令：立即写一条。 */
   item(value: unknown): void {
-    process.stdout.write(JSON.stringify(this.unwrap(value) ?? null) + '\n')
+    process.stdout.write(JSON.stringify(this.shape(value) ?? null) + '\n')
   }
 
   /**
@@ -44,7 +46,7 @@ export class Output {
       if (!streamed) for (const v of Array.isArray(data) ? data : [data]) this.item(v)
       this.summary(error ?? null, page)
     } else {
-      this.envelope(process.stdout, { ...this.base(error ?? null), data: this.unwrap(data) ?? null, page })
+      this.envelope(process.stdout, { ...this.base(error ?? null), data: this.shape(data) ?? null, page })
     }
   }
 
@@ -77,10 +79,58 @@ export class Output {
     stream.write(JSON.stringify(ordered, null, pretty ? 2 : undefined) + '\n')
   }
 
+  /** 先 `--raw`，再 `--fields`。 */
+  private shape(value: unknown): unknown {
+    const v = this.unwrap(value)
+    return this.fields ? project(v, this.fields) : v
+  }
+
   /** `--raw` 时用平台原始对象代替归一化对象。 */
   private unwrap(value: unknown): unknown {
     if (!this.raw || value == null || typeof value !== 'object') return value
     if (Array.isArray(value)) return value.map((v) => this.unwrap(v))
     return RAW in value ? (value as Record<symbol, unknown>)[RAW] : value
   }
+}
+
+/** `--fields` 解析成的字段树：`true` 表示整个字段。 */
+export type FieldTree = Map<string, FieldTree | true>
+
+/** 解析 `--fields id,author.name`。同时给出 `author` 和 `author.name` 时取整个 `author`。 */
+export function parseFields(spec: string): FieldTree {
+  const tree: FieldTree = new Map()
+  for (const path of spec.split(',').map((s) => s.trim())) {
+    const segments = path.split('.')
+    if (segments.some((s) => s === '')) {
+      throw new CatbusError('USAGE', `--fields 的字段路径不对：${path || '（空）'}`, { hint: '例如 --fields id,url,author.name' })
+    }
+    let node = tree
+    for (const [i, s] of segments.entries()) {
+      const child = node.get(s)
+      if (child === true) break
+      if (i === segments.length - 1) {
+        node.set(s, true)
+        break
+      }
+      if (child) node = child
+      else {
+        const next: FieldTree = new Map()
+        node.set(s, next)
+        node = next
+      }
+    }
+  }
+  return tree
+}
+
+/** 按字段树裁剪：数组作用到每个元素，不是对象的值原样返回，对象上没有的字段为 null。 */
+export function project(value: unknown, tree: FieldTree): unknown {
+  if (Array.isArray(value)) return value.map((v) => project(v, tree))
+  if (value == null || typeof value !== 'object') return value
+  const out: Record<string, unknown> = {}
+  for (const [key, sub] of tree) {
+    const v = (value as Record<string, unknown>)[key]
+    out[key] = v === undefined ? null : sub === true ? v : project(v, sub)
+  }
+  return out
 }

@@ -352,7 +352,7 @@ describe('jd 命令流程', () => {
         url: `https://item.jd.com/${SKU}.html`,
         title: '机械键盘',
         text: null,
-        author: { id: '1000', name: '假店铺', url: 'https://mall.jd.com/index-1000.html' },
+        author: { id: '1000', name: '假店铺', url: 'https://mall.jd.com/index-1000.html', avatar: null },
         created_at: null,
         cover: null,
         media: [],

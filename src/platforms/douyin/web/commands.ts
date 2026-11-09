@@ -48,7 +48,7 @@ export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
     return null
   })
   const sess = d.jar.find((c) => c.name === 'sessionid')
-  const user = me ? norm.ref(me.secUid, me.user?.nickname ?? ctx.credential.user?.name) : ctx.credential.user
+  const user = me ? norm.account(me.secUid, me.user, ctx.credential.user?.name) : n.accountUser(ctx.credential.user)
   return { logged_in: true, user, method: ctx.credential.method, expires_at: sess?.expires ? n.time(sess.expires) : null }
 }
 
@@ -393,7 +393,7 @@ async function completeLogin(ctx: Ctx, d: Douyin) {
   }
   d.tokens.uid = uid
   const { secUid, user } = await api.mySecUid(d)
-  return finishLogin(ctx, d.credential, norm.ref(secUid, user?.nickname)!)
+  return finishLogin(ctx, d.credential, norm.account(secUid, user)!)
 }
 
 /**

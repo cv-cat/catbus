@@ -1,7 +1,7 @@
 # catbus
 
-> catbus (猫巴士, "all aboard, every platform") is a TypeScript CLI that drives the web APIs of 12 Chinese and global platforms — Xiaohongshu (xhs), Douyin, TikTok, Bilibili, Kuaishou, Weibo, Xianyu, Taobao, JD, X, YouTube and 12306 (China Railway) — through one uniform command syntax and one JSON output format.
-> Capabilities are ported from cv-cat's open-source Python projects and rewritten in TypeScript; YouTube and 12306 talk to the official web APIs directly. Only Node is required at runtime. Version 0.1.0; web endpoints of all 12 platforms are available; app / pc endpoints are planned.
+> catbus (猫巴士, "all aboard, every platform") is a TypeScript CLI: one command syntax and one JSON output format for any platform. It currently drives the web APIs of 15 platforms — Xiaohongshu (xhs), Douyin, TikTok, Bilibili, Kuaishou, Weibo, Xianyu, Taobao, JD, X, YouTube, 12306 (China Railway), Maoyan, Jimeng and M-Team — and the goal is every platform in the world.
+> Capabilities are ported from cv-cat's open-source Python projects and rewritten in TypeScript; YouTube, 12306, Maoyan and M-Team talk to official web APIs directly. It calls each platform's own web API over HTTP (pure API, no browser automation; the only exception is YouTube Studio publishing, which uses a local headless Chromium for a BotGuard token). Only Node is required at runtime. Web endpoints of all 15 platforms are available; app / pc endpoints are planned.
 
 ## What catbus does
 
@@ -41,7 +41,7 @@ catbus <global-command>
 ```
 
 - Global commands: `platforms [platform]`, `doctor`, `auth list`, `config get|set|unset|list`, `version`, `tui` (full-screen interactive UI for humans; needs a TTY, not for agents).
-- Global options: `-a/--account <name>`, `-e/--endpoint web|app|pc` (default web), `-o/--output json|jsonl`, `--raw`, `--proxy <url>`, `-v`, `-q`, `-y/--yes`, `-h/--help`.
+- Global options: `-a/--account <name>`, `-e/--endpoint web|app|pc` (default web), `-o/--output json|jsonl`, `--raw`, `--fields <path,...>`, `--dry-run`, `--proxy <url>`, `-v`, `-q`, `-y/--yes`, `-h/--help`.
 - Paging: one page by default; `--limit N`, `--all`, `--cursor <page.cursor>`.
 - Standard filters: `--sort general|latest|popular|views|comments|collects|sales|price_asc|price_desc`, `--type all|video|image|text|article|goods`, `--time all|day|week|month|half_year|year`, `--kind recommend|hot|following` (feed list). Each platform supports a subset; a standard value the platform lacks returns `UNSUPPORTED`, a non-standard value returns `USAGE`.
 - Arguments accept IDs, URLs (including share short links), natural identifiers (Bilibili BV id, X handle) and `me` for users. Every output object has `id` and `url` that can be passed to the next command. For xhs, pass URLs (they carry `xsec_token`).
@@ -107,6 +107,8 @@ Envelope (exactly one per call with `-o json`):
 - List commands set `page: { cursor, has_more }`.
 - `-o jsonl`: one `data` entry per line on stdout; a summary envelope on stderr at the end.
 - `--raw`: platform original objects instead of normalized ones.
+- `--fields id,url,author.name`: keep only these fields of each `data` entry (dot paths; through arrays per element; missing → `null`). Applied after `--raw`.
+- `--dry-run`: run all checks (usage, implemented, local login) without calling the platform; `data` is `{args, options, confirm}`.
 - Normalized types: `User`, `Item`, `Comment`, `Live`, `Event`, `Message`, `Conversation`, `Notice`, `Media`, `Folder`, … — fields always present (`null` / `[]` when missing), IDs are strings, counts are integers, times are ISO 8601 with timezone. Full definitions: [AGENTS.md section 6](AGENTS.md).
 
 ## Exit codes
@@ -123,8 +125,8 @@ Envelope (exactly one per call with `-o json`):
 
 ## Docs
 
-- [README.md](README.md): overview (Chinese)
-- [README.en.md](README.en.md): overview (English)
+- [README.md](README.md): overview (English)
+- [README.zh-CN.md](README.zh-CN.md), [README.ja.md](README.ja.md), [README.ko.md](README.ko.md): translations
 - [AGENTS.md](AGENTS.md): the specification — commands (section 4), sessions (5), output (6), architecture (7), conventions (8) (Chinese)
 - [docs/capabilities.md](docs/capabilities.md): capability matrix, generated from the registry
 - [docs/upstream-map.md](docs/upstream-map.md): upstream porting map

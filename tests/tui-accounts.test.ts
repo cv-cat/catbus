@@ -14,7 +14,7 @@ describe('tui 账号管理', () => {
 
   async function seed(account: string, user: { id: string; name: string } | null = { id: 'u-' + account, name: '用户' + account }) {
     const c = newCredential({ platform: 'bilibili', endpoint: 'web', account, method: 'cookie' })
-    c.user = user ? { ...user, url: null } : null
+    c.user = user ? { ...user, url: null, avatar: null } : null
     await writeCredential(c)
   }
 
