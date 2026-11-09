@@ -62,6 +62,7 @@ const Comment = z.strictObject({
   parent_id: nstr,
   author: UserRef.nullable(),
   text: str,
+  media: z.array(Media),
   created_at: ntime,
   stats: z.strictObject({ likes: nint, replies: nint }),
 })

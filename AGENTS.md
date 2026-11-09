@@ -695,7 +695,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | Item | `id kind url title text author:UserRef created_at cover media:Media[] stats{views likes comments collects shares} price:Price\|null status\|null` |
 | Torrent | Item 的全部字段（`kind: torrent`），另有 `size file_count category_id seeders leechers completed discount`；大小为字节，计数为整数或 null，优惠为站点代码或 null |
 | BonusRecord | `id time type before after change user:UserRef\|null note url`：PT 站魔力值明细的一条；`before` / `after` / `change` 为数字（变化量带符号），站点不提供时为 null；`url` 为相关链接，没有时为 null |
-| Comment | `id item_id parent_id author:UserRef text created_at stats{likes replies}` |
+| Comment | `id item_id parent_id author:UserRef text media:Media[] created_at stats{likes replies}` |
 | Folder / Series | `id name count url` |
 | Category | `id name parent_id` |
 | Keyword | `text heat` |
@@ -703,6 +703,8 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | Poi | `id name address` |
 
 `Comment.parent_id` 表示直接被回复的评论 ID；楼中楼回复可能指向另一条子回复，不能统一填成根评论 ID。bilibili 的原始 `root` / `parent` 通过 `--raw` 保留。
+
+`Comment.media` 是评论里附带的图片、表情包（贴纸）、商品评价的晒图，取自同一个原始评论对象，不为它额外发请求；动图（GIF、动态表情包）仍记为 `image`，只有平台给的是视频文件时（例如 X 回复里的视频和 GIF）才是 `video`。正文里的行内表情（如 B 站的 `[doge]`）仍是文本，不进 `media`。没有时为 `[]`。
 
 **直播**：
 

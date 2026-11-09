@@ -1,6 +1,7 @@
 import * as n from '../../../core/normalize.js'
 import { jsonLoads } from '../../../core/py.js'
 import type { Category, Comment, Conversation, Event, Folder, Gift, Item, Live, Media, Message, Notice, Poi, Rank, User, UserRef } from '../../../core/schemas.js'
+import { commentMedia, reviewMedia } from '../../_shared/aweme.js'
 import { ORIGIN, SHOP } from './profile.js'
 import type { ImTextMessage, LiveEvent, LiveUser, PulledMessage } from './wire.js'
 
@@ -106,6 +107,7 @@ export function comment(v: any, itemId: string): Comment {
       parent_id: parent,
       author: ref(u.uid, u.nickname, u.unique_id),
       text: String(v.text ?? ''),
+      media: commentMedia(v),
       created_at: n.time(v.create_time),
       stats: { likes: n.count(v.digg_count), replies: n.count(v.reply_comment_total) },
     },
@@ -121,6 +123,7 @@ export function review(v: any, productId: string): Comment {
       item_id: productId,
       author: n.userRef({ id: v.review_user?.user_id ?? v.user_id ?? v.review_user?.name, name: v.review_user?.name ?? v.user_name }),
       text: String(v.review_text ?? v.display_text ?? v.text ?? ''),
+      media: reviewMedia(v.images ?? v.review_images),
       created_at: n.time(v.review_timestamp ?? v.review_time ?? v.create_time),
       stats: { likes: n.count(v.like_count ?? v.helpful_count), replies: null },
     },

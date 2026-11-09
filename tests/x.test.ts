@@ -221,6 +221,7 @@ describe('x 对拍：命令流程', () => {
         parent_id: null,
         author: { id: '20002', name: 'Peer', url: 'https://x.com/peer_user' },
         text: '@elonmusk 第一条回复',
+        media: [],
         created_at: expect.any(String),
         stats: { likes: 11, replies: 22 },
       },

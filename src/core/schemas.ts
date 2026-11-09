@@ -89,6 +89,8 @@ export interface Comment {
   parent_id: string | null
   author: UserRef | null
   text: string
+  /** 评论附带的图片、表情包、商品评价的晒图；没有时为 []。 */
+  media: Media[]
   created_at: string | null
   stats: { likes: number | null; replies: number | null }
 }

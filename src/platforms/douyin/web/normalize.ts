@@ -1,6 +1,7 @@
 import * as n from '../../../core/normalize.js'
 import { jsonLoads } from '../../../core/py.js'
 import type { AccountUser, Comment, Event, Item, ItemStatus, Live, Media, Notice, Rank, User, UserRef } from '../../../core/schemas.js'
+import { commentMedia, reviewMedia } from '../../_shared/aweme.js'
 import { LIVE, WWW } from './profile.js'
 
 /** 抖音原始对象 → 归一化类型（AGENTS 6.2）。用户 id 用 sec_uid：它能直接拼出主页 URL，也是各接口的入参。 */
@@ -136,6 +137,7 @@ export function comment(c: any, itemId: string): Comment {
       parent_id: parent,
       author: authorRef(c.user),
       text: String(c.text ?? ''),
+      media: commentMedia(c),
       created_at: n.time(c.create_time),
       stats: { likes: n.count(c.digg_count), replies: n.count(c.reply_comment_total) },
     },
@@ -152,6 +154,7 @@ export function productComment(c: any, productId: string): Comment {
       item_id: productId,
       author: n.userRef({ id: u.Id ?? u.SecUid ?? u.Nickname ?? u.NickName, name: u.NickName ?? u.Nickname ?? u.nickname }),
       text: String(c.Content ?? c.content ?? ''),
+      media: reviewMedia(c.Photos ?? c.photos),
       created_at: n.time(c.CommentTime ?? c.CreateTime ?? c.create_time),
       stats: { likes: n.count(c.LikeCount ?? c.like_count), replies: n.count(c.ReplyCount ?? c.reply_count) },
     },

@@ -141,6 +141,16 @@ export function user(u: any): User {
   )
 }
 
+/**
+ * 评论附带的图片：weibo.com 的图片评论把图片放在 `url_struct[i].pic_infos`（正文里只有「查看图片」短链），
+ * 也可能直接在评论上的 `pic_infos`；m.weibo.cn 的评论是单张的 `pic`。按地址去重。
+ */
+function commentImages(c: any): Media[] {
+  const all = [...images(c), ...(Array.isArray(c?.url_struct) ? c.url_struct : []).flatMap((u: any) => images(u)), ...(c?.pic ? images({ pics: [c.pic] }) : [])]
+  const seen = new Set<string>()
+  return all.filter((m) => !seen.has(m.url!) && !!seen.add(m.url!))
+}
+
 /** buildComments 的一条评论。 */
 export function comment(c: any, itemId: string): Comment {
   const id = n.id(c.idstr ?? c.id)
@@ -152,6 +162,7 @@ export function comment(c: any, itemId: string): Comment {
       parent_id: root && root !== id ? root : null,
       author: ref(c.user),
       text: n.str(c.text_raw) ?? n.plainText(c.text) ?? '',
+      media: commentImages(c),
       created_at: n.time(c.created_at),
       stats: { likes: n.count(c.like_counts), replies: n.count(c.total_number) },
     },
