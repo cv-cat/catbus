@@ -247,7 +247,7 @@ export async function smsLoginCode(p: Pc, phone: string, code: string, zone = '8
   }
 }
 
-// ---------------------------------------------------------------- 人机验证：短信验证码（verifyType 120）
+// ---------------------------------------------------------------- 人机验证：短信验证码（120 验证页 / 213 主站登录强制）
 
 /**
  * 461 / 471 响应头里的验证材料（checkStatus 放进 detail 的 verify_uuid / verify_type / status）。
@@ -258,10 +258,15 @@ export type Verify = { uuid: string; type: string; biz: string }
 /** 验证页会去掉 verifyUuid 的地区前缀（前端 ok()）。 */
 const VERIFY_UUID_PREFIXES = ['sg__', 'ae__', 'gcp__']
 
+/** 验证侧统一去掉 verifyUuid 的地区前缀（验证前端 ok()）。 */
+const verifyUuidOf = (v: Verify): string => {
+  const prefix = VERIFY_UUID_PREFIXES.find((x) => v.uuid.startsWith(x))
+  return prefix ? v.uuid.slice(prefix.length) : v.uuid
+}
+
 /** SmsCaptcha 组件的公共参数 d，键序照前端；biz 为空时 JSON.stringify 丢掉，这里不写。 */
 function verifyBase(v: Verify): Record<string, string> {
-  const prefix = VERIFY_UUID_PREFIXES.find((x) => v.uuid.startsWith(x))
-  return { verifyUuid: prefix ? v.uuid.slice(prefix.length) : v.uuid, verifyType: v.type, verifyBiz: v.biz, sourceSite: `${WEB}/explore`, captchaVersion: '2.0.0' }
+  return { verifyUuid: verifyUuidOf(v), verifyType: v.type, verifyBiz: v.biz, sourceSite: `${WEB}/explore`, captchaVersion: '2.0.0' }
 }
 
 /**
@@ -305,6 +310,35 @@ export async function smsVerifySend(v: Pc, verify: Verify): Promise<string> {
 /** vc/check：校验验证码；通过后 verifyUuid 的风控标记解除。前端 SmsCaptcha 的 checkCount 恒为 0。 */
 export async function smsVerifyCheck(v: Pc, verify: Verify, rid: string, code: string): Promise<void> {
   await redcaptcha(v, '/api/redcaptcha/v2/vc/check', { ...verifyBase(verify), rid, code, checkCount: 0 })
+}
+
+// ---------------------------------------------------------------- 登录强制的短信验证（verifyType 213）
+
+/**
+ * 主站 471 的登录强制短信验证（2026-11-09 Chrome 实测）：不建验证页会话，在登录链的会话上直接验。
+ * 与 120 的接口差异：无 vc/init，getverifyuserinfo 取账号资料，vc/send 显式带用户输入的手机号。
+ * 213 的公共参数键序照实测：verifyType 在前、verifyBiz 是数字、不带 captchaVersion。
+ */
+function verifyBase213(v: Verify, extra: Record<string, unknown> = {}): Record<string, unknown> {
+  return { verifyType: v.type, verifyBiz: Number(v.biz) || v.biz, verifyUuid: verifyUuidOf(v), sourceSite: `${WEB}/explore`, ...extra }
+}
+
+/** getverifyuserinfo：验证对象的账号资料（昵称 / 头像），交互时给用户核对是哪个账号在验证。 */
+export async function smsVerifyUserInfo(v: Pc, verify: Verify): Promise<{ nickName?: string; avatarUrl?: string }> {
+  const d = await redcaptcha(v, '/api/redcaptcha/v2/getverifyuserinfo', { verifyUuid: verifyUuidOf(verify), verifyType: verify.type })
+  return { nickName: d?.nickName, avatarUrl: d?.avatarUrl }
+}
+
+/** vc/send（213）：验证码发给指定手机号，返回 rid（vc/check 要带上）。 */
+export async function smsVerifySendPhone(v: Pc, verify: Verify, phone: string): Promise<string> {
+  const d = await redcaptcha(v, '/api/redcaptcha/v2/vc/send', verifyBase213(verify, { phoneNumber: phone, regionCode: 86 }))
+  if (!d.rid) throw new CatbusError('RISK_CONTROL', '小红书短信验证：发送验证码没有返回 rid', { detail: { kind: 'captcha', verify_type: verify.type } })
+  return String(d.rid)
+}
+
+/** vc/check（213）：校验输入的验证码；通过后 verifyUuid 的风控标记解除，回到 qrcode/status 换登录态。 */
+export async function smsVerifyCheckPhone(v: Pc, verify: Verify, rid: string, code: string): Promise<void> {
+  await redcaptcha(v, '/api/redcaptcha/v2/vc/check', verifyBase213(verify, { rid, code, checkCount: 0 }))
 }
 
 /** 上游 XHSLoginApi.get_user_info：user/me，guest 为 false 才算正式登录。 */
