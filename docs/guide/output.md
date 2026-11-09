@@ -59,6 +59,28 @@ catbus bilibili item get BV1xx411c7mD --raw | jq '.data | keys'
 
 原始对象的结构随平台和接口变化，不保证稳定；写脚本时优先用归一化字段。
 
+## --fields
+
+只要部分字段时用 `--fields`，逗号分隔，点号进入嵌套对象；路径经过数组时作用到每个元素。列表命令裁剪每一条，信封的其他字段不变；条目里没有的字段输出 null。
+
+```bash
+catbus bilibili item search 猫 --fields id,url,title,author.name,stats.likes
+catbus xhs item get <url> --fields id,media.url
+```
+
+同时给出 `author` 和 `author.name` 时输出整个 `author`。和 `--raw` 一起用时，路径按原始对象的字段写。
+
+## --dry-run
+
+`--dry-run` 只做执行前的检查，不调用平台接口：参数和选项、命令是否已实现、本地有没有登录（不在线校验）。检查不通过时照常报错，通过时 `data` 是解析后的结果：
+
+```bash
+catbus bilibili item delete BV1xx411c7mD --dry-run
+# data: {"args":{"item":"BV1xx411c7mD"},"options":{},"confirm":true}
+```
+
+`options` 含默认值，凭证类的值打码；`--text @file` 不读文件，原样给出。`confirm` 表示真正执行时是否需要危险操作确认（`-y`）。只用于平台命令。
+
 ## 归一化类型
 
 同一种对象在所有平台上结构相同。常用类型：

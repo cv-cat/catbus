@@ -26,6 +26,8 @@ catbus <platform> <resource> <action> [参数...] [选项...]
 | `-e, --endpoint web\|app\|pc` | 端，默认 `web`（app / pc 尚未实现） |
 | `-o, --output json\|jsonl` | 输出格式，默认 `json` |
 | `--raw` | 用平台原始对象代替归一化对象 |
+| `--fields <路径,...>` | 只输出 `data` 条目里的这些字段，点号进嵌套、经过数组作用到每个元素，例如 `id,url,author.name`；没有的字段为 null |
+| `--dry-run` | 只做参数、选项和登录态检查，不执行；`data` 为 `{args options confirm}` |
 | `--proxy <url>` | 本次调用的代理 |
 | `-v, --verbose` | stderr 输出调试日志（已脱敏） |
 | `-q, --quiet` | 只保留错误 |
