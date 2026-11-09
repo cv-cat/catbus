@@ -940,7 +940,7 @@ export function conversationOf(v: any) {
   return n.conversation(
     {
       id: chatIdOf(v),
-      peer: norm.ref({ user_id: peerId, nickname: peer.nickname ?? peer.user_name ?? v.nickname }),
+      peer: norm.ref({ user_id: peerId, nickname: peer.nickname ?? peer.user_name ?? v.nickname, avatar: peer.avatar ?? peer.image ?? v.avatar }),
       unread: n.count(v.unread_count),
       last_message: lastMessageOf(v),
       updated_at: updatedAtOf(v),
@@ -1021,7 +1021,7 @@ export function messageOf(v: any, conversation: string, self: string): Message {
     {
       id: String(v.message_id ?? v.id ?? v.mid),
       conversation_id: conversation,
-      from: norm.ref({ user_id: sender, nickname: info.nickname ?? v.sender_nickname ?? v.nickname }),
+      from: norm.ref({ user_id: sender, nickname: info.nickname ?? v.sender_nickname ?? v.nickname, avatar: info.avatar ?? info.image }),
       type: messageType(v),
       text: n.str(push.innerText(v.content ?? '')),
       created_at: n.time(v.created_at ?? v.create_time ?? v.ts),

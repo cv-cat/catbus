@@ -448,7 +448,7 @@ describe('douyin 对拍：长连接', () => {
       ['enter', '观众C', null, null],
       ['follow', '观众D', null, null],
     ])
-    expect(events[0]!.user).toEqual({ id: 'MS4wLjABAAAAviewerA', name: '观众A', url: 'https://www.douyin.com/user/MS4wLjABAAAAviewerA' })
+    expect(events[0]!.user).toEqual({ id: 'MS4wLjABAAAAviewerA', name: '观众A', url: 'https://www.douyin.com/user/MS4wLjABAAAAviewerA', avatar: null })
   })
 
   it('私信：设备号 → frontier-im 地址（access_key）与握手头；推送帧转成 Message', async () => {

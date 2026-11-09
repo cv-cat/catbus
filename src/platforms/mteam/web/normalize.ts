@@ -5,7 +5,7 @@ import type { Row } from './api.js'
 import { SITE } from './client.js'
 
 export function userRef(raw: Row): UserRef {
-  return { id: String(raw.id), name: n.str(raw.username), url: `${SITE}/profile/${raw.id}` }
+  return { id: String(raw.id), name: n.str(raw.username), url: `${SITE}/profile/${raw.id}`, avatar: n.avatar(raw.avatarUrl) }
 }
 
 /** 当前账号（member/profile）→ AccountUser：头像与 user() 同源（avatarUrl）。 */
@@ -20,7 +20,7 @@ export function user(raw: Row): User {
 export function torrent(raw: Row): Torrent {
   const status = raw.status ?? {}
   const author = !raw.anonymous && raw.author != null
-    ? { id: String(raw.author), name: null, url: `${SITE}/profile/${raw.author}` } : null
+    ? { id: String(raw.author), name: null, url: `${SITE}/profile/${raw.author}`, avatar: null } : null
   return withRaw({
     ...n.item({
       id: String(raw.id), kind: 'torrent', url: `${SITE}/detail/${raw.id}`,
@@ -39,12 +39,12 @@ export function category(raw: Row): Category {
   return n.category({ id: String(raw.id), name: String(raw.nameChs ?? raw.nameCht ?? raw.nameEng ?? raw.id), parent_id: n.idOrNull(raw.parent) }, raw)
 }
 
-const SYSTEM: UserRef = { id: '0', name: '系统', url: null }
+const SYSTEM: UserRef = { id: '0', name: '系统', url: null, avatar: null }
 
 function peerRef(id: unknown): UserRef | null {
   if (id == null || id === '') return null
   if (String(id) === '0') return SYSTEM
-  return { id: String(id), name: null, url: `${SITE}/profile/${id}` }
+  return { id: String(id), name: null, url: `${SITE}/profile/${id}`, avatar: null }
 }
 
 const sizeText = (bytes: unknown): string | null => {

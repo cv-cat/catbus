@@ -8,6 +8,7 @@
 
 ### Added
 
+- UserRef 带上头像：作者、评论者、主播、观众、私信对方等所有 UserRef 改为 `id name url avatar`，`avatar` 从同一个原始对象里取（统一成 https，不额外请求），取不到时为 null。AccountUser 的字段与 UserRef 相同，类型名保留
 - 评论带上图片：Comment 新增 `media: Media[]`（评论附带的图片、表情包、商品评价的晒图；动图也记为 `image`，正文里的行内表情不算），取自同一个原始评论对象，不额外请求。xhs（`pictures`）、douyin / tiktok（`image_list`、`sticker`，商品评价的晒图）、bilibili（`content.pictures`）、weibo（`url_struct` / `pic_infos` / `pic`）、x（回复推文的 `extended_entities`）、jd（评价的 `pictureInfoList`）；kuaishou 的评论查询不返回图片、youtube 评论没有图片，为 `[]`
 - 账号带上头像：Account 与 AuthStatus 的 `user` 改为新类型 AccountUser（`id name url avatar`），凭证文件的 `user` 也保存 `avatar`。登录、cookie 导入和 `auth status` 复用流程里原有的那次当前用户请求取头像（统一成 https），不额外请求；`auth status` 拿到新的昵称 / 头像会写回凭证。旧凭证文件没有 `avatar` 时读成 null，不需要迁移。taobao、xianyu、jd、jimeng 的校验接口不给头像，为 null
 - 新增 `youtube`（YouTube，别名 `yt`）平台的 web 端。没有上游仓库，直接对接 YouTube 网页背后的 InnerTube 接口（`/youtubei/v1/`），接口说明见 `src/platforms/youtube/UPSTREAM`：

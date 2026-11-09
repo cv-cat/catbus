@@ -51,7 +51,7 @@ export class Xianyu {
   }
 
   me(): UserRef {
-    return { id: this.myId, name: this.nick, url: userUrl(this.myId) }
+    return { id: this.myId, name: this.nick, url: userUrl(this.myId), avatar: null }
   }
 
   /** 私信用的设备 ID：上游每次按 `unb` 随机生成；这里生成一次后存在凭证的 device 里。 */

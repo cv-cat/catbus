@@ -555,7 +555,7 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth|api
   - 需要单独登录的，用 `--scope <name>` 登录，各平台可用的 scope 在注册表里声明；
   - 命令缺少所需 scope 时，报 `AUTH_REQUIRED`，`hint` 带上 `--scope`。
 - **`auth status`**：在线校验，返回 AuthStatus。未登录或已失效时返回 `logged_in: false`，不报错。校验成功且返回的是同一个用户时，新的昵称 / 头像由 core 回写到凭证文件。
-- **头像**：登录、cookie 导入校验和 `auth status` 复用流程里本来就有的那次当前用户请求，取到头像就存进凭证的 `user.avatar`（统一成 https 绝对地址），不为头像额外发请求；取不到时为 null。旧凭证文件没有 `avatar` 时读成 null，不需要迁移。
+- **头像**（账号的头像；作者、评论者等 UserRef 的头像见 6.2）：登录、cookie 导入校验和 `auth status` 复用流程里本来就有的那次当前用户请求，取到头像就存进凭证的 `user.avatar`（统一成 https 绝对地址），不为头像额外发请求；取不到时为 null。旧凭证文件没有 `avatar` 时读成 null，不需要迁移。
 - **`auth logout`**：删除本地凭证文件（上游支持服务端登出的，同时调用服务端登出，目前有 B 站和快手），并清除指向它的 `_current`。
 - **`auth use <account>`**：设置 `_current`。端声明了 `use` 钩子的（目前只有 `jimeng`），先调用钩子，再设置 `_current`；钩子报错时不切换。
 - **`auth list`**：列出本平台、本端的账号。
@@ -683,7 +683,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 
 | 类型 | 字段 |
 |---|---|
-| UserRef | `id name url` |
+| UserRef | `id name url avatar`。`avatar` 为头像的 https 绝对地址，从同一个原始对象里取，不为头像额外发请求；取不到时为 null |
 | Price | `amount currency`。`amount` 用货币主单位（元）的十进制数。虚拟货币也用它，`currency` 写平台货币代码 |
 | Media | `id type url width height duration`。`url` 在刚上传、平台还没给出可访问地址时（例如视频转码前）为 null |
 
@@ -728,7 +728,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 
 | 类型 | 字段 |
 |---|---|
-| AccountUser | `id name url avatar`：UserRef 加上头像，只用于账号 |
+| AccountUser | `id name url avatar`：字段与 UserRef 相同，只用于账号（Account、AuthStatus、凭证文件），保留这个类型名 |
 | AuthStatus | `logged_in user:AccountUser\|null method expires_at` |
 | Account | `platform endpoint account current user:AccountUser\|null method updated_at` |
 | File | `path type url size` |

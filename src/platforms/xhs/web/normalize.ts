@@ -21,10 +21,19 @@ export function userUrl(id: unknown, token?: unknown, source = 'pc_note'): strin
   return token ? `${WEB}/user/profile/${id}?xsec_token=${encodeURIComponent(String(token))}&xsec_source=${source}` : `${WEB}/user/profile/${id}`
 }
 
+/**
+ * 作者 / 评论者等的 UserRef。头像：笔记卡片与详情的 user.avatar，评论的 user_info.image，
+ * 直播 profile.avatar，个人页的 images / imageb。
+ */
 export function ref(u: any): UserRef | null {
   if (!u) return null
   const id = u.user_id ?? u.userId ?? u.id
-  return n.userRef({ id, name: u.nickname ?? u.nick_name ?? u.name ?? u.userName, url: userUrl(id, u.xsec_token) })
+  return n.userRef({
+    id,
+    name: u.nickname ?? u.nick_name ?? u.name ?? u.userName,
+    url: userUrl(id, u.xsec_token),
+    avatar: u.avatar ?? u.image ?? u.images ?? u.imageb ?? u.avatar_url,
+  })
 }
 
 /** 当前账号（user/me）→ AccountUser：头像取 images（大图），没有时 imageb。 */

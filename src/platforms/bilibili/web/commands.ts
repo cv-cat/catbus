@@ -831,7 +831,7 @@ export async function liveGet(ctx: Ctx) {
       url: norm.liveUrl(r.roomId),
       title: n.str(info.title),
       status: (info.live_status ?? r.status) === 1 ? 'live' : 'offline',
-      host: norm.ref(r.uid, host.uname),
+      host: norm.ref(r.uid, host.uname, host.face),
       cover: n.url(info.cover),
       stats: { viewers: n.count(info.online) },
     },

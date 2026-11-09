@@ -67,7 +67,7 @@ export class Taobao {
   }
 
   me(): UserRef {
-    return { id: this.myId, name: this.nick || null, url: null }
+    return { id: this.myId, name: this.nick || null, url: null, avatar: null }
   }
 
   /** 私信、上传等需要登录的操作：cookie 里必须有 unb。 */
