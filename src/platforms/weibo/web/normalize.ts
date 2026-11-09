@@ -17,7 +17,8 @@ export function itemUrl(mid: string, uid?: unknown, bid?: unknown): string {
 
 export function ref(u: any): UserRef | null {
   const id = u?.idstr ?? u?.id
-  return n.userRef({ id, name: u?.screen_name, url: id == null || id === '' ? null : userUrl(id) })
+  // 头像：profile_image_url 是小图（列表里够用），没有时 avatar_large / avatar_hd
+  return n.userRef({ id, name: u?.screen_name, url: id == null || id === '' ? null : userUrl(id), avatar: u?.profile_image_url || u?.avatar_large || u?.avatar_hd })
 }
 
 /** "21万次播放" / "1,234" → 整数。 */

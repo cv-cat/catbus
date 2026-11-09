@@ -71,7 +71,7 @@ export async function currentUser(): Promise<UserRef | null> {
   const id = /"user_id"\s*:\s*"?(\d+)/.exec(stdout)?.[1]
   if (!id) return null
   const name = /"user_name"\s*:\s*"([^"]*)"/.exec(stdout)?.[1]
-  return { id, name: name || null, url: null }
+  return { id, name: name || null, url: null, avatar: null }
 }
 
 export interface LoginRequest {

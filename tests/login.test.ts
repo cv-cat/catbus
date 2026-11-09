@@ -82,12 +82,12 @@ describe('finishLogin（AGENTS 5.3）', () => {
   })
 
   it('accountNameFor：转成合法账号名，冲突或起不出来时加序号', () => {
-    expect(accountNameFor({ id: '5F3A_xY', name: null, url: null }, new Set())).toBe('5f3a_xy')
-    expect(accountNameFor({ id: '@Elon.Musk', name: null, url: null }, new Set())).toBe('elon-musk')
-    expect(accountNameFor({ id: '123', name: null, url: null }, new Set(['123', '123-2']))).toBe('123-3')
-    expect(accountNameFor({ id: '中文', name: null, url: null }, new Set())).toBe('account-2')
-    expect(accountNameFor({ id: 'guest', name: null, url: null }, new Set())).toBe('guest-2')
-    const long = accountNameFor({ id: 'x'.repeat(40), name: null, url: null }, new Set(['x'.repeat(32)]))
+    expect(accountNameFor({ id: '5F3A_xY', name: null, url: null, avatar: null }, new Set())).toBe('5f3a_xy')
+    expect(accountNameFor({ id: '@Elon.Musk', name: null, url: null, avatar: null }, new Set())).toBe('elon-musk')
+    expect(accountNameFor({ id: '123', name: null, url: null, avatar: null }, new Set(['123', '123-2']))).toBe('123-3')
+    expect(accountNameFor({ id: '中文', name: null, url: null, avatar: null }, new Set())).toBe('account-2')
+    expect(accountNameFor({ id: 'guest', name: null, url: null, avatar: null }, new Set())).toBe('guest-2')
+    const long = accountNameFor({ id: 'x'.repeat(40), name: null, url: null, avatar: null }, new Set(['x'.repeat(32)]))
     expect(long).toBe('x'.repeat(30) + '-2')
   })
 })

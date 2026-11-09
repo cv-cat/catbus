@@ -167,7 +167,7 @@ describe('x 对拍：命令流程', () => {
       url: `https://x.com/elonmusk/status/${TWEET_ID}`,
       title: null,
       text: '视频推文 https://t.co/v',
-      author: { id: USER_ID, name: 'Elon Musk', url: 'https://x.com/elonmusk' },
+      author: { id: USER_ID, name: 'Elon Musk', url: 'https://x.com/elonmusk', avatar: 'https://pbs.twimg.com/profile_images/1/fake_normal.jpg' },
       created_at: expect.stringMatching(/^2022-10-2[67]T\d\d:45:58/),
       cover: 'https://pbs.twimg.com/ext_tw_video_thumb/901/pu/img/thumb.jpg',
       media: [{ id: '901', type: 'video', url: 'https://video.twimg.com/ext_tw_video/901/pu/vid/1280x720/high.mp4', width: 1920, height: 1080, duration: 9.301 }],
@@ -219,12 +219,12 @@ describe('x 对拍：命令流程', () => {
         id: '2001',
         item_id: TWEET_ID,
         parent_id: null,
-        author: { id: '20002', name: 'Peer', url: 'https://x.com/peer_user' },
+        author: { id: '20002', name: 'Peer', url: 'https://x.com/peer_user', avatar: null },
         text: '@elonmusk 第一条回复',
         created_at: expect.any(String),
         stats: { likes: 11, replies: 22 },
       },
-      expect.objectContaining({ id: '2002', parent_id: '2001', author: { id: USER_ID, name: 'Elon Musk', url: 'https://x.com/elonmusk' } }),
+      expect.objectContaining({ id: '2002', parent_id: '2001', author: { id: USER_ID, name: 'Elon Musk', url: 'https://x.com/elonmusk', avatar: 'https://pbs.twimg.com/profile_images/1/fake_normal.jpg' } }),
     ])
     expect(page).toEqual({ cursor: 'DETAIL_NEXT', has_more: true })
   })
@@ -255,7 +255,7 @@ describe('x 对拍：命令流程', () => {
     if (error) throw error
     expectRequests(requests, c.requests)
     expect((result as any).data).toEqual([
-      { id: '10001:20002', peer: { id: '20002', name: 'Peer', url: 'https://x.com/peer_user' }, unread: null, last_message: null, updated_at: null },
+      { id: '10001:20002', peer: { id: '20002', name: 'Peer', url: 'https://x.com/peer_user', avatar: null }, unread: null, last_message: null, updated_at: null },
       { id: 'g1790000000', peer: null, unread: null, last_message: null, updated_at: expect.stringMatching(/^2026-09-2[12]T/) },
     ])
   })
@@ -279,8 +279,8 @@ describe('x 对拍：命令流程', () => {
     if (error) throw error
     expectRequests(requests, c.requests)
     expect((result as any).data.map((v: any) => v.peer)).toEqual([
-      { id: '20002', name: 'Peer', url: 'https://x.com/peer_user' },
-      { id: '30003', name: '第三人', url: 'https://x.com/third_user' },
+      { id: '20002', name: 'Peer', url: 'https://x.com/peer_user', avatar: null },
+      { id: '30003', name: '第三人', url: 'https://x.com/third_user', avatar: null },
     ])
     expect((result as any).page).toEqual({ cursor: null, has_more: false })
   })
@@ -497,7 +497,7 @@ describe('x 命令流程：其余读写命令', () => {
     })
     try {
       const { data } = await cmd.msgList(ctx)
-      expect(data[0]!.peer).toEqual({ id: '20002', name: 'Peer', url: 'https://x.com/peer_user' })
+      expect(data[0]!.peer).toEqual({ id: '20002', name: 'Peer', url: 'https://x.com/peer_user', avatar: null })
     } finally {
       restore()
     }
