@@ -20,6 +20,13 @@ export function image(path: unknown): string | null {
   return `https://img14.360buyimg.com/n1/${s.replace(/^\/+/, '')}`
 }
 
+/** 用户头像：`//host/path`、`http(s)://` 照常归一，没有协议头的 `host/path` 补上 https。 */
+function userImage(path: unknown): string | null {
+  const s = n.str(path)
+  if (!s) return null
+  return n.avatar(/^(https?:)?\/\//.test(s) ? s : /^[a-z0-9.-]+\.[a-z]{2,}\//i.test(s) ? `https://${s}` : null)
+}
+
 /** 在对象里按键名找第一个非空值（广度优先，限深度）。 */
 export function find(obj: unknown, keys: string[], depth = 5): any {
   let level: unknown[] = [obj]
@@ -73,7 +80,7 @@ export function findList(obj: unknown, keys: string[], depth = 6): any[] {
 
 export function shopRef(shopId: unknown, name: unknown): UserRef | null {
   const id = n.str(shopId)
-  return id ? { id, name: n.str(name), url: shopUrl(id) } : name ? { id: String(name), name: String(name), url: null } : null
+  return id ? { id, name: n.str(name), url: shopUrl(id), avatar: null } : name ? { id: String(name), name: String(name), url: null, avatar: null } : null
 }
 
 /** 搜索结果里的一件商品（wareList 的元素，字段同上游 search_wares）。 */
@@ -143,7 +150,12 @@ export function comments(sku: string, d: any): Comment[] {
       {
         id: n.id(c.commentId ?? c.id ?? c.guid),
         item_id: sku,
-        author: n.userRef({ id: c.userNickName ?? c.nickName ?? c.nickname ?? c.userId, name: c.userNickName ?? c.nickName ?? c.nickname }),
+        author: n.userRef({
+          id: c.userNickName ?? c.nickName ?? c.nickname ?? c.userId,
+          name: c.userNickName ?? c.nickName ?? c.nickname,
+          // 评价者头像：userImgURL（m 站评价），老接口为 userImageUrl；可能没有协议头
+          avatar: userImage(c.userImgURL ?? c.userImageUrl ?? c.userImgUrl),
+        }),
         text: String(c.commentData ?? c.content ?? ''),
         created_at: n.time(c.commentDate ?? c.creationTime ?? c.date),
         stats: { likes: n.count(c.praiseCnt ?? c.usefulVoteCount ?? c.likeCount), replies: n.count(c.replyCnt ?? c.replyCount) },
@@ -236,7 +248,7 @@ export function me(pin: string, data: any): User {
   return n.user({ id: String(pin || id), name: n.str(data?.Identity?.Unick || data?.Identity?.Name), handle: pin || null, url: 'https://home.jd.com/' }, data)
 }
 
-export const meRef = (pin: string, name: string | null): UserRef => ({ id: pin, name: name || pin, url: 'https://home.jd.com/' })
+export const meRef = (pin: string, name: string | null): UserRef => ({ id: pin, name: name || pin, url: 'https://home.jd.com/', avatar: null })
 
 // ---------------------------------------------------------------- 咚咚
 
@@ -247,7 +259,7 @@ export function conversations(d: any): Conversation[] {
     return n.conversation(
       {
         id: n.id(s.venderId),
-        peer: { id: n.id(s.venderId), name: n.str(s.venderName ?? s.shopName ?? s.name), url: s.shopId ? shopUrl(s.shopId) : null },
+        peer: { id: n.id(s.venderId), name: n.str(s.venderName ?? s.shopName ?? s.name), url: s.shopId ? shopUrl(s.shopId) : null, avatar: null },
         unread: n.count(s.unreadCount ?? s.unread ?? s.unReadNum),
         last_message: n.str(typeof last === 'string' ? last : (last.content ?? last.body?.content)),
         updated_at: n.time(s.timestamp ?? s.lastTime ?? s.time ?? last.timestamp ?? last.datetime),
@@ -275,7 +287,7 @@ export function extractText(body: any): string | null {
 
 const MSG_TYPES: Record<string, Message['type']> = { text: 'text', image: 'image', img: 'image', video: 'video', template2: 'card', card: 'card' }
 
-const userOf = (pin: unknown): UserRef | null => (pin ? { id: String(pin), name: String(pin), url: null } : null)
+const userOf = (pin: unknown): UserRef | null => (pin ? { id: String(pin), name: String(pin), url: null, avatar: null } : null)
 
 /**
  * WS 下行帧 → msg listen 输出的消息（JdChatWS._handle 的分支）：
@@ -323,7 +335,7 @@ export function message(p: any, venderId: string): Message {
     {
       id: n.id(p.id ?? p.mid ?? p.msgId),
       conversation_id: n.id(body.chatinfo?.venderId ?? p.venderId ?? venderId),
-      from: from.pin ? { id: String(from.pin), name: n.str(from.nickname ?? from.pin), url: null } : null,
+      from: from.pin ? { id: String(from.pin), name: n.str(from.nickname ?? from.pin), url: null, avatar: null } : null,
       type: MSG_TYPES[kind] ?? (extractText(body) ? 'text' : 'other'),
       text: extractText(body),
       media: url ? [n.media({ type: 'image', url })] : [],

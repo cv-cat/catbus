@@ -206,7 +206,7 @@ describe('youtube 平台（web）', () => {
       }
       const res = { contents: { twoColumnSearchResultsRenderer: { primaryContents: { sectionListRenderer: { contents: [{ itemSectionRenderer: { contents: [{ videoRenderer: collab }] } }] } } } } }
       const r = await withYt({ search: () => res }, () => cli('youtube', 'item', 'search', 'podcast'))
-      expect(r.env.data[0].author).toEqual({ id: 'UCaaaaaaaaaaaaaaaaaaaaaa', name: 'Channel A', url: 'https://www.youtube.com/channel/UCaaaaaaaaaaaaaaaaaaaaaa' })
+      expect(r.env.data[0].author).toEqual({ id: 'UCaaaaaaaaaaaaaaaaaaaaaa', name: 'Channel A', url: 'https://www.youtube.com/channel/UCaaaaaaaaaaaaaaaaaaaaaa', avatar: null })
     })
 
     it('item search：按上传时间排序已下线，--sort latest 报 UNSUPPORTED', async () => {

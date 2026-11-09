@@ -65,7 +65,7 @@ catbus bilibili item get BV1xx411c7mD --raw | jq '.data | keys'
 
 | 类型 | 字段 |
 |---|---|
-| UserRef | `id name url` |
+| UserRef | `id name url avatar`（`avatar` 为头像的 https 地址，平台不给时为 null） |
 | User | `id name handle avatar url bio stats{followers following items likes}` |
 | Item | `id kind url title text author:UserRef created_at cover media:Media[] stats{views likes comments collects shares} price:Price\|null status\|null` |
 | Media | `id type url width height duration` |
@@ -76,7 +76,7 @@ catbus bilibili item get BV1xx411c7mD --raw | jq '.data | keys'
 | Conversation | `id peer:UserRef unread last_message updated_at` |
 | Message | `id conversation_id from:UserRef type text media:Media[] created_at` |
 | Notice | `id type user:UserRef target{id url}\|null text created_at` |
-| AccountUser | `id name url avatar`（账号专用：UserRef 加上头像，取不到时为 null） |
+| AccountUser | `id name url avatar`（账号专用，字段与 UserRef 相同） |
 | AuthStatus | `logged_in user:AccountUser\|null method expires_at` |
 | Account | `platform endpoint account current user:AccountUser\|null method updated_at` |
 | File | `path type url size` |

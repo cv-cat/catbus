@@ -10,7 +10,8 @@ const nnum = z.number().nullable()
 const time = z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/, '不是带时区的 ISO 8601')
 const ntime = time.nullable()
 
-const UserRef = z.strictObject({ id: str, name: nstr, url: nstr })
+/** 头像是 https 绝对地址，取不到时为 null。 */
+const UserRef = z.strictObject({ id: str, name: nstr, url: nstr, avatar: z.string().regex(/^https:\/\//).nullable() })
 const Price = z.strictObject({ amount: z.number(), currency: str })
 const Media = z.strictObject({
   id: nstr,
