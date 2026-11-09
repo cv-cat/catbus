@@ -297,6 +297,7 @@ export async function itemDownload(ctx: Ctx) {
   const info = await api.videoInfo(b, bvid)
   const media = await playMedia(b, bvid, info.cid)
   return downloadMedia(ctx, b.http, bvid, media, {
+    title: info.title,
     headers: [
       ['user-agent', PROFILE.ua],
       ['referer', 'https://www.bilibili.com/'],

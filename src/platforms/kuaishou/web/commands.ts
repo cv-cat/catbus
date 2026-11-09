@@ -411,6 +411,7 @@ export async function itemDownload(ctx: Ctx) {
   return run(ctx, 'www', async (k) => {
     const d = await detailOf(k, ctx.args.item!)
     return downloadMedia(ctx, k.http, String(d.photo?.id), norm.photoMedia(d.photo), {
+      title: d.photo?.caption,
       headers: [
         ['user-agent', UA],
         ['referer', 'https://www.kuaishou.com/'],

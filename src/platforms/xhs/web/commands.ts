@@ -484,14 +484,14 @@ export async function itemList(ctx: Ctx) {
   })
 }
 
-async function noteMedia(p: Pc, input: string): Promise<{ id: string; media: Media[] }> {
+async function noteMedia(p: Pc, input: string): Promise<{ id: string; title: string | null; media: Media[] }> {
   const { ref, item } = await noteDetail(p, input)
   let media = norm.mediaOf(item)
   if (item.kind === 'video' && !media.length) {
     const url = await api.noteVideo(p, ref.id)
     if (url) media = [n.media({ type: 'video', url })]
   }
-  return { id: ref.id, media }
+  return { id: ref.id, title: item.title || item.text, media }
 }
 
 export async function itemMedia(ctx: Ctx) {
@@ -500,8 +500,9 @@ export async function itemMedia(ctx: Ctx) {
 
 export async function itemDownload(ctx: Ctx) {
   return run(ctx, async (p) => {
-    const { id, media } = await noteMedia(p, ctx.args.item!)
+    const { id, title, media } = await noteMedia(p, ctx.args.item!)
     return downloadMedia(ctx, p.http, id, media, {
+      title,
       headers: [
         ['user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36'],
         ['referer', `${WEB}/`],

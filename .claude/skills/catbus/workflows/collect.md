@@ -63,6 +63,8 @@ catbus xhs item download "<笔记 url>" --dir ./xhs   # 存到本地，文件名
 
 已有文件默认跳过，`--overwrite` 覆盖。批量下载时逐条执行，不要并发。
 
+`--subdir title` 让每条内容放进以标题命名的子目录（如 `./xhs/<标题>/xhs_<id>_1.jpg`），目录名已清洗成各系统都能用的形式；`--subdir id` 按 ID 分目录。
+
 ## 跨平台
 
 同一个关键词在几个平台上搜，把结果合在一起，每条加上 `platform`：
