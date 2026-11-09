@@ -10,7 +10,8 @@ import { writeFileAtomic } from './fsutil.js'
 import { cacheDir } from './paths.js'
 import { now, sleep } from './rand.js'
 import type { HandlerContext } from './registry.js'
-import type { Account, Credential, UserRef } from './schemas.js'
+import { accountUser } from './normalize.js'
+import type { Account, AccountUser, Credential, UserRef } from './schemas.js'
 
 /** 登录流程的公共部分（AGENTS 5.3）。各平台的 `auth login` handler 调用这些函数。 */
 
@@ -34,8 +35,14 @@ export function freshCredential(ctx: HandlerContext, method: Credential['method'
 /**
  * 登录成功后落盘：账号名下已经存了另一个用户时报 USAGE，新凭证不保存；
  * 还没有当前账号时，把它设为当前账号。
+ * `user.avatar` 是登录流程里那次用户信息请求顺带拿到的头像（AGENTS 5.3），没有时沿用同一用户之前存的。
  */
-export async function finishLogin(ctx: HandlerContext, credential: Credential, user: UserRef): Promise<Account> {
+export async function finishLogin(
+  ctx: HandlerContext,
+  credential: Credential,
+  ref: UserRef & { avatar?: string | null },
+): Promise<Account> {
+  const user: AccountUser = accountUser(ref)
   const p = ctx.platform.id
   const account = loginTarget(ctx)
   const existing = await readCredential(p, ctx.endpoint, account).catch(() => null)
@@ -45,7 +52,7 @@ export async function finishLogin(ctx: HandlerContext, credential: Credential, u
     })
   }
   credential.account = account
-  credential.user = user
+  credential.user = { ...user, avatar: user.avatar ?? existing?.user?.avatar ?? null }
   if (existing) credential.created_at = existing.created_at
   await writeCredential(credential)
   let current = await getCurrent(p, ctx.endpoint)

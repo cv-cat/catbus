@@ -239,6 +239,7 @@ catbus xhs auth logout -a work
 ```
 
 - `auth status` 未登录或已失效时返回 `logged_in: false`，不报错；`expires_at` 取自登录 cookie 的过期时间，取不到时为 null。
+- 账号的 `user` 带头像 `avatar`（https 地址）：登录和 `auth status` 时顺带取到就保存，`auth status` 拿到新的昵称 / 头像会更新本地凭证；平台的校验接口不给头像时为 null（taobao、xianyu、jd、jimeng）。
 - 平台返回登录失效时，命令报 `AUTH_EXPIRED`（退出码 3），`hint` 是重新登录的命令。
 - 会自动刷新的 token（例如 B 站的 refresh_token）和响应里的 Set-Cookie，会自动合并回凭证文件。
 - `auth logout` 删除本地凭证文件，并清除指向它的当前账号。bilibili 和 kuaishou 会同时调用服务端登出；服务端登出失败时只删本地凭证。

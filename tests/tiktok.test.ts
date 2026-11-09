@@ -704,7 +704,7 @@ describe('tiktok auth', () => {
     try {
       const { authLogin } = await import('../src/platforms/tiktok/web/commands.js')
       const ctx = makeCtx({ platform: 'tiktok', account: null, options: { method: 'cookie', cookie: JSON.stringify(SESSION) } })
-      const user = { uid: '7000000000000000001', uniqueId: 'me_handle', nickName: '我', secUid: SEC }
+      const user = { uid: '7000000000000000001', uniqueId: 'me_handle', nickName: '我', secUid: SEC, avatarUri: ['http://p16-sign-va.tiktokcdn.com/fake~c5_100x100.jpeg'] }
       const { result, requests } = await withResponses([page({ 'webapp.app-context': { user } })], () => authLogin(ctx))
       expect(requests.map((r) => r.url)).toEqual(['https://www.tiktok.com/'])
       expect(result).toMatchObject({ platform: 'tiktok', account: 'default', current: true, user: { id: user.uid, name: '我', url: 'https://www.tiktok.com/@me_handle' }, method: 'cookie' })
@@ -712,6 +712,9 @@ describe('tiktok auth', () => {
       expect(saved.scopes.main.cookies.map((c: any) => c.name)).toContain('sessionid')
       expect(saved.device.ticket_guard_ts_sign).toBe(SESSION.ticket_guard_ts_sign)
       expect(saved.device.device_id).toBe('7000000000000000001')
+      // 头像：app-context.user.avatarUri 的第一张，统一成 https
+      expect(saved.user.avatar).toBe('https://p16-sign-va.tiktokcdn.com/fake~c5_100x100.jpeg')
+      expect((result as any).user.avatar).toBe('https://p16-sign-va.tiktokcdn.com/fake~c5_100x100.jpeg')
     } finally {
       if (prev === undefined) delete process.env.CATBUS_HOME
       else process.env.CATBUS_HOME = prev

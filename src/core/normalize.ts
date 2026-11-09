@@ -1,6 +1,7 @@
 import { isoNow } from './fsutil.js'
 import { now } from './rand.js'
 import type {
+  AccountUser,
   Category,
   Comment,
   Conversation,
@@ -135,6 +136,21 @@ type Input<T, K extends keyof T> = Partial<Omit<T, 'stats'>> & Pick<T, K> & (T e
 
 function attach<T extends object>(value: T, raw: unknown): T {
   return raw === undefined ? value : withRaw(value, raw)
+}
+
+/** 头像地址：统一成 https 绝对地址，不是绝对地址时为 null。 */
+export function avatar(value: unknown): string | null {
+  const s = url(typeof value === 'string' ? value.trim() : value)
+  return s && /^https:\/\/[^/]/.test(s) ? s : null
+}
+
+/** 账号的用户（Account / AuthStatus / 凭证）：UserRef 加上头像，缺失时为 null。 */
+export function accountUser(ref: UserRef, avatarUrl?: unknown): AccountUser
+export function accountUser(ref: UserRef | null | undefined, avatarUrl?: unknown): AccountUser | null
+export function accountUser(ref: UserRef | null | undefined, avatarUrl?: unknown): AccountUser | null {
+  if (!ref) return null
+  const given = avatarUrl !== undefined ? avatarUrl : (ref as Partial<AccountUser>).avatar
+  return { id: ref.id, name: ref.name, url: ref.url, avatar: avatar(given) }
 }
 
 export function userRef(v: { id: unknown; name?: unknown; url?: unknown } | null | undefined): UserRef | null {

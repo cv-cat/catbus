@@ -553,7 +553,8 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth|api
   - 能自动换取的凭证，登录时或第一次用到时自动获取，不需要用户再登录一次（例如 xhs 的创作者中心：用主站登录态换取）；
   - 需要单独登录的，用 `--scope <name>` 登录，各平台可用的 scope 在注册表里声明；
   - 命令缺少所需 scope 时，报 `AUTH_REQUIRED`，`hint` 带上 `--scope`。
-- **`auth status`**：在线校验，返回 AuthStatus。未登录或已失效时返回 `logged_in: false`，不报错。
+- **`auth status`**：在线校验，返回 AuthStatus。未登录或已失效时返回 `logged_in: false`，不报错。校验成功且返回的是同一个用户时，新的昵称 / 头像由 core 回写到凭证文件。
+- **头像**：登录、cookie 导入校验和 `auth status` 复用流程里本来就有的那次当前用户请求，取到头像就存进凭证的 `user.avatar`（统一成 https 绝对地址），不为头像额外发请求；取不到时为 null。旧凭证文件没有 `avatar` 时读成 null，不需要迁移。
 - **`auth logout`**：删除本地凭证文件（上游支持服务端登出的，同时调用服务端登出，目前有 B 站和快手），并清除指向它的 `_current`。
 - **`auth use <account>`**：设置 `_current`。端声明了 `use` 钩子的（目前只有 `jimeng`），先调用钩子，再设置 `_current`；钩子报错时不切换。
 - **`auth list`**：列出本平台、本端的账号。
@@ -567,7 +568,7 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth|api
   "platform": "xhs",
   "endpoint": "web",
   "account": "default",                  // 游客文件为 "guest"
-  "user": { "id": "5f...", "name": "...", "url": "..." },   // UserRef；游客为 null
+  "user": { "id": "5f...", "name": "...", "url": "...", "avatar": "https://..." },   // AccountUser；游客为 null
   "method": "qrcode",                    // qrcode | sms | password | cookie | oauth | apikey | guest
   "created_at": "2026-09-27T12:00:00+08:00",
   "updated_at": "2026-09-27T12:00:00+08:00",
@@ -724,8 +725,9 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 
 | 类型 | 字段 |
 |---|---|
-| AuthStatus | `logged_in user:UserRef\|null method expires_at` |
-| Account | `platform endpoint account current user:UserRef\|null method updated_at` |
+| AccountUser | `id name url avatar`：UserRef 加上头像，只用于账号 |
+| AuthStatus | `logged_in user:AccountUser\|null method expires_at` |
+| Account | `platform endpoint account current user:AccountUser\|null method updated_at` |
 | File | `path type url size` |
 
 **扩展类型**（见 4.7）：

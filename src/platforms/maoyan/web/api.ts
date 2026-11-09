@@ -1,6 +1,7 @@
 import { CatbusError } from '../../../core/errors.js'
 import * as rand from '../../../core/rand.js'
-import type { UserRef } from '../../../core/schemas.js'
+import * as n from '../../../core/normalize.js'
+import type { AccountUser } from '../../../core/schemas.js'
 import type { MaoyanClient } from './client.js'
 
 const UUID_ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789'
@@ -120,7 +121,9 @@ export async function showsWithTickets(client: MaoyanClient, projectId: string, 
   return out
 }
 
-export async function currentUser(client: MaoyanClient, token: string): Promise<UserRef> {
+export async function currentUser(client: MaoyanClient, token: string): Promise<AccountUser> {
   const u = await client.userInfo(token)
-  return { id: String(u.userId), name: u.nickName ?? u.nickname ?? u.userName ?? u.username ?? null, url: null }
+  // 头像字段名随美团账号接口版本不同，取到哪个用哪个，都没有时为 null
+  const avatar = u.avatarUrl ?? u.avatarurl ?? u.avatar ?? u.headImgUrl ?? null
+  return n.accountUser({ id: String(u.userId), name: u.nickName ?? u.nickname ?? u.userName ?? u.username ?? null, url: null }, avatar)
 }

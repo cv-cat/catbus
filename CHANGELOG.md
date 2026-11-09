@@ -8,6 +8,7 @@
 
 ### Added
 
+- 账号带上头像：Account 与 AuthStatus 的 `user` 改为新类型 AccountUser（`id name url avatar`），凭证文件的 `user` 也保存 `avatar`。登录、cookie 导入和 `auth status` 复用流程里原有的那次当前用户请求取头像（统一成 https），不额外请求；`auth status` 拿到新的昵称 / 头像会写回凭证。旧凭证文件没有 `avatar` 时读成 null，不需要迁移。taobao、xianyu、jd、jimeng 的校验接口不给头像，为 null
 - 新增 `youtube`（YouTube，别名 `yt`）平台的 web 端。没有上游仓库，直接对接 YouTube 网页背后的 InnerTube 接口（`/youtubei/v1/`），接口说明见 `src/platforms/youtube/UPSTREAM`：
   - 不登录可用：`item get` / `search`（`--sort general|popular`、`--time`、`--type`）/ `related` / `media` / `download`，`comment list` / `replies`，`user get` / `search` / `items`，`series list` / `items`（播放列表），`keyword suggest`，`live get` / `search` / `history` / `listen`（直播聊天）
   - 需要登录：`feed list`（首页推荐、订阅流），`history list`，`notice list` / `count`，`user likes` / `collects`（稍后观看）/ `following`（只能看自己的），`item like` / `unlike` / `collect` / `uncollect`，`user follow` / `unfollow`（订阅），`comment add`（含 `--reply-to`）/ `delete` / `like` / `unlike`

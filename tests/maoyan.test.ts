@@ -312,7 +312,7 @@ describe('maoyan 平台（web）', () => {
       expect(calls).toHaveLength(0)
       await cli('maoyan', 'auth', 'login', '--method', 'cookie', '--cookie', 'dper=fake-dper')
       const on = await cli('maoyan', 'auth', 'status')
-      expect(on.env.data).toMatchObject({ logged_in: true, method: 'cookie', user: { id: '12345' } })
+      expect(on.env.data).toMatchObject({ logged_in: true, method: 'cookie', user: { id: '12345', avatar: null } })
       restoreSender!()
       mock({ '/api/account/v1/getUserInfoByToken': () => json('{"error":{"code":10010101,"message":"登录令牌无效"},"success":false}') })
       const off = await cli('maoyan', 'auth', 'status')

@@ -1,11 +1,16 @@
 import * as n from '../../../core/normalize.js'
-import type { BonusRecord, Category, Conversation, Message, Torrent, User, UserRef } from '../../../core/schemas.js'
+import type { AccountUser, BonusRecord, Category, Conversation, Message, Torrent, User, UserRef } from '../../../core/schemas.js'
 import { withRaw } from '../../../core/schemas.js'
 import type { Row } from './api.js'
 import { SITE } from './client.js'
 
 export function userRef(raw: Row): UserRef {
   return { id: String(raw.id), name: n.str(raw.username), url: `${SITE}/profile/${raw.id}` }
+}
+
+/** 当前账号（member/profile）→ AccountUser：头像与 user() 同源（avatarUrl）。 */
+export function account(raw: Row): AccountUser {
+  return n.accountUser(userRef(raw), raw.avatarUrl)
 }
 
 export function user(raw: Row): User {

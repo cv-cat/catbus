@@ -109,7 +109,7 @@ async function completeLogin(ctx: Ctx, p: Pc) {
   if (!me || me.guest !== false || !me.user_id) throw new CatbusError('AUTH_REQUIRED', '登录没有成功：拿到的仍是访客会话')
   p.save()
   delete p.credential.extra.user_id
-  return finishLogin(ctx, p.credential, norm.ref(me)!)
+  return finishLogin(ctx, p.credential, norm.account(me)!)
 }
 
 async function loginQrcode(ctx: Ctx) {
@@ -272,7 +272,7 @@ async function loginCookie(ctx: Ctx, scopeName: string) {
   const me = p.check(await api.userMe(p))
   if (!me?.user_id || me.guest === true) throw new CatbusError('AUTH_REQUIRED', '登录没有成功：cookie 无效或已过期')
   p.save()
-  return finishLogin(ctx, credential, norm.ref(me)!)
+  return finishLogin(ctx, credential, norm.account(me)!)
 }
 
 /** 创作者中心 scope：导入到已有账号（或新账号）的 creator 分区。 */
@@ -385,7 +385,7 @@ export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
   const me = r?.data
   const ok = r?.success !== false && me?.user_id && me?.guest !== true
   const sess = p.jar.cookies.find((c) => c.name === 'web_session')
-  return { logged_in: Boolean(ok), user: ok ? norm.ref(me) : null, method: ok ? ctx.credential.method : null, expires_at: ok && sess?.expires ? n.time(sess.expires) : null }
+  return { logged_in: Boolean(ok), user: ok ? norm.account(me) : null, method: ok ? ctx.credential.method : null, expires_at: ok && sess?.expires ? n.time(sess.expires) : null }
 }
 
 // ================================================================ user

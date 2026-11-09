@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { resolve as resolvePath } from 'node:path'
 import { text as readStdin } from 'node:stream/consumers'
 import { z } from 'zod'
-import { checkAccountName, endpointFlag, getCurrent, GUEST, newCredential, readCredential, writeCredential } from '../core/auth-store.js'
+import { checkAccountName, endpointFlag, getCurrent, GUEST, newCredential, readCredential, syncStatusUser, writeCredential } from '../core/auth-store.js'
 import { resolveNetwork } from '../core/config.js'
 import { CatbusError, toCatbusError } from '../core/errors.js'
 import { createLogger, type Logger } from '../core/log.js'
@@ -17,7 +17,7 @@ import {
   type Platform,
 } from '../core/registry.js'
 import * as rand from '../core/rand.js'
-import type { Credential } from '../core/schemas.js'
+import type { AuthStatus, Credential } from '../core/schemas.js'
 import { type Args, type Options, VOCAB } from '../core/vocab.js'
 import { findPlatform, PLATFORMS } from '../platforms/index.js'
 import { collectOptionKinds, type GlobalFlags, type Parsed, parseArgv } from './argv.js'
@@ -243,12 +243,18 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
     } else if (command.paged) {
       await runPaged(platform, ctx, handler, out)
     } else {
-      out.result(await handler(ctx))
+      const result = await handler(ctx)
+      // auth status 在线校验拿到的新昵称 / 头像合并回凭证，随下面的 persistCredential 落盘
+      out.result(key === 'auth status' && isAuthStatus(result) ? syncStatusUser(ctx.credential, result) : result)
     }
   } finally {
     await persistCredential(ctx.credential, snapshot)
   }
   return 0
+}
+
+function isAuthStatus(value: unknown): value is AuthStatus {
+  return typeof value === 'object' && value != null && 'logged_in' in value && 'user' in value
 }
 
 /**

@@ -1,6 +1,6 @@
 import * as n from '../../../core/normalize.js'
 import { jsonLoads } from '../../../core/py.js'
-import type { Comment, Event, Item, ItemStatus, Live, Media, Notice, Rank, User, UserRef } from '../../../core/schemas.js'
+import type { AccountUser, Comment, Event, Item, ItemStatus, Live, Media, Notice, Rank, User, UserRef } from '../../../core/schemas.js'
 import { LIVE, WWW } from './profile.js'
 
 /** 抖音原始对象 → 归一化类型（AGENTS 6.2）。用户 id 用 sec_uid：它能直接拼出主页 URL，也是各接口的入参。 */
@@ -13,6 +13,12 @@ const first = (v: any): string | null => n.url(v?.url_list?.[0])
 
 export function ref(secUid: unknown, name: unknown): UserRef | null {
   return n.userRef({ id: secUid, name, url: secUid ? userUrl(secUid) : null })
+}
+
+/** 当前账号（创作者中心 media/user/info 的 user）→ AccountUser：头像取最大档，也兼容字符串形态的 avatar_url。 */
+export function account(secUid: unknown, u: any, name?: unknown): AccountUser | null {
+  const avatar = first(u?.avatar_larger) ?? first(u?.avatar_medium) ?? first(u?.avatar_300x300) ?? first(u?.avatar_thumb) ?? u?.avatar_url ?? null
+  return n.accountUser(ref(secUid, u?.nickname ?? name), avatar)
 }
 
 export function authorRef(u: any): UserRef | null {
