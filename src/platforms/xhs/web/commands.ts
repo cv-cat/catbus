@@ -132,21 +132,24 @@ async function loginQrcode(ctx: Ctx) {
       return undefined
     })
   } catch (err) {
-    // 确认后 qrcode/status 回 471 + verifyType 120：过短信验证，再用同一组 qr_id / code 换登录态
+    // 确认后 qrcode/status 回 471：verifyType 120（登录风控，验证页链）或 213（主站登录强制，2026-11-09 实测）。
+    // 过短信验证后，用同一组 qr_id / code 换登录态——qrcodeFinish 每次生成新的 ECDH 公钥，213 要求重试时换公钥。
     const verify = smsVerifyOf(err)
     if (!verify) throw err
-    await passSmsVerify(ctx, p, verify)
+    if (verify.type === '213') await passSms213(ctx, p, verify)
+    else await passSmsVerify(ctx, p, verify)
     await login.qrcodeFinish(p, qr.qrId, qr.code)
   }
   return completeLogin(ctx, p)
 }
 
-/** 461 / 471 且 verifyType 为 120（短信验证码）的风控错误 → 验证材料；其余返回 null。 */
+/** 461 / 471 且 verifyType 为短信验证码（120 验证页 / 213 主站登录强制）的风控错误 → 验证材料；其余返回 null。 */
 export function smsVerifyOf(err: unknown): login.Verify | null {
   if (!(err instanceof CatbusError) || err.code !== 'RISK_CONTROL') return null
   const d = (err.detail ?? {}) as Record<string, unknown>
-  if (String(d.verify_type ?? '') !== '120' || !d.verify_uuid || !d.status) return null
-  return { uuid: String(d.verify_uuid), type: '120', biz: String(d.status) }
+  const type = String(d.verify_type ?? '')
+  if ((type !== '120' && type !== '213') || !d.verify_uuid || !d.status) return null
+  return { uuid: String(d.verify_uuid), type, biz: String(d.status) }
 }
 
 /** 等验证码的最长时间：验证页的验证码有效期之外留些余量。 */
@@ -188,9 +191,9 @@ const COOKIE_LOGIN_HINT = '在浏览器里登录小红书后导入 cookie：catb
 /** 非交互时 stdin 的读取状态：一次读到多行时剩下的留给下一次（重输验证码），读到 EOF 后不再等。 */
 const stdinLines = { rest: '', ended: false }
 
-/** 读一行验证码：交互时在 stderr 上提问，否则从 stdin 读一行；EOF、超时或 Ctrl-C 返回空串。 */
-async function readVerifyCode(ctx: Ctx): Promise<string> {
-  if (interactive()) return prompt('验证码：')
+/** 读一行输入：交互时在 stderr 上提问，否则从 stdin 读一行；EOF、超时或 Ctrl-C 返回空串。 */
+async function readLine(ctx: Ctx, question: string): Promise<string> {
+  if (interactive()) return prompt(question)
   const take = (): string | null => {
     const nl = stdinLines.rest.search(/[\r\n]/)
     if (nl < 0) return null
@@ -233,6 +236,53 @@ async function readVerifyCode(ctx: Ctx): Promise<string> {
     process.stdin.on('end', onEnd)
     process.stdin.resume()
   })
+}
+
+/** 读一行验证码。 */
+const readVerifyCode = (ctx: Ctx) => readLine(ctx, '验证码：')
+
+/**
+ * verifyType 213（2026-11-09 主站实测）：登录强制短信验证。与 120 的验证页不同：
+ * 在登录链的会话上直接验证（不重建验证页会话、无 vc/init），验证码发给用户输入的手机号；
+ * 通过后回到 qrcodeFinish，重新生成 ECDH 公钥再查一次 qrcode/status 换登录态。
+ * 手机号和验证码都支持三种给法：--phone / --code 选项、终端交互输入、stdin 管道（两行：手机号、验证码）。
+ */
+export async function passSms213(
+  ctx: Ctx,
+  p: Pc,
+  verify: login.Verify,
+  o: { read?: (ctx: Ctx) => Promise<string>; phone?: string } = {},
+): Promise<void> {
+  const read = o.read ?? readVerifyCode
+  const info = await login.smsVerifyUserInfo(p, verify).catch(() => null)
+  ctx.log.info(`小红书要求短信验证（verifyType 213）${info?.nickName ? `，账号：${info.nickName}` : ''}，需要验证接收验证码的手机号`)
+  const phone = ((o.phone ?? ctx.options.phone) as string | undefined)?.trim() || (await readLine(ctx, '手机号（需与账号绑定手机一致）：')).trim()
+  if (!/^1[3-9]\d{9}$/.test(phone)) {
+    throw new CatbusError('USAGE', '手机号应为 11 位中国大陆手机号', { hint: 'catbus xhs auth login --phone <手机号>' })
+  }
+  let rid: string
+  try {
+    rid = await login.smsVerifySendPhone(p, verify, phone)
+  } catch (err) {
+    // 站点大概率只接受账号绑定的手机号；透传为 RISK_CONTROL 并说明原因
+    if (err instanceof CatbusError && err.code === 'RISK_CONTROL') {
+      throw new CatbusError('RISK_CONTROL', err.message, { hint: '手机号需与该账号绑定手机一致；或改用 cookie 登录：catbus xhs auth login --method cookie', detail: err.detail ?? { kind: 'captcha' } })
+    }
+    throw err
+  }
+  ctx.log.info(`验证码已发送到 ${phone}，请输入 6 位短信验证码（空行放弃）：`)
+  for (let i = 1; ; i++) {
+    const code = (await read(ctx)).trim()
+    if (!code) throw new CatbusError('RISK_CONTROL', '没有输入短信验证码，已放弃验证', { hint: COOKIE_LOGIN_HINT, detail: { kind: 'captcha', verify_type: verify.type } })
+    try {
+      await login.smsVerifyCheckPhone(p, verify, rid, code)
+      ctx.log.info('短信验证通过，继续登录')
+      return
+    } catch (err) {
+      if (i >= VERIFY_CODE_TRIES || !(err instanceof CatbusError && err.code === 'RISK_CONTROL')) throw err
+      ctx.log.info(`${err.message}，请重新输入（还剩 ${VERIFY_CODE_TRIES - i} 次）：`)
+    }
+  }
 }
 
 async function loginSms(ctx: Ctx) {

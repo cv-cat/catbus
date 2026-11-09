@@ -550,6 +550,7 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth|api
 | `apikey` | `--api-key-file`、`--api-key-stdin`（mteam 私有选项） | 从本地文件或 stdin 读取官方访问令牌，TTY 可隐藏输入；先在线校验，再由 core 保存到账号凭证。令牌只发到官方 API，不传给重定向目标 |
 
 - **验证码**：上游能自动过的就自动过，过不了报 `RISK_CONTROL`（`detail.kind = captcha`），退出码 5。
+- **登录中的人机验证**：平台在登录流程中途强制的短信验证码验证（例如 xhs 扫码确认后的 HTTP 471，`verifyType` 120 验证页链 / 213 主站登录强制链）由实现自动完成，手机号与验证码沿用 `--phone` / `--code` 或终端输入（非交互可从 stdin 逐行读，包括验证码发往的指定手机号）。验证通过后用同一组未完成的登录参数继续；验证失败与放弃按 `RISK_CONTROL` 报错。站点只接受账号绑定手机时，`hint` 写明。
 - **子站点**（创作者中心、直播、IM 等）：
   - 能自动换取的凭证，登录时或第一次用到时自动获取，不需要用户再登录一次（例如 xhs 的创作者中心：用主站登录态换取）；
   - 需要单独登录的，用 `--scope <name>` 登录，各平台可用的 scope 在注册表里声明；
