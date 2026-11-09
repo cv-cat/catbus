@@ -11,7 +11,7 @@ import * as pb from '../../../core/pb.js'
 import { jsonLoads } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
-import type { AuthStatus, Credential, Danmaku, Item, Media, Subtitle } from '../../../core/schemas.js'
+import type { AuthStatus, Credential, Danmaku, Item, Media, Series, Subtitle } from '../../../core/schemas.js'
 import { openSocket, reconnecting } from '../../../core/stream.js'
 import { paged, scope } from '../../../core/toolkit.js'
 import * as api from './api.js'
@@ -21,7 +21,7 @@ import * as geetest from './geetest.js'
 import * as norm from './normalize.js'
 import { COOKIE_DOMAIN, PROFILE } from './profile.js'
 import { DYNAMIC_REPLY_HINT, READ_DYNAMIC_REPLY_HINT, type ReadReplyTarget, resolveDynamic, resolveFolder, resolveItem, resolveReadReplyTarget, resolveReplyTarget, resolveRoom, resolveUser } from './resolve.js'
-import { encryptPassword } from './sign.js'
+import { bv2av, encryptPassword } from './sign.js'
 import { uploadVideo } from './upos.js'
 
 type Ctx = HandlerContext
@@ -386,6 +386,7 @@ export async function itemPublish(ctx: Ctx) {
     dtime,
     noReprint: o.allowReprint ? 0 : 1,
   })
+  if (o.series) await joinSeason(b, String(o.series), { aid: Number(d.aid) || Number(bv2av(d.bvid)), cid: Number(video.biz_id), title: String(o.title), bvid: d.bvid })
   return n.item({ id: d.bvid, kind: 'video', url: norm.videoUrl(d.bvid), title: o.title, text: o.text ?? null, cover: cover || null, status: 'reviewing' }, d)
 }
 
@@ -421,6 +422,99 @@ export async function itemEdit(ctx: Ctx) {
     onlySelf: o.visibility == null ? Number(A.is_only_self ?? 0) : o.visibility === 'private' ? 1 : 0,
   })
   return n.item({ id: d.bvid || bvid, kind: 'video', url: norm.videoUrl(d.bvid || bvid), title: o.title ?? A.title, text: o.text ?? A.desc ?? null, cover: cover || null, status: 'reviewing' }, d)
+}
+
+// ================================================================ 合集（平台扩展）
+
+const SEASON_PAGE_SIZE = 50
+const SEASON_MAX_PAGES = 20
+
+/** 合集参数：合集 ID，或空间页合集链接里的 sid。 */
+function seasonIdOf(input: string): string {
+  const s = input.trim()
+  const m = /[?&]sid=(\d+)/.exec(s) ?? /^(\d+)$/.exec(s)
+  if (!m) throw new CatbusError('USAGE', `无法识别的合集：${input}`, { hint: '传合集 ID，或空间页合集链接（带 sid=）' })
+  return m[1]!
+}
+
+interface SeasonRef {
+  id: number
+  /** 合集里第一个小节；合集没有小节时为 null。 */
+  sectionId: number | null
+  title: string
+}
+
+/** 按 ID 找合集与它的小节（season/switch 需要小节 ID）。 */
+async function findSeason(b: Bili, input: string): Promise<SeasonRef> {
+  const want = seasonIdOf(input)
+  for (let pn = 1; pn <= SEASON_MAX_PAGES; pn++) {
+    const d: any = await api.seasons(b, pn, SEASON_PAGE_SIZE)
+    const hit = (d?.seasons ?? []).find((x: any) => String(x?.season?.id ?? '') === want)
+    if (hit) {
+      const section = (hit.sections?.sections ?? [])[0]
+      return { id: Number(want), sectionId: section?.id != null ? Number(section.id) : null, title: String(hit.season?.title ?? '') }
+    }
+    if ((d?.seasons ?? []).length < SEASON_PAGE_SIZE) break
+  }
+  throw new CatbusError('USAGE', `找不到合集 ${input}`, { hint: 'catbus bilibili series list 看自己有哪些合集' })
+}
+
+/**
+ * 把一份稿件挂进合集。发布时顺手加合集：稿件已经发出去了，失败不能当成发布失败，
+ * 报 UPSTREAM 并带上 bvid，hint 让用 `series add` 重试。
+ */
+async function joinSeason(b: Bili, seasonInput: string, target: { aid: number; cid: number; title: string; bvid: string }): Promise<void> {
+  const season = await findSeason(b, seasonInput)
+  if (season.sectionId == null) throw new CatbusError('USAGE', `合集「${season.title}」没有小节，无法加入`, { hint: '先在网页端给合集建一个小节' })
+  try {
+    await api.addSeasonEpisodes(b, season.sectionId, [{ aid: target.aid, cid: target.cid, title: target.title }])
+  } catch (err) {
+    const reason = err instanceof CatbusError ? err.message : err instanceof Error ? err.message : String(err)
+    throw new CatbusError('UPSTREAM', `稿件 ${target.bvid} 已发布，但加入合集「${season.title}」失败：${reason}`, {
+      hint: `catbus bilibili series add ${season.id} ${target.bvid} 重试`,
+      detail: { bvid: target.bvid, season_id: season.id },
+    })
+  }
+}
+
+/** 我的合集列表（创作中心「合集管理」）；只能列自己的，分页沿用 --limit / --cursor / --all。 */
+export async function seriesList(ctx: Ctx) {
+  const b = await bili(ctx)
+  b.requireLogin()
+  if (ctx.args.user && ctx.args.user !== 'me') {
+    throw new CatbusError('UNSUPPORTED', 'B 站只能列自己创建的合集', { hint: 'catbus bilibili series list' })
+  }
+  const pn = page(ctx)
+  const d: any = await api.seasons(b, pn, SEASON_PAGE_SIZE)
+  const mid = b.mid || String(ctx.credential.user?.id ?? '')
+  const list: Series[] = (d?.seasons ?? []).map((x: any) => {
+    const s = x.season ?? {}
+    // season.ep_num 常是 0，集数在「小节」的 epCount 里
+    const count = Number(s.ep_num ?? 0) || (x.sections?.sections ?? []).reduce((n: number, sec: any) => n + Number(sec.epCount ?? 0), 0) || (x.part_episodes ?? []).length
+    return {
+      id: String(s.id ?? ''),
+      name: String(s.title ?? ''),
+      count,
+      url: mid ? `https://space.bilibili.com/${mid}/channel/collectiondetail?sid=${s.id}` : null,
+    }
+  })
+  const total = Number(d?.total ?? list.length)
+  const hasMore = pn * SEASON_PAGE_SIZE < total
+  return paged(list, hasMore ? String(pn + 1) : undefined, hasMore)
+}
+
+/** 把一条已发布的稿件加进合集（挂到合集的第一个小节）。 */
+export async function seriesAdd(ctx: Ctx) {
+  const b = await bili(ctx)
+  b.requireLogin()
+  const season = await findSeason(b, ctx.args.series!)
+  if (season.sectionId == null) throw new CatbusError('USAGE', `合集「${season.title}」没有小节，无法加入`, { hint: '先在网页端给合集建一个小节' })
+  const { aid, bvid } = await resolveItem(b, ctx.args.item!)
+  const vids: any = await api.archiveVideos(b, Number(aid))
+  const cid = Number(vids?.videos?.[0]?.cid)
+  if (!cid) throw new CatbusError('UPSTREAM', `读不到稿件 ${bvid} 的 cid`, { detail: { bvid } })
+  await api.addSeasonEpisodes(b, season.sectionId, [{ aid: Number(aid), cid, title: String(vids?.archive?.title ?? bvid) }])
+  return { id: bvid }
 }
 
 /** 换视频：先上传，拿到 filename 与 cid（biz_id）。 */
