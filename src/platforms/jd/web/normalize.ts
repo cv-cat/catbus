@@ -1,5 +1,5 @@
 import * as n from '../../../core/normalize.js'
-import type { Comment, Conversation, Coupon, Item, Keyword, Message, Order, Price, User, UserRef } from '../../../core/schemas.js'
+import type { Comment, Conversation, Coupon, Item, Keyword, Media, Message, Order, Price, User, UserRef } from '../../../core/schemas.js'
 import { withRaw } from '../../../core/schemas.js'
 import type { RawOrder } from './api.js'
 import { stripTags } from './util.js'
@@ -139,6 +139,18 @@ export function detail(sku: string, d: any): Item {
   )
 }
 
+/** 评价的晒图：`pictureInfoList[i]` 的 `largePicURL`（没有时 `picURL`），地址多为 `//` 开头。 */
+function commentPictures(c: any): Media[] {
+  const list: any[] = c?.pictureInfoList ?? c?.pictureList ?? c?.images ?? []
+  return (Array.isArray(list) ? list : [])
+    .map((p: any) => {
+      const o: any = typeof p === 'string' ? { picURL: p } : (p ?? {})
+      const url = n.url(o.largePicURL ?? o.picURL ?? o.imgUrl ?? o.url)
+      return url ? n.media({ id: n.idOrNull(o.picId ?? o.id), type: 'image', url, width: n.count(o.width), height: n.count(o.height) }, p) : null
+    })
+    .filter((m): m is Media => m != null)
+}
+
 /**
  * 商品评价（getLegoWareDetailComment）。响应里同时有评价 `commentInfoList` 和问答 `questionList`，
  * 问答条目也有 `content`，按字段名去猜会拿成问答，所以先按键名取评价列表。
@@ -157,6 +169,7 @@ export function comments(sku: string, d: any): Comment[] {
           avatar: userImage(c.userImgURL ?? c.userImageUrl ?? c.userImgUrl),
         }),
         text: String(c.commentData ?? c.content ?? ''),
+        media: commentPictures(c),
         created_at: n.time(c.commentDate ?? c.creationTime ?? c.date),
         stats: { likes: n.count(c.praiseCnt ?? c.usefulVoteCount ?? c.likeCount), replies: n.count(c.replyCnt ?? c.replyCount) },
       },

@@ -1,5 +1,5 @@
 import * as n from '../../../core/normalize.js'
-import type { Comment, Event, Item, ItemStatus, Live, User, UserRef } from '../../../core/schemas.js'
+import type { Comment, Event, Item, ItemStatus, Live, Media, User, UserRef } from '../../../core/schemas.js'
 
 /** B 站原始对象 → 归一化类型（AGENTS 6.2）。 */
 
@@ -238,6 +238,16 @@ export function navUser(v: any): User {
   return n.user({ id: n.id(v.mid), name: n.str(v.uname), avatar: n.url(v.face), url: spaceUrl(v.mid) }, v)
 }
 
+/** 评论附带的图片：`content.pictures[i]` 的 `img_src`（宽高有时缺）。正文里的 `[表情]` 在 `content.emote` 里，仍算文本。 */
+function replyPictures(list: unknown): Media[] {
+  const out: Media[] = []
+  for (const p of Array.isArray(list) ? (list as any[]) : []) {
+    const url = n.url(p?.img_src)
+    if (url) out.push(n.media({ id: null, type: 'image', url, width: n.count(p.img_width), height: n.count(p.img_height) }, p))
+  }
+  return out
+}
+
 export function reply(v: any, itemId: string): Comment {
   return n.comment(
     {
@@ -246,6 +256,7 @@ export function reply(v: any, itemId: string): Comment {
       parent_id: v.parent ? n.id(v.parent) : null,
       author: ref(v.member?.mid, v.member?.uname, v.member?.avatar),
       text: String(v.content?.message ?? ''),
+      media: replyPictures(v.content?.pictures),
       created_at: n.time(v.ctime),
       stats: { likes: n.count(v.like), replies: n.count(v.rcount) },
     },

@@ -123,6 +123,7 @@ export function comment(raw: any, itemId: string): Comment {
       parent_id: parent === itemId ? null : parent,
       author: userRef(t.core?.user_results?.result),
       text: textOf(t) ?? '',
+      media: mediaOf(legacy).media,
       created_at: n.time(legacy.created_at),
       stats: { likes: n.count(legacy.favorite_count), replies: n.count(legacy.reply_count) },
     },

@@ -209,6 +209,7 @@ export function comment(v: Input<Comment, 'id' | 'item_id' | 'text'>, raw?: unkn
       parent_id: v.parent_id ?? null,
       author: v.author ?? null,
       text: v.text,
+      media: v.media ?? [],
       created_at: v.created_at ?? null,
       stats: { likes: null, replies: null, ...v.stats },
     },

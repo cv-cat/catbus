@@ -70,7 +70,7 @@ catbus bilibili item get BV1xx411c7mD --raw | jq '.data | keys'
 | Item | `id kind url title text author:UserRef created_at cover media:Media[] stats{views likes comments collects shares} price:Price\|null status\|null` |
 | Media | `id type url width height duration` |
 | Price | `amount currency`（`amount` 以元等主单位计） |
-| Comment | `id item_id parent_id author:UserRef text created_at stats{likes replies}` |
+| Comment | `id item_id parent_id author:UserRef text media:Media[] created_at stats{likes replies}` |
 | Live | `id url title status host:UserRef cover stats{viewers}` |
 | Event | `type time user:UserRef text gift{name count}\|null` |
 | Conversation | `id peer:UserRef unread last_message updated_at` |
@@ -88,6 +88,7 @@ catbus bilibili item get BV1xx411c7mD --raw | jq '.data | keys'
 - 计数是整数或 null，「1.2万」会换算成 12000。
 - 时间是带时区的 ISO 8601。
 - 字段总是存在，取不到时为 null 或 `[]`。有些字段因为上游接口不返回而恒为 null，例如抖音作品的 `title`、抖音和小红书列表的 `stats.views`，各平台说明的「已知限制」里有完整列表。
+- Comment 的 `media` 是评论附带的图片、表情包和商品评价的晒图（动图也是 `image`），正文里的行内表情不算；没有时为 `[]`。
 - 所有对象都带 `id` 和 `url`，可以直接作为下一条命令的参数。
 
 写操作的返回：成对动作（`like/unlike` 等）、`delete`、`live send` 等返回 `{id}`（目标对象的 id）；`item publish` 返回 Item；`comment add` 返回 Comment；`msg send` 返回 Message；`item download` 返回 File[]。
