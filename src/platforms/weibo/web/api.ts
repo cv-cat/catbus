@@ -30,6 +30,8 @@ import { APP_SOURCE, sessionId, uploadImageParams, uploadVideoParams } from './s
 export interface SelfInfo {
   uid: string
   nick: string
+  /** $CONFIG.user 的头像（avatar_hd > avatar_large > profile_image_url），没有时为 null。 */
+  avatar: string | null
 }
 
 const CONFIG_RE = /try\{window\.\$CONFIG = (.*?);\}catch\(e\)\{window\.\$CONFIG/
@@ -50,7 +52,8 @@ export async function selfInfo(w: Weibo): Promise<SelfInfo | null> {
   }
   const uid = config?.user?.id
   if (uid == null || uid === '') return null
-  return { uid: String(uid), nick: String(config.user.watermark?.nick ?? config.user.screen_name ?? '') }
+  const u = config.user
+  return { uid: String(uid), nick: String(u.watermark?.nick ?? u.screen_name ?? ''), avatar: u.avatar_hd || u.avatar_large || u.profile_image_url || null }
 }
 
 /** getUserInfo：用户资料。 */

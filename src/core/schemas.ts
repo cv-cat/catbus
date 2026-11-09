@@ -9,6 +9,12 @@ export interface UserRef {
   url: string | null
 }
 
+/** 账号的用户：UserRef 加上头像，只用于 Account、AuthStatus 与凭证文件（AGENTS 6.2）。 */
+export interface AccountUser extends UserRef {
+  /** https 绝对地址；取不到时为 null。 */
+  avatar: string | null
+}
+
 export interface Price {
   amount: number
   currency: string
@@ -188,7 +194,7 @@ export interface NoticeCount {
 
 export interface AuthStatus {
   logged_in: boolean
-  user: UserRef | null
+  user: AccountUser | null
   method: string | null
   expires_at: string | null
 }
@@ -198,7 +204,7 @@ export interface Account {
   endpoint: string
   account: string
   current: boolean
-  user: UserRef | null
+  user: AccountUser | null
   method: string | null
   updated_at: string | null
 }
@@ -342,7 +348,13 @@ export function withRaw<T extends object>(value: T, raw: unknown): T {
 
 // ---- 凭证文件（AGENTS 5.4） ----
 
-const UserRefSchema = z.object({ id: z.string(), name: z.string().nullable(), url: z.string().nullable() })
+// 旧凭证文件的 user 没有 avatar，读成 null（不需要迁移）
+const AccountUserSchema = z.object({
+  id: z.string(),
+  name: z.string().nullable(),
+  url: z.string().nullable(),
+  avatar: z.string().nullable().default(null),
+})
 
 const CookieSchema = z.object({
   name: z.string(),
@@ -363,7 +375,7 @@ export const CredentialSchema = z.object({
   platform: z.string(),
   endpoint: z.enum(['web', 'app', 'pc']),
   account: z.string(),
-  user: UserRefSchema.nullable(),
+  user: AccountUserSchema.nullable(),
   method: z.enum([...LOGIN_METHODS, 'guest']),
   created_at: z.string(),
   updated_at: z.string(),

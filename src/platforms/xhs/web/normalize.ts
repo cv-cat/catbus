@@ -1,5 +1,5 @@
 import * as n from '../../../core/normalize.js'
-import type { Comment, Item, ItemKind, Media, User, UserRef } from '../../../core/schemas.js'
+import type { AccountUser, Comment, Item, ItemKind, Media, User, UserRef } from '../../../core/schemas.js'
 import { noWaterImage } from './api.js'
 
 /**
@@ -25,6 +25,11 @@ export function ref(u: any): UserRef | null {
   if (!u) return null
   const id = u.user_id ?? u.userId ?? u.id
   return n.userRef({ id, name: u.nickname ?? u.nick_name ?? u.name ?? u.userName, url: userUrl(id, u.xsec_token) })
+}
+
+/** 当前账号（user/me）→ AccountUser：头像取 images（大图），没有时 imageb。 */
+export function account(u: any): AccountUser | null {
+  return n.accountUser(ref(u), u?.images ?? u?.imageb ?? u?.image ?? u?.avatar)
 }
 
 const kindOf = (type: unknown): ItemKind => (type === 'video' ? 'video' : 'image')

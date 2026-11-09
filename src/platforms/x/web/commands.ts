@@ -92,7 +92,7 @@ export async function authLogin(ctx: Ctx) {
   }
   const me = await viewerOrNull(await xclient(loginContext(ctx, credential)))
   if (!me) throw new CatbusError('AUTH_REQUIRED', '登录没有成功：cookie 无效或已过期', { hint: '重新在浏览器登录 x.com 后复制 cookie' })
-  return finishLogin(ctx, credential, norm.userRef(me)!)
+  return finishLogin(ctx, credential, norm.account(me)!)
 }
 
 export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
@@ -101,7 +101,7 @@ export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
   const me = x.isLoggedIn ? await viewerOrNull(x) : null
   if (!me) return out
   const expires = x.jar.cookies.find((c) => c.name === 'auth_token')?.expires
-  return { logged_in: true, user: norm.userRef(me), method: ctx.credential.method, expires_at: expires ? n.time(expires) : null }
+  return { logged_in: true, user: norm.account(me), method: ctx.credential.method, expires_at: expires ? n.time(expires) : null }
 }
 
 // ================================================================ user

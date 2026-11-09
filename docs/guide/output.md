@@ -76,8 +76,9 @@ catbus bilibili item get BV1xx411c7mD --raw | jq '.data | keys'
 | Conversation | `id peer:UserRef unread last_message updated_at` |
 | Message | `id conversation_id from:UserRef type text media:Media[] created_at` |
 | Notice | `id type user:UserRef target{id url}\|null text created_at` |
-| AuthStatus | `logged_in user:UserRef\|null method expires_at` |
-| Account | `platform endpoint account current user:UserRef\|null method updated_at` |
+| AccountUser | `id name url avatar`（账号专用：UserRef 加上头像，取不到时为 null） |
+| AuthStatus | `logged_in user:AccountUser\|null method expires_at` |
+| Account | `platform endpoint account current user:AccountUser\|null method updated_at` |
 | File | `path type url size` |
 
 完整的类型（Folder、Category、Keyword、Topic、Poi、Gift、Rank、Subtitle、Danmaku、Order、Coupon……）、枚举值和每条命令的输出类型见 [AGENTS.md 6.2](../../AGENTS.md#62-归一化类型)、[6.3](../../AGENTS.md#63-各命令的输出)。每条命令的输出类型也写在 `--help` 的「输出」一行里。

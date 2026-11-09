@@ -51,16 +51,18 @@ function loginCredential(ctx: Ctx): Credential {
 }
 
 /** 当前登录用户：首页 app-context.user，拿不到时用 multi_sids 的 uid 查私信卡片。 */
-async function me(t: TikTok): Promise<{ id: string; name: string | null; handle: string | null; secUid: string | null }> {
+async function me(t: TikTok): Promise<{ id: string; name: string | null; handle: string | null; secUid: string | null; avatar: unknown }> {
   try {
     const u = await currentUser(t)
-    return { id: String(u.uid ?? t.uid), name: (u.nickName as string) ?? null, handle: u.uniqueId ?? null, secUid: u.secUid ?? null }
+    // app-context.user 的头像是 avatarUri（地址数组），个别版本给 avatarLarger / avatarThumb
+    const avatar = (Array.isArray(u.avatarUri) ? u.avatarUri[0] : u.avatarUri) ?? u.avatarLarger ?? u.avatarMedium ?? u.avatarThumb
+    return { id: String(u.uid ?? t.uid), name: (u.nickName as string) ?? null, handle: u.uniqueId ?? null, secUid: u.secUid ?? null, avatar }
   } catch (err) {
     if (!t.uid) throw err
     const r = await api.imUserProfile(t, [t.uid])
     const p = r.users?.[0]?.im_user_profile
     if (!p) throw err
-    return { id: t.uid, name: p.nickname ?? null, handle: p.unique_id ?? null, secUid: p.sec_uid ?? null }
+    return { id: t.uid, name: p.nickname ?? null, handle: p.unique_id ?? null, secUid: p.sec_uid ?? null, avatar: p.avatar_thumb?.url_list?.[0] ?? p.avatar_url }
   }
 }
 
@@ -71,7 +73,7 @@ export async function authLogin(ctx: Ctx) {
   const t = await tiktok(loginContext(ctx, credential))
   if (!t.loggedIn) throw new CatbusError('AUTH_REQUIRED', 'cookie 里没有登录态（缺少 sessionid / sid_tt / multi_sids）')
   const u = await me(t)
-  return finishLogin(ctx, credential, norm.ref(u.id, u.name, u.handle)!)
+  return finishLogin(ctx, credential, n.accountUser(norm.ref(u.id, u.name, u.handle)!, u.avatar))
 }
 
 export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
@@ -81,7 +83,7 @@ export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
   try {
     const u = await me(t)
     const sess = t.jar.cookies.find((c) => c.name === 'sessionid' || c.name === 'sid_tt')
-    return { logged_in: true, user: norm.ref(u.id, u.name, u.handle), method: ctx.credential.method, expires_at: sess?.expires ? n.time(sess.expires) : null }
+    return { logged_in: true, user: n.accountUser(norm.ref(u.id, u.name, u.handle), u.avatar), method: ctx.credential.method, expires_at: sess?.expires ? n.time(sess.expires) : null }
   } catch (err) {
     if (err instanceof CatbusError && (err.code === 'AUTH_EXPIRED' || err.code === 'AUTH_REQUIRED')) return out
     throw err

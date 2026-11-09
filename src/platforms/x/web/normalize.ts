@@ -1,5 +1,5 @@
 import * as n from '../../../core/normalize.js'
-import type { Comment, Conversation, Item, Media, Message, User, UserRef } from '../../../core/schemas.js'
+import type { AccountUser, Comment, Conversation, Item, Media, Message, User, UserRef } from '../../../core/schemas.js'
 import { X_HOST } from './profile.js'
 
 /** X 原始对象 → 归一化类型（AGENTS 6.2），字段取值参照上游 utils/data_util.py 的 handle_work_info。 */
@@ -22,6 +22,11 @@ export function userRef(u: any): UserRef | null {
   if (!u) return null
   const screenName = screenNameOf(u)
   return n.userRef({ id: u.rest_id ?? u.legacy?.id_str, name: u.core?.name ?? u.legacy?.name, url: screenName ? userUrl(screenName) : null })
+}
+
+/** 当前账号（Viewer）→ AccountUser：头像与 user() 同源（新版 avatar.image_url，老版 legacy.profile_image_url_https）。 */
+export function account(u: any): AccountUser | null {
+  return n.accountUser(userRef(u), u?.avatar?.image_url ?? u?.legacy?.profile_image_url_https)
 }
 
 /** 完整用户资料：新版字段在 core / avatar / profile_bio / relationship_counts / tweet_counts，老版在 legacy。 */

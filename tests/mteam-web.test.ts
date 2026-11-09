@@ -98,7 +98,7 @@ describe('mteam：网页账密会话', () => {
   }
 
   async function webAccount() {
-    const credential = newCredential({ platform: 'mteam', endpoint: 'web', account: 'default', method: 'password', user: { id: UID, name: 'tester', url: null } })
+    const credential = newCredential({ platform: 'mteam', endpoint: 'web', account: 'default', method: 'password', user: { id: UID, name: 'tester', url: null, avatar: null } })
     Object.assign(credential.scopes.main!.tokens, { auth: JWT, did: DID, visitor_id: 'ab'.repeat(16) })
     await writeCredential(credential)
     await setCurrent('mteam', 'web', 'default')
@@ -233,7 +233,7 @@ describe('mteam：网页账密会话', () => {
     expect(read.env.data[0]).toMatchObject({ id: '77', from: { id: '0' }, text: '您的登入通知\n合成正文' })
     expect(requests.some((r) => r.url.includes('markRead'))).toBe(false)
 
-    const keyCredential = newCredential({ platform: 'mteam', endpoint: 'web', account: 'key', method: 'apikey', user: { id: UID, name: 'tester', url: null } })
+    const keyCredential = newCredential({ platform: 'mteam', endpoint: 'web', account: 'key', method: 'apikey', user: { id: UID, name: 'tester', url: null, avatar: null } })
     keyCredential.scopes.main!.tokens.api_key = 'fake-key'
     await writeCredential(keyCredential)
     requests.length = 0

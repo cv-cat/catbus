@@ -471,7 +471,7 @@ describe('youtube 平台（web）', () => {
       const menu = { actions: [{ openPopupAction: { popup: { multiPageMenuRenderer: { header: { activeAccountHeaderRenderer: { accountName: { simpleText: 'No Channel' } } } } } } }] }
       const accounts = { contents: [{ accountSectionListRenderer: { contents: [{ accountItemSectionRenderer: { contents: [{ accountItem: { isSelected: true, serviceEndpoint: { selectActiveIdentityEndpoint: { supportedTokens: [{ accountStateToken: { hasChannel: false, obfuscatedGaiaId: '123456789012345678901' } }] } } } }] } }] } }] }
       const r = await withYt({ 'account/account_menu': () => menu, 'account/accounts_list': () => accounts }, () => cli('youtube', 'auth', 'login', '-a', 'nochannel', '--cookie', COOKIE))
-      expect(r.env.data.user).toEqual({ id: '123456789012345678901', name: 'No Channel', url: null })
+      expect(r.env.data.user).toEqual({ id: '123456789012345678901', name: 'No Channel', url: null, avatar: null })
     })
 
     it('多账号：-a 选账号；只能看自己的列表时别人的报 UNSUPPORTED；游客做写操作报 AUTH_REQUIRED', async () => {
@@ -565,7 +565,22 @@ describe('youtube 平台（web）', () => {
         return r
       })
       expect(r.env.ok).toBe(true)
-      expect(JSON.parse(readFileSync(file, 'utf8')).user).toEqual({ id: ME, name: 'Test User', url: `https://www.youtube.com/channel/${ME}` })
+      expect(JSON.parse(readFileSync(file, 'utf8')).user).toEqual({ id: ME, name: 'Test User', url: `https://www.youtube.com/channel/${ME}`, avatar: null })
+    })
+
+    it('头像：头像菜单的 accountPhoto 取最大的一张，登录和 auth status 都带上，status 拿到新头像时写回凭证', async () => {
+      const withPhoto = (url: string) => {
+        const menu = structuredClone(ACCOUNT_MENU) as any
+        menu.actions[0].openPopupAction.popup.multiPageMenuRenderer.header.activeAccountHeaderRenderer.accountPhoto = {
+          thumbnails: [{ url: url.replace('s176', 's48'), width: 48, height: 48 }, { url, width: 176, height: 176 }],
+        }
+        return menu
+      }
+      const r = await withYt({ 'account/account_menu': () => withPhoto('https://yt3.ggpht.com/fake=s176-c-k') }, () => cli('youtube', 'auth', 'login', '--cookie', COOKIE))
+      expect(r.env.data.user).toEqual({ id: ME, name: 'Test User', url: `https://www.youtube.com/channel/${ME}`, avatar: 'https://yt3.ggpht.com/fake=s176-c-k' })
+      const status = await withYt({ 'account/account_menu': () => withPhoto('//yt3.ggpht.com/new=s176-c-k') }, () => cli('youtube', 'auth', 'status'))
+      expect(status.env.data.user.avatar).toBe('https://yt3.ggpht.com/new=s176-c-k')
+      expect(JSON.parse(readFileSync(join(home.dir, 'auth', 'youtube', 'web', 'default.json'), 'utf8')).user.avatar).toBe('https://yt3.ggpht.com/new=s176-c-k')
     })
 
     it('auth status：在线校验；cookie 失效（401）时为 logged_in false，不报错', async () => {
@@ -1342,7 +1357,7 @@ describe('youtube 平台（web）', () => {
       )
       expect(r.env.ok).toBe(true)
       expect(menus).toBe(3)
-      expect(JSON.parse(readFileSync(file, 'utf8')).user).toEqual({ id: ME, name: 'No Channel', url: `https://www.youtube.com/channel/${ME}` })
+      expect(JSON.parse(readFileSync(file, 'utf8')).user).toEqual({ id: ME, name: 'No Channel', url: `https://www.youtube.com/channel/${ME}`, avatar: null })
 
       // 一直查不到：UPSTREAM，凭证不变
       writeFileSync(file, readFileSync(file, 'utf8').replace(ME, '123456789012345678901'))

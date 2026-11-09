@@ -259,7 +259,8 @@ export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
   const s = await api.checkSession(jd)
   return {
     logged_in: s.alive,
-    user: s.alive && jd.pin ? norm.meRef(jd.pin, s.name) : null,
+    // loginservice 只给昵称，没有头像（AGENTS 5.3：不为头像额外请求）
+    user: s.alive && jd.pin ? n.accountUser(norm.meRef(jd.pin, s.name), null) : null,
     method: s.alive ? ctx.credential.method : null,
     expires_at: null,
   }

@@ -207,6 +207,7 @@ catbus <platform> <resource> <action> [参数...] [选项...]
 | 类型 | 字段 |
 |---|---|
 | UserRef | `id name url` |
+| AccountUser | `id name url avatar`（`auth list` / `status` / `login` 里账号的 user；没有头像时为 null） |
 | User | `id name handle avatar url bio stats{followers following items likes}` |
 | Item | `id kind url title text author:UserRef created_at cover media:Media[] stats{views likes comments collects shares} price status` |
 | Media | `id type url width height duration` |

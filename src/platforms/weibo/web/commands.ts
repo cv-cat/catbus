@@ -21,7 +21,7 @@ export async function authLogin(ctx: Ctx) {
   const w = new Weibo(loginContext(ctx, credential))
   const self = await api.selfInfo(w)
   if (!self) throw new CatbusError('AUTH_REQUIRED', '登录没有成功：cookie 无效或已过期', { hint: '在浏览器登录 weibo.com 后，复制请求头里完整的 Cookie' })
-  return finishLogin(ctx, credential, { id: self.uid, name: n.str(self.nick), url: norm.userUrl(self.uid) })
+  return finishLogin(ctx, credential, { id: self.uid, name: n.str(self.nick), url: norm.userUrl(self.uid), avatar: self.avatar })
 }
 
 /** 登录态的过期时间：cookie ALF 是 SUB 的过期秒数（可能带 `02_` 前缀）。 */
@@ -37,7 +37,7 @@ export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
   const self = w.isLogin ? await api.selfInfo(w) : null
   return {
     logged_in: Boolean(self),
-    user: self ? n.userRef({ id: self.uid, name: self.nick, url: norm.userUrl(self.uid) }) : null,
+    user: self ? n.accountUser(n.userRef({ id: self.uid, name: self.nick, url: norm.userUrl(self.uid) }), self.avatar) : null,
     method: self ? ctx.credential.method : null,
     expires_at: self ? expiresAt(w) : null,
   }

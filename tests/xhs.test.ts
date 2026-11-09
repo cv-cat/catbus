@@ -91,7 +91,7 @@ const ACK = Buffer.concat([Buffer.from([0x0a, 5]), Buffer.from('mid-1'), Buffer.
 /** 登录态：cookie 放进指定 scope（创作者中心是 creator）。 */
 function ctxWith(cookies: string, scope = 'main') {
   const ctx = makeCtx({ platform: 'xhs' })
-  ctx.credential.user = { id: USER_ID, name: '测试用户', url: null }
+  ctx.credential.user = { id: USER_ID, name: '测试用户', url: null, avatar: null }
   ctx.credential.scopes[scope] = { cookies: makeCtx({ platform: 'xhs', cookies, cookieDomain: '.xiaohongshu.com' }).credential.scopes.main!.cookies, tokens: {} }
   return ctx
 }
@@ -1081,7 +1081,7 @@ describe('xhs 创作者中心：第一次用主站登录态桥接', () => {
     useTempHome()
     async function account() {
       const c = newCredential({ platform: 'xhs', endpoint: 'web', account: 'default', method: 'cookie' })
-      c.user = { id: USER_ID, name: '测试用户', url: null }
+      c.user = { id: USER_ID, name: '测试用户', url: null, avatar: null }
       c.scopes.main!.cookies = parseCookieInput(PC_COOKIES, '.xiaohongshu.com')
       await writeCredential(c)
       await setCurrent('xhs', 'web', 'default')

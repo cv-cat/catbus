@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { resolve as resolvePath } from 'node:path'
 import { text as readStdin } from 'node:stream/consumers'
 import { z } from 'zod'
-import { checkAccountName, endpointFlag, getCurrent, GUEST, newCredential, readCredential, writeCredential } from '../core/auth-store.js'
+import { checkAccountName, endpointFlag, getCurrent, GUEST, newCredential, readCredential, syncStatusUser, writeCredential } from '../core/auth-store.js'
 import { resolveNetwork } from '../core/config.js'
 import { CatbusError, toCatbusError } from '../core/errors.js'
 import { createLogger, type Logger } from '../core/log.js'
@@ -17,7 +17,7 @@ import {
   type Platform,
 } from '../core/registry.js'
 import * as rand from '../core/rand.js'
-import type { Account, Credential } from '../core/schemas.js'
+import type { Account, AuthStatus, Credential } from '../core/schemas.js'
 import { type Args, type Options, VOCAB } from '../core/vocab.js'
 import { findPlatform, PLATFORMS } from '../platforms/index.js'
 import { collectOptionKinds, type GlobalFlags, type Parsed, parseArgv } from './argv.js'
@@ -253,12 +253,17 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
       const data = await handler(ctx)
       // auth login 实际落盘的账号可能与目标不同（--auto-bind），信封里写实际的
       if (key === 'auth login' && data && typeof (data as Account).account === 'string') out.meta.account = (data as Account).account
-      out.result(data)
+      // auth status 在线校验拿到的新昵称 / 头像合并回凭证，随下面的 persistCredential 落盘
+      out.result(key === 'auth status' && isAuthStatus(data) ? syncStatusUser(ctx.credential, data) : data)
     }
   } finally {
     await persistCredential(ctx.credential, snapshot)
   }
   return 0
+}
+
+function isAuthStatus(value: unknown): value is AuthStatus {
+  return typeof value === 'object' && value != null && 'logged_in' in value && 'user' in value
 }
 
 /**

@@ -2,14 +2,15 @@ import { describe, expect, it } from 'vitest'
 import { getCurrent, listAccounts, newCredential, readCredential, setCurrent, writeCredential } from '../src/core/auth-store.js'
 import { accountNameFor, finishLogin } from '../src/core/login.js'
 import type { HandlerContext } from '../src/core/registry.js'
-import type { UserRef } from '../src/core/schemas.js'
+import type { AccountUser } from '../src/core/schemas.js'
 import { findPlatform } from '../src/platforms/index.js'
 import { cli, useTempHome } from './helpers.js'
 
 useTempHome()
 
-const alice: UserRef = { id: 'u-alice', name: 'Alice', url: null }
-const bob: UserRef = { id: 'u-bob', name: 'Bob', url: null }
+const alice: AccountUser = { id: 'u-alice', name: 'Alice', url: null, avatar: 'https://example.com/alice.png' }
+// bob 没有头像：替换 alice 时不能继承她的头像
+const bob: AccountUser = { id: 'u-bob', name: 'Bob', url: null, avatar: null }
 
 /** finishLogin 只用到平台、端、账号、选项和 logger。 */
 function loginCtx(account: string | null, options: Record<string, unknown> = {}) {
@@ -25,7 +26,7 @@ function fresh(account: string, token: string) {
   return c
 }
 
-async function seed(account: string, user: UserRef, token: string) {
+async function seed(account: string, user: AccountUser, token: string) {
   const c = fresh(account, token)
   c.user = user
   await writeCredential(c)
