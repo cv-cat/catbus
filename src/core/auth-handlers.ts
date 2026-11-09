@@ -25,6 +25,8 @@ export async function use(ctx: HandlerContext) {
       hint: `catbus ${p} auth login -a ${account}${endpointFlag(ctx.endpoint)}`,
     })
   }
+  const ep = ctx.platform.endpoints[ctx.endpoint]
+  if (ep !== 'planned' && ep.use) await (await ep.use())({ ...ctx, account, credential })
   await setCurrent(p, ctx.endpoint, account)
   return toAccount(credential, true)
 }

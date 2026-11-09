@@ -10,6 +10,55 @@
 
 - 全局选项 `--fields <路径,...>`：只输出 `data` 条目里的这些字段，点号进入嵌套对象，经过数组时作用到每个元素，没有的字段为 null；json、jsonl 都适用，在 `--raw` 之后生效
 - 全局选项 `--dry-run`：做完参数、选项、是否已实现、本地登录态的检查就停下，不调用平台接口；`data` 为 `{args options confirm}`，凭证类选项打码
+- UserRef 带上头像：作者、评论者、主播、观众、私信对方等所有 UserRef 改为 `id name url avatar`，`avatar` 从同一个原始对象里取（统一成 https，不额外请求），取不到时为 null。AccountUser 的字段与 UserRef 相同，类型名保留
+- 评论带上图片：Comment 新增 `media: Media[]`（评论附带的图片、表情包、商品评价的晒图；动图也记为 `image`，正文里的行内表情不算），取自同一个原始评论对象，不额外请求。xhs（`pictures`）、douyin / tiktok（`image_list`、`sticker`，商品评价的晒图）、bilibili（`content.pictures`）、weibo（`url_struct` / `pic_infos` / `pic`）、x（回复推文的 `extended_entities`）、jd（评价的 `pictureInfoList`）；kuaishou 的评论查询不返回图片、youtube 评论没有图片，为 `[]`
+- 账号带上头像：Account 与 AuthStatus 的 `user` 改为新类型 AccountUser（`id name url avatar`），凭证文件的 `user` 也保存 `avatar`。登录、cookie 导入和 `auth status` 复用流程里原有的那次当前用户请求取头像（统一成 https），不额外请求；`auth status` 拿到新的昵称 / 头像会写回凭证。旧凭证文件没有 `avatar` 时读成 null，不需要迁移。taobao、xianyu、jd、jimeng 的校验接口不给头像，为 null
+- 新增 `youtube`（YouTube，别名 `yt`）平台的 web 端。没有上游仓库，直接对接 YouTube 网页背后的 InnerTube 接口（`/youtubei/v1/`），接口说明见 `src/platforms/youtube/UPSTREAM`：
+  - 不登录可用：`item get` / `search`（`--sort general|popular`、`--time`、`--type`）/ `related` / `media` / `download`，`comment list` / `replies`，`user get` / `search` / `items`，`series list` / `items`（播放列表），`keyword suggest`，`live get` / `search` / `history` / `listen`（直播聊天）
+  - 需要登录：`feed list`（首页推荐、订阅流），`history list`，`notice list` / `count`，`user likes` / `collects`（稍后观看）/ `following`（只能看自己的），`item like` / `unlike` / `collect` / `uncollect`，`user follow` / `unfollow`（订阅），`comment add`（含 `--reply-to`）/ `delete` / `like` / `unlike`
+  - 登录只支持导入浏览器 cookie；支持多账号（`-a`、`auth use`）。没有开 YouTube 频道的 Google 账号以 Google 账号 ID 作为用户 ID
+  - `item media` / `download` 走 VISIONOS 客户端、不带登录，给出最清晰的视频轨和音频轨两个文件；同一出口 IP 请求过多时 YouTube 会要求人机验证（`RISK_CONTROL`）
+  - `item list`（自己上传的视频，数据来自 YouTube Studio）；`live send`：发直播聊天文字消息；`channel create`：给账号开频道
+  - `item publish`（◐ 部分支持）：发布视频（标题、简介、标签、`--visibility public|private`、`--schedule` 定时发布）。自定义封面（`--cover`）未经真机验证，可能需要已验证的账号；`item delete`：删除自己的视频（需要确认，2026-10-30 实测通过）。两者走 YouTube Studio：建视频和删除要求网页端 BotGuard 校验，由本机的无头 Chromium 计算，其余请求都由 Node 发出。Chromium 按 `catbus config set youtube.browser <路径>`、环境变量 `CATBUS_YOUTUBE_BROWSER`、Playwright 缓存的顺序查找，不使用系统里的 Google Chrome（AGENTS.md 5.7）
+  - core：配置项新增 `youtube.browser`（AGENTS.md 5.5）
+- 平台规范：YouTube 的 web 端声明 `guest: true`（AGENTS.md 5.2 的特例），读取命令不登录可用
+- 新增 `docs/platforms/youtube.md`，更新 Agent 技能、多语言 README 与 llms.txt
+
+## [0.3.0] - 2026-11-05
+
+### Fixed
+
+- bilibili：`item edit` 一执行就报「找不到这条稿件」。`archiveDetail` 返回的已经是接口的 `data`，原实现又按 `data.archives` 取了一层，永远取不到原稿；改为按编辑页的 `x/vupre/web/archive/view` 取稿件
+- mteam：`item download` 被拒（「下载地址不属于受支持的官方 HTTPS 域名」）。`api.m-team.cc` 的下载地址会 302 到下载节点 `*.halomt.com`，现在允许跳转到这个域名（第一跳仍须是 MT 自己的域名）
+- 抖音：扫码后 2046（「为保障你的账号安全，请前往抖音APP完成验证后再进行登录」）把登录流程白白中断。2046 是 passport 新加的二次验证风控门，不再报错：catbus 默认选短信验证，按登录页验证组件的请求形状直接调 `/passport/web/send_code/` 发码（stderr 提示发往的掩码手机号），验证码从 stdin 读一行（支持管道喂给 AI），`/passport/web/validate_code/` 校验通过后用同一个二维码 token 继续轮询等放行；回车跳过短信或决策里没有短信选项时，退回「等 App 端验证」的原有轮询，超时与过期逻辑不变，全程无浏览器
+- 能力矩阵的「登录方式」表按 `LOGIN_METHODS` 生成，不再写死 4 种方式
+- xhs：扫码确认后被要求短信人机验证（HTTP 471，`verifyType 120`）时不再直接失败：向账号绑定的手机发验证码，在终端输入（非交互时从 stdin 读一行）后继续登录
+
+### Added
+
+- bilibili：`item publish --schedule <ISO 时间>`，定时发布（`x/vu/web/add/v3` 的 `dtime`），时间按 B 站限制校验在 2 小时后、15 天内
+- bilibili：`item edit --schedule <ISO 时间>|none`，改期 / 取消定时（`x/vu/web/edit` 的 `dtime`）；不给时沿用原稿的定时，避免编辑封面时把定时稿变成立即发布
+- bilibili：`item publish` 支持 B 站双封面，新增私有选项 `--cover43`（稿件列表页的 4:3 封面），与 `--cover`（播放页的 16:9）各传一张，提交时一起写进 `x/vu/web/add/v3` 的 `cover` / `cover43`
+- bilibili：`item edit` 支持只改资料，`--video` 不再必填；新增 `--cover43`。不给 `--video` 时按编辑页接口 `x/vupre/web/archive/view` 取原稿的分 P（`filename` + `cid`，`x/vu/web/edit` 两个都要），只换 16:9 / 4:3 封面不用重传视频、不丢原分 P；`--cover` / `--cover43` 缺省沿用原图。编辑时沿用原稿的 `is_only_self`，不给 `--visibility` 不会把「仅自己可见」的稿改成公开
+- mteam：网页账密登录（`--method password`），请求带网页前端的 HMAC 签名；新设备的两步验证支持邮箱验证码（`--email` 发码、`--code` 完成，非 TTY 分两次执行）和 TOTP
+- mteam：`item collect` / `uncollect`、`user collects`、`item download --qbit`（推送到本机 qBittorrent，`--qbit-savepath` 指定保存目录；multipart 自己拼，结尾边界带 CRLF，避免 qBittorrent 把结尾边界读进最后一个字段）、`seed list`、`seed stats`、`exam get`（考核进度）、`bonus get`（时魔）、`bonus history`（新扩展类型 `BonusRecord`）、`msg list` / `history`（站内信只读，只支持账密登录）；`item search` / `feed list` 新增私有选项 `--order-by` / `--asc`
+- 新增 `jimeng`（即梦，别名 `dreamina`）平台：管理即梦官方 CLI `dreamina` 的多账号登录态，不注册生成类命令
+  - `auth login`：浏览器授权（新登录方式 `oauth`），由 `dreamina` 发起设备码授权，把钥匙串里的登录态存到账号名下
+  - `auth use`：把目标账号的登录态写回钥匙串，之后直接运行 `dreamina` 就是这个账号
+  - `auth status`：用 `dreamina user_credit` 在线校验；`auth logout`：钥匙串里正是这个账号时同时 `dreamina logout`
+  - `dreamina` 自己刷新 token 后，catbus 在下次改写钥匙串前把最新值存回所属账号
+  - 只支持 macOS，需要先安装 `dreamina`
+- core：端声明新增 `use` 钩子，`auth use` 设置当前账号前调用（AGENTS 5.3、5.6）
+- 新增 `docs/platforms/jimeng.md`、AGENTS.md 5.6，更新能力矩阵、登录指南、Agent 技能和 llms.txt
+- `user update`：修改当前账号的昵称（`--name`）、头像（`--avatar`）、简介（`--bio`），只改给出的字段，返回修改后的 User
+- bilibili：`user update`，接口按网页端个人中心 `account.bilibili.com` 补（`x/member/web/sign/update`、`face/update`、`web/update`），上游没有，没有对拍。改昵称前先查 `uname/update/message` 的资格；改昵称扣硬币，带 `--name` 时需要确认
+- 新增 `maoyan`（猫眼演出）平台，web 端免登录只读查询：
+  - 城市热门演出（`feed list`）：私有选项 `--city`（城市名或演出城市 ID，默认北京），`--category` 本地筛选
+  - 演出分类（`feed categories`）、演出城市检索（`poi search`）：内置数据，不联网
+  - 演出详情（`item get`）：场次时间、城市、场馆、票价档、售卖状态逐行写进 `text`；详情接口要 H5guard 的 `mtgsig`，在本地 vm 里出签
+  - 离线测试（真实响应裁剪的 fixture）与在线 E2E 测试；平台文档、能力矩阵、Agent 技能与多语言 README
+- `maoyan`：新增 `auth login`（大众点评 App 扫码，不用打开浏览器；或 `--method cookie` 导入 `dper`）、`auth status`，以及 `item get --tickets`（需要登录）：把场次、票档、实售价、余票逐行追加到 `text`，原始字段在 `--raw` 的 `shows`
+- bilibili：`comment pin` / `comment unpin`，置顶 / 取消置顶自己作品评论区里的一级评论（`x/v2/reply/top`，平台扩展，AGENTS 4.7）
 
 ## [0.2.1] - 2026-10-22
 

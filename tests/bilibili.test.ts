@@ -218,6 +218,15 @@ describe('bilibili 对拍：上传的结果与动态配图', () => {
 })
 
 describe('bilibili 对拍：命令流程', () => {
+  it('auth status 头像：nav 的 face（不额外请求），统一成 https', async () => {
+    const c = loadCase('bilibili', 'nav')
+    const patched = { ...c, responses: [{ ...c.responses[0]!, body: { ...(c.responses[0]!.body as any), data: { ...(c.responses[0]!.body as any).data, face: 'http://i0.hdslb.com/bfs/face/fake.jpg' } } }] }
+    const { requests, result, error } = await replay(patched, () => commands.authStatus(loggedCtx()))
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect((result as any).user).toEqual({ id: '10001', name: '测试', url: 'https://space.bilibili.com/10001', avatar: 'https://i0.hdslb.com/bfs/face/fake.jpg' })
+  })
+
   it('游客 item get：匿名设备初始化（spi → bili_ticket → 指纹上报）后取稿件详情', async () => {
     const c = loadCase('bilibili', 'guest_item_get')
     const { itemGet } = await import('../src/platforms/bilibili/web/commands.js')
@@ -302,8 +311,8 @@ describe('bilibili comment replies：非上游楼中楼', () => {
     expect(requests[0]!.cookies).toContainEqual(['SESSDATA', 'fake-sessdata'])
     expect(result.data[0]).toEqual({
       id: '71002', item_id: THREAD_BVID, parent_id: '71001',
-      author: { id: '10002', name: '测试用户', url: 'https://space.bilibili.com/10002' },
-      text: '测试回复 71002', created_at: '2023-11-15T06:13:20+08:00', stats: { likes: 3, replies: 0 },
+      author: { id: '10002', name: '测试用户', url: 'https://space.bilibili.com/10002', avatar: null },
+      text: '测试回复 71002', media: [], created_at: '2023-11-15T06:13:20+08:00', stats: { likes: 3, replies: 0 },
     })
     expect(result.data[0][RAW]).toEqual(raw)
     expect(result.page).toEqual({ cursor: '2', has_more: true })
@@ -1093,5 +1102,220 @@ describe('bilibili 纯算', () => {
     expect(geetest.customB64(Buffer.from('abc'))).toHaveLength(4)
     expect(geetest.customB64(Buffer.from('ab')).endsWith('.')).toBe(true)
     expect(geetest.csCipher('abcdef', null, '')).toBe('abcdef')
+  })
+})
+
+describe('bilibili 评论置顶', () => {
+  it('comment pin / unpin：只发 type、oid、rpid、action 与 csrf', async () => {
+    const pin = await runCommand('commentPin', { args: { item: BVID, comment: '123456' } }, () => ({ code: 0, message: '0', ttl: 1 }))
+    expect(pin.error).toBeUndefined()
+    expect(pin.urls[0]).toBe('https://api.bilibili.com/x/v2/reply/top')
+    expect(Object.fromEntries(new URLSearchParams(pin.bodies[0] as string))).toEqual({
+      type: '1',
+      oid: '80433022',
+      rpid: '123456',
+      action: '1',
+      csrf: 'fakecsrf0123456789abcdef01234567',
+    })
+    expect(pin.result).toEqual({ id: '123456' })
+
+    const unpin = await runCommand('commentUnpin', { args: { item: BVID, comment: '123456' } }, () => ({ code: 0, message: '0', ttl: 1 }))
+    expect(unpin.error).toBeUndefined()
+    expect(new URLSearchParams(unpin.bodies[0] as string).get('action')).toBe('0')
+  })
+
+  it('专栏走 type=12，动态走 type=17', async () => {
+    const cv = await runCommand('commentPin', { args: { item: 'https://www.bilibili.com/read/cv12345', comment: '9' } }, () => ({ code: 0, message: '0', ttl: 1 }))
+    expect(new URLSearchParams(cv.bodies[0] as string).get('type')).toBe('12')
+    const dyn = await runCommand('commentPin', { args: { item: 'dyn:987654321098765432', comment: '9' } }, () => ({ code: 0, message: '0', ttl: 1 }))
+    expect(new URLSearchParams(dyn.bodies[0] as string).get('type')).toBe('17')
+  })
+})
+
+describe('bilibili user update（非上游，没有对拍）', () => {
+  const CSRF = 'fakecsrf0123456789abcdef01234567'
+  const ACCOUNT = 'https://api.bilibili.com/x/member/web/account'
+  const MESSAGE = 'https://api.bilibili.com/x/member/uname/update/message'
+  const space = (over: object = {}) => ({ mid: 10001, name: '旧名', face: 'http://i0.hdslb.com/bfs/face/a.jpg', sign: '旧签名', ...over })
+  const route = (over: Record<string, unknown> = {}) => (url: string) => {
+    for (const [k, v] of Object.entries(over)) if (url.includes(k)) return v
+    if (url.startsWith(MESSAGE)) return ok({ allow: true, uname_message: '' })
+    if (url.startsWith(ACCOUNT)) return ok({ mid: 10001, uname: '旧名', sign: '旧签名', sex: '男', birthday: '2000-01-02', nick_free: false })
+    if (url.includes('/x/space/wbi/acc/info')) return ok(space())
+    return { code: 0, message: '0', ttl: 1 }
+  }
+
+  it('只给 --bio：走签名接口，不碰昵称；返回自己的资料，签名用提交的值', async () => {
+    const { urls, bodies, result, error } = await runCommand('userUpdate', { options: { bio: '新签名' } }, route())
+    expect(error).toBeUndefined()
+    expect(urls[0]).toBe('https://api.bilibili.com/x/member/web/sign/update')
+    expect(bodies[0]).toBe(`user_sign=${encodeURIComponent('新签名')}&csrf=${CSRF}`)
+    expect(urls.some((u) => u.includes('/x/member/web/update') || u.startsWith(MESSAGE))).toBe(false)
+    expect(urls).toHaveLength(2)
+    expect(urls[1]).toContain('/x/space/wbi/acc/info?mid=10001')
+    // 签名要审核：空间资料还是旧的，返回的是提交的值
+    expect(result).toMatchObject({ id: '10001', name: '旧名', bio: '新签名', url: 'https://space.bilibili.com/10001' })
+  })
+
+  it('--name：先查资格，再把当前的性别、生日连同签名整表提交', async () => {
+    const { urls, bodies, error } = await runCommand('userUpdate', { options: { name: '新名' } }, route())
+    expect(error).toBeUndefined()
+    expect(urls.slice(0, 3)).toEqual([MESSAGE, ACCOUNT, 'https://api.bilibili.com/x/member/web/update'])
+    expect(bodies[2]).toBe(`uname=${encodeURIComponent('新名')}&usersign=${encodeURIComponent('旧签名')}&sex=${encodeURIComponent('男')}&birthday=2000-01-02&source=profile_web&csrf=${CSRF}`)
+    // 同时给 --bio 时签名跟着整表一起提交，不再单独调签名接口
+    const both = await runCommand('userUpdate', { options: { name: '新名', bio: '新签名' } }, route())
+    expect(both.bodies[2]).toContain(`usersign=${encodeURIComponent('新签名')}`)
+    expect(both.urls.some((u) => u.includes('sign/update'))).toBe(false)
+  })
+
+  it('--name：不允许改名时不提交；昵称重复（data.code 40014）报 UPSTREAM，hint 给推荐昵称', async () => {
+    const denied = await runCommand('userUpdate', { options: { name: '新名' } }, route({ [MESSAGE]: ok({ allow: false, uname_message: '30 天内只能改一次' }) }))
+    expect(denied.error).toMatchObject({ code: 'UPSTREAM', message: expect.stringContaining('30 天内只能改一次') })
+    expect(denied.urls).toEqual([MESSAGE])
+    const taken = await runCommand('userUpdate', { options: { name: '新名' } }, route({ '/x/member/web/update': ok({ code: 40014, name_list: ['新名_1', '新名2026'] }) }))
+    expect(taken.error).toMatchObject({ code: 'UPSTREAM', message: '昵称已被占用', hint: '可用的昵称：新名_1、新名2026', detail: { code: 40014 } })
+    const long = await runCommand('userUpdate', { options: { bio: 'x'.repeat(80) } }, route({ 'sign/update': { code: 40022, message: '签名过长' } }))
+    expect(long.error).toMatchObject({ code: 'UPSTREAM', message: '签名太长，最多 70 字', detail: { code: 40022 } })
+    // data.code 不在表里时用 data.message，不用顶层的 '0'
+    const other = await runCommand('userUpdate', { options: { name: '新名' } }, route({ '/x/member/web/update': ok({ code: 40099, message: '昵称不合规' }) }))
+    expect(other.error).toMatchObject({ code: 'UPSTREAM', message: '昵称不合规', detail: { code: 40099 } })
+  })
+
+  it('--avatar：图片 multipart 直传，csrf 在 query 里；格式不对报 USAGE，不发请求', async () => {
+    const { requests, result, error } = await runCommand(
+      'userUpdate',
+      { options: { avatar: IMAGE_FILE } },
+      route({ 'face/update': { code: 0, message: 'OK', ttl: 1, data: 'http://i2.hdslb.com/bfs/face/new.jpg' } }),
+    )
+    expect(error).toBeUndefined()
+    expect(requests[0]!.url).toBe(`https://api.bilibili.com/x/member/web/face/update?csrf=${CSRF}`)
+    // 头像用接口返回的新地址，不等空间资料刷新
+    expect(result.avatar).toBe('https://i2.hdslb.com/bfs/face/new.jpg')
+    expect(requests[0]!.multipart!.map((m) => [m.name, m.filename ?? null, m.contentType ?? null])).toEqual([
+      ['dopost', null, null],
+      ['DisplayRank', null, null],
+      ['face', 'pic.png', 'image/png'],
+    ])
+    const txt = join(FIXTURES, 'face.txt')
+    writeFileSync(txt, 'not an image')
+    const bad = await runCommand('userUpdate', { options: { avatar: txt } }, route())
+    expect(bad.error).toMatchObject({ code: 'USAGE' })
+    expect(bad.urls).toEqual([])
+  })
+
+  it('注册表：非上游，带 --name 时需要确认', () => {
+    const c = web().commands.get('user update')!
+    expect(c).toMatchObject({ upstream: 'partial', note: expect.stringContaining('非上游') })
+    const confirm = c.confirm as (o: object) => boolean
+    expect([confirm({ bio: 'x' }), confirm({ avatar: 'a.png' }), confirm({ name: 'n' })]).toEqual([false, false, true])
+  })
+})
+
+describe('bilibili 定时发布', () => {
+  it('submitArchive：给了 dtime 才写进 body', async () => {
+    const requests: PreparedRequest[] = []
+    const restore = mockSender((p) => {
+      requests.push(p)
+      return fakeResponse({ code: 0, message: '0', data: { bvid: BVID } }, { headers: [['content-type', 'application/json']], url: p.url })
+    })
+    try {
+      await logged((b) => api.submitArchive(b, { videos: [{ filename: 'n1', biz_id: 9 }], title: 't', tid: 17, tag: 'a', dtime: 1790090000 }))
+      await logged((b) => api.submitArchive(b, { videos: [{ filename: 'n1', biz_id: 9 }], title: 't', tid: 17, tag: 'a' }))
+    } finally {
+      restore()
+    }
+    const bodies = requests.map((p) => JSON.parse(Buffer.from(p.body as Uint8Array).toString('utf8')))
+    expect(bodies[0].dtime).toBe(1790090000)
+    expect(bodies[1]).not.toHaveProperty('dtime')
+  })
+
+  it('item publish：--schedule 早于 2 小时后时报 USAGE，不发请求', async () => {
+    const soon = new Date(NOW + 3600_000).toISOString()
+    const { error, urls } = await runCommand(
+      'itemPublish',
+      { options: { video: COVER_FILE, title: 't', tag: ['a'], category: '17', schedule: soon } },
+      () => ({ code: 0, message: '0', data: { bvid: BVID } }),
+    )
+    expect(error).toMatchObject({ code: 'USAGE' })
+    expect(urls).toEqual([])
+  })
+})
+
+describe('bilibili 双封面（16:9 + 4:3）与只改资料', () => {
+  const VIEW = 'https://member.bilibili.com/x/vupre/web/archive/view'
+  const COVER_UP = 'https://member.bilibili.com/x/vu/web/cover/up'
+  const EDIT = 'https://member.bilibili.com/x/vu/web/edit'
+  /** 原稿的定时发布时间（unix 秒），编辑不给 --schedule 时应当沿用。 */
+  const DTIME = 1790090000
+
+  /** 编辑页数据按请求里的 aid 回；分 P 带 filename 与 cid，x/vu/web/edit 需要这两项。 */
+  const route = (extra: Record<string, unknown> = {}) => (url: string) => {
+    for (const [k, v] of Object.entries(extra)) if (url.includes(k)) return v
+    if (url.startsWith(VIEW)) {
+      const aid = Number(new URL(url).searchParams.get('aid'))
+      return ok({
+        archive: { aid, bvid: BVID, title: '旧标题', tid: 231, tag: '旧标签', desc: '旧简介', cover: 'https://x/old16x9.jpg', cover43: 'https://x/old4x3.jpg', copyright: 1, is_only_self: 1, dtime: DTIME },
+        videos: [{ cid: 43291905898, filename: 'n230101abc', index: 1, title: '旧标题', desc: '', duration: 0 }],
+      })
+    }
+    if (url === COVER_UP) return ok({ url: 'https://archive.biliimg.com/bfs/archive/new.jpg' })
+    if (url.startsWith(EDIT)) return ok({ bvid: BVID })
+    return { code: 0, message: '0', ttl: 1 }
+  }
+
+  const editBody = (bodies: unknown[]) => {
+    const raw = bodies.find((b) => typeof b === 'string' && b.includes('"videos"'))
+    return JSON.parse(String(raw))
+  }
+
+  it('不给 --video：沿用原稿分 P，只换 16:9 与 4:3 两张封面', async () => {
+    const { bodies, urls, error } = await runCommand('itemEdit', { args: { item: BVID }, options: { cover: COVER_FILE, cover43: COVER_FILE } }, route())
+    expect(error).toBeUndefined()
+    const body = editBody(bodies)
+    expect(body).toMatchObject({ aid: expect.any(Number), cover: 'https://archive.biliimg.com/bfs/archive/new.jpg', cover43: 'https://archive.biliimg.com/bfs/archive/new.jpg' })
+    expect(body.videos).toEqual([{ filename: 'n230101abc', title: '旧标题', desc: '', cid: 43291905898 }])
+    // 两张封面各上传一次，没有上传视频
+    expect(urls.filter((u) => u === COVER_UP)).toHaveLength(2)
+    expect(urls.some((u) => u.includes('upos'))).toBe(false)
+  })
+
+  it('只改标题：封面沿用原稿的 16:9 与 4:3，不上传任何封面', async () => {
+    const { bodies, urls, error } = await runCommand('itemEdit', { args: { item: BVID }, options: { title: '新标题' } }, route())
+    expect(error).toBeUndefined()
+    const body = editBody(bodies)
+    expect(body).toMatchObject({ title: '新标题', cover: 'https://x/old16x9.jpg', cover43: 'https://x/old4x3.jpg', is_only_self: 1 })
+    expect(urls).not.toContain(COVER_UP)
+  })
+
+  it('什么都不给：报 USAGE，不发请求', async () => {
+    const { error, urls } = await runCommand('itemEdit', { args: { item: BVID }, options: {} }, route())
+    expect(error).toMatchObject({ code: 'USAGE' })
+    expect(urls).toEqual([])
+  })
+
+  it('submitArchive / editArchive：不给 4:3 封面时不写 cover43（保持原请求形状）', async () => {
+    const requests: PreparedRequest[] = []
+    const restore = mockSender((p) => {
+      requests.push(p)
+      return fakeResponse({ code: 0, message: '0', data: { bvid: BVID } }, { headers: [['content-type', 'application/json']], url: p.url })
+    })
+    try {
+      await logged((b) => api.submitArchive(b, { videos: [{ filename: 'n1', biz_id: 9 }], title: 't', tid: 17, tag: 'a', cover: 'https://x/c.jpg' }))
+      await logged((b) => api.submitArchive(b, { videos: [{ filename: 'n1', biz_id: 9 }], title: 't', tid: 17, tag: 'a', cover: 'https://x/c.jpg', cover43: 'https://x/c43.jpg' }))
+      await logged((b) => api.editArchive(b, { aid: 1, videos: [{ filename: '', biz_id: 9 }], title: 't', tid: 17, tag: 'a', cover: 'https://x/c.jpg', cover43: 'https://x/c43.jpg' }))
+    } finally {
+      restore()
+    }
+    const bodies = requests.map((p) => JSON.parse(Buffer.from(p.body as Uint8Array).toString('utf8')))
+    expect(bodies[0]).not.toHaveProperty('cover43')
+    expect(bodies[1]).toMatchObject({ cover: 'https://x/c.jpg', cover43: 'https://x/c43.jpg' })
+    expect(bodies[2]).toMatchObject({ aid: 1, cover43: 'https://x/c43.jpg' })
+  })
+
+  it('--schedule：不给时沿用原稿的定时，none 取消定时', async () => {
+    const keep = await runCommand('itemEdit', { args: { item: BVID }, options: { title: '新标题' } }, route())
+    expect(editBody(keep.bodies).dtime).toBe(DTIME)
+    const cancel = await runCommand('itemEdit', { args: { item: BVID }, options: { schedule: 'none' } }, route())
+    expect(editBody(cancel.bodies).dtime).toBe(0)
   })
 })

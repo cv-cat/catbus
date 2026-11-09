@@ -114,6 +114,7 @@ function harvest(pool: Pool, cmd: Command, argv: string[], data: unknown): void 
   const list = (Array.isArray(data) ? data : [data]).filter((x): x is Obj => x != null && typeof x === 'object')
   for (const o of list) {
     switch (type) {
+      case 'Torrent':
       case 'Item':
         if (cmd.key === 'live products' || cmd.key === 'product get') pool.products.push(o)
         else pool.items.push(o)
@@ -183,6 +184,7 @@ for (const platform of PLATFORMS) {
   if (web === 'planned') continue
   const p = platform.id
   if (p === '12306') continue // 12306 为免登录铁路平台，在专门的 12306.e2e.ts 中按铁路业务链路测试
+  if (p === 'maoyan') continue // 猫眼演出免登录，在 maoyan.e2e.ts 中测试
   const commands = sortCommands(web.commands.values())
     .filter((c) => c.status === 'implemented' && !c.stream && !SKIP.has(c.key) && READ_ACTIONS.has(c.action))
     .map((c, i) => ({ c, i }))

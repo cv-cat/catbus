@@ -220,6 +220,17 @@ describe('weibo 对拍：命令流程', () => {
     expect(new Date((result as any).expires_at).getTime()).toBe(1790259200_000)
   })
 
+  it('auth status 头像：$CONFIG.user 的 avatar_hd 优先，统一成 https；golden 里没有头像时为 null', async () => {
+    const c = loadCase('weibo', 'self_info')
+    expect((await replay(c, () => cmd.authStatus(loggedCtx()))).result).toMatchObject({ user: { avatar: null } })
+    const body = String(c.responses[0]!.body).replace('"screen_name"', '"avatar_hd": "http://tvax1.sinaimg.cn/crop.0.0.180.180.1024/hd.jpg", "avatar_large": "https://large.jpg", "screen_name"')
+    const patched = { ...c, responses: [{ ...c.responses[0]!, body }] }
+    const { requests, result, error } = await replay(patched, () => cmd.authStatus(loggedCtx()))
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect((result as any).user).toEqual({ id: '10001', name: '测试昵称', url: 'https://weibo.com/u/10001', avatar: 'https://tvax1.sinaimg.cn/crop.0.0.180.180.1024/hd.jpg' })
+  })
+
   it('item publish 图文：get_self_info → 逐张上传 → statuses/update（上游 post_weibo）', async () => {
     const c = loadCase('weibo', 'post_image')
     const images = (c.input.images as { base64: string }[]).map((b, i) => tmpFile(`img${i + 1}.jpg`, bytes(b)))

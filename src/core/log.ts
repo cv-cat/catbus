@@ -1,7 +1,7 @@
-const SENSITIVE = /cookie|token|authorization|password|secret|ticket|sessdata|ct0/i
+const SENSITIVE = /cookie|token|authorization|password|secret|ticket|sessdata|ct0|api[-_]?key|passkey/i
 const URL_USERINFO = /\/\/[^/\s:@]+:[^/\s@]+@/g
 const COOKIE_HEADER = /\b((?:set-)?cookie)(["']?\s*:\s*)[^\n]*/gi
-const SENSITIVE_PAIR = /\b(authorization|[\w-]*token|password|secret|ticket|sessdata|ct0)(["']?\s*[:=]\s*)((?:bearer|basic)\s+)?("[^"]*"|'[^']*'|[^\s,;&]+)/gi
+const SENSITIVE_PAIR = /\b(authorization|[\w-]*token|password|secret|ticket|sessdata|ct0|[\w-]*api[-_]?key|passkey)(["']?\s*[:=]\s*)((?:bearer|basic)\s+)?("[^"]*"|'[^']*'|[^\s,;&]+)/gi
 
 /**
  * 给凭证打码：对象里键名敏感的值换成 ***；字符串里的 Cookie 头整行打码，key=value / key: value 只打码值，

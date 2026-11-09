@@ -515,7 +515,7 @@ describe('taobao auth（CLI）', () => {
     expect(r.env.data).toMatchObject({ platform: 'taobao', account: 'default', current: true, user: { id: MY_ID, name: 'tester', url: null }, method: 'cookie' })
 
     const status = await replay(c, () => cli('taobao', 'auth', 'status'))
-    expect((status.result as any).env.data).toMatchObject({ logged_in: true, user: { id: MY_ID, name: 'tester' }, method: 'cookie' })
+    expect((status.result as any).env.data).toMatchObject({ logged_in: true, user: { id: MY_ID, name: 'tester', avatar: null }, method: 'cookie' })
   })
 
   it('cookie 失效：AUTH_REQUIRED', async () => {

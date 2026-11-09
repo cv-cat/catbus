@@ -90,7 +90,7 @@ export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
     throw err
   }
   const expires = ['cookie2', 'sgcookie', 'unb'].map((name) => x.jar.cookies.find((c) => c.name === name)?.expires).find((e) => e != null)
-  return { logged_in: true, user: x.me(), method: ctx.credential.method, expires_at: n.time(expires) }
+  return { logged_in: true, user: n.accountUser(x.me(), null), method: ctx.credential.method, expires_at: n.time(expires) }
 }
 
 // ================================================================ user

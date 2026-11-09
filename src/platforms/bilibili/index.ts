@@ -64,6 +64,10 @@ export default definePlatform({
         'user following': 'none',
         'user follow': 'none',
         'user unfollow': 'none',
+        'user update': impl('partial', 'userUpdate', {
+          note: '非上游：上游没有改资料的接口，请求按网页端个人中心 account.bilibili.com 补的，没有对拍。改昵称每次扣 6 个硬币（从没设过昵称的账号免费一次），需要确认；签名最多 70 字，改完要审核；头像只收 png / jpg，不超过 2MB',
+          confirm: (o: Record<string, unknown>) => o.name != null,
+        }),
 
         'item get': impl('full', 'itemGet'),
         'item search': impl('full', 'itemSearch', {
@@ -78,13 +82,32 @@ export default definePlatform({
         'item collect': impl('full', 'itemCollect', { options: { folder: FOLDER } }),
         'item uncollect': impl('full', 'itemUncollect', { options: { folder: FOLDER } }),
         'item publish': impl('full', 'itemPublish', {
-          supports: ['title', 'text', 'video', 'cover', 'tag', 'category', 'visibility'],
+          supports: ['title', 'text', 'video', 'cover', 'tag', 'category', 'visibility', 'schedule'],
           options: {
+            cover43: z.string().optional().describe('4:3 封面图片路径（稿件列表页）；B 站双封面，和 --cover 各给一张'),
             visibility: visibility('public', 'private'),
             source: z.string().optional().describe('转载来源；给出时按转载投稿，不给为自制'),
             dynamic: z.string().optional().describe('同步到动态的文案'),
             allowReprint: z.boolean().optional().describe('允许转载，默认禁止'),
           },
+        }),
+        'item edit': impl('full', 'itemEdit', {
+          summary: '编辑稿件：更换视频，或改标题、简介、封面（16:9 / 4:3）、定时、标签、分区',
+          args: [item],
+          auth: 'required',
+          output: 'Item',
+          options: {
+            video: z.string().optional().describe('新视频文件；给出时替换原视频，不给则只改资料'),
+            title: z.string().optional().describe('新标题，缺省沿用原标题'),
+            text: z.string().optional().describe('新简介，缺省沿用原简介'),
+            cover: z.string().optional().describe('新封面图片路径（16:9，播放页），缺省沿用原封面'),
+            cover43: z.string().optional().describe('新封面图片路径（4:3，稿件列表页），缺省沿用原封面'),
+            schedule: z.string().optional().describe('定时发布：ISO 时间，或 none 取消定时；缺省沿用原稿的定时'),
+            tag: z.array(z.string()).optional().describe('新标签，可重复；缺省沿用原标签'),
+            category: z.string().optional().describe('新分区 id，缺省沿用原分区'),
+            visibility: visibility('public', 'private'),
+          },
+          note: '只改资料时不用传 --video；封面分 16:9（--cover）与 4:3（--cover43）两张，缺省沿用原图；--schedule 改期、none 取消定时，缺省沿用原稿；提交后进入重新审核',
         }),
         'item delete': impl('partial', 'itemDelete', { note: '需要人机验证（极验点选），catbus 还不能自动通过，会报 RISK_CONTROL' }),
         'item categories': impl('full', 'itemCategories'),
@@ -105,6 +128,22 @@ export default definePlatform({
           check: (_a, o) => (o.root != null && o.replyTo == null ? '--root 要和 --reply-to 一起用' : undefined),
         }),
         'comment delete': impl('partial', 'commentDelete', { note: DYNAMIC_REPLY_NOTE, args: [replyTarget, { name: 'comment', summary: '评论 ID' }] }),
+        'comment pin': {
+          upstream: 'full',
+          summary: '置顶评论',
+          args: [replyTarget, { name: 'comment', summary: '评论 ID（comment list 输出的 id）' }],
+          auth: 'required',
+          output: '{id}',
+          handler: h('commentPin'),
+        },
+        'comment unpin': {
+          upstream: 'full',
+          summary: '取消置顶评论',
+          args: [replyTarget, { name: 'comment', summary: '评论 ID（comment list 输出的 id）' }],
+          auth: 'required',
+          output: '{id}',
+          handler: h('commentUnpin'),
+        },
         'comment like': 'none',
         'comment unlike': 'none',
 

@@ -16,7 +16,7 @@
 
 | 方式 | 命令 | 说明 |
 |---|---|---|
-| 扫码（默认） | `catbus xhs auth login` | 目前手机确认后常被要求人机验证（HTTP 471），报 `RISK_CONTROL`，见下方「已知限制」。**建议先用 cookie 导入** |
+| 扫码（默认） | `catbus xhs auth login` | 手机确认后可能被要求人机验证（HTTP 471）；是短信验证时 catbus 会发验证码让你输入，其他验证方式报 `RISK_CONTROL`，见下方「已知限制」 |
 | 短信 | `catbus xhs auth login --method sms --phone <手机号>` | 终端里会提示输入验证码；非交互环境分两步，第二步用 `--code <验证码>` |
 | cookie | `catbus xhs auth login --method cookie --cookie @xhs-cookie.txt` | 从 www.xiaohongshu.com 的 DevTools → Network 复制完整的 Cookie 请求头 |
 
@@ -202,7 +202,7 @@ catbus xhs live listen <room_id> --duration 10m > live.jsonl
 
 ## 已知限制
 
-- **扫码登录被要求人机验证**：手机确认后服务端返回 HTTP 471（`verifytype 120`），上游 Spider_XHS 同样失败。catbus 报 `RISK_CONTROL`（`detail.kind` 为 `captcha`），`hint` 提示改用 cookie 导入。cookie 导入实测可用。
+- **扫码登录被要求人机验证**：手机确认后服务端可能返回 HTTP 471。`verifytype` 为 `120`（短信验证）时，catbus 向账号绑定的手机发验证码（stderr 上显示脱敏号码），交互时在终端输入，非交互时从 stdin 读一行（收到短信后再写入，脚本或 Agent 可以通过管道传入），验证通过后继续登录；输错可以重输，最多 3 次，空行放弃。其他验证方式（如 `124` App 扫码、滑块）仍报 `RISK_CONTROL`（`detail.kind` 为 `captcha`），`hint` 提示改用 cookie 导入。cookie 导入实测可用。
 - **评论接口间歇性要求人机验证**：`comment list` 偶尔返回 HTTP 461（`verifytype 124`），请求越密越容易触发。报 `RISK_CONTROL`，`error.hint` 和 `detail.verify_url` 里是网页验证链接：在登录了同一账号的浏览器里打开、完成验证后再重试。不验证时有时几分钟自己恢复，也见过持续 8 小时以上的；批量翻页时放慢节奏。
 - **字段恒为空**：列表里的 `stats.views`（公开接口不返回播放量）、`keyword hot` 的 `heat`（热搜接口不给热度值）。
 - **还没真机验证**：`msg send` / `read` / `revoke` / `delete`、`msg listen`、`live listen`、`live send`。关注列表与群聊的字段名参考了第三方代码（上游没有样本）。

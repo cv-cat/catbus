@@ -9,9 +9,11 @@
 ## 能做
 
 - **读**：`item search` / `get` / `related` / `media` / `download` / `list` / `categories` / `subtitles`（字幕，带时间轴）；`user get` / `search` / `items`（`--keyword` 过滤）；`comment list`（稿件、专栏、纯文字 / 转发 / 图文动态）；`comment replies`（视频、专栏、图文动态根评论下的可见楼中楼）；`feed list`（`--kind recommend|hot|following`，following 只列关注的人的视频投稿，需要登录）；`live get` / `search` / `categories` / `listen` / `history` / `gifts` / `media`；`folder list` / `items`；`danmaku list`；`draft get`。
-- **写**：`item like` / `unlike` / `collect` / `uncollect`（`--folder`）/ `publish` / `delete`；`item coin`、`item triple`；`comment add` / `delete`；`danmaku send`；`dynamic publish` / `delete`；`article publish`（专栏）/ `draft delete`；`live send` / `start` / `stop`；`media upload`。
+- **写**：`item like` / `unlike` / `collect` / `uncollect`（`--folder`）/ `publish` / `edit`（换视频、改资料、换 16:9 / 4:3 封面，不给 `--video` 时只改资料）/ `delete`；`item coin`、`item triple`；`comment add` / `delete`；`danmaku send`；`dynamic publish` / `delete`；`article publish`（专栏）/ `draft delete`；`live send` / `start` / `stop`；`media upload`；`user update`（`--name` / `--avatar` / `--bio`，改当前账号资料）。
 
 B 站写操作是 10 个平台里验证最充分的：点赞、收藏、评论增删、发弹幕、专栏草稿都已真机通过。
+
+- **评论置顶**：`comment pin` / `unpin`（只作用于自己管理的评论区里的一级评论；已有置顶时再置顶报 12029）。
 
 ## 做不到
 
@@ -36,8 +38,10 @@ B 站写操作是 10 个平台里验证最充分的：点赞、收藏、评论�
 - **`danmaku list` 不完整**：6 分钟以内的视频只返回前 2 分钟的弹幕且不报错，更长的报 `UPSTREAM`。不要用它做完整统计，要告诉用户。
 - `item delete` 需要极验点选，catbus 过不了，会报 `RISK_CONTROL`：让用户在网页端撤稿。
 - `item coin` 会真的花掉硬币、`item triple` 包含投币，都是危险操作，要用户同意后才加 `-y`。
+- `user update --name` 每次扣 6 个硬币（从没设过昵称的账号免费一次），要用户同意后才加 `-y`；`--bio` 最多 70 字，改完要审核，返回的资料里可能还是旧签名；`--avatar` 只收 png / jpg，不超过 2MB。
 - `dynamic publish` 没有仅自己可见，发出去就公开。
-- `item publish` 只能发视频；`--category` 取自 `item categories`；`--visibility` 只有 `public` / `private`。
+- `item publish` 只能发视频；`--category` 取自 `item categories`；`--visibility` 只有 `public` / `private`；`--schedule` 定时发布，时间要在 2 小时后、15 天内（B 站限制）。
+- B 站封面有两套比例：`--cover` 是播放页的 16:9，`--cover43` 是稿件列表页的 4:3，各传一张；只改封面用 `item edit <BV> --cover ... --cover43 ...`，不用重传视频。
 - `user get` 的 `stats` 恒为 null（接口不给计数）。
 - `comment add` / `delete` 的动态目标仍只支持纯文字和转发；图文动态只开放读取。视频 / 专栏动态请直接传 BV / cv 号。
 

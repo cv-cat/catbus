@@ -32,6 +32,7 @@ export const ORIGIN = {
   dynamic: 'https://t.bilibili.com',
   space: 'https://space.bilibili.com',
   search: 'https://search.bilibili.com',
+  account: 'https://account.bilibili.com',
 } as const
 
 export const API = 'https://api.bilibili.com'

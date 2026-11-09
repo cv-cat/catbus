@@ -49,6 +49,7 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `user search` | ✓ | 搜索用户。 |
 | `user items` | ✓ | 用户发布的稿件。取值：`--sort` latest / views / collects。私有选项 `--keyword`。 |
 | `user collects`、`user followers`、`user following`、`user follow`、`user unfollow` | ○ | 规划中 |
+| `user update` | ◐ | 修改当前账号的昵称（`--name`）、头像（`--avatar`）、签名（`--bio`）。非上游，请求按网页端个人中心补的。改昵称每次扣 6 个硬币（从没设过昵称的账号免费一次），需要确认；签名最多 70 字，改完要审核；头像只收 png / jpg，不超过 2MB。 |
 
 ### item
 
@@ -64,7 +65,8 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `item unlike` | ✓ | 取消点赞。 |
 | `item collect` | ✓ | 收藏。私有选项 `--folder`。 |
 | `item uncollect` | ✓ | 取消收藏。私有选项 `--folder`。 |
-| `item publish` | ✓ | 发布稿件。必须给 `--video`、`--title`、至少一个 `--tag` 和 `--category`（取值见 `item categories`）。取值：`--visibility` public / private。不支持 `--image`、`--topic`、`--mention`、`--poi`、`--schedule`、`--price`。私有选项 `--source`、`--dynamic`、`--allow-reprint`。 |
+| `item publish` | ✓ | 发布稿件。必须给 `--video`、`--title`、至少一个 `--tag` 和 `--category`（取值见 `item categories`）。取值：`--visibility` public / private。支持 `--schedule` 定时发布（ISO 时间，B 站要求 2 小时后、15 天内）。不支持 `--image`、`--topic`、`--mention`、`--poi`、`--price`。私有选项 `--source`、`--dynamic`、`--allow-reprint`、`--cover43`。 |
+| `item edit` | ✓ | 编辑已投稿件。不给 `--video` 时只改资料，按编辑页接口取原稿的分 P（`filename` + `cid`）；`--cover` 是 16:9（播放页）、`--cover43` 是 4:3（稿件列表页），缺省沿用原图；`--schedule` 改期 / `none` 取消定时，缺省沿用原稿；不给 `--visibility` 时沿用原稿的可见性。提交后进入重新审核。平台扩展。 |
 | `item delete` | ◐ | 删除稿件。需要人机验证（极验点选），catbus 还不能自动通过，会报 `RISK_CONTROL`。危险操作，需要确认。 |
 | `item categories` | ✓ | 稿件分类，即 `--category` 的取值。 |
 | `item coin` | ✓ | 投币。平台扩展。危险操作，需要确认。 |
@@ -78,6 +80,7 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `comment list` | ◐ | 评论列表。支持视频、专栏、纯文字 / 转发动态及图文动态；图文动态通过非上游动态详情接口获取相簿评论区 ID，没有对拍。取值：`--sort` popular / latest。 |
 | `comment add` | ◐ | 发表评论。动态只支持纯文字和转发：图文动态（带图）的评论区挂在相簿上，上游没有查相簿 ID 的接口；稿件、专栏不受影响。私有选项 `--root`。 |
 | `comment delete` | ◐ | 删除评论。动态只支持纯文字和转发：图文动态（带图）的评论区挂在相簿上，上游没有查相簿 ID 的接口；稿件、专栏不受影响。危险操作，需要确认。 |
+| `comment pin` / `unpin` | ✓ | 置顶 / 取消置顶一级评论。平台扩展，接口 `x/v2/reply/top`；只能置顶自己管理的评论区里的一级评论，已有置顶时再置顶报 12029。 |
 | `comment replies <item> <comment>` | ◐ | 视频、专栏、图文动态根评论下的可见楼中楼。`<comment>` 为 `comment list` 返回的根评论 ID。使用非上游的楼中楼及动态详情接口，没有对拍；纯文字和转发动态的楼中楼尚未验证，不支持。支持 `--limit`、`--cursor`、`--all`、jsonl 和 `--raw`。 |
 | `comment like`、`comment unlike` | ○ | 规划中 |
 
@@ -164,11 +167,13 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `user items <user>` | `--keyword <词>` | 只看投稿里匹配关键词的 |
 | `item collect` / `uncollect` | `--folder <收藏夹 id>` | 收藏进 / 移出指定收藏夹，多个用逗号分隔，取值来自 `folder list`。不给时收藏进第一个收藏夹，取消时从所有收着它的收藏夹移出 |
 | `item publish` | `--source <来源>`、`--dynamic <文案>`、`--allow-reprint` | `--source` 表示转载并给出来源，不给为自制；`--dynamic` 是同步到动态的文案；默认禁止转载，`--allow-reprint` 允许 |
+| `item publish` / `item edit` | `--cover <图片>`、`--cover43 <图片>` | B 站封面有两套比例：`--cover` 是播放页的 16:9，`--cover43` 是稿件列表页的 4:3，各传一张；只给其中一张时另一张沿用原图（发布时为空，由平台自己截） |
 | `comment add <item> <text>` | `--reply-to <评论>`、`--root <评论>` | 回复楼中楼时 `--root` 给根评论、`--reply-to` 给被回复的那条；不给 `--root` 时 `--reply-to` 就是根评论 |
 | `live send <room> <text>` | `--color`、`--font-size`、`--position`、`--reply-user <用户>` | 弹幕样式同 `danmaku send`；`--reply-user` 为回复的观众（UID 或空间链接） |
 
 | 扩展命令 | 说明 | 输出 |
 |---|---|---|
+| `item edit <item> [--video <文件>] [--title <标题>] [--text <简介>] [--cover <16:9 图>] [--cover43 <4:3 图>] [--tag <标签>...] [--category <分区 id>] [--visibility public\|private]` | 编辑已投稿件：换视频、改资料、换封面；提交后重新审核 | Item |
 | `item coin <item> [--count 1\|2] [--like]` | 投币，默认 1 个；`--like` 同时点赞。**会真的花掉硬币**，需要确认 | `{id}` |
 | `item triple <item>` | 一键三连，需要确认 | `{id}` |
 | `item subtitles <item>` | 字幕：每种语言一条，带时间轴（`lines[{from to text}]`） | Subtitle[] |

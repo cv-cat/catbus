@@ -49,7 +49,7 @@ catbus douyin comment list <item> --limit 100 -o jsonl | jq -r '.text'
 ```
 
 - Item：`id kind url title text author{id name url} created_at cover media[] stats{views likes comments collects shares} price status`
-- Comment：`id item_id parent_id author text created_at stats{likes replies}`
+- Comment：`id item_id parent_id author text media created_at stats{likes replies}`（`media` 是评论里附带的图片 / 表情包，没有时为 `[]`）
 - User：`id name handle avatar url bio stats{followers following items likes}`
 
 有些字段因为平台不返回而恒为 null（例如抖音作品的 `title`、抖音和小红书列表的 `stats.views`），平台文件里有写。需要平台原始字段时加 `--raw`。完整类型见 [../reference/commands.md](../reference/commands.md)。

@@ -603,7 +603,7 @@ describe('xianyu auth', () => {
     expect(r.env.data).toMatchObject({ platform: 'xianyu', account: 'default', current: true, user: { id: MY_ID, name: 'tester' }, method: 'cookie' })
 
     const status = await replay(c, () => cli('xianyu', 'auth', 'status'))
-    expect((status.result as any).env.data).toMatchObject({ logged_in: true, user: { id: MY_ID, name: 'tester' }, method: 'cookie' })
+    expect((status.result as any).env.data).toMatchObject({ logged_in: true, user: { id: MY_ID, name: 'tester', avatar: null }, method: 'cookie' })
     const me = await replay(c, () => cli('xianyu', 'user', 'get', 'me'))
     expect((me.result as any).env.data).toMatchObject({ id: MY_ID, name: 'tester', url: `https://www.goofish.com/personal?userId=${MY_ID}` })
   })

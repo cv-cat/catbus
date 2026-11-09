@@ -7,10 +7,10 @@
 
 做**一个 CLI —— 操作各大平台接口的统一入口**。
 
-- 一个命令 `catbus`，按统一的命令规范调用 10 个平台：小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X。
+- 一个命令 `catbus`，按统一的命令规范调用 10 个平台：小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X。另有直接对接官方接口的 12306 和 YouTube（见第 3 节）。
 - 能力来源是作者 [cv-cat](https://github.com/cv-cat) 的 10 个开源仓库，已克隆到 `references/`，作为**只读的原始来源**。
 - 所有平台都在本仓库里**用 TypeScript 重写**，不在运行时调用上游的 Python。
-- **用户只需要安装 Node**（版本见 7.1）。不需要 Python，不需要 C/C++ 编译器，也不需要其他系统依赖。
+- **用户只需要安装 Node**（版本见 7.1）。不需要 Python，不需要 C/C++ 编译器，也不需要其他系统依赖。例外：`youtube` 的 `item publish` / `item delete` 需要本机的 Chromium（见 5.7）。
   - `npm i -g catbus-cli` 装完就能离线使用。
   - 必须支持全部目标系统（见 7.2）。
 - 以 **npm 包**分发，不发 PyPI。安装体积不是约束，优先保证开箱即用。
@@ -33,11 +33,12 @@
 | 许可证 | MIT（主包、assets-jd、assets-ocr 相同） |
 | 数据目录 | `~/.catbus/`，可用 `CATBUS_HOME` 覆盖 |
 | 环境变量前缀 | `CATBUS_` |
-| Logo | `assets/logo.svg`（图标）、`assets/logo-wordmark.svg`（横版）、`assets/banner.txt`（终端字符画）。猫巴士：车身就是一只橘猫，车头是猫脸和耳朵，车尾是尾巴，轮毂是肉垫；车顶路牌是终端提示符 `>_`；车窗里坐着小红书红、B 站粉、抖音青三只小猫乘客。会颠簸、转轮子、摇尾巴、眨眼、抖耳朵；字符画沿用 `( >ω_ )`。配色取自 Catppuccin Mocha |
+| Logo | 吉祥物是一位 Q 版的巴士车掌小姐（原创角色）：深藏青色短卷发、一侧小辫系红发带、琥珀色大眼睛，戴红色帽带和金色巴士徽章的车掌帽，藏青双排扣制服、红领结、白手套、棕色挎包，举着一张印着 `>_` 的车票，挎包里有时探出一只小黑猫；白边贴纸风格。图由图像模型生成，角色描述、画风和每张图的用途见 `scripts/assets/mascot.md`，新图沿用同一段角色描述。`assets/logo.png`（透明底）是主图，`assets/stickers/` 是 README 里的其他姿势，`assets/banner.txt` 是终端字符画（沿用 `( >ω_ )`）。配色取自吉祥物：藏青 `#232838`、红 `#E8414F`，不用橙色和紫色。README 里的图（`hero-<语言>-<主题>`、`platforms-<主题>`）和 `social-preview.png` 都由 `scripts/gen-assets.mjs` 生成（`npm run gen:assets`），不手改：首屏左边是字标 `catbus`、标题、副标题和安装命令 `npm i -g catbus-cli`，右边是吉祥物；字体都是 OFL（Nunito、Geist Mono、Noto Sans 的简中、日文、韩文），第一次运行时下载到 `.cache/fonts/`，图里的字全部转成轮廓，随语言变化的文案每种语言出一张图；平台图一律用各平台真实的图标（`scripts/assets/logos/`，来源见其中的 `SOURCES.txt`），在路上的平台同样是原色，只在右上角挂 `soon` 标签；图上的平台列表与注册表对账，不一致时生成脚本报错 |
 
 ## 2. 范围
 
-- 目前支持第 3 节的 11 个平台的 web 端（10 个内容与电商平台 + 12306 铁路平台 `12306`）；app / pc 端在注册表里为 planned（见 4.3）。
+- 目前支持第 3 节的 15 个平台的 web 端（10 个内容与电商平台 + 12306 铁路平台 `12306` + YouTube `youtube` + 即梦 `jimeng` + 猫眼演出 `maoyan` + M-Team `mteam`）；app / pc 端在注册表里为 planned（见 4.3）。
+- `jimeng` 不调用平台接口，只保存和切换即梦官方 CLI `dreamina` 的登录态，是第 1 节「只需要 Node」「支持全部目标系统」的例外：需要另外安装 `dreamina`，只支持 macOS（见 5.6）。`youtube` 的 `item publish` / `item delete` 同样是「只需要 Node」的例外，需要本机的 Chromium（见 5.7）。
 - 矩阵里的 ○（平台有这个概念、上游没有的能力）只占位：注册为 planned，执行时返回 NOT_IMPLEMENTED，有需要时再实现。移植中发现矩阵与上游不符（上游其实没有、或只是占位）的能力，按上游实际情况标为 ○ 或 ◐，以 `docs/capabilities.md` 为准。
 - 新平台开始移植时，先把平台 id、别名、`item` 叫法等登记到第 3 节、4.2 和 4.5，再进注册表；在那之前 `catbus <平台>` 是未知平台（`USAGE`）。
 - 改规范先改本文件，再写代码。
@@ -57,6 +58,10 @@
 | jd | JdApis | `jd_apis/jd_api.py`、`jd_apis/jd_login_api.py`、`builder/auth.py` |
 | x | XApis | `x_apis/x_api.py`、`x_apis/x_write_api.py`、`x_apis/login_api.py` |
 | 12306 | （无上游仓库，直接对接 12306 官方公开接口） | `https://kyfw.12306.cn`（接口端点见 `src/platforms/12306/UPSTREAM`） |
+| youtube | （无上游仓库，直接对接 YouTube web 端的 InnerTube 接口） | `https://www.youtube.com/youtubei/v1/`（接口端点见 `src/platforms/youtube/UPSTREAM`） |
+| jimeng | （无上游仓库，封装即梦官方 CLI `dreamina` 的登录态） | `dreamina` 的子命令与钥匙串项（见 `src/platforms/jimeng/UPSTREAM`、5.6） |
+| maoyan | （无上游仓库，直接对接猫眼演出公开接口） | `https://yanchu.maoyan.com`、`https://m.dianping.com`（接口端点见 `src/platforms/maoyan/UPSTREAM`） |
+| mteam | （无上游仓库，直接对接 M-Team 官方 API） | `https://api.m-team.cc/api`（来源与验证范围见 `src/platforms/mteam/UPSTREAM`） |
 
 参考资料：
 - 每个仓库的鉴权、登录、API 方法、JS 资产、游客态生成位置，以及 Python → JS 的替换对照，见 [docs/upstream-map.md](docs/upstream-map.md)。
@@ -69,7 +74,9 @@
   - **不能修改其中任何受版本控制的文件**。
 - `references/` 不进入本仓库的版本控制，它们各自是独立的 git 仓库。
 - 每个平台的移植基于哪个上游 commit，记录在 `src/platforms/<p>/UPSTREAM`。
-- `12306` 平台直接对接 12306 官方公开接口，无上游 `references/` 仓库，基准与接口说明见 `src/platforms/12306/UPSTREAM`；离线测试不采用 Python 对拍（golden），改用基于真实响应裁剪的 fixture，通过 `mockSender` / `fakeResponse` 回放测试。
+- 没有上游仓库的平台（`12306`、`maoyan`、`youtube`）直接对接官方接口：`UPSTREAM` 记录对接的服务端点与接口说明；离线测试不采用 Python 对拍（golden），改用基于真实响应裁剪的 fixture，通过 `mockSender` / `fakeResponse` 回放测试。
+- `jimeng` 平台没有上游仓库，也不发 HTTP 请求：`UPSTREAM` 记录验证过的 `dreamina` 版本、用到的子命令和钥匙串项；离线测试替换 `dreamina` 子进程和钥匙串读写（`tests/jimeng.test.ts`）。
+- `mteam` 平台通过官方 API Key 或网页账密登录的令牌调用接口，无 Python 上游；离线测试使用假凭证与合成响应，通过 `mockSender` / `fakeResponse` 校验请求和输出，不保存真实账号数据。
 
 ## 4. 命令规范
 
@@ -113,6 +120,10 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | `jd` | `jingdong` |
 | `x` | `twitter` |
 | `12306` | — |
+| `youtube` | `yt` |
+| `jimeng` | `dreamina` |
+| `maoyan` | — |
+| `mteam` | `mt`, `m-team`, `mantou` |
 
 目录名、配置键、输出里的 `platform` 字段一律使用**规范 id**。只有平台有别名；resource 和 action 没有别名。
 
@@ -149,7 +160,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | resource | 含义 | action |
 |---|---|---|
 | `auth` | 登录态 | `login` `status` `logout` `list` `use` |
-| `user` | 用户 | `get` `search` `items` `likes` `collects` `reposts` `followers` `following` `follow` `unfollow` |
+| `user` | 用户 | `get` `search` `items` `likes` `collects` `reposts` `followers` `following` `follow` `unfollow` `update` |
 | `item` | 平台的**主内容单元**（见下表） | `get` `search` `related` `list` `media` `download` `like` `unlike` `collect` `uncollect` `repost` `unrepost` `publish` `delete` `categories` |
 | `product` | 内容平台里挂的商品（抖音 / TikTok 商城等） | `get` |
 | `comment` | 评论，也包括商品评价 | `list` `replies` `add` `delete` `like` `unlike` |
@@ -179,6 +190,10 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | xianyu | 闲置商品 |
 | taobao | 商品 |
 | jd | 商品 SKU |
+| youtube | 视频 |
+| jimeng | 作品（目前没有 item 命令） |
+| maoyan | 演出项目 |
+| mteam | 种子资源（输出 Torrent，含统一 Item 字段及 PT 元数据） |
 
 各动作的说明：
 - `item list`：当前账号自己发布的内容，带审核状态，数据来自创作者中心。
@@ -187,6 +202,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - `item download`：下载到本地。
 - `item categories`：发布和搜索时 `--category` 的取值。
 - `feed list --kind recommend|hot|following`：默认 `recommend`。
+- `user update`：修改当前账号的资料（昵称、头像、简介），只改给出的字段。
 - `live listen`：弹幕 / 礼物 / 进场等事件流。
 - `live history`：最近的弹幕。
 - `live media`：直播流地址。
@@ -217,6 +233,17 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 
 | 平台 | 命令 | 说明 | 输出 |
 |---|---|---|---|
+| mteam | `auth login [--api-key-file <文件> \| --api-key-stdin]` | 官方 API Key 登录，默认 `--method apikey`；TTY 下省略选项时隐藏输入。凭证写入 `scopes.main.tokens.api_key`，不接受命令行明文 Key | Account |
+| mteam | `auth login --method password --username <name> --password-stdin [--email <邮箱>] [--code <验证码>]` | 网页账密登录（`/login`，请求带网页前端的 HMAC 签名）。新设备要两步验证（code 1001）：邮箱方式先用 `--email` 让站点发码，非 TTY 下保存中间态（10 分钟有效，不含密码）后返回 `{sent, verify}`，再带 `--code` 重新执行一次（密码仍从 stdin 读）；TOTP 方式直接带 `--code`。凭证写入 `scopes.main.tokens` 的 `auth`（JWT）、`did`、`visitor_id`；站内信只支持这种登录 | Account |
+| mteam | `item search <kw>` / `feed list` `[--mode normal\|movie\|tvshow\|music\|anime\|adult] [--category <id>] [--free] [--order-by date\|size\|seeders\|leechers\|name] [--asc]` | 资源搜索 / 浏览，默认综合区 normal；`--free` 只看免费资源；私有选项 `--order-by` 按字段排序（默认降序，`--asc` 升序；站点置顶的资源总在最前）；沿用 `--limit` / `--cursor` / `--all`。`feed list` 表示浏览最新资源，`item list` 仍保留“自己的投稿”语义 | Torrent[] |
+| mteam | `item get <item>` / `item categories` / `item download <item> [--qbit] [--qbit-category <name>] [--qbit-paused] [--qbit-savepath <dir>]` | 详情 / 分类 / 下载 `.torrent` 文件；下载沿用 `--dir` / `--overwrite`。文件可能包含 Tracker 凭证，权限 0600，输出 File.url 为 null，不输出临时下载链接。私有选项 `--qbit` 下载后推送到本机 qBittorrent Web UI（`CATBUS_MTEAM_QBIT_URL`，默认 `http://127.0.0.1:25254`，直连、不走代理，默认分类 `mteam`，`--qbit-savepath` 指定保存目录，不给时用 qBittorrent 自己的设置）；qBittorrent 回复 `Fails.`（通常是已在任务列表）时只在 stderr 警告 | Torrent / Category[] / File[] |
+| mteam | `item collect` / `item uncollect <item>` / `user collects [me] [--mode <分区>]` | 收藏 / 取消收藏（接口按目标状态设置，重复执行不报错）/ 收藏列表（按分区，默认 normal） | `{id}` / Torrent[] |
+| mteam | `seed list [--status seeding\|leeching\|completed\|incomplete\|uploaded]` | 我的做种 / 下载中 / 已完成 / 未完成 / 已发布列表，默认 `seeding`；本账号在该种子上的上传、下载、分享率写进 `text`。分页沿用 `--limit` / `--cursor` / `--all` | Torrent[] |
+| mteam | `seed stats` | tracker 上当前的做种数和下载数（`/tracker/myPeerStatus`） | `{seeding leeching}` |
+| mteam | `exam get` | 进行中的考核（新人考核等）进度（`/examine/getMyActiveList`）：`items` 依次为 `download` / `upload`（字节）和 `bonus`（魔力值），各带 `current target done`；没有进行中的考核时返回空数组 | `{id title status start_at end_at note items[{name current target done}]}[]` |
+| mteam | `bonus get` | 时魔（`/tracker/mybonus`）：`per_hour` 每小时魔力值、`a` A 值、`seeding_count` / `seeding_size_gb` 计入时魔的做种数和体积（GB）、`two_factor` 是否开启两步验证 | `{per_hour a seeding_count seeding_size_gb two_factor}` |
+| mteam | `bonus history` | 魔力值、上传量、下载量的变动记录（`/credit/logs`）：`change` 为魔力值变化，上传 / 下载变化写进 `note`；站点不给变动前后的余额，`before` / `after` 为 null | BonusRecord[] |
+| mteam | `msg list [--box inbox\|system\|sent]` / `msg history <conversation>` | 站内信列表（收件箱 / 系统通知 / 发件箱，每条站内信作为一个会话）/ 读取一条站内信。只读，读取不会标记已读；只支持账密登录的会话，API Key 会话报 `UNSUPPORTED` | Conversation[] / Message[] |
 | tiktok | `folder add <folder> <item>` | 把视频加入收藏夹（一次一个视频）。TikTok 只能把已收藏的视频加进收藏夹 | `{id}`（视频 id） |
 | tiktok | `folder create <name> [--visibility public\|private]` | 收藏夹公开 / 私密：用 4.9 的标准选项 `--visibility`，只取 `public`、`private`；默认 `private`（与上游一致） | Folder |
 | tiktok | `folder update <folder> [--name <name>] [--visibility public\|private]` | 同上。`--name`、`--visibility` 至少给一个，没给的保持原值 | Folder |
@@ -227,6 +254,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | tiktok | `item publish [--allow-ai-remix on\|off]` | 私有选项：允许 AI 改编，默认 `on` | Item |
 | bilibili | `item coin <item> [--count 1\|2] [--like]` | 投币；`--like` 同时点赞 | `{id}` |
 | bilibili | `item triple <item>` | 一键三连 | `{id}` |
+| bilibili | `item edit <item> [--video <文件>] [--title <标题>] [--text <简介>] [--cover <16:9 图>] [--cover43 <4:3 图>] [--schedule <ISO 时间>\|none] [--tag <标签>...] [--category <分区 id>] [--visibility public\|private]` | 编辑已投稿件；给出 `--video` 时替换视频（先上传新文件，再走 `x/vu/web/edit`），不给则只改资料，分 P 沿用原稿的 `filename` + `cid`，可见性沿用原稿的 `is_only_self`，提交后重新审核。缺省沿用原标题/简介/封面/标签/分区。B 站封面分 16:9（`--cover`，播放页）与 4:3（`--cover43`，稿件列表页）两张，只给一张时另一张沿用原图。`--schedule` 改期、`none` 取消定时，不给时沿用原稿的定时 | Item |
 | bilibili | `item subtitles <item>` | 字幕 | Subtitle[] |
 | bilibili | `danmaku list <item>` | 视频弹幕 | Danmaku[] |
 | bilibili | `danmaku send <item> <text> --offset <秒> [--color] [--font-size] [--position]` | 发视频弹幕。`--color` 为 `#RRGGBB` 或十进制，`--font-size` 默认 25，`--position scroll\|top\|bottom` 默认 `scroll` | `{id}` |
@@ -237,8 +265,9 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | bilibili | `draft delete <id>` | 删专栏草稿 | `{id}` |
 | bilibili | `user items <user> [--keyword <词>]` | 私有选项：只看投稿里匹配关键词的 | Item[] |
 | bilibili | `item collect` / `uncollect <item> [--folder <收藏夹 id>]` | 私有选项：收藏进 / 移出指定收藏夹，多个用逗号分隔。不给时收藏进第一个收藏夹，取消时从所有收藏夹移出 | `{id}` |
-| bilibili | `item publish [--source <来源>] [--dynamic <文案>] [--allow-reprint]` | 私有选项：`--source` 表示转载并给出来源，不给为自制；`--dynamic` 为同步到动态的文案；默认禁止转载，`--allow-reprint` 允许 | Item |
+| bilibili | `item publish [--source <来源>] [--dynamic <文案>] [--allow-reprint] [--cover43 <4:3 图>]` | 私有选项：`--source` 表示转载并给出来源，不给为自制；`--dynamic` 为同步到动态的文案；默认禁止转载，`--allow-reprint` 允许；`--cover43` 是稿件列表页的 4:3 封面，和 `--cover`（播放页 16:9）一起构成 B 站的双封面 | Item |
 | bilibili | `comment add <item> <text> --reply-to <comment> [--root <comment>]` | 私有选项：回复楼中楼时 `--root` 给根评论、`--reply-to` 给被回复的那条；不给 `--root` 时 `--reply-to` 就是根评论 | Comment |
+| bilibili | `comment pin <item> <comment>` / `comment unpin <item> <comment>` | 置顶 / 取消置顶一级评论（`x/v2/reply/top`）。只能置顶自己管理的评论区里的一级评论；已有置顶时再置顶报 12029 | `{id}`（评论 ID） |
 | bilibili | `live send <room> <text> [--color] [--font-size] [--position] [--reply-user <user>]` | 私有选项：弹幕样式同 `danmaku send`；`--reply-user` 为回复的观众（UID 或空间链接） | `{id}` |
 | xianyu | `item publish [--original-price <金额>]` | 私有选项：原价（元），要和 `--price` 一起用 | Item |
 | xianyu | `item publish [--shipping free\|distance\|fixed\|none]` | 私有选项：运费方式，默认 `free` 包邮；`distance` 按距离计费，`fixed` 一口价，`none` 无需邮寄 | Item |
@@ -265,6 +294,9 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | x | `item publish [--thread <text> ...]` | 私有选项：发 thread。`--text` 是第一条，每个 `--thread` 是后面的一条，依次回复上一条；`--image` / `--video` / `--quote` 只作用于第一条。返回第一条 | Item |
 | x | `article publish --text [--title] [--cover]` | 发文章（Premium 长文）：`--text` 是 Markdown，依次建草稿、写标题、正文、封面，再发布。不给 `--title` 时取正文第一行的 `# 标题`。独占一行的 `![](图片)` 上传成插图，相对路径按 `--text @file` 的文件所在目录解析（直接给正文时按当前目录） | `{id url}` |
 | x | `article delete <article>` | 删文章：草稿或已发布的都可以，已发布的连同文章推文一起删 | `{id}` |
+| youtube | `channel create [--name <名称>] [--handle <handle>]` | 给当前 Google 账号开 YouTube 频道（上传、评论、直播聊天都要求有频道）。名称默认用账号名，handle 默认用 YouTube 推荐的；已有频道时报 `USAGE` | User |
+| maoyan | `feed list [--city <城市>]` | 私有选项：城市，城市名或演出城市 ID（`poi search` 输出的 `id`），默认北京 | Item[] |
+| maoyan | `item get <item> [--tickets]` | 私有选项：同时查场次、票档、实售价、余票，逐行追加到 `text`，原始字段在 `--raw` 的 `shows`。只有这个选项需要登录，未登录报 `AUTH_REQUIRED` | Item |
 | 12306 | `station search <keyword>` | 车站搜索（支持站名、拼音前缀、电报码） | Station[] |
 | 12306 | `ticket search <from> <to> [--date <YYYY-MM-DD>] [--type <G,D...>] [--available]` | 直达车次与余票（`--date` 默认今天；`--type` 过滤车型；`--available` 只看有票车次） | Ticket[] |
 | 12306 | `ticket price <train> --from-no <序号> --to-no <序号> --seat-types <编码> [--date <YYYY-MM-DD>]` | 票价详情（参数取自 ticket search 输出的 train_no、from.no、to.no、seat_types） | Fare |
@@ -287,7 +319,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 
 | resource | 形式 |
 |---|---|
-| user | `get` / `items` / `follow` / `unfollow <user>`；`likes` / `collects` / `reposts` / `followers` / `following [user]`，省略时为 `me`；`search <kw>` |
+| user | `get` / `items` / `follow` / `unfollow <user>`；`likes` / `collects` / `reposts` / `followers` / `following [user]`，省略时为 `me`；`search <kw>`；`update` 不带位置参数，只改当前账号 |
 | item | `get` / `related` / `media` / `download` / `like` / `unlike` / `collect` / `uncollect` / `repost` / `unrepost` / `delete <item>`；`search <kw>`；`list`、`categories`、`publish` 不带位置参数 |
 | product | `get <product>` |
 | comment | `list <item>`；`replies` / `delete` / `like` / `unlike <item> <comment>`；`add <item> <text> [--reply-to <comment>]` |
@@ -309,6 +341,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - bilibili 的 `comment list` / `replies` 读取图文动态时，先用非上游的动态详情接口取 `basic.comment_type=11` 与 `comment_id_str`（相簿 ID），不能把动态 ID 当作评论区 oid；输出 `Comment.item_id` 仍为动态 ID。同一条命令翻页时复用解析结果。`comment add` / `delete` 仍只支持纯文字和转发动态。
 - `msg send --item <item>`：对商品卖家 / 客服发消息（闲鱼、淘宝、京东）。
 - `msg send --to <user> --item <item>`：就这件商品给指定用户发消息（闲鱼：卖家主动联系买家）。不支持的平台报 `UNSUPPORTED`。
+- maoyan：演出（item）的场次时间、城市、场馆、票价档、售卖状态没有对应的 Item 字段，按「键：值」逐行写进 `text`，原始字段用 `--raw`。`poi search` 只搜演出城市，`id` 是 `feed list --city` 的取值。`item get --tickets` 的场次和票档同样写进 `text`，不新增类型。
 - taobao 没有按用户查询、按用户发起会话的接口：`user get <user>` 的 `<user>` 只接受商品链接，返回这件商品的卖家；`msg send` 不支持 `--to`（报 `UNSUPPORTED`）。
 
 ### 4.9 选项
@@ -370,6 +403,16 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 
 本地文件会自动上传，不需要先调 `media upload`。
 
+**资料**（`user update`）：
+
+| 选项 | 说明 |
+|---|---|
+| `--name <str>` | 昵称 |
+| `--avatar <path\|url>` | 头像图片，本地文件自动上传 |
+| `--bio <str>` | 简介 / 签名，传空字符串表示清空 |
+
+三个至少给一个，没给的保持原值。平台在注册表里用 `supports` 声明支持哪几个；平台对修改次数、冷却期、审核的限制，按平台返回的错误报 `UPSTREAM`，`hint` 写明限制。
+
 **下载**：
 - `--dir <目录>`：默认当前目录。文件名为 `<platform>_<id>_<序号>.<ext>`。
 - `--overwrite`：覆盖已有文件，默认跳过已有文件。
@@ -407,7 +450,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 以下操作执行前需要确认：
 - 所有 `delete`；
 - `msg revoke`；
-- bilibili 的 `item coin` / `item triple`；
+- bilibili 的 `item coin` / `item triple`，以及带 `--name` 的 `user update`（改昵称扣硬币）；
 - `live send --gift`。
 
 确认方式：
@@ -427,7 +470,8 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - 抖音的 PK / 连麦 / 评论标签；
 - TikTok 的 story 和收藏夹移动；
 - xhs 的蒲公英（达人）和千帆（分销达人）：只对开通了的品牌 / 机构账号有用，普通账号访问会被拒，被拒后几分钟内主站的评论等接口还会要求人机验证；
-- 12306（`12306`）的登录、下单、候补提交、退票改签：购票由用户本人在 12306 APP 完成，catbus 仅提供免登录的只读查询能力。
+- 12306（`12306`）的登录、下单、候补提交、退票改签：购票由用户本人在 12306 APP 完成，catbus 仅提供免登录的只读查询能力；
+- 猫眼演出（`maoyan`）的下单、抢票、预约：catbus 只提供只读查询。
 
 如果某条命令内部需要其中的能力（例如心跳），由实现内部调用。
 
@@ -461,7 +505,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - `-a` 指定的账号不存在时，报 `AUTH_REQUIRED`，`hint` 为 `catbus <p> auth login -a <name>`。
 
 **游客态只在声明了 `guest: true` 的端上存在**（见 7.6）。不支持游客态的端上没有 `guest.json`：`auth status` 等 auth 命令没有账号时，用一份只在内存里的空凭证，不落盘。
-- **web 端除 `12306` 外都不支持游客态**：各内容与电商平台的 web 端不登录几乎看不到内容，所以 web 端除 `auth` 命令外全部需要登录，未登录时直接报 `AUTH_REQUIRED` 并提示登录命令。游客态主要留给 app 端。**特例**：12306（`12306`）的车站、余票、票价、经停、中转查询均为公开免登录接口，其 web 端声明 `guest: true`，查询命令为 `auth: optional`，无需登录即可直接使用；且不提供 `auth login`。
+- **web 端默认不支持游客态**：各内容与电商平台的 web 端不登录几乎看不到内容，所以 web 端默认 `guest: false`，除 `auth` 命令外全部需要登录，未登录时直接报 `AUTH_REQUIRED` 并提示登录命令。游客态主要留给 app 端。公开内容不登录也能读的平台在 web 端声明 `guest: true`，目前是 `12306`、`maoyan` 和 `youtube`：读取命令沿用词表默认的 `auth: optional`，写操作和只看自己的命令仍为 `required`；不需要登录的端可以不提供 `auth login`（如 `12306`）。猫眼演出（`maoyan`）另外提供 `auth login`（大众点评扫码或 cookie 导入，凭证是 `.dianping.com` 的 `dper`，约七天有效），只有 `item get --tickets` 要求登录。各平台具体哪些命令免登录、支持哪些登录方式，见注册表和 `docs/platforms/<p>.md`。
 - 支持游客态的端上，很多平台匿名访问也需要设备 cookie 或 token（例如 xhs 的 `a1`、抖音的 `ttwid`、B 站的 `buvid`、X 的 guest token）。catbus 自动生成这些数据，缓存到 `guest.json`，过期后重新生成；各平台的生成方式见 upstream-map。
 - 登录流程本身仍会先生成这些设备数据（很多平台的登录接口要求先有设备 cookie），这与游客态无关。
 
@@ -487,13 +531,14 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 ### 5.3 登录与登出
 
 ```bash
-catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie] [--scope <scope>]
+catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth|apikey] [--scope <scope>]
 ```
 
 **账号名**：
 - 不带 `-a` 时：有当前账号就登录到当前账号，否则登录到 `default`。
 - 登录成功后，如果还没有当前账号，就把它设为当前账号。
-- 如果该名字下已经存了另一个用户，报 `USAGE`，`hint` 为"用 `-a <新名字>`，或者先 logout"，新凭证不保存。
+- 如果该名字下已经存了另一个用户，视为先登出再登录：旧凭证被新凭证替换，stderr 提示一行（不调用服务端登出）。
+- `--auto-bind`：不按账号名，而按登录的用户决定存到哪个账号。本平台本端已经有这个用户（`user.id` 相同）的账号时，刷新那个账号的凭证；没有时新增账号：`default` 没被占用就用 `default`，否则按用户 id 起名（转成 5.1 的格式，重名时加 `-2`、`-3`……）。不改变已有的当前账号；还没有当前账号时同样设为当前账号。不能和 `-a`、`--scope` 一起用（报 `USAGE`）。信封里的 `account` 是实际落盘的账号。
 
 **登录方式**：每个平台在注册表里声明支持哪些方式、默认用哪种，见 capabilities.md。
 
@@ -501,17 +546,20 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie] [--scope
 |---|---|---|
 | `qrcode` | — | 二维码画到 stderr，同时把 PNG 存到 `cache/<p>/`，然后等待扫码 |
 | `sms` | `--phone`、`--code` | TTY 下先发验证码，再交互输入。非 TTY 下分两步：`--phone` 发验证码并保存中间态（10 分钟有效），再单独用 `--code` 完成登录 |
-| `password` | `--username`、`--password-stdin` | 密码只从 stdin 读取，TTY 下隐藏输入 |
+| `password` | `--username`、`--password-stdin` | 密码只从 stdin 读取，TTY 下隐藏输入。需要两步验证的平台（mteam）另用 `--code`，流程同 `sms` 的两步：非 TTY 下第一步发码并保存中间态，第二步带 `--code` 完成 |
 | `cookie` | `--cookie <str\|@file\|->` | 导入后调一次 `me` 校验。也接受浏览器导出的 cookie JSON 数组；douyin、tiktok 另外接受一个 JSON 对象，把 ticket、证书、私钥等设备数据一并导入（这两个平台的写操作需要它们） |
+| `oauth` | — | 浏览器授权（OAuth 设备码）：授权链接打到 stderr，用户在已登录该平台的浏览器里打开并同意，然后等待授权完成。目前只有 `jimeng`，由 `dreamina` 完成授权（见 5.6） |
+| `apikey` | `--api-key-file`、`--api-key-stdin`（mteam 私有选项） | 从本地文件或 stdin 读取官方访问令牌，TTY 可隐藏输入；先在线校验，再由 core 保存到账号凭证。令牌只发到官方 API，不传给重定向目标 |
 
 - **验证码**：上游能自动过的就自动过，过不了报 `RISK_CONTROL`（`detail.kind = captcha`），退出码 5。
 - **子站点**（创作者中心、直播、IM 等）：
   - 能自动换取的凭证，登录时或第一次用到时自动获取，不需要用户再登录一次（例如 xhs 的创作者中心：用主站登录态换取）；
   - 需要单独登录的，用 `--scope <name>` 登录，各平台可用的 scope 在注册表里声明；
   - 命令缺少所需 scope 时，报 `AUTH_REQUIRED`，`hint` 带上 `--scope`。
-- **`auth status`**：在线校验，返回 AuthStatus。未登录或已失效时返回 `logged_in: false`，不报错。
+- **`auth status`**：在线校验，返回 AuthStatus。未登录或已失效时返回 `logged_in: false`，不报错。校验成功且返回的是同一个用户时，新的昵称 / 头像由 core 回写到凭证文件。
+- **头像**（账号的头像；作者、评论者等 UserRef 的头像见 6.2）：登录、cookie 导入校验和 `auth status` 复用流程里本来就有的那次当前用户请求，取到头像就存进凭证的 `user.avatar`（统一成 https 绝对地址），不为头像额外发请求；取不到时为 null。旧凭证文件没有 `avatar` 时读成 null，不需要迁移。
 - **`auth logout`**：删除本地凭证文件（上游支持服务端登出的，同时调用服务端登出，目前有 B 站和快手），并清除指向它的 `_current`。
-- **`auth use <account>`**：设置 `_current`。
+- **`auth use <account>`**：设置 `_current`。端声明了 `use` 钩子的（目前只有 `jimeng`），先调用钩子，再设置 `_current`；钩子报错时不切换。
 - **`auth list`**：列出本平台、本端的账号。
 - **自动刷新**：会自动刷新的 token（如 B 站的 refresh）和响应里的 Set-Cookie，都会合并回凭证文件并原子写入。
 
@@ -523,8 +571,8 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie] [--scope
   "platform": "xhs",
   "endpoint": "web",
   "account": "default",                  // 游客文件为 "guest"
-  "user": { "id": "5f...", "name": "...", "url": "..." },   // UserRef；游客为 null
-  "method": "qrcode",                    // qrcode | sms | password | cookie | guest
+  "user": { "id": "5f...", "name": "...", "url": "...", "avatar": "https://..." },   // AccountUser；游客为 null
+  "method": "qrcode",                    // qrcode | sms | password | cookie | oauth | apikey | guest
   "created_at": "2026-09-27T12:00:00+08:00",
   "updated_at": "2026-09-27T12:00:00+08:00",
   "scopes": {                            // 子站点分区；单站点平台只有 main
@@ -552,11 +600,51 @@ timeout = 30                      # 单次请求超时（秒）
 
 [xhs]
 proxy = "socks5://..."            # 平台代理
+
+[youtube]
+browser = "/path/to/chromium"     # 发布与删除用的本地 Chromium（见 5.7）
 ```
 
 - 代理的优先级：`--proxy` > `<platform>.proxy` > `proxy`。
 - 不读取 `HTTP(S)_PROXY` 环境变量，代理只能显式配置。
 - `catbus config set xhs.proxy <url>`，用点号表示平台段。
+- `youtube.browser` 只接受已存在的绝对路径（`checkBrowser`），不接受代理地址。
+
+### 5.6 代管外部 CLI 的登录态
+
+有的平台已经有官方 CLI，生成、查询等能力直接用官方 CLI 更合适，catbus 只补上它缺少的多账号管理。目前只有 `jimeng`（即梦官方 CLI `dreamina`）。
+
+- **范围**：只注册 `auth` 命令（`login`、`status`，以及 core 提供的 `list`、`use`、`logout`），不注册 item 等业务命令；业务操作由用户直接运行官方 CLI。
+- **存储**：外部 CLI 自己的登录态存放位置（`dreamina` 是 macOS 钥匙串里的一项：service `dreamina`，account `byted_cli_user_token`）同一时间只有一个账号。catbus 把这一项的原值存进对应账号凭证的 `scopes.main.tokens.keyring`，凭证文件仍只由 core 读写（5.4）。
+- **当前账号与外部登录态一致**：`auth use` 通过端的 `use` 钩子把目标账号的登录态写回外部存储，之后直接运行官方 CLI 就是这个账号。`auth login`、`auth status` 会临时占用外部存储，结束时（包括失败）切回 `_current` 指向的账号。
+- **刷新回写**：外部 CLI 会自己刷新 token、改写外部存储。catbus 每次改写外部存储前，先按外部存储里的用户 id 找到所属账号，把最新值存回该账号的凭证。外部存储里的用户不属于任何账号时，在 stderr 警告它会被覆盖。
+- **登录**：`--method oauth`，由外部 CLI 发起设备码授权（`dreamina relogin --headless`，再 `dreamina login checklogin --poll`），授权链接打到 stderr。外部 CLI 发起登录时会先清掉外部存储里原来的登录态。
+- **校验**：`auth status` 用外部 CLI 的只读命令在线校验（`dreamina user_credit`），失效时返回 `logged_in: false`。
+- **登出**：`auth logout` 的服务端登出钩子只在外部存储里正是这个账号时调用外部 CLI 的登出（`dreamina logout`），再由 core 删除本地凭证。
+- **依赖与系统**：外部 CLI 由用户自己安装，找不到时报 `ERROR` 并提示安装。外部存储的读写按系统适配，未适配的系统报 `UNSUPPORTED`（`jimeng` 目前只支持 macOS）。
+- **限制**：同一时间只有一个账号生效，不能两个账号同时运行外部 CLI；不要绕过 catbus 用外部 CLI 自己的登录命令换账号，否则新登录的账号没有保存，下次切换时会被覆盖。
+
+### 5.7 YouTube Studio 写操作与本地 Chromium
+
+`youtube` 的 `item publish` 与 `item delete` 走 YouTube Studio（studio.youtube.com）。Studio 的写请求要在 `context.request` 里带两样 Google 的网页环境校验结果，catbus 在 Node 里生不成，所以这两个命令是「只需要 Node」的例外（见第 1 节）。
+
+- **分工**：无头 Chromium 只负责在 Studio 页面里计算 BotGuard（`src/platforms/youtube/web/botguard.ts` 的 `runBotGuard`，经 CDP 的 `Runtime.evaluate` 注入）。其余请求全部由 Node 发出：`att/get`、`att/esr`、reauth、`ars/grst`、上传（`upload.youtube.com`）、`upload/createvideo`、`video_manager/metadata_update`、`video/delete`。浏览器只用来算校验，不用来点页面。
+- **CDP 传输**：用 `--remote-debugging-pipe`，协议消息走 fd 3 / fd 4，以 `\0` 分隔，不开调试端口。调试端口会让同机其他进程拿到会话 cookie，所以不用。因为 CDP 不走 WebSocket，这里不涉及第 7.3 节的 WebSocket 选型。
+- **顺序**：每个写命令内，先开浏览器，再 `att/get`（CREATOR_STUDIO_ACTION）→ BotGuard → `att/esr` 换 `sessionToken`（esr 要求 reauth 时再走 `security/get_web_reauth_url` 与 `ars/grst`），拿到令牌之后才开始上传。这样浏览器启动失败或 reauth 被拒绝时，不会白传一遍视频。上传期间浏览器保持打开，上传完成后用它对 UNBOUND 挑战加上 `scottyResourceId` 算一次 BotGuard，放进 `attestationResponseData`。写请求带 `sessionInfo.token`。
+- **interpreter 白名单**：BotGuard 的 interpreter 地址来自 `att/get` 的响应，取回后要在已登录的 Studio 页面里执行，所以只允许 `https` 协议、主机在白名单里（目前只有 `www.google.com`，即实测出现过的 `//www.google.com/js/th/…`）。取回时不跟随重定向，跳转目标不在白名单里直接拒绝；最终地址也要再校验一次。新的 Google 静态域要先确认是真实出现过，再加进白名单。
+- **找浏览器**，按顺序：`catbus config set youtube.browser <绝对路径>` → 环境变量 `CATBUS_YOUTUBE_BROWSER`（同样要求绝对路径）→ Playwright 缓存里最新的 `chromium-<版本>`（`npx playwright install chromium` 装的；macOS 在 `~/Library/Caches/ms-playwright`，Linux 在 `~/.cache/ms-playwright`，Windows 在 `%LOCALAPPDATA%\ms-playwright`，`PLAYWRIGHT_BROWSERS_PATH` 优先）。指定的路径必须是可以执行的文件（`X_OK`），否则报 `ERROR`；都没有时也报 `ERROR`。
+  - 不扫描系统里的 Google Chrome：那是用户日常在用的浏览器，catbus 不占用它。
+  - 不用 `chromium_headless_shell`：它过不了 Studio 的浏览器检查。
+- **浏览器启动参数**：每次命令用独立的临时 profile，用完删除（删除失败时打 warn 并给出路径）；UA 与 Node 侧请求一致，不带 `HeadlessChrome`。
+  - **代理**：与 Node 侧使用同一个代理（`--proxy` / `<platform>.proxy` / `proxy`）。没有配置代理时传 `--proxy-server=direct://`，不读取系统代理。浏览器的子进程环境里去掉 `*_PROXY` 变量，与第 5.5 节「不读取 `HTTP(S)_PROXY`」一致。Chromium 的 `--proxy-server` 放不下认证信息，代理带账号密码时报 `USAGE`。
+  - **进程**：非 Windows 上放进独立的进程组，结束时整组发信号（先 SIGTERM，超时 SIGKILL），等进程组结束后才删除临时 profile。
+- **cookie**：打开页面前把凭证里的全部 cookie 注入浏览器（设置失败的个数会 warn）；命令结束时，把浏览器里的 cookie 按「名字 + 域 + 路径」写回凭证，覆盖注入时的全部域。写回的条件：浏览器的值与注入时不同（浏览器确实轮换过），并且 Node 侧这一份在这期间没有被改过。两边都改过同一个 cookie 时，取 `expires` 较新的那个；相同时保留 Node 侧的值（它是最后经过 Set-Cookie 确认的）。
+- **重试**：会话相关的请求（att/get、att/esr、reauth、ars/grst）和 interpreter 下载，网络出错时再试一次；页面导航也重试（只读）。上传分段在网络出错或状态码可重试（429、5xx）时，用同一个 offset 重发同一段，最多三次。`metadata_update` 是幂等的，网络出错时再试一次。
+- **不重试的写请求**：`upload/createvideo` 与 `video/delete` 遇到网络错误时，请求可能已经生效，报 `UPSTREAM`，hint 写「可能已经生效，先到 Studio 或用 `item list` 确认，不要直接重试」。建视频没有返回视频 ID 时，如果是上传被拒（`uploadFeedbackItemRenderer` 里 `REJECTED`），按原因报错（限流报 `RISK_CONTROL`）；否则报 `UPSTREAM`。
+- **视频建好之后**：任何失败（包括 `metadata_update` 的网络错误、AUTH 类错误）一律报 `UPSTREAM` 并附上视频 ID，hint 写「不要重新发布，视频已存在」。不透传 `NETWORK` 或 `AUTH_EXPIRED`，否则调用方会以为能重试整条发布，结果产生重复视频。
+- **大文件**：本地视频按段从磁盘读取，不整个读进内存；URL 形式的 `--video` 先下载到内存（只有这种情况）。
+- **错误**：找不到或无法执行浏览器 → `ERROR`；浏览器启动后立即退出或超时 → `ERROR`；浏览器打开页面后跳到 Google 登录页 → `AUTH_EXPIRED`；reauth 被拒绝或没有发放令牌 → `RISK_CONTROL`（`detail.kind` 为 `blocked`）；BotGuard 在页面里报错 → `UPSTREAM`；interpreter 不在白名单、或跳转 → `UPSTREAM`。
+- **测试**：离线测试替换 `browser.open`（假浏览器只记录 BotGuard 的 binding）和 Studio 的响应；`findChrome` 的路径按 darwin / linux / win32 的目录布局做单测；`runBotGuard` 在 `node:vm` 里独立运行；`openBrowser` 的失败路径（不可执行、启动后立即退出、超时）用假的可执行脚本测，并检查临时目录被清理。真机验证只在测试账号上做，视频一律私享，测完用 `item delete` 删掉。
 
 ## 6. 输出
 
@@ -609,7 +697,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 
 | 类型 | 字段 |
 |---|---|
-| UserRef | `id name url` |
+| UserRef | `id name url avatar`。`avatar` 为头像的 https 绝对地址，从同一个原始对象里取，不为头像额外发请求；取不到时为 null |
 | Price | `amount currency`。`amount` 用货币主单位（元）的十进制数。虚拟货币也用它，`currency` 写平台货币代码 |
 | Media | `id type url width height duration`。`url` 在刚上传、平台还没给出可访问地址时（例如视频转码前）为 null |
 
@@ -619,7 +707,9 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 |---|---|
 | User | `id name handle avatar url bio stats{followers following items likes}` |
 | Item | `id kind url title text author:UserRef created_at cover media:Media[] stats{views likes comments collects shares} price:Price\|null status\|null` |
-| Comment | `id item_id parent_id author:UserRef text created_at stats{likes replies}` |
+| Torrent | Item 的全部字段（`kind: torrent`），另有 `size file_count category_id seeders leechers completed discount`；大小为字节，计数为整数或 null，优惠为站点代码或 null |
+| BonusRecord | `id time type before after change user:UserRef\|null note url`：PT 站魔力值明细的一条；`before` / `after` / `change` 为数字（变化量带符号），站点不提供时为 null；`url` 为相关链接，没有时为 null |
+| Comment | `id item_id parent_id author:UserRef text media:Media[] created_at stats{likes replies}` |
 | Folder / Series | `id name count url` |
 | Category | `id name parent_id` |
 | Keyword | `text heat` |
@@ -627,6 +717,8 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | Poi | `id name address` |
 
 `Comment.parent_id` 表示直接被回复的评论 ID；楼中楼回复可能指向另一条子回复，不能统一填成根评论 ID。bilibili 的原始 `root` / `parent` 通过 `--raw` 保留。
+
+`Comment.media` 是评论里附带的图片、表情包（贴纸）、商品评价的晒图，取自同一个原始评论对象，不为它额外发请求；动图（GIF、动态表情包）仍记为 `image`，只有平台给的是视频文件时（例如 X 回复里的视频和 GIF）才是 `video`。正文里的行内表情（如 B 站的 `[doge]`）仍是文本，不进 `media`。没有时为 `[]`。
 
 **直播**：
 
@@ -650,8 +742,9 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 
 | 类型 | 字段 |
 |---|---|
-| AuthStatus | `logged_in user:UserRef\|null method expires_at` |
-| Account | `platform endpoint account current user:UserRef\|null method updated_at` |
+| AccountUser | `id name url avatar`：字段与 UserRef 相同，只用于账号（Account、AuthStatus、凭证文件），保留这个类型名 |
+| AuthStatus | `logged_in user:AccountUser\|null method expires_at` |
+| Account | `platform endpoint account current user:AccountUser\|null method updated_at` |
 | File | `path type url size` |
 
 **扩展类型**（见 4.7）：
@@ -679,7 +772,8 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 
 | 字段 | 取值 |
 |---|---|
-| Item.kind | `video` `image` `text` `article` `goods` |
+| Item.kind | `video` `image` `text` `article` `goods` `torrent` |
+| File.type | `image` `video` `audio` `torrent` |
 | Item.status | `published` `reviewing` `rejected` `private` `draft`；商品另有 `on_sale` `sold` `off_shelf`。只有自己的内容和商品才有，其余为 null |
 | Media.type | `image` `video` `audio` |
 | Live.status | `live` `offline` |
@@ -697,7 +791,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 
 ### 6.3 各命令的输出
 
-读取类命令按资源返回对应类型。列表类命令返回数组，并带 `page`。
+读取类命令按资源返回对应类型。列表类命令返回数组，并带 `page`。mteam 的 `item get` 返回 Torrent，`item search` / `feed list` / `user collects` / `seed list` 返回 Torrent[]，`bonus history` 返回 BonusRecord[]；`user get` 只支持 me。
 
 | 命令 | data |
 |---|---|
@@ -745,6 +839,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | `media upload` | Media |
 | `item download` | File[] |
 | `folder create` / `update` | Folder |
+| `user update` | User，修改后的当前账号 |
 | `live start` | `{id push{url key}}`，推流地址 |
 
 全局命令的返回：
@@ -861,13 +956,14 @@ wreq-js 默认会读 `HTTP(S)_PROXY` 环境变量和 Windows 系统代理。为�
   - HTTP 用 `core/http.ts` 的 `HttpClient`（`toolkit.httpClient(ctx)`），请求头按上游顺序显式给出；cookie 在凭证的 cookie 罐里，Set-Cookie 自动写回，命令结束时由 core 落盘。
   - 签名 JS 复制到 `static/<p>/`，用 `core/vm.ts` 的 `loadScript` / `callScript` 执行。
   - 业务错误映射到 6.4 的错误码：登录墙 → `toolkit.authError`，风控 → `RISK_CONTROL`，其余 → `UPSTREAM`（原始错误码放 `detail`）。
-- **上游基线**：`src/platforms/<p>/UPSTREAM` 记录上游仓库地址和 commit。无上游仓库的平台（如 `12306`）记录对接的官方服务端点与接口说明。
+- **上游基线**：`src/platforms/<p>/UPSTREAM` 记录上游仓库地址和 commit。无上游仓库的平台（如 `12306`、`youtube`）记录对接的官方服务端点与接口说明。
 - **上游更新时**：
   1. 用 `git -C references/<repo> log <commit>..` 查看变更；
   2. 同步移植；
   3. 重新生成对拍数据；
   4. 更新 UPSTREAM。
-- **12306 平台离线与在线测试**：`12306` 平台直接对接 12306 官方公开接口，无 Python 参考实现与 golden 对拍数据。离线测试在 `tests/12306.test.ts` 中采用真实响应裁剪的 fixture，配合 `mockSender` / `fakeResponse` 覆盖信封、退出码、字段解析与降级容错；在线测试在 `tests/e2e/12306.e2e.ts` 中覆盖免登录查询全链路。
+- **maoyan 平台**：H5guard（mtgsig）和它的环境补丁放在 `static/maoyan/`，在同一个 vm context 里依次执行 `env_core.js`、`env.js`、`H5guard.js`。`env.js` 为 vm 改写过（不读文件、不用 `process`，页面 cookie 只含设备数据、不含登录态），其余原样。扫码登录走 `accountapi.dianping.com` 的 `qrlogin` 接口，不开浏览器：取图接口的 `qruuid` cookie 拼成二维码内容，交给 `showQrcode`。离线测试在 `tests/maoyan.test.ts`，fixture 来自真实响应裁剪；在线测试在 `tests/e2e/maoyan.e2e.ts`。
+- **无上游平台的离线与在线测试**：`12306`、`youtube` 没有 Python 参考实现与 golden 对拍数据。离线测试（`tests/<p>.test.ts`）采用真实响应裁剪的 fixture，配合 `mockSender` / `fakeResponse` 覆盖信封、退出码、字段解析与降级容错；在线测试在 `tests/e2e/12306.e2e.ts` 中覆盖免登录查询全链路。
 - **在线测试**：`npm run test:e2e`，用单独的配置 `tests/e2e/vitest.config.ts`，不在 `npm test` 和 CI 里。使用开发者本机 `~/.catbus` 里的登录态，没登录的平台整组跳过；`npm run test:e2e -- -t <platform>` 只跑一个平台（`-t` 按名字前缀匹配，x 要写成 `-t '^x '`，否则会连 xhs、xianyu 一起跑）。
   - 只跑只读命令：从注册表枚举每个平台已实现的读取类命令，前面命令返回的对象（item、用户、评论、直播间、会话、收藏夹……）的 `url` 或 `id` 作为后面命令的参数，逐条校验信封和 6.2 的字段结构。写操作、下载、长连接不跑。
   - 命令之间默认间隔 1.5 秒，小红书 4 秒，避免触发风控。以下记为跳过：子站点没登录（`AUTH_REQUIRED`）、平台风控（`RISK_CONTROL`）、默认参数落在规划中的取值上（`NOT_IMPLEMENTED`）、注册表 note 写明的限制（有 note 的命令报 `UNSUPPORTED`）。
@@ -906,7 +1002,7 @@ export default definePlatform({
 - 命令的值可以是 `'full' | 'partial' | 'none'` 的简写，也可以是对象。
 - 矩阵里 — 的命令不写。
 - `auth list` / `use` / `logout` 由 core 自动注册。
-- 端的字段：`login`（登录方式与子站点）、`logout?`（服务端登出）、`guest?`（是否支持游客态，默认 false）、`commands`。`guest` 为 false 时，除 `auth` 外的命令一律按 `auth: required` 处理，声明 `optional` 会在启动时报错。web 端都不设 `guest`。
+- 端的字段：`login`（登录方式与子站点）、`logout?`（服务端登出）、`use?`（`auth use` 设置当前账号前调用，见 5.3、5.6）、`guest?`（是否支持游客态，默认 false）、`commands`。`guest` 为 false 时，除 `auth` 外的命令一律按 `auth: required` 处理，声明 `optional` 会在启动时报错。web 端只有公开内容不登录也能读的平台设 `guest: true`（见 5.2）。
 
 命令的字段：
 
@@ -939,11 +1035,11 @@ export default definePlatform({
 ```
 All-In-One/
 ├── AGENTS.md  CLAUDE.md→AGENTS.md
-├── README.md（另有 en、zh-TW、ja、ko 译本）  CHANGELOG.md  llms.txt
+├── README.md（英文，默认；另有 zh-CN、ja、ko 译本）  CHANGELOG.md  llms.txt
 ├── package.json  tsconfig.json  tsconfig.build.json   # npm 主包 catbus-cli
 ├── Dockerfile  compose.yaml  Makefile  .dockerignore
 ├── .github/                        # 仓库治理：CONTRIBUTING、TESTING、SECURITY、PRIVACY、CODE_OF_CONDUCT
-├── assets/                         # logo、banner、README 用的图
+├── assets/                         # logo、banner、README 用的图（由 scripts/gen-assets.mjs 生成）
 ├── docs/
 │   ├── guide/  platforms/          # 用户指南、各平台说明
 │   ├── examples/                   # 组合 catbus 的示例脚本
@@ -967,7 +1063,7 @@ All-In-One/
 └── tests/                          # vitest；golden/<p>/ 放对拍数据
 ```
 
-`.gitignore`：`references/`、`node_modules/`、`dist/`、`packages/assets-jd/`、`packages/assets-ocr/` 下的模型文件，以及内部文档 `docs/trouble.md`、`docs/roadmap.md`。
+`.gitignore`：`references/`、`node_modules/`、`dist/`、`packages/assets-jd/`、`packages/assets-ocr/` 下的模型文件，`gen:assets` 下载的字体 `.cache/`，以及内部文档 `docs/trouble.md`、`docs/roadmap.md`。
 
 ### 7.8 provider 协议（规划中）
 

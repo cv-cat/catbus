@@ -10,6 +10,7 @@ import { checkStatus, Pc, resetXraySeq } from '../src/platforms/xhs/web/client.j
 import * as login from '../src/platforms/xhs/web/login.js'
 import * as norm from '../src/platforms/xhs/web/normalize.js'
 import { EDITH } from '../src/platforms/xhs/web/profile.js'
+import { CatbusError } from '../src/core/errors.js'
 import { fakeResponse, mockSender } from '../src/core/http.js'
 import { pyRound } from '../src/core/py.js'
 import { deterministic } from '../src/core/rand.js'
@@ -90,7 +91,7 @@ const ACK = Buffer.concat([Buffer.from([0x0a, 5]), Buffer.from('mid-1'), Buffer.
 /** 登录态：cookie 放进指定 scope（创作者中心是 creator）。 */
 function ctxWith(cookies: string, scope = 'main') {
   const ctx = makeCtx({ platform: 'xhs' })
-  ctx.credential.user = { id: USER_ID, name: '测试用户', url: null }
+  ctx.credential.user = { id: USER_ID, name: '测试用户', url: null, avatar: null }
   ctx.credential.scopes[scope] = { cookies: makeCtx({ platform: 'xhs', cookies, cookieDomain: '.xiaohongshu.com' }).credential.scopes.main!.cookies, tokens: {} }
   return ctx
 }
@@ -475,6 +476,88 @@ function pcCtx(args: Record<string, string | undefined> = {}, options: Record<st
 }
 
 const hits = (requests: GoldenRequest[], part: string) => requests.filter((r) => r.url.includes(part))
+
+describe('xhs 短信人机验证（verifyType 120）', () => {
+  const VERIFY = { uuid: 'sg__c96c01a0-0000-0000-0000-000000000000', type: '120', biz: '471' }
+  const BASE = { verifyUuid: 'c96c01a0-0000-0000-0000-000000000000', verifyType: '120', verifyBiz: '471', sourceSite: 'https://www.xiaohongshu.com/explore', captchaVersion: '2.0.0' }
+  const route = (checks: string[]) => (r: GoldenRequest): Reply => {
+    const s = security(r)
+    if (s) return s
+    if (r.url.endsWith('/api/redcaptcha/v2/vc/init')) return ok({ phone: '138****0000' })
+    if (r.url.endsWith('/api/redcaptcha/v2/vc/send')) return ok({ rid: 'rid-1', expireSec: 60 })
+    if (r.url.endsWith('/api/redcaptcha/v2/vc/check')) {
+      const code = jsonBody(r).code
+      checks.push(code)
+      return code === '123456' ? ok({}) : fail(-1, '验证码错误')
+    }
+    return undefined
+  }
+
+  it('风控错误 → 验证材料：只认 RISK_CONTROL 且 verify_type 为 120、带 verify_uuid 的', () => {
+    const risk = (detail: Record<string, unknown>) => new CatbusError('RISK_CONTROL', 'x', { detail })
+    expect(cmd.smsVerifyOf(risk({ kind: 'captcha', status: 471, verify_type: '120', verify_uuid: 'u-1' }))).toEqual({ uuid: 'u-1', type: '120', biz: '471' })
+    expect(cmd.smsVerifyOf(risk({ kind: 'captcha', status: 471, verify_type: '124', verify_uuid: 'u-1' }))).toBeNull()
+    expect(cmd.smsVerifyOf(risk({ kind: 'captcha', status: 471, verify_type: '120' }))).toBeNull()
+    expect(cmd.smsVerifyOf(new CatbusError('UPSTREAM', 'x', { detail: { verify_type: '120', verify_uuid: 'u', status: 471 } }))).toBeNull()
+  })
+
+  it('vc/init → vc/send → vc/check：body 照验证页（去掉 uuid 地区前缀，checkCount 为 0），走 edith 的 0201 签名', async () => {
+    const checks: string[] = []
+    const { requests, result, error } = await serve(route(checks), async () => {
+      resetXraySeq(XRAY_SEQ)
+      const p = new Pc(ctxWith(PC_COOKIES))
+      const phone = await login.smsVerifyInit(p, VERIFY)
+      const rid = await login.smsVerifySend(p, VERIFY)
+      await login.smsVerifyCheck(p, VERIFY, rid, '123456')
+      return { phone, rid }
+    })
+    if (error) throw error
+    expect(result).toEqual({ phone: '138****0000', rid: 'rid-1' })
+    const vc = requests.filter((r) => r.url.includes('/api/redcaptcha/v2/vc/'))
+    expect(vc.map((r) => r.url)).toEqual(['init', 'send', 'check'].map((x) => `${EDITH}/api/redcaptcha/v2/vc/${x}`))
+    expect(jsonBody(vc[0]!)).toEqual(BASE)
+    expect(Object.keys(jsonBody(vc[0]!))).toEqual(Object.keys(BASE))
+    expect(jsonBody(vc[1]!)).toEqual(BASE)
+    expect(jsonBody(vc[2]!)).toEqual({ ...BASE, rid: 'rid-1', code: '123456', checkCount: 0 })
+    for (const r of vc) {
+      const h = Object.fromEntries(r.headers.map(([k, v]) => [k.toLowerCase(), v]))
+      expect(h['x-s']).toBeTruthy()
+      expect(h.origin).toBe('https://www.xiaohongshu.com')
+    }
+  })
+
+  it('passSmsVerify：验证码错了可以重输，通过后返回；空行放弃报 RISK_CONTROL', async () => {
+    const checks: string[] = []
+    const codes = ['000000', '123456']
+    const ctx = pcCtx()
+    const { error } = await serve(route(checks), async () => {
+      resetXraySeq(XRAY_SEQ)
+      const p = new Pc(ctx)
+      await cmd.passSmsVerify(ctx, p, VERIFY, { session: async (x) => x, read: async () => codes.shift() ?? '' })
+    })
+    if (error) throw error
+    expect(checks).toEqual(['000000', '123456'])
+
+    const gaveUp = await serve(route([]), async () => {
+      const p = new Pc(ctx)
+      await cmd.passSmsVerify(ctx, p, VERIFY, { session: async (x) => x, read: async () => '' })
+    })
+    expect(gaveUp.error).toMatchObject({ code: 'RISK_CONTROL', hint: expect.stringContaining('--method cookie') })
+    expect(hits(gaveUp.requests, '/vc/check')).toHaveLength(0)
+  })
+
+  it('passSmsVerify：连续 3 次验证码错误后报错，不再读', async () => {
+    let reads = 0
+    const ctx = pcCtx()
+    const { error, requests } = await serve(route([]), async () => {
+      const p = new Pc(ctx)
+      await cmd.passSmsVerify(ctx, p, VERIFY, { session: async (x) => x, read: async () => (reads++, '999999') })
+    })
+    expect(error).toMatchObject({ code: 'RISK_CONTROL', message: expect.stringContaining('验证码错误') })
+    expect(reads).toBe(3)
+    expect(hits(requests, '/vc/check')).toHaveLength(3)
+  })
+})
 
 describe('xhs 私信', () => {
   it('msg read：按会话 id（对方的 chat_user_id）找到会话，带上它的 store_id 与未读数', async () => {
@@ -998,7 +1081,7 @@ describe('xhs 创作者中心：第一次用主站登录态桥接', () => {
     useTempHome()
     async function account() {
       const c = newCredential({ platform: 'xhs', endpoint: 'web', account: 'default', method: 'cookie' })
-      c.user = { id: USER_ID, name: '测试用户', url: null }
+      c.user = { id: USER_ID, name: '测试用户', url: null, avatar: null }
       c.scopes.main!.cookies = parseCookieInput(PC_COOKIES, '.xiaohongshu.com')
       await writeCredential(c)
       await setCurrent('xhs', 'web', 'default')

@@ -10,7 +10,8 @@ const nnum = z.number().nullable()
 const time = z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/, '不是带时区的 ISO 8601')
 const ntime = time.nullable()
 
-const UserRef = z.strictObject({ id: str, name: nstr, url: nstr })
+/** 头像是 https 绝对地址，取不到时为 null。 */
+const UserRef = z.strictObject({ id: str, name: nstr, url: nstr, avatar: z.string().regex(/^https:\/\//).nullable() })
 const Price = z.strictObject({ amount: z.number(), currency: str })
 const Media = z.strictObject({
   id: nstr,
@@ -33,7 +34,7 @@ const User = z.strictObject({
 
 const Item = z.strictObject({
   id: str,
-  kind: z.enum(['video', 'image', 'text', 'article', 'goods']),
+  kind: z.enum(['video', 'image', 'text', 'article', 'goods', 'torrent']),
   url: nstr,
   title: nstr,
   text: nstr,
@@ -46,12 +47,23 @@ const Item = z.strictObject({
   status: z.enum(['published', 'reviewing', 'rejected', 'private', 'draft', 'on_sale', 'sold', 'off_shelf']).nullable(),
 })
 
+const Torrent = Item.extend({
+  kind: z.literal('torrent'), size: nint, file_count: nint, category_id: nstr,
+  seeders: nint, leechers: nint, completed: nint, discount: nstr,
+})
+
+const BonusRecord = z.strictObject({
+  id: str, time: ntime, type: nstr, before: z.number().nullable(), after: z.number().nullable(), change: z.number().nullable(),
+  user: UserRef.nullable(), note: nstr, url: nstr,
+})
+
 const Comment = z.strictObject({
   id: str,
   item_id: str,
   parent_id: nstr,
   author: UserRef.nullable(),
   text: str,
+  media: z.array(Media),
   created_at: ntime,
   stats: z.strictObject({ likes: nint, replies: nint }),
 })
@@ -210,7 +222,7 @@ const Transfer = z.strictObject({
 export const SHAPES: Record<string, z.ZodType> = {
   User, Item, Comment, Folder, Series: Folder, Category, Keyword, Topic, Poi, Live, Event, Gift, Rank,
   Conversation, Message, Notice, NoticeCount, Media, AuthStatus, Account, Subtitle, Danmaku, Order, Coupon,
-  Station, Ticket, Stop, Fare, Transfer,
+  Station, Ticket, Stop, Fare, Transfer, Torrent, BonusRecord,
 }
 
 /** 按注册表的 output（如 `Item[]`、`{count}`）取校验器；内联结构只校验是对象。 */

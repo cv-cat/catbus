@@ -1,4 +1,4 @@
-import { describeOption, FILTER_VALUES, flagName, PAGING, STANDARD_VALUES } from './options.js'
+import { describeOption, FILTER_VALUES, flagName, LOGIN_METHODS, PAGING, STANDARD_VALUES } from './options.js'
 import { type AvailableEndpoint, type Command, type Platform, sortCommands, type Upstream } from './registry.js'
 import { VOCAB } from './vocab.js'
 
@@ -61,7 +61,7 @@ function header(first: string, platforms: Platform[]): string[] {
 function loginTable(platforms: Platform[]): string[] {
   const logins = platforms.map((p) => web(p).login)
   const lines = [...header('', platforms)]
-  for (const method of ['qrcode', 'sms', 'password', 'cookie'] as const) {
+  for (const method of LOGIN_METHODS) {
     lines.push(row([method, ...logins.map((l) => (l.methods.includes(method) ? '✓' : ''))]))
   }
   lines.push(row(['默认', ...logins.map((l) => l.default ?? '—')]))

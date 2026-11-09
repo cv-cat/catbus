@@ -128,6 +128,24 @@ describe('fsutil', () => {
       expect(statSync(join(home.dir, 'a')).mode & 0o777).toBe(0o700)
     }
   })
+
+  it('排他原子写入：并发发布同一目标只有一个成功，已有文件保留且不留临时文件', async () => {
+    const file = join(home.dir, 'exclusive', 'target')
+    const results = await Promise.allSettled([
+      writeFileAtomic(file, 'first-complete-file', { overwrite: false }),
+      writeFileAtomic(file, 'second-complete-file', { overwrite: false }),
+    ])
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1)
+    const rejected = results.find((r) => r.status === 'rejected') as PromiseRejectedResult
+    expect(rejected.reason).toMatchObject({ code: 'EEXIST' })
+    const content = readFileSync(file, 'utf8')
+    expect(['first-complete-file', 'second-complete-file']).toContain(content)
+    await expect(writeFileAtomic(file, 'must-not-replace', { overwrite: false })).rejects.toMatchObject({ code: 'EEXIST' })
+    expect(readFileSync(file, 'utf8')).toBe(content)
+    const { readdirSync } = await import('node:fs')
+    expect(readdirSync(join(home.dir, 'exclusive'))).toEqual(['target'])
+    if (process.platform !== 'win32') expect(statSync(file).mode & 0o777).toBe(0o600)
+  })
 })
 
 describe('auth-store', () => {
@@ -173,6 +191,10 @@ describe('config', () => {
     expect(parseKey('proxy', resolve)).toEqual(['proxy'])
     expect(parseKey('rednote.proxy', resolve)).toEqual(['xhs', 'proxy'])
     expect(() => parseKey('xhs.timeout', resolve)).toThrow()
+    // browser 键只给 youtube 用（AGENTS 5.7）
+    const resolveYt = (n: string) => ({ yt: 'youtube', youtube: 'youtube', xhs: 'xhs' })[n]
+    expect(parseKey('yt.browser', resolveYt)).toEqual(['youtube', 'browser'])
+    expect(() => parseKey('xhs.browser', resolveYt)).toThrow()
   })
 
   it('代理优先级：--proxy > <platform>.proxy > proxy；不读 HTTP(S)_PROXY', async () => {

@@ -1,7 +1,7 @@
 {
   "name": "catbus-cli",
-  "version": "0.2.1",
-  "description": "catbus（猫巴士）：上车，开往任何平台。一个命令操作小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X、12306。",
+  "version": "0.3.0",
+  "description": "catbus（猫巴士）：上车，开往任何平台。一个命令操作小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X、YouTube、12306、猫眼演出。",
   "keywords": [
     "cli",
     "xiaohongshu",
@@ -14,7 +14,10 @@
     "taobao",
     "jd",
     "twitter",
-    "12306"
+    "youtube",
+    "12306",
+    "maoyan",
+    "jimeng"
   ],
   "author": "cv-cat",
   "license": "MIT",
@@ -48,6 +51,7 @@
     "test": "vitest run",
     "test:e2e": "vitest run -c tests/e2e/vitest.config.ts",
     "gen:capabilities": "npm run build && node scripts/gen-capabilities.mjs",
+    "gen:assets": "npm run build && node scripts/gen-assets.mjs",
     "prepack": "npm run build",
     "assets:jd": "node scripts/fetch-jd-models.mjs",
     "assets:ocr": "node scripts/fetch-ocr-models.mjs"
@@ -71,6 +75,7 @@
     "@types/jsdom": "^30.0.0",
     "@types/node": "^22.20.4",
     "@types/qrcode": "^1.5.6",
+    "fontkit": "^2.0.4",
     "typescript": "^7.0.2",
     "vitest": "^5.0.2"
   }

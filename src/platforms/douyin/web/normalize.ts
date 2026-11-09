@@ -1,6 +1,7 @@
 import * as n from '../../../core/normalize.js'
 import { jsonLoads } from '../../../core/py.js'
-import type { Comment, Event, Item, ItemStatus, Live, Media, Notice, Rank, User, UserRef } from '../../../core/schemas.js'
+import type { AccountUser, Comment, Event, Item, ItemStatus, Live, Media, Notice, Rank, User, UserRef } from '../../../core/schemas.js'
+import { commentMedia, reviewMedia } from '../../_shared/aweme.js'
 import { LIVE, WWW } from './profile.js'
 
 /** 抖音原始对象 → 归一化类型（AGENTS 6.2）。用户 id 用 sec_uid：它能直接拼出主页 URL，也是各接口的入参。 */
@@ -11,13 +12,23 @@ export const itemUrl = (id: unknown, image = false) => `${WWW}/${image ? 'note' 
 
 const first = (v: any): string | null => n.url(v?.url_list?.[0])
 
-export function ref(secUid: unknown, name: unknown): UserRef | null {
-  return n.userRef({ id: secUid, name, url: secUid ? userUrl(secUid) : null })
+export function ref(secUid: unknown, name: unknown, avatar?: unknown): UserRef | null {
+  return n.userRef({ id: secUid, name, url: secUid ? userUrl(secUid) : null, avatar })
+}
+
+/** 作者、评论者、主播、榜单用户的头像：取小图 avatar_thumb（列表里够用），没有时依次取 medium / larger，也兼容字符串形态的 avatar_url。 */
+export const avatarOf = (u: any): string | null =>
+  first(u?.avatar_thumb) ?? first(u?.avatar_medium) ?? first(u?.avatar_larger) ?? (typeof u?.avatar_url === 'string' ? u.avatar_url : null)
+
+/** 当前账号（创作者中心 media/user/info 的 user）→ AccountUser：头像取最大档，也兼容字符串形态的 avatar_url。 */
+export function account(secUid: unknown, u: any, name?: unknown): AccountUser | null {
+  const avatar = first(u?.avatar_larger) ?? first(u?.avatar_medium) ?? first(u?.avatar_300x300) ?? first(u?.avatar_thumb) ?? u?.avatar_url ?? null
+  return n.accountUser(ref(secUid, u?.nickname ?? name), avatar)
 }
 
 export function authorRef(u: any): UserRef | null {
   if (!u) return null
-  return ref(u.sec_uid || u.sec_user_id, u.nickname)
+  return ref(u.sec_uid || u.sec_user_id, u.nickname, avatarOf(u))
 }
 
 /** 图文：aweme_type 68，或带 images。 */
@@ -130,6 +141,7 @@ export function comment(c: any, itemId: string): Comment {
       parent_id: parent,
       author: authorRef(c.user),
       text: String(c.text ?? ''),
+      media: commentMedia(c),
       created_at: n.time(c.create_time),
       stats: { likes: n.count(c.digg_count), replies: n.count(c.reply_comment_total) },
     },
@@ -146,6 +158,7 @@ export function productComment(c: any, productId: string): Comment {
       item_id: productId,
       author: n.userRef({ id: u.Id ?? u.SecUid ?? u.Nickname ?? u.NickName, name: u.NickName ?? u.Nickname ?? u.nickname }),
       text: String(c.Content ?? c.content ?? ''),
+      media: reviewMedia(c.Photos ?? c.photos),
       created_at: n.time(c.CommentTime ?? c.CreateTime ?? c.create_time),
       stats: { likes: n.count(c.LikeCount ?? c.like_count), replies: n.count(c.ReplyCount ?? c.reply_count) },
     },
@@ -232,7 +245,7 @@ export function liveStreams(body: any): Media[] {
 /** 贡献榜 / 千票榜的一行（ranks[] 或 list[]：user、rank、score）。 */
 export function rankRow(x: any, i: number): Rank {
   const u = x?.user ?? x?.user_info ?? {}
-  const who = authorRef(u) ?? n.userRef({ id: u.id_str ?? u.id, name: u.nickname }) ?? { id: '', name: null, url: null }
+  const who = authorRef(u) ?? n.userRef({ id: u.id_str ?? u.id, name: u.nickname, avatar: avatarOf(u) }) ?? { id: '', name: null, url: null, avatar: null }
   return n.rank({ rank: Number(x?.rank ?? x?.seat_index ?? i + 1), user: who, score: n.count(x?.score ?? x?.value) }, x)
 }
 

@@ -86,6 +86,7 @@ export const VOCAB: Record<string, CommandSpec> = {
       username: z.string().optional().describe('用户名（password）'),
       passwordStdin: z.boolean().optional().describe('从 stdin 读取密码（password）'),
       cookie: z.string().optional().describe('cookie 字符串、@文件，或 - 表示从 stdin 读取（cookie）'),
+      autoBind: z.boolean().optional().describe('按登录的用户自动选账号：已保存过就刷新那个账号，否则新增（default 空着时用 default）'),
     },
   }),
   'auth status': read('在线校验登录态', [], 'AuthStatus'),
@@ -103,6 +104,14 @@ export const VOCAB: Record<string, CommandSpec> = {
   'user following': list('关注列表', [arg.userOrMe], 'User[]'),
   'user follow': write('关注', [arg.user]),
   'user unfollow': write('取消关注', [arg.user]),
+  'user update': write('修改当前账号的资料', [], 'User', {
+    options: {
+      name: z.string().optional().describe('昵称'),
+      avatar: z.string().optional().describe('头像：本地文件或 URL'),
+      bio: z.string().optional().describe('简介 / 签名，空字符串表示清空'),
+    },
+    check: (_a, o) => (given(o, ['name', 'avatar', 'bio']).length === 0 ? '--name、--avatar、--bio 至少给一个' : undefined),
+  }),
 
   'item get': read('{item}详情', [arg.item], 'Item'),
   'item search': list('搜索{item}', [arg.keyword], 'Item[]'),

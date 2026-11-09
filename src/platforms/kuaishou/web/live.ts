@@ -120,7 +120,7 @@ export function decodeFrame(frame: Uint8Array): Frame {
 
 function liveUser(u: any): UserRef | null {
   if (!u?.principalId) return null
-  return n.userRef({ id: u.principalId, name: u.userName, url: `https://live.kuaishou.com/profile/${u.principalId}` })
+  return n.userRef({ id: u.principalId, name: u.userName, url: `https://live.kuaishou.com/profile/${u.principalId}`, avatar: u.headUrl })
 }
 
 /** SC_FEED_PUSH → Event：弹幕、点赞、礼物、分享与系统通知。 */

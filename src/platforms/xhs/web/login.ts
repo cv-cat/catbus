@@ -3,7 +3,7 @@ import { CatbusError } from '../../../core/errors.js'
 import { md5Hex } from '../../../core/hash.js'
 import { parseJson } from '../../../core/http.js'
 import * as rand from '../../../core/rand.js'
-import { checkStatus, getdss, jsonOf as parseResponse, loginOrder, type Pc, splice } from './client.js'
+import { checkStatus, getdss, jsonOf as parseResponse, loginOrder, Pc, splice } from './client.js'
 import { acceptSsk, createHandshake, generateWebsectiga, pcProfileData } from './js.js'
 import { AS, EDITH, type Headers, LOGIN_LANG, navigationHeaders, orderedHeaders, PC_ORDER, PC_REFERENCE, SEM, WEB, XHR_ACCEPT } from './profile.js'
 import { normalizeEts } from './state.js'
@@ -245,6 +245,66 @@ export async function smsLoginCode(p: Pc, phone: string, code: string, zone = '8
     p.state.webSsk = JSON.stringify({ 'xhs-pc-web': acceptSsk(hs.private_key_base64, sskEnc) })
     p.state.fingerprintReady = true
   }
+}
+
+// ---------------------------------------------------------------- 人机验证：短信验证码（verifyType 120）
+
+/**
+ * 461 / 471 响应头里的验证材料（checkStatus 放进 detail 的 verify_uuid / verify_type / status）。
+ * verifyType 的含义取自网页验证页 fe-login 的分发表：120 短信、121 邮箱、124 App 扫码、101–103 滑块 / 旋转、110–114 点选。
+ */
+export type Verify = { uuid: string; type: string; biz: string }
+
+/** 验证页会去掉 verifyUuid 的地区前缀（前端 ok()）。 */
+const VERIFY_UUID_PREFIXES = ['sg__', 'ae__', 'gcp__']
+
+/** SmsCaptcha 组件的公共参数 d，键序照前端；biz 为空时 JSON.stringify 丢掉，这里不写。 */
+function verifyBase(v: Verify): Record<string, string> {
+  const prefix = VERIFY_UUID_PREFIXES.find((x) => v.uuid.startsWith(x))
+  return { verifyUuid: prefix ? v.uuid.slice(prefix.length) : v.uuid, verifyType: v.type, verifyBiz: v.biz, sourceSite: `${WEB}/explore`, captchaVersion: '2.0.0' }
+}
+
+/**
+ * 验证页的会话：照上游 risk_qr_verify，在 cookie 副本上重跑一遍安全引导（验证页是一次新的页面加载，
+ * redcaptcha 校验引导动作的时效，拿登录时的旧引导态会被拒），xsecappid 换成验证页的 fe-login。
+ * 副本不回写：原会话的 cookie 和签名状态保持不变，验证通过后继续用它换登录态。
+ */
+export async function verifySession(p: Pc): Promise<Pc> {
+  p.sync()
+  p.save()
+  const v = new Pc({ ...p.ctx, credential: structuredClone(p.credential) })
+  await initializeSecurity(v)
+  await activate(v)
+  await webprofile(v)
+  v.setCookie('xsecappid', 'fe-login')
+  return v
+}
+
+/** redcaptcha 接口：签名同 getconfig（0201 / security_initial），响应 code 为 0 才算成功。 */
+async function redcaptcha(v: Pc, api: string, payload: Record<string, unknown>): Promise<any> {
+  const res = await security(v, api, payload, { tier: '0201', mnsProfile: 'security_initial', trace: true, origin: EDITH, kind: 'post' })
+  const body = await jsonOf(res)
+  if (!res.ok || body?.code !== 0) throw new CatbusError('RISK_CONTROL', `小红书短信验证失败：${body?.msg || `HTTP ${res.status}`}`, { detail: { kind: 'captcha', api, code: body?.code ?? null } })
+  return body.data ?? {}
+}
+
+/** vc/init：验证页的初始化，返回要发往的手机号（脱敏）。 */
+export async function smsVerifyInit(v: Pc, verify: Verify): Promise<string | null> {
+  const d = await redcaptcha(v, '/api/redcaptcha/v2/vc/init', verifyBase(verify))
+  const masked = Object.values(d).find((x) => typeof x === 'string' && /\d/.test(x) && x.includes('*'))
+  return (masked as string | undefined) ?? null
+}
+
+/** vc/send：向账号绑定的手机发验证码，返回 rid（vc/check 要带上）。 */
+export async function smsVerifySend(v: Pc, verify: Verify): Promise<string> {
+  const d = await redcaptcha(v, '/api/redcaptcha/v2/vc/send', verifyBase(verify))
+  if (!d.rid) throw new CatbusError('RISK_CONTROL', '小红书短信验证：发送验证码没有返回 rid', { detail: { kind: 'captcha' } })
+  return String(d.rid)
+}
+
+/** vc/check：校验验证码；通过后 verifyUuid 的风控标记解除。前端 SmsCaptcha 的 checkCount 恒为 0。 */
+export async function smsVerifyCheck(v: Pc, verify: Verify, rid: string, code: string): Promise<void> {
+  await redcaptcha(v, '/api/redcaptcha/v2/vc/check', { ...verifyBase(verify), rid, code, checkCount: 0 })
 }
 
 /** 上游 XHSLoginApi.get_user_info：user/me，guest 为 false 才算正式登录。 */

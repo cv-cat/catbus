@@ -7,7 +7,12 @@ export interface UserRef {
   id: string
   name: string | null
   url: string | null
+  /** 头像：https 绝对地址；取不到时为 null。 */
+  avatar: string | null
 }
+
+/** 账号的用户：字段与 UserRef 相同，只用于 Account、AuthStatus 与凭证文件（AGENTS 6.2）。 */
+export type AccountUser = UserRef
 
 export interface Price {
   amount: number
@@ -34,7 +39,7 @@ export interface User {
   stats: { followers: number | null; following: number | null; items: number | null; likes: number | null }
 }
 
-export type ItemKind = 'video' | 'image' | 'text' | 'article' | 'goods'
+export type ItemKind = 'video' | 'image' | 'text' | 'article' | 'goods' | 'torrent'
 export type ItemStatus = 'published' | 'reviewing' | 'rejected' | 'private' | 'draft' | 'on_sale' | 'sold' | 'off_shelf'
 
 export interface Item {
@@ -52,12 +57,39 @@ export interface Item {
   status: ItemStatus | null
 }
 
+/** PT 资源：保留通用 Item 字段，补充跨 Tracker 通用的种子信息。 */
+export interface Torrent extends Item {
+  kind: 'torrent'
+  size: number | null
+  file_count: number | null
+  category_id: string | null
+  seeders: number | null
+  leechers: number | null
+  completed: number | null
+  discount: string | null
+}
+
+/** PT 站魔力值明细的一条记录（mteam bonus history）。 */
+export interface BonusRecord {
+  id: string
+  time: string | null
+  type: string | null
+  before: number | null
+  after: number | null
+  change: number | null
+  user: UserRef | null
+  note: string | null
+  url: string | null
+}
+
 export interface Comment {
   id: string
   item_id: string
   parent_id: string | null
   author: UserRef | null
   text: string
+  /** 评论附带的图片、表情包、商品评价的晒图；没有时为 []。 */
+  media: Media[]
   created_at: string | null
   stats: { likes: number | null; replies: number | null }
 }
@@ -163,7 +195,7 @@ export interface NoticeCount {
 
 export interface AuthStatus {
   logged_in: boolean
-  user: UserRef | null
+  user: AccountUser | null
   method: string | null
   expires_at: string | null
 }
@@ -173,14 +205,14 @@ export interface Account {
   endpoint: string
   account: string
   current: boolean
-  user: UserRef | null
+  user: AccountUser | null
   method: string | null
   updated_at: string | null
 }
 
 export interface File {
   path: string
-  type: 'image' | 'video' | 'audio'
+  type: 'image' | 'video' | 'audio' | 'torrent'
   url: string | null
   size: number
 }
@@ -304,7 +336,7 @@ export interface Transfer {
 export const OUTPUT_TYPES = new Set([
   'User', 'Item', 'Comment', 'Folder', 'Series', 'Category', 'Keyword', 'Topic', 'Poi', 'Live', 'Event', 'Gift',
   'Rank', 'Conversation', 'Message', 'Notice', 'NoticeCount', 'Media', 'AuthStatus', 'Account', 'File', 'Subtitle',
-  'Danmaku', 'Order', 'Coupon', 'Station', 'Ticket', 'Stop', 'Fare', 'Transfer',
+  'Danmaku', 'Order', 'Coupon', 'Station', 'Ticket', 'Stop', 'Fare', 'Transfer', 'Torrent', 'BonusRecord',
 ])
 
 /** 归一化对象上挂平台原始对象，`--raw` 时用它替换。JSON 序列化会忽略 symbol 键。 */
@@ -317,7 +349,13 @@ export function withRaw<T extends object>(value: T, raw: unknown): T {
 
 // ---- 凭证文件（AGENTS 5.4） ----
 
-const UserRefSchema = z.object({ id: z.string(), name: z.string().nullable(), url: z.string().nullable() })
+// 旧凭证文件的 user 没有 avatar，读成 null（不需要迁移）
+const AccountUserSchema = z.object({
+  id: z.string(),
+  name: z.string().nullable(),
+  url: z.string().nullable(),
+  avatar: z.string().nullable().default(null),
+})
 
 const CookieSchema = z.object({
   name: z.string(),
@@ -338,7 +376,7 @@ export const CredentialSchema = z.object({
   platform: z.string(),
   endpoint: z.enum(['web', 'app', 'pc']),
   account: z.string(),
-  user: UserRefSchema.nullable(),
+  user: AccountUserSchema.nullable(),
   method: z.enum([...LOGIN_METHODS, 'guest']),
   created_at: z.string(),
   updated_at: z.string(),
