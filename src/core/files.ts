@@ -99,7 +99,7 @@ export interface DownloadOptions {
  * 把一组媒体下载到 `--dir`（`--subdir` 时放进 item 自己的子目录），文件名 `<platform>_<id>_<序号>.<ext>`；
  * 已有文件默认跳过，`--overwrite` 时覆盖。
  */
-export async function downloadMedia(ctx: HandlerContext, http: HttpClient, itemId: string, media: Media[], options: DownloadOptions = {}): Promise<File[]> {
+export async function downloadMedia(ctx: HandlerContext, http: Pick<HttpClient, 'request'>, itemId: string, media: Media[], options: DownloadOptions = {}): Promise<File[]> {
   const dir = await itemDir(ctx, itemId, options.title)
   const overwrite = Boolean(ctx.options.overwrite)
   await mkdir(dir, { recursive: true })
