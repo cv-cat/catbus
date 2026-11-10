@@ -439,6 +439,43 @@ describe('youtube 平台（web）', () => {
       expect(r.env.data.map((f: any) => basename(f.path))).toEqual(['youtube_dQw4w9WgXcQ_1.mp4', 'youtube_dQw4w9WgXcQ_2.m4a'])
     })
 
+    it('item download：GVS 分段 403 时铸 PO token 补 `&pot=` 重试一次，拿回数据', async () => {
+      const MB = 1024 * 1024
+      const vr2 = {
+        playabilityStatus: { status: 'OK' },
+        streamingData: {
+          adaptiveFormats: [
+            { itag: 137, url: 'https://rr5---sn-np0.googlevideo.com/videoplayback?id=1', mimeType: 'video/mp4; codecs="avc1"', height: 1080, contentLength: String(25 * MB) },
+            { itag: 140, url: 'https://rr5---sn-np0.googlevideo.com/videoplayback?id=2', mimeType: 'audio/mp4; codecs="mp4a"', contentLength: '5' },
+          ],
+        },
+      }
+      const gvs: [hasPot: boolean, range: string][] = []
+      const video = (_: unknown, p: PreparedRequest) => {
+        const u = new URL(p.url)
+        const hasPot = u.searchParams.has('pot')
+        gvs.push([hasPot, u.searchParams.get('range')!])
+        // 风控窗口期：无 pot 的直链一律 403，带 pot 放行
+        return hasPot ? fakeResponse(`[${u.searchParams.get('range')}] pot=${u.searchParams.get('pot')}`) : fakeResponse('forbidden', { status: 403 })
+      }
+      const dir = join(home.dir, 'dl403')
+      await withYt({ player: () => vr2, '/videoplayback': video }, async () => {
+        youtubePotTest.fakeMinter = async (binding: string) => `pot-${binding}`
+        try {
+          const r = await cli('youtube', 'item', 'download', 'dQw4w9WgXcQ', '--dir', dir)
+          expect(r.env.ok).toBe(true)
+          // 每段都是先裸链 403、再带 pot 重试成功
+          const ranges = [`0-${10 * MB - 1}`, `${10 * MB}-${20 * MB - 1}`, `${20 * MB}-${25 * MB - 1}`, '0-4']
+          expect(gvs).toEqual(ranges.flatMap((range) => [[false, range], [true, range]]))
+          const text = readFileSync(join(dir, 'youtube_dQw4w9WgXcQ_1.mp4'), 'utf8')
+          expect(text.startsWith('[0')).toBe(true)
+          expect(text.endsWith('pot=pot-dQw4w9WgXcQ')).toBe(true)
+        } finally {
+          youtubePotTest.fakeMinter = null
+        }
+      })
+    })
+
     it('item media：人机验证时回落到 iOS + PO token（token 同时放行 player 与 GVS 直链）', async () => {
       const fakeMinter = async (binding: string) => `pot-${binding}`
       await withYt(
