@@ -1,21 +1,31 @@
+import { readFile } from 'node:fs/promises'
+import { resolve as resolvePath } from 'node:path'
+import { text as readStdin } from 'node:stream/consumers'
 import { z } from 'zod'
-import { endpointFlag, syncStatusUser } from '../core/auth-store.js'
+import { checkAccountName, endpointFlag, getCurrent, GUEST, newCredential, readCredential, syncStatusUser, writeCredential } from '../core/auth-store.js'
 import { resolveNetwork } from '../core/config.js'
 import { CatbusError, toCatbusError } from '../core/errors.js'
 import { createLogger, type Logger, redact } from '../core/log.js'
-import { flagName, parseDuration } from '../core/options.js'
-import { ENDPOINTS, type Endpoint, type HandlerContext, type Page, type Platform } from '../core/registry.js'
+import { describeOption, flagName, PAGING, parseDuration, STANDARD_VALUES } from '../core/options.js'
+import {
+  type AvailableEndpoint,
+  type Command,
+  ENDPOINTS,
+  type Endpoint,
+  type HandlerContext,
+  type Page,
+  type Platform,
+} from '../core/registry.js'
 import * as rand from '../core/rand.js'
-import type { Account, AuthStatus } from '../core/schemas.js'
-import { VOCAB } from '../core/vocab.js'
+import type { Account, AuthStatus, Credential } from '../core/schemas.js'
+import { type Args, type Options, VOCAB } from '../core/vocab.js'
 import { findPlatform, PLATFORMS } from '../platforms/index.js'
-import { collectOptionKinds, type Parsed, parseArgv } from './argv.js'
+import { collectOptionKinds, type GlobalFlags, type Parsed, parseArgv } from './argv.js'
 import { allAccounts } from './commands/auth.js'
 import { config } from './commands/config.js'
 import { platformInfo } from './commands/platforms.js'
 import { version } from './commands/version.js'
 import { confirm } from './confirm.js'
-import { createHandlerContext, credentialSnapshot, persistCredential, readFileOptions, resolveIdentity, splitCursor, validate } from './exec.js'
 import { nativeHint } from './hints.js'
 import { commandHelp, GLOBAL_HELP, platformHelp, resourceHelp, rootHelp } from './help.js'
 import { FORMATS, type Format, Output, parseFields } from './output.js'
@@ -75,7 +85,7 @@ async function runGlobal(name: string, words: string[], parsed: Parsed, out: Out
   switch (name) {
     case 'tui': {
       noArgs()
-      // 全屏界面：画在 stdout 的备用屏幕上，退出后终端恢复原样（AGENTS 4.13）
+      // 全屏界面：画在 stdout 的备用屏幕上，退出后终端恢复原样（AGENTS 4.13）。只在这里动态加载，其他命令不付启动成本
       const { runTui } = await import('../tui/index.js')
       return runTui()
     }
@@ -200,12 +210,7 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
     })
   }
 
-  if (key === 'auth login' && options.autoBind) {
-    // --auto-bind 按登录的用户决定账号名（AGENTS 5.3），不能再指定账号或子站点
-    const hint = `catbus ${p} auth login --auto-bind${endpointFlag(endpoint)}`
-    if (g.account != null) throw new CatbusError('USAGE', '--auto-bind 会自动选择账号，不能和 -a 一起用', { hint })
-    if (options.scope != null) throw new CatbusError('USAGE', '--auto-bind 不能和 --scope 一起用：子站点要登录到已有账号，用 -a 指定', { hint: `catbus ${p} auth login -a <账号> --scope ${options.scope}${endpointFlag(endpoint)}` })
-  }
+  if (key === 'auth login') checkAutoBind(platform, endpoint, options, g)
   const identity = await resolveIdentity(platform, endpoint, command, args, g, log)
   // auth login 没有当前账号时登录到 default（AGENTS 5.3），信封里写实际登录的账号
   out.meta.account = identity.account ?? (key === 'auth login' ? 'default' : null)
@@ -225,7 +230,6 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
   const handler = await command.handler!()
   const controller = new AbortController()
   const ctx = createHandlerContext({ platform, endpoint, command, args, options, identity, network, log, raw: out.raw, signal: controller.signal })
-
   const snapshot = credentialSnapshot(ctx.credential, ep, command)
   try {
     if (command.stream) {
@@ -237,8 +241,7 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
       const data = await handler(ctx)
       // auth login 实际落盘的账号可能与目标不同（--auto-bind），信封里写实际的
       if (key === 'auth login' && data && typeof (data as Account).account === 'string') out.meta.account = (data as Account).account
-      // auth status 在线校验拿到的新昵称 / 头像合并回凭证，随下面的 persistCredential 落盘
-      out.result(key === 'auth status' && isAuthStatus(data) ? syncStatusUser(ctx.credential, data) : data)
+      out.result(settle(command, ctx, data))
     }
   } finally {
     await persistCredential(ctx.credential, snapshot)
@@ -248,6 +251,209 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
 
 function isAuthStatus(value: unknown): value is AuthStatus {
   return typeof value === 'object' && value != null && 'logged_in' in value && 'user' in value
+}
+
+/** handler 的返回值在输出前的加工：auth status 在线校验拿到的新昵称 / 头像合并回凭证，随 persistCredential 落盘。 */
+export function settle(command: Command, ctx: HandlerContext, data: unknown): unknown {
+  return command.key === 'auth status' && isAuthStatus(data) ? syncStatusUser(ctx.credential, data) : data
+}
+
+/** `auth login --auto-bind` 按登录的用户决定账号名（AGENTS 5.3），不能再指定账号或子站点。 */
+export function checkAutoBind(platform: Platform, endpoint: Endpoint, options: Options, g: GlobalFlags): void {
+  if (!options.autoBind) return
+  const p = platform.id
+  const hint = `catbus ${p} auth login --auto-bind${endpointFlag(endpoint)}`
+  if (g.account != null) throw new CatbusError('USAGE', '--auto-bind 会自动选择账号，不能和 -a 一起用', { hint })
+  if (options.scope != null) throw new CatbusError('USAGE', '--auto-bind 不能和 --scope 一起用：子站点要登录到已有账号，用 -a 指定', { hint: `catbus ${p} auth login -a <账号> --scope ${options.scope}${endpointFlag(endpoint)}` })
+}
+
+// 本文件里带 export 的函数（settle、checkAutoBind 以及下面这些）同时给终端界面用（经 src/cli/exec.ts，AGENTS 4.13）：
+// 界面在进程内运行同一批 handler，校验、身份、凭证落盘的规则只有这一份。runPlatform 里新增一步检查或加工时，
+// 写成这样的导出函数，再在 exec.ts 的 prepare / invoke 里补上同一步，界面就跟着生效。
+
+/** handler 的上下文；保存凭证只经 core（AGENTS 5.4）。 */
+export function createHandlerContext(init: {
+  platform: Platform
+  endpoint: Endpoint
+  command: Command
+  args: Args
+  options: Options
+  identity: { account: string | null; credential: Credential }
+  network: { proxy: string | null; timeout: number }
+  log: Logger
+  raw: boolean
+  signal: AbortSignal
+}): HandlerContext {
+  const { platform, endpoint, command, options, identity } = init
+  return {
+    platform,
+    endpoint,
+    resource: command.resource,
+    action: command.action,
+    args: init.args,
+    options,
+    account: identity.account,
+    credential: identity.credential,
+    cursor: (options.cursor as string | undefined) ?? null,
+    raw: init.raw,
+    config: init.network,
+    log: init.log,
+    signal: init.signal,
+    saveCredential: async (credential: Credential) => {
+      if (credential.platform !== platform.id || credential.endpoint !== endpoint) throw new Error('saveCredential：平台或端不匹配')
+      await writeCredential(credential)
+    },
+  }
+}
+
+/**
+ * 命令开始前的凭证快照，结束时与之比较决定要不要落盘（persistCredential）。null 表示不落盘：
+ * - 不支持游客态的端上，游客凭证只在内存里（见 resolveIdentity）；
+ * - auth login 的新凭证由 finishLogin 落盘，结束时再写回目标账号的旧凭证会把它盖掉。
+ */
+export function credentialSnapshot(credential: Credential, ep: AvailableEndpoint, command: Command): string | null {
+  return command.key === 'auth login' || (credential.account === GUEST && !ep.guest) ? null : JSON.stringify(credential)
+}
+
+/**
+ * 请求中更新过的凭证（Set-Cookie、刷新的 token、新生成的游客设备数据）落盘。
+ * 账号文件已被删除（logout）时不再写回。
+ */
+export async function persistCredential(credential: Credential, snapshot: string | null): Promise<void> {
+  if (snapshot == null || JSON.stringify(credential) === snapshot) return
+  const { platform, endpoint, account } = credential
+  if (account !== GUEST) {
+    const saved = await readCredential(platform, endpoint as Endpoint, account).catch(() => null)
+    // 已被删除（logout），或者命令执行期间文件换成了另一个用户（重新登录）：不用旧凭证覆盖
+    const before = (JSON.parse(snapshot) as Credential).user?.id ?? null
+    if (!saved || (saved.user?.id ?? null) !== before) return
+  }
+  await writeCredential(credential)
+}
+
+/** 选项与参数校验：不适用的选项 → 标准取值 → 位置参数个数 → zod → 跨参数约束。 */
+export function validate(platform: Platform, command: Command, words: string[], given: Options): { args: Args; options: Options } {
+  const p = platform.id
+  const help = `catbus ${p} ${command.key} --help`
+  for (const key of Object.keys(given)) {
+    if (command.unsupported.includes(key)) {
+      const usable = Object.keys(command.options).filter((k) => !(k in PAGING))
+      throw new CatbusError('UNSUPPORTED', `${p} 的 ${command.key} 不支持 --${flagName(key)}`, {
+        hint: usable.length ? `可用的选项：${usable.map((k) => `--${flagName(k)}`).join('、')}` : help,
+      })
+    }
+    if (!(key in command.options)) {
+      throw new CatbusError('USAGE', `选项 --${flagName(key)} 不适用于 ${p} ${command.key}`, { hint: help })
+    }
+    const standard = STANDARD_VALUES[key]
+    if (!standard) continue
+    if (command.extension && !describeOption(command.options[key]!).values?.some((v) => standard.includes(v))) continue
+    const value = String(given[key])
+    const flag = `--${flagName(key)}`
+    // 两种错误的 hint 都只列本平台支持的取值，照着 hint 改不会再撞 UNSUPPORTED
+    const supported = describeOption(command.options[key]!).values ?? standard
+    if (!standard.includes(value)) {
+      throw new CatbusError('USAGE', `${flag} 的取值不对：${value}`, { hint: `可选：${supported.join('、')}` })
+    }
+    if (!supported.includes(value)) {
+      throw new CatbusError('UNSUPPORTED', `${p} 的 ${command.key} 不支持 ${flag} ${value}`, { hint: `可选：${supported.join('、')}` })
+    }
+  }
+
+  const min = command.args.filter((a) => !a.optional).length
+  if (words.length < min) {
+    throw new CatbusError('USAGE', `缺少参数 <${command.args[words.length]!.name}>`, { hint: help })
+  }
+  if (words.length > command.args.length) {
+    throw new CatbusError('USAGE', `多余的参数：${words.slice(command.args.length).join(' ')}`, {
+      hint: `含空格的文本请加引号；以 - 开头的参数放在 -- 之后。${help}`,
+    })
+  }
+
+  const result = z.object(command.options).safeParse(given)
+  if (!result.success) {
+    const issue = result.error.issues[0]!
+    const key = String(issue.path[0] ?? '')
+    throw new CatbusError('USAGE', `${key ? `--${flagName(key)}：` : ''}${issue.message}`, { hint: help })
+  }
+  const options = result.data as Options
+  const args: Args = Object.fromEntries(command.args.map((a, i) => [a.name, words[i] ?? a.default]))
+  const problem = command.check?.(args, options)
+  if (problem) throw new CatbusError('USAGE', problem, { hint: help })
+  return { args, options }
+}
+
+/** 身份：-a > _current > 游客（AGENTS 5.2）。auth 命令只解析账号名，不做登录检查。 */
+export async function resolveIdentity(
+  platform: Platform,
+  endpoint: Endpoint,
+  command: Command,
+  args: Args,
+  g: GlobalFlags,
+  log: Logger,
+): Promise<{ account: string | null; credential: Credential }> {
+  const p = platform.id
+  const e = endpointFlag(endpoint)
+  const ep = platform.endpoints[endpoint] as AvailableEndpoint
+  const blank = () => newCredential({ platform: p, endpoint, account: GUEST, method: 'guest' })
+  // 不支持游客态的端上没有 guest.json：auth 命令没有账号时用一份不落盘的空凭证（AGENTS 5.2）
+  const guest = async () => (ep.guest ? ((await readCredential(p, endpoint, GUEST).catch(() => null)) ?? blank()) : blank())
+  if (command.resource === 'auth') {
+    // -a guest 只对 auth status 有意义；登录、登出到 guest 都不行（guest 是保留名）
+    const allowGuest = command.key === 'auth status'
+    const account = g.account != null ? checkAccountName(g.account, { allowGuest }) : await getCurrent(p, endpoint)
+    const credential = account == null || account === GUEST ? null : await readCredential(p, endpoint, account).catch(() => null)
+    return { account: account === GUEST ? null : account, credential: credential ?? (await guest()) }
+  }
+
+  if (g.account != null && g.account !== GUEST) {
+    const account = checkAccountName(g.account)
+    const credential = await readCredential(p, endpoint, account)
+    if (!credential) {
+      throw new CatbusError('AUTH_REQUIRED', `账号 ${account} 不存在`, { hint: `catbus ${p} auth login -a ${account}${e}` })
+    }
+    return { account, credential }
+  }
+  const current = g.account == null ? await getCurrent(p, endpoint) : null
+  if (current) return { account: current, credential: (await readCredential(p, endpoint, current))! }
+
+  const login = `catbus ${p} auth login${e}`
+  if (command.auth === 'required') throw new CatbusError('AUTH_REQUIRED', `${command.key} 需要登录`, { hint: login })
+  if (command.args.some((a) => a.name === 'user' && args[a.name] === 'me')) {
+    throw new CatbusError('AUTH_REQUIRED', 'me 表示当前账号，需要先登录', { hint: login })
+  }
+  if (g.account !== GUEST && ep.login.methods.length > 0) {
+    log.info(`未登录 ${p} (${endpoint})，本次以游客身份访问，结果可能不完整；很多操作需要登录。登录：${login}`)
+  }
+  return { account: GUEST, credential: await guest() }
+}
+
+/**
+ * `--text @file`、`--cookie @file|-`：从文件或 stdin 读取。
+ * `--text @file` 同时把文件的绝对路径记在 `textFile` 里，正文里的相对路径（如 Markdown 插图）按它所在目录解析。
+ */
+export async function readFileOptions(options: Options): Promise<void> {
+  for (const key of ['text', 'cookie']) {
+    const v = options[key]
+    if (typeof v !== 'string') continue
+    if (key === 'cookie' && v === '-') options[key] = (await readStdin(process.stdin)).trim()
+    else if (v.startsWith('@')) {
+      options[key] = await readFile(v.slice(1), 'utf8').catch(() => {
+        throw new CatbusError('USAGE', `读取文件失败：${v.slice(1)}`)
+      })
+      if (key === 'text') options.textFile = resolvePath(v.slice(1))
+    }
+  }
+}
+
+/** 截在一页中间时的游标后缀：`<这一页的游标>#skip=N`，续翻时重取这一页、跳过已经输出的 N 条。 */
+const SKIP_RE = /#skip=(\d+)$/
+
+export function splitCursor(cursor: string | null): { cursor: string | null; skip: number } {
+  const m = cursor == null ? null : SKIP_RE.exec(cursor)
+  if (!m) return { cursor, skip: 0 }
+  const base = cursor!.slice(0, m.index)
+  return { cursor: base === '' ? null : base, skip: Number(m[1]) }
 }
 
 /** 分页：默认一页；--limit N 翻到取满 N 条；--all 翻到没有更多。jsonl 时边翻边输出。 */

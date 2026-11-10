@@ -3,11 +3,11 @@ import { useMemo } from 'react'
 import type { LoginMethod } from '../core/options.js'
 import type { Platform } from '../core/registry.js'
 import { splitAtCursor, type TextState } from './input.js'
-import { fieldsFor, type LoginView as View } from './login.js'
+import { type LoginField, loginFields, type LoginView as View } from './login.js'
 import { METHOD_LABEL } from './model.js'
 import { qrCells, qrSize } from './qr.js'
 import { Keys, Pane, T, useGlyphs, useLook } from './ui.js'
-import { clip } from './text.js'
+import { clip, padEnd, width } from './text.js'
 
 // 登录页（AGENTS 4.13）：选方式、填账号名和必要字段，然后显示二维码或验证码输入。
 
@@ -17,29 +17,37 @@ export interface SetupState {
   account: string
   scopes: string[]
   scope: number
-  /** 方式需要的字段值。 */
-  values: Record<string, string>
+  /** 表单里填的选项值，键是 `auth login` 的选项名：文本为字符串，开关为 true。 */
+  values: Record<string, string | boolean>
   /** 焦点：0 方式，1 账号名，2 子站点（有才有），之后是方式的字段。 */
   focus: number
 }
 
-/** 表单里依次有哪些行：方式、账号名、（子站点）、方式的字段。 */
-export function setupRows(s: SetupState): { id: string; label: string }[] {
-  const rows = [
+export interface SetupRow {
+  id: string
+  label: string
+  /** 选项字段才有；方式、账号名、子站点三行没有。 */
+  field?: LoginField
+}
+
+/** 表单里依次有哪些行：方式、账号名、（子站点）、这个方式能用的选项（从注册表算，见 loginFields）。 */
+export function setupRows(platform: Platform, s: SetupState): SetupRow[] {
+  const rows: SetupRow[] = [
     { id: 'method', label: '登录方式' },
     { id: 'account', label: '账号名' },
   ]
   if (s.scopes.length) rows.push({ id: 'scope', label: '子站点' })
-  for (const f of fieldsFor(s.methods[s.method]!)) rows.push({ id: f.name, label: f.label })
+  for (const f of loginFields(platform, s.methods[s.method]!)) rows.push({ id: f.name, label: f.label, field: f })
   return rows
 }
 
 export function SetupView({ platform, state, editor, cols, rows, error }: { platform: Platform; state: SetupState; editor: TextState; cols: number; rows: number; error: string | null }) {
   const g = useGlyphs()
-  const list = setupRows(state)
+  const list = setupRows(platform, state)
   const method = state.methods[state.method]!
-  const labelW = 10
+  const labelW = Math.max(10, ...list.map((r) => width(r.label) + 2))
   const valueW = Math.max(10, cols - 6 - labelW)
+  const focused = list[state.focus]
   return (
     <Pane title={`登录 ${g.sep} ${platform.name}`} cols={cols} rows={rows} focused>
       <Box paddingLeft={2} paddingTop={1}>
@@ -74,9 +82,13 @@ export function SetupView({ platform, state, editor, cols, rows, error }: { plat
             </>
           )
         } else {
-          const raw = r.id === 'account' ? state.account : (state.values[r.id] ?? '')
-          const hidden = fieldsFor(method).find((f) => f.name === r.id)?.hidden
-          if (on) {
+          const value = r.id === 'account' ? state.account : state.values[r.id]
+          const toggle = r.field?.kind === 'toggle'
+          const raw = typeof value === 'string' ? value : ''
+          const hidden = r.field?.hidden
+          if (toggle) {
+            shown = <T c={value === true ? 'green' : 'dim'}>{(value === true ? '[x] ' : '[ ] ') + clip(r.field?.hint ?? '', valueW - 4, g.more)}</T>
+          } else if (on) {
             const [a, c, b] = splitAtCursor(editor)
             const mask = (t: string) => (hidden ? '*'.repeat([...t].length) : t)
             shown = (
@@ -88,13 +100,14 @@ export function SetupView({ platform, state, editor, cols, rows, error }: { plat
             )
           } else {
             const text = hidden ? '*'.repeat(Math.min(12, [...raw].length)) : raw
-            shown = text ? <T c="accent">{clip(text, valueW, g.more)}</T> : <T c="dim">{r.id === 'account' ? '留空 = 当前账号或 default' : '必填'}</T>
+            const empty = r.id === 'account' ? '留空 = 当前账号或 default' : r.field?.required ? '必填' : '可选'
+            shown = text ? <T c="accent">{clip(text, valueW, g.more)}</T> : <T c="dim">{empty}</T>
           }
         }
         return (
           <Box key={r.id}>
             <T c="accent">{on ? g.caret : ' '}</T>
-            <T c={on ? 'fg' : 'dim'}>{(' ' + r.label).padEnd(labelW)}</T>
+            <T c={on ? 'fg' : 'dim'}>{padEnd(' ' + r.label, labelW)}</T>
             <Box width={valueW} overflow="hidden">
               {shown}
             </Box>
@@ -107,6 +120,11 @@ export function SetupView({ platform, state, editor, cols, rows, error }: { plat
           {' Enter 开始登录 '}
         </T>
       </Box>
+      {focused?.field?.kind === 'text' && focused.field.hint ? (
+        <Box paddingLeft={2} paddingTop={1}>
+          <T c="dim">{clip(focused.field.hint, cols - 6, g.more)}</T>
+        </Box>
+      ) : null}
       {method === 'cookie' ? (
         <Box paddingLeft={2} paddingTop={1}>
           <T c="dim">cookie 从浏览器开发者工具里复制；粘贴时用终端的粘贴快捷键。</T>
@@ -122,7 +140,7 @@ export function SetupView({ platform, state, editor, cols, rows, error }: { plat
 }
 
 export function SetupKeys({ cols }: { cols: number }) {
-  return <Keys cols={cols} items={[['↑↓ Tab', '换项'], ['←→', '选方式'], ['Enter', '开始'], ['Esc', '返回']]} />
+  return <Keys cols={cols} items={[['↑↓ Tab', '换项'], ['←→', '选方式'], ['空格', '开关'], ['Enter', '开始'], ['Esc', '返回']]} />
 }
 
 // ---- 进行中 ----
@@ -134,7 +152,7 @@ export function ProgressView({
   cols,
   rows,
   spin,
-  log,
+  recent,
 }: {
   platform: Platform
   view: View
@@ -142,7 +160,8 @@ export function ProgressView({
   cols: number
   rows: number
   spin: string
-  log: string | null
+  /** 这次登录开始以来的日志：平台在提问前给出的说明（发码提示、待选账号列表等）。 */
+  recent: string[]
 }) {
   const g = useGlyphs()
   return (
@@ -174,14 +193,15 @@ export function ProgressView({
       ) : null}
       {view.type === 'prompt' ? (
         <Box flexDirection="column" paddingLeft={2} paddingTop={1}>
+          {recent.slice(-Math.max(1, rows - 9)).map((l, i) => (
+            <T key={i} c="sub">
+              {clip(l.replace(/^\[catbus\] /, ''), cols - 8, g.more)}
+            </T>
+          ))}
+          {recent.length ? <Box height={1} /> : null}
           <T bold>{view.question.replace(/[：:]\s*$/, '')}</T>
           <Box height={1} />
           <PromptBox editor={editor} hidden={view.hidden} width={Math.min(cols - 8, 40)} />
-          {log ? (
-            <Box paddingTop={1}>
-              <T c="dim">{clip(log, cols - 8, g.more)}</T>
-            </Box>
-          ) : null}
         </Box>
       ) : null}
     </Pane>

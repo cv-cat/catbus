@@ -34,6 +34,21 @@ export interface LoginUi {
 let ui: LoginUi | null = null
 const uiStack: LoginUi[] = []
 
+/** 终端界面运行期间为 true：stdin 归界面，钩子之外的提问不能去读它。 */
+let screenOwnsStdin = false
+
+/**
+ * 终端界面启动时调用，返回撤销函数（AGENTS 4.13）。之后没有界面钩子时：`interactive()` 为 false，平台走各自的非交互分支
+ *（保存中间态、报 USAGE / RISK_CONTROL 并给出命令行提示）；`prompt()` 直接报 USAGE，不会开 readline 和界面抢输入。
+ * CLI 里从不调用，行为不变。
+ */
+export function claimStdin(): () => void {
+  screenOwnsStdin = true
+  return () => {
+    screenOwnsStdin = false
+  }
+}
+
 /**
  * 设上界面钩子，返回撤销函数。用栈而不是“恢复上一个”：重新扫码时旧会话的撤销晚于新会话的设置，
  * 如果撤销时去恢复“设置前的值”，新会话结束后会把已取消的旧钩子又装回来。
@@ -200,12 +215,14 @@ export async function poll<T>(fn: () => Promise<T | undefined>, options: { inter
 /** 是否可以交互输入（stdin 与 stderr 都是 TTY）。 */
 export function interactive(): boolean {
   if (ui) return ui.interactive
+  if (screenOwnsStdin) return false
   return Boolean(process.stdin.isTTY && process.stderr.isTTY)
 }
 
 /** 在 stderr 上提问，读一行。hidden 时不回显（密码）。 */
 export async function prompt(question: string, options: { hidden?: boolean } = {}): Promise<string> {
   if (ui) return ui.prompt(question, options)
+  if (screenOwnsStdin) throw new CatbusError('USAGE', `这一步需要输入（${question.replace(/[：:]\s*$/, '')}），不能在界面里完成`, { hint: '请在终端里运行界面底部显示的等价命令' })
   const rl = createInterface({ input: process.stdin, output: process.stderr, terminal: true })
   if (options.hidden) {
     const write = (rl as unknown as { _writeToOutput: (s: string) => void })._writeToOutput

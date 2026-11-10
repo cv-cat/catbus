@@ -8,15 +8,25 @@ const ANSI = /\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g
 
 export class LogBuffer {
   readonly lines: string[] = []
+  /** 累计收到的行数（缓冲只留最近 200 行，所以不等于 lines.length）。 */
+  count = 0
   private subs = new Set<() => void>()
 
   push(text: string): void {
     for (const raw of text.replace(ANSI, '').split(/\r?\n/)) {
       const line = raw.trim()
-      if (line) this.lines.push(line)
+      if (!line) continue
+      this.lines.push(line)
+      this.count++
     }
     if (this.lines.length > 200) this.lines.splice(0, this.lines.length - 200)
     for (const fn of this.subs) fn()
+  }
+
+  /** mark（取自当时的 count）之后收到的行。 */
+  since(mark: number): string[] {
+    const n = Math.min(this.lines.length, this.count - mark)
+    return n > 0 ? this.lines.slice(-n) : []
   }
 
   last(): string | null {

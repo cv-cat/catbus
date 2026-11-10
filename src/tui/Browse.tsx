@@ -12,9 +12,14 @@ import { clip, padEnd, width } from './text.js'
 export function PlatformPane({ rows, selected, cols, height, focused }: { rows: PlatformRow[]; selected: number; cols: number; height: number; focused: boolean }) {
   const g = useGlyphs()
   const inner = cols - 2
+  // 标题 1 行、底边 1 行、图例 3 行；平台多到放不下时只画选中项附近的一段，并标出位置
+  const room = Math.max(1, height - 5)
+  const visible = rows.length > room ? Math.max(1, room - 1) : room
+  const top = rows.length > visible ? Math.max(0, Math.min(selected - Math.floor(visible / 2), rows.length - visible)) : 0
   return (
     <Pane title="平台" cols={cols} rows={height} focused={focused}>
-      {rows.map((r, i) => {
+      {rows.slice(top, top + visible).map((r, n) => {
+        const i = top + n
         const dot = r.open ? <T c="teal">{g.dotOn}</T> : r.loggedIn ? <T c="green">{g.dotOn}</T> : <T c="dim">{g.dotOff}</T>
         return (
           <Row
@@ -30,6 +35,11 @@ export function PlatformPane({ rows, selected, cols, height, focused }: { rows: 
           />
         )
       })}
+      {rows.length > visible ? (
+        <Box paddingLeft={1}>
+          <T c="dim">{`${top + 1}-${top + visible} / ${rows.length}`}</T>
+        </Box>
+      ) : null}
       <Box height={1} />
       <Box paddingLeft={1}>
         <T c="dim">{`${g.dotOn} 已登录  ${g.dotOff} 未登录`}</T>

@@ -2,8 +2,7 @@ import { CatbusError, toCatbusError } from '../core/errors.js'
 import { parseDuration } from '../core/options.js'
 import type { Command, Platform } from '../core/registry.js'
 import { listenable } from './model.js'
-import { createHandlerContext, credentialSnapshot, persistCredential, readFileOptions, resolveIdentity, validate } from '../cli/exec.js'
-import { resolveNetwork } from '../core/config.js'
+import { prepare } from '../cli/exec.js'
 import type { Logger } from '../core/log.js'
 import { clock, count } from './text.js'
 
@@ -105,19 +104,10 @@ export interface ListenHandle {
  */
 export async function startListen(req: ListenRequest, onEvent: (value: unknown) => void): Promise<ListenHandle> {
   const { platform, command, log } = req
-  const endpoint = 'web' as const
-  const ep = platform.endpoints[endpoint]
-  if (ep === 'planned') throw new CatbusError('NOT_IMPLEMENTED', `${platform.id} 的 web 端尚未实现`)
   if (!listenable(command)) throw new CatbusError('USAGE', `${command.key} 不是监听命令`)
-  const { args, options } = validate(platform, command, req.words, req.given)
-  const identity = await resolveIdentity(platform, endpoint, command, args, {}, log)
-  await readFileOptions(options)
-  const network = await resolveNetwork(platform.id, undefined)
-  const handler = await command.handler!()
   const controller = new AbortController()
-  const ctx = createHandlerContext({ platform, endpoint, command, args, options, identity, network, log, raw: false, signal: controller.signal })
-  const snapshot = credentialSnapshot(ctx.credential, ep, command)
-  const duration = typeof options.duration === 'string' ? parseDuration(options.duration) : null
+  const { ctx, handler, finish } = await prepare({ platform, command, words: req.words, given: req.given, log, signal: controller.signal })
+  const duration = typeof ctx.options.duration === 'string' ? parseDuration(ctx.options.duration) : null
   const timer = duration ? setTimeout(() => controller.abort(), duration) : null
   const endsAt = duration ? Date.now() + duration : null
 
@@ -137,7 +127,7 @@ export async function startListen(req: ListenRequest, onEvent: (value: unknown) 
       controller.abort()
       // 生成器可能正卡在 await 上，return() 要等它恢复才会完成；不等它，免得界面挂住（与 CLI 一致）
       void Promise.resolve(iterator.return?.()).catch(() => {})
-      await persistCredential(ctx.credential, snapshot).catch(() => {})
+      await finish().catch(() => {})
     }
   })()
   return { stop: () => controller.abort(), done, endsAt }

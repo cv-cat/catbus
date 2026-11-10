@@ -10,7 +10,7 @@ import { type LogBuffer, bufferLogger } from './logs.js'
 import { Mascot, MASCOT_ROWS } from './MascotView.js'
 import { availability, usable, cliFromInvocation, cliLine, fields, type FormValue, groupCommands, type PlatformRow, platformRows, toInvocation } from './model.js'
 import { AccountsView, accountKeys, type AccountsState } from './AccountsView.js'
-import { fieldsFor, type LoginSession, type LoginView as LoginState, accountsOf, checkAccount, loginCommand, loginMethods, logoutAccount, startLogin, useAccount } from './login.js'
+import { type LoginSession, type LoginView as LoginState, accountsOf, checkAccount, loginCommand, loginFields, loginMethods, logoutAccount, startLogin, useAccount } from './login.js'
 import { ListenScreen } from './ListenScreen.js'
 import { type Next, nextSteps } from './follow.js'
 import { NextKeys, NextView } from './NextView.js'
@@ -89,7 +89,16 @@ function Shell({ logs, platforms, toggleTheme }: { logs: LogBuffer; platforms: P
   const [loginView, setLoginView] = useState<LoginState | null>(null)
   const loginSession = useRef<LoginSession | null>(null)
   // 退出界面（q、Ctrl-C、窗口关闭）时，进行中的登录一并取消：撤销界面钩子，免得它一直占着 stdin
-  useEffect(() => () => loginSession.current?.cancel(), [])
+  const alive = useRef(true)
+  useEffect(
+    () => () => {
+      alive.current = false
+      loginSession.current?.cancel()
+    },
+    [],
+  )
+  // 这次登录从日志的哪一行开始：提问页把之后的日志显示出来（发码提示、待选账号列表等）
+  const loginMark = useRef(0)
   // 结果页“接着做”
   const [steps, setSteps] = useState<Next[]>([])
   const [stepAt, setStepAt] = useState(0)
@@ -246,12 +255,22 @@ function Shell({ logs, platforms, toggleTheme }: { logs: LogBuffer; platforms: P
   const openAccounts = () => {
     setAcc({ rows: [], selected: 0, checked: {}, confirmLogout: null, loading: true })
     setMode('accounts')
-    void accountsOf(platform).then((rows) => setAcc((a) => ({ ...a, rows, loading: false, selected: Math.max(0, rows.findIndex((r) => r.active)) })))
+    void accountsOf(platform)
+      .then((rows) => setAcc((a) => ({ ...a, rows, loading: false, selected: Math.max(0, rows.findIndex((r) => r.active)) })))
+      .catch((e) => {
+        setAcc((a) => ({ ...a, loading: false }))
+        setNote(`读取账号失败：${toCatbusError(e).message}`)
+      })
   }
 
   const reloadAccounts = async () => {
-    const rows = await accountsOf(platform)
-    setAcc((a) => ({ ...a, rows, selected: Math.min(a.selected, Math.max(0, rows.length - 1)), confirmLogout: null }))
+    // 不向外抛：调用处是 `void xxx().then(() => reloadAccounts())`，这里再抛就成了未处理的 rejection
+    try {
+      const rows = await accountsOf(platform)
+      setAcc((a) => ({ ...a, rows, selected: Math.min(a.selected, Math.max(0, rows.length - 1)), confirmLogout: null }))
+    } catch (e) {
+      setNote(`读取账号失败：${toCatbusError(e).message}`)
+    }
     refreshRows()
   }
 
@@ -272,16 +291,16 @@ function Shell({ logs, platforms, toggleTheme }: { logs: LogBuffer; platforms: P
   const beginLogin = () => {
     if (!setup) return
     const method = setup.methods[setup.method]!
-    const need = fieldsFor(method)
-    const missing = need.find((f) => !(setup.values[f.name] ?? '').trim())
+    const missing = loginFields(platform, method).find((f) => f.required && !String(setup.values[f.name] ?? '').trim())
     if (missing) {
-      setSetupError(`先填${missing.label}`)
+      setSetupError(`先填 ${missing.label}`)
       return
     }
     setSetupError(null)
     const scope = setup.scopes.length && setup.scope > 0 ? setup.scopes[setup.scope - 1] : undefined
     setLoginView({ type: 'working', text: '正在准备登录…' })
     setEditor(initial(''))
+    loginMark.current = logs.count
     loginSession.current = startLogin(
       { platform, method, account: setup.account, ...(scope ? { scope } : {}), fields: setup.values, log: bufferLogger(logs) },
       (v) => {
@@ -295,7 +314,9 @@ function Shell({ logs, platforms, toggleTheme }: { logs: LogBuffer; platforms: P
   const restartLogin = () => {
     const old = loginSession.current
     old?.cancel()
-    void (old?.done ?? Promise.resolve()).then(() => beginLogin())
+    void (old?.done ?? Promise.resolve()).then(() => {
+      if (alive.current) beginLogin()
+    })
   }
 
   const leaveLogin = () => {
@@ -355,9 +376,10 @@ function Shell({ logs, platforms, toggleTheme }: { logs: LogBuffer; platforms: P
     if (!v) {
       // 选方式、填字段
       if (!setup) return
-      const rowsNow = setupRows(setup)
+      const rowsNow = setupRows(platform, setup)
       const cur = rowsNow[setup.focus]!
-      const isText = cur.id !== 'method' && cur.id !== 'scope'
+      const isToggle = cur.field?.kind === 'toggle'
+      const isText = cur.id !== 'method' && cur.id !== 'scope' && !isToggle
       const commit = (state: TextState) => {
         if (cur.id === 'account') setSetup({ ...setup, account: state.value })
         else setSetup({ ...setup, values: { ...setup.values, [cur.id]: state.value } })
@@ -366,8 +388,8 @@ function Shell({ logs, platforms, toggleTheme }: { logs: LogBuffer; platforms: P
         const next = (n + rowsNow.length) % rowsNow.length
         const target = rowsNow[next]!
         setSetup((st) => (st ? { ...st, focus: next } : st))
-        const val = target.id === 'account' ? setup.account : (setup.values[target.id] ?? '')
-        setEditor(initial(target.id === 'method' || target.id === 'scope' ? '' : val))
+        const val = target.id === 'account' ? setup.account : setup.values[target.id]
+        setEditor(initial(typeof val === 'string' ? val : ''))
       }
       if (key.escape) return leaveLogin()
       if (key.return) return beginLogin()
@@ -383,6 +405,10 @@ function Shell({ logs, platforms, toggleTheme }: { logs: LogBuffer; platforms: P
         const n = setup.scopes.length + 1
         const d = key.leftArrow || input === 'h' ? -1 : 1
         setSetup({ ...setup, scope: (setup.scope + d + n) % n })
+        return
+      }
+      if (isToggle && (input === ' ' || key.leftArrow || key.rightArrow)) {
+        setSetup({ ...setup, values: { ...setup.values, [cur.id]: setup.values[cur.id] !== true } })
         return
       }
       if (isText) {
@@ -404,7 +430,9 @@ function Shell({ logs, platforms, toggleTheme }: { logs: LogBuffer; platforms: P
         leaveLogin()
         if (wasDone) {
           setNote(`已登录 ${platform.name}`)
-          void accountsOf(platform).then((rows) => setAcc((a) => ({ ...a, rows })))
+          void accountsOf(platform)
+            .then((rows) => setAcc((a) => ({ ...a, rows })))
+            .catch(() => {})
         }
       }
       return
@@ -713,8 +741,8 @@ function Shell({ logs, platforms, toggleTheme }: { logs: LogBuffer; platforms: P
       if (mode === 'login') {
         const v = loginView
         if (!v && setup) {
-          const cur = setupRows(setup)[setup.focus]!
-          if (cur.id === 'method' || cur.id === 'scope') return
+          const cur = setupRows(platform, setup)[setup.focus]!
+          if (cur.id === 'method' || cur.id === 'scope' || cur.field?.kind === 'toggle') return
           const next = edit(editor, text, {})
           if (next) {
             setEditor(next)
@@ -811,7 +839,7 @@ function Shell({ logs, platforms, toggleTheme }: { logs: LogBuffer; platforms: P
       body = <ResultView platform={platform} view={loginView} cols={columns} rows={bodyRows} />
       keys = <Keys cols={columns - 2} items={loginView.type === 'error' ? [['r', '重试'], ['Esc', '返回']] : [['Enter', '完成']]} />
     } else {
-      body = <ProgressView platform={platform} view={loginView} editor={editor} cols={columns} rows={bodyRows} spin={g.spin[spin % g.spin.length]!} log={log} />
+      body = <ProgressView platform={platform} view={loginView} editor={editor} cols={columns} rows={bodyRows} spin={g.spin[spin % g.spin.length]!} recent={logs.since(loginMark.current)} />
       keys = <ProgressKeys cols={columns - 2} view={loginView} />
     }
   } else if (mode === 'accounts') {

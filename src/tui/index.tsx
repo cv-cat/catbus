@@ -1,5 +1,6 @@
 import { render } from 'ink'
 import { CatbusError } from '../core/errors.js'
+import { claimStdin } from '../core/login.js'
 import { App } from './App.js'
 import { captureStderr, LogBuffer } from './logs.js'
 import { pickLook } from './theme.js'
@@ -20,6 +21,8 @@ export async function runTui(): Promise<number> {
   checkTerminal(process.stdin, process.stdout)
   const logs = new LogBuffer()
   const restoreStderr = captureStderr(logs)
+  // stdin 归界面：登录页之外（读取命令、监听）的 handler 不能再去读它
+  const releaseStdin = claimStdin()
   const look = pickLook(process.env)
   // 在 render 之前提前开启 raw mode，消除"首页画出来但还不能收键"的时间窗口。
   // Ink 会在 useInput 挂载时再开一次（引用计数），卸载时关掉。这里开的这一次会在 render 返回前被 Ink 接管。
@@ -40,6 +43,7 @@ export async function runTui(): Promise<number> {
     await app.waitUntilExit()
     return 0
   } finally {
+    releaseStdin()
     restoreStderr()
   }
 }
