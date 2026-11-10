@@ -6,6 +6,8 @@
  * 流程与 yt-dlp 的 PO Token Provider（bgutil）一致，全部在 Node 里完成，不需要浏览器：
  * 首页的 ytAtN 挑战 → interpreter（www.google.com 白名单 + jsdom 环境）→ BotGuard 快照 →
  * GenerateIT 换 integrity token → WebPoMinter 按内容绑定（视频 ID）铸造 token。
+ * minter 是带闭包的实例只做进程内缓存（catbus 每条命令是独立进程，跨命令本来就复用不到）；
+ * 早期把它挂进凭证 device 落盘，读回来成了没有方法的对象，缓存命中时报 mintAsWebsafeString is not a function。
  * 实测（2026-11-10）：player 与 GVS 的 token 都绑视频 ID；iOS 请求带 serviceIntegrityDimensions
  * 后 pbp 门控放开，分组直链 + URL 追加 `&pot=` 能完整下载。
  */
@@ -35,8 +37,6 @@ const { JSDOM, VirtualConsole } = require('jsdom') as {
 const GENERATE_IT_URL = 'https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/GenerateIT'
 /** interpreter 只能来自 YouTube 网页环境用的 www.google.com 静态脚本（与 Studio 的 BotGuard 白名单一致）。 */
 const INTERPRETER_HOST = 'www.google.com'
-/** integrity token 的实测 TTL 是 12h（43200s），minter 按一半取保守值缓存。 */
-const MINTER_TTL_MS = 6 * 3600 * 1000
 /** challenge 里 program 会随部署轮转，短缓存即可（够一条命令内复用，不跨命令依赖它）。 */
 const CHALLENGE_TTL_MS = 30 * 60 * 1000
 
@@ -51,11 +51,13 @@ interface MintFn {
   mintAsWebsafeString(contentBinding: string): Promise<string>
 }
 
-/** 缓存挂凭证 device，随凭证由 core 落盘（guest 凭证同样适用）。 */
+/** 缓存挂凭证 device，随凭证由 core 落盘（guest 凭证同样适用）。challenge 是纯数据，可以落盘；minter 不行。 */
 export interface PotCache {
   challenge?: { data: BgChallenge; fetchedAt: number }
-  minter?: { minter: MintFn; expiresAt: number }
 }
+
+/** WebPoMinter 是带闭包的实例，JSON 序列化会丢掉方法：缓存只能放进程内（每条命令是一个独立进程）。 */
+let procMinter: MintFn | null = null
 
 /** PO token 链路失败：仍按人机验证报错（上层维持 RISK_CONTROL 语义），与原 VISIONOS 失败的提示不同。 */
 export class PotError extends CatbusError {
@@ -99,9 +101,8 @@ async function loadChallenge(c: YtClient, cache: PotCache): Promise<BgChallenge>
  */
 export async function poMinter(c: YtClient): Promise<MintFn> {
   if (potTest.fakeMinter) return { mintAsWebsafeString: (binding: string) => potTest.fakeMinter!(binding) }
+  if (procMinter) return procMinter
   const cache = (c.ctx.credential.device.pot ??= {}) as PotCache
-  const hit = cache.minter
-  if (hit && hit.expiresAt > rand.now()) return hit.minter
 
   const challenge = await loadChallenge(c, cache)
   // interpreter 的 host 白名单：只认客户端实测使用的 www.google.com 静态脚本（AGENTS 5.7 的口径）
@@ -139,7 +140,10 @@ export async function poMinter(c: YtClient): Promise<MintFn> {
     { integrityToken, estimatedTtlSecs: ttlSecs, mintRefreshThreshold, websafeFallbackToken },
     webPoSignalOutput as never,
   )) as unknown as MintFn
-  cache.minter = { minter, expiresAt: rand.now() + MINTER_TTL_MS }
+  if (typeof (minter as unknown as Record<string, unknown>).mintAsWebsafeString !== 'function') {
+    throw new PotError('WebPoMinter 不是可用的铸造器')
+  }
+  procMinter = minter
   return minter
 }
 
