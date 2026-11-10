@@ -254,6 +254,37 @@ export async function mobileCodeLogin(ks: Ks, phone: string, smsCode: string, co
   return [data, sessionCookies(data, res)]
 }
 
+/**
+ * multi_user_token_login：手机号下有多个用户（mobileCode 结果 100110031，响应带 userInfos + multiUserToken）时，
+ * 选定 targetUserId 后用 multiUserToken 完成登录。字段与官方登录页的登录口一致（account 为网页里的账号输入框，默认空）。
+ */
+export async function multiUserTokenLogin(
+  ks: Ks,
+  params: {
+    phone: string
+    userId: string
+    multiUserToken: string
+    countryCode?: string // 默认 +86
+    account?: string // 官方登录页的账号框，默认空
+  },
+): Promise<[Json, Issued]> {
+  const [data, res] = await ks.loginForm(
+    '/pass/kuaishou/login/multiUserToken',
+    [
+      ['account', params.account ?? ''],
+      ['countryCode', params.countryCode ?? '+86'],
+      ['isWebSig4', 'true'],
+      ['multiUserToken', params.multiUserToken],
+      ['phone', params.phone],
+      ['setCookie', 'true'],
+      ['sid', SID_WEB_API],
+      ['targetUserId', params.userId],
+    ],
+    PASSPORT,
+  )
+  return [data, sessionCookies(data, res)]
+}
+
 /** STS 两跳是 iframe 导航，不是 XHR。 */
 function navHeaders(referer: string): [string, string][] {
   return [
