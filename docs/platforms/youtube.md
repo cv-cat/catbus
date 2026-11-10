@@ -176,7 +176,7 @@ catbus youtube comment add dQw4w9WgXcQ "Nice video"
 ## 已知限制
 
 - **搜索排序只有两种**：YouTube 2025 年改版后搜索页只剩「Relevance」和「Popularity」，对应 `--sort general` 和 `--sort popular`；按上传时间排序已经下线。`--time` 按上传时间筛选仍然可用。
-- **媒体地址**：`item media` / `download` 用 YouTube 的 VISIONOS 客户端取地址，不带登录（登录后的 WEB 客户端只给 SABR 流，没有可直接下载的地址）。同一出口 IP 请求过多时，YouTube 会要求「Sign in to confirm you're not a bot」，catbus 报 `RISK_CONTROL`，过一段时间或换代理出口再试。年龄限制、会员专享、仅儿童可见等视频拿不到地址。下载得到的是视频轨和音频轨两个文件，需要的话自己用 ffmpeg 合流。下载按 10 MB 一段用 range 请求（整文件请求会被拒绝）。实测（2026-10-29）VISIONOS 的地址不带 PO token 也能完整下载；之前用的 ANDROID_VR 地址只给前约 1 分钟。
+- **媒体地址**：`item media` / `download` 用 YouTube 的 VISIONOS 客户端取地址，不带登录（登录后的 WEB 客户端只给 SABR 流，没有可直接下载的地址）。同一出口 IP 请求过多时，VISIONOS 的 player 会被要求「Sign in to confirm you're not a bot」（这个客户端不支持登录，带 cookie 也没用）；catbus 会改走 iOS 客户端并带 PO token（BotGuard 生成、绑定视频 ID，流程与 yt-dlp 的 PO Token Provider 相同，全部在 Node 里完成，不启动浏览器）。PO token 链路仍失败时才报 `RISK_CONTROL`，期间保持原退避语义：过一段时间或换代理出口再试。年龄限制、会员专享、仅儿童可见等视频拿不到地址。下载得到的是视频轨和音频轨两个文件，需要的话自己用 ffmpeg 合流。下载按 10 MB 一段用 range 请求（整文件请求会被拒绝）。实测（2026-10-29）VISIONOS 的地址不带 PO token 也能完整下载；之前用的 ANDROID_VR 地址只给前约 1 分钟。实测（2026-11-10）：iOS + PO token 的兜底在出口 IP 被风控时可用，4K 的分组直链加 `&pot=` 后可以完整下载。PO token 的 interpreter 固定来自 `www.google.com` 的静态脚本（与 Studio BotGuard 同一白名单口径）。
 - **列表里看不到的视频**：有些视频（实测是一个「面向儿童」的合集）点赞、加入稍后观看都成功，但 YouTube 在点赞列表、稍后观看列表里把它隐藏（页面提示「1 unavailable video is hidden」），`user likes` / `user collects` 里也就没有它。
 - **只能看自己的列表**：`user likes`、`user collects`、`user following` 只接受 `me`，YouTube 不公开别人的点赞、稍后观看和订阅。
 - **没有频道的 Google 账号**：`user get me` 报错；YouTube 不允许没有频道的账号发评论。点赞、订阅、稍后观看不受影响。这样的账号登录时 `user.id` 是 Google 账号 ID；之后开了频道，再登录到同一个账号名时 user.id 不同，旧凭证会被替换（stderr 有提示）；用 `--auto-bind` 会新增一个账号，而不是刷新原来的。

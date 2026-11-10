@@ -45,6 +45,23 @@ const MEDIA_CLIENT = {
 const MEDIA_CLIENT_ID = '101'
 export const MEDIA_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15'
 
+/**
+ * 人机验证兜底用的 iOS 客户端，与 yt-dlp 使用的一致。
+ * 实测（2026-11-10）：VISIONOS 被「Sign in to confirm you're not a bot」拦下（同一出口 IP 请求多了会发生）时，
+ * iOS player 带 PO token（serviceIntegrityDimensions，绑定视频 ID）能拿到完整的分组直链；
+ * GVS 直链再追加 `&pot=`（同一 token）可正常下载。
+ */
+const POT_CLIENT = {
+  clientName: 'IOS',
+  clientVersion: '20.10.4',
+  deviceMake: 'Apple',
+  deviceModel: 'iPhone16,2',
+  osName: 'iPhone',
+  osVersion: '18.3.2.22D82',
+}
+const POT_CLIENT_ID = '5'
+export const POT_UA = 'com.google.ios.youtube/20.10.4 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X;)'
+
 /** 会改动账号数据的 InnerTube 接口：网络出错时不自动重试。 */
 const WRITE_PATH = /^(like|subscription|comment|browse\/edit_playlist|live_chat\/send|playlist|upload|channel\/create)/
 
@@ -173,6 +190,49 @@ export class YtClient {
     ]
     const client = { ...MEDIA_CLIENT, hl: HL, gl: GL, visitorData: cfg.visitorData }
     return this.post('player', headers, { context: { client }, ...playerBody(videoId) }, this.bare)
+  }
+
+  /** GET 一个文本资源（首页、interpreter 脚本、RotateCookiesPage 等），带页面请求头。 */
+  get(url: string, headers: HeaderPairs): Promise<HttpResponse> {
+    return retryNetwork(this.ctx, () => this.http.request({ url, headers }))
+  }
+
+  /** ToggleSignin 之外的通用 raw POST（GenerateIT 等 protobuf-RPC 用），不做 InnerTube 包装。 */
+  postRaw(url: string, headers: HeaderPairs, body: string): Promise<HttpResponse> {
+    return retryNetwork(this.ctx, () => this.http.request({ method: 'POST', url, headers, body }))
+  }
+
+  /** 已缓存的 ytcfg（挑战的 program 会读它），等价 config() 的同步读取。 */
+  configNow(): YtConfig | undefined {
+    return this.ctx.credential.device.ytcfg as YtConfig | undefined
+  }
+
+  /** 首页 HTML（PO token 的 ytAtN 挑战在这里；set-cookie 由 HttpClient 写回、随凭证落盘）。 */
+  homepage(): Promise<string> {
+    return this.get(`${ORIGIN}/`, this.pageHeaders()).then(async (res) => {
+      await this.check(res, '/')
+      return res.text()
+    })
+  }
+
+  /**
+   * 人机验证的 player 兜底（iOS 客户端）：VIOSOS 被人机验证拦下时改走这条。
+   * 带 PO token（绑定视频 ID，pot.ts 生成）；iOS 客户端不吃 SAPISIDHASH，登录态只随 cookie 携带。
+   */
+  async potPlayer<T = any>(videoId: string, poToken: string): Promise<T> {
+    const cfg = await this.config()
+    const headers: HeaderPairs = [
+      ['User-Agent', POT_UA],
+      ['Content-Type', 'application/json'],
+      ['X-Goog-Visitor-Id', cfg.visitorData],
+      ['X-Youtube-Client-Name', POT_CLIENT_ID],
+      ['X-Youtube-Client-Version', POT_CLIENT.clientVersion],
+      ['Origin', ORIGIN],
+      ['Referer', `${ORIGIN}/`],
+      ['Cookie', this.jar.header(`${ORIGIN}/`)],
+    ]
+    const client = { ...POT_CLIENT, hl: HL, gl: GL, visitorData: cfg.visitorData }
+    return this.post('player', headers, { context: { client }, ...playerBody(videoId), serviceIntegrityDimensions: { poToken } })
   }
 
   // ---------------------------------------------------------------- cookie 轮换（AGENTS 5.8）

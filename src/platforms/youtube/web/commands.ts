@@ -10,6 +10,7 @@ import { authError, isGuest, paged } from '../../../core/toolkit.js'
 import * as api from './api.js'
 import { MEDIA_UA, type YtClient, yt } from './client.js'
 import * as norm from './normalize.js'
+import { PotError, poMinter } from './pot.js'
 import { studio, studioConfig } from './studio.js'
 import {
   CHANNEL_TAB,
@@ -243,17 +244,55 @@ function assertVideo(ctx: Ctx, player: any, id: string): void {
   throw new CatbusError('UPSTREAM', `视频不可用：${reason}`, { detail: { status: ps.status ?? null, reason, id } })
 }
 
-/** 媒体地址：VISIONOS 客户端的 player。人机验证、年龄限制等拿不到地址时按 playabilityStatus 报错。 */
+/**
+ * 媒体地址：VISIONOS 客户端的 player。人机验证、年龄限制等拿不到地址时按 playabilityStatus 报错。
+ * 被「Sign in to confirm you're not a bot」拦下（同一出口 IP 请求多了会发生）时，VISIONOS 带
+ * cookie 也没用（这个客户端不支持登录），改走 iOS + PO token 的兜底路径（token 由 pot.ts 生成）。
+ */
 async function mediaOf(c: YtClient, id: string) {
   const player = await c.mediaPlayer(id)
   const ps = player?.playabilityStatus ?? {}
-  checkBot(ps)
+  if (isBot(ps)) {
+    c.ctx.log.warn('VISIONOS player 被人机验证拦下，改走 iOS + PO token 的兜底路径')
+    return mediaByPot(c, id)
+  }
+  const media = playableMedia(player, id, ps)
+  return { media, title: (player?.videoDetails?.title as string | undefined) ?? null }
+}
+
+/** 空格式列表 → UPSTREAM（年龄限制、会员专享等），与人机验证区分开。 */
+function playableMedia(player: any, id: string, ps: any) {
   const media = norm.playMedia(player)
   if (!media.length) {
     throw new CatbusError('UPSTREAM', `拿不到视频的媒体地址：${ps.reason ?? ps.status ?? id}`, {
       hint: '年龄限制、会员专享、仅儿童可见等视频不支持',
       detail: { status: ps.status ?? null, reason: ps.reason ?? null, id },
     })
+  }
+  return media
+}
+
+/** iOS + PO token 的兜底 player：token（绑视频 ID）同时放行 player 与 GVS 直链。 */
+async function mediaByPot(c: YtClient, id: string) {
+  let player: any
+  let gvsPot: string
+  try {
+    const minter = await poMinter(c)
+    // 实测（2026-11-10）：player token 与 GVS token 都绑视频 ID，用同一个
+    gvsPot = await minter.mintAsWebsafeString(id)
+    player = await c.potPlayer(id, gvsPot)
+  } catch (err) {
+    if (err instanceof CatbusError && (err.code === 'RISK_CONTROL' || err.code === 'NETWORK')) throw err
+    throw new PotError(`PO Token 兜底失败：${err instanceof Error ? err.message : String(err)}`)
+  }
+  const ps = player?.playabilityStatus ?? {}
+  if (isBot(ps)) throw new PotError(`PO token 也被人机验证拦下：${ps.reason ?? ''}`)
+  const media = playableMedia(player, id, ps)
+  // 兜底路径的直链要带 GVS PO token（URL 追加 `&pot=`），Google 偶尔已在部分 URL 上自带
+  for (const m of media) {
+    const raw = (m as any)[RAW]
+    if (!raw?.url || /[?&]pot=/.test(raw.url)) continue
+    m.url = `${raw.url}&pot=${gvsPot}`
   }
   return { media, title: (player?.videoDetails?.title as string | undefined) ?? null }
 }
