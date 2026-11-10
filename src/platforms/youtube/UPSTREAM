@@ -12,5 +12,6 @@ endpoints:
   resolve: /youtubei/v1/navigation/resolve_url（@handle、/c/、/user/ → 频道 ID）
   live chat: /youtubei/v1/live_chat/get_live_chat
   account: /youtubei/v1/account/account_menu（登录校验）
+  cookie rotate: GET accounts.youtube.com/RotateCookiesPage?origin=https://www.youtube.com&yt_pid=1（页内 init('<token>', m, o, l, interval)）→ POST accounts.youtube.com/RotateCookies（body 为 protobuf-over-JSON 数组 [m, token, o, l]，0 写 null；响应 )]}' 前缀，[0][1] 为下次间隔秒数，最小 60）：轮换 SIDCC / __Secure-1PSIDCC / __Secure-3PSIDCC / __Secure-1PSIDTS / __Secure-3PSIDTS，logged_in=0 时触发（AGENTS 5.8）
   suggest: https://suggestqueries-clients6.youtube.com/complete/search
 note: 无上游开源仓库，直接对接 YouTube web 端的 InnerTube 接口；协议细节参考 yt-dlp 与 YouTube.js 的公开实现（只参考，不移植代码）

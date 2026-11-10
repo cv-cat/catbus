@@ -2,6 +2,14 @@ import { playerBody, type YtClient } from './client.js'
 
 /** 一个函数对应一个 InnerTube 接口（见 UPSTREAM）。 */
 
+/**
+ * Cookie 轮换页：GET accounts.youtube.com/RotateCookiesPage。
+ * 不走 InnerTube；轮换靠它的 Set-Cookie 与页内 token 换 /RotateCookies 的 Set-Cookie。
+ */
+export function rotateCookiesPage(c: YtClient) {
+  return c.rotatePage()
+}
+
 export function search(c: YtClient, query: string, params?: string) {
   return c.innertube('search', { query, ...(params ? { params } : {}) })
 }

@@ -99,7 +99,10 @@ export async function authLogin(ctx: Ctx) {
 export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
   const c = yt(ctx)
   const out: AuthStatus = { logged_in: false, user: null, method: null, expires_at: null }
-  const user = c.loggedIn ? await meOrNull(c) : null
+  if (!c.loggedIn) return out
+  // 浏览器里登录后每约 10 分钟轮换一次时效性 cookie（AGENTS 5.8）；catbus 没有常驻进程，auth status 顺带轮一次
+  await c.rotateCookies('auth status').catch(() => false)
+  const user = await meOrNull(c)
   if (!user) return out
   const expires = c.jar.cookies.find((x) => x.name === '__Secure-3PSID' || x.name === 'SID')?.expires
   return { logged_in: true, user, method: ctx.credential.method, expires_at: expires ? n.time(expires) : null }

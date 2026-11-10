@@ -8,6 +8,8 @@ import { authError, httpClient, isGuest, jarOf } from '../../../core/toolkit.js'
 
 const ORIGIN = 'https://www.youtube.com'
 export const STUDIO_ORIGIN = 'https://studio.youtube.com'
+/** Cookie 轮换（AGENTS 5.8）在 accounts.youtube.com 上：RotateCookiesPage 取页内 token，RotateCookies 换新 cookie。 */
+const ACCOUNTS_ORIGIN = 'https://accounts.youtube.com'
 const BROWSER = 'chrome_149' as const
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36'
 /** 页面语言固定为英文：计数（`1.2M views`）和相对时间（`3 days ago`）按英文解析。 */
@@ -16,6 +18,10 @@ const GL = 'US'
 const ACCEPT_LANGUAGE = `${HL}-${GL},${HL};q=0.9`
 /** 首页 ytcfg 的缓存时长。clientVersion 每天都会更新，旧版本仍可用一段时间。 */
 const CONFIG_TTL_MS = 12 * 3600 * 1000
+
+/** Cookie 轮换（AGENTS 5.8）：间隔的默认值与下限（秒）。 */
+export const ROTATE_INTERVAL_DEFAULT = 600
+export const ROTATE_INTERVAL_MIN = 60
 
 /** 发请求要用的页面配置，缓存在凭证的 device.ytcfg 里，随凭证由 core 落盘。 */
 interface YtConfig {
@@ -140,10 +146,15 @@ export class YtClient {
     ]
     if (auth) headers.push(['Authorization', auth], ['X-Goog-AuthUser', '0'], ['X-Origin', ORIGIN])
     const client = { clientName: 'WEB', clientVersion: cfg.clientVersion, hl: HL, gl: GL, visitorData: cfg.visitorData }
-    const res = await this.post<T>(path, headers, { context: { client }, ...body })
+    const send = () => this.post<T>(path, headers, { context: { client }, ...body })
+    let res = await send()
     // cookie 失效时（常见原因是浏览器开着同一个会话、Google 轮换了 cookie），需要登录的页面照样回 200，只是内容为空；
-    // 响应的 responseContext 里有 logged_in=0，据此报登录失效，不返回空列表
-    if (auth && loggedInFlag(res) === '0') throw authError(this.ctx, 'YouTube 登录态已失效（cookie 可能已被浏览器轮换），请重新导出 cookie 登录')
+    // 响应的 responseContext 里有 logged_in=0。先按 AGENTS 5.8 轮换一次 cookie 并重试原请求，轮换后仍是 0 才报登录失效
+    if (auth && loggedInFlag(res) === '0') {
+      const rotated = await this.rotateCookies('cookie 失效')
+      if (rotated) res = await send()
+      if (loggedInFlag(res) === '0') throw authError(this.ctx, 'YouTube 登录态已失效（cookie 可能已被浏览器轮换），请重新导出 cookie 登录')
+    }
     return res
   }
 
@@ -162,6 +173,84 @@ export class YtClient {
     ]
     const client = { ...MEDIA_CLIENT, hl: HL, gl: GL, visitorData: cfg.visitorData }
     return this.post('player', headers, { context: { client }, ...playerBody(videoId) }, this.bare)
+  }
+
+  // ---------------------------------------------------------------- cookie 轮换（AGENTS 5.8）
+
+  /**
+   * 轮换时效性 cookie：GET RotateCookiesPage 取页内 token，POST /RotateCookies 换新 cookie。
+   * Set-Cookie 由 HttpClient 自动写回 cookie 罐、随凭证落盘。
+   * 返回是否真的轮换过（节流期内或已登录但无 cookie 时为 false）。
+   * `reason` 只进日志。
+   */
+  async rotateCookies(reason: string): Promise<boolean> {
+    if (!this.loggedIn) return false
+    const next = this.ctx.credential.device.cookieRotate as { nextAttemptAt?: number } | undefined
+    if (next?.nextAttemptAt && next.nextAttemptAt > rand.now()) {
+      this.ctx.log.debug(`距上次 cookie 轮换不足间隔，跳过（${reason}）`)
+      return false
+    }
+    try {
+      const html = await this.rotatePage()
+      const token = /init\('(\d+)'/.exec(html)?.[1]
+      if (!token) {
+        this.rotateThrottle('RotateCookiesPage 里没有 init token', null)
+        return false
+      }
+      // 页内 init('<token>', m, o, l, interval)：数值字段为 0 时按 protobuf 的省略规则写 null（实测 [null,"<token>",1]）
+      const [, m, o, l] = /init\('\d+'\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/.exec(html) ?? []
+      const body = [numOrNull(m), token, numOrNull(o), numOrNull(l)]
+      const res = await retryNetwork(this.ctx, () =>
+        this.http.request({
+          method: 'POST',
+          url: `${ACCOUNTS_ORIGIN}/RotateCookies`,
+          headers: [
+            ['User-Agent', UA],
+            ['Accept', '*/*'],
+            ['Accept-Language', ACCEPT_LANGUAGE],
+            ['Content-Type', 'application/json'],
+            ['Origin', ACCOUNTS_ORIGIN],
+            ['Referer', `${ACCOUNTS_ORIGIN}/RotateCookiesPage`],
+          ],
+          json: body,
+        }),
+      )
+      await this.check(res, 'RotateCookies')
+      // 响应是 `)]}'` 前缀的 JSON 数组：[["identity.hfcr", <下次间隔秒数>], …]
+      const text = (await res.text()).replace(/^\)\]\}'\s*/, '')
+      const interval = Math.max(ROTATE_INTERVAL_MIN, Number(JSON.parse(text)?.[0]?.[1]) || ROTATE_INTERVAL_DEFAULT)
+      this.rotateThrottle(null, interval)
+      this.ctx.log.info(`YouTube cookie 已轮换（${reason}），下次约 ${Math.round(interval / 60)} 分钟后`)
+      return true
+    } catch (err) {
+      // 轮换失败不掩盖原错误：退避后照常执行命令，cookie 再不行时由调用方报 AUTH_EXPIRED
+      const message = err instanceof CatbusError ? `${err.code}: ${err.message}` : String(err)
+      this.rotateThrottle(`cookie 轮换失败：${message}`, null)
+      return false
+    }
+  }
+
+  /** RotateCookiesPage 的 HTML。Set-Cookie 由 HttpClient 写回；页内 token 一次有效，不复用、不落盘。 */
+  rotatePage(): Promise<string> {
+    return retryNetwork(this.ctx, () =>
+      this.http.request({
+        url: `${ACCOUNTS_ORIGIN}/RotateCookiesPage`,
+        query: { origin: ORIGIN, yt_pid: '1' },
+        headers: this.pageHeaders(),
+      }),
+    ).then(async (res) => {
+      await this.check(res, 'RotateCookiesPage')
+      return res.text()
+    })
+  }
+
+  /** 记下次轮换时间到凭证（core 在命令结束时落盘）：成功用服务端给的间隔，失败按现有间隔翻倍退避。 */
+  private rotateThrottle(message: string | null, interval: number | null): void {
+    if (message) this.ctx.log.warn(message)
+    const prev = (this.ctx.credential.device.cookieRotate as { nextAttemptAt?: number } | undefined)?.nextAttemptAt
+    const backoff = interval == null && prev != null && prev > rand.now() ? Math.min((prev - rand.now()) * 2, 3600 * 1000) : null
+    const waitMs = backoff ?? (interval ?? ROTATE_INTERVAL_DEFAULT) * 1000
+    this.ctx.credential.device.cookieRotate = { nextAttemptAt: rand.now() + waitMs }
   }
 
   private async post<T>(path: string, headers: HeaderPairs, json: unknown, http = this.http): Promise<T> {
@@ -226,6 +315,12 @@ function loggedInFlag(res: any): string | null {
     for (const p of t.params ?? []) if (p.key === 'logged_in') return String(p.value)
   }
   return null
+}
+
+/** RotateCookies 请求体里的数值字段：0（或解析不出）按 protobuf 的省略规则写 null。 */
+function numOrNull(s: string | undefined): number | null {
+  const n = Number(s)
+  return s !== undefined && Number.isFinite(n) && n !== 0 ? n : null
 }
 
 /** player 请求体里除 context 以外的部分：WEB 与 VISIONOS 相同。 */
