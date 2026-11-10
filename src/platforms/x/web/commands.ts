@@ -178,6 +178,7 @@ export async function itemDownload(ctx: Ctx) {
   // 图片显式要 orig 才是原图（上游 download_work）
   const media = it.media.map((m) => (m.type === 'image' ? { ...m, url: `${m.url}?format=jpg&name=orig` } : m))
   return downloadMedia(ctx, x.http, it.id, media, {
+    title: it.title || it.text,
     headers: [['user-agent', PROFILE.ua]],
     ext: (m) => (m.type === 'image' ? 'jpg' : 'mp4'),
   })

@@ -252,11 +252,11 @@ async function mediaOf(c: YtClient, id: string) {
       detail: { status: ps.status ?? null, reason: ps.reason ?? null, id },
     })
   }
-  return media
+  return { media, title: (player?.videoDetails?.title as string | undefined) ?? null }
 }
 
 export async function itemMedia(ctx: Ctx) {
-  return mediaOf(yt(ctx), videoId(ctx.args.item!))
+  return (await mediaOf(yt(ctx), videoId(ctx.args.item!))).media
 }
 
 const CHUNK_BYTES = 10 * 1024 * 1024
@@ -264,8 +264,8 @@ const CHUNK_BYTES = 10 * 1024 * 1024
 export async function itemDownload(ctx: Ctx) {
   const c = yt(ctx)
   const id = videoId(ctx.args.item!)
-  const media = await mediaOf(c, id)
-  return downloadMedia(ctx, c.http, id, media, downloadOptions)
+  const { media, title } = await mediaOf(c, id)
+  return downloadMedia(ctx, c.http, id, media, { ...downloadOptions, title })
 }
 
 const downloadOptions: DownloadOptions = {

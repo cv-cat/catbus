@@ -417,6 +417,9 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 **下载**：
 - `--dir <目录>`：默认当前目录。文件名为 `<platform>_<id>_<序号>.<ext>`。
 - `--overwrite`：覆盖已有文件，默认跳过已有文件。
+- `--subdir none|id|title`：每个 item 放进 `--dir` 下自己的子目录，默认 `none`（直接放在 `--dir` 里）。`id` 用 item 的 ID；`title` 用标题（没有标题时用正文开头，再没有用 ID）。文件名不变。
+  - `title` 的目录名按 Windows、macOS、Linux 都能用的规则清洗：去掉 emoji 和平台表情码（如小红书的 `[笑哭R]`、`#话题[话题]#`）、控制字符和 `<>:"/\|?*`，空白合并成一个空格，去掉首尾的空格和点，避开 Windows 保留名（`CON`、`NUL`、`COM1` 等，前面加 `_`），最长 60 个字符；清洗后为空时用 ID。
+  - 同名目录里已经有别的 item 的文件（按文件名前缀 `<platform>_<id>_` 判断）时，目录名后面加 ` (<ID 后 6 位>)`。
 
 **长连接**：`listen` 总是输出 jsonl，断线自动重连。`--duration <秒|10m|1h>` 指定运行时长，Ctrl-C 正常退出，退出码 0。
 

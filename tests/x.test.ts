@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import { CatbusError } from '../src/core/errors.js'
+import { folderName } from '../src/core/files.js'
 import { fakeResponse, mockSender } from '../src/core/http.js'
 import { RAW } from '../src/core/schemas.js'
 import xPlatform from '../src/platforms/x/index.js'
@@ -11,6 +12,7 @@ import * as api from '../src/platforms/x/web/api.js'
 import { markdownToContentState, splitTitle } from '../src/platforms/x/web/article.js'
 import { XClient } from '../src/platforms/x/web/client.js'
 import * as cmd from '../src/platforms/x/web/commands.js'
+import * as norm from '../src/platforms/x/web/normalize.js'
 import { isUserId, parseArticleId, parseScreenName, parseTweetId } from '../src/platforms/x/web/resolve.js'
 import { transaction } from '../src/platforms/x/web/transaction.js'
 import { expectRequests, loadCase, makeCtx, replay } from './golden.js'
@@ -472,6 +474,19 @@ describe('x 命令流程：其余读写命令', () => {
     expect(requests[1]).toMatchObject({ method: 'GET', url: 'https://video.twimg.com/ext_tw_video/901/pu/vid/1280x720/high.mp4', cookies: [] })
     const path = join(dir, `x_${TWEET_ID}_1.mp4`)
     expect(result).toEqual([{ path, type: 'video', url: 'https://video.twimg.com/ext_tw_video/901/pu/vid/1280x720/high.mp4', size: 8 }])
+    expect(readFileSync(path, 'utf8')).toBe('fake-mp4')
+  })
+
+  it('item download --subdir title：放进以推文正文命名的子目录，文件名不变', async () => {
+    const c = loadCase('x', 'tweet_result')
+    const dir = mkdtempSync(join(tmpdir(), 'catbus-x-'))
+    const video = { status: 200, headers: { 'content-type': 'video/mp4' }, body: { base64: Buffer.from('fake-mp4').toString('base64') } }
+    const ctx = loggedCtx({ platform: 'x', args: { item: TWEET_ID }, options: { dir, subdir: 'title' } })
+    const { result, error } = await replay({ ...c, responses: [...c.responses, video] }, () => cmd.itemDownload(ctx))
+    if (error) throw error
+    const text = (norm.item((c.responses[0]!.body as any).data.tweetResult.result) as any).text as string
+    const path = join(dir, folderName(text)!, `x_${TWEET_ID}_1.mp4`)
+    expect((result as any)[0].path).toBe(path)
     expect(readFileSync(path, 'utf8')).toBe('fake-mp4')
   })
 

@@ -218,6 +218,7 @@ export async function itemDownload(ctx: Ctx) {
   const media = norm.itemMedia(s)
   if (!media.length) throw new CatbusError('UPSTREAM', '作品没有可下载的媒体')
   return downloadMedia(ctx, t.http, String(s.id), media, {
+    title: s.desc,
     headers: [
       ['user-agent', t.ua],
       ['referer', `${ORIGIN}/`],

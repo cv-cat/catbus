@@ -1,9 +1,10 @@
 import { randomBytes } from 'node:crypto'
-import { readFile, stat } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { mkdir, readFile, stat } from 'node:fs/promises'
+import { join } from 'node:path'
 import { text as readStdin } from 'node:stream/consumers'
 import { endpointFlag } from '../../../core/auth-store.js'
 import { CatbusError } from '../../../core/errors.js'
+import { itemDir } from '../../../core/files.js'
 import { writeFileAtomic } from '../../../core/fsutil.js'
 import { HttpClient } from '../../../core/http.js'
 import { finishLogin, freshCredential, interactive, loginContext, prompt, readPassword, smsState } from '../../../core/login.js'
@@ -329,7 +330,11 @@ export async function itemDownload(ctx: HandlerContext): Promise<File[]> {
 }
 
 async function saveTorrent(ctx: HandlerContext, id: string): Promise<File[]> {
-  const path = join(resolve(String(ctx.options.dir ?? '.')), `mteam_${id}_1.torrent`)
+  // --subdir title 才需要种子标题，多查一次详情
+  const title = ctx.options.subdir === 'title' ? normalize.torrent(await new Api(ctx).detail(id)).title : null
+  const dir = await itemDir(ctx, id, title)
+  await mkdir(dir, { recursive: true })
+  const path = join(dir, `mteam_${id}_1.torrent`)
   const existing = await stat(path).catch(() => null)
   if (existing && !existing.isFile()) throw new CatbusError('USAGE', '种子文件目标路径不是普通文件')
   if (existing && !ctx.options.overwrite) {

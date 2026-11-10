@@ -1,5 +1,5 @@
 import { createWriteStream } from 'node:fs'
-import { mkdir, readFile, rename, rm, stat } from 'node:fs/promises'
+import { mkdir, readdir, readFile, rename, rm, stat } from 'node:fs/promises'
 import { basename, extname, join, resolve } from 'node:path'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
@@ -41,7 +41,50 @@ export function contentTypeOf(name: string): string {
   return TYPE_BY_EXT[extname(name).slice(1).toLowerCase()] ?? 'application/octet-stream'
 }
 
+// ---------- --subdir（AGENTS 4.9「下载」） ----------
+
+// emoji：图形符号、零宽连接符、变体选择符、键帽、区域旗帜、肤色、标签字符
+const EMOJI = /[\p{Extended_Pictographic}\u200d\ufe0e\ufe0f\u20e3\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}\u{E0020}-\u{E007F}]/gu
+// 平台表情码与话题标签，如小红书的 [笑哭R]、#话题[话题]#
+const STICKER = /#[^#\s]{1,30}\[话题\]#|\[[^[\]\s]{1,8}R\]|\[话题\]/g
+// Windows / macOS / Linux 不允许或会出问题的字符
+const ILLEGAL = /[<>:"/\\|?*\p{Cc}\p{Cf}]/gu
+const RESERVED = /^(con|prn|aux|nul|com[0-9¹²³]|lpt[0-9¹²³])(\..*)?$/i
+const NAME_MAX = 60
+
+/** 把标题清洗成三大系统都能用的目录名；清洗后为空时返回 null。 */
+export function folderName(title: string | null | undefined): string | null {
+  if (!title) return null
+  let s = title.normalize('NFC').replace(STICKER, ' ').replace(EMOJI, ' ').replace(ILLEGAL, ' ')
+  s = s.replace(/\s+/g, ' ').trim()
+  s = [...s].slice(0, NAME_MAX).join('') // 按码点截，不截断汉字
+  s = s.replace(/^[\s.]+|[\s.]+$/g, '')
+  if (!s) return null
+  return RESERVED.test(s) ? `_${s}` : s
+}
+
+/**
+ * 这个 item 的下载目录：`--dir`，加上 `--subdir` 给出的子目录。
+ * `title` 模式下同名目录里已有别的 item 的文件时，目录名加上 ID 后 6 位区分。
+ */
+export async function itemDir(ctx: HandlerContext, itemId: string, title?: string | null): Promise<string> {
+  const base = resolve((ctx.options.dir as string | undefined) ?? '.')
+  const mode = (ctx.options.subdir as string | undefined) ?? 'none'
+  if (mode === 'none') return base
+  const safeId = folderName(itemId) ?? 'item'
+  if (mode === 'id') return join(base, safeId)
+  const name = folderName(title) ?? safeId
+  const dir = join(base, name)
+  const prefix = `${ctx.platform.id}_`
+  const mine = `${ctx.platform.id}_${itemId}_`
+  const names = await readdir(dir).catch(() => [] as string[])
+  const taken = names.some((f) => f.startsWith(prefix) && !f.startsWith(mine))
+  return taken ? join(base, `${name} (${itemId.slice(-6)})`) : dir
+}
+
 export interface DownloadOptions {
+  /** `--subdir title` 用的标题；没有标题时传正文。 */
+  title?: string | null
   headers?: HeaderInit
   /** 指定扩展名，例如 B 站 DASH 的音视频分轨。 */
   ext?: (media: Media, index: number) => string | undefined
@@ -53,10 +96,11 @@ export interface DownloadOptions {
 }
 
 /**
- * 把一组媒体下载到 `--dir`，文件名 `<platform>_<id>_<序号>.<ext>`；已有文件默认跳过，`--overwrite` 时覆盖。
+ * 把一组媒体下载到 `--dir`（`--subdir` 时放进 item 自己的子目录），文件名 `<platform>_<id>_<序号>.<ext>`；
+ * 已有文件默认跳过，`--overwrite` 时覆盖。
  */
 export async function downloadMedia(ctx: HandlerContext, http: HttpClient, itemId: string, media: Media[], options: DownloadOptions = {}): Promise<File[]> {
-  const dir = resolve((ctx.options.dir as string | undefined) ?? '.')
+  const dir = await itemDir(ctx, itemId, options.title)
   const overwrite = Boolean(ctx.options.overwrite)
   await mkdir(dir, { recursive: true })
   const files: File[] = []
