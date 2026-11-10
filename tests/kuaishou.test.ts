@@ -1,4 +1,4 @@
-import { mkdtempSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -971,5 +971,131 @@ describe('kuaishou 扫码登录的轮询（core poll）', () => {
     }
     const qr = sent.filter((p) => p.startsWith('/rest/c/infra/ks/qr/')).map((p) => p.split('/').pop())
     expect(qr).toEqual(['start', 'scanResult', 'scanResult', 'scanResult', 'scanResult', 'start', 'scanResult', 'acceptResult', 'acceptResult'])
+  })
+})
+
+describe('kuaishou 短信多用户（官方 result 100110031：手机号下有多个账号）', () => {
+  const MULTI_USERS = [
+    { userId: 20002, account: '甲号', avatar: 'http://p1.a.yximgs.com/uhead/fake.jpg' },
+    { userId: 20001, account: '乙号' },
+  ]
+  /** sms 的三个金样板响应：验证通过的多用户状态 / 选定后的成功 / 后续的站点换票链（末尾三站与 qrcode_login_flow 相同）。 */
+  const MULTI_100110031 = { status: 200, headers: { 'content-type': 'application/json' }, body: { result: 100110031, userInfos: MULTI_USERS, multiUserToken: 'fake-multi-token' } }
+  const MULTI_SELECT_OK = { status: 200, headers: { 'content-type': 'application/json' }, body: { result: 1, passToken: 'fake-pass-token', userId: '20002', 'kuaishou.web.api_st': 'fake-api-st', 'kuaishou.web.api.at': 'fake-api-at' } }
+  const statePath = () => join(tmp, 'home', 'cache', 'kuaishou', 'sms-web-default.json')
+  const FINISH_CHAIN = [
+    'POST /pass/kuaishou/login/multiUserToken',
+    'GET /pass/kuaishou/login/passToken',
+    'GET /rest/infra/sts',
+    'GET /new-reco',
+    'GET /pass/kuaishou/login/passToken',
+    'GET /rest/infra/sts',
+    'GET /article/publish/video',
+    'POST /s/w/p',
+    'GET /new-reco',
+    'POST /pass/kuaishou/getCdns',
+    'POST /pass/kuaishou/login/passToken',
+    'POST /live_api/baseuser/userLogin',
+    'POST /graphql',
+  ]
+
+  function seedSmsState(data: Record<string, unknown>, phone = '13800000000') {
+    mkdirSync(join(tmp, 'home', 'cache', 'kuaishou'), { recursive: true })
+    writeFileSync(statePath(), JSON.stringify({
+      saved_at: Date.now(),
+      data: { phone, cookies: COOKIES.filter(([name]) => name !== 'kwscode' && name !== 'kwssectoken'), kwfcv1: KWFV1, ...data },
+    }))
+  }
+
+  /** 手排响应的命令级回放：不再是 golden 对拍（上游没有 multiUserToken 的流程），响应取自官方面与 qrcode_login_flow 的尾段。 */
+  async function replaySms(options: Record<string, unknown>, queues: Record<string, unknown[]>) {
+    const qc = loadCase('kuaishou', 'qrcode_login_flow').responses
+    const pending = new Map(Object.entries(queues))
+    const requests: GoldenRequest[] = []
+    const restoreSender = mockSender((p) => {
+      const req = normalize(p)
+      requests.push(req)
+      const path = new URL(req.url).pathname
+      const q = pending.get(`${p.method} ${path}`)
+      if (!q?.length) throw new Error(`TS 实现多发了请求：${p.method} ${p.url}`)
+      return toResponse(q.shift() as GoldenCase['responses'][number], p.url)
+    })
+    try {
+      const { authLogin } = await import('../src/platforms/kuaishou/web/commands.js')
+      const ctx = makeCtx({ platform: 'kuaishou', options })
+      const result = (await authLogin(ctx)) as any
+      const paths = requests.map((r) => `${r.method} ${new URL(r.url).pathname}`)
+      const bodies = requests.map((r) => (typeof r.body === 'string' ? r.body : ''))
+      return { result, paths, bodies }
+    } finally {
+      restoreSender()
+    }
+  }
+
+  it('--code 验证通过但手机号下有多个账号（result 100110031）：保存待选中间态，返回 users', async () => {
+    seedSmsState({})
+    const q = loadCase('kuaishou', 'qrcode_login_flow')
+    const { result, paths } = await replaySms({ method: 'sms', code: '000000' }, {
+      'POST /pass/kuaishou/login/mobileCode': [MULTI_100110031],
+      'OPTIONS /s/w/c': [q.responses[0]!],
+      'POST /s/w/c': [q.responses[1]!],
+    })
+    expect(paths.filter((p) => p.startsWith('POST /pass/kuaishou')).length).toBe(1)
+    expect(result).toMatchObject({
+      sent: true,
+      phone: '13800000000',
+      users: [
+        { id: '20002', name: '甲号', avatar: 'http://p1.a.yximgs.com/uhead/fake.jpg' },
+        { id: '20001', name: '乙号', avatar: null },
+      ],
+    })
+    // 待选状态覆盖中间态：验证已经通过，下一步只带 --user，不再要验证码
+    const saved = JSON.parse(readFileSync(statePath(), 'utf8'))
+    expect(saved.data.multiUserToken).toBe('fake-multi-token')
+    expect(saved.data.users.map((u: { id: string }) => u.id)).toEqual(['20002', '20001'])
+    const names = saved.data.cookies.map(([name]: [string, string]) => name)
+    expect(names).toEqual(expect.arrayContaining(['did', 'kwfv1', 'kpn']))
+    expect(names).not.toContain('kwscode')
+    expect(names).not.toContain('kwssectoken')
+  })
+
+  it('--user <id>：multiUserToken 完成登录，三站换票收尾，清掉中间态', async () => {
+    const qc = loadCase('kuaishou', 'qrcode_login_flow').responses
+    seedSmsState({
+      users: MULTI_USERS.map((u) => ({ id: String(u.userId), name: u.account, avatar: (u as { avatar?: string }).avatar ?? null })),
+      multiUserToken: 'fake-multi-token',
+    })
+    const { result, paths, bodies } = await replaySms({ method: 'sms', user: '20002' }, {
+      'POST /pass/kuaishou/login/multiUserToken': [MULTI_SELECT_OK],
+      'GET /pass/kuaishou/login/passToken': [qc[6]!, qc[9]!],
+      'GET /rest/infra/sts': [qc[7]!, qc[10]!],
+      'GET /new-reco': [qc[8]!, qc[13]!],
+      'GET /article/publish/video': [qc[11]!],
+      'POST /s/w/p': [qc[12]!],
+      'POST /pass/kuaishou/getCdns': [qc[14]!],
+      'POST /pass/kuaishou/login/passToken': [qc[15]!],
+      'POST /live_api/baseuser/userLogin': [qc[16]!],
+      'POST /graphql': [qc[17]!],
+      'OPTIONS /s/w/c': [qc[0]!],
+      'POST /s/w/c': [qc[1]!],
+    })
+    // gdfp 的 webweapon 引导（/s/w/c）与指纹上报（/s/w/p）是否发出取决于进程内的注册状态（本文件其他用例会预热），按缺失过滤后比对整链
+    const core = paths.filter((p) => !p.includes('/s/w/'))
+    expect(core).toEqual(FINISH_CHAIN.filter((p) => !p.includes('/s/w/')))
+    expect(result).toMatchObject({ platform: 'kuaishou', account: 'default', method: 'sms', user: { id: SELF_EID, name: '测试' } })
+    // multiUserToken 登录口：字段与官方登录页一致（account 空串、sid web.api、setCookie true）
+    const form = bodies.find((body) => body.startsWith('account='))
+    expect(form).toBe('account=&countryCode=%2B86&isWebSig4=true&multiUserToken=fake-multi-token&phone=13800000000&setCookie=true&sid=kuaishou.web.api&targetUserId=20002')
+    expect(existsSync(statePath())).toBe(false)
+  })
+
+  it('提示列表里没有的 --user：报 USAGE', async () => {
+    seedSmsState({ users: [{ id: '20001', name: '乙号', avatar: null }], multiUserToken: 'fake-multi-token' })
+    await expect(replaySms({ method: 'sms', user: '99999' }, {})).rejects.toMatchObject({ code: 'USAGE', message: expect.stringContaining('99999') })
+  })
+
+  it('中间态还没通过验证（没有 multiUserToken）：--user 报 USAGE', async () => {
+    seedSmsState({})
+    await expect(replaySms({ method: 'sms', user: '20002' }, {})).rejects.toMatchObject({ code: 'USAGE', message: expect.stringContaining('待选') })
   })
 })
