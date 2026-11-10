@@ -11,6 +11,7 @@ import youtube from '../src/platforms/youtube/index.js'
 import { browser, findChrome, type OpenOptions } from '../src/platforms/youtube/web/browser.js'
 import { count, relTime } from '../src/platforms/youtube/web/normalize.js'
 import { cookieKey, syncCookies } from '../src/platforms/youtube/web/publish.js'
+import { potTest as youtubePotTest } from '../src/platforms/youtube/web/pot.js'
 import type { Cookie } from '../src/core/schemas.js'
 import {
   commentAction,
@@ -438,10 +439,58 @@ describe('youtube 平台（web）', () => {
       expect(r.env.data.map((f: any) => basename(f.path))).toEqual(['youtube_dQw4w9WgXcQ_1.mp4', 'youtube_dQw4w9WgXcQ_2.m4a'])
     })
 
-    it('item media：人机验证报 RISK_CONTROL', async () => {
+    it('item media：人机验证时回落到 iOS + PO token（token 同时放行 player 与 GVS 直链）', async () => {
+      const fakeMinter = async (binding: string) => `pot-${binding}`
+      await withYt(
+        {
+          player: (body) =>
+            body.context.client.clientName === 'IOS'
+              ? {
+                  playabilityStatus: { status: 'OK' },
+                  videoDetails: { videoId: 'dQw4w9WgXcQ', lengthSeconds: '213' },
+                  streamingData: {
+                    adaptiveFormats: [
+                      { itag: 137, url: 'https://media.example/137', mimeType: 'video/mp4; codecs="avc1"', width: 1920, height: 1080 },
+                      { itag: 140, url: 'https://media.example/140?x=1', mimeType: 'audio/mp4; codecs="mp4a"' },
+                    ],
+                  },
+                }
+              : { playabilityStatus: { status: 'LOGIN_REQUIRED', reason: 'Sign in to confirm you’re not a bot' } },
+        },
+        async (calls) => {
+          youtubePotTest.fakeMinter = fakeMinter
+          try {
+            const r = await cli('youtube', 'item', 'media', 'dQw4w9WgXcQ')
+            expect(r.code).toBe(0)
+            expect(r.env.data.map((m: any) => [m.id, m.type, m.url])).toEqual([
+              ['137', 'video', 'https://media.example/137&pot=pot-dQw4w9WgXcQ'],
+              ['140', 'audio', 'https://media.example/140?x=1&pot=pot-dQw4w9WgXcQ'],
+            ])
+            // VISIONOS 先被拦（客户端 101），再走 iOS 分轨（客户端 5）
+            expect(calls.filter((c) => c.path === 'player').map((c) => c.body.context.client.clientName)).toEqual(['VISIONOS', 'IOS'])
+            const iosCall = calls.findLast((c) => c.path === 'player')!
+            expect(iosCall.headers).toContainEqual(['X-Youtube-Client-Name', '5'])
+            expect(iosCall.body.serviceIntegrityDimensions).toEqual({ poToken: 'pot-dQw4w9WgXcQ' })
+          } finally {
+            youtubePotTest.fakeMinter = null
+          }
+        },
+      )
+    })
+
+    it('item media：PO token 兜底也被人机验证拦下时维持 RISK_CONTROL', async () => {
       const r = await withYt(
-        { player: () => ({ playabilityStatus: { status: 'LOGIN_REQUIRED', reason: 'Sign in to confirm you’re not a bot' } }) },
-        () => cli('youtube', 'item', 'media', 'dQw4w9WgXcQ'),
+        {
+          player: () => ({ playabilityStatus: { status: 'LOGIN_REQUIRED', reason: 'Sign in to confirm you’re not a bot' } }),
+        },
+        async () => {
+          youtubePotTest.fakeMinter = async () => 'pot-fake'
+          try {
+            return await cli('youtube', 'item', 'media', 'dQw4w9WgXcQ')
+          } finally {
+            youtubePotTest.fakeMinter = null
+          }
+        },
       )
       expect(r.code).toBe(5)
       expect(r.env.error).toMatchObject({ code: 'RISK_CONTROL', detail: { kind: 'captcha' } })
