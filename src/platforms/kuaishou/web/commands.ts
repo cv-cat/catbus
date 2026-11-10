@@ -237,6 +237,8 @@ async function completeSmsUser(ctx: Ctx, k: Ks, credential: Credential, phone: s
   if (data?.result !== 1 || !data?.passToken) {
     // 400013 是风控（响应带统一短信验证页 captchaUrl）：待选中间态不被消耗，完成页面验证后重跑同一条 --user 命令
     if (data?.result === 400013 && data?.captchaUrl) {
+      // 这行 stderr 提示会显示在 WebUI 弹窗里（bridge 只转发 [catbus] 行）
+      ctx.log.info(`请在浏览器打开这个链接完成安全验证：${data.captchaUrl}`)
       throw new CatbusError('RISK_CONTROL', '快手要求先完成安全验证，再选择账号登录', {
         detail: { kind: 'captcha', captchaUrl: data.captchaUrl, reason: data.reason ?? data.error_msg ?? '当前请求存在风险', captchaType: data.captchaType ?? null },
         hint: '在浏览器打开 detail.captchaUrl 完成统一验证，完成后重新执行同一命令 --user <用户 id>（待选状态仍有效）',
