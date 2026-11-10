@@ -11,6 +11,7 @@
  */
 
 import { BotGuardClient } from 'bgutils-js/botguard'
+import { GOOG_API_KEY } from 'bgutils-js/utils'
 import { WebPoMinter as Minter } from 'bgutils-js/webpo'
 import { createRequire } from 'node:module'
 import { format } from 'node:util'
@@ -25,10 +26,13 @@ const { JSDOM, VirtualConsole } = require('jsdom') as {
   VirtualConsole: new () => any
 }
 
-/** GenerateIT 是 Google WAA 的 protobuf 风格 RPC：双元素请求 `[API key, botguard 响应]`，四元素响应。 */
-const GENERATE_IT_URL = 'https://youtube-.runtime.googleapis.com/$rpc/google.internal.waa.v1.Waa/GenerateIT'
-/** YouTube 客户端共用、多年未变的 WAA API key（bgutils-js 同值）。 */
-const GENERATE_IT_KEY = 'O43z0dpjhgX20SCx4KAo'
+/**
+ * GenerateIT 是 Google WAA 的 protobuf 风格 RPC：双元素请求 `[API key, botguard 响应]`，四元素响应。
+ * 端点与 key 都用 bgutils-js 的常量（jnn-pa.googleapis.com / GOOG_API_KEY）。网页用的
+ * youtube-.runtime.googleapis.com 在部分网络路径下下发的证书不覆盖 runtime 子域
+ * （2026-11-10 实测 CERTIFICATE_VERIFY_FAILED），jnn-pa 正常；两处是同一个 WAA 服务的前端。
+ */
+const GENERATE_IT_URL = 'https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/GenerateIT'
 /** interpreter 只能来自 YouTube 网页环境用的 www.google.com 静态脚本（与 Studio 的 BotGuard 白名单一致）。 */
 const INTERPRETER_HOST = 'www.google.com'
 /** integrity token 的实测 TTL 是 12h（43200s），minter 按一半取保守值缓存。 */
@@ -122,10 +126,10 @@ export async function poMinter(c: YtClient): Promise<MintFn> {
 
   const itRes = await c.postRaw(GENERATE_IT_URL, [
     ['Content-Type', 'application/json+protobuf'],
-    ['X-Goog-Api-Key', GENERATE_IT_KEY],
+    ['X-Goog-Api-Key', GOOG_API_KEY],
     ['X-User-Agent', 'grpc-web-javascript/0.1'],
     ['User-Agent', c.ua],
-  ], JSON.stringify([GENERATE_IT_KEY, botguardResponse]))
+  ], JSON.stringify([GOOG_API_KEY, botguardResponse]))
   await c.check(itRes, 'GenerateIT')
   const [integrityToken, ttlSecs, mintRefreshThreshold, websafeFallbackToken] = await jsonLoads(await itRes.text())
   if (!integrityToken) throw new PotError('GenerateIT 没有返回 integrity token')
@@ -166,6 +170,11 @@ function runInterpreter(c: YtClient, interpreterJS: string): void {
     try {
       Object.defineProperty(g, 'navigator', { value: dom.window.navigator })
     } catch { /* Node 的 navigator 只读，保留原生即可 */ }
+  }
+  // BotGuard 的 program 会把宿主当 EventTarget 用（绑定用户交互事件），jsdom 的 window 是唯一的 EventTarget
+  for (const name of ['addEventListener', 'removeEventListener', 'dispatchEvent'] as const) {
+    const fn = (dom.window as unknown as Record<string, unknown>)[name]
+    if (typeof fn === 'function') g[name] = (fn as (...args: unknown[]) => void).bind(dom.window)
   }
   // interpreter 的 BotGuard program 会读 ytcfg（EVENT_ID 等），提供与主页同源的最小配置
   g.yt = { config_: c.configNow() }
