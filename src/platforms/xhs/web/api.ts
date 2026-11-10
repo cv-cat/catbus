@@ -194,11 +194,21 @@ export async function noteVideo(p: Pc, noteId: string): Promise<string | null> {
   return /<meta name="og:video" content="(.*?)">/.exec(await res.text())?.[1] ?? null
 }
 
-/** get_note_no_water_img：CDN 图片地址换成 ci.xiaohongshu.com 的无水印 JPEG。 */
+/**
+ * get_note_no_water_img：CDN 图片地址换成 ci.xiaohongshu.com 的无水印 JPEG。
+ *
+ * 与上游的差异：标准 CDN 地址 `/<时间>/<32 位 hash>/<路径>!<样式>` 整段保留 hash 之后的路径。
+ * 上游只认 notes_pre_post/、spectrum、.jpg 三种前缀，其余只取最后一段，
+ * 遇到 `oss-sg/notes/<token>` 这类新前缀会丢掉目录，拼出的地址 404。
+ */
+const CDN_PATH = /^https?:\/\/[^/]+\/\d{8,}\/[0-9a-f]{32}\/([^?!]+)/
+
 export function noWaterImage(url: string): string {
   const strip = (s: string) => s.split('!', 1)[0]!.split('?', 1)[0]!
   let token: string
-  if (url.includes('notes_pre_post/')) token = 'notes_pre_post/' + strip(url.split('notes_pre_post/')[1]!)
+  const cdn = CDN_PATH.exec(url)
+  if (cdn) token = cdn[1]!
+  else if (url.includes('notes_pre_post/')) token = 'notes_pre_post/' + strip(url.split('notes_pre_post/')[1]!)
   else if (url.includes('spectrum')) token = strip(url.split('/').slice(-2).join('/'))
   else if (url.includes('.jpg')) token = strip(url.split('/').slice(-3).join('/'))
   else token = strip(url.split('/').at(-1)!)

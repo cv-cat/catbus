@@ -302,6 +302,17 @@ describe('xhs 纯算', () => {
     expect(urls.map(api.noWaterImage)).toEqual(loadCase('xhs', 'pc_no_water_img').result)
   })
 
+  it('无水印图片地址：标准 CDN 地址保留 hash 之后的整段路径（oss-sg/notes/ 等新前缀）', () => {
+    const at = 'https://sns-webpic-qc.xhscdn.com/202611102219/d4405cda1452fb4228bc2ddb2b25a5f4/'
+    expect(api.noWaterImage(`${at}oss-sg/notes/1040g3l03276bea9g5s005oqmk8665t7qp144nsg!nc_n_webp_mw_1`)).toBe(
+      'https://ci.xiaohongshu.com/oss-sg/notes/1040g3l03276bea9g5s005oqmk8665t7qp144nsg?imageView2/format/jpeg',
+    )
+    // 已有的几种前缀结果不变
+    expect(api.noWaterImage(`${at}notes_pre_post/1040g2abc!nd_dft_wlteh_webp_3`)).toBe('https://ci.xiaohongshu.com/notes_pre_post/1040g2abc?imageView2/format/jpeg')
+    expect(api.noWaterImage(`${at}spectrum/1040g0k0abc!nd_dft_wgth_webp_3`)).toBe('https://ci.xiaohongshu.com/spectrum/1040g0k0abc?imageView2/format/jpeg')
+    expect(api.noWaterImage(`${at}1040g2sg327cjt04u6e705oc8tc3k1klr9tlqgm0!nc_n_webp_mw_1`)).toBe('https://ci.xiaohongshu.com/1040g2sg327cjt04u6e705oc8tc3k1klr9tlqgm0?imageView2/format/jpeg')
+  })
+
   it('视频地址：新版 Web 的编码名混淆成 EF4 / EF5，按 h264 → EF4 → h265 → EF5 → 其余的顺序取第一个有地址的流', () => {
     const video = (stream: any) =>
       norm.note({ id: 'n1', note_card: { note_id: 'n1', type: 'video', video: { media: { video_id: 1, stream } } } }).media[0]?.url
