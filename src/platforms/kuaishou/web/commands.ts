@@ -241,7 +241,8 @@ async function completeSmsUser(ctx: Ctx, k: Ks, credential: Credential, phone: s
       ctx.log.info(`请在浏览器打开这个链接完成安全验证：${data.captchaUrl}`)
       throw new CatbusError('RISK_CONTROL', '快手要求先完成安全验证，再选择账号登录', {
         detail: { kind: 'captcha', captchaUrl: data.captchaUrl, reason: data.reason ?? data.error_msg ?? '当前请求存在风险', captchaType: data.captchaType ?? null },
-        hint: '在浏览器打开 detail.captchaUrl 完成统一验证，完成后重新执行同一命令 --user <用户 id>（待选状态仍有效）',
+        // hint 整行放进弹窗：URL 要完整露出，用户能直接复制到浏览器
+        hint: `在浏览器打开这个链接完成统一验证（语音或短信验证码），完成后重新点击要登录的账号：${data.captchaUrl}`,
       })
     }
     throw new CatbusError('AUTH_REQUIRED', `选择账号登录失败：${data?.error_msg ?? data?.result}`, { detail: { stage: 'multiUserToken', result: data?.result, raw: data } })
