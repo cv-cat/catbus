@@ -17,7 +17,7 @@
 | 方式 | 命令 | 说明 |
 |---|---|---|
 | 扫码（默认） | `catbus kuaishou auth login` | 真机验证可用 |
-| 短信 | `catbus kuaishou auth login --method sms --phone <手机号>` | 终端里会提示输入验证码；非交互环境分两步，第二步用 `--code <验证码>` |
+| 短信 | `catbus kuaishou auth login --method sms --phone <手机号>` | 终端里会提示输入验证码；非交互环境分两步，第二步用 `--code <验证码>`。手机号下有多个账号时，验证通过后还要选账号：非交互环境返回 `{sent, phone, users}`，第三步带 `--user <用户 id>` 完成登录 |
 | cookie | `catbus kuaishou auth login --method cookie --cookie @ks-cookie.txt` | 从 www.kuaishou.com 的 DevTools → Network 复制完整的 Cookie 请求头 |
 
 - 快手的凭证分三个站点：主站 www、创作者中心 cp、直播站 live。**登录时 catbus 一并换取三个站点的票据**，不需要分别登录，也没有 `--scope`。

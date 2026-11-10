@@ -67,7 +67,7 @@ catbus <platform> <resource> <action> [参数...] [选项...]
 | `item related <item>` | Item[]，分页 |
 | `item list` | Item[]，分页：自己发布的，带审核状态 |
 | `item media <item>` | Media[]：可播放 / 下载的地址 |
-| `item download <item> [--dir <目录>] [--overwrite]` | File[]；文件名 `<platform>_<id>_<序号>.<ext>` |
+| `item download <item> [--dir <目录>] [--overwrite] [--subdir none\|id\|title]` | File[]；文件名 `<platform>_<id>_<序号>.<ext>`；`--subdir` 时每条内容一个子目录 |
 | `item like` / `unlike` / `collect` / `uncollect` / `repost` / `unrepost <item>` | `{id}` |
 | `item publish [发布选项]` | Item |
 | `item delete <item>` | `{id}`，危险操作 |

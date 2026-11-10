@@ -78,6 +78,7 @@ export const QUOTE = z.string().optional().describe('引用一条内容：ID 或
 export const DOWNLOAD = {
   dir: z.string().optional().describe('下载目录，默认当前目录'),
   overwrite: z.boolean().optional().describe('覆盖已有文件，默认跳过'),
+  subdir: z.enum(['none', 'id', 'title']).optional().describe('每条内容放进自己的子目录：none（默认）、id、title（按标题）'),
 }
 
 const DURATION_RE = /^(\d+(?:\.\d+)?)(s|m|h)?$/

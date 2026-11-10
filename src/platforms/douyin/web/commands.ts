@@ -201,6 +201,7 @@ export async function itemDownload(ctx: Ctx) {
   const d = await douyin(ctx)
   const v = await detail(d, ctx.args.item!)
   return downloadMedia(ctx, d.http, n.id(v.aweme_id), norm.awemeMedia(v), {
+    title: v.desc,
     headers: [
       ['user-agent', PROFILE.ua],
       ['referer', `${WWW}/`],

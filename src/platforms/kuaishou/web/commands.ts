@@ -1,12 +1,12 @@
 import { basename, extname } from 'node:path'
-import { GUEST } from '../../../core/auth-store.js'
+import { endpointFlag, GUEST } from '../../../core/auth-store.js'
 import { CatbusError } from '../../../core/errors.js'
 import { downloadMedia, type LocalMedia, readMedia } from '../../../core/files.js'
-import { cookieCredential, finishLogin, freshCredential, loginContext, poll, showQrcode, smsLogin } from '../../../core/login.js'
+import { cookieCredential, finishLogin, freshCredential, interactive, loginContext, poll, prompt, showQrcode, type SmsIntermediate, smsLogin, smsState } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
-import type { AuthStatus, Category, Credential, Gift, Item, Media, NoticeCount } from '../../../core/schemas.js'
+import type { Account, AuthStatus, Category, Credential, Gift, Item, Media, NoticeCount } from '../../../core/schemas.js'
 import { openSocket, reconnecting } from '../../../core/stream.js'
 import { paged } from '../../../core/toolkit.js'
 import * as api from './api.js'
@@ -169,11 +169,167 @@ interface SmsState extends Record<string, unknown> {
   phone: string
   cookies: [string, string][]
   kwfcv1: string
+  /** 官方 result 100110031（手机号下有多个用户）的中间态：账号列表 + 官方返回的 multiUserToken，等用户选择。 */
+  users?: readonly SmsUserOption[]
+  multiUserToken?: string
+  /** multiUserToken 撞 400013 后的待验证状态：等用户用 --code 提交语音/短信验证码。 */
+  zt?: { userId: string; captchaUrl: string }
+}
+
+interface SmsUserOption {
+  id: string
+  name: string
+  avatar: string | null
+}
+
+/** 当前的会话状态快照：webweapon 两件套（6 分钟时效）不落盘，新进程里由会话重建。 */
+function smsSnapshot(k: Ks, phone: string, extra: Partial<SmsState> = {}): SmsState {
+  return {
+    phone,
+    cookies: [...k.s.cookies].filter(([name]) => name !== 'kwscode' && name !== 'kwssectoken'),
+    kwfcv1: k.s.kwfcv1,
+    ...extra,
+  }
+}
+
+/** 解析官方 100110031 响应里的账号列表与 multiUserToken。 */
+function smsUserOptions(data: Json): { users: SmsUserOption[]; token: string } {
+  const infos = Array.isArray(data?.userInfos) ? (data.userInfos as Json[]) : []
+  const token = typeof data?.multiUserToken === 'string' ? data.multiUserToken : ''
+  const users = infos
+    .map((u) => ({
+      id: String(u?.userId ?? u?.user_id ?? ''),
+      name: String(u?.account ?? u?.nickname ?? u?.nickName ?? u?.name ?? ''),
+      avatar: typeof u?.avatar === 'string' && u.avatar ? u.avatar : null,
+    }))
+    .filter((u) => u.id)
+  if (!users.length || !token) {
+    throw new CatbusError('UPSTREAM', '快手要求选择登录的账号，但响应里没有账号信息', {
+      detail: { stage: 'mobileCode', result: 100110031, users: users.length, multiUserToken: Boolean(token) },
+    })
+  }
+  return { users, token }
+}
+
+/** SMS 走到换票收尾时的新会话：verify 与选账号共用。 */
+function recoverK(ctx: Ctx, credential: Credential, state: SmsState): Ks {
+  const k = new Ks({ ...ctx, account: GUEST, credential })
+  k.s.prepare(state.cookies)
+  k.s.restoreCounter(state.kwfcv1)
+  k.s.liveBootstrapEnabled = true
+  k.s.ensureBrowserDefaults()
+  return k
+}
+
+/** mobileCode / multiUserToken 拿到 passToken 后的公共收尾：www / CP / live 三站换票 + userInfo 校验。 */
+async function finishSmsLogin(ctx: Ctx, k: Ks, credential: Credential, issued: Issued): Promise<Account> {
+  k.s.update(issued)
+  mergeIssued(issued, await api.stsLogin(k, api.SID_WWW, WWW))
+  mergeIssued(issued, await api.bootstrapDocument(k, WWW, '/new-reco'))
+  await finishBrowserSession(k, issued)
+  k.s.update(issued)
+  k.s.ensureBrowserDefaults()
+  await liveSubsite(k)
+  return completeLogin(ctx, k, credential)
+}
+
+/** `--user <id>`（或 TTY 里选中一项）后用 multiUserToken 完成登录。 */
+async function completeSmsUser(
+  ctx: Ctx,
+  k: Ks,
+  credential: Credential,
+  phone: string,
+  userId: string,
+  token: string,
+  verify?: { type: number; token: string },
+): Promise<Account> {
+  const [data, issued] = await api.multiUserTokenLogin(k, { phone, userId, multiUserToken: token, verifyToken: verify })
+  if (data?.result !== 1 || !data?.passToken) {
+    throw new CatbusError('AUTH_REQUIRED', `选择账号登录失败：${data?.error_msg ?? data?.result}`, { detail: { stage: 'multiUserToken', result: data?.result } })
+  }
+  return finishSmsLogin(ctx, k, credential, issued)
+}
+
+/**
+ * 选号登录 + 统一安全验证的完整闭环：
+ * 1) multiUserToken 报 400013（响应带 captchaUrl/unionToken）→ 不自动发语音验证码：先以待验证状态挂起，
+ *    由用户决定何时发起（发起 = 再次执行 --user 不带 --code，走 ztUnionVerify 发语音验证码）；
+ * 2) TTY 就地：回车发起电话、输验证码完成；非交互返回 {sent, verify} 中间态，用户拿 `--code <验证码>` 重新执行；
+ * 3) 校验通过拿到 phoneVerifySuccToken，随重发的 multiUserToken 一起带上（ztIdentityVerification*）。
+ */
+async function loginSmsUser(
+  ctx: Ctx,
+  k: Ks,
+  credential: Credential,
+  state: SmsState,
+  userId: string,
+  verify: { type: number; token: string } | undefined,
+  cmd: string,
+): Promise<Account | SmsIntermediate> {
+  const attempt = (v?: { type: number; token: string }) =>
+    api.multiUserTokenLogin(k, { phone: state.phone, userId, multiUserToken: state.multiUserToken!, verifyToken: v })
+  const fail = (data: Json): CatbusError =>
+    new CatbusError('AUTH_REQUIRED', `选择账号登录失败：${data?.error_msg ?? data?.result}`, { detail: { stage: 'multiUserToken', result: data?.result } })
+
+  if (verify) {
+    // 已通过安全验证（--code 步）：带凭证重发 multiUserToken，理论上一次通过
+    const [data, issued] = await attempt(verify)
+    if (data?.result === 1 && data?.passToken) return finishSmsLogin(ctx, k, credential, issued)
+    throw fail(data)
+  }
+
+  let [data, issued] = await attempt(verify)
+  if (data?.result === 1 && data?.passToken) return finishSmsLogin(ctx, k, credential, issued)
+  if (data?.result !== 400013 || !data?.captchaUrl) throw fail(data)
+
+  // 统一安全验证：先挂起，不自动拨打电话（发送由用户显式触发，见 select 分支与 TTY 的回车提示）
+  const info = api.parseCaptchaUrl(String(data.captchaUrl))
+  await smsState.save(ctx, smsSnapshot(k, state.phone, {
+    users: state.users,
+    multiUserToken: state.multiUserToken,
+    zt: { userId, captchaUrl: String(data.captchaUrl) },
+  }))
+  ctx.log.info(`快手要求安全验证（${info.useVoice ? '语音' : '短信'}验证码）。发起验证码：${cmd} --user ${userId}（再次执行、不带 --code）；提交：加上 --code <验证码>`)
+
+  if (!interactive()) return { sent: true, verify: true, phone: state.phone }
+
+  for (;;) {
+    const code = (await prompt('回车发起语音验证码电话（未发起/没接到时），或输入收到的语音/短信验证码：')).trim()
+    if (!code) {
+      const r = await api.ztVerifySendCode(k, info)
+      if (r?.result !== 1) {
+        throw new CatbusError('RISK_CONTROL', `发起安全验证失败：${r?.error_msg ?? r?.result}`, {
+          detail: { kind: 'blocked', captchaUrl: data.captchaUrl, sendResult: r?.result ?? null },
+        })
+      }
+      ctx.log.info('已发起，手机会收到语音验证码电话')
+      continue
+    }
+    const v = await api.ztVerifyCheckCode(k, info, code)
+    if (v?.result === 1 && v?.phoneVerifySuccToken) {
+      ;[data, issued] = await attempt({ type: Number(v.phoneVerifyType ?? 13), token: String(v.phoneVerifySuccToken) })
+      if (data?.result === 1 && data?.passToken) return finishSmsLogin(ctx, k, credential, issued)
+      throw fail(data)
+    }
+    ctx.log.info(`验证失败：${v?.error_msg ?? v?.result}，再试一次`)
+  }
+}
+
+/** TTY 交互：列出账号让用户选。 */
+async function pickSmsUser(ctx: Ctx, users: readonly SmsUserOption[]): Promise<SmsUserOption> {
+  ctx.log.info('该手机号下有多个账号，选择要登录的：')
+  for (const [i, u] of users.entries()) ctx.log.info(`  ${i + 1}) ${u.name || '（无昵称）'}  ${u.id}`)
+  for (;;) {
+    const input = (await prompt('输入序号（1 顶着第一个）：')).trim()
+    if (/^\d+$/.test(input) && Number(input) >= 1 && Number(input) <= users.length) return users[Number(input) - 1]!
+    ctx.log.info(`无效的序号：${input || '（未输入）'}，1 到 ${users.length} 之间的数字`)
+  }
 }
 
 async function smsFlow(ctx: Ctx) {
   const credential = freshCredential(ctx, 'sms')
   let k: Ks | null = null
+  const cmd = `catbus kuaishou auth login --method sms${ctx.account ? ` -a ${ctx.account}` : ''}${endpointFlag(ctx.endpoint)}`
   return smsLogin<SmsState>(ctx, {
     send: async (phone) => {
       k = loginKs(ctx, credential)
@@ -182,29 +338,80 @@ async function smsFlow(ctx: Ctx) {
       if (r?.result !== 1) {
         throw new CatbusError('UPSTREAM', `短信验证码申请失败：${r?.error_msg ?? r?.result}`, { detail: { result: r?.result } })
       }
-      return { phone, cookies: [...k.s.cookies].filter(([name]) => name !== 'kwscode' && name !== 'kwssectoken'), kwfcv1: k.s.kwfcv1 }
+      return smsSnapshot(k, phone)
     },
     verify: async (state, code) => {
-      if (!k) {
-        k = new Ks({ ...ctx, account: GUEST, credential })
-        k.s.prepare(state.cookies)
-        k.s.restoreCounter(state.kwfcv1)
-        k.s.liveBootstrapEnabled = true
-        k.s.ensureBrowserDefaults()
+      // 待验证状态（multiUserToken 撞 400013 后）：--code 现在提交的是安全验证码，不是登录验证码
+      if (state.zt) {
+        const token = typeof state.multiUserToken === 'string' ? state.multiUserToken : ''
+        if (!token || !state.users) {
+          throw new CatbusError('USAGE', '这个中间态缺少待选账号信息（可能已过期）', { hint: `${cmd} --phone <手机号> 重新开始` })
+        }
+        const session = k ?? recoverK(ctx, credential, state)
+        const info = api.parseCaptchaUrl(state.zt.captchaUrl)
+        const v = await api.ztVerifyCheckCode(session, info, code)
+        if (v?.result !== 1 || !v?.phoneVerifySuccToken) {
+          throw new CatbusError('RISK_CONTROL', `安全验证失败：${v?.error_msg ?? v?.result}`, {
+            detail: { kind: 'captcha', result: v?.result ?? null },
+            hint: `重新执行 ${cmd} --user ${state.zt.userId}（会重新发验证码）`,
+          })
+        }
+        return loginSmsUser(ctx, session, credential, state, state.zt.userId, {
+          type: Number(v.phoneVerifyType ?? 13),
+          token: String(v.phoneVerifySuccToken),
+        }, cmd)
       }
+      if (!k) k = recoverK(ctx, credential, state)
       const [data, issued] = await api.mobileCodeLogin(k, state.phone, code)
+      if (data?.result === 100110031) {
+        const { users, token } = smsUserOptions(data)
+        if (!interactive()) {
+          // 手机号下有多个账号（官方 result 100110031）：保存待选状态（验证已经通过，无需再输验证码），提示用 --user 收尾
+          await smsState.save(ctx, smsSnapshot(k, state.phone, { users, multiUserToken: token }))
+          ctx.log.info('该手机号下有多个账号。选择后执行：' + `${cmd} --user <用户 id>（10 分钟内有效）`)
+          return { sent: true, phone: state.phone, users }
+        }
+        const picked = await pickSmsUser(ctx, users)
+        return completeSmsUser(ctx, k, credential, state.phone, picked.id, token)
+      }
       if (data?.result !== 1 || !data?.passToken) {
         throw new CatbusError('AUTH_REQUIRED', `验证码登录失败：${data?.error_msg ?? data?.result}`, { detail: { stage: 'mobileCode', result: data?.result } })
       }
-      k.s.update(issued)
-      k.s.update(issued)
-      mergeIssued(issued, await api.stsLogin(k, api.SID_WWW, WWW))
-      mergeIssued(issued, await api.bootstrapDocument(k, WWW, '/new-reco'))
-      await finishBrowserSession(k, issued)
-      k.s.update(issued)
-      k.s.ensureBrowserDefaults()
-      await liveSubsite(k)
-      return completeLogin(ctx, k, credential)
+      return finishSmsLogin(ctx, k, credential, issued)
+    },
+    select: async (state, userId) => {
+      const token = typeof state.multiUserToken === 'string' ? state.multiUserToken : ''
+      if (!token) {
+        throw new CatbusError('USAGE', '这个中间态不是待选账号的状态（还没有通过短信验证）', { hint: `${cmd} --code <验证码>` })
+      }
+      if (state.users && !state.users.some((u) => u.id === userId)) {
+        throw new CatbusError('USAGE', `提示的账号里没有这个用户：${userId}`, { hint: '可用的账号见上一步输出的 users' })
+      }
+      const session = k ?? recoverK(ctx, credential, state)
+      // 待验证状态（上一步撞了统一安全验证）：不带 --code = 发起/重发语音验证码；带 = 提交验证码
+      if (state.zt) {
+        const code = typeof ctx.options.code === 'string' ? ctx.options.code.trim() : ''
+        const info = api.parseCaptchaUrl(state.zt.captchaUrl)
+        if (!code) {
+          const r = await api.ztVerifySendCode(session, info)
+          if (r?.result !== 1) {
+            throw new CatbusError('RISK_CONTROL', `发起语音验证码失败：${r?.error_msg ?? r?.result}`, {
+              detail: { kind: 'blocked', captchaUrl: state.zt.captchaUrl, sendResult: r?.result ?? null },
+            })
+          }
+          ctx.log.info(`语音/短信验证码已发起（${info.useVoice ? '语音' : '短信'}）。提交验证码：${cmd} --user ${userId} --code <验证码>`)
+          return { sent: true, verify: true, phone: state.phone }
+        }
+        const v = await api.ztVerifyCheckCode(session, info, code)
+        if (v?.result !== 1 || !v?.phoneVerifySuccToken) {
+          throw new CatbusError('RISK_CONTROL', `安全验证失败：${v?.error_msg ?? v?.result}`, {
+            detail: { kind: 'captcha', result: v?.result ?? null },
+            hint: `重新执行 ${cmd} --user ${userId}（会重新发验证码）`,
+          })
+        }
+        return loginSmsUser(ctx, session, credential, state, userId, { type: Number(v.phoneVerifyType ?? 13), token: String(v.phoneVerifySuccToken) }, cmd)
+      }
+      return loginSmsUser(ctx, session, credential, state, userId, undefined, cmd)
     },
   })
 }
@@ -411,6 +618,7 @@ export async function itemDownload(ctx: Ctx) {
   return run(ctx, 'www', async (k) => {
     const d = await detailOf(k, ctx.args.item!)
     return downloadMedia(ctx, k.http, String(d.photo?.id), norm.photoMedia(d.photo), {
+      title: d.photo?.caption,
       headers: [
         ['user-agent', UA],
         ['referer', 'https://www.kuaishou.com/'],

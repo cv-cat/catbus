@@ -257,24 +257,45 @@ export const smsState = {
   },
 }
 
+/** 短信登录的中间结果：非 TTY 分步时返回，`sent` 之外的字段平台自定义（如快手 sms 多用户的 `users`）。 */
+export type SmsIntermediate = { sent: true } & Record<string, unknown>
+
 /**
  * 短信登录的通用流程。平台提供 send（发验证码，返回需要保存的中间态）和 verify（用验证码完成登录）。
- * TTY 下一步完成；非 TTY 下先 `--phone` 发码，再单独用 `--code` 完成。
+ * 平台验证成功后还要用户选账号的（如快手手机号下有多个账号），额外提供 select（`--user <id>` 完成登录），
+ * verify 在非 TTY 下返回 `platforms 自定义的 { sent: true, ... }` 表示还有下一步（此时平台自己保存了新的中间态，core 不清掉）。
+ * TTY 下一步完成；非 TTY 下先 `--phone` 发码，再单独用 `--code` 完成，需要选账号时最后用 `--user <id>` 收尾。
  */
 export async function smsLogin<S extends Record<string, unknown>>(
   ctx: HandlerContext,
-  flow: { send(phone: string): Promise<S>; verify(state: S, code: string): Promise<Account> },
-): Promise<Account | { sent: true; phone: string }> {
+  flow: {
+    send(phone: string): Promise<S>
+    verify(state: S, code: string): Promise<Account | SmsIntermediate>
+    select?(state: S, userId: string): Promise<Account | SmsIntermediate>
+  },
+): Promise<Account | SmsIntermediate> {
   const phone = ctx.options.phone as string | undefined
   const code = ctx.options.code as string | undefined
+  const user = (ctx.options.user as string | undefined)?.trim()
   const p = ctx.platform.id
   const cmd = `catbus ${p} auth login --method sms${ctx.account ? ` -a ${ctx.account}` : ''}${endpointFlag(ctx.endpoint)}`
+  if (user) {
+    if (!flow.select) throw new CatbusError('USAGE', '该平台不支持用 --user 选择账号', { hint: `${cmd} --code <验证码>` })
+    const state = await smsState.load<S>(ctx)
+    if (!state) throw new CatbusError('USAGE', '没有找到有效的短信登录中间态（10 分钟内有效）', { hint: `${cmd} --phone <手机号>` })
+    const result = await flow.select(state, user)
+    // 返回 {sent:true,...} 中间态（例如选号后撞风控、等验证码）时 state 由平台自己维护，不清
+    if ('sent' in (result as SmsIntermediate) && (result as SmsIntermediate).sent) return result
+    await smsState.clear(ctx)
+    return result as Account
+  }
   if (code) {
     const state = await smsState.load<S>(ctx)
     if (!state) throw new CatbusError('USAGE', '没有找到有效的短信登录中间态（10 分钟内有效）', { hint: `${cmd} --phone <手机号>` })
-    const account = await flow.verify(state, code)
+    const result = await flow.verify(state, code)
+    if ('sent' in result && result.sent) return result
     await smsState.clear(ctx)
-    return account
+    return result
   }
   if (!phone) {
     if (!interactive()) throw new CatbusError('USAGE', '短信登录需要 --phone', { hint: `${cmd} --phone <手机号>` })

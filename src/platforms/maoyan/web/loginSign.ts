@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
-import { JSDOM } from 'jsdom'
+import { format } from 'node:util'
+import { JSDOM, VirtualConsole } from 'jsdom'
 import { CatbusError } from '../../../core/errors.js'
 import { staticFile } from '../../../core/paths.js'
 
@@ -31,11 +32,22 @@ export interface PcloginGuard {
   stop(): void
 }
 
+/** jsdom 默认把 window.console 转发到 Node 的 stdout，会污染 stdout 上的 JSON 信封；改写到 stderr（AGENTS 8「stdout 纯净」）。 */
+function stderrVirtualConsole(): VirtualConsole {
+  const vc = new VirtualConsole()
+  for (const k of ['log', 'info', 'warn', 'error', 'debug', 'trace'] as const) {
+    vc.on(k, (...a: unknown[]) => process.stderr.write(format(...a) + '\n'))
+  }
+  vc.on('jsdomError', (e: Error) => process.stderr.write(`[catbus] jsdom: ${e.message}\n`))
+  return vc
+}
+
 function realGuard(): PcloginGuard {
   const dom = new JSDOM('<!doctype html><html><head></head><body></body></html>', {
     url: 'https://account.dianping.com/pclogin',
     runScripts: 'outside-only',
     pretendToBeVisual: true,
+    virtualConsole: stderrVirtualConsole(),
   })
   try {
     dom.window.eval(readFileSync(staticFile('maoyan', 'H5guard-pclogin.js'), 'utf8'))

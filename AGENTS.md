@@ -302,6 +302,8 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | 12306 | `ticket price <train> --from-no <序号> --to-no <序号> --seat-types <编码> [--date <YYYY-MM-DD>]` | 票价详情（参数取自 ticket search 输出的 train_no、from.no、to.no、seat_types） | Fare |
 | 12306 | `route get <train> <from> <to> [--date <YYYY-MM-DD>]` | 经停站与时刻（`<train>` 为 train_no，`<from>`/`<to>` 为出发站与到达站） | Stop[] |
 | 12306 | `transfer search <from> <to> [--date <YYYY-MM-DD>] [--via <中转站>] [--limit N]` | 中转方案搜索（同一车次分段有座标为「同车换座」） | Transfer[] |
+| kuaishou | `auth login --user <用户 id>` | 短信验证通过后手机号下有多个用户（官方 result `100110031`，响应带 `userInfos` 与 `multiUserToken`）时选择登录哪一个。TTY 下直接在终端列出账号选择；非 TTY 下保存待选中间态（10 分钟内有效，含原 `--phone` 与会话 cookie），验证码一步返回 `{sent, phone, users}`，再带 `--user <用户 id>` 重新执行完成登录（不用再输验证码）。multiUserToken 走官方登录页的 `/pass/kuaishou/login/multiUserToken`（_sig4 名单内_，字段 channelType、countryCode、isWebSig4、multiUserToken、phone、setCookie、sid、targetUserId、account，签名缺失时服务端报 `400013`），后续站点换票与短信登录成功后一致 | Account |
+| kuaishou | `auth login --user <用户 id> --code <验证码>` | 选号时若进入统一安全验证（官方 result `400013`，响应带 captchaUrl，含 unionToken / unLoginUserId），第一次带 `--user` 执行会先挂起（`{sent, verify: true}`，不发验证码）；不带 `--code` 重复执行 `--user <id>` 即发起 / 重发语音、短信验证码（接口为验证页同款 form，字段 unionToken、kpn、bizName、contextIdentifier、type=53、useVoice、sid、unLoginUserId）；TTY 下直接提示「回车发起电话，输验证码完成」。验证码填入后用 `--code` 提交（验证或选号一步都接受），catbus 校验拿到 `phoneVerifySuccToken` / `phoneVerifyType` 后带 `ztIdentityVerificationType` / `ztIdentityVerificationCheckToken` 重发 multiUserToken 完成登录。待验证凭证不随失败消耗，验证码错了可再执行；整链不需要浏览器 | Account |
 
 扩展类型的字段见 6.2。
 
@@ -343,6 +345,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - `msg send --to <user> --item <item>`：就这件商品给指定用户发消息（闲鱼：卖家主动联系买家）。不支持的平台报 `UNSUPPORTED`。
 - maoyan：演出（item）的场次时间、城市、场馆、票价档、售卖状态没有对应的 Item 字段，按「键：值」逐行写进 `text`，原始字段用 `--raw`。`poi search` 只搜演出城市，`id` 是 `feed list --city` 的取值。`item get --tickets` 的场次和票档同样写进 `text`，不新增类型。
 - taobao 没有按用户查询、按用户发起会话的接口：`user get <user>` 的 `<user>` 只接受商品链接，返回这件商品的卖家；`msg send` 不支持 `--to`（报 `UNSUPPORTED`）。
+- x 的推文归一化（Item）：转推（`legacy.retweeted_status_result`）按原推归一化：`id`、`url`、`author`、正文、媒体和计数都取原推，因为外层只有截断的「RT @…」正文，没有媒体，计数也是 0；原始的转推对象仍挂在 `--raw` 上。推文自己没有媒体时，`cover` 依次退到被引用推文（`quoted_status_result`）的第一张媒体，再退到链接卡片（`card.legacy.binding_values`）的缩略图；`media` 只放推文自己的媒体。
 
 ### 4.9 选项
 
@@ -416,6 +419,9 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 **下载**：
 - `--dir <目录>`：默认当前目录。文件名为 `<platform>_<id>_<序号>.<ext>`。
 - `--overwrite`：覆盖已有文件，默认跳过已有文件。
+- `--subdir none|id|title`：每个 item 放进 `--dir` 下自己的子目录，默认 `none`（直接放在 `--dir` 里）。`id` 用 item 的 ID；`title` 用标题（没有标题时用正文开头，再没有用 ID）。文件名不变。
+  - `title` 的目录名按 Windows、macOS、Linux 都能用的规则清洗：去掉 emoji 和平台表情码（如小红书的 `[笑哭R]`、`#话题[话题]#`）、控制字符和 `<>:"/\|?*`，空白合并成一个空格，去掉首尾的空格和点，避开 Windows 保留名（`CON`、`NUL`、`COM1` 等，前面加 `_`），最长 60 个字符；清洗后为空时用 ID。
+  - 同名目录里已经有别的 item 的文件（按文件名前缀 `<platform>_<id>_` 判断）时，目录名后面加 ` (<ID 后 6 位>)`。
 
 **长连接**：`listen` 总是输出 jsonl，断线自动重连。`--duration <秒|10m|1h>` 指定运行时长，Ctrl-C 正常退出，退出码 0。
 
@@ -666,6 +672,19 @@ browser = "/path/to/chromium"     # 发布与删除用的本地 Chromium（见 5
 - **大文件**：本地视频按段从磁盘读取，不整个读进内存；URL 形式的 `--video` 先下载到内存（只有这种情况）。
 - **错误**：找不到或无法执行浏览器 → `ERROR`；浏览器启动后立即退出或超时 → `ERROR`；浏览器打开页面后跳到 Google 登录页 → `AUTH_EXPIRED`；reauth 被拒绝或没有发放令牌 → `RISK_CONTROL`（`detail.kind` 为 `blocked`）；BotGuard 在页面里报错 → `UPSTREAM`；interpreter 不在白名单、或跳转 → `UPSTREAM`。
 - **测试**：离线测试替换 `browser.open`（假浏览器只记录 BotGuard 的 binding）和 Studio 的响应；`findChrome` 的路径按 darwin / linux / win32 的目录布局做单测；`runBotGuard` 在 `node:vm` 里独立运行；`openBrowser` 的失败路径（不可执行、启动后立即退出、超时）用假的可执行脚本测，并检查临时目录被清理。真机验证只在测试账号上做，视频一律私享，测完用 `item delete` 删掉。
+
+### 5.8 YouTube 的 cookie 轮换
+
+Google 会定期轮换登录会话的时效性 cookie（`SIDCC`、`__Secure-1PSIDCC`、`__Secure-3PSIDCC`、`__Secure-1PSIDTS`、`__Secure-3PSIDTS`）。浏览器里由 `accounts.youtube.com/RotateCookiesPage` 的隐藏 iframe 自动完成；catbus 导入的 cookie 没有这个机制，不轮换就会慢慢失效（需要登录的接口回 200 但内容为空，`logged_in=0`）。catbus 用 Node 复刻这个轮换（`src/platforms/youtube/web/client.ts` 的 `rotateCookies`）：
+
+- **接口**（2026-11-10 实测）：
+  1. `GET accounts.youtube.com/RotateCookiesPage?origin=https://www.youtube.com&yt_pid=1`，带全部凭证 cookie。响应 HTML 末尾内联 `init('<token>', m, o, l, interval)`：token 是本次轮换的凭证，interval 是下次轮换的间隔秒数（默认 600，最小 60）；响应同时已用 Set-Cookie 轮换过一轮。
+  2. `POST accounts.youtube.com/RotateCookies`，`Content-Type: application/json`，body 是 protobuf-over-JSON 数组 `[m, token, o, l]`（数值字段为 0 时写 null；实测 `[null,"<token>",1]`）。响应是 `)]}'` 前缀的 JSON 数组，`[0][1]` 是下次间隔秒数；Set-Cookie 完成轮换。
+- **触发时机**：登录后的 InnerTube 请求响应里 `logged_in=0`（cookie 失效的信号）时，先轮换一次再重试原请求；轮换后恢复了就继续，没恢复才报 `AUTH_EXPIRED`。此外 `auth status` 也顺带轮换一次（浏览器是登录后每 600 秒轮一次，catbus 命令都是一次性的，没有常驻进程可定时）。
+- **节流**：下次尝试时间记在凭证 `device.cookieRotate.nextAttemptAt`（毫秒时间戳），间隔用服务端给的值（默认 600 秒、最小 60 秒），失败翻倍退避；未到时间不发起轮换，避免每次命令都打一遍。页内 token 一次有效，拿到后立即用掉，不复用、不落盘。
+- **写回**：轮换的 Set-Cookie 由 `HttpClient` 自动写进 cookie 罐，随凭证由 core 落盘（5.3「自动刷新」）。轮换成功时 stderr 提示一行。
+- **与浏览器共存**：轮换会让浏览器里那份 cookie 的时效性 cookie 失效（反之亦然），与 5.7 的浏览器写回是同一个取舍：catbus 用着的时候，导出 cookie 的那个浏览器会话应保持关闭。
+- **测试**：离线测试用 fixture 回放 RotateCookiesPage 与 /RotateCookies 的真实响应（裁剪），校验触发时机、请求体、节流与 Set-Cookie 写回。
 
 ## 6. 输出
 
