@@ -216,7 +216,7 @@ export class YtClient {
   }
 
   /**
-   * 人机验证的 player 兜底（iOS 客户端）：VIOSOS 被人机验证拦下时改走这条。
+   * 人机验证的 player 兜底（iOS 客户端）：VISIONOS 被人机验证拦下时改走这条。
    * 带 PO token（绑定视频 ID，pot.ts 生成）；iOS 客户端不吃 SAPISIDHASH，登录态只随 cookie 携带。
    */
   async potPlayer<T = any>(videoId: string, poToken: string): Promise<T> {
