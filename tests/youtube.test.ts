@@ -440,9 +440,8 @@ describe('youtube 平台（web）', () => {
     })
 
     it('item media：人机验证时回落到 iOS + PO token（token 同时放行 player 与 GVS 直链）', async () => {
-      // 首页 fixture 带 ytAtN 行（chunked=false 用例走 poMinter 的假注入）
       const fakeMinter = async (binding: string) => `pot-${binding}`
-      const { calls } = await withYt(
+      await withYt(
         {
           player: (body) =>
             body.context.client.clientName === 'IOS'
@@ -472,7 +471,6 @@ describe('youtube 平台（web）', () => {
             const iosCall = calls.findLast((c) => c.path === 'player')!
             expect(iosCall.headers).toContainEqual(['X-Youtube-Client-Name', '5'])
             expect(iosCall.body.serviceIntegrityDimensions).toEqual({ poToken: 'pot-dQw4w9WgXcQ' })
-            return r
           } finally {
             youtubePotTest.fakeMinter = null
           }
