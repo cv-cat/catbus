@@ -1106,7 +1106,7 @@ describe('kuaishou 短信多用户（官方 result 100110031：手机号下有�
         throw new Error('应当抛出 RISK_CONTROL')
       } catch (err: any) {
         expect(err.code).toBe('RISK_CONTROL')
-        expect(err.hint).toContain('captchaUrl')
+        expect(err.hint).toContain('https://app.m.kuaishou.com')
         expect(err.detail).toMatchObject({ kind: 'captcha', captchaUrl: expect.stringContaining('unionToken=fake') })
         return { statePreserved: existsSync(statePath()) }
       }
