@@ -1096,17 +1096,40 @@ describe('kuaishou 短信多用户（官方 result 100110031：手机号下有�
   /** 手排 400013 的 captchaUrl：官方验证页的形制，unionToken / unLoginUserId 等都在 query 里（随请求变化，测试用假值）。 */
   const ZT_CAPTCHA_URL = 'https://app.m.kuaishou.com/zt/unified/tools/verification/verify-sms-unified?unionToken={{SECRET_jqmbctsu}}&useVoice=true&unLoginUserId=fake-uid-1'
 
-  it('--user <id> 撞统一人机验证（400013）：CLI 自发语音验证码，挂起等 --code', async () => {
+  it('--user <id> 撞统一安全验证（400013）：先不拨号，挂起，由用户显式发起', async () => {
     const qc = loadCase('kuaishou', 'qrcode_login_flow').responses
     seedSmsState({ users: MULTI_USERS.map((u) => ({ id: String(u.userId), name: u.account, avatar: (u as { avatar?: string }).avatar ?? null })), multiUserToken: 'fake-multi-token' })
-    const { result, requests } = await replaySms({ method: 'sms', user: '20002' }, {
+    const { result, paths, requests } = await replaySms({ method: 'sms', user: '20002' }, {
       'OPTIONS /s/w/c': [qc[0]!],
       'POST /s/w/c': [qc[1]!],
       'POST /pass/kuaishou/login/multiUserToken': [{ status: 200, headers: { 'content-type': 'application/json' }, body: { result: 400013, reason: '当前请求存在风险，请稍后重试!', captchaType: 13, errorCode: 6116, captchaUrl: ZT_CAPTCHA_URL } }],
+    })
+    // 撞上即保存待验证状态并挂起：这一步不发验证码（没有任何去验证页的请求）
+    expect(paths.filter((p) => p.includes('/pass/ztUnionVerify'))).toEqual([])
+    expect(requests.filter((r) => r.url.includes('/pass/kuaishou/login/multiUserToken')).length).toBe(1)
+    // 挂起等用户显式发起：不是错误，返回 {sent, verify} 中间态
+    expect(result).toMatchObject({ sent: true, verify: true, phone: '13800000000' })
+    // 待验证状态落盘
+    const saved = JSON.parse(readFileSync(statePath(), 'utf8'))
+    expect(saved.data.zt).toMatchObject({ userId: '20002' })
+    expect(saved.data.multiUserToken).toBe('fake-multi-token')
+    expect(saved.data.zt.captchaUrl).toBe(ZT_CAPTCHA_URL)
+  })
+
+  it('--user <id>（待验证态）不带 --code：发起语音验证码电话，再挂一次', async () => {
+    seedSmsState({
+      users: MULTI_USERS.map((u) => ({ id: String(u.userId), name: u.account, avatar: null })),
+      multiUserToken: 'fake-multi-token',
+      zt: { userId: '20002', captchaUrl: ZT_CAPTCHA_URL },
+    })
+    const info = api.parseCaptchaUrl(ZT_CAPTCHA_URL)
+    const { result, paths, requests } = await replaySms({ method: 'sms', user: '20002' }, {
+      // 恢复会话后的第一个请求会先走 gdfp 引导
+      'OPTIONS /s/w/c': [loadCase('kuaishou', 'qrcode_login_flow').responses[0]!],
+      'POST /s/w/c': [loadCase('kuaishou', 'qrcode_login_flow').responses[1]!],
       'POST /pass/ztUnionVerify/sms/unlogin/sendByUser': [{ status: 200, headers: { 'content-type': 'application/json' }, body: { result: 1 } }],
     })
-    // 按官方验证页的形制发码：纯 form、无 sig4，unionToken 与 unLoginUserId 取自 captchaUrl
-    const info = api.parseCaptchaUrl(ZT_CAPTCHA_URL)
+    // 发码按验证页的形制：纯 form、无 __NS_hxfalcon，unionToken 与 unLoginUserId 取自 captchaUrl
     const send = requests.find((r) => r.url.includes('/pass/ztUnionVerify/sms/unlogin/sendByUser'))
     expect(send!.method).toBe('POST')
     expect(info.useVoice).toBe(true)
@@ -1117,13 +1140,26 @@ describe('kuaishou 短信多用户（官方 result 100110031：手机号下有�
     expect(String(send!.body)).toContain('bizName=LOGIN_FROM_WEB')
     expect(String(send!.body)).toContain('contextIdentifier=LOGIN_AUDIT_FROM_WEB')
     expect(send!.url).not.toContain('__NS_hxfalcon')
-    // 挂起等 --code：不是错误，返回 {sent, verify} 中间态
+    // 只发码、不重选：中间态回到挂起；待验证状态保留（multiUserToken 没被再次消费）
+    expect(requests.filter((r) => r.url.includes('/pass/kuaishou/org'))).toEqual([])
     expect(result).toMatchObject({ sent: true, verify: true, phone: '13800000000' })
-    // 待验证状态落盘：验证凭证还挂着，等 --code
+    expect(existsSync(statePath())).toBe(true)
     const saved = JSON.parse(readFileSync(statePath(), 'utf8'))
     expect(saved.data.zt).toMatchObject({ userId: '20002' })
-    expect(saved.data.multiUserToken).toBe('fake-multi-token')
-    expect(saved.data.zt.captchaUrl).toBe(ZT_CAPTCHA_URL)
+  })
+
+  it('--user <id>（待验证态）发码失败：报 RISK_CONTROL，待验证状态保留', async () => {
+    seedSmsState({
+      users: MULTI_USERS.map((u) => ({ id: String(u.userId), name: u.account, avatar: null })),
+      multiUserToken: 'fake-multi-token',
+      zt: { userId: '20002', captchaUrl: ZT_CAPTCHA_URL },
+    })
+    await expect(replaySms({ method: 'sms', user: '20002' }, {
+      'OPTIONS /s/w/c': [loadCase('kuaishou', 'qrcode_login_flow').responses[0]!],
+      'POST /s/w/c': [loadCase('kuaishou', 'qrcode_login_flow').responses[1]!],
+      'POST /pass/ztUnionVerify/sms/unlogin/sendByUser': [{ status: 200, headers: { 'content-type': 'application/json' }, body: { result: 2120, error_msg: '请求过于频繁' } }],
+    })).rejects.toMatchObject({ code: 'RISK_CONTROL', detail: { kind: 'blocked' } })
+    expect(existsSync(statePath())).toBe(true)
   })
 
   it('--user <id> --code <验证码>：安全验证通过后带凭证重发，登录成功清中间态', async () => {
@@ -1163,15 +1199,6 @@ describe('kuaishou 短信多用户（官方 result 100110031：手机号下有�
     expect(core).toEqual(FINISH_CHAIN.filter((p) => !p.includes('/s/w/')))
     expect(result).toMatchObject({ platform: 'kuaishou', account: 'default', method: 'sms', user: { id: SELF_EID } })
     expect(existsSync(statePath())).toBe(false)
-  })
-
-  it('--user <id>（待验证态）不带 --code：报 USAGE 并提示带验证码', async () => {
-    seedSmsState({
-      users: MULTI_USERS.map((u) => ({ id: String(u.userId), name: u.account, avatar: null })),
-      multiUserToken: 'fake-multi-token',
-      zt: { userId: '20002', captchaUrl: ZT_CAPTCHA_URL },
-    })
-    await expect(replaySms({ method: 'sms', user: '20002' }, {})).rejects.toMatchObject({ code: 'USAGE', hint: expect.stringContaining('--code') })
   })
 
   it('--code（待验证态）验证码错误：报 RISK_CONTROL，待验证状态保留', async () => {

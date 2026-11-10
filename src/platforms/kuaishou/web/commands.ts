@@ -251,9 +251,10 @@ async function completeSmsUser(
 }
 
 /**
- * 选号登录 + 统一人机验证的完整闭环：
- * 1) multiUserToken 报 400013（响应带 captchaUrl/unionToken）→ CLI 自己发语音验证码；
- * 2) TTY 就地输验证码；非交互返回 {sent, verify} 中间态，用户拿 `--code <验证码>` 重新执行；
+ * 选号登录 + 统一安全验证的完整闭环：
+ * 1) multiUserToken 报 400013（响应带 captchaUrl/unionToken）→ 不自动发语音验证码：先以待验证状态挂起，
+ *    由用户决定何时发起（发起 = 再次执行 --user 不带 --code，走 ztUnionVerify 发语音验证码）；
+ * 2) TTY 就地：回车发起电话、输验证码完成；非交互返回 {sent, verify} 中间态，用户拿 `--code <验证码>` 重新执行；
  * 3) 校验通过拿到 phoneVerifySuccToken，随重发的 multiUserToken 一起带上（ztIdentityVerification*）。
  */
 async function loginSmsUser(
@@ -281,29 +282,29 @@ async function loginSmsUser(
   if (data?.result === 1 && data?.passToken) return finishSmsLogin(ctx, k, credential, issued)
   if (data?.result !== 400013 || !data?.captchaUrl) throw fail(data)
 
-  // 统一人机验证：CLI 内走官方验证页的三步
+  // 统一安全验证：先挂起，不自动拨打电话（发送由用户显式触发，见 select 分支与 TTY 的回车提示）
   const info = api.parseCaptchaUrl(String(data.captchaUrl))
-  const r = await api.ztVerifySendCode(k, info)
-  if (r?.result !== 1) {
-    throw new CatbusError('RISK_CONTROL', `快手风控拦截，发起安全验证失败：${r?.error_msg ?? r?.result}`, {
-      detail: { kind: 'blocked', captchaUrl: data.captchaUrl, sendResult: r?.result ?? null },
-    })
-  }
-  ctx.log.info(`快手要求安全验证，语音/短信验证码已发出（${info.useVoice ? '语音' : '短信'}）`)
+  await smsState.save(ctx, smsSnapshot(k, state.phone, {
+    users: state.users,
+    multiUserToken: state.multiUserToken,
+    zt: { userId, captchaUrl: String(data.captchaUrl) },
+  }))
+  ctx.log.info(`快手要求安全验证（${info.useVoice ? '语音' : '短信'}验证码）。发起验证码：${cmd} --user ${userId}（再次执行、不带 --code）；提交：加上 --code <验证码>`)
 
-  if (!interactive()) {
-    // 非交互：挂起，等用户带 --code 重新执行（state 里的凭证不消耗）
-    await smsState.save(ctx, smsSnapshot(k, state.phone, {
-      users: state.users,
-      multiUserToken: state.multiUserToken,
-      zt: { userId, captchaUrl: String(data.captchaUrl) },
-    }))
-    ctx.log.info(`提交验证码：${cmd} --code <验证码>`)
-    return { sent: true, verify: true, phone: state.phone }
-  }
+  if (!interactive()) return { sent: true, verify: true, phone: state.phone }
 
   for (;;) {
-    const code = (await prompt('输入收到的语音/短信验证码：')).trim()
+    const code = (await prompt('回车发起语音验证码电话（未发起/没接到时），或输入收到的语音/短信验证码：')).trim()
+    if (!code) {
+      const r = await api.ztVerifySendCode(k, info)
+      if (r?.result !== 1) {
+        throw new CatbusError('RISK_CONTROL', `发起安全验证失败：${r?.error_msg ?? r?.result}`, {
+          detail: { kind: 'blocked', captchaUrl: data.captchaUrl, sendResult: r?.result ?? null },
+        })
+      }
+      ctx.log.info('已发起，手机会收到语音验证码电话')
+      continue
+    }
     const v = await api.ztVerifyCheckCode(k, info, code)
     if (v?.result === 1 && v?.phoneVerifySuccToken) {
       ;[data, issued] = await attempt({ type: Number(v.phoneVerifyType ?? 13), token: String(v.phoneVerifySuccToken) })
@@ -387,13 +388,20 @@ async function smsFlow(ctx: Ctx) {
         throw new CatbusError('USAGE', `提示的账号里没有这个用户：${userId}`, { hint: '可用的账号见上一步输出的 users' })
       }
       const session = k ?? recoverK(ctx, credential, state)
-      // 待验证状态（上一步撞了统一人机验证）：--code 提交的是安全验证码
+      // 待验证状态（上一步撞了统一安全验证）：不带 --code = 发起/重发语音验证码；带 = 提交验证码
       if (state.zt) {
         const code = typeof ctx.options.code === 'string' ? ctx.options.code.trim() : ''
-        if (!code) {
-          throw new CatbusError('USAGE', '这个登录已被快手风控拦下，先按上一步提示拿到语音/短信验证码，再带上提交', { hint: `${cmd} --user ${userId} --code <验证码>` })
-        }
         const info = api.parseCaptchaUrl(state.zt.captchaUrl)
+        if (!code) {
+          const r = await api.ztVerifySendCode(session, info)
+          if (r?.result !== 1) {
+            throw new CatbusError('RISK_CONTROL', `发起语音验证码失败：${r?.error_msg ?? r?.result}`, {
+              detail: { kind: 'blocked', captchaUrl: state.zt.captchaUrl, sendResult: r?.result ?? null },
+            })
+          }
+          ctx.log.info(`语音/短信验证码已发起（${info.useVoice ? '语音' : '短信'}）。提交验证码：${cmd} --user ${userId} --code <验证码>`)
+          return { sent: true, verify: true, phone: state.phone }
+        }
         const v = await api.ztVerifyCheckCode(session, info, code)
         if (v?.result !== 1 || !v?.phoneVerifySuccToken) {
           throw new CatbusError('RISK_CONTROL', `安全验证失败：${v?.error_msg ?? v?.result}`, {
