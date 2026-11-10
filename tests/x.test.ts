@@ -676,6 +676,48 @@ describe('x 命令与注册表', () => {
   })
 })
 
+describe('x 推文归一化：转推、引用、链接卡片（AGENTS 4.8）', () => {
+  const user = (id: string, sn: string) => ({ rest_id: id, core: { name: sn, screen_name: sn }, avatar: { image_url: `https://pbs.twimg.com/${sn}.jpg` } })
+  const photo = (id: string) => ({ id_str: id, type: 'photo', media_url_https: `https://pbs.twimg.com/media/${id}.jpg`, original_info: { width: 800, height: 600 } })
+  const tweet = (id: string, sn: string, legacy: any, extra: any = {}) => ({
+    __typename: 'Tweet', rest_id: id, core: { user_results: { result: user(`u${id}`, sn) } },
+    legacy: { id_str: id, full_text: `text ${id}`, created_at: 'Mon Nov 10 08:00:00 +0000 2026', favorite_count: 0, reply_count: 0, retweet_count: 0, bookmark_count: 0, ...legacy }, ...extra,
+  })
+
+  it('转推按原推归一化：id、作者、正文、媒体、计数都取原推', () => {
+    const orig = tweet('200', 'orig', { full_text: '原推正文', favorite_count: 9, reply_count: 3, retweet_count: 2, bookmark_count: 1, extended_entities: { media: [photo('m1')] } }, { views: { count: '120' } })
+    const rt = tweet('100', 'rter', { full_text: 'RT @orig: 原推正…', retweeted_status_result: { result: { __typename: 'TweetWithVisibilityResults', tweet: orig } } })
+    const it = norm.item(rt) as any
+    expect(it).toMatchObject({ id: '200', url: 'https://x.com/orig/status/200', kind: 'image', text: '原推正文', cover: 'https://pbs.twimg.com/media/m1.jpg' })
+    expect(it.author).toMatchObject({ id: 'u200', name: 'orig' })
+    expect(it.media).toHaveLength(1)
+    expect(it.stats).toEqual({ views: 120, likes: 9, comments: 3, collects: 1, shares: 2 })
+  })
+
+  it('引用推文：自己没有媒体时 cover 取被引用推文的第一张，media 仍为空', () => {
+    const quoted = tweet('300', 'q', { extended_entities: { media: [photo('m3'), photo('m4')] } })
+    const it = norm.item(tweet('100', 'a', {}, { quoted_status_result: { result: quoted } })) as any
+    expect(it).toMatchObject({ kind: 'text', cover: 'https://pbs.twimg.com/media/m3.jpg', media: [] })
+  })
+
+  it('链接卡片：cover 取 binding_values 里清晰度最高的缩略图', () => {
+    const card = { legacy: { name: 'summary_large_image', binding_values: [
+      { key: 'thumbnail_image', value: { type: 'IMAGE', image_value: { url: 'https://pbs.twimg.com/card_img/1/a?name=280x150' } } },
+      { key: 'domain', value: { type: 'STRING', string_value: 'example.com' } },
+      { key: 'thumbnail_image_large', value: { type: 'IMAGE', image_value: { url: 'https://pbs.twimg.com/card_img/1/a?name=800x320_1' } } },
+    ] } }
+    const it = norm.item(tweet('100', 'a', {}, { card })) as any
+    expect(it).toMatchObject({ kind: 'text', cover: 'https://pbs.twimg.com/card_img/1/a?name=800x320_1', media: [] })
+  })
+
+  it('推文自己有媒体时不看引用和卡片；纯文字推文 cover 为 null', () => {
+    const quoted = tweet('300', 'q', { extended_entities: { media: [photo('m3')] } })
+    const own = norm.item(tweet('100', 'a', { extended_entities: { media: [photo('m1')] } }, { quoted_status_result: { result: quoted } })) as any
+    expect(own.cover).toBe('https://pbs.twimg.com/media/m1.jpg')
+    expect((norm.item(tweet('101', 'a', {})) as any).cover).toBeNull()
+  })
+})
+
 describe('x 参数归一化', () => {
   it('推文 id：纯数字、x.com / twitter.com 链接', () => {
     expect(parseTweetId(TWEET_ID)).toBe(TWEET_ID)
