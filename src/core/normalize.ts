@@ -144,18 +144,22 @@ export function avatar(value: unknown): string | null {
   return s && /^https:\/\/[^/]/.test(s) ? s : null
 }
 
-/** 账号的用户（Account / AuthStatus / 凭证）：UserRef 加上头像，缺失时为 null。 */
-export function accountUser(ref: UserRef, avatarUrl?: unknown): AccountUser
-export function accountUser(ref: UserRef | null | undefined, avatarUrl?: unknown): AccountUser | null
-export function accountUser(ref: UserRef | null | undefined, avatarUrl?: unknown): AccountUser | null {
+/** 账号的用户（Account / AuthStatus / 凭证）：字段与 UserRef 相同；给出 avatarUrl 时覆盖 ref 里的头像，缺失时为 null。 */
+export function accountUser(ref: RefLike, avatarUrl?: unknown): AccountUser
+export function accountUser(ref: RefLike | null | undefined, avatarUrl?: unknown): AccountUser | null
+export function accountUser(ref: RefLike | null | undefined, avatarUrl?: unknown): AccountUser | null {
   if (!ref) return null
-  const given = avatarUrl !== undefined ? avatarUrl : (ref as Partial<AccountUser>).avatar
+  const given = avatarUrl !== undefined ? avatarUrl : ref.avatar
   return { id: ref.id, name: ref.name, url: ref.url, avatar: avatar(given) }
 }
 
-export function userRef(v: { id: unknown; name?: unknown; url?: unknown } | null | undefined): UserRef | null {
+/** 旧凭证文件里的 user 可能没有 avatar，按 null 读。 */
+type RefLike = Omit<UserRef, 'avatar'> & { avatar?: string | null }
+
+/** UserRef：avatar 用 avatar() 归一成 https 绝对地址，不给或取不到时为 null。 */
+export function userRef(v: { id: unknown; name?: unknown; url?: unknown; avatar?: unknown } | null | undefined): UserRef | null {
   if (!v || v.id == null || v.id === '') return null
-  return { id: id(v.id), name: str(v.name), url: url(v.url) }
+  return { id: id(v.id), name: str(v.name), url: url(v.url), avatar: avatar(v.avatar) }
 }
 
 export function user(v: Input<User, 'id'>, raw?: unknown): User {
@@ -205,6 +209,7 @@ export function comment(v: Input<Comment, 'id' | 'item_id' | 'text'>, raw?: unkn
       parent_id: v.parent_id ?? null,
       author: v.author ?? null,
       text: v.text,
+      media: v.media ?? [],
       created_at: v.created_at ?? null,
       stats: { likes: null, replies: null, ...v.stats },
     },

@@ -1,5 +1,7 @@
 references/
 node_modules/
+# 开发时可能用 symlink 把 node_modules 链到主检出（symlink 不匹配上面的目录规则）
+node_modules
 dist/
 coverage/
 *.tgz

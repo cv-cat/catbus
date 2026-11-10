@@ -311,8 +311,8 @@ describe('bilibili comment replies：非上游楼中楼', () => {
     expect(requests[0]!.cookies).toContainEqual(['SESSDATA', 'fake-sessdata'])
     expect(result.data[0]).toEqual({
       id: '71002', item_id: THREAD_BVID, parent_id: '71001',
-      author: { id: '10002', name: '测试用户', url: 'https://space.bilibili.com/10002' },
-      text: '测试回复 71002', created_at: '2023-11-15T06:13:20+08:00', stats: { likes: 3, replies: 0 },
+      author: { id: '10002', name: '测试用户', url: 'https://space.bilibili.com/10002', avatar: null },
+      text: '测试回复 71002', media: [], created_at: '2023-11-15T06:13:20+08:00', stats: { likes: 3, replies: 0 },
     })
     expect(result.data[0][RAW]).toEqual(raw)
     expect(result.page).toEqual({ cursor: '2', has_more: true })

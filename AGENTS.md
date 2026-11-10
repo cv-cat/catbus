@@ -302,6 +302,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | 12306 | `ticket price <train> --from-no <序号> --to-no <序号> --seat-types <编码> [--date <YYYY-MM-DD>]` | 票价详情（参数取自 ticket search 输出的 train_no、from.no、to.no、seat_types） | Fare |
 | 12306 | `route get <train> <from> <to> [--date <YYYY-MM-DD>]` | 经停站与时刻（`<train>` 为 train_no，`<from>`/`<to>` 为出发站与到达站） | Stop[] |
 | 12306 | `transfer search <from> <to> [--date <YYYY-MM-DD>] [--via <中转站>] [--limit N]` | 中转方案搜索（同一车次分段有座标为「同车换座」） | Transfer[] |
+| kuaishou | `auth login --user <用户 id>` | 短信验证通过后手机号下有多个用户（官方 result `100110031`，响应带 `userInfos` 与 `multiUserToken`）时选择登录哪一个。TTY 下直接在终端列出账号选择；非 TTY 下保存待选中间态（10 分钟内有效，含原 `--phone` 与会话 cookie），验证码一步返回 `{sent, phone, users}`，再带 `--user <用户 id>` 重新执行完成登录（不用再输验证码）。multiUserToken 走官方登录页的 `/pass/kuaishou/login/multiUserToken`（字段 account、countryCode、isWebSig4、multiUserToken、phone、setCookie、sid、targetUserId），后续站点换票与短信登录成功后一致 | Account |
 
 扩展类型的字段见 6.2。
 
@@ -354,6 +355,8 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | `-e, --endpoint web\|app\|pc` | 端，默认 `web` |
 | `-o, --output json\|jsonl` | 输出格式，默认 `json`（见 6.1） |
 | `--raw` | 用平台原始对象代替归一化对象 |
+| `--fields <路径,...>` | 只输出 `data` 条目里的这些字段（见 6.1） |
+| `--dry-run` | 只校验、不执行（见 6.1） |
 | `--proxy <url>` | 本次调用使用的代理 |
 | `-v, --verbose` | stderr 输出调试日志（已脱敏） |
 | `-q, --quiet` | 不输出提示和进度，只保留错误 |
@@ -553,12 +556,13 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth|api
 | `apikey` | `--api-key-file`、`--api-key-stdin`（mteam 私有选项） | 从本地文件或 stdin 读取官方访问令牌，TTY 可隐藏输入；先在线校验，再由 core 保存到账号凭证。令牌只发到官方 API，不传给重定向目标 |
 
 - **验证码**：上游能自动过的就自动过，过不了报 `RISK_CONTROL`（`detail.kind = captcha`），退出码 5。
+- **登录中的人机验证**：平台在登录流程中途强制的短信验证码验证（例如 xhs 扫码确认后的 HTTP 471，`verifyType` 120 验证页链 / 213 主站登录强制链）由实现自动完成，手机号与验证码沿用 `--phone` / `--code` 或终端输入（非交互可从 stdin 逐行读，包括验证码发往的指定手机号）。验证通过后用同一组未完成的登录参数继续；验证失败与放弃按 `RISK_CONTROL` 报错。站点只接受账号绑定手机时，`hint` 写明。
 - **子站点**（创作者中心、直播、IM 等）：
   - 能自动换取的凭证，登录时或第一次用到时自动获取，不需要用户再登录一次（例如 xhs 的创作者中心：用主站登录态换取）；
   - 需要单独登录的，用 `--scope <name>` 登录，各平台可用的 scope 在注册表里声明；
   - 命令缺少所需 scope 时，报 `AUTH_REQUIRED`，`hint` 带上 `--scope`。
 - **`auth status`**：在线校验，返回 AuthStatus。未登录或已失效时返回 `logged_in: false`，不报错。校验成功且返回的是同一个用户时，新的昵称 / 头像由 core 回写到凭证文件。
-- **头像**：登录、cookie 导入校验和 `auth status` 复用流程里本来就有的那次当前用户请求，取到头像就存进凭证的 `user.avatar`（统一成 https 绝对地址），不为头像额外发请求；取不到时为 null。旧凭证文件没有 `avatar` 时读成 null，不需要迁移。
+- **头像**（账号的头像；作者、评论者等 UserRef 的头像见 6.2）：登录、cookie 导入校验和 `auth status` 复用流程里本来就有的那次当前用户请求，取到头像就存进凭证的 `user.avatar`（统一成 https 绝对地址），不为头像额外发请求；取不到时为 null。旧凭证文件没有 `avatar` 时读成 null，不需要迁移。
 - **`auth logout`**：删除本地凭证文件（上游支持服务端登出的，同时调用服务端登出，目前有 B 站和快手），并清除指向它的 `_current`。
 - **`auth use <account>`**：设置 `_current`。端声明了 `use` 钩子的（目前只有 `jimeng`），先调用钩子，再设置 `_current`；钩子报错时不切换。
 - **`auth list`**：列出本平台、本端的账号。
@@ -678,6 +682,18 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 
 `--raw`：用平台原始对象代替每个归一化对象，信封不变。
 
+`--fields <路径,...>`：只输出每个 `data` 条目里的这些字段，用来省掉不需要的数据。
+- 逗号分隔，用点号进入嵌套对象，例如 `--fields id,url,author.name,stats.likes`。路径经过数组时作用到数组的每个元素（`media.url`）。
+- 列表命令作用到每一条，非列表命令作用到 `data` 本身；`data` 不是对象时（如 `config get`）不变。json 和 jsonl 都适用，信封的其他字段不变。
+- 输出保留嵌套结构，键按 `--fields` 里的顺序；条目里没有的路径输出 null。同时给出 `author` 和 `author.name` 时输出整个 `author`。
+- 在 `--raw` 之后生效，路径按原始对象的字段写。
+- 路径为空或有空段（`a..b`）时报 `USAGE`。
+
+`--dry-run`：做完执行前的全部检查就停下，不调用平台接口、不联网、不确认、不写凭证。
+- 检查的内容和顺序与真正执行时一样：参数和选项（`USAGE` / `UNSUPPORTED`）、是否已实现（`NOT_IMPLEMENTED`）、身份（`AUTH_REQUIRED`，只看本地有没有账号，不在线校验登录态）。
+- 通过时退出码 0，`data` 为 DryRun `{args options confirm}`：`args` 是位置参数，`options` 是校验后的选项（含默认值，凭证类的值打码；`--text @file` 等不读文件内容，原样给出），`confirm` 表示真正执行时是否需要危险操作确认。`page` 为 null，不受 `--fields` 影响。
+- 只用于平台命令；用在全局命令上报 `USAGE`。和 `-h` 一起用时输出帮助。
+
 ### 6.2 归一化类型
 
 所有平台的同一种对象都输出同一结构。
@@ -686,7 +702,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 
 | 类型 | 字段 |
 |---|---|
-| UserRef | `id name url` |
+| UserRef | `id name url avatar`。`avatar` 为头像的 https 绝对地址，从同一个原始对象里取，不为头像额外发请求；取不到时为 null |
 | Price | `amount currency`。`amount` 用货币主单位（元）的十进制数。虚拟货币也用它，`currency` 写平台货币代码 |
 | Media | `id type url width height duration`。`url` 在刚上传、平台还没给出可访问地址时（例如视频转码前）为 null |
 
@@ -698,7 +714,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | Item | `id kind url title text author:UserRef created_at cover media:Media[] stats{views likes comments collects shares} price:Price\|null status\|null` |
 | Torrent | Item 的全部字段（`kind: torrent`），另有 `size file_count category_id seeders leechers completed discount`；大小为字节，计数为整数或 null，优惠为站点代码或 null |
 | BonusRecord | `id time type before after change user:UserRef\|null note url`：PT 站魔力值明细的一条；`before` / `after` / `change` 为数字（变化量带符号），站点不提供时为 null；`url` 为相关链接，没有时为 null |
-| Comment | `id item_id parent_id author:UserRef text created_at stats{likes replies}` |
+| Comment | `id item_id parent_id author:UserRef text media:Media[] created_at stats{likes replies}` |
 | Folder / Series | `id name count url` |
 | Category | `id name parent_id` |
 | Keyword | `text heat` |
@@ -706,6 +722,8 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | Poi | `id name address` |
 
 `Comment.parent_id` 表示直接被回复的评论 ID；楼中楼回复可能指向另一条子回复，不能统一填成根评论 ID。bilibili 的原始 `root` / `parent` 通过 `--raw` 保留。
+
+`Comment.media` 是评论里附带的图片、表情包（贴纸）、商品评价的晒图，取自同一个原始评论对象，不为它额外发请求；动图（GIF、动态表情包）仍记为 `image`，只有平台给的是视频文件时（例如 X 回复里的视频和 GIF）才是 `video`。正文里的行内表情（如 B 站的 `[doge]`）仍是文本，不进 `media`。没有时为 `[]`。
 
 **直播**：
 
@@ -729,7 +747,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 
 | 类型 | 字段 |
 |---|---|
-| AccountUser | `id name url avatar`：UserRef 加上头像，只用于账号 |
+| AccountUser | `id name url avatar`：字段与 UserRef 相同，只用于账号（Account、AuthStatus、凭证文件），保留这个类型名 |
 | AuthStatus | `logged_in user:AccountUser\|null method expires_at` |
 | Account | `platform endpoint account current user:AccountUser\|null method updated_at` |
 | File | `path type url size` |

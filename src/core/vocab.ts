@@ -83,6 +83,7 @@ export const VOCAB: Record<string, CommandSpec> = {
     options: {
       phone: z.string().optional().describe('手机号（sms）'),
       code: z.string().optional().describe('短信验证码（sms）'),
+      user: z.string().optional().describe('选择登录的账号（快手 sms 的多用户手机号）'),
       username: z.string().optional().describe('用户名（password）'),
       passwordStdin: z.boolean().optional().describe('从 stdin 读取密码（password）'),
       cookie: z.string().optional().describe('cookie 字符串、@文件，或 - 表示从 stdin 读取（cookie）'),

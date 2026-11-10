@@ -33,6 +33,17 @@ vi.mock('../src/platforms/index.js', async (importOriginal) => {
           'user followers': { upstream: 'full', handler: h(async () => ({ data: [], page: { cursor: null, has_more: false } })) },
           'item get': { upstream: 'full', handler: h(async (ctx) => withRaw({ id: ctx.args.item }, { raw_id: ctx.args.item })) },
           'item list': { upstream: 'full', handler: h(async () => ({ data: [], page: { cursor: null, has_more: false } })) },
+          // 嵌套对象，测 --fields
+          'item related': {
+            upstream: 'full',
+            handler: h(async () => ({
+              data: [
+                { id: 'a', title: 't', author: { id: 'u', name: 'n' }, media: [{ url: 'm1', type: 'image' }, { url: 'm2', type: 'video' }], stats: null },
+                { id: 'b', title: null, author: null, media: [], stats: { likes: 3 } },
+              ],
+              page: { cursor: null, has_more: false },
+            })),
+          },
           'item search': {
             upstream: 'full',
             // 每页 2 条，共 3 页
@@ -244,6 +255,61 @@ describe('输出', () => {
     const file = join(process.env.CATBUS_HOME!, 'post.txt')
     writeFileSync(file, '正文')
     expect((await cli('demo', 'item', 'publish', '--text', `@${file}`)).env.data).toEqual({ text: '正文' })
+  })
+
+  it('--fields：按点号路径裁剪，经过数组作用到每个元素，没有的字段为 null', async () => {
+    const r = await cli('demo', 'item', 'related', 'i1', '-q', '--fields', 'id, author.name,media.url,stats.likes,nope')
+    expect(r.env.data).toEqual([
+      { id: 'a', author: { name: 'n' }, media: [{ url: 'm1' }, { url: 'm2' }], stats: null, nope: null },
+      { id: 'b', author: null, media: [], stats: { likes: 3 }, nope: null },
+    ])
+    expect(r.env.page).toEqual({ cursor: null, has_more: false })
+    // 同时给出整个字段和它的子路径时取整个字段，顺序不影响
+    const whole = await cli('demo', 'item', 'related', 'i1', '-q', '--fields', 'author.name,author')
+    expect(whole.env.data[0]).toEqual({ author: { id: 'u', name: 'n' } })
+  })
+
+  it('--fields：jsonl 每行裁剪；在 --raw 之后生效；非对象的 data 不变', async () => {
+    const r = await cli('demo', 'item', 'related', 'i1', '-q', '-o', 'jsonl', '--fields', 'id')
+    expect(r.stdout).toBe('{"id":"a"}\n{"id":"b"}\n')
+    expect((await cli('demo', 'item', 'get', 'i1', '-q', '--raw', '--fields', 'raw_id')).env.data).toEqual({ raw_id: 'i1' })
+    expect((await cli('demo', 'item', 'search', 'kw', '-q', '--fields', 'id')).env.data).toEqual([0, 1])
+  })
+
+  it('--fields：空路径或空段报 USAGE', async () => {
+    for (const spec of ['', 'id,', 'a..b']) {
+      const r = await cli('demo', 'item', 'get', 'i1', '-q', '--fields', spec)
+      expect(r.code).toBe(2)
+      expect(r.env.error.code).toBe('USAGE')
+    }
+  })
+})
+
+describe('--dry-run', () => {
+  it('通过检查时输出解析后的参数和选项，不执行、不确认、不读文件', async () => {
+    await login()
+    const del = await cli('demo', 'item', 'delete', 'i1', '--dry-run')
+    expect(del.code).toBe(0)
+    expect(del.env).toMatchObject({ ok: true, resource: 'item', action: 'delete', account: 'work', page: null })
+    expect(del.env.data).toEqual({ args: { item: 'i1' }, options: {}, confirm: true })
+    // 真正执行时会读文件并报错；dry-run 不读，原样给出
+    const pub = await cli('demo', 'item', 'publish', '--text', '@/nonexistent/post.md', '--dry-run', '--fields', 'id')
+    expect(pub.code).toBe(0)
+    expect(pub.env.data).toMatchObject({ options: { text: '@/nonexistent/post.md' }, confirm: false })
+  })
+
+  it('检查不通过时照常报错：USAGE、AUTH_REQUIRED、NOT_IMPLEMENTED', async () => {
+    expect((await cli('demo', 'item', 'get', '--dry-run')).env.error.code).toBe('USAGE')
+    expect((await cli('demo', 'item', 'list', '--dry-run')).env.error.code).toBe('AUTH_REQUIRED')
+    expect((await cli('demo', 'item', 'get', 'i1', '-e', 'app', '--dry-run')).env.error.code).toBe('NOT_IMPLEMENTED')
+  })
+
+  it('凭证类选项打码；全局命令不接受 --dry-run', async () => {
+    const r = await cli('bilibili', 'auth', 'login', '--method', 'cookie', '--cookie', 'SESSDATA=secret', '--dry-run')
+    expect(r.code).toBe(0)
+    expect(r.env.data.options.cookie).toBe('***')
+    expect(JSON.stringify(r.env)).not.toContain('secret')
+    expect((await cli('version', '--dry-run')).env.error.code).toBe('USAGE')
   })
 })
 

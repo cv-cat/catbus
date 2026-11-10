@@ -21,12 +21,18 @@ export const tweetUrl = (id: string, screenName?: string | null) => (screenName 
 export function userRef(u: any): UserRef | null {
   if (!u) return null
   const screenName = screenNameOf(u)
-  return n.userRef({ id: u.rest_id ?? u.legacy?.id_str, name: u.core?.name ?? u.legacy?.name, url: screenName ? userUrl(screenName) : null })
+  return n.userRef({
+    id: u.rest_id ?? u.legacy?.id_str,
+    name: u.core?.name ?? u.legacy?.name,
+    url: screenName ? userUrl(screenName) : null,
+    // 头像与 user() 同源：新版 avatar.image_url，老版 legacy.profile_image_url_https
+    avatar: u.avatar?.image_url ?? u.legacy?.profile_image_url_https,
+  })
 }
 
-/** 当前账号（Viewer）→ AccountUser：头像与 user() 同源（新版 avatar.image_url，老版 legacy.profile_image_url_https）。 */
+/** 当前账号（Viewer）→ AccountUser：字段与 userRef() 相同。 */
 export function account(u: any): AccountUser | null {
-  return n.accountUser(userRef(u), u?.avatar?.image_url ?? u?.legacy?.profile_image_url_https)
+  return userRef(u)
 }
 
 /** 完整用户资料：新版字段在 core / avatar / profile_bio / relationship_counts / tweet_counts，老版在 legacy。 */
@@ -117,6 +123,7 @@ export function comment(raw: any, itemId: string): Comment {
       parent_id: parent === itemId ? null : parent,
       author: userRef(t.core?.user_results?.result),
       text: textOf(t) ?? '',
+      media: mediaOf(legacy).media,
       created_at: n.time(legacy.created_at),
       stats: { likes: n.count(legacy.favorite_count), replies: n.count(legacy.reply_count) },
     },

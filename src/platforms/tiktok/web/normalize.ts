@@ -1,6 +1,7 @@
 import * as n from '../../../core/normalize.js'
 import { jsonLoads } from '../../../core/py.js'
 import type { Category, Comment, Conversation, Event, Folder, Gift, Item, Live, Media, Message, Notice, Poi, Rank, User, UserRef } from '../../../core/schemas.js'
+import { commentMedia, reviewMedia } from '../../_shared/aweme.js'
 import { ORIGIN, SHOP } from './profile.js'
 import type { ImTextMessage, LiveEvent, LiveUser, PulledMessage } from './wire.js'
 
@@ -11,11 +12,15 @@ export const itemUrl = (uniqueId: unknown, id: unknown, photo = false) => `${ORI
 export const liveUrl = (uniqueId: unknown) => (uniqueId ? `${ORIGIN}/@${uniqueId}/live` : null)
 export const productUrl = (id: unknown) => `${SHOP}/view/product/${id}`
 
-export function ref(id: unknown, name: unknown, uniqueId?: unknown): UserRef | null {
-  return n.userRef({ id, name: name || uniqueId, url: userUrl(uniqueId) })
+export function ref(id: unknown, name: unknown, uniqueId?: unknown, avatar?: unknown): UserRef | null {
+  return n.userRef({ id, name: name || uniqueId, url: userUrl(uniqueId), avatar })
 }
 
 const first = (v: unknown): string | null => (Array.isArray(v) ? n.url(v[0]) : n.url(v))
+
+/** 头像：web 端结构（itemStruct.author、user/room 的 user）是 avatarThumb 字符串，webcast / 评论 / 通知是 avatar_thumb.url_list。 */
+const avatarOf = (u: any): string | null =>
+  n.url(u?.avatarThumb ?? u?.avatarMedium ?? u?.avatarLarger) ?? first(u?.avatar_thumb?.url_list ?? u?.avatar_medium?.url_list ?? u?.avatar_larger?.url_list)
 
 /** 作品（itemStruct：视频页 hydration、搜索、推荐、主页列表都用这个结构）。 */
 export function item(v: any): Item {
@@ -29,7 +34,7 @@ export function item(v: any): Item {
       url: itemUrl(a.uniqueId, v.id, photo),
       title: n.str(v.imagePost?.title),
       text: n.str(v.desc),
-      author: ref(a.id, a.nickname, a.uniqueId),
+      author: ref(a.id, a.nickname, a.uniqueId, avatarOf(a)),
       created_at: n.time(v.createTime),
       cover: n.url(v.video?.cover || v.video?.originCover) ?? first(v.imagePost?.cover?.imageURL?.urlList),
       media: itemMedia(v),
@@ -104,8 +109,9 @@ export function comment(v: any, itemId: string): Comment {
       id: n.id(v.cid),
       item_id: n.id(v.aweme_id ?? itemId),
       parent_id: parent,
-      author: ref(u.uid, u.nickname, u.unique_id),
+      author: ref(u.uid, u.nickname, u.unique_id, avatarOf(u)),
       text: String(v.text ?? ''),
+      media: commentMedia(v),
       created_at: n.time(v.create_time),
       stats: { likes: n.count(v.digg_count), replies: n.count(v.reply_comment_total) },
     },
@@ -121,6 +127,7 @@ export function review(v: any, productId: string): Comment {
       item_id: productId,
       author: n.userRef({ id: v.review_user?.user_id ?? v.user_id ?? v.review_user?.name, name: v.review_user?.name ?? v.user_name }),
       text: String(v.review_text ?? v.display_text ?? v.text ?? ''),
+      media: reviewMedia(v.images ?? v.review_images),
       created_at: n.time(v.review_timestamp ?? v.review_time ?? v.create_time),
       stats: { likes: n.count(v.like_count ?? v.helpful_count), replies: null },
     },
@@ -179,7 +186,7 @@ export function liveRoom(d: any): Live {
       url: liveUrl(u.uniqueId),
       title: n.str(r.title),
       status: Number(r.status ?? u.status) === 2 ? 'live' : 'offline',
-      host: ref(u.id, u.nickname, u.uniqueId),
+      host: ref(u.id, u.nickname, u.uniqueId, avatarOf(u)),
       cover: n.url(r.coverUrl),
       stats: { viewers: n.count(r.liveRoomStats?.userCount) },
     },
@@ -196,7 +203,7 @@ export function webcastRoom(r: any): Live {
       url: liveUrl(o.display_id),
       title: n.str(r.title),
       status: Number(r.status) === 2 ? 'live' : 'offline',
-      host: ref(o.id_str ?? o.id, o.nickname, o.display_id),
+      host: ref(o.id_str ?? o.id, o.nickname, o.display_id, avatarOf(o)),
       cover: first(r.cover?.url_list),
       stats: { viewers: n.count(r.user_count ?? r.stats?.total_user) },
     },
@@ -257,7 +264,7 @@ export function gift(g: any): Gift {
 
 export function rank(v: any, i: number): Rank | null {
   const u = v.user ?? {}
-  const r = ref(u.id_str ?? u.id, u.nickname, u.display_id)
+  const r = ref(u.id_str ?? u.id, u.nickname, u.display_id, avatarOf(u))
   return r ? n.rank({ rank: Number(v.rank ?? i + 1), user: r, score: n.count(v.score) }, v) : null
 }
 
@@ -299,7 +306,7 @@ export function notice(v: any, system = false): Notice {
     {
       id: n.id(v.nid_str ?? v.nid),
       type,
-      user: ref(u.uid ?? u.id, u.nickname, u.unique_id ?? u.uniqueId),
+      user: ref(u.uid ?? u.id, u.nickname, u.unique_id ?? u.uniqueId, avatarOf(u)),
       target: aweme?.aweme_id ? { id: n.id(aweme.aweme_id), url: itemUrl(aweme.author?.unique_id, aweme.aweme_id) } : null,
       text: n.str(text),
       created_at: n.time(v.create_time),

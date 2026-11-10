@@ -21,10 +21,19 @@ export function userUrl(id: unknown, token?: unknown, source = 'pc_note'): strin
   return token ? `${WEB}/user/profile/${id}?xsec_token=${encodeURIComponent(String(token))}&xsec_source=${source}` : `${WEB}/user/profile/${id}`
 }
 
+/**
+ * 作者 / 评论者等的 UserRef。头像：笔记卡片与详情的 user.avatar，评论的 user_info.image，
+ * 直播 profile.avatar，个人页的 images / imageb。
+ */
 export function ref(u: any): UserRef | null {
   if (!u) return null
   const id = u.user_id ?? u.userId ?? u.id
-  return n.userRef({ id, name: u.nickname ?? u.nick_name ?? u.name ?? u.userName, url: userUrl(id, u.xsec_token) })
+  return n.userRef({
+    id,
+    name: u.nickname ?? u.nick_name ?? u.name ?? u.userName,
+    url: userUrl(id, u.xsec_token),
+    avatar: u.avatar ?? u.image ?? u.images ?? u.imageb ?? u.avatar_url,
+  })
 }
 
 /** 当前账号（user/me）→ AccountUser：头像取 images（大图），没有时 imageb。 */
@@ -168,6 +177,21 @@ export function followingUser(v: any): User {
   )
 }
 
+/**
+ * 评论附带的图片（含表情包）：`pictures[i]` 的 `url_default` 是大图（WB_DFT），`url_pre` 是缩略图（WB_PRV），
+ * 两者也在 `info_list` 里按 `image_scene` 给出。
+ */
+function commentPictures(list: unknown): Media[] {
+  const out: Media[] = []
+  for (const p of Array.isArray(list) ? (list as any[]) : []) {
+    const info = (scene: string) => (Array.isArray(p?.info_list) ? p.info_list.find((x: any) => x?.image_scene === scene)?.url : undefined)
+    const url = n.url(p?.url_default ?? info('WB_DFT') ?? p?.url_pre ?? info('WB_PRV') ?? p?.url)
+    if (!url) continue
+    out.push(n.media({ id: null, type: 'image', url, width: n.count(p.width), height: n.count(p.height) }, p))
+  }
+  return out
+}
+
 /** 评论（comment/page 的 comments[i] 与 sub_comments）。 */
 export function comment(v: any, itemId: string, parent: string | null = null): Comment {
   return n.comment(
@@ -177,6 +201,7 @@ export function comment(v: any, itemId: string, parent: string | null = null): C
       parent_id: parent ?? n.idOrNull(v.target_comment?.id) ?? null,
       author: ref(v.user_info),
       text: String(v.content ?? ''),
+      media: commentPictures(v.pictures),
       created_at: n.time(v.create_time),
       stats: { likes: n.count(v.like_count), replies: n.count(v.sub_comment_count) },
     },

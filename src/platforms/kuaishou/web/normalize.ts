@@ -12,8 +12,8 @@ const first = (o: any, ...keys: string[]): any => {
   return undefined
 }
 
-export function ref(id: unknown, name: unknown): UserRef | null {
-  return n.userRef({ id, name, url: id == null || id === '' ? null : profileUrl(id) })
+export function ref(id: unknown, name: unknown, avatar?: unknown): UserRef | null {
+  return n.userRef({ id, name, url: id == null || id === '' ? null : profileUrl(id), avatar })
 }
 
 /** 取 URL：字符串，或 [{url}] / [{cdn,url}] 列表的第一个。 */
@@ -65,7 +65,7 @@ export function feed(v: any, authorFallback?: any): Item {
       kind: images.length ? 'image' : 'video',
       url: photoUrl(id),
       text: n.str(first(photo, 'caption', 'originCaption')),
-      author: ref(first(author, 'id', 'authorId', 'user_id', 'eid'), first(author, 'name', 'user_name', 'nickname')),
+      author: ref(first(author, 'id', 'authorId', 'user_id', 'eid'), first(author, 'name', 'user_name', 'nickname'), first(author, 'headerUrl', 'headurl', 'avatar', 'userHead')),
       created_at: n.time(first(photo, 'timestamp', 'create_time')),
       cover: urlOf(first(photo, 'coverUrl', 'coverUrls')),
       media: photoMedia(photo),
@@ -143,7 +143,7 @@ export function comment(v: any, itemId: string, parentId: string | null = null):
       id: n.id(v.commentId ?? v.comment_id),
       item_id: itemId,
       parent_id: parentId,
-      author: ref(first(v, 'authorEid', 'authorId', 'author_id'), first(v, 'authorName', 'author_name')),
+      author: ref(first(v, 'authorEid', 'authorId', 'author_id'), first(v, 'authorName', 'author_name'), first(v, 'headurl', 'headerUrl', 'authorHead')),
       text: String(v.content ?? ''),
       created_at: n.time(v.timestamp),
       stats: { likes: n.count(first(v, 'realLikedCount', 'likedCount')), replies: n.count(first(v, 'subCommentCount')) ?? (v.hasSubComments ? null : 0) },
@@ -162,7 +162,7 @@ export function liveRoom(v: any): Live {
       url: liveUrl(eid),
       title: n.str(v.caption),
       status: v.living || author.living ? 'live' : 'offline',
-      host: n.userRef({ id: eid, name: author.name, url: liveUrl(eid) }),
+      host: n.userRef({ id: eid, name: author.name, url: liveUrl(eid), avatar: first(author, 'avatar', 'headerUrl', 'headurl') }),
       cover: n.url(v.poster),
       stats: { viewers: n.count(v.watchingCount) },
     },

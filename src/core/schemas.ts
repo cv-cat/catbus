@@ -7,13 +7,12 @@ export interface UserRef {
   id: string
   name: string | null
   url: string | null
-}
-
-/** 账号的用户：UserRef 加上头像，只用于 Account、AuthStatus 与凭证文件（AGENTS 6.2）。 */
-export interface AccountUser extends UserRef {
-  /** https 绝对地址；取不到时为 null。 */
+  /** 头像：https 绝对地址；取不到时为 null。 */
   avatar: string | null
 }
+
+/** 账号的用户：字段与 UserRef 相同，只用于 Account、AuthStatus 与凭证文件（AGENTS 6.2）。 */
+export type AccountUser = UserRef
 
 export interface Price {
   amount: number
@@ -89,6 +88,8 @@ export interface Comment {
   parent_id: string | null
   author: UserRef | null
   text: string
+  /** 评论附带的图片、表情包、商品评价的晒图；没有时为 []。 */
+  media: Media[]
   created_at: string | null
   stats: { likes: number | null; replies: number | null }
 }
