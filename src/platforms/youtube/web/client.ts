@@ -192,13 +192,14 @@ export class YtClient {
     }
     try {
       const html = await this.rotatePage()
-      const token = /init\('(\d+)'/.exec(html)?.[1]
+      // token 是 int64，可能是负数（实测出现过 -3614468034866697709）
+      const token = /init\('(-?\d+)'/.exec(html)?.[1]
       if (!token) {
         this.rotateThrottle('RotateCookiesPage 里没有 init token', null)
         return false
       }
       // 页内 init('<token>', m, o, l, interval)：数值字段为 0 时按 protobuf 的省略规则写 null（实测 [null,"<token>",1]）
-      const [, m, o, l] = /init\('\d+'\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/.exec(html) ?? []
+      const [, m, o, l] = /init\('-?\d+'\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/.exec(html) ?? []
       const body = [numOrNull(m), token, numOrNull(o), numOrNull(l)]
       const res = await retryNetwork(this.ctx, () =>
         this.http.request({

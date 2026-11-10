@@ -651,6 +651,20 @@ describe('youtube 平台（web）', () => {
         expect(saved.device.cookieRotate.nextAttemptAt).toBeLessThanOrEqual(rand.now() + 600_000)
       })
 
+      it('页内 token 是 int64，负数也照发（真机出现过 -3614468034866697709）', async () => {
+        await login()
+        const negative = {
+          '/RotateCookiesPage': () => fakeResponse(ROTATE_PAGE.replace('2793357806803385843', '-3614468034866697709'), { headers: [['content-type', 'text/html']] }),
+          '/RotateCookies': rotateRoutes['/RotateCookies'],
+        }
+        const r = await withYt({ browse: () => EMPTY, ...negative }, async (calls) => {
+          const out = await cli('youtube', 'feed', 'list')
+          expect(calls.find((c) => c.path === '/RotateCookies')!.body).toEqual([null, '-3614468034866697709', 1, null])
+          return out
+        })
+        expect(r.code).toBe(3) // 轮换后 browse 仍是 logged_in=0，报 AUTH_EXPIRED
+      })
+
       it('轮换救不回来时仍报 AUTH_EXPIRED；原请求只重试一次', async () => {
         await login()
         let browseCalls = 0
