@@ -259,6 +259,7 @@ export async function mobileCodeLogin(ks: Ks, phone: string, smsCode: string, co
  * 选定 targetUserId 后用 multiUserToken 完成登录。字段与官方登录页的登录口一致（account 为网页里的账号输入框，默认空）。
  * 官方前端对全部 /pass/kuaishou* 都做 sig4（form 参与签名、URL 带 __NS_hxfalcon）并附 channelType，
  * 该口在 LOGIN_SIG4 名单里；缺签名服务端报 400013。
+ * verifyToken 给出时（400013 风控后），官方在重发请求里附带 ztIdentityVerificationType / ztIdentityVerificationCheckToken。
  */
 export async function multiUserTokenLogin(
   ks: Ks,
@@ -268,6 +269,7 @@ export async function multiUserTokenLogin(
     multiUserToken: string
     countryCode?: string // 默认 +86
     account?: string // 官方登录页的账号框，默认空
+    verifyToken?: { type: number; token: string } // 统一验证通过的凭证
   },
 ): Promise<[Json, Issued]> {
   const [data, res] = await ks.loginForm(
@@ -282,10 +284,79 @@ export async function multiUserTokenLogin(
       ['sid', SID_WEB_API],
       ['targetUserId', params.userId],
       ['account', params.account ?? ''],
+      ...(params.verifyToken
+        ? ([
+            ['ztIdentityVerificationType', String(params.verifyToken.type)],
+            ['ztIdentityVerificationCheckToken', params.verifyToken.token],
+          ] as [string, string][])
+        : []),
     ],
     PASSPORT,
   )
   return [data, sessionCookies(data, res)]
+}
+
+/**
+ * 统一人机验证（ztUnionVerify）：multiUserToken 等 /pass/kuaishou* 接口风控报 4xxxxx 时，
+ * 响应带 captchaUrl（含 unionToken、unLoginUserId），按官方验证页的三步在 CLI 内走完：
+ * sendVoiceCode（发语音/短信验证码）→ verifySmsCode（校验，回 phoneVerifySuccToken）→
+ * 重发原请求时附 ztIdentityVerificationType / ztIdentityVerificationCheckToken。
+ * 这三个口官方是纯 form、无 sig4（验证页自己的 XHR）。
+ */
+const ZT_VERIFY_HOST = 'https://app.m.kuaishou.com'
+
+async function ztVerifyForm(ks: Ks, path: string, fields: [string, string][]): Promise<Json> {
+  const body = fields.map(([k, v]) => `${k}=${quote(v, '')}`).join('&')
+  const h = buildHeaders('POST', 'login')
+  h.set('referer', `${ZT_VERIFY_HOST}/`)
+  h.set('origin', ZT_VERIFY_HOST)
+  h.set('sec-fetch-site', 'same-origin')
+  const res = await ks.send({ method: 'POST', url: `${ZT_VERIFY_HOST}${path}`, headers: h.get(), cookie: await ks.s.currentLine(), body })
+  return (await res.clone().json().catch(() => ({}))) as Json
+}
+
+/** 解析 captchaUrl：unionToken、unLoginUserId、kpn、bizName、contextIdentifier、useVoice 都在里面。 */
+export function parseCaptchaUrl(url: string): { unionToken: string; unLoginUserId: string; kpn: string; bizName: string; contextIdentifier: string; useVoice: boolean; sid: string } {
+  const u = new URL(url)
+  const get = (name: string) => u.searchParams.get(name) ?? ''
+  return {
+    unionToken: get('unionToken'),
+    unLoginUserId: get('unLoginUserId') || get('userId'),
+    kpn: get('kpn') || 'KUAISHOU',
+    bizName: get('bizName') || 'LOGIN_FROM_WEB',
+    contextIdentifier: get('contextIdentifier') || 'LOGIN_AUDIT_FROM_WEB',
+    useVoice: get('useVoice') === 'true',
+    sid: get('sid') || SID_WEB_API,
+  }
+}
+
+/** 统一验证第一步：发语音/短信验证码（type=53 即登录）。 */
+export async function ztVerifySendCode(ks: Ks, info: ReturnType<typeof parseCaptchaUrl>): Promise<Json> {
+  return ztVerifyForm(ks, '/pass/ztUnionVerify/sms/unlogin/sendByUser', [
+    ['unionToken', info.unionToken],
+    ['kpn', info.kpn],
+    ['bizName', info.bizName],
+    ['contextIdentifier', info.contextIdentifier],
+    ['type', '53'],
+    ['useVoice', String(info.useVoice)],
+    ['sid', info.sid],
+    ['unLoginUserId', info.unLoginUserId],
+  ])
+}
+
+/** 统一验证第二步：校验验证码；成功时响应带 phoneVerifySuccToken / phoneVerifyType（即重发凭证）。 */
+export async function ztVerifyCheckCode(ks: Ks, info: ReturnType<typeof parseCaptchaUrl>, smsCode: string): Promise<Json> {
+  return ztVerifyForm(ks, '/pass/ztUnionVerify/sms/unlogin/verifyByUser', [
+    ['kpn', info.kpn],
+    ['bizName', info.bizName],
+    ['contextIdentifier', info.contextIdentifier],
+    ['unionToken', info.unionToken],
+    ['useVoice', String(info.useVoice)],
+    ['sid', info.sid],
+    ['smsCode', smsCode],
+    ['userId', info.unLoginUserId],
+    ['unLoginUserId', info.unLoginUserId],
+  ])
 }
 
 /** STS 两跳是 iframe 导航，不是 XHR。 */

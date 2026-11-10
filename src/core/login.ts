@@ -219,7 +219,7 @@ export async function smsLogin<S extends Record<string, unknown>>(
   flow: {
     send(phone: string): Promise<S>
     verify(state: S, code: string): Promise<Account | SmsIntermediate>
-    select?(state: S, userId: string): Promise<Account>
+    select?(state: S, userId: string): Promise<Account | SmsIntermediate>
   },
 ): Promise<Account | SmsIntermediate> {
   const phone = ctx.options.phone as string | undefined
@@ -231,9 +231,11 @@ export async function smsLogin<S extends Record<string, unknown>>(
     if (!flow.select) throw new CatbusError('USAGE', '该平台不支持用 --user 选择账号', { hint: `${cmd} --code <验证码>` })
     const state = await smsState.load<S>(ctx)
     if (!state) throw new CatbusError('USAGE', '没有找到有效的短信登录中间态（10 分钟内有效）', { hint: `${cmd} --phone <手机号>` })
-    const account = await flow.select(state, user)
+    const result = await flow.select(state, user)
+    // 返回 {sent:true,...} 中间态（例如选号后撞风控、等验证码）时 state 由平台自己维护，不清
+    if ('sent' in (result as SmsIntermediate) && (result as SmsIntermediate).sent) return result
     await smsState.clear(ctx)
-    return account
+    return result as Account
   }
   if (code) {
     const state = await smsState.load<S>(ctx)
