@@ -13,13 +13,17 @@
 import { BotGuardClient } from 'bgutils-js/botguard'
 import { WebPoMinter as Minter } from 'bgutils-js/webpo'
 import { createRequire } from 'node:module'
+import { format } from 'node:util'
 import { CatbusError } from '../../../core/errors.js'
 import { jsonLoads } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import { retryNetwork, type YtClient } from './client.js'
 
 const require = createRequire(import.meta.url)
-const { JSDOM } = require('jsdom') as { JSDOM: new (html: string, opts?: Record<string, unknown>) => any }
+const { JSDOM, VirtualConsole } = require('jsdom') as {
+  JSDOM: new (html: string, opts?: Record<string, unknown>) => any
+  VirtualConsole: new () => any
+}
 
 /** GenerateIT 是 Google WAA 的 protobuf 风格 RPC：双元素请求 `[API key, botguard 响应]`，四元素响应。 */
 const GENERATE_IT_URL = 'https://youtube-.runtime.googleapis.com/$rpc/google.internal.waa.v1.Waa/GenerateIT'
@@ -142,11 +146,16 @@ export async function poMinter(c: YtClient): Promise<MintFn> {
  * BotGuardClient.create({globalObject: globalThis}) 会取到 globalThis[globalName]。
  */
 function runInterpreter(c: YtClient, interpreterJS: string): void {
+  // jsdom 默认把 window.console 转发到 Node 的 stdout，会污染 stdout 上的 JSON 信封；改写到 stderr（AGENTS 8「stdout 纯净」）
+  const vc = new VirtualConsole()
+  for (const k of ['log', 'info', 'warn', 'error', 'debug', 'trace']) vc.on(k, (...a: unknown[]) => process.stderr.write(format(...a) + '\n'))
+  vc.on('jsdomError', (e: Error) => process.stderr.write(`[catbus] jsdom: ${e.message}\n`))
   const dom = new JSDOM('<!DOCTYPE html><html lang="en"><head><title></title></head><body></body></html>', {
     url: 'https://www.youtube.com/',
     referrer: 'https://www.youtube.com/',
     resources: { userAgent: c.ua },
     pretendToBeVisual: true,
+    virtualConsole: vc,
   })
   const g = globalThis as Record<string, unknown>
   g.window = dom.window

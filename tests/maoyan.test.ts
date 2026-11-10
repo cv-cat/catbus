@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fakeResponse, type HeaderPairs, type HttpResponse, mockSender, type PreparedRequest } from '../src/core/http.js'
 import * as rand from '../src/core/rand.js'
 import { resolveCity, resolveProject } from '../src/platforms/maoyan/web/resolve.js'
@@ -413,5 +413,33 @@ describe('maoyan 平台（web）', () => {
     const r = await cli('maoyan', 'item', 'search', '演唱会')
     expect(r.code).toBe(4)
     expect(r.env.error.code).toBe('NOT_IMPLEMENTED')
+  })
+})
+
+// 真实的 pclogin guard（jsdom 跑 H5guard 4.3.0），不用 mockGuard：页面脚本会打日志，
+// jsdom 默认把它们转发到 stdout，会污染 stdout 上的 JSON 信封（AGENTS 6.1），回归见 fix/maoyan-jsdom-stdout。
+describe('maoyan 扫码登录的 jsdom 环境', () => {
+  useTempHome()
+
+  it('出指纹和 mtgsig 时 stdout 保持纯净（页面日志只进 stderr）', async () => {
+    const { startGuard } = await import('../src/platforms/maoyan/web/loginSign.js')
+    const out: string[] = []
+    const err: string[] = []
+    const o = vi.spyOn(process.stdout, 'write').mockImplementation((s) => (out.push(String(s)), true))
+    const e = vi.spyOn(process.stderr, 'write').mockImplementation((s) => (err.push(String(s)), true))
+    let guard: Awaited<ReturnType<typeof startGuard>> | undefined
+    try {
+      guard = startGuard()
+      expect(guard.fingerprint).toMatch(/^H5dfp_/)
+      const sig = await guard.sign('https://accountapi.dianping.com/mlogin/dp/api/v1/qrlogin/getQrCodeImg?risk_app=216')
+      expect(sig).toContain('"a1"')
+    } finally {
+      guard?.stop()
+      o.mockRestore()
+      e.mockRestore()
+    }
+    expect(out.join('')).toBe('')
+    // jsdom 的「Not implemented」警告与页面脚本日志走 stderr，不进 stdout
+    expect(err.join('')).toContain('jsdom')
   })
 })
