@@ -1093,6 +1093,28 @@ describe('kuaishou 短信多用户（官方 result 100110031：手机号下有�
     expect(existsSync(statePath())).toBe(false)
   })
 
+  it('multiUserToken 报风控 400013（带 captchaUrl）：报 RISK_CONTROL，待选中间态保留', async () => {
+    const qc = loadCase('kuaishou', 'qrcode_login_flow').responses
+    seedSmsState({ users: MULTI_USERS.map((u) => ({ id: String(u.userId), name: u.account, avatar: null })), multiUserToken: 'fake-multi-token' })
+    const { result, statePreserved } = await (async () => {
+      try {
+        await replaySms({ method: 'sms', user: '20002' }, {
+          'OPTIONS /s/w/c': [qc[0]!],
+          'POST /s/w/c': [qc[1]!],
+          'POST /pass/kuaishou/login/multiUserToken': [{ status: 200, headers: { 'content-type': 'application/json' }, body: { result: 400013, reason: '当前请求存在风险，请稍后重试!', captchaType: 13, errorCode: 6116, captchaUrl: 'https://app.m.kuaishou.com/zt/unified/tools/verification/verify-sms-unified?unionToken=fake' } }],
+        })
+        throw new Error('应当抛出 RISK_CONTROL')
+      } catch (err: any) {
+        expect(err.code).toBe('RISK_CONTROL')
+        expect(err.hint).toContain('captchaUrl')
+        expect(err.detail).toMatchObject({ kind: 'captcha', captchaUrl: expect.stringContaining('unionToken=fake') })
+        return { statePreserved: existsSync(statePath()) }
+      }
+    })()
+    // 风控不消耗待选中间态：完成页面验证后能重跑同一条命令
+    expect(statePreserved).toBe(true)
+  })
+
   it('提示列表里没有的 --user：报 USAGE', async () => {
     seedSmsState({ users: [{ id: '20001', name: '乙号', avatar: null }], multiUserToken: 'fake-multi-token' })
     await expect(replaySms({ method: 'sms', user: '99999' }, {})).rejects.toMatchObject({ code: 'USAGE', message: expect.stringContaining('99999') })
