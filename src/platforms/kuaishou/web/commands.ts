@@ -245,7 +245,7 @@ async function completeSmsUser(
 ): Promise<Account> {
   const [data, issued] = await api.multiUserTokenLogin(k, { phone, userId, multiUserToken: token, verifyToken: verify })
   if (data?.result !== 1 || !data?.passToken) {
-    throw new CatbusError('AUTH_REQUIRED', `选择账号登录失败：${data?.error_msg ?? data?.result}`, { detail: { stage: 'multiUserToken', result: data?.result, raw: data } })
+    throw new CatbusError('AUTH_REQUIRED', `选择账号登录失败：${data?.error_msg ?? data?.result}`, { detail: { stage: 'multiUserToken', result: data?.result } })
   }
   return finishSmsLogin(ctx, k, credential, issued)
 }
@@ -269,7 +269,7 @@ async function loginSmsUser(
   const attempt = (v?: { type: number; token: string }) =>
     api.multiUserTokenLogin(k, { phone: state.phone, userId, multiUserToken: state.multiUserToken!, verifyToken: v })
   const fail = (data: Json): CatbusError =>
-    new CatbusError('AUTH_REQUIRED', `选择账号登录失败：${data?.error_msg ?? data?.result}`, { detail: { stage: 'multiUserToken', result: data?.result, raw: data } })
+    new CatbusError('AUTH_REQUIRED', `选择账号登录失败：${data?.error_msg ?? data?.result}`, { detail: { stage: 'multiUserToken', result: data?.result } })
 
   if (verify) {
     // 已通过安全验证（--code 步）：带凭证重发 multiUserToken，理论上一次通过
