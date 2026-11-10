@@ -609,6 +609,118 @@ describe('youtube 平台（web）', () => {
       expect(guest.env.ok).toBe(true)
     })
 
+    describe('cookie 轮换（AGENTS 5.8）', () => {
+      // 2026-11-10 真机抓包（裁剪）：RotateCookiesPage 的 HTML 与 /RotateCookies 的响应
+      const ROTATE_PAGE = `<!DOCTYPE html><html><body><script src='https://www.gstatic.com/_/mss/boq-identity/_/js/k=boq-identity.IdentityRotateCookiesHttp.en_GB.pwe7zYN1lhM.2018.O/am=AAAADA/d=1/rs=AOaEmlFQJpa9yNySJoEA6RNlYHR07LrTOA/m=hfcr' nonce="DLCQJSefrfFPHzLL739oFQ"></script><script nonce="DLCQJSefrfFPHzLL739oFQ">init('2793357806803385843',  0.0 ,  1.0 ,  0.0 ,  600.0 )</script></body></html>`
+      const ROTATE_OUT = `)]}'\n\n[["identity.hfcr",600],["di",63]]`
+      const SET_COOKIES = [
+        'SIDCC=rotated-sidcc; path=/; domain=.youtube.com; priority=high',
+        '__Secure-1PSIDCC=rotated-1psidcc; path=/; domain=.youtube.com; Secure; HttpOnly; priority=high',
+      ]
+      const EMPTY = { responseContext: { serviceTrackingParams: [{ service: 'GFEEDBACK', params: [{ key: 'logged_in', value: '0' }] }] }, contents: {} }
+      const rotateRoutes = {
+        '/RotateCookiesPage': () => fakeResponse(ROTATE_PAGE, { headers: [['content-type', 'text/html']] }),
+        '/RotateCookies': () =>
+          fakeResponse(ROTATE_OUT, {
+            headers: [['content-type', 'application/json'], ...SET_COOKIES.map((h): [string, string] => ['set-cookie', h])],
+          }),
+      }
+      const credential = () => JSON.parse(readFileSync(join(home.dir, 'auth', 'youtube', 'web', 'default.json'), 'utf8'))
+
+      it('logged_in=0 时先轮换再重试：请求体照实测，Set-Cookie 写回凭证并记下次时间', async () => {
+        await login()
+        let browseCalls = 0
+        const r = await withYt(
+          { browse: () => (++browseCalls === 1 ? EMPTY : json('playlist')), ...rotateRoutes },
+          async (calls) => {
+            const out = await cli('youtube', 'feed', 'list')
+            expect(out.env.ok).toBe(true)
+            // ytcfg 已在 login 时缓存进凭证，这里不再取首页：browse（失效）→ RotateCookiesPage → RotateCookies → browse（重试成功）
+            expect(calls.map((c) => c.path)).toEqual(['browse', '/RotateCookiesPage', '/RotateCookies', 'browse'])
+            // 数值字段为 0 时按 protobuf 的省略规则写 null；init('2793357806803385843', 0.0, 1.0, 0.0, 600.0) → [null, token, 1, null]
+            expect(calls.find((c) => c.path === '/RotateCookies')!.body).toEqual([null, '2793357806803385843', 1, null])
+            return out
+          },
+        )
+        expect(r.code).toBe(0)
+        const saved = credential()
+        expect(saved.scopes.main.cookies.find((c: Cookie) => c.name === 'SIDCC')).toMatchObject({ value: 'rotated-sidcc', domain: '.youtube.com' })
+        expect(saved.scopes.main.cookies.find((c: Cookie) => c.name === '__Secure-1PSIDCC')!.value).toBe('rotated-1psidcc')
+        // 节流：服务端给的 600 秒
+        expect(saved.device.cookieRotate.nextAttemptAt).toBeGreaterThan(rand.now())
+        expect(saved.device.cookieRotate.nextAttemptAt).toBeLessThanOrEqual(rand.now() + 600_000)
+      })
+
+      it('页内 token 是 int64，负数也照发（真机出现过 -3614468034866697709）', async () => {
+        await login()
+        const negative = {
+          '/RotateCookiesPage': () => fakeResponse(ROTATE_PAGE.replace('2793357806803385843', '-3614468034866697709'), { headers: [['content-type', 'text/html']] }),
+          '/RotateCookies': rotateRoutes['/RotateCookies'],
+        }
+        const r = await withYt({ browse: () => EMPTY, ...negative }, async (calls) => {
+          const out = await cli('youtube', 'feed', 'list')
+          expect(calls.find((c) => c.path === '/RotateCookies')!.body).toEqual([null, '-3614468034866697709', 1, null])
+          return out
+        })
+        expect(r.code).toBe(3) // 轮换后 browse 仍是 logged_in=0，报 AUTH_EXPIRED
+      })
+
+      it('轮换救不回来时仍报 AUTH_EXPIRED；原请求只重试一次', async () => {
+        await login()
+        let browseCalls = 0
+        const r = await withYt({ browse: () => (browseCalls++, EMPTY), ...rotateRoutes }, async (calls) => {
+          const out = await cli('youtube', 'feed', 'list')
+          expect(out.code).toBe(3)
+          expect(out.env.error.code).toBe('AUTH_EXPIRED')
+          expect(calls.filter((c) => c.path === 'browse')).toHaveLength(2)
+          return out
+        })
+        expect(r.code).toBe(3)
+      })
+
+      it('节流期内不发起轮换：直接报 AUTH_EXPIRED，不发 RotateCookies 请求', async () => {
+        await login()
+        const saved = credential()
+        saved.device.cookieRotate = { nextAttemptAt: rand.now() + 600_000 }
+        writeFileSync(join(home.dir, 'auth', 'youtube', 'web', 'default.json'), JSON.stringify(saved))
+        const r = await withYt({ browse: () => EMPTY }, async (calls) => {
+          const out = await cli('youtube', 'feed', 'list')
+          expect(out.env.error.code).toBe('AUTH_EXPIRED')
+          expect(calls.filter((c) => c.path.startsWith('/RotateCookies'))).toHaveLength(0)
+          return out
+        })
+        expect(r.code).toBe(3)
+      })
+
+      it('轮换请求失败时退避并继续：不掩盖 AUTH_EXPIRED，下次时间按默认间隔记', async () => {
+        await login()
+        const r = await withYt(
+          { browse: () => EMPTY, '/RotateCookiesPage': () => fakeResponse('boom', { status: 500 }) },
+          async (calls) => {
+            const out = await cli('youtube', 'feed', 'list')
+            expect(out.env.error.code).toBe('AUTH_EXPIRED')
+            expect(calls.filter((c) => c.path === '/RotateCookies')).toHaveLength(0)
+            return out
+          },
+        )
+        expect(r.code).toBe(3)
+        const next = credential().device.cookieRotate.nextAttemptAt
+        expect(next).toBeGreaterThan(rand.now())
+        expect(next).toBeLessThanOrEqual(rand.now() + 600_000)
+      })
+
+      it('auth status 顺带轮换一次（浏览器每约 10 分钟轮一次，catbus 没有常驻进程）', async () => {
+        await login()
+        const r = await withYt({ 'account/account_menu': () => ACCOUNT_MENU, ...rotateRoutes }, async (calls) => {
+          const out = await cli('youtube', 'auth', 'status')
+          expect(out.env.data.logged_in).toBe(true)
+          expect(calls.some((c) => c.path === '/RotateCookies')).toBe(true)
+          return out
+        })
+        expect(r.code).toBe(0)
+      })
+    })
+
     it('feed list / history list：--kind 对应的 browse 页', async () => {
       await login()
       await withYt({ browse: () => json('playlist') }, async (calls) => {

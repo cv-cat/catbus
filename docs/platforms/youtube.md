@@ -28,6 +28,7 @@ catbus youtube auth login --cookie @youtube-cookie.txt
 - `auth status` 的 `expires_at` 取自 `__Secure-3PSID`（或 `SID`）的过期时间。
 - 导出 cookie 后不要在那个浏览器里退出登录，退出会让这份 cookie 失效。
 - 浏览器一直开着这个登录会话时，Google 会定期轮换会话 cookie，导出的那份几分钟到十几分钟后就失效（实测）。建议在无痕窗口里登录、导出 cookie 后直接关掉窗口，catbus 就是这个会话唯一的使用方。失效后：`auth status` 返回 `logged_in: false`；需要登录的命令报 `AUTH_EXPIRED`（YouTube 对失效的 cookie 照样返回 200 和空内容，catbus 按响应里的 `logged_in=0` 判断，不会返回空列表）。重新导出，再 `auth login` 一次。
+- **cookie 轮换**（AGENTS.md 5.8）：catbus 会复刻浏览器里 `accounts.youtube.com/RotateCookiesPage` 的自动轮换——登录后的请求发现 `logged_in=0` 时，先向 accounts.youtube.com 轮换一次时效性 cookie（`SIDCC`、`__Secure-1PSIDCC`、`__Secure-3PSIDCC`、`__Secure-1PSIDTS`、`__Secure-3PSIDTS`）并重试原请求，轮换的 Set-Cookie 自动写回凭证；`auth status` 也顺带轮换一次。间隔约 10 分钟（服务端指定），失败翻倍退避，轮换救不回来时才报 `AUTH_EXPIRED`。注意：轮换会让导出 cookie 的那个浏览器会话失效（反过来浏览器轮换也会让 catbus 的失效），两边只能留一个。
 - 没有子站点。
 
 ### 多账号

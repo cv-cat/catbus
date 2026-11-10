@@ -651,6 +651,19 @@ browser = "/path/to/chromium"     # 发布与删除用的本地 Chromium（见 5
 - **错误**：找不到或无法执行浏览器 → `ERROR`；浏览器启动后立即退出或超时 → `ERROR`；浏览器打开页面后跳到 Google 登录页 → `AUTH_EXPIRED`；reauth 被拒绝或没有发放令牌 → `RISK_CONTROL`（`detail.kind` 为 `blocked`）；BotGuard 在页面里报错 → `UPSTREAM`；interpreter 不在白名单、或跳转 → `UPSTREAM`。
 - **测试**：离线测试替换 `browser.open`（假浏览器只记录 BotGuard 的 binding）和 Studio 的响应；`findChrome` 的路径按 darwin / linux / win32 的目录布局做单测；`runBotGuard` 在 `node:vm` 里独立运行；`openBrowser` 的失败路径（不可执行、启动后立即退出、超时）用假的可执行脚本测，并检查临时目录被清理。真机验证只在测试账号上做，视频一律私享，测完用 `item delete` 删掉。
 
+### 5.8 YouTube 的 cookie 轮换
+
+Google 会定期轮换登录会话的时效性 cookie（`SIDCC`、`__Secure-1PSIDCC`、`__Secure-3PSIDCC`、`__Secure-1PSIDTS`、`__Secure-3PSIDTS`）。浏览器里由 `accounts.youtube.com/RotateCookiesPage` 的隐藏 iframe 自动完成；catbus 导入的 cookie 没有这个机制，不轮换就会慢慢失效（需要登录的接口回 200 但内容为空，`logged_in=0`）。catbus 用 Node 复刻这个轮换（`src/platforms/youtube/web/client.ts` 的 `rotateCookies`）：
+
+- **接口**（2026-11-10 实测）：
+  1. `GET accounts.youtube.com/RotateCookiesPage?origin=https://www.youtube.com&yt_pid=1`，带全部凭证 cookie。响应 HTML 末尾内联 `init('<token>', m, o, l, interval)`：token 是本次轮换的凭证，interval 是下次轮换的间隔秒数（默认 600，最小 60）；响应同时已用 Set-Cookie 轮换过一轮。
+  2. `POST accounts.youtube.com/RotateCookies`，`Content-Type: application/json`，body 是 protobuf-over-JSON 数组 `[m, token, o, l]`（数值字段为 0 时写 null；实测 `[null,"<token>",1]`）。响应是 `)]}'` 前缀的 JSON 数组，`[0][1]` 是下次间隔秒数；Set-Cookie 完成轮换。
+- **触发时机**：登录后的 InnerTube 请求响应里 `logged_in=0`（cookie 失效的信号）时，先轮换一次再重试原请求；轮换后恢复了就继续，没恢复才报 `AUTH_EXPIRED`。此外 `auth status` 也顺带轮换一次（浏览器是登录后每 600 秒轮一次，catbus 命令都是一次性的，没有常驻进程可定时）。
+- **节流**：下次尝试时间记在凭证 `device.cookieRotate.nextAttemptAt`（毫秒时间戳），间隔用服务端给的值（默认 600 秒、最小 60 秒），失败翻倍退避；未到时间不发起轮换，避免每次命令都打一遍。页内 token 一次有效，拿到后立即用掉，不复用、不落盘。
+- **写回**：轮换的 Set-Cookie 由 `HttpClient` 自动写进 cookie 罐，随凭证由 core 落盘（5.3「自动刷新」）。轮换成功时 stderr 提示一行。
+- **与浏览器共存**：轮换会让浏览器里那份 cookie 的时效性 cookie 失效（反之亦然），与 5.7 的浏览器写回是同一个取舍：catbus 用着的时候，导出 cookie 的那个浏览器会话应保持关闭。
+- **测试**：离线测试用 fixture 回放 RotateCookiesPage 与 /RotateCookies 的真实响应（裁剪），校验触发时机、请求体、节流与 Set-Cookie 写回。
+
 ## 6. 输出
 
 ### 6.1 信封与格式
