@@ -235,7 +235,7 @@ async function finishSmsLogin(ctx: Ctx, k: Ks, credential: Credential, issued: I
 async function completeSmsUser(ctx: Ctx, k: Ks, credential: Credential, phone: string, userId: string, token: string): Promise<Account> {
   const [data, issued] = await api.multiUserTokenLogin(k, { phone, userId, multiUserToken: token })
   if (data?.result !== 1 || !data?.passToken) {
-    throw new CatbusError('AUTH_REQUIRED', `选择账号登录失败：${data?.error_msg ?? data?.result}`, { detail: { stage: 'multiUserToken', result: data?.result } })
+    throw new CatbusError('AUTH_REQUIRED', `选择账号登录失败：${data?.error_msg ?? data?.result}`, { detail: { stage: 'multiUserToken', result: data?.result, raw: data } })
   }
   return finishSmsLogin(ctx, k, credential, issued)
 }

@@ -105,6 +105,7 @@ const LOGIN_SIG4 = new Set([
   '/pass/bid/web/sns/quickLoginByKsAuth',
   '/pass/kuaishou/sms/requestMobileCode',
   '/pass/kuaishou/login/mobileCode',
+  '/pass/kuaishou/login/multiUserToken',
   '/pass/kuaishou/login/qr/callback',
 ])
 

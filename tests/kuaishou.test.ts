@@ -1026,7 +1026,7 @@ describe('kuaishou 短信多用户（官方 result 100110031：手机号下有�
       const result = (await authLogin(ctx)) as any
       const paths = requests.map((r) => `${r.method} ${new URL(r.url).pathname}`)
       const bodies = requests.map((r) => (typeof r.body === 'string' ? r.body : ''))
-      return { result, paths, bodies }
+      return { result, paths, bodies, requests }
     } finally {
       restoreSender()
     }
@@ -1065,7 +1065,7 @@ describe('kuaishou 短信多用户（官方 result 100110031：手机号下有�
       users: MULTI_USERS.map((u) => ({ id: String(u.userId), name: u.account, avatar: (u as { avatar?: string }).avatar ?? null })),
       multiUserToken: 'fake-multi-token',
     })
-    const { result, paths, bodies } = await replaySms({ method: 'sms', user: '20002' }, {
+    const { result, paths, bodies, requests } = await replaySms({ method: 'sms', user: '20002' }, {
       'POST /pass/kuaishou/login/multiUserToken': [MULTI_SELECT_OK],
       'GET /pass/kuaishou/login/passToken': [qc[6]!, qc[9]!],
       'GET /rest/infra/sts': [qc[7]!, qc[10]!],
@@ -1083,9 +1083,13 @@ describe('kuaishou 短信多用户（官方 result 100110031：手机号下有�
     const core = paths.filter((p) => !p.includes('/s/w/'))
     expect(core).toEqual(FINISH_CHAIN.filter((p) => !p.includes('/s/w/')))
     expect(result).toMatchObject({ platform: 'kuaishou', account: 'default', method: 'sms', user: { id: SELF_EID, name: '测试' } })
-    // multiUserToken 登录口：字段与官方登录页一致（account 空串、sid web.api、setCookie true）
-    const form = bodies.find((body) => body.startsWith('account='))
-    expect(form).toBe('account=&countryCode=%2B86&isWebSig4=true&multiUserToken=fake-multi-token&phone=13800000000&setCookie=true&sid=kuaishou.web.api&targetUserId=20002')
+    // multiUserToken 登录口：字段与官方登录页一致（sid web.api、setCookie true、account 空串），URL 带 sig4
+    const form = bodies.find((body) => body.startsWith('channelType='))
+    expect(form).toBe('channelType=PC_PAGE&countryCode=%2B86&isWebSig4=true&multiUserToken=fake-multi-token&phone=13800000000&setCookie=true&sid=kuaishou.web.api&targetUserId=20002&account=')
+    // 官方对全部 /pass/kuaishou* 做 sig4：URL 上要有 __NS_hxfalcon 与 caver，缺了服务端报 400013
+    const multiReq = requests.find((r) => r.url.includes('/pass/kuaishou/login/multiUserToken'))
+    expect(multiReq.url).toMatch(/[?&]__NS_hxfalcon=/)
+    expect(multiReq.url).toMatch(/caver=/)
     expect(existsSync(statePath())).toBe(false)
   })
 

@@ -257,6 +257,8 @@ export async function mobileCodeLogin(ks: Ks, phone: string, smsCode: string, co
 /**
  * multi_user_token_login：手机号下有多个用户（mobileCode 结果 100110031，响应带 userInfos + multiUserToken）时，
  * 选定 targetUserId 后用 multiUserToken 完成登录。字段与官方登录页的登录口一致（account 为网页里的账号输入框，默认空）。
+ * 官方前端对全部 /pass/kuaishou* 都做 sig4（form 参与签名、URL 带 __NS_hxfalcon）并附 channelType，
+ * 该口在 LOGIN_SIG4 名单里；缺签名服务端报 400013。
  */
 export async function multiUserTokenLogin(
   ks: Ks,
@@ -271,7 +273,7 @@ export async function multiUserTokenLogin(
   const [data, res] = await ks.loginForm(
     '/pass/kuaishou/login/multiUserToken',
     [
-      ['account', params.account ?? ''],
+      ['channelType', CHANNEL_PC],
       ['countryCode', params.countryCode ?? '+86'],
       ['isWebSig4', 'true'],
       ['multiUserToken', params.multiUserToken],
@@ -279,6 +281,7 @@ export async function multiUserTokenLogin(
       ['setCookie', 'true'],
       ['sid', SID_WEB_API],
       ['targetUserId', params.userId],
+      ['account', params.account ?? ''],
     ],
     PASSPORT,
   )
