@@ -40,6 +40,7 @@ const GLOBAL_OPTIONS = [
   ['-y, --yes', '跳过危险操作的确认'],
   ['-h, --help', '帮助'],
   ['    --version', '版本信息'],
+  ['    --web', '启动本地 WebUI，同 catbus web'],
 ]
 
 export function rootHelp(): string {
@@ -62,6 +63,7 @@ export function rootHelp(): string {
       ['auth list', '所有平台、所有端的账号'],
       ['config get|set|unset|list', '读写配置（~/.catbus/config.toml）'],
       ['version', '版本、Node 版本、系统与架构'],
+      ['web [stop|status]', '本地 WebUI：启动并打开浏览器 / 停止 / 查看'],
     ]),
     '',
     '全局选项:',
@@ -236,4 +238,27 @@ export const GLOBAL_HELP: Record<string, string> = {
     '代理的优先级：--proxy > <platform>.proxy > proxy。不读取 HTTP(S)_PROXY 环境变量。',
   ].join('\n'),
   version: ['用法: catbus version（或 catbus --version）', '', '输出 catbus 版本、Node 版本、系统与架构。'].join('\n'),
+  web: [
+    '用法:',
+    '  catbus web [--port <n>] [--host <addr>] [--demo] [--headless] [--detach]（或 catbus --web …）',
+    '  catbus web stop',
+    '  catbus web status',
+    '',
+    '启动本地 WebUI 并打开浏览器。默认在前台运行，Ctrl-C 退出；已有服务在运行时直接复用。',
+    '',
+    '选项:',
+    table([
+      ['--port <n>', '端口，默认 5174；0 表示随机端口'],
+      ['--host <addr>', '监听地址，默认 127.0.0.1；不是回环地址（如 0.0.0.0）时启用访问令牌，--demo 时不需要'],
+      ['--demo', '演示模式：只用演示数据，不会用到任何真实账号'],
+      ['--headless', '只启动服务，不打开浏览器'],
+      ['--detach', '后台运行：就绪后立即返回，关掉终端也继续运行；用 catbus web stop 停止'],
+    ]),
+    '',
+    '示例:',
+    '  catbus web',
+    '  catbus web --demo',
+    '  catbus web --detach --headless --port 8080',
+    '  catbus web status',
+  ].join('\n'),
 }

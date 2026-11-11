@@ -3,6 +3,7 @@ import { CatbusError } from '../core/errors.js'
 import { describeOption, flagName, type OptionKind, STANDARD_OPTIONS } from '../core/options.js'
 import type { Platform } from '../core/registry.js'
 import { VOCAB } from '../core/vocab.js'
+import { WEB_OPTIONS } from './commands/web.js'
 
 export const GLOBAL_FLAGS = {
   account: { type: 'string', short: 'a' },
@@ -17,6 +18,7 @@ export const GLOBAL_FLAGS = {
   yes: { type: 'boolean', short: 'y' },
   help: { type: 'boolean', short: 'h' },
   version: { type: 'boolean' },
+  web: { type: 'boolean' },
 } as const satisfies ParseArgsOptionsConfig
 
 export interface GlobalFlags {
@@ -32,6 +34,8 @@ export interface GlobalFlags {
   yes?: boolean
   help?: boolean
   version?: boolean
+  /** `--web`：catbus web 的别名 */
+  web?: boolean
 }
 
 export interface Parsed {
@@ -55,6 +59,7 @@ export function collectOptionKinds(platforms: Platform[]): Map<string, OptionKin
     kinds.set(key, kind)
   }
   for (const [k, s] of Object.entries(STANDARD_OPTIONS)) add(k, s, '标准选项')
+  for (const [k, s] of Object.entries(WEB_OPTIONS)) add(k, s, '全局命令 web')
   for (const [key, spec] of Object.entries(VOCAB)) for (const [k, s] of Object.entries(spec.options)) add(k, s, key)
   for (const p of platforms) {
     for (const e of Object.values(p.endpoints)) {
