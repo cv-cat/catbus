@@ -286,7 +286,12 @@ async function mediaByPot(c: YtClient, id: string) {
     throw new PotError(`PO Token 兜底失败：${err instanceof Error ? err.message : String(err)}`)
   }
   const ps = player?.playabilityStatus ?? {}
-  if (isBot(ps)) throw new PotError(`PO token 也被人机验证拦下：${ps.reason ?? ''}`)
+  // iOS + pot 仍被人机验证拦：这是出口 IP 级的风控（pot 证明的是客户端来源，压不住 IP 信誉分，
+  // 实测 2026-11-11：重度下载同一天后，VISIONOS / iOS+pot / ANDROID+pot 全被拦，登录 WEB 会话能过但 formats 全是 SABR）。
+  // 能做的只有换出口 IP 或等信誉恢复，所以 hint 直接给这两条。
+  if (isBot(ps)) {
+    throw new PotError(`PO token 也被人机验证拦下：${ps.reason ?? ''}`)
+  }
   const media = playableMedia(player, id, ps)
   // 兜底路径的直链要带 GVS PO token（URL 追加 `&pot=`），Google 偶尔已在部分 URL 上自带
   for (const m of media) {
