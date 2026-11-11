@@ -1,8 +1,9 @@
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, vi } from 'vitest'
 import { run } from '../src/cli/dispatch.js'
+import { fakeResponse, type HeaderPairs, type HttpResponse, mockSender, type PreparedRequest } from '../src/core/http.js'
 
 /** 每个测试一个临时的 CATBUS_HOME。 */
 export function useTempHome(): { readonly dir: string } {
@@ -48,3 +49,54 @@ export async function cli(...argv: string[]): Promise<CliResult> {
     e.mockRestore()
   }
 }
+
+// ---- 12306 的录制响应（tests/12306.test.ts 和 tests/tui.test.tsx 共用） ----
+
+const fixture = (name: string) => readFileSync(join(import.meta.dirname, 'fixtures/12306', name), 'utf8')
+
+export interface CallRecord {
+  path: string
+  url: string
+  query: Record<string, string>
+  headers: HeaderPairs
+  cookies: [string, string][]
+}
+
+export function mockTrain(overrides: Record<string, (p: PreparedRequest, u: URL) => HttpResponse> = {}) {
+  const routes: Record<string, (p: PreparedRequest, u: URL) => HttpResponse> = {
+    '/otn/leftTicket/init': () =>
+      fakeResponse(`<script>var ${fixture('init.html.txt')};</script>`, {
+        headers: [
+          ['content-type', 'text/html'],
+          ['set-cookie', 'JSESSIONID=fake; Path=/otn'],
+        ],
+      }),
+    '/otn/resources/js/framework/station_name.js': () =>
+      fakeResponse(fixture('station_name.js'), { headers: [['content-type', 'application/javascript']] }),
+    '/otn/leftTicket/queryG': () =>
+      fakeResponse(fixture('left_ticket.json'), { headers: [['content-type', 'application/json']] }),
+    '/otn/leftTicket/queryTicketPrice': () =>
+      fakeResponse(fixture('price.json'), { headers: [['content-type', 'application/json']] }),
+    '/otn/czxx/queryByTrainNo': () =>
+      fakeResponse(fixture('route.json'), { headers: [['content-type', 'application/json']] }),
+    '/lcquery/queryG': () =>
+      fakeResponse(fixture('transfer.json'), { headers: [['content-type', 'application/json']] }),
+    ...overrides,
+  }
+  const calls: CallRecord[] = []
+  const restore = mockSender((p: PreparedRequest) => {
+    const u = new URL(p.url)
+    calls.push({
+      path: u.pathname,
+      url: p.url,
+      query: Object.fromEntries(u.searchParams),
+      headers: p.headers,
+      cookies: p.cookies,
+    })
+    const route = routes[u.pathname]
+    if (!route) throw new Error(`未录制的请求：${u.pathname}`)
+    return route(p, u)
+  })
+  return { calls, restore }
+}
+

@@ -6,56 +6,10 @@ import { fakeResponse, type HeaderPairs, type HttpResponse, mockSender, type Pre
 import * as rand from '../src/core/rand.js'
 import { resetSession } from '../src/platforms/12306/web/client.js'
 import { hasTicket, parseStations, parseYp } from '../src/platforms/12306/web/normalize.js'
-import { cli, useTempHome } from './helpers.js'
+import { cli, mockTrain, useTempHome } from './helpers.js'
 
 const fixture = (name: string) => readFileSync(join(import.meta.dirname, 'fixtures/12306', name), 'utf8')
 const DATE = '2026-10-10'
-
-interface CallRecord {
-  path: string
-  url: string
-  query: Record<string, string>
-  headers: HeaderPairs
-  cookies: [string, string][]
-}
-
-function mockTrain(overrides: Record<string, (p: PreparedRequest, u: URL) => HttpResponse> = {}) {
-  const routes: Record<string, (p: PreparedRequest, u: URL) => HttpResponse> = {
-    '/otn/leftTicket/init': () =>
-      fakeResponse(`<script>var ${fixture('init.html.txt')};</script>`, {
-        headers: [
-          ['content-type', 'text/html'],
-          ['set-cookie', 'JSESSIONID=fake; Path=/otn'],
-        ],
-      }),
-    '/otn/resources/js/framework/station_name.js': () =>
-      fakeResponse(fixture('station_name.js'), { headers: [['content-type', 'application/javascript']] }),
-    '/otn/leftTicket/queryG': () =>
-      fakeResponse(fixture('left_ticket.json'), { headers: [['content-type', 'application/json']] }),
-    '/otn/leftTicket/queryTicketPrice': () =>
-      fakeResponse(fixture('price.json'), { headers: [['content-type', 'application/json']] }),
-    '/otn/czxx/queryByTrainNo': () =>
-      fakeResponse(fixture('route.json'), { headers: [['content-type', 'application/json']] }),
-    '/lcquery/queryG': () =>
-      fakeResponse(fixture('transfer.json'), { headers: [['content-type', 'application/json']] }),
-    ...overrides,
-  }
-  const calls: CallRecord[] = []
-  const restore = mockSender((p: PreparedRequest) => {
-    const u = new URL(p.url)
-    calls.push({
-      path: u.pathname,
-      url: p.url,
-      query: Object.fromEntries(u.searchParams),
-      headers: p.headers,
-      cookies: p.cookies,
-    })
-    const route = routes[u.pathname]
-    if (!route) throw new Error(`未录制的请求：${u.pathname}`)
-    return route(p, u)
-  })
-  return { calls, restore }
-}
 
 describe('12306 平台（web）', () => {
   useTempHome()

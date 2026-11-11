@@ -37,9 +37,10 @@ npm i -g catbus-cli         # 必要なのは Node だけ
 
 catbus bilibili auth login  # QR コードでログイン
 catbus bilibili item search cat --limit 20
+catbus tui           # コマンドを覚えたくない？全画面 UI を使う
 ```
 
-Docker やソースからのインストールは[クイックスタートガイド](docs/guide/quick-start.md)をご覧ください。
+Docker やソースからのインストールは[クイックスタートガイド](docs/guide/quick-start.md)、全画面 UI は[ターミナル UI](docs/guide/tui.md)をご覧ください。
 
 ## ひとつのコマンド体系で、すべてのプラットフォームを
 

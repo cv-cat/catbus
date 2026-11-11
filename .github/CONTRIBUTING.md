@@ -135,6 +135,19 @@ git -C references/BilibiliApis checkout 0234d8188b40314d011358d60424bb88fd291a1f
 - 上游没有对应方法、catbus 自己补的请求，也放进 `api.ts` 并在注释里注明「非上游」。这类请求没法对拍，要用命令测试覆盖（见 TESTING.md）。
 - 上游方法与 catbus 命令、选项的对应关系变了，同步更新 [docs/upstream-map.md](../docs/upstream-map.md)。
 
+### 4.3 终端界面（`catbus tui`）跟着注册表走
+
+界面读同一份注册表、在进程内运行同一批 handler（AGENTS 4.13），新平台、新命令、新选项**不用为它另写代码**。只有下面几种情况要多做一步：
+
+| 你改了什么 | 要做什么 | 不做会怎样 |
+|---|---|---|
+| 新增一个**只读**的动作名（例如 `stats`） | 加进 `src/tui/model.ts` 的 `READ_ACTIONS`，并同步 AGENTS 4.13 的列表 | 命令在界面里显示为 `○`，只给出等价命令；`tests/exec.test.ts` 会提醒你登记 |
+| 给 `auth login` 加选项 | 说明末尾标上适用的登录方式，例如 `.describe('登录区域（sms）')`；各方式通用的不标 | 不标注的选项在每种登录方式下都显示 |
+| 登录流程里要用户输入或打开链接 | 用 `core/login.ts` 的 `interactive()` / `prompt()` / `showLink()` / `showQrcode()`，不要直接读 `process.stdin` 或自己开 readline | 在界面里收不到输入，登录卡住 |
+| 改 `src/cli/dispatch.ts` 的 `runPlatform`（加一步检查、加工返回值） | 写成 `dispatch.ts` 里的导出函数，并在 `src/cli/exec.ts` 的 `prepare` / `invoke` 里补上同一步 | `tests/exec.test.ts` 失败 |
+
+写入、删除、发布、下载类命令界面里不运行，只显示等价的命令行，所以不用考虑它们在界面里的确认和进度。
+
 ## 5. 对拍测试
 
 请求构造和签名**必须**有对拍测试（AGENTS 7.5）：先用上游 Python 代码在固定的随机数与时钟下生成请求序列，再让 TS 实现在同样的条件下运行，逐字节比较。

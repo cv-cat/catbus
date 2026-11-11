@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { rm, stat } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import vm from 'node:vm'
 import { ensureDir, writeFileAtomic } from '../../core/fsutil.js'
 import { catbusHome, packageJson } from '../../core/paths.js'
@@ -53,6 +54,23 @@ export function satisfies(version: string, range: string): boolean {
     const atLeast = i === -1 || v[i]! > min[i]!
     return atLeast && (m[1] === '>=' || v[0] === min[0])
   })
+}
+
+/** 在子进程里跑界面自检（见 tui/selftest-main.ts）。子进程的 stdout 是一行 JSON。 */
+async function runSelfTest(): Promise<{ ok: boolean; checks: { name: string; ok: boolean; message: string }[] }> {
+  const { execFile } = await import('node:child_process')
+  const file = fileURLToPath(new URL('../../tui/selftest-main.js', import.meta.url))
+  const { stdout, stderr, code } = await new Promise<{ stdout: string; stderr: string; code: number | null }>((resolve) => {
+    execFile(process.execPath, [file], { timeout: 20_000, windowsHide: true, env: { ...process.env, FORCE_COLOR: undefined, NO_COLOR: undefined } }, (error, out, err) => {
+      resolve({ stdout: out, stderr: err, code: error ? ((error as { code?: number }).code ?? 1) : 0 })
+    })
+  })
+  const line = stdout.trim().split('\n').at(-1) ?? ''
+  try {
+    return JSON.parse(line)
+  } catch {
+    throw new Error(`界面自检没有正常结束（退出码 ${code}）：${(stderr || stdout).trim().slice(0, 200) || '没有输出'}`)
+  }
 }
 
 export async function doctor(): Promise<Check[]> {
@@ -114,6 +132,15 @@ export async function doctor(): Promise<Check[]> {
       const got = Array.from(c!.data as Float32Array).join()
       if (got !== '4,6') throw new Error(`推理结果不对：${got}`)
       return `onnxruntime-web ${installedVersion('onnxruntime-web')}（wasm）`
+    }),
+
+    // catbus tui：Ink 与 Yoga（WASM）能加载，并且用假的 TTY 把真实界面跑一遍（渲染、布局、按键）。
+    // 这样 CI 的冒烟测试在每个目标系统上都覆盖到界面，不依赖真实终端。装不上时只有 tui 起不来，其余命令不受影响。
+    await check('tui', async () => {
+      const r = await runSelfTest()
+      const bad = r.checks.filter((c) => !c.ok)
+      if (bad.length) throw new Error(bad.map((c) => `${c.name}：${c.message}`).join('；'))
+      return `ink ${installedVersion('ink')}（yoga ${installedVersion('yoga-layout')}，wasm），离屏自检 ${r.checks.length} 项通过`
     }),
 
     await check('assets-jd', async () => {

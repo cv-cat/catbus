@@ -37,9 +37,10 @@ npm i -g catbus-cli         # 只需要 Node
 
 catbus bilibili auth login  # 扫码登录
 catbus bilibili item search 猫 --limit 20
+catbus tui    # 不想记命令？用全屏界面
 ```
 
-想用 Docker 或源码安装？看[快速上手指南](docs/guide/quick-start.md)。
+想用 Docker 或源码安装？看[快速上手指南](docs/guide/quick-start.md)；全屏界面见[终端界面](docs/guide/tui.md)。
 
 ## 一套命令，所有平台通用
 
