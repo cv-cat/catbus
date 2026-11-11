@@ -77,6 +77,8 @@ const REQUIRED: Partial<Record<LoginMethod, string[]>> = { cookie: ['cookie'], p
 const HIDDEN = new Set(['cookie'])
 /** 说明末尾的 `（sms）`、`（password）`：选项只用于这些登录方式。没有标注的选项各方式通用。 */
 const METHOD_TAG = /（([a-z]+(?:\s*[/、,]\s*[a-z]+)*)）\s*$/
+/** 选项说明里「或 - 表示从 stdin 读取」这类话在界面里不适用（stdin 归界面），不显示。 */
+const STDIN_NOTE = /[，,]\s*或 - 表示从 stdin 读取/
 
 /**
  * 登录页的表单字段：从注册表里 `auth login` 的选项算出来，不手写。平台或词表新增登录选项时界面自动出现，
@@ -98,7 +100,7 @@ export function loginFields(platform: Platform, method: LoginMethod): LoginField
       name,
       label: `--${flagName(name)}`,
       kind: info.kind === 'boolean' ? 'toggle' : 'text',
-      hint: tag ? description.slice(0, tag.index) : description,
+      hint: (tag ? description.slice(0, tag.index) : description).replace(STDIN_NOTE, ''),
       hidden: HIDDEN.has(name),
       required: required.includes(name),
     })

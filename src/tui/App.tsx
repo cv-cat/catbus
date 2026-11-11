@@ -263,13 +263,15 @@ function Shell({ logs, platforms, toggleTheme }: { logs: LogBuffer; platforms: P
       })
   }
 
-  const reloadAccounts = async () => {
-    // 不向外抛：调用处是 `void xxx().then(() => reloadAccounts())`，这里再抛就成了未处理的 rejection
+  const reloadAccounts = async (done: string) => {
+    // 操作（切换、登出）已经成功，这里只是刷新列表。不向外抛：调用处是 `void xxx().then(() => reloadAccounts(...))`，
+    // 再抛就成了未处理的 rejection。刷新失败时把原因接在成功提示后面，不能让成功提示把它盖掉。
     try {
       const rows = await accountsOf(platform)
       setAcc((a) => ({ ...a, rows, selected: Math.min(a.selected, Math.max(0, rows.length - 1)), confirmLogout: null }))
+      setNote(done)
     } catch (e) {
-      setNote(`读取账号失败：${toCatbusError(e).message}`)
+      setNote(`${done}，但读取账号列表失败：${toCatbusError(e).message}`)
     }
     refreshRows()
   }
@@ -291,7 +293,9 @@ function Shell({ logs, platforms, toggleTheme }: { logs: LogBuffer; platforms: P
   const beginLogin = () => {
     if (!setup) return
     const method = setup.methods[setup.method]!
-    const missing = loginFields(platform, method).find((f) => f.required && !String(setup.values[f.name] ?? '').trim())
+    // 文本要非空，开关要打开，才算填了
+    const filled = (v: string | boolean | undefined) => (typeof v === 'string' ? v.trim() !== '' : v === true)
+    const missing = loginFields(platform, method).find((f) => f.required && !filled(setup.values[f.name]))
     if (missing) {
       setSetupError(`先填 ${missing.label}`)
       return
@@ -471,7 +475,7 @@ function Shell({ logs, platforms, toggleTheme }: { logs: LogBuffer; platforms: P
       setAcc((a) => ({ ...a, confirmLogout: null }))
       if (input === 'y') {
         void logoutAccount(platform, target, bufferLogger(logs))
-          .then(() => reloadAccounts().then(() => setNote(`已登出 ${target}`)))
+          .then(() => reloadAccounts(`已登出 ${target}`))
           .catch((e) => setNote(`登出失败：${(e as Error).message}`))
       }
       return
@@ -484,7 +488,7 @@ function Shell({ logs, platforms, toggleTheme }: { logs: LogBuffer; platforms: P
     if (!row) return
     if (key.return) {
       void useAccount(platform, row.account, bufferLogger(logs))
-        .then(() => reloadAccounts().then(() => setNote(`当前账号：${row.account}`)))
+        .then(() => reloadAccounts(`当前账号：${row.account}`))
         .catch((e) => setNote((e as Error).message))
       return
     }

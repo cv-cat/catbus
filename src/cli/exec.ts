@@ -8,7 +8,7 @@ import { checkAutoBind, createHandlerContext, credentialSnapshot, persistCredent
 // 进程内运行一条平台命令（AGENTS 4.13）。给终端界面用：不解析 argv、不写信封、不碰 stdout。
 //
 // 校验、身份解析、凭证落盘这些规则都在 dispatch.ts 里，这里只是按 runPlatform 的顺序把它们串起来。
-// CLI 独有的几步不在这里：帮助、端为 planned 的判断、--dry-run、危险操作确认（界面不运行需要确认的命令）。
+// CLI 独有的几步不在这里：帮助、端为 planned 的判断、--dry-run、危险操作确认（界面不运行需要确认的命令）、从 stdin 读选项。
 //
 // dispatch.ts 的 runPlatform 新增一步检查或加工时，在这里补上同一步；tests/exec.test.ts 检查两边结果一致。
 
@@ -51,6 +51,10 @@ export async function prepare(inv: Invocation): Promise<Prepared> {
   const g: GlobalFlags = inv.account == null ? {} : { account: inv.account }
   if (command.key === 'auth login') checkAutoBind(platform, endpoint, options, g)
   const identity = await resolveIdentity(platform, endpoint, command, args, g, log)
+  // `--cookie -` 是从 stdin 读取。进程内的调用方（界面）自己占着 stdin，读它会一直等下去并和界面抢输入
+  if (options.cookie === '-') {
+    throw new CatbusError('USAGE', '这里不能从 stdin 读取 cookie（--cookie -）', { hint: '直接给出 cookie，或用 @文件 从文件读取' })
+  }
   await readFileOptions(options)
   const network = await resolveNetwork(platform.id, undefined)
   const handler = await command.handler!()
