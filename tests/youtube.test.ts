@@ -4,6 +4,7 @@ import { basename, dirname, join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { RequestError } from 'wreq-js'
 import { CookieJar } from '../src/core/cookies.js'
+import { CatbusError } from '../src/core/errors.js'
 import { fakeResponse, type HttpResponse, mockSender, type PreparedRequest } from '../src/core/http.js'
 import { decode, int, str } from '../src/core/pb.js'
 import * as rand from '../src/core/rand.js'
@@ -437,6 +438,130 @@ describe('youtube 平台（web）', () => {
       expect(ranges).toEqual([`/v:0-${10 * MB - 1}`, `/v:${10 * MB}-${20 * MB - 1}`, `/v:${20 * MB}-${25 * MB - 1}`, '/a:0-4'])
       expect(readFileSync(join(dir, 'youtube_dQw4w9WgXcQ_1.mp4'), 'utf8')).toBe(`[0-${10 * MB - 1}][${10 * MB}-${20 * MB - 1}][${20 * MB}-${25 * MB - 1}]`)
       expect(r.env.data.map((f: any) => basename(f.path))).toEqual(['youtube_dQw4w9WgXcQ_1.mp4', 'youtube_dQw4w9WgXcQ_2.m4a'])
+    })
+
+    it('item download：GVS 分段 403 时铸 PO token 补 `&pot=` 重试一次，拿回数据', async () => {
+      const MB = 1024 * 1024
+      const vr2 = {
+        playabilityStatus: { status: 'OK' },
+        streamingData: {
+          adaptiveFormats: [
+            { itag: 137, url: 'https://rr5---sn-np0.googlevideo.com/videoplayback?id=1', mimeType: 'video/mp4; codecs="avc1"', height: 1080, contentLength: String(25 * MB) },
+            { itag: 140, url: 'https://rr5---sn-np0.googlevideo.com/videoplayback?id=2', mimeType: 'audio/mp4; codecs="mp4a"', contentLength: '5' },
+          ],
+        },
+      }
+      const gvs: [hasPot: boolean, range: string][] = []
+      const video = (_: unknown, p: PreparedRequest) => {
+        const u = new URL(p.url)
+        const hasPot = u.searchParams.has('pot')
+        gvs.push([hasPot, u.searchParams.get('range')!])
+        // 风控窗口期：无 pot 的直链一律 403，带 pot 放行
+        return hasPot ? fakeResponse(`[${u.searchParams.get('range')}] pot=${u.searchParams.get('pot')}`) : fakeResponse('forbidden', { status: 403 })
+      }
+      const dir = join(home.dir, 'dl403')
+      await withYt({ player: () => vr2, '/videoplayback': video }, async () => {
+        youtubePotTest.fakeMinter = async (binding: string) => `pot-${binding}`
+        try {
+          const r = await cli('youtube', 'item', 'download', 'dQw4w9WgXcQ', '--dir', dir)
+          expect(r.env.ok).toBe(true)
+          // 每段都是先裸链 403、再带 pot 重试成功
+          const ranges = [`0-${10 * MB - 1}`, `${10 * MB}-${20 * MB - 1}`, `${20 * MB}-${25 * MB - 1}`, '0-4']
+          expect(gvs).toEqual(ranges.flatMap((range) => [[false, range], [true, range]]))
+          const text = readFileSync(join(dir, 'youtube_dQw4w9WgXcQ_1.mp4'), 'utf8')
+          expect(text.startsWith('[0')).toBe(true)
+          expect(text.endsWith('pot=pot-dQw4w9WgXcQ')).toBe(true)
+        } finally {
+          youtubePotTest.fakeMinter = null
+        }
+      })
+    })
+
+    it('item download：单段网络错误重试（重试前把半截数据截掉），429/5xx 同样重试，403 不重试', async () => {
+      const MB = 1024 * 1024
+      const vr2 = {
+        playabilityStatus: { status: 'OK' },
+        streamingData: {
+          adaptiveFormats: [
+            { itag: 137, url: 'https://media.example/v?id=1', mimeType: 'video/mp4; codecs="avc1"', height: 1080, contentLength: String(25 * MB) },
+            { itag: 140, url: 'https://media.example/a?id=2', mimeType: 'audio/mp4; codecs="mp4a"', contentLength: '5' },
+          ],
+        },
+      }
+      const hits: string[] = []
+      // body 与 range 等长（真实分段每段写满整个 range），内容用段序号填充以便校验
+      const chunkOf = (range: string, fill: number) => {
+        const [s, e] = range.split('-').map(Number)
+        return Buffer.alloc(e - s + 1, fill)
+      }
+      const flaky = (_: unknown, p: PreparedRequest) => {
+        const range = new URL(p.url).searchParams.get('range')!
+        hits.push(range)
+        // 第一段：先网络错误一次、再 500 一次，第三次放行；第二段直接 403（不应重试）
+        if (range === `0-${10 * MB - 1}`) {
+          if (hits.filter((h) => h === range).length === 1) throw new CatbusError('NETWORK', '网络错误：boom')
+          if (hits.filter((h) => h === range).length === 2) return fakeResponse('server error', { status: 500 })
+          return fakeResponse(chunkOf(range, 0x31))
+        }
+        if (range === `${10 * MB}-${20 * MB - 1}`) return fakeResponse('forbidden', { status: 403 })
+        return fakeResponse(chunkOf(range, 0x32))
+      }
+      const dir = join(home.dir, 'dl-flaky')
+      const r = await withYt({ player: () => vr2, '/v': flaky, '/a': () => fakeResponse(Buffer.alloc(5, 0x41)) }, () => cli('youtube', 'item', 'download', 'dQw4w9WgXcQ', '--dir', dir))
+      // 第一段重试两次后成功，第二段 403 失败整个命令报错
+      expect(r.code).toBe(7)
+      expect(r.env.error).toMatchObject({ code: 'UPSTREAM', detail: { status: 403 } })
+      expect(hits.filter((h) => h === `0-${10 * MB - 1}`)).toHaveLength(3)
+      expect(hits.filter((h) => h === `${10 * MB}-${20 * MB - 1}`)).toHaveLength(1)
+      // 失败时保留 .part（恰好落在段边界 = 第一段的数据），供下次续传
+      const part = readFileSync(join(dir, 'youtube_dQw4w9WgXcQ_1.mp4.part'))
+      expect(part.equals(Buffer.alloc(10 * MB, 0x31))).toBe(true)
+    })
+
+    it('item download：断点续传——上一次失败留下的 .part 接着用，已完成段不再请求', async () => {
+      const MB = 1024 * 1024
+      const vr2 = {
+        playabilityStatus: { status: 'OK' },
+        streamingData: {
+          adaptiveFormats: [
+            { itag: 137, url: 'https://media.example/v?id=1', mimeType: 'video/mp4; codecs="avc1"', height: 1080, contentLength: String(25 * MB) },
+            { itag: 140, url: 'https://media.example/a?id=2', mimeType: 'audio/mp4; codecs="mp4a"', contentLength: '5' },
+          ],
+        },
+      }
+      const gvs: string[] = []
+      let barrier = 0 // 0: 第二段一律 403；1: 全部放行
+      const chunkOf = (range: string, fill: number) => {
+        const [s, e] = range.split('-').map(Number)
+        return Buffer.alloc(e - s + 1, fill)
+      }
+      const media = (_: unknown, p: PreparedRequest) => {
+        const u = new URL(p.url)
+        const range = u.searchParams.get('range')!
+        gvs.push(`${u.pathname}:${range}`)
+        if (barrier === 0 && range === `${10 * MB}-${20 * MB - 1}`) return fakeResponse('forbidden', { status: 403 })
+        // 各段用不同填充值，最后按字节比对，确认 .part 的第一段没有被重复下载或错位
+        return fakeResponse(chunkOf(range, range.startsWith('0-') ? 0x01 : 0x02))
+      }
+      const dir = join(home.dir, 'dl-resume')
+      await withYt({ player: () => vr2, '/v': media, '/a': () => fakeResponse(Buffer.alloc(5, 0x41)) }, async () => {
+        const first = await cli('youtube', 'item', 'download', 'dQw4w9WgXcQ', '--dir', dir)
+        expect(first.code).toBe(7)
+        barrier = 1
+        const second = await cli('youtube', 'item', 'download', 'dQw4w9WgXcQ', '--dir', dir)
+        expect(second.env.ok).toBe(true)
+        // 第一次：第一段成功 + 第二段 403；第二次：只请求第二、三段（第一段来自 .part），音频单独的 route 不计数
+        expect(gvs).toEqual([
+          `/v:0-${10 * MB - 1}`,
+          `/v:${10 * MB}-${20 * MB - 1}`,
+          `/v:${10 * MB}-${20 * MB - 1}`,
+          `/v:${20 * MB}-${25 * MB - 1}`,
+        ])
+        const file = readFileSync(join(dir, 'youtube_dQw4w9WgXcQ_1.mp4'))
+        const want = Buffer.concat([Buffer.alloc(10 * MB, 0x01), Buffer.alloc(10 * MB, 0x02), Buffer.alloc(5 * MB, 0x02)])
+        expect(file.equals(want)).toBe(true)
+        expect(readFileSync(join(dir, 'youtube_dQw4w9WgXcQ_2.m4a')).equals(Buffer.alloc(5, 0x41))).toBe(true)
+      })
     })
 
     it('item media：人机验证时回落到 iOS + PO token（token 同时放行 player 与 GVS 直链）', async () => {

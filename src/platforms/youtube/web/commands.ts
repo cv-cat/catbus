@@ -286,7 +286,12 @@ async function mediaByPot(c: YtClient, id: string) {
     throw new PotError(`PO Token 兜底失败：${err instanceof Error ? err.message : String(err)}`)
   }
   const ps = player?.playabilityStatus ?? {}
-  if (isBot(ps)) throw new PotError(`PO token 也被人机验证拦下：${ps.reason ?? ''}`)
+  // iOS + pot 仍被人机验证拦：这是出口 IP 级的风控（pot 证明的是客户端来源，压不住 IP 信誉分，
+  // 实测 2026-11-11：重度下载同一天后，VISIONOS / iOS+pot / ANDROID+pot 全被拦，登录 WEB 会话能过但 formats 全是 SABR）。
+  // 能做的只有换出口 IP 或等信誉恢复，所以 hint 直接给这两条。
+  if (isBot(ps)) {
+    throw new PotError(`PO token 也被人机验证拦下：${ps.reason ?? ''}`)
+  }
   const media = playableMedia(player, id, ps)
   // 兜底路径的直链要带 GVS PO token（URL 追加 `&pot=`），Google 偶尔已在部分 URL 上自带
   for (const m of media) {
@@ -307,7 +312,30 @@ export async function itemDownload(ctx: Ctx) {
   const c = yt(ctx)
   const id = videoId(ctx.args.item!)
   const { media, title } = await mediaOf(c, id)
-  return downloadMedia(ctx, c.http, id, media, { ...downloadOptions, title })
+  return downloadMedia(ctx, potRetryHttp(c, id), id, media, { ...downloadOptions, title })
+}
+
+/**
+ * GVS 下载段返回 403 且 URL 没有 pot 参数时：铸一个同绑视频 ID 的 PO token，URL 追加 `&pot=` 重试一次。
+ * VISIONOS 放行了、GVS 又收紧（风控窗口期）就轮到这一层兜底；铸不出来时维持原 403，不掩盖链路错误。
+ * mediaOf 的 pot 路径已经带了 token（potTs 注释），这里只补未带 token 的直链分段。
+ */
+function potRetryHttp(c: YtClient, id: string): Pick<YtClient['http'], 'request'> {
+  const request: YtClient['http']['request'] = async (req) => {
+    if (!req.url.includes('.googlevideo.com/') || /[?&]pot=/.test(req.url)) return c.http.request(req)
+    const res = await c.http.request(req)
+    if (res.status !== 403) return res
+    try {
+      const minter = await poMinter(c)
+      const pot = await minter.mintAsWebsafeString(id)
+      c.ctx.log.debug('GVS 下载 403，补 PO token 重试一次')
+      return await c.http.request({ ...req, url: `${req.url}&pot=${pot}` })
+    } catch (err) {
+      c.ctx.log.debug(`补 PO token 没成（${err instanceof Error ? err.message : String(err)}），维持原 403`)
+      return res
+    }
+  }
+  return { request } as Pick<YtClient['http'], 'request'>
 }
 
 const downloadOptions: DownloadOptions = {
