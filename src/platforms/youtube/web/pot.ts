@@ -58,7 +58,11 @@ let procMinter: MintFn | null = null
 /** PO token 链路失败：仍按人机验证报错（上层维持 RISK_CONTROL 语义），与原 VISIONOS 失败的提示不同。 */
 export class PotError extends CatbusError {
   constructor(message: string) {
-    super('RISK_CONTROL', message, { hint: 'PO Token 链路失败，过一段时间再试，或换一个代理出口', detail: { kind: 'captcha' } })
+    super('RISK_CONTROL', message, {
+      // pot 压不住的是出口 IP 的信誉分（2026-11-11 实测：重度下载后 iOS/ANDROID+pot 全被拦，换出口或等恢复是仅有的解法）
+      hint: '出口 IP 被人机验证盯上了：换一个代理出口节点，或等几十分钟让 IP 信誉恢复后重试',
+      detail: { kind: 'captcha' },
+    })
   }
 }
 
