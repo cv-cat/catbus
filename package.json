@@ -59,7 +59,7 @@
   "dependencies": {
     "@cv-cat/catbus-assets-jd": "0.1.0",
     "@cv-cat/catbus-assets-ocr": "0.1.0",
-    "@napi-rs/canvas": "^1.0.9",
+    "@napi-rs/canvas": "^1.1.0",
     "@techstark/opencv-js": "^5.0.0-release.1",
     "astring": "^1.9.0",
     "bgutils-js": "^4.0.3",
