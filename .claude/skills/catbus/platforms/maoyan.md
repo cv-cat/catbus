@@ -26,7 +26,7 @@
 
 ## 坑
 
-- **场次和场馆在 `text` 里**：Item 没有这些字段，`item get` 把「时间、城市、场馆、票价、状态」逐行写进 `text`（`feed list` 是「分类、演出者、开售」）；要结构化的原始字段用 `--raw`（如 `baseProjectVO.showTimeRange`、`shopVO.shopName`）。
+- **场次和场馆在 `text` 里**：Item 没有这些字段，`item get` 把「时间、城市、场馆、票价、状态、开售时间」逐行写进 `text`（`feed list` 是「分类、演出者、开售、开售时间」；开售时间是带时区的 ISO 8601，可以直接算倒计时）；要结构化的原始字段用 `--raw`（如 `baseProjectVO.showTimeRange`、`shopVO.shopName`）。
 - **没有分页**：`feed list` 一次返回该城市的全部热门演出（约 26 条），`--limit` / `--cursor` 没有意义。
 - **`--category` 在本地筛选**：猫眼的列表接口不按分类返回，筛完可能一条都没有。
 - **`price` 是最低价**：票价档在 `item get` 的 `text`（「票价：380、1680」）。
