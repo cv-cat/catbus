@@ -880,6 +880,7 @@ export const useDiscoverStore = defineStore('discover', () => {
     kindSwitch,
     committed,
     orderFields,
+    filters,
     initFilters,
     /** 发现页当前该在的地址（作者页回到发现页时用）；还没搜索过时为 null */
     discoverUrl: () => (synced ? urlFor(synced) : null),

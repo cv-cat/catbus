@@ -29,6 +29,9 @@ const READ_COMMANDS: Record<string, readonly string[]> = {
   // 作者页（AGENTS.md 7.9「作者页」）：<user> 放在 `--` 之后
   'user get': [],
   'user items': ['--limit', '--cursor'],
+  // 搜索联想与热搜（AGENTS.md 7.9）：前缀放在 `--` 之后
+  'keyword suggest': [],
+  'keyword hot': [],
 }
 /** 不带值的开关选项：`item get` 的 `--raw`（详情卡片的原始 JSON，设置「实验性」里打开），以及字段排序的升序开关 `--asc` */
 const READ_FLAGS: Record<string, readonly string[]> = {
@@ -39,6 +42,8 @@ const READ_FLAGS: Record<string, readonly string[]> = {
 const COMMENT_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/
 const SAFE_VALUE = /^[^\0\r\n]{1,512}$/
 const PLATFORM = /^[a-z0-9-]{1,16}$/
+/** 联想前缀的长度上限（按字符计） */
+const PREFIX_MAX = 100
 
 export function validateArgv(argv: unknown): string[] {
   if (!Array.isArray(argv) || !argv.every((a) => typeof a === 'string' && SAFE_VALUE.test(a))) {
@@ -70,6 +75,11 @@ export function validateArgv(argv: unknown): string[] {
     const comment = rest.shift()
     if (!comment || !COMMENT_ID.test(comment)) throw new Error('评论 ID 不合法')
     positional.push(item, comment)
+  } else if (resource === 'keyword' && action === 'suggest') {
+    const prefix = rest.shift()
+    if (!prefix?.trim()) throw new Error('缺少联想前缀')
+    if ([...prefix].length > PREFIX_MAX) throw new Error(`联想前缀不能超过 ${PREFIX_MAX} 个字符`)
+    positional.push(prefix)
   }
   const options: string[] = []
   // 全局选项 -a：只改本次浏览用的账号，不改 _current

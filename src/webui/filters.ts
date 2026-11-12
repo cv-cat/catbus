@@ -19,6 +19,9 @@ export interface PlatformFilters {
   order: string[] | null
   /** `user get` 和 `user items` 都已实现：作者可以做成站内的作者页（AGENTS.md 7.9「作者页」） */
   author: boolean
+  /** 搜索联想 `keyword suggest`、热搜 `keyword hot` 是否已实现（AGENTS.md 7.9「搜索联想与热搜」） */
+  suggest: boolean
+  hot: boolean
 }
 
 const FILTERS = ['sort', 'type', 'time'] as const
@@ -42,7 +45,7 @@ export function platformFilters(): Promise<Record<string, PlatformFilters>> {
       const web = p.endpoints.web
       if (!web || web === 'planned') continue
       const cmd = web.commands.get('item search')
-      const entry: PlatformFilters = { search: cmd?.status === 'implemented', sort: null, type: null, time: null, kind: null, order: null, author: false }
+      const entry: PlatformFilters = { search: cmd?.status === 'implemented', sort: null, type: null, time: null, kind: null, order: null, author: false, suggest: web.commands.get('keyword suggest')?.status === 'implemented', hot: web.commands.get('keyword hot')?.status === 'implemented' }
       for (const k of FILTERS) entry[k] = cmd ? enumValues(cmd.options[k]) : null
       const feed = web.commands.get('feed list')
       entry.kind = feed?.status === 'implemented' ? enumValues(feed.options.kind) : null
