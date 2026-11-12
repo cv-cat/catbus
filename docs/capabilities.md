@@ -203,7 +203,7 @@
 
 | 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | youtube | 12306 | jimeng | maoyan | mteam |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| feed list | ◐ | ◐ | ✓ | ◐ | ◐ | ◐ | ○ | ○ | ○ | ◐ | ✓ | — | — | ✓ | ✓ |
+| feed list | ◐ | ◐ | ✓ | ◐ | ◐ | ✓ | ○ | ○ | ○ | ◐ | ✓ | — | — | ✓ | ✓ |
 | feed categories | ✓ | — | ○ | — | — | — | — | — | — | — | — | — | — | ✓ | — |
 | keyword suggest | ✓ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ○ | ✓ | — | — | — | — |
 | keyword hot | ✓ | ○ | ○ | ○ | ○ | ○ | — | — | ✓ | ○ | — | — | — | — | — |

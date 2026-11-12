@@ -52,6 +52,10 @@ const CASES: Record<string, (c: GoldenCase) => Promise<unknown>> = {
   user_posted_p1: logged((w) => api.userPosted(w, '1669879400', '1', '')),
   user_posted_p2: logged((w) => api.userPosted(w, '1669879400', '2', '4937540924966431kp2')),
   comments: logged((w) => api.comments(w, '5266778656', MID)),
+  feed_hot_p1: logged((w) => api.feedRecommend(w, null)),
+  feed_hot_p2: logged((w) => api.feedRecommend(w, '{"ul_sid":"fake-ul-sid","ul_hid":"fake-ul-hid","since_id":"5079000000000001"}')),
+  feed_friends_p1: logged((w) => api.feedFollowing(w, null)),
+  feed_friends_p2: logged((w) => api.feedFollowing(w, '5079000000000001')),
   mobile_detail: logged((w) => api.mobileDetail(w, MID)),
   mobile_search: logged((w) => api.mobileSearch(w, '猫 咪&狗', 1)),
   mobile_search_p2: logged((w) => api.mobileSearch(w, '猫', 2)),
@@ -185,6 +189,43 @@ describe('weibo 对拍：命令流程', () => {
 
     const p2 = loadCase('weibo', 'user_posted_p2')
     const second = await replay(p2, () => cmd.userItems({ ...ctx, cursor: r1.page.cursor }))
+    if (second.error) throw second.error
+    expectRequests(second.requests, p2.requests)
+  })
+
+  it('登录 feed list（recommend）：两页，cursor 是 since_id 对象的紧凑 JSON，原样回传', async () => {
+    const p1 = loadCase('weibo', 'feed_hot_p1')
+    const first = await replay(p1, () => cmd.feedList(loggedCtx()))
+    if (first.error) throw first.error
+    expectRequests(first.requests, p1.requests)
+    const r1 = first.result as { data: any[]; page: { cursor: string } }
+    expect(r1.page).toEqual({ cursor: '{"ul_sid":"fake-ul-sid","ul_hid":"fake-ul-hid","since_id":"5079000000000001"}', has_more: true })
+    expect(r1.data[0]).toMatchObject({ id: '5079000000000001', kind: 'image', url: 'https://weibo.com/10001/OwfakeBid' })
+
+    const p2 = loadCase('weibo', 'feed_hot_p2')
+    const second = await replay(p2, () => cmd.feedList(loggedCtx({ cursor: r1.page.cursor })))
+    if (second.error) throw second.error
+    expectRequests(second.requests, p2.requests)
+  })
+
+  it('登录 feed list --kind hot：与 recommend 是同一条流，请求相同', async () => {
+    const c = loadCase('weibo', 'feed_hot_p1')
+    const { requests, error } = await replay(c, () => cmd.feedList(loggedCtx({ options: { kind: 'hot' } })))
+    if (error) throw error
+    expectRequests(requests, c.requests)
+  })
+
+  it('登录 feed list --kind following：两页，翻页带上一页的 max_id', async () => {
+    const p1 = loadCase('weibo', 'feed_friends_p1')
+    const ctx = loggedCtx({ options: { kind: 'following' } })
+    const first = await replay(p1, () => cmd.feedList(ctx))
+    if (first.error) throw first.error
+    expectRequests(first.requests, p1.requests)
+    const r1 = first.result as { page: { cursor: string } }
+    expect(r1.page).toEqual({ cursor: '5079000000000001', has_more: true })
+
+    const p2 = loadCase('weibo', 'feed_friends_p2')
+    const second = await replay(p2, () => cmd.feedList({ ...ctx, cursor: r1.page.cursor }))
     if (second.error) throw second.error
     expectRequests(second.requests, p2.requests)
   })
@@ -471,7 +512,7 @@ describe('weibo 纯算', () => {
   })
 })
 
-// ---------------------------------------------------------------- feed list（weibo.com 网页版自己的接口，上游没有；fixture 回放）
+// ---------------------------------------------------------------- feed list：真实响应的解析（请求构造见上面的对拍；这里用真机响应裁剪的 fixture，覆盖视频、广告过滤等形态）
 
 const feedFixture = (name: string) => readFileSync(join(import.meta.dirname, 'fixtures/weibo', name), 'utf8')
 
@@ -489,7 +530,7 @@ function mockFeed(routes: Record<string, string>) {
   }
 }
 
-describe('weibo feed list（无上游，fixture 回放）', () => {
+describe('weibo feed list：解析真实响应（fixture）', () => {
   afterEach(() => vi.restoreAllMocks())
 
   it('默认 recommend：hottimeline，cursor 是上一页 since_id 对象的 JSON 原文', async () => {

@@ -221,14 +221,13 @@
 - **登录**：上游没有，只支持 cookie 登录。
 - **上游凭证来源**：无。仓库另带一个 FastAPI 服务 `app.py`，不移植。
 - **API**
-  - `apis/weibo_apis.py` 的 `WeiboApis`：`get_self_info`、`getUserInfo`、`getUserPosted`、`getWordComments`、`getWorkInfo`、`searchSome`、`get_user_all_posted`
+  - `apis/weibo_apis.py` 的 `WeiboApis`：`get_self_info`、`getUserInfo`、`getUserPosted`、`getWordComments`、`getWorkInfo`、`searchSome`、`get_user_all_posted`、`getHotTimeline`（推荐流 → `feed list`，`hot` 是同一条流；翻页把上一页响应里的 `since_id` 对象序列化成紧凑 JSON 原样回传）、`getFriendsTimeline`（关注流 → `feed list --kind following`，翻页带上一页的 `max_id`）
   - `apis/weibo_mobile_apis.py` 的 `WeiboMobileApis`（m.weibo.cn，上游不带 cookie；catbus 带访客 cookie，见 1.2）：`getWorkInfo`（`item get`，`comment list` 缺作者 uid 时也用它查）、`searchSome`（`item search`：访客从第二页起是登录墙，只取第一页）。
   - `apis/weibo_creator_apis.py` 的 `WeiboCreaterApis.post_weibo`。`type`（请求里的 `visible`）：0 公开、1 仅自己、6 朋友圈（互相关注）、10 粉丝，对应 `--visibility public / private / friends / fans`
 - **没有移植的**
   - `WeiboApis.getWorkInfo(url)`：请求 `weibo.com/<uid>/<mblogid>`，只取页面里的 `window.$CONFIG`。现在的 weibo.com 是单页应用，页面只是一个壳，`$CONFIG` 是全站配置（登录时多一个当前用户 `user`，`get_self_info` 取的就是它），没有微博正文；正文由前端另外请求 `/ajax/statuses/show`，上游没有这个接口。上游自己的 `app.py` 取详情也走 `WeiboMobileApis.getWorkInfo`。
   - `WeiboApis.searchSome`：只发请求，解析被注释掉，永远返回 None。
 - **JS 资产**：`static/weibo.js` 存在，但 Python 里没有引用，不复制。
-- **不是移植来的（weibo.com 网页版自己的接口，2026-11-12 实测）**：`feed list`。上游没有动态流接口；推荐流（`--kind recommend`，`hot` 是同一条流）走 `/ajax/feed/hottimeline`（`group_id=102803`），翻页把上一页响应里的 `since_id` 对象原样回传；关注流（`--kind following`）走 `/ajax/feed/friendstimeline`，翻页带上一页的 `max_id`。都要登录。没有 Python 对拍，测试用真机响应裁剪的 fixture 回放（`tests/fixtures/weibo/`）。
 
 ### xianyu — XianYuApis
 

@@ -57,6 +57,10 @@ WEB_MBLOG = {
     'pic_infos': {'fakepid1': {'pic_id': 'fakepid1', 'largest': {'url': 'https://wx1.sinaimg.cn/large/fakepid1.jpg', 'width': 100, 'height': 80}}},
 }
 
+# hottimeline 翻页用的 since_id 是对象，下一页把它序列化后原样回传
+HOT_CURSOR = {'ul_sid': 'fake-ul-sid', 'ul_hid': 'fake-ul-hid', 'since_id': '5079000000000001'}
+HOT_CURSOR_STR = json.dumps(HOT_CURSOR, separators=(',', ':'))
+
 state = {'pic': 0, 'output': 0}
 
 
@@ -94,6 +98,10 @@ def respond(req):
         state['output'] += 1
         # 第一次还没转完，第二次返回结果：覆盖轮询
         return {'ok': 1, 'data': {}} if state['output'] % 2 == 1 else {'ok': 1, 'data': {MEDIA_ID: {'screenshot': []}}}
+    if 'feed/hottimeline' in url:
+        return {'ok': 1, 'statuses': [WEB_MBLOG], 'since_id': HOT_CURSOR, 'max_id': 0, 'total_number': 20}
+    if 'feed/friendstimeline' in url:
+        return {'ok': 1, 'statuses': [WEB_MBLOG], 'since_id': 5079000000000009, 'max_id': 5079000000000001, 'total_number': 20}
     if 'statuses/update' in url:
         return {'ok': 1, 'data': WEB_MBLOG}
     return {'ok': 1, 'data': {}}
@@ -115,6 +123,10 @@ case('user_posted_p1', lambda: web.getUserPosted('1669879400', '1', '', COOKIES)
 case('user_posted_p2', lambda: web.getUserPosted('1669879400', '2', '4937540924966431kp2', COOKIES),
      uid='1669879400', page='2', since_id='4937540924966431kp2')
 case('comments', lambda: web.getWordComments('5266778656', MID, COOKIES), uid='5266778656', mid=MID)
+case('feed_hot_p1', lambda: web.getHotTimeline('0', COOKIES))
+case('feed_hot_p2', lambda: web.getHotTimeline(HOT_CURSOR_STR, COOKIES), since_id=HOT_CURSOR_STR)
+case('feed_friends_p1', lambda: web.getFriendsTimeline('', COOKIES))
+case('feed_friends_p2', lambda: web.getFriendsTimeline('5079000000000001', COOKIES), max_id='5079000000000001')
 
 # ---------------------------------------------------------------- WeiboMobileApis（m.weibo.cn，不带 cookie）
 case('mobile_detail', lambda: mobile.getWorkInfo(MID), id=MID)

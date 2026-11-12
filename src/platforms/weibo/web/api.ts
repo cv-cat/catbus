@@ -87,7 +87,7 @@ export function comments(w: Weibo, uid: string, mid: string, maxId?: string) {
   return w.json('com', { url: `${WEB}/ajax/statuses/buildComments`, headers: commonHeaders(w.xsrf), query: params })
 }
 
-// ================================================================ feed（weibo.com 网页版自己的接口，上游没有）
+// ================================================================ feed（WeiboApis.getHotTimeline / getFriendsTimeline）
 
 /**
  * 推荐流（hottimeline）：网页「发现」页的推荐，与「热门」页是同一条流。
