@@ -49,7 +49,7 @@ catbus maoyan auth status
 
 | 命令 | 状态 | 说明 |
 |---|---|---|
-| `feed list` | ✓ | 城市热门演出（在售 / 预售）。私有选项 `--city <城市>`，默认北京；`--category` 取 `feed categories` 的 id。一次返回该城市的全部热门演出（约 26 条），没有分页；猫眼的列表接口不按分类返回，`--category` 在本地筛选。`text` 里是分类、演出者、开售状态，第一位演出者作 `author`。 |
+| `feed list` | ✓ | 城市热门演出（在售 / 预售）。私有选项 `--city <城市>`，默认北京；`--category` 取 `feed categories` 的 id。一次返回该城市的全部热门演出（约 26 条），没有分页；猫眼的列表接口不按分类返回，`--category` 在本地筛选。`text` 里是分类、演出者、开售状态和开售时间（ISO 8601），第一位演出者作 `author`。 |
 | `feed categories` | ✓ | 演出分类（演唱会、话剧音乐剧、相声、体育赛事……）。 |
 
 ### poi

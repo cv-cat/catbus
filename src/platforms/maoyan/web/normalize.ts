@@ -55,6 +55,7 @@ export function showItem(r: any): Item {
         ['分类', r.categoryName],
         ['演出者', performers.join('、')],
         ['开售', r.onSaleTimeDisplay],
+        ['开售时间', n.time(r.onSaleTime)],
       ]),
       author: performer(r.celebrityVOList?.[0]),
       created_at: null,
@@ -117,6 +118,7 @@ export function detailItem(d: any, shows?: any[]): Item {
             ['场馆', venue],
             ['票价', (d.priceVO?.sellPriceList ?? []).join('、')],
             ['状态', b.buttonContext?.message],
+            ['开售时间', n.time(d.saleRemindVO?.onSaleTime)],
           ]),
           ...showLines(shows ?? []),
         ]

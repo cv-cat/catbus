@@ -8,6 +8,7 @@
 
 ### Added
 
+- maoyan：`feed list`、`item get` 的 `text` 多一行「开售时间：<带时区的 ISO 8601>」（取自接口的 `onSaleTime`）。原来只有「明天开售」这类相对文案，算不出距开售还有多久
 - 全局选项 `--fields <路径,...>`：只输出 `data` 条目里的这些字段，点号进入嵌套对象，经过数组时作用到每个元素，没有的字段为 null；json、jsonl 都适用，在 `--raw` 之后生效
 - 全局选项 `--dry-run`：做完参数、选项、是否已实现、本地登录态的检查就停下，不调用平台接口；`data` 为 `{args options confirm}`，凭证类选项打码
 - UserRef 带上头像：作者、评论者、主播、观众、私信对方等所有 UserRef 改为 `id name url avatar`，`avatar` 从同一个原始对象里取（统一成 https，不额外请求），取不到时为 null。AccountUser 的字段与 UserRef 相同，类型名保留
