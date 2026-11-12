@@ -1,9 +1,10 @@
 import { execFile } from 'node:child_process'
 import { chmodSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs'
-import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path'
+import { dirname, extname, join, posix, relative, resolve, sep } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { catbusHome } from '../core/paths.js'
 import { resolveCli } from './cli.js'
+import { exportFileName, parseExportDoc, toText, toXlsx, type ExportDoc, type ExportFormat } from './export-format.js'
 
 /**
  * 批量下载（AGENTS.md 7.9「批量选择与下载」）。分两段：
@@ -45,6 +46,73 @@ export interface DownloadItem {
   verify_url?: string | null
   /** 下载完成的文件已被清理（过期或被删），要重新下载 */
   expired?: boolean
+  /** CLI 写的帖子信息 `<platform>_<id>.json`（File.type 为 data）；没有导出信息时为 null */
+  data?: string | null
+  /** 这一条取到了什么：下载完成后从 File[] 和 ExportDoc 得出，下载记录据此显示 */
+  got?: ItemGot | null
+}
+
+/** 一条下载的结果：媒体文件数、是否写了信息、评论条数（含楼中楼）、是否遇到风控提前停止 */
+export interface ItemGot {
+  media: number
+  meta: boolean
+  /** 一级评论条数；没取评论时为 null */
+  comments: number | null
+  /** 楼中楼总条数 */
+  replies: number
+  truncated: boolean
+}
+
+/** 一批下载的内容与格式（AGENTS.md 7.9「批量选择与下载」）；重试时沿用 */
+export interface DownloadOptions {
+  media: boolean
+  meta: boolean
+  comments: number | 'all'
+  replies: number | 'all'
+  format: ExportFormat
+}
+
+export const DEFAULT_OPTIONS: Readonly<DownloadOptions> = Object.freeze({ media: true, meta: false, comments: 0, replies: 0, format: 'json' })
+const COMMENT_LIMITS: readonly (number | 'all')[] = [0, 5, 10, 20, 50, 100, 1000, 'all']
+const REPLY_LIMITS: readonly (number | 'all')[] = [0, 3, 10, 20, 50, 100, 'all']
+const FORMATS: readonly ExportFormat[] = ['json', 'txt', 'xlsx']
+
+/** 逐个校验下载选项（白名单），缺省取默认值；什么都不下载时报错 */
+export function parseOptions(b: Record<string, unknown>): DownloadOptions {
+  const pick = <T>(key: string, list: readonly T[], fallback: T): T => {
+    const v = b[key]
+    if (v === undefined || v === null) return fallback
+    if (!list.includes(v as T)) throw new DownloadError(`下载选项 ${key} 不合法`)
+    return v as T
+  }
+  const opts: DownloadOptions = {
+    media: pick('media', [true, false], DEFAULT_OPTIONS.media),
+    meta: pick('meta', [true, false], DEFAULT_OPTIONS.meta),
+    comments: pick('comments', COMMENT_LIMITS, DEFAULT_OPTIONS.comments),
+    replies: pick('replies', REPLY_LIMITS, DEFAULT_OPTIONS.replies),
+    format: pick('format', FORMATS, DEFAULT_OPTIONS.format),
+  }
+  if (!opts.media && !opts.meta && opts.comments === 0) throw new DownloadError('没有要下载的内容：媒体、信息、评论至少选一项')
+  return opts
+}
+
+/** 旧记录没有 opts，或记录文件被改过：不合法时按默认值 */
+function optionsOf(batch: Batch): DownloadOptions {
+  try {
+    return batch.opts ? parseOptions(batch.opts as unknown as Record<string, unknown>) : { ...DEFAULT_OPTIONS }
+  } catch {
+    return { ...DEFAULT_OPTIONS }
+  }
+}
+
+/** 下载选项 → `item download` 的选项（约定见 AGENTS.md 7.9） */
+export function optionArgs(o: DownloadOptions): string[] {
+  const out: string[] = []
+  if (o.meta) out.push('--meta')
+  if (o.comments !== 0) out.push('--comments', String(o.comments))
+  if (o.comments !== 0 && o.replies !== 0) out.push('--replies', String(o.replies))
+  if (!o.media) out.push('--no-media')
+  return out
 }
 
 class CliError extends Error {
@@ -66,6 +134,8 @@ export interface Batch {
   created_at: string
   /** 最近一条结束（完成或失败）的时间，过期清理按它算 */
   finished_at?: string | null
+  /** 下载的内容与格式；旧记录没有，按默认值（只下媒体） */
+  opts?: DownloadOptions
   items: DownloadItem[]
 }
 
@@ -242,6 +312,7 @@ export function startBatch(body: unknown): Batch {
   }
   if (!Array.isArray(b.items) || !b.items.length) throw new DownloadError('没有要下载的条目')
   if (b.items.length > MAX_ITEMS) throw new DownloadError(`一次最多下载 ${MAX_ITEMS} 条`)
+  const opts = parseOptions(b)
   const id = randomUUID()
   const dir = batchDir(id)
   const base = join(dir, b.platform)
@@ -263,7 +334,7 @@ export function startBatch(body: unknown): Batch {
       error: null,
     }
   })
-  const batch: Batch = { v: 2, id, platform: b.platform, account, dir, created_at: new Date().toISOString(), finished_at: null, items }
+  const batch: Batch = { v: 2, id, platform: b.platform, account, dir, created_at: new Date().toISOString(), finished_at: null, opts, items }
   batches.unshift(batch)
   if (batches.length > MAX_BATCHES) {
     for (const old of batches.slice(MAX_BATCHES)) removeBatchFiles(old.id)
@@ -308,7 +379,7 @@ export function retryFailed(body: unknown): Batch[] {
   if (!batch) throw new DownloadError('下载记录不存在')
   const targets = batch.items.filter((it) => (it.status === 'failed' || (it.status === 'done' && it.expired)) && (b.item == null || it.id === b.item))
   if (!targets.length) throw new DownloadError('没有可以重试的条目')
-  for (const it of targets) Object.assign(it, { status: 'queued', files: it.status === 'done' ? [] : it.files, error: null, code: null, verify_url: null, expired: false })
+  for (const it of targets) Object.assign(it, { status: 'queued', files: it.status === 'done' ? [] : it.files, data: null, got: null, error: null, code: null, verify_url: null, expired: false })
   save()
   void pump()
   return batches
@@ -355,10 +426,13 @@ export function cleanupDownloads(now = Date.now()) {
 // ---------- 交给浏览器 ----------
 
 export interface DeliveryFile {
-  /** 真实路径（realpath） */
-  path: string
-  /** zip 里的条目名：<p>/<标题>/<文件名> */
+  /** 真实路径（realpath）；按格式生成的文件（info.txt、xlsx）没有路径，内容在 data 里 */
+  path?: string
+  data?: Buffer
+  /** zip 里的条目名：<p>/<标题>/<文件名>，汇总的 xlsx 在根目录 */
   entry: string
+  /** 只有这一个文件、直接交给浏览器时用的文件名；不给时取 entry 的文件名 */
+  name?: string
 }
 
 export interface Delivery {
@@ -374,7 +448,7 @@ const TYPES: Record<string, string> = {
   '.heic': 'image/heic', '.avif': 'image/avif', '.mp4': 'video/mp4', '.mov': 'video/quicktime', '.webm': 'video/webm',
   '.m4v': 'video/x-m4v', '.mkv': 'video/x-matroska', '.m4a': 'audio/mp4', '.mp3': 'audio/mpeg', '.aac': 'audio/aac',
   '.flac': 'audio/flac', '.txt': 'text/plain; charset=utf-8', '.json': 'application/json', '.srt': 'text/plain; charset=utf-8',
-  '.vtt': 'text/vtt', '.torrent': 'application/x-bittorrent', '.pdf': 'application/pdf', '.zip': 'application/zip',
+  '.vtt': 'text/vtt', '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', '.torrent': 'application/x-bittorrent', '.pdf': 'application/pdf', '.zip': 'application/zip',
 }
 export const contentType = (name: string) => TYPES[extname(name).toLowerCase()] ?? 'application/octet-stream'
 
@@ -391,8 +465,10 @@ function stamp(iso: string): string {
  *
  * - `item`：只要这一条；`only`：这一批里的这几条（重试后单独交付）；都不给时整批。
  * - 只交付已完成的条目；一个文件直接给，多个文件打 zip。
+ * - 帖子信息（CLI 写的 `<platform>_<id>.json`）按这一批的格式交付：json 原样；txt 换成这条目录里的 info.txt；
+ *   xlsx 整批汇总成一个 `catbus-<p>-<日期时间>.xlsx`，放在 zip 根目录。读不出来的信息文件原样交付。
  */
-export function prepareDelivery(batchId: string, item: string | null, only: string[] = []): Delivery {
+export async function prepareDelivery(batchId: string, item: string | null, only: string[] = []): Promise<Delivery> {
   ensureLoaded()
   const batch = batches.find((x) => x.id === batchId)
   if (!batch || !BATCH_ID.test(batch.id)) throw new DeliveryError(404, '下载记录不存在')
@@ -417,7 +493,9 @@ export function prepareDelivery(batchId: string, item: string | null, only: stri
     expire(done)
     throw new DeliveryError(410, '文件已过期，请重新下载')
   }
+  const format = optionsOf(batch).format
   const files: DeliveryFile[] = []
+  const docs: ExportDoc[] = []
   for (const it of done) {
     for (const f of it.files) {
       if (typeof f !== 'string' || !within(f, dir)) throw new DeliveryError(403, '文件不在这一批的临时目录里')
@@ -429,11 +507,35 @@ export function prepareDelivery(batchId: string, item: string | null, only: stri
         throw new DeliveryError(410, '文件已过期，请重新下载')
       }
       if (!real.startsWith(root + sep) || !lstatSync(real).isFile()) throw new DeliveryError(403, '文件不在这一批的临时目录里')
-      files.push({ path: real, entry: relative(root, real).split(sep).join('/') })
+      const entry = relative(root, real).split(sep).join('/')
+      if (format !== 'json' && f === it.data) {
+        let doc: ExportDoc | null = null
+        try {
+          doc = parseExportDoc(readFileSync(real, 'utf8'))
+        } catch {
+          // 不是合法的 ExportDoc：原样交付
+        }
+        if (doc && format === 'txt') {
+          const name = `${folderName(it.title) ?? folderName(it.id) ?? 'info'}.txt`
+          files.push({ data: Buffer.from(toText(doc), 'utf8'), entry: posix.join(posix.dirname(entry), exportFileName(doc, 'txt')), name })
+          continue
+        }
+        if (doc) {
+          docs.push(doc)
+          continue
+        }
+      }
+      files.push({ path: real, entry })
     }
   }
+  if (docs.length) {
+    const name = `catbus-${batch.platform}-${stamp(batch.created_at)}.xlsx`
+    files.push({ data: await toXlsx(docs), entry: name, name })
+  }
+  if (!files.length) throw new DeliveryError(404, '没有可以交给浏览器的文件')
   if (files.length === 1) {
-    const name = basename(files[0]!.path)
+    const f = files[0]!
+    const name = f.name ?? posix.basename(f.entry)
     return { name, type: contentType(name), zip: false, files }
   }
   const title = done.length === 1 ? (folderName(done[0]!.title) ?? folderName(done[0]!.id)) : null
@@ -478,7 +580,10 @@ async function pump() {
       try {
         mkdirSync(batch.dir, { recursive: true, mode: 0o700 })
         mkdirSync(dir, { recursive: true, mode: 0o700 })
-        item.files = await download(batch, item, dir)
+        const out = await download(batch, item, dir)
+        item.files = out.map((f) => f.path)
+        item.data = out.find((f) => f.type === 'data')?.path ?? null
+        item.got = summarize(out, item.data)
         tighten(batch.dir)
         item.status = 'done'
         item.expired = false
@@ -495,16 +600,34 @@ async function pump() {
   }
 }
 
-function download(batch: Batch, item: DownloadItem, dir: string): Promise<string[]> {
+/** 下载结果里取到了什么：帖子信息文件读出评论条数和是否被风控截断 */
+function summarize(out: { path: string; type: string | null }[], data: string | null): ItemGot {
+  const got: ItemGot = { media: out.filter((f) => f.type !== 'data').length, meta: !!data, comments: null, replies: 0, truncated: false }
+  if (!data) return got
+  try {
+    const doc = JSON.parse(readFileSync(data, 'utf8')) as { comments?: unknown; comments_truncated?: unknown }
+    if (Array.isArray(doc.comments)) {
+      got.comments = doc.comments.length
+      got.replies = doc.comments.reduce((n: number, c: { replies?: unknown }) => n + (Array.isArray(c?.replies) ? c.replies.length : 0), 0)
+    }
+    got.truncated = doc.comments_truncated === true
+  } catch {
+    // 读不出来时只记有信息文件
+  }
+  return got
+}
+
+function download(batch: Batch, item: DownloadItem, dir: string): Promise<{ path: string; type: string | null }[]> {
   const { file, prefix } = resolveCli()
+  const opts = optionsOf(batch)
   const argv = [...prefix, '-o', 'json', '-q', batch.platform, 'item', 'download']
   if (batch.account) argv.push('-a', batch.account)
-  argv.push('--dir', dir, '--', item.url)
+  argv.push('--dir', dir, ...optionArgs(opts), '--', item.url)
   return new Promise((resolve, reject) => {
     execFile(file, argv, { timeout: 10 * 60_000, maxBuffer: 8 * 1024 * 1024 }, (err, stdout) => {
       let env: {
         ok?: boolean
-        data?: { path?: string }[]
+        data?: { path?: string; type?: string }[]
         error?: { code?: string; message?: string; hint?: string | null; detail?: { verify_url?: unknown } | null }
       } | null = null
       try {
@@ -516,7 +639,11 @@ function download(batch: Batch, item: DownloadItem, dir: string): Promise<string
         const e = env?.error
         return reject(new CliError(e?.message ?? '下载失败', e?.code ?? null, httpsUrl(e?.detail?.verify_url)))
       }
-      resolve((env.data ?? []).map((f) => f.path).filter((p): p is string => typeof p === 'string'))
+      resolve(
+        (env.data ?? [])
+          .filter((f): f is { path: string; type?: string } => typeof f?.path === 'string')
+          .map((f) => ({ path: f.path, type: typeof f.type === 'string' ? f.type : null })),
+      )
     })
   })
 }

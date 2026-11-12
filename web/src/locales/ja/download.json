@@ -35,7 +35,8 @@
   },
   "toast": {
     "done": "ダウンロードが完了し、ブラウザに保存を依頼しました",
-    "saved": "ブラウザに保存を依頼しました"
+    "saved": "ブラウザに保存を依頼しました",
+    "demoXlsx": "デモモードでは Excel を作成しないため、JSON ファイルにしました"
   },
   "error": {
     "requestFailed": "リクエストに失敗しました（{status}）",
@@ -49,5 +50,39 @@
     "items": "件数：{n} 件",
     "about": "これはデモモードでページ内に生成した説明ファイルです。catbus には接続していません。",
     "real": "実際のダウンロードでは、ファイルが 1 つならそのまま、複数なら 1 つの zip にまとめて、ブラウザのダウンロード先に保存されます。"
+  },
+  "panel": {
+    "title": "ダウンロードオプション",
+    "open": "ダウンロードオプション",
+    "short": "オプション",
+    "content": "内容",
+    "media": "メディア",
+    "mediaDesc": "画像・動画などの元ファイル",
+    "meta": "情報",
+    "metaDesc": "タイトル・本文・投稿者・反応数",
+    "comments": "コメント",
+    "commentsHint": "コメント {comments}・返信 {replies}（コメントごと）",
+    "metaLocked": "コメントをダウンロードすると情報も含まれます",
+    "atLeastOne": "1 つ以上選んでください",
+    "commentsUnsupported": "{platform} はコメントのダウンロードにまだ対応していません",
+    "listSep": "、",
+    "toSettings": "件数は設定で変更",
+    "format": "形式",
+    "formatTxt": "テキスト",
+    "formatNote": {
+      "json": "情報とコメントを JSON で保存（投稿ごとに 1 ファイル）",
+      "txt": "情報とコメントを読みやすいテキストで保存（投稿ごとに info.txt）",
+      "xlsx": "まとめて 1 つの Excel ファイルにします"
+    },
+    "formatNoMeta": "形式は情報とコメントにのみ適用されます",
+    "downloadCount": "{n} 件をダウンロード"
+  },
+  "got": {
+    "media": "メディア ✓",
+    "noMedia": "メディア ✗",
+    "meta": "情報 ✓",
+    "comments": "コメント {n}/{limit}",
+    "commentsAll": "コメント {n}",
+    "truncated": "（制限にかかったため停止）"
   }
 }

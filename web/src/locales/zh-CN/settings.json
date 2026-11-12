@@ -30,7 +30,8 @@
     "tab": {
       "general": "通用",
       "display": "显示",
-      "experimental": "实验性"
+      "experimental": "实验性",
+      "download": "下载"
     },
     "hint": "设置保存在本浏览器里，换浏览器不会同步。",
     "reset": "恢复默认",
@@ -93,6 +94,19 @@
       "clear": "清空",
       "platforms": "平台代理（优先于全局代理，只读；用 {command} 修改）",
       "platformPlaceholder": "<平台>"
+    }
+  },
+  "download": {
+    "all": "全部",
+    "count": "{n} 条",
+    "comments": {
+      "title": "评论下载条数",
+      "desc": "下载时每条帖子取多少条评论",
+      "risk": "评论取得越多，请求越多，容易触发平台风控或要求账号验证。"
+    },
+    "replies": {
+      "title": "子评论下载条数",
+      "desc": "每条评论下取多少条回复"
     }
   }
 }

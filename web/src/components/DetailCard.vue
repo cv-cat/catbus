@@ -31,6 +31,8 @@ import { useAuthorStore } from '@/stores/author'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useDetailSwipe } from '@/composables/useDetailSwipe'
 import { useDownloadsStore } from '@/stores/downloads'
+import DownloadMenu from './DownloadMenu.vue'
+import { commentsSupported } from '@/composables/useCommentsSupport'
 import { openVerify, useVerifyStore, verifyUrlOf } from '@/stores/verify'
 
 /**
@@ -112,6 +114,9 @@ function toggleRaw() {
 
 // ---------- 下载：与瀑布流的批量下载走同一个接口，这一条算一批 ----------
 const dl = ref<'idle' | 'busy' | 'done'>('idle')
+/** 下载按钮旁的下载面板：选内容和格式，选择记进设置 */
+const dlMenu = ref(false)
+const dlMenuBtn = ref<HTMLElement>()
 let dlTimer = 0
 async function download() {
   const c = cur.value
@@ -119,7 +124,7 @@ async function download() {
   if (!c || !it || dl.value === 'busy') return
   dl.value = 'busy'
   try {
-    await downloads.start(c.platform, c.account, [it])
+    await downloads.start(c.platform, c.account, [it], commentsSupported(c.platform))
     dl.value = 'done'
     clearTimeout(dlTimer)
     dlTimer = window.setTimeout(() => (dl.value = 'idle'), 2400)
@@ -621,7 +626,7 @@ function onAuthor(e: MouseEvent | KeyboardEvent) {
 // ---------- 键盘：Esc 关闭；W / S、↑ / ↓ 上一条 / 下一条；A / D、← / → 切图或快退快进；空格播放 ----------
 const modified = (e: KeyboardEvent) => e.metaKey || e.ctrlKey || e.altKey
 function onKey(e: KeyboardEvent) {
-  if (!cur.value || !target.value || verify.open) return
+  if (!cur.value || !target.value || verify.open || dlMenu.value) return
   if (e.key === 'Escape') {
     e.preventDefault()
     close()
@@ -731,8 +736,9 @@ onBeforeUnmount(() => {
      >
        <Braces :size="14" />
      </button>
+     <span class="split">
      <button
-       class="origin icon"
+       class="origin icon left"
        type="button"
        :aria-label="dl === 'done' ? t('detail.head.downloaded') : t('common.action.download')"
        :disabled="dl === 'busy'"
@@ -743,6 +749,19 @@ onBeforeUnmount(() => {
        <Check v-else-if="dl === 'done'" :size="14" />
        <Download v-else :size="14" />
      </button>
+     <button
+       ref="dlMenuBtn"
+       class="origin icon right"
+       type="button"
+       :aria-label="t('download.panel.open')"
+       :title="t('download.panel.open')"
+       :aria-expanded="dlMenu"
+       @click="dlMenu = !dlMenu"
+     >
+       <ChevronDown :size="13" />
+     </button>
+     </span>
+     <DownloadMenu :open="dlMenu" :anchor="dlMenuBtn ?? null" :platforms="cur ? [cur.platform] : []" @close="dlMenu = false" @download="download" />
      <a class="origin icon" :href="item.url" target="_blank" rel="noopener noreferrer" :aria-label="t('detail.head.origin')" :title="t('detail.head.openOn', { platform: platform?.name ?? t('detail.head.platform') })">
        <ExternalLink :size="14" />
      </a>
@@ -1061,6 +1080,19 @@ onBeforeUnmount(() => {
 }
 .origin.icon:has(.lucide-check) {
   color: var(--red);
+}
+.split {
+  flex: none;
+  display: inline-flex;
+}
+.split .left {
+  border-radius: 18px 0 0 18px;
+  border-right-width: 0;
+}
+.split .right {
+  width: 22px;
+  border-radius: 0 18px 18px 0;
+  color: var(--ink-3);
 }
 .origin:disabled {
   cursor: progress;

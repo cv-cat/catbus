@@ -20,6 +20,7 @@ import { animateFrom, wave, waveWhileLoading } from '@/composables/motion'
 import { openLogin } from '@/stores/login'
 import { useSelectionStore } from '@/stores/selection'
 import { useDownloadsStore } from '@/stores/downloads'
+import { commentsSupported } from '@/composables/useCommentsSupport'
 import { openVerify } from '@/stores/verify'
 import { useSourceStore } from '@/stores/source'
 import { useBreakpoint } from '@/composables/useBreakpoint'
@@ -80,6 +81,9 @@ const placeholder = computed(() =>
 )
 
 /** 选中的条目按平台（和账号）各作为一批下载（聚合模式下可能来自几个平台），然后打开下载记录 */
+/** 选中条目所属的平台：下载面板据此判断能不能带评论 */
+const selectedPlatforms = computed(() => [...new Set(sel.pick(d.items).map((it) => d.platformOf(it)))])
+
 async function downloadSelected() {
   const picked = sel.pick(d.items)
   if (!picked.length) return
@@ -94,7 +98,7 @@ async function downloadSelected() {
     groups.set(key, g)
   }
   try {
-    for (const g of groups.values()) await downloads.start(g.platform, g.account, g.list)
+    for (const g of groups.values()) await downloads.start(g.platform, g.account, g.list, commentsSupported(g.platform))
     sel.none()
     downloads.open = true
   } catch (e) {
@@ -300,7 +304,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
       <div class="spacer" />
-      <SelectionActions v-if="!bp.phone" :items="d.items" @download="downloadSelected" />
+      <SelectionActions v-if="!bp.phone" :items="d.items" :platforms="selectedPlatforms" @download="downloadSelected" />
       <SearchBar
         v-model="state.keyword"
         class="search reveal"
@@ -341,7 +345,7 @@ onBeforeUnmount(() => {
           </div>
         </Transition>
       </div>
-      <SelectionActions v-if="stuck && !bp.phone" compact :items="d.items" @download="downloadSelected" />
+      <SelectionActions v-if="stuck && !bp.phone" compact :items="d.items" :platforms="selectedPlatforms" @download="downloadSelected" />
       <Transition name="mini-search">
         <SearchBar
           v-if="stuck && !bp.phone"
@@ -377,7 +381,7 @@ onBeforeUnmount(() => {
     <p v-if="d.loadingMore" class="more mono"><CatbusLoader :size="15" />{{ t('common.state.loading') }}</p>
     <p v-else-if="d.items.length && !d.hasMore" class="more mono">{{ t('discover.end') }}</p>
 
-    <SelectionActions v-if="bp.phone" bar :items="d.items" @download="downloadSelected" />
+    <SelectionActions v-if="bp.phone" bar :items="d.items" :platforms="selectedPlatforms" @download="downloadSelected" />
 
     <Transition name="to-top" @after-leave="launching = false">
       <button

@@ -14,6 +14,7 @@ import { useAuthorStore } from '@/stores/author'
 import { useDiscoverStore } from '@/stores/discover'
 import { useSelectionStore } from '@/stores/selection'
 import { useDownloadsStore } from '@/stores/downloads'
+import { commentsSupported } from '@/composables/useCommentsSupport'
 import { useNavStore } from '@/stores/nav'
 import { openLogin } from '@/stores/login'
 import { openVerify } from '@/stores/verify'
@@ -57,7 +58,7 @@ async function downloadSelected() {
   const picked: Item[] = sel.pick(a.items)
   if (!picked.length) return
   try {
-    await downloads.start(platform.value.id, a.account(), picked)
+    await downloads.start(platform.value.id, a.account(), picked, commentsSupported(platform.value.id))
     sel.none()
     downloads.open = true
   } catch (e) {
@@ -152,7 +153,7 @@ onBeforeUnmount(() => {
         </a>
       </template>
       <template v-else>
-        <SelectionActions :items="a.items" @download="downloadSelected" />
+        <SelectionActions :items="a.items" :platforms="[platform.id]" @download="downloadSelected" />
         <SearchBar v-model="keyword" class="search" :loading="d.loading" :placeholder="placeholder" @submit="a.search(keyword)" />
         <DownloadCenter class="tool" />
       </template>
@@ -177,7 +178,7 @@ onBeforeUnmount(() => {
     <p v-if="a.loadingMore" class="more mono"><CatbusLoader :size="15" />{{ t('common.state.loading') }}</p>
     <p v-else-if="a.items.length && !a.hasMore" class="more mono">{{ t('discover.end') }}</p>
 
-    <SelectionActions v-if="bp.phone" bar :items="a.items" @download="downloadSelected" />
+    <SelectionActions v-if="bp.phone" bar :items="a.items" :platforms="[platform.id]" @download="downloadSelected" />
   </main>
 </template>
 

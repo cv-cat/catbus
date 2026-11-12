@@ -30,7 +30,8 @@
     "tab": {
       "general": "General",
       "display": "Display",
-      "experimental": "Experimental"
+      "experimental": "Experimental",
+      "download": "Downloads"
     },
     "hint": "Settings are saved in this browser and don't sync to others.",
     "reset": "Reset to defaults",
@@ -93,6 +94,19 @@
       "clear": "Clear",
       "platforms": "Platform proxies (override the global proxy; read-only, change with {command})",
       "platformPlaceholder": "<platform>"
+    }
+  },
+  "download": {
+    "all": "All",
+    "count": "{n}",
+    "comments": {
+      "title": "Comments to download",
+      "desc": "How many comments to fetch for each post",
+      "risk": "The more comments you fetch, the more requests are made, which can trigger the platform's rate limits or account verification."
+    },
+    "replies": {
+      "title": "Replies to download",
+      "desc": "How many replies to fetch under each comment"
     }
   }
 }

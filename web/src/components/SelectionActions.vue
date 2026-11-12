@@ -1,14 +1,18 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowLeftRight, CheckCheck, Download, X } from 'lucide-vue-next'
+import { ArrowLeftRight, CheckCheck, Download, SlidersHorizontal, X } from 'lucide-vue-next'
 import type { Item } from '@/api/types'
+import DownloadMenu from '@/components/DownloadMenu.vue'
 import { useSelectionStore } from '@/stores/selection'
 
 /**
  * 有卡片被选中时，从搜索框左侧依次向左弹出：全选、全不选、反选、下载。
  * `bar`：手机上改成固定在底部的操作条（带文字），从底部滑入。
+ * 下载右边是「下载选项」：打开下载面板选内容和格式；直接点下载按上次的选择下载。
+ * platforms：选中条目所属的平台（下载面板据此判断能不能带评论）。
  */
-const props = defineProps<{ items: Item[]; compact?: boolean; bar?: boolean }>()
+const props = defineProps<{ items: Item[]; compact?: boolean; bar?: boolean; platforms?: string[] }>()
 const emit = defineEmits<{ download: [] }>()
 const sel = useSelectionStore()
 const { t } = useI18n()
@@ -18,8 +22,16 @@ const ACTIONS = [
   { key: 'none', labelKey: 'discover.selection.none', icon: X, run: () => sel.none() },
   { key: 'invert', labelKey: 'discover.selection.invert', icon: ArrowLeftRight, run: () => sel.invert(props.items) },
   { key: 'download', labelKey: 'discover.selection.download', shortKey: 'common.action.download', icon: Download, run: () => emit('download') },
+  { key: 'options', labelKey: 'download.panel.open', shortKey: 'download.panel.short', icon: SlidersHorizontal, run: (e: MouseEvent) => openMenu(e) },
 ] as const
 const N = ACTIONS.length
+
+const menuOpen = ref(false)
+const anchor = ref<HTMLElement | null>(null)
+function openMenu(e: MouseEvent) {
+  anchor.value = e.currentTarget as HTMLElement
+  menuOpen.value = !menuOpen.value
+}
 </script>
 
 <template>
@@ -35,7 +47,8 @@ const N = ACTIONS.length
         class="bar-act"
         :class="{ primary: a.key === 'download' }"
         :aria-label="a.key === 'download' ? t('discover.selection.downloadCount', { n: sel.count }, sel.count) : t(a.labelKey)"
-        @click="a.run()"
+        :aria-expanded="a.key === 'options' ? menuOpen : undefined"
+        @click="a.run($event)"
       >
         <component :is="a.icon" :size="18" aria-hidden="true" />
         <span>{{ t('shortKey' in a ? a.shortKey : a.labelKey) }}</span>
@@ -52,13 +65,21 @@ const N = ACTIONS.length
  :style="{ '--from': `${(N - i) * (compact ? 44 : 56)}px`, '--in': `${(N - 1 - i) * 45}ms`, '--out': `${i * 30}ms` }"
         :aria-label="t(a.labelKey)"
  :title="t(a.labelKey)"
- @click="a.run()"
+ @click="a.run($event)"
       >
         <component :is="a.icon" :size="compact ? 15 : 18" />
         <span v-if="a.key === 'download'" class="count mono">{{ sel.count }}</span>
       </button>
     </Transition>
   </div>
+  <DownloadMenu
+    :open="menuOpen && sel.active"
+    :anchor="anchor"
+    :platforms="platforms ?? []"
+    :count="sel.count"
+    @close="menuOpen = false"
+    @download="emit('download')"
+  />
 </template>
 
 <style scoped>

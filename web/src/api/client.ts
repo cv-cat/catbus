@@ -59,6 +59,8 @@ export interface PlatformFilters {
   hot?: boolean
   /** web 端的 `item related` 已实现（详情卡片的相关推荐）；旧版 bridge 不给，当作不支持 */
   related?: boolean
+  /** web 端的 `comment list` 已实现（下载时可以带评论）；旧版 bridge 不给 */
+  comments?: boolean
 }
 
 /** 读不到（旧版 bridge、纯静态预览）时返回 null，页面不置灰任何筛选；演示模式不请求服务端，用演示的取值表 */

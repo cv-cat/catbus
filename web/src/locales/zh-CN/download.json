@@ -35,7 +35,8 @@
   },
   "toast": {
     "done": "下载完成，已交给浏览器保存",
-    "saved": "已交给浏览器保存"
+    "saved": "已交给浏览器保存",
+    "demoXlsx": "演示模式不生成 Excel，已改为 JSON 文件"
   },
   "error": {
     "requestFailed": "请求失败（{status}）",
@@ -49,5 +50,39 @@
     "items": "条目：{n} 条",
     "about": "这是演示模式在页面里生成的说明文件，没有连接 catbus。",
     "real": "真实下载时，一个文件直接保存，多个文件打成一个 zip，由浏览器存到它的下载位置。"
+  },
+  "panel": {
+    "title": "下载选项",
+    "open": "下载选项",
+    "short": "选项",
+    "content": "下载内容",
+    "media": "媒体",
+    "mediaDesc": "图片、视频等原文件",
+    "meta": "信息",
+    "metaDesc": "标题、正文、作者、互动数",
+    "comments": "评论",
+    "commentsHint": "评论 {comments}，每条评论回复 {replies}",
+    "metaLocked": "下载评论时一定会带上信息",
+    "atLeastOne": "至少选一项",
+    "commentsUnsupported": "{platform} 暂不支持下载评论",
+    "listSep": "、",
+    "toSettings": "去设置里改条数",
+    "format": "格式",
+    "formatTxt": "纯文本",
+    "formatNote": {
+      "json": "信息和评论存成 JSON，每条一个文件",
+      "txt": "信息和评论存成便于阅读的文本，每条一个 info.txt",
+      "xlsx": "整批汇总成一个 Excel 表格"
+    },
+    "formatNoMeta": "格式只用于信息和评论，只下媒体时不影响",
+    "downloadCount": "下载 {n} 条"
+  },
+  "got": {
+    "media": "媒体 ✓",
+    "noMedia": "媒体 ✗",
+    "meta": "信息 ✓",
+    "comments": "评论 {n}/{limit}",
+    "commentsAll": "评论 {n}",
+    "truncated": "（遇到风控，已停止）"
   }
 }

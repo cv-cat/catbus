@@ -12,7 +12,15 @@ import { LOCALES, type LocalePref } from '@/i18n/locales'
 export type ThemePref = 'light' | 'dark' | 'system'
 export type Density = 'compact' | 'standard' | 'cozy'
 export type PageSize = 20 | 40 | 60
-export type SettingsTab = 'general' | 'display' | 'experimental'
+export type SettingsTab = 'general' | 'display' | 'download' | 'experimental'
+/** 下载时每条帖子取多少条一级评论、每条评论取多少条楼中楼（AGENTS.md 7.9「设置」） */
+export const COMMENT_LIMITS = [5, 10, 20, 50, 100, 1000, 'all'] as const
+export const REPLY_LIMITS = [3, 10, 20, 50, 100, 'all'] as const
+export type CommentLimit = (typeof COMMENT_LIMITS)[number]
+export type ReplyLimit = (typeof REPLY_LIMITS)[number]
+export type ExportFormat = 'json' | 'txt' | 'xlsx'
+/** 评论条数超过这个数时提示风控风险 */
+export const COMMENT_RISK_OVER = 100
 
 export interface Settings {
   // 通用
@@ -30,6 +38,14 @@ export interface Settings {
   /** 像素背景和人浪动效（一个开关） */
   pixelBackground: boolean
   reduceMotion: 'system' | 'always'
+  // 下载
+  commentLimit: CommentLimit
+  replyLimit: ReplyLimit
+  /** 下载面板上次的选择：内容（媒体、信息、评论）与格式；直接点下载按钮时按它下载 */
+  dlMedia: boolean
+  dlMeta: boolean
+  dlComments: boolean
+  dlFormat: ExportFormat
   // 实验性
   rawJson: boolean
   hoverPreview: boolean
@@ -50,6 +66,12 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   cardStats: true,
   pixelBackground: false,
   reduceMotion: 'system',
+  commentLimit: 10,
+  replyLimit: 3,
+  dlMedia: true,
+  dlMeta: false,
+  dlComments: false,
+  dlFormat: 'json',
   rawJson: false,
   hoverPreview: false,
 })
@@ -74,6 +96,12 @@ const valid = (): Validators => (validators ??= {
   cardStats: bool,
   pixelBackground: bool,
   reduceMotion: oneOf(['system', 'always'] as const),
+  commentLimit: oneOf(COMMENT_LIMITS),
+  replyLimit: oneOf(REPLY_LIMITS),
+  dlMedia: bool,
+  dlMeta: bool,
+  dlComments: bool,
+  dlFormat: oneOf(['json', 'txt', 'xlsx'] as const),
   rawJson: bool,
   hoverPreview: bool,
 })
@@ -106,6 +134,8 @@ function load(): Settings {
   for (const k of Object.keys(valid()) as (keyof Settings)[]) {
     if (valid()[k](saved[k])) (out as unknown as Record<string, unknown>)[k] = saved[k]
   }
+  // 下载内容至少一项：存下的是全都不选时回到默认
+  if (!out.dlMedia && !out.dlMeta && !out.dlComments) out.dlMedia = true
   try {
     const legacy = ls?.getItem(LEGACY_THEME_KEY)
     if (legacy != null) {

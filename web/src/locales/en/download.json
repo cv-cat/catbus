@@ -35,7 +35,8 @@
   },
   "toast": {
     "done": "Download complete, sent to your browser",
-    "saved": "Sent to your browser"
+    "saved": "Sent to your browser",
+    "demoXlsx": "Demo mode doesn't make Excel files, so you got a JSON file instead"
   },
   "error": {
     "requestFailed": "Request failed ({status})",
@@ -49,5 +50,39 @@
     "items": "Items: {n}",
     "about": "This file was generated in the page by demo mode. catbus was not contacted.",
     "real": "In a real download, a single file is saved directly and multiple files are bundled into one zip, saved by the browser to its download location."
+  },
+  "panel": {
+    "title": "Download options",
+    "open": "Download options",
+    "short": "Options",
+    "content": "Content",
+    "media": "Media",
+    "mediaDesc": "Original images, videos and other files",
+    "meta": "Info",
+    "metaDesc": "Title, text, author, engagement counts",
+    "comments": "Comments",
+    "commentsHint": "Comments: {comments} · replies per comment: {replies}",
+    "metaLocked": "Comments always include the post info",
+    "atLeastOne": "Pick at least one",
+    "commentsUnsupported": "Comments can't be downloaded from {platform} yet",
+    "listSep": ", ",
+    "toSettings": "Change the counts in Settings",
+    "format": "Format",
+    "formatTxt": "Plain text",
+    "formatNote": {
+      "json": "Info and comments saved as JSON, one file per post",
+      "txt": "Info and comments saved as readable text, one info.txt per post",
+      "xlsx": "The whole batch in one Excel spreadsheet"
+    },
+    "formatNoMeta": "The format only applies to info and comments",
+    "downloadCount": "Download {n} item | Download {n} items"
+  },
+  "got": {
+    "media": "Media ✓",
+    "noMedia": "Media ✗",
+    "meta": "Info ✓",
+    "comments": "Comments {n}/{limit}",
+    "commentsAll": "Comments {n}",
+    "truncated": " (stopped by rate limiting)"
   }
 }

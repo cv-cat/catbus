@@ -24,6 +24,8 @@ export interface PlatformFilters {
   hot: boolean
   /** web 端的 `item related` 已实现：详情卡片显示相关推荐（AGENTS.md 7.9「相关推荐」） */
   related: boolean
+  /** web 端的 `comment list` 已实现：下载时可以带上评论（AGENTS.md 7.9「批量选择与下载」） */
+  comments: boolean
 }
 
 const FILTERS = ['sort', 'type', 'time'] as const
@@ -47,7 +49,7 @@ export function platformFilters(): Promise<Record<string, PlatformFilters>> {
       const web = p.endpoints.web
       if (!web || web === 'planned') continue
       const cmd = web.commands.get('item search')
-      const entry: PlatformFilters = { search: cmd?.status === 'implemented', sort: null, type: null, time: null, kind: null, order: null, author: false, related: web.commands.get('item related')?.status === 'implemented', suggest: web.commands.get('keyword suggest')?.status === 'implemented', hot: web.commands.get('keyword hot')?.status === 'implemented' }
+      const entry: PlatformFilters = { search: cmd?.status === 'implemented', sort: null, type: null, time: null, kind: null, order: null, author: false, related: web.commands.get('item related')?.status === 'implemented', suggest: web.commands.get('keyword suggest')?.status === 'implemented', hot: web.commands.get('keyword hot')?.status === 'implemented', comments: web.commands.get('comment list')?.status === 'implemented' }
       for (const k of FILTERS) entry[k] = cmd ? enumValues(cmd.options[k]) : null
       const feed = web.commands.get('feed list')
       entry.kind = feed?.status === 'implemented' ? enumValues(feed.options.kind) : null

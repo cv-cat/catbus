@@ -1,9 +1,27 @@
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue'
-import { downloadApi, type Batch } from '@/api/download'
+import { downloadApi, type Batch, type DownloadOptions } from '@/api/download'
+import { useSettingsStore } from '@/stores/settings'
 import type { Item } from '@/api/types'
 import { toast } from '@/stores/toast'
 import { t } from '@/i18n'
+
+/**
+ * 下载面板上次的选择 → 这一批的下载选项：勾了评论就隐含信息，条数取设置里的值。
+ * `comments` 为 false 时（这些平台都没有评论）不取评论。
+ */
+export function downloadOptions(comments = true): DownloadOptions {
+  const s = useSettingsStore().settings
+  const withComments = s.dlComments && comments
+  const media = s.dlMedia || (!s.dlMeta && !withComments)
+  return {
+    media,
+    meta: s.dlMeta || withComments,
+    comments: withComments ? s.commentLimit : 0,
+    replies: withComments ? s.replyLimit : 0,
+    format: s.dlFormat,
+  }
+}
 
 const busy = (b: Batch) => b.items.some((it) => it.status === 'queued' || it.status === 'running')
 const retryable = (it: Batch['items'][number]) => it.status === 'failed' || (it.status === 'done' && !!it.expired)
@@ -70,7 +88,8 @@ export const useDownloadsStore = defineStore('downloads', () => {
   async function deliver(b: Batch, item?: string, only?: string[], auto = false) {
     try {
       const r = await downloadApi.deliver(b, item, only)
-      if (r === 'expired') {
+      if (r === 'demo-xlsx') toast(t('download.toast.demoXlsx'), 3600)
+      else if (r === 'expired') {
         toast(t('download.status.expired'), 3200)
         // 服务端已把条目标为已过期，刷新后出现重试按钮
         void refresh()
@@ -86,8 +105,9 @@ export const useDownloadsStore = defineStore('downloads', () => {
     if (b) return deliver(b, item)
   }
 
-  async function start(platform: string, account: string | null, items: Item[]) {
-    const batch = await downloadApi.start(platform, account, items)
+  /** 按下载面板上次的选择下载；comments 为 false 表示这个平台没有评论 */
+  async function start(platform: string, account: string | null, items: Item[], comments = true) {
+    const batch = await downloadApi.start(platform, account, items, downloadOptions(comments))
     pendingBatches.add(batch.id)
     batches.value = [batch, ...batches.value.filter((b) => b.id !== batch.id)]
     schedule()

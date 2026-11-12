@@ -2,12 +2,13 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch, type Component } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
-import { FlaskConical, Palette, RotateCcw, SlidersHorizontal, X } from 'lucide-vue-next'
+import { Download, FlaskConical, Palette, RotateCcw, SlidersHorizontal, X } from 'lucide-vue-next'
 import BottomSheet from '@/components/BottomSheet.vue'
 import SegmentedControl from '@/components/SegmentedControl.vue'
 import SettingsGeneral from './SettingsGeneral.vue'
 import SettingsDisplay from './SettingsDisplay.vue'
 import SettingsExperimental from './SettingsExperimental.vue'
+import SettingsDownload from './SettingsDownload.vue'
 import { useSettingsStore, type SettingsTab } from '@/stores/settings'
 import { useTheme } from '@/composables/useTheme'
 import { useBreakpoint } from '@/composables/useBreakpoint'
@@ -27,11 +28,13 @@ const { t } = useI18n()
 const TABS = computed<{ value: SettingsTab; label: string; icon: Component }[]>(() => [
   { value: 'general', label: t('settings.dialog.tab.general'), icon: SlidersHorizontal },
   { value: 'display', label: t('settings.dialog.tab.display'), icon: Palette },
+  { value: 'download', label: t('settings.dialog.tab.download'), icon: Download },
   { value: 'experimental', label: t('settings.dialog.tab.experimental'), icon: FlaskConical },
 ])
 const PANELS: Record<SettingsTab, Component> = {
   general: SettingsGeneral,
   display: SettingsDisplay,
+  download: SettingsDownload,
   experimental: SettingsExperimental,
 }
 const current = computed(() => TABS.value.find((x) => x.value === tab.value)!)

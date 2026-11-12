@@ -35,7 +35,8 @@
   },
   "toast": {
     "done": "다운로드 완료. 브라우저로 전달해 저장했어요",
-    "saved": "브라우저로 전달해 저장했어요"
+    "saved": "브라우저로 전달해 저장했어요",
+    "demoXlsx": "데모 모드에서는 Excel을 만들지 않아 JSON 파일로 저장했습니다"
   },
   "error": {
     "requestFailed": "요청 실패 ({status})",
@@ -49,5 +50,39 @@
     "items": "항목: {n}개",
     "about": "데모 모드에서 페이지가 만든 안내 파일이에요. catbus에 연결되지 않았어요.",
     "real": "실제로 다운로드하면 파일이 하나일 때는 그대로, 여러 개일 때는 zip 하나로 묶어 브라우저가 다운로드 위치에 저장해요."
+  },
+  "panel": {
+    "title": "다운로드 옵션",
+    "open": "다운로드 옵션",
+    "short": "옵션",
+    "content": "내용",
+    "media": "미디어",
+    "mediaDesc": "이미지, 동영상 등 원본 파일",
+    "meta": "정보",
+    "metaDesc": "제목, 본문, 작성자, 반응 수",
+    "comments": "댓글",
+    "commentsHint": "댓글 {comments}, 댓글마다 답글 {replies}",
+    "metaLocked": "댓글을 다운로드하면 정보도 함께 포함됩니다",
+    "atLeastOne": "하나 이상 선택하세요",
+    "commentsUnsupported": "{platform}은(는) 아직 댓글 다운로드를 지원하지 않습니다",
+    "listSep": ", ",
+    "toSettings": "개수는 설정에서 변경",
+    "format": "형식",
+    "formatTxt": "텍스트",
+    "formatNote": {
+      "json": "정보와 댓글을 JSON으로 저장(게시물마다 파일 1개)",
+      "txt": "정보와 댓글을 읽기 쉬운 텍스트로 저장(게시물마다 info.txt)",
+      "xlsx": "한 번에 받은 항목을 Excel 파일 하나로 모읍니다"
+    },
+    "formatNoMeta": "형식은 정보와 댓글에만 적용됩니다",
+    "downloadCount": "{n}개 다운로드"
+  },
+  "got": {
+    "media": "미디어 ✓",
+    "noMedia": "미디어 ✗",
+    "meta": "정보 ✓",
+    "comments": "댓글 {n}/{limit}",
+    "commentsAll": "댓글 {n}",
+    "truncated": " (제한에 걸려 중단됨)"
   }
 }

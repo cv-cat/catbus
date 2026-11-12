@@ -61,10 +61,29 @@ function itemStatus(it: DownloadItem, b: Batch): string {
   // 失败原因是 CLI 的中文报错：按 code 取译文
   if (it.status === 'failed') return it.error ? errorTitle({ code: it.code ?? 'ERROR', message: it.error }) : t('download.status.failed')
   if (it.expired) return t('download.status.expired')
+  const got = gotText(it, b)
+  if (got) return got
   const n = it.files.length
   // 整批结束后才交给浏览器
   return counts(b).busy ? t('download.status.downloaded', { n }, n) : t('download.status.delivered', { n }, n)
 }
+/** 下了信息时显示取到了什么：「媒体 ✓ · 信息 ✓ · 评论 87/100（遇到风控，已停止）」 */
+function gotText(it: DownloadItem, b: Batch): string | null {
+  const g = it.got
+  if (!g?.meta) return null
+  const parts: string[] = []
+  if (b.opts?.media !== false) parts.push(g.media ? t('download.got.media') : t('download.got.noMedia'))
+  parts.push(t('download.got.meta'))
+  const limit = b.opts?.comments ?? 0
+  if (limit !== 0 && g.comments != null) {
+    const n = g.comments
+    let c = limit === 'all' ? t('download.got.commentsAll', { n }, n) : t('download.got.comments', { n, limit })
+    if (g.truncated) c += t('download.got.truncated')
+    parts.push(c)
+  }
+  return parts.join(' · ')
+}
+const partial = (it: DownloadItem) => it.status === 'done' && !it.expired && !!it.got?.truncated
 const name = (p: string) => platformById(p)?.name ?? p
 const logo = (p: string) => platformById(p)?.logo ?? ''
 
@@ -218,7 +237,7 @@ onBeforeUnmount(() => (dl.open = false))
        </span>
        <span class="text">
   <span v-tip.overflow="b.items[0]!.title || b.items[0]!.id" class="t">{{ b.items[0]!.title || b.items[0]!.id }}</span>
-  <span v-tip.overflow="`${name(b.platform)} · ${since(b.created_at)} · ${itemStatus(b.items[0]!, b)}`" class="s" :class="b.items[0]!.status">
+  <span v-tip.overflow="`${name(b.platform)} · ${since(b.created_at)} · ${itemStatus(b.items[0]!, b)}`" class="s" :class="[b.items[0]!.status, { warn: partial(b.items[0]!) }]">
     {{ name(b.platform) }} · {{ since(b.created_at) }} ·
     <span v-if="b.items[0]!.status === 'running'" class="running-text"><CatbusLoader :size="12" :label="t('download.status.runningLabel')" />{{ t('download.status.running') }}</span>
     <template v-else>{{ itemStatus(b.items[0]!, b) }}</template>
@@ -309,7 +328,7 @@ onBeforeUnmount(() => (dl.open = false))
       </span>
       <span class="text">
  <span v-tip.overflow="it.title || it.id" class="t">{{ it.title || it.id }}</span>
-        <span v-tip.overflow="itemStatus(it, b)" class="s" :class="it.status"><CatbusLoader v-if="it.status === 'running'" :size="12" :label="t('download.status.runningLabel')" />{{ itemStatus(it, b) }}</span>
+        <span v-tip.overflow="itemStatus(it, b)" class="s" :class="[it.status, { warn: partial(it) }]"><CatbusLoader v-if="it.status === 'running'" :size="12" :label="t('download.status.runningLabel')" />{{ itemStatus(it, b) }}</span>
       </span>
       <template v-if="retryable(it)">
  <button v-if="it.verify_url" type="button" class="open warn" v-tip="t('download.action.verify')" :aria-label="t('download.action.verify')" @click="verifyThen(b, it)">
@@ -555,6 +574,13 @@ onBeforeUnmount(() => (dl.open = false))
 }
 .s.failed {
   color: var(--red);
+}
+/* 部分完成：评论遇到风控提前停止 */
+.s.warn {
+  color: #b7791f;
+}
+[data-theme='dark'] .s.warn {
+  color: #f6c453;
 }
 .s.running,
 .running-text {

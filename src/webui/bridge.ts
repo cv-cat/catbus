@@ -183,7 +183,7 @@ async function handleLogin(req: IncomingMessage, res: ServerResponse) {
 async function handleDownload(req: IncomingMessage, res: ServerResponse) {
   const url = new URL(req.url ?? '/', 'http://localhost')
   const parts = url.pathname.split('/').slice(1)
-  if (parts.at(-1) === 'file' && (parts.length === 2 || parts.length === 3)) return serveDelivery(req, res, parts, url.searchParams.getAll('item'))
+  if (parts.at(-1) === 'file' && (parts.length === 2 || parts.length === 3)) return void serveDelivery(req, res, parts, url.searchParams.getAll('item'))
   const action = parts[0]
   try {
     if (req.method === 'POST' && action === 'start') return send(res, 200, JSON.stringify({ batch: startBatch(await readBody(req)) }))
@@ -206,14 +206,14 @@ export function contentDisposition(name: string): string {
 }
 
 /** 把一批（或其中几条）的文件交给浏览器：一个文件直接给，多个文件流式打成 zip（只存不压缩） */
-function serveDelivery(req: IncomingMessage, res: ServerResponse, parts: string[], only: string[]) {
+async function serveDelivery(req: IncomingMessage, res: ServerResponse, parts: string[], only: string[]) {
   if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, bridgeError('只接受 GET、HEAD'))
   // 跨站页面不能让浏览器来取这里的文件
   if (req.headers['sec-fetch-site'] === 'cross-site') return send(res, 403, bridgeError('拒绝跨站请求'))
   let delivery: Delivery
   try {
     const [batch, item] = parts.slice(0, -1).map((p) => decodeURIComponent(p))
-    delivery = prepareDelivery(batch!, parts.length === 3 ? item! : null, only)
+    delivery = await prepareDelivery(batch!, parts.length === 3 ? item! : null, only)
   } catch (e) {
     if (e instanceof DeliveryError) return send(res, e.status, bridgeError(e.message))
     if (e instanceof URIError) return send(res, 400, bridgeError('地址不合法'))
@@ -226,20 +226,27 @@ function serveDelivery(req: IncomingMessage, res: ServerResponse, parts: string[
   res.setHeader('x-content-type-options', 'nosniff')
   if (!delivery.zip) {
     const file = delivery.files[0]!
+    if (file.data) {
+      res.setHeader('content-length', String(file.data.length))
+      return void res.end(req.method === 'HEAD' ? undefined : file.data)
+    }
     try {
-      res.setHeader('content-length', String(statSync(file.path).size))
+      res.setHeader('content-length', String(statSync(file.path!).size))
     } catch {
       return send(res, 410, bridgeError('文件已过期，请重新下载'))
     }
     if (req.method === 'HEAD') return void res.end()
-    const stream = createReadStream(file.path)
+    const stream = createReadStream(file.path!)
     stream.on('error', () => res.destroy())
     stream.pipe(res)
     return
   }
   if (req.method === 'HEAD') return void res.end()
   const zip = new ZipFile()
-  for (const f of delivery.files) zip.addFile(f.path, f.entry, { compress: false })
+  for (const f of delivery.files) {
+    if (f.data) zip.addBuffer(f.data, f.entry, { compress: false })
+    else zip.addFile(f.path!, f.entry, { compress: false })
+  }
   // 打包途中文件被删等：响应已经开始，只能断开
   zip.on('error', () => res.destroy())
   zip.outputStream.on('error', () => res.destroy())
