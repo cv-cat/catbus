@@ -1,4 +1,4 @@
-import { mockAccounts, mockComments, mockFilters, mockHot, mockReplies, mockItem, mockItems, mockLogout, mockSuggest, mockUse } from './mock'
+import { mockAccounts, mockComments, mockFilters, mockHot, mockReplies, mockItem, mockItems, mockLogout, mockRelated, mockSuggest, mockUse } from './mock'
 import { loginApi } from './login'
 import type { Account, Comment, Envelope, Item, Keyword } from './types'
 import { isDemo, useSourceStore, type Source } from '@/stores/source'
@@ -29,6 +29,8 @@ export interface PlatformFilters {
   /** 搜索联想 / 热搜是否已实现；旧版 bridge 不给，当作不支持 */
   suggest?: boolean
   hot?: boolean
+  /** web 端的 `item related` 已实现（详情卡片的相关推荐）；旧版 bridge 不给，当作不支持 */
+  related?: boolean
 }
 
 /** 读不到（旧版 bridge、纯静态预览）时返回 null，页面不置灰任何筛选；演示模式不请求服务端，用演示的取值表 */
@@ -149,6 +151,18 @@ export async function listReplies(
   if (limit) argv.push('--limit', String(limit))
   if (cursor) argv.push('--cursor', cursor)
   return call<Comment[]>(argv)
+}
+
+/** 相关推荐：`item related`，只取一页（AGENTS.md 7.9「相关推荐」） */
+export async function listRelated(platform: string, item: Item, limit: number, account?: string | null): Promise<Envelope<Item[]>> {
+  if (isDemo()) {
+    await new Promise((r) => setTimeout(r, 600))
+    return mockRelated(platform, item, limit)
+  }
+  const argv = [platform, 'item', 'related', item.url || item.id]
+  if (account) argv.push('-a', account)
+  argv.push('--limit', String(limit))
+  return call<Item[]>(argv)
 }
 
 /** 支持楼中楼的平台（注册表里实现了 comment replies） */

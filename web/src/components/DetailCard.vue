@@ -13,6 +13,7 @@ import SaleCountdown from './SaleCountdown.vue'
 import CommentMedia from './CommentMedia.vue'
 import CatbusLoader from './CatbusLoader.vue'
 import RawJsonView from './RawJsonView.vue'
+import RelatedRail from './RelatedRail.vue'
 import { getRawItem } from '@/api/raw'
 import { useSettingsStore } from '@/stores/settings'
 import { getItem, listComments } from '@/api/client'
@@ -36,7 +37,7 @@ import { openVerify, useVerifyStore, verifyUrlOf } from '@/stores/verify'
  */
 const detailStore = useDetailStore()
 const { target } = storeToRefs(detailStore)
-const { close, step, canStep } = detailStore
+const { close, step, canStep, jump } = detailStore
 const { verify } = useVerifyStore()
 const downloads = useDownloadsStore()
 
@@ -368,13 +369,14 @@ let busy = false
 const LOAD_DELAY = 280
 let loadTimer = 0
 
-function tween(vars: gsap.TweenVars, el: Element): Promise<void> {
+function tween(vars: gsap.TweenVars, el: gsap.TweenTarget): Promise<void> {
   return new Promise((resolve) => {
     tl = gsap.timeline({ onComplete: () => resolve() }).to(el, vars)
   })
 }
 
-async function playSwitch(t: DetailTarget, dir: 1 | -1) {
+/** dir 为 0：从相关推荐切过来，卡片不动，媒体区和信息栏交叉淡入（AGENTS.md 7.9「相关推荐」） */
+async function playSwitch(t: DetailTarget, dir: 1 | -1 | 0) {
   const my = ++switching
   busy = true
   const s = sheet.value!
@@ -383,7 +385,9 @@ async function playSwitch(t: DetailTarget, dir: 1 | -1) {
   settled.value = false
   const dist = Math.min(80, vh.value * 0.08)
   const reduced = prefersReducedMotion()
-  await tween({ y: reduced ? 0 : -dir * dist, opacity: 0, duration: reduced ? 0.1 : 0.2, ease: 'power2.in' }, s)
+  const parts = () => Array.from(s.children)
+  if (dir === 0) await tween({ opacity: 0, duration: reduced ? 0.06 : 0.125, ease: 'power3.inOut' }, parts())
+  else await tween({ y: reduced ? 0 : -dir * dist, opacity: 0, duration: reduced ? 0.1 : 0.2, ease: 'power2.in' }, s)
   if (my !== switching) return
 
   // 卡片的隐藏状态跟着换：关闭时缩回新的这一条
@@ -408,6 +412,14 @@ async function playSwitch(t: DetailTarget, dir: 1 | -1) {
   if (body.value) body.value.scrollTop = 0
   if (my !== switching) return
 
+  if (dir === 0) {
+    tl = gsap.timeline({ onComplete: opened }).fromTo(
+      parts(),
+      { opacity: 0 },
+      { opacity: 1, duration: reduced ? 0.06 : 0.125, ease: 'power3.inOut', clearProps: 'opacity' },
+    )
+    return
+  }
   tl = gsap.timeline({ onComplete: opened }).fromTo(
     s,
     { y: reduced ? 0 : dir * dist, opacity: 0 },
@@ -421,8 +433,8 @@ function go(dir: 1 | -1) {
 }
 
 watch(target, async (t, before) => {
-  if (t && before && t.dir && cur.value) {
-    await playSwitch(t, t.dir)
+  if (t && before && (t.dir || t.related) && cur.value) {
+    await playSwitch(t, t.dir ?? 0)
   } else if (t) {
     switching++
     clearTimeout(loadTimer)
@@ -803,6 +815,17 @@ onBeforeUnmount(() => {
 <span /><span /><span class="short" />
      </div>
      <p v-if="itemError" class="inline-error rv">详情没有加载完整：{{ itemError.message }}</p>
+
+     <RelatedRail
+       v-if="plain"
+       :platform="cur.platform"
+       :id="cur.item.id"
+       :item="detail ?? cur.item"
+       :account="cur.account"
+       :ready="!loadingItem && !loadingComments"
+       :open="Boolean(target)"
+       @pick="jump"
+     />
 
             <template v-if="plain">
             <div v-if="!textOnly" class="divider rv" />

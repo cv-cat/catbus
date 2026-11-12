@@ -170,6 +170,32 @@ export function mockReplies(item: Item, comment: string, offset: number, limit: 
   return { ok: true, data, page: { cursor: String(next), has_more: next < total }, error: null }
 }
 
+/** 演示用的相关推荐：竖封面、一半是带播放数的视频；读不到 /api/filters 时按这几个平台演示（与注册表一致） */
+export const MOCK_RELATED_PLATFORMS = ['tiktok', 'bilibili', 'kuaishou', 'jd', 'youtube']
+export function mockRelated(platform: string, item: Item, limit: number): Envelope<Item[]> {
+  const n = hash(`related:${item.id}`)
+  const data: Item[] = Array.from({ length: Math.min(limit, 8 + (n % 5)) }, (_, i) => {
+    const k = n + i
+    const id = `${platform}-r${(k % 1e8).toString(36)}`
+    const video = k % 2 === 0
+    return {
+      id,
+      kind: video ? 'video' : 'image',
+      url: `https://example.com/${platform}/${id}`,
+      title: TITLES[k % TITLES.length]!,
+      text: null,
+      author: demoAuthor(k),
+      created_at: new Date(Date.now() - (k % 30) * 864e5).toISOString(),
+      cover: `https://picsum.photos/seed/${id}/480/600`,
+      media: [{ id: null, type: video ? 'video' : 'image', url: video ? DEMO_VIDEO : null, width: 480, height: 600, duration: video ? 30 + (k % 300) : null }],
+      stats: { views: video ? 1000 + (hash(id) % 200000) : null, likes: hash(id) % 90000, comments: hash(id + 'c') % 2000, collects: null, shares: null },
+      price: null,
+      status: null,
+    }
+  })
+  return { ok: true, data, page: { cursor: null, has_more: false }, error: null }
+}
+
 const NICKS: Record<string, string[]> = {
   xhs: ['下一站去哪', '丸子是只柴', '露营可可', '小野玩户外', '倒拔垂杨柳'],
   douyin: ['catbus', '飞天', '蜡笔小新', '吴荔斌', '漫逛江南', '丸子是小号', '澄就YOUNG', '霞客湾', '一站一站', '山野来信', '江南小雨', '早睡早起', '周末去哪', '晚风'],
