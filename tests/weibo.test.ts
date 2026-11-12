@@ -11,6 +11,7 @@ import { RAW } from '../src/core/schemas.js'
 import * as api from '../src/platforms/weibo/web/api.js'
 import { check, riskCheck, Weibo } from '../src/platforms/weibo/web/client.js'
 import * as cmd from '../src/platforms/weibo/web/commands.js'
+import { mblog } from '../src/platforms/weibo/web/normalize.js'
 import { resolveItem } from '../src/platforms/weibo/web/resolve.js'
 import { bidToMid, fileParams, midToBid } from '../src/platforms/weibo/web/sign.js'
 import { expectRequests, type GoldenCase, type GoldenRequest, loadCase, makeCtx, replay } from './golden.js'
@@ -513,6 +514,75 @@ describe('weibo 纯算', () => {
 })
 
 // ---------------------------------------------------------------- feed list：真实响应的解析（请求构造见上面的对拍；这里用真机响应裁剪的 fixture，覆盖视频、广告过滤等形态）
+
+describe('weibo 转发微博的归一化（AGENTS 4.8）', () => {
+  const video = {
+    type: 'video',
+    object_type: 'video',
+    object_id: '1034:5000000000000001',
+    page_pic: { url: 'https://wx2.sinaimg.cn/orj480/fakecover.jpg' },
+    play_count: '1.2万次播放',
+    urls: { mp4_720p_mp4: 'https://f.video.weibocdn.com/o0/fake720.mp4', mp4_hd_mp4: 'https://f.video.weibocdn.com/o0/fakehd.mp4' },
+    media_info: { duration: 12 },
+  }
+  const original = {
+    id: '5000000000000002',
+    bid: 'Orig0001',
+    text: '原微博的正文',
+    user: { id: 2000000002, screen_name: '原作者' },
+    page_info: video,
+    pic_num: 0,
+    attitudes_count: 999,
+  }
+  const repost = (extra: object = {}) => ({
+    id: '5000000000000003',
+    bid: 'Repo0001',
+    text: '转发语',
+    created_at: 'Sat Oct 31 13:56:26 +0800 2026',
+    user: { id: 2000000003, screen_name: '转发者' },
+    pic_num: 0,
+    pic_ids: [],
+    attitudes_count: 213,
+    reposts_count: 21,
+    retweeted_status: original,
+    ...extra,
+  })
+
+  it('转发这条自己没有媒体：kind、cover、media、播放数取原微博，正文、作者、计数仍是转发这条的', () => {
+    const item = mblog(repost())
+    expect(item.id).toBe('5000000000000003')
+    expect(item.text).toBe('转发语')
+    expect(item.author?.name).toBe('转发者')
+    expect(item.stats.likes).toBe(213)
+    expect(item.kind).toBe('video')
+    expect(item.cover).toBe('https://wx2.sinaimg.cn/orj480/fakecover.jpg')
+    expect(item.media.map((x) => [x.type, x.url])).toEqual([['video', 'https://f.video.weibocdn.com/o0/fake720.mp4']])
+    expect(item.stats.views).toBe(12000)
+  })
+
+  it('原微博是图文：media 为原微博的图片', () => {
+    const item = mblog(repost({ retweeted_status: { ...original, page_info: undefined, pic_num: 1, pics: [{ pid: 'p1', large: { url: 'https://wx1.sinaimg.cn/large/p1.jpg', geo: { width: 800, height: 600 } } }] } }))
+    expect(item.kind).toBe('image')
+    expect(item.cover).toBe('https://wx1.sinaimg.cn/large/p1.jpg')
+    expect(item.media.map((x) => x.url)).toEqual(['https://wx1.sinaimg.cn/large/p1.jpg'])
+  })
+
+  it('转发这条自己带图片或卡片时用自己的，不取原微博', () => {
+    const withPic = mblog(repost({ pic_num: 1, pics: [{ pid: 'own', large: { url: 'https://wx1.sinaimg.cn/large/own.jpg' } }] }))
+    expect(withPic.kind).toBe('image')
+    expect(withPic.media.map((x) => x.url)).toEqual(['https://wx1.sinaimg.cn/large/own.jpg'])
+    const withCard = mblog(repost({ page_info: { type: 'webpage', page_title: '链接' } }))
+    expect(withCard.kind).toBe('text')
+    expect(withCard.media).toEqual([])
+  })
+
+  it('不是转发、自己也没有媒体：仍是纯文字', () => {
+    const item = mblog(repost({ retweeted_status: undefined }))
+    expect(item.kind).toBe('text')
+    expect(item.cover).toBeNull()
+    expect(item.media).toEqual([])
+  })
+})
 
 const feedFixture = (name: string) => readFileSync(join(import.meta.dirname, 'fixtures/weibo', name), 'utf8')
 
