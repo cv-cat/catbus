@@ -232,7 +232,27 @@ export function mockUse(platform: string, account: string) {
  * 演示模式的筛选取值表（与 GET /api/filters 同结构，取值照各平台注册表里的声明），
  * `?demo` 下不请求服务端也能演示分类、时间筛选的置灰。
  */
-export function mockFilters(): Record<string, { search: boolean; sort: string[] | null; type: string[] | null; time: string[] | null; kind: string[] | null; order: string[] | null }> {
+export function mockFilters(): Record<string, { search: boolean; sort: string[] | null; type: string[] | null; time: string[] | null; kind: string[] | null; order: string[] | null; author: boolean; suggest: boolean; hot: boolean; related: boolean }> {
+  const base = mockFilterValues()
+  // 作者页、联想 / 热搜、相关推荐的能力同样照注册表：演示模式下这几项也能演示
+  return Object.fromEntries(
+    Object.entries(base).map(([id, f]) => [
+      id,
+      {
+        ...f,
+        author: MOCK_AUTHOR_PLATFORMS.includes(id),
+        suggest: MOCK_KEYWORD_SUPPORT[id]?.suggest ?? false,
+        hot: MOCK_KEYWORD_SUPPORT[id]?.hot ?? false,
+        related: MOCK_RELATED_PLATFORMS.includes(id),
+      },
+    ]),
+  )
+}
+
+/** web 端 `user get` 和 `user items` 都已实现的平台（与注册表一致） */
+const MOCK_AUTHOR_PLATFORMS = ['xhs', 'douyin', 'tiktok', 'bilibili', 'kuaishou', 'weibo', 'x', 'youtube']
+
+function mockFilterValues(): Record<string, { search: boolean; sort: string[] | null; type: string[] | null; time: string[] | null; kind: string[] | null; order: string[] | null }> {
   const f = (sort: string[] | null, type: string[] | null, time: string[] | null, kind: string[] | null, search = true) =>
     ({ search, sort, type, time, kind, order: null as string[] | null })
   const T = ['all', 'video', 'image']
@@ -301,6 +321,7 @@ export function mockUserItems(platform: string, ref: string, offset: number, lim
   const data = page.data!.slice(0, Math.max(0, total - offset)).map((it) => ({ ...it, id: `${it.id}-u`, title: it.title?.replace(/ · @.*$/, '') ?? null, author }))
   const next = offset + data.length
   return { ok: true, data, page: { cursor: String(next), has_more: next < total }, error: null }
+}
 
 // 搜索联想与热搜的演示词（AGENTS.md 7.9「搜索联想与热搜」）
 const HOT_WORDS = [
