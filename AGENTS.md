@@ -345,6 +345,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - `msg send --to <user> --item <item>`：就这件商品给指定用户发消息（闲鱼：卖家主动联系买家）。不支持的平台报 `UNSUPPORTED`。
 - maoyan：演出（item）的场次时间、城市、场馆、票价档、售卖状态没有对应的 Item 字段，按「键：值」逐行写进 `text`，原始字段用 `--raw`。接口给了开售时间（`onSaleTime`）时，`feed list` 和 `item get` 的 `text` 另有一行「开售时间：<带时区的 ISO 8601>」（已开售的演出同样有，是过去的时间）；`feed list` 的「开售」仍是站点的相对文案（如「明天开售」）。`poi search` 只搜演出城市，`id` 是 `feed list --city` 的取值。`item get --tickets` 的场次和票档同样写进 `text`，不新增类型。
 - taobao 没有按用户查询、按用户发起会话的接口：`user get <user>` 的 `<user>` 只接受商品链接，返回这件商品的卖家；`msg send` 不支持 `--to`（报 `UNSUPPORTED`）。
+- weibo 的转发微博（Item）：`id`、`url`、`author`、正文和计数仍取转发这条自己的（转发语和转发者）。转发这条自己没有媒体（没有 `page_info`，也没有图片）时，`kind`、`cover`、`media`、文章的 `title` 和视频的 `stats.views` 取原微博（`retweeted_status`），否则详情里只剩转发语、看不到被转发的视频和图片；原微博本身仍挂在 `--raw` 的 `retweeted_status` 上。
 - x 的推文归一化（Item）：转推（`legacy.retweeted_status_result`）按原推归一化：`id`、`url`、`author`、正文、媒体和计数都取原推，因为外层只有截断的「RT @…」正文，没有媒体，计数也是 0；原始的转推对象仍挂在 `--raw` 上。推文自己没有媒体时，`cover` 依次退到被引用推文（`quoted_status_result`）的第一张媒体，再退到链接卡片（`card.legacy.binding_values`）的缩略图；`media` 只放推文自己的媒体。
 
 ### 4.9 选项
