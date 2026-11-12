@@ -34,3 +34,6 @@ downloads/
 
 # vitest 的缓存
 .vitest/
+
+# WebUI 真机截图（design-assets 里的设计素材照常跟踪）
+design-assets/webui-responsive-e2e/
