@@ -76,7 +76,7 @@ describe('maoyan 平台（web）', () => {
       expect(calls[0]!.cookies).toEqual([])
     })
 
-    it('归一化为 Item（kind 为 goods），演出者作 author，分类 / 开售写进 text', async () => {
+    it('归一化为 Item（kind 为 goods），演出者作 author，分类 / 开售 / 开售时间写进 text', async () => {
       mock()
       const r = await cli('maoyan', 'feed', 'list')
       expect(r.env.data).toHaveLength(3)
@@ -85,7 +85,7 @@ describe('maoyan 平台（web）', () => {
         kind: 'goods',
         url: 'https://show.maoyan.com/qqw#/detail/514992',
         title: '岳云鹏孙越相声专场演出',
-        text: '分类：相声\n演出者：岳云鹏、孙越\n开售：已开售',
+        text: '分类：相声\n演出者：岳云鹏、孙越\n开售：已开售\n开售时间：2026-10-29T10:18:00+08:00',
         author: {
           id: '11399',
           name: '岳云鹏',
@@ -170,7 +170,7 @@ describe('maoyan 平台（web）', () => {
         kind: 'goods',
         url: 'https://show.maoyan.com/qqw#/detail/514992',
         title: expect.stringContaining('岳云鹏孙越相声专场演出'),
-        text: '时间：2026.12.12 19:30 周六\n城市：北京\n场馆：北京展览馆剧场（官方售票）（西直门外大街135号）\n票价：380、1680\n状态：立即预定',
+        text: '时间：2026.12.12 19:30 周六\n城市：北京\n场馆：北京展览馆剧场（官方售票）（西直门外大街135号）\n票价：380、1680\n状态：立即预定\n开售时间：2026-10-29T10:18:00+08:00',
         author: null,
         price: { amount: 380, currency: 'CNY' },
         status: null,
@@ -356,7 +356,7 @@ describe('maoyan 平台（web）', () => {
       await login()
       const r = await cli('maoyan', 'item', 'get', '514992', '--tickets')
       expect(r.code).toBe(0)
-      expect(r.env.data.text).toContain('状态：立即预定\n场次：2026-12-12 星期六 19:30\n票档：380元，实售价 342，余票 12\n票档：980元，实售价 980，余票 0，售罄\n场次：2026-12-13 星期日 19:30')
+      expect(r.env.data.text).toContain('状态：立即预定\n开售时间：2026-10-29T10:18:00+08:00\n场次：2026-12-12 星期六 19:30\n票档：380元，实售价 342，余票 12\n票档：980元，实售价 980，余票 0，售罄\n场次：2026-12-13 星期日 19:30')
       expect(r.env.data.text).not.toContain('隐藏')
       expect(calls.filter((c) => c.path === '/my/odea/show/tickets').map((c) => new URL(c.url).searchParams.get('showId'))).toEqual(['11', '12'])
 

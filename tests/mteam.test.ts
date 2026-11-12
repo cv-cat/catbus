@@ -7,6 +7,8 @@ import { redact } from '../src/core/log.js'
 import * as rand from '../src/core/rand.js'
 import { shapeOf } from './e2e/shapes.js'
 import { cli, useTempHome } from './helpers.js'
+import { findPlatform } from '../src/platforms/index.js'
+import { KEYS, start } from './tui-harness.js'
 
 // 全部是合成数据，禁止把真实账号响应或种子元数据写入 fixture。
 const KEY = 'fake-mteam-api-key-for-tests'
@@ -320,5 +322,37 @@ describe('mteam：官方 API 适配', () => {
   it('API Key 和 passkey 可被通用 logger 脱敏', () => {
     expect(redact({ 'x-api-key': KEY, api_key: KEY, passkey: KEY })).toEqual({ 'x-api-key': '***', api_key: '***', passkey: '***' })
     expect(redact(`x-api-key=${KEY}&passkey=${KEY}`)).toBe('x-api-key=***&passkey=***')
+  })
+})
+
+describe('mteam：终端界面登录', () => {
+  const home = useTempHome()
+  let restore: (() => void) | undefined
+  afterEach(() => restore?.())
+
+  it('API Key 在界面里隐藏输入，屏幕上没有明文；校验通过后保存到账号', async () => {
+    const seen: string[] = []
+    restore = mockSender((request) => {
+      const path = new URL(request.url).pathname
+      seen.push(path)
+      if (path === '/api/member/profile') return ok(profile)
+      throw new Error(`意外请求：${path}`)
+    })
+    const s = await start({ platforms: [findPlatform('mteam')!], columns: 100, rows: 28 })
+    try {
+      await s.press('a', 'n', KEYS.enter) // 账号页 → 登录新账号 → 开始
+      await s.waitForText('M-Team API Key')
+      await s.type(KEY)
+      expect(s.screen().join('\n')).not.toContain(KEY)
+      expect(s.raw()).not.toContain(KEY)
+      await s.press(KEYS.enter)
+      await s.waitForText('已登录')
+      expect(seen).toEqual(['/api/member/profile'])
+      const saved = JSON.parse(readFileSync(join(home.dir, 'auth/mteam/web/default.json'), 'utf8'))
+      expect(saved).toMatchObject({ method: 'apikey', user: { id: profile.id } })
+      expect(saved.scopes.main.tokens.api_key).toBe(KEY)
+    } finally {
+      s.stop()
+    }
   })
 })

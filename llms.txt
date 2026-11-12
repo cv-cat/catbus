@@ -40,7 +40,7 @@ catbus <platform> <resource> <action> [args...] [options...]
 catbus <global-command>
 ```
 
-- Global commands: `platforms [platform]`, `doctor`, `auth list`, `config get|set|unset|list`, `version`.
+- Global commands: `platforms [platform]`, `doctor`, `auth list`, `config get|set|unset|list`, `version`, `tui` (full-screen interactive UI for humans; needs a TTY, not for agents).
 - Global options: `-a/--account <name>`, `-e/--endpoint web|app|pc` (default web), `-o/--output json|jsonl`, `--raw`, `--fields <path,...>`, `--dry-run`, `--proxy <url>`, `-v`, `-q`, `-y/--yes`, `-h/--help`.
 - Paging: one page by default; `--limit N`, `--all`, `--cursor <page.cursor>`.
 - Standard filters: `--sort general|latest|popular|views|comments|collects|sales|price_asc|price_desc`, `--type all|video|image|text|article|goods`, `--time all|day|week|month|half_year|year`, `--kind recommend|hot|following` (feed list). Each platform supports a subset; a standard value the platform lacks returns `UNSUPPORTED`, a non-standard value returns `USAGE`.

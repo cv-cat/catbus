@@ -37,9 +37,10 @@ npm i -g catbus-cli         # only Node needed
 
 catbus bilibili auth login  # scan a QR code
 catbus bilibili item search cat --limit 20
+catbus tui    # don't want to memorize commands? use the full-screen UI
 ```
 
-Prefer Docker or a source install? See the [quick start guide](docs/guide/quick-start.md).
+Prefer Docker or a source install? See the [quick start guide](docs/guide/quick-start.md). The full-screen interface is described in [Terminal UI](docs/guide/tui.md).
 
 ## One set of commands for every platform
 
