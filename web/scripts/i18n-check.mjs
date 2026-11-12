@@ -7,7 +7,8 @@
  *   npm run i18n:check -- --hardcoded [文件...] 另外列出代码里残留的中文（可只看给出的文件 / 目录）
  *   npm run i18n:check -- --hardcoded --strict  有残留中文也算失败
  *
- * 对账规则：key 集合一致；占位（{n}、{name}）集合一致；复数分支（按 | 分隔）数量一致；译文不为空。
+ * 对账规则：key 集合一致；占位（{n}、{name}）集合一致；译文不为空。复数分支（按 | 分隔）可以和中文不同
+ * （中文一支，英语分单复数），但最多三支（零 | 一 | 多）。
  * 残留中文不算：注释、带 `i18n-ignore` 的行、<style>、演示数据（src/api/mock.ts）、表情表（src/data/emoji/）、文案文件本身。
  * 有错误时退出码 1。
  */
@@ -91,7 +92,7 @@ for (const code of LOCALES.filter((c) => c !== SOURCE && (!onlyLocale || c === o
     const tv = msgs.get(k)
     if (!tv.trim() && v.trim()) err(`译文为空 ${k}`)
     if (placeholders(tv) !== placeholders(v)) err(`占位不一致 ${k}：中文 {${placeholders(v)}}，译文 {${placeholders(tv)}}`)
-    if (branches(tv) !== branches(v)) err(`复数分支数不一致 ${k}：中文 ${branches(v)} 支，译文 ${branches(tv)} 支`)
+    if (branches(tv) > 3) err(`复数分支超过三支 ${k}`)
   }
   for (const k of msgs.keys()) if (!source.has(k)) err(`多余的 key ${k}（中文里没有）`)
   if (errors === before) console.log(`  ✓ ${msgs.size} 条，与 zh-CN 一致`)
