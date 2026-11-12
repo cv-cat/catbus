@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { ChevronLeft, ChevronRight, X } from 'lucide-vue-next'
 import { closeLightbox, useLightboxStore } from '@/stores/lightbox'
+import { imgSrc } from '@/api/client'
 
 /**
  * 看大图：Esc / 点空白关闭，← / → 切换。键盘事件在捕获阶段拦下，不让底下的详情卡片也响应。
@@ -220,7 +221,7 @@ function onClick(e: MouseEvent) {
           class="big"
           :class="{ zoomed: view.scale > 1 }"
           :style="imgStyle"
-          :src="lb.images[lb.index]"
+          :src="imgSrc(lb.images[lb.index])"
           alt=""
           referrerpolicy="no-referrer"
           draggable="false"

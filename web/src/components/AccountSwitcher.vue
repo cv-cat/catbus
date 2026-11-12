@@ -8,6 +8,7 @@ import { gsap, prefersReducedMotion } from '@/composables/motion'
 import { since } from '@/composables/format'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import BottomSheet from './BottomSheet.vue'
+import { imgSrc } from '@/api/client'
 
 /** 收起时显示几个账号；展开后超过这么多个就改成滚动 */
 const COLLAPSED = 3
@@ -327,7 +328,7 @@ onBeforeUnmount(close)
        </template>
        <template v-else>
               <span class="ava" :style="{ background: color(a) }" aria-hidden="true">
-                <img v-if="avatarOf(a)" :src="avatarOf(a)!" alt="" referrerpolicy="no-referrer" @error="onAvatarError(avatarOf(a)!)" />
+                <img v-if="avatarOf(a)" :src="imgSrc(avatarOf(a)!)" alt="" referrerpolicy="no-referrer" @error="onAvatarError(avatarOf(a)!)" />
                 <template v-else>{{ nick(a).slice(0, 1) }}</template>
               </span>
               <div class="text">
@@ -395,7 +396,7 @@ onBeforeUnmount(close)
     >
       <span class="ava-wrap">
         <span class="ava" aria-hidden="true">
-          <img v-if="avatarOf(current)" :src="avatarOf(current)!" alt="" referrerpolicy="no-referrer" @error="onAvatarError(avatarOf(current)!)" />
+          <img v-if="avatarOf(current)" :src="imgSrc(avatarOf(current)!)" alt="" referrerpolicy="no-referrer" @error="onAvatarError(avatarOf(current)!)" />
           <template v-else>{{ current ? nick(current).slice(0, 1) : '?' }}</template>
         </span>
         <span v-if="rail && status" class="dot" :class="status" aria-hidden="true" />

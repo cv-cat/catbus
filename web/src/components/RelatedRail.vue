@@ -6,6 +6,7 @@ import type { Item } from '@/api/types'
 import { compact, tintOf } from '@/composables/format'
 import { prefersReducedMotion } from '@/composables/motion'
 import { cachedRelated, fetchRelated, relatedSupported, rememberRelated } from '@/composables/useRelated'
+import { imgSrc } from '@/api/client'
 
 /**
  * 详情卡片里的「相关推荐」（AGENTS.md 7.9，设计稿 S / S2 / S3）：一行横向滚动的小卡片。
@@ -118,7 +119,7 @@ onBeforeUnmount(() => {
         <template v-if="list">
           <button v-for="it in list" :key="it.id" class="mini" type="button" :title="label(it)" @click="emit('pick', it)">
             <span class="cover">
-              <img v-if="it.cover" :src="it.cover" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+              <img v-if="it.cover" :src="imgSrc(it.cover)" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
               <span v-if="views(it)" class="badge mono"><Play :size="9" fill="currentColor" aria-hidden="true" />{{ views(it) }}</span>
             </span>
             <span class="m-title">{{ label(it) }}</span>

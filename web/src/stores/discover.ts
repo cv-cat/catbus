@@ -505,6 +505,9 @@ export const useDiscoverStore = defineStore('discover', () => {
         if (!append) {
           items.value = []
           channels.delete(platform)
+          // 上一个查询的翻页状态不再对应：不收起的话哨兵仍可见，会拿旧 cursor 反复翻页、反复报错
+          cursor.value = null
+          hasMore.value = false
         }
         return
       }
@@ -542,12 +545,18 @@ export const useDiscoverStore = defineStore('discover', () => {
       // 取消只发生在请求作废之后；保险起见，取消一律不当成错误
       if (id !== seq || isAbort(e)) return
       error.value = { code: 'NETWORK', message: (e as Error).message, hint: null, detail: null }
+      if (!append) {
+        cursor.value = null
+        hasMore.value = false
+      }
     } finally {
       if (id === seq) loading.value = loadingMore.value = false
     }
   }
 
-  const loadMore = () => !loadingMore.value && view.hasMore.value && run(true)
+  // 单一模式下出错后不自动翻页：每次加载结束哨兵都会重新 observe，出错还接着翻就会无限重试、「加载中」高频闪烁。
+  // 由用户点重试 / 刷新 / 换筛选重新开始（新一次搜索会先清掉 error）
+  const loadMore = () => !loadingMore.value && (aggregate.value || !error.value) && view.hasMore.value && run(true)
 
   /** 刷新按钮：按当前渠道已提交的查询重新请求，替换缓存（旧结果变淡，新结果回来后替换）；聚合模式下选中的渠道全部重新请求 */
   function refresh() {

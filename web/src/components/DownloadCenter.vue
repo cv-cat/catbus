@@ -9,6 +9,7 @@ import { since } from '@/composables/format'
 import { openVerify } from '@/stores/verify'
 import { prefersReducedMotion, wave } from '@/composables/motion'
 import { useBreakpoint } from '@/composables/useBreakpoint'
+import { imgSrc } from '@/api/client'
 
 const dl = useDownloadsStore()
 const bp = useBreakpoint()
@@ -207,7 +208,7 @@ onBeforeUnmount(() => (dl.open = false))
      <!-- 一批只有一条：直接显示那一条 -->
      <div v-if="b.items.length === 1" class="row single">
        <span class="thumb">
-  <img v-if="b.items[0]!.cover" :src="b.items[0]!.cover" alt="" loading="lazy" referrerpolicy="no-referrer" />
+  <img v-if="b.items[0]!.cover" :src="imgSrc(b.items[0]!.cover)" alt="" loading="lazy" referrerpolicy="no-referrer" />
          <ImageOff v-else :size="14" />
          <img class="plat" :src="logo(b.platform)" alt="" />
        </span>
@@ -241,7 +242,7 @@ onBeforeUnmount(() => (dl.open = false))
          <X :size="15" />
        </button>
        <span v-tip="itemStatus(b.items[0]!, b)" class="ico-wrap" tabindex="0">
-  <span v-if="b.items[0]!.status === 'running'" class="ico run-dot" aria-hidden="true" />
+  <span v-if="b.items[0]!.status === 'running'" class="ico run-dot lg" aria-hidden="true" />
   <Clock v-else-if="b.items[0]!.status === 'queued'" class="ico" :size="16" />
   <AlertCircle v-else-if="b.items[0]!.status === 'failed'" class="ico bad" :size="16" />
   <TimerOff v-else-if="b.items[0]!.expired" class="ico" :size="16" />
@@ -261,7 +262,7 @@ onBeforeUnmount(() => (dl.open = false))
        >
   <span class="stack">
     <span v-for="(it, i) in b.items.slice(0, 3)" :key="it.id" class="thumb" :style="{ '--i': i }">
-      <img v-if="it.cover" :src="it.cover" alt="" loading="lazy" referrerpolicy="no-referrer" />
+      <img v-if="it.cover" :src="imgSrc(it.cover)" alt="" loading="lazy" referrerpolicy="no-referrer" />
       <ImageOff v-else :size="14" />
     </span>
   </span>
@@ -299,7 +300,7 @@ onBeforeUnmount(() => (dl.open = false))
   <div class="inner">
     <div v-for="it in b.items" :key="it.id" class="row sub">
       <span class="thumb sm">
- <img v-if="it.cover" :src="it.cover" alt="" loading="lazy" referrerpolicy="no-referrer" />
+ <img v-if="it.cover" :src="imgSrc(it.cover)" alt="" loading="lazy" referrerpolicy="no-referrer" />
         <ImageOff v-else :size="12" />
       </span>
       <span class="text">
@@ -570,9 +571,14 @@ onBeforeUnmount(() => (dl.open = false))
 .run-dot {
   width: 7px;
   height: 7px;
+  /* 外边距把占位补成与状态图标同样的方框（行内 14px、批次 16px），圆点与对勾、时钟中心对齐 */
+  margin: 3.5px;
   border-radius: 50%;
   background: var(--red);
   box-shadow: 0 0 0 3px var(--red-soft);
+}
+.run-dot.lg {
+  margin: 4.5px;
 }
 .ico-wrap {
   flex: none;

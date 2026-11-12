@@ -62,6 +62,10 @@ const label = computed(() => {
   text-align: left;
   transition: color 0.2s, background 0.2s;
 }
+/* 渠道列表是滚动容器（overflow 会裁掉外扩的描边），焦点环收进按钮内侧 */
+.channel:focus-visible {
+  outline-offset: -2px;
+}
 .channel:hover:not(.active) {
   background: var(--hair);
   color: var(--ink);

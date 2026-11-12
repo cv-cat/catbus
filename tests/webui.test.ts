@@ -564,8 +564,9 @@ describe('字段排序：item search / feed list 放行 --order-by 与 --asc', (
     expect(all.maoyan!.kind).toEqual(['recommend'])
     expect(all.mteam!.kind).toBeNull()
     expect(all.mteam!.time).toBeNull()
+    expect(all.weibo!.kind).toEqual(['recommend', 'following'])
     // feed list 没有实现（只占位）的平台不给
-    expect(all.weibo!.kind).toBeNull()
+    expect(all.jd!.kind).toBeNull()
   })
 
   it('bridge 放行 feed list --kind 与 item search --time', () => {

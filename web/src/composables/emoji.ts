@@ -1,4 +1,5 @@
 import douyin from '@/data/emoji/douyin.json'
+import weibo from '@/data/emoji/weibo.json'
 import xhs from '@/data/emoji/xhs.json'
 
 /**
@@ -9,6 +10,10 @@ import xhs from '@/data/emoji/xhs.json'
  * `https://www.douyin.com/aweme/v1/web/emoji/list`（`display_name` 去掉方括号 →
  * `emoji_url.url_list[0]`）。douyinpic.com 不带签名的地址返回 403，所以存的是接口给的
  * 带签名长效链接（x-expires 约为 2036 年），不需要 Referer / cookie；过期后重新生成这份表。
+ * 微博的 `[心]`、`[doge]` 等码，对照表取自微博网页版的 `https://weibo.com/ajax/statuses/config`
+ * （需要登录）里 `emoticon.ZH_CN` 的表情面板（`phrase` 去掉方括号 → `url`）；同一响应的
+ * `emoticonRender` 有七千多条（含繁体、拼音别名和大量 IP 表情），太大，不收。图片在 face.t.sinajs.cn，
+ * 不需要 Referer / cookie。
  */
 const XHS_BASE = 'https://picasso-static.xiaohongshu.com/fe-platform/'
 
@@ -21,7 +26,7 @@ function expand(map: Record<string, string>): Map<string, string> {
   return out
 }
 
-const TABLES: Record<string, Map<string, string>> = { xhs: expand(xhs), douyin: expand(douyin) }
+const TABLES: Record<string, Map<string, string>> = { xhs: expand(xhs), douyin: expand(douyin), weibo: expand(weibo) }
 
 export type EmojiSeg = { t: string; img?: string }
 

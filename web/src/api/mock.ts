@@ -264,7 +264,7 @@ function mockFilterValues(): Record<string, { search: boolean; sort: string[] | 
     bilibili: f(['general', 'views', 'latest', 'collects'], ['video', 'article'], null, ['recommend', 'hot', 'following']),
     tiktok: f(null, null, null, RF),
     kuaishou: f(null, null, null, RF),
-    weibo: f(null, null, null, null),
+    weibo: f(null, null, null, RF),
     x: f(['general', 'latest'], T, null, RF),
     youtube: f(['general', 'popular'], ['all', 'video'], ['all', 'day', 'week', 'month', 'year'], RF),
     xianyu: f(null, null, null, null, false),

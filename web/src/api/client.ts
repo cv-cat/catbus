@@ -195,6 +195,32 @@ export function mediaSrc(platform: string, url: string): string {
   return `/api/media?${new URLSearchParams({ platform, url })}`
 }
 
+/**
+ * 校验 Referer 的图床（AGENTS.md 7.9「媒体代理」）：新浪图床对浏览器 UA 不带 weibo.com 的 Referer 返回 403，
+ * <img> 设不了 Referer，所以经 /api/media 转发。按主机判断，头像、评论图片等拿不到平台的地方也能用。
+ */
+const IMG_PROXY_HOSTS: [suffix: string, platform: string][] = [
+  ['sinaimg.cn', 'weibo'],
+  ['weibocdn.com', 'weibo'],
+]
+export function imgSrc(url: string): string
+export function imgSrc(url: string | null | undefined): string | undefined
+export function imgSrc(url: string | null | undefined): string | undefined {
+  if (!url) return undefined
+  if (isDemo()) return url
+  let u: URL
+  try {
+    u = new URL(url)
+  } catch {
+    return url
+  }
+  const host = u.hostname.toLowerCase()
+  const hit = IMG_PROXY_HOSTS.find(([h]) => host === h || host.endsWith(`.${h}`))
+  if (!hit || (u.protocol !== 'https:' && u.protocol !== 'http:')) return url
+  u.protocol = 'https:'
+  return `/api/media?${new URLSearchParams({ platform: hit[1], url: u.href })}`
+}
+
 export async function listAccounts(): Promise<Envelope<Account[]>> {
   if (isDemo()) return mockAccounts()
   return call<Account[]>(['auth', 'list'])

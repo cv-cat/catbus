@@ -16,7 +16,7 @@ import RawJsonView from './RawJsonView.vue'
 import RelatedRail from './RelatedRail.vue'
 import { getRawItem } from '@/api/raw'
 import { useSettingsStore } from '@/stores/settings'
-import { getItem, isAbort, listComments } from '@/api/client'
+import { getItem, isAbort, listComments, imgSrc } from '@/api/client'
 import type { CatbusError, Comment, Item } from '@/api/types'
 import { platformById } from '@/data/platforms'
 import { compact, since, tintOf } from '@/composables/format'
@@ -668,7 +668,7 @@ onBeforeUnmount(() => {
   <Teleport to="body">
     <div v-if="cur && item" class="detail" :class="{ compact: isCompact, landscape, 'text-only': textOnly }">
       <div ref="scrim" class="scrim" @click="close" />
-      <img ref="ghost" class="ghost" :src="item.cover ?? undefined" alt="" referrerpolicy="no-referrer" />
+      <img ref="ghost" class="ghost" :src="imgSrc(item.cover ?? undefined)" alt="" referrerpolicy="no-referrer" />
 
       <article
         ref="sheet"
@@ -739,8 +739,8 @@ onBeforeUnmount(() => {
        <Check v-else-if="dl === 'done'" :size="14" />
        <Download v-else :size="14" />
      </button>
-     <a class="origin" :href="item.url" target="_blank" rel="noopener noreferrer" :title="`在${platform?.name ?? '平台'}打开`">
-       <ExternalLink :size="14" />原链接
+     <a class="origin icon" :href="item.url" target="_blank" rel="noopener noreferrer" aria-label="原链接" :title="`在${platform?.name ?? '平台'}打开`">
+       <ExternalLink :size="14" />
      </a>
      <button v-if="!isCompact || textOnly" ref="closeBtn" class="close" type="button" aria-label="关闭" title="关闭（Esc）" @click="close"><X :size="18" /></button>
           </header>
@@ -774,7 +774,7 @@ onBeforeUnmount(() => {
        <div v-if="descr.length" class="bb">
          <template v-for="(b, i) in descr" :key="i">
            <a v-if="b.type === 'img'" v-show="!badImgs.has(b.url)" class="bb-img" :href="b.url" target="_blank" rel="noopener noreferrer">
-             <img :src="b.url" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" @error="badImgs = new Set(badImgs).add(b.url)" />
+             <img :src="imgSrc(b.url)" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" @error="badImgs = new Set(badImgs).add(b.url)" />
            </a>
            <pre v-else-if="b.type === 'code'" class="bb-code mono">{{ b.text }}</pre>
            <blockquote v-else-if="b.type === 'quote'" class="bb-quote"><EmojiText platform="" :text="b.text" /></blockquote>
@@ -817,7 +817,7 @@ onBeforeUnmount(() => {
          <p class="count">演出详情</p>
          <div class="bb">
            <a v-for="u in showImages" v-show="!badImgs.has(u)" :key="u" class="bb-img" :href="u" target="_blank" rel="noopener noreferrer">
-             <img :src="u" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" @error="badImgs = new Set(badImgs).add(u)" />
+             <img :src="imgSrc(u)" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" @error="badImgs = new Set(badImgs).add(u)" />
            </a>
          </div>
        </template>

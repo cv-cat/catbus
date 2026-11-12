@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import type { UserRef } from '@/api/types'
 import { initial } from '@/composables/format'
+import { imgSrc } from '@/api/client'
 
 /**
  * 用户头像：有 `avatar`（AGENTS.md 6.2 UserRef）时显示图片，取不到或加载失败时退回占位色 + 首字。
@@ -21,7 +22,7 @@ watch(
     <template v-if="letter">{{ initial(user?.name) }}</template>
     <img
       v-if="user?.avatar && !broken"
-      :src="user.avatar"
+      :src="imgSrc(user.avatar)"
       alt=""
       loading="lazy"
       decoding="async"

@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { ExternalLink } from 'lucide-vue-next'
 import { emojiSegments, type EmojiSeg } from '@/composables/emoji'
 import { linkLabel, linkSegments } from '@/composables/linkify'
+import { imgSrc } from '@/api/client'
 
 /**
  * 文本里的平台表情码（如小红书的 `[点赞R]`、抖音的 `[捂脸]`）渲染成图片，
@@ -27,7 +28,7 @@ const segs = computed<Seg[]>(() =>
       rel="noopener noreferrer"
       @click.stop
     ><span class="link-text">{{ linkLabel(s.href) }}</span><ExternalLink class="link-icon" :size="11" aria-hidden="true" /></a>
-    <img v-else-if="s.img" class="emoji" :src="s.img" :alt="s.t" :title="s.t" loading="lazy" referrerpolicy="no-referrer" />
+    <img v-else-if="s.img" class="emoji" :src="imgSrc(s.img)" :alt="s.t" :title="s.t" loading="lazy" referrerpolicy="no-referrer" />
     <template v-else>{{ s.t }}</template>
   </template>
 </template>

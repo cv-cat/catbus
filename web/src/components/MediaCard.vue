@@ -16,6 +16,7 @@ import { releaseVideo, useHoverPreview } from '@/composables/useHoverPreview'
 import { useSettingsStore } from '@/stores/settings'
 import { useAuthorStore } from '@/stores/author'
 import { gsap, prefersReducedMotion } from '@/composables/motion'
+import { imgSrc } from '@/api/client'
 
 const props = defineProps<{
   item: Item
@@ -284,7 +285,7 @@ onBeforeUnmount(() => {
     <div v-else-if="!textOnly" ref="coverEl" class="cover" :class="{ pending: preview.pending.value }" :style="{ aspectRatio: String(ratio), '--tint': tint }">
       <img
         v-if="item.cover && !failed"
-        :src="item.cover"
+        :src="imgSrc(item.cover)"
         :alt="title"
         loading="lazy"
         decoding="async"
@@ -383,7 +384,7 @@ onBeforeUnmount(() => {
         @pointerleave="onPopLeave"
         @click="onPopClick"
       >
-        <img v-if="item.cover && !failed" class="pop-cover" :src="item.cover" alt="" referrerpolicy="no-referrer" />
+        <img v-if="item.cover && !failed" class="pop-cover" :src="imgSrc(item.cover)" alt="" referrerpolicy="no-referrer" />
         <video
           ref="previewEl"
           class="pop-video"

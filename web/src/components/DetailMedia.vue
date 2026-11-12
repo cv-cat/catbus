@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ExternalLink, FastForward, Maximize, Pause, Play, RotateCw, Volume2, VolumeX } from 'lucide-vue-next'
 import CatbusLoader from '@/components/CatbusLoader.vue'
 import type { Item } from '@/api/types'
-import { mediaSrc } from '@/api/client'
+import { mediaSrc, imgSrc } from '@/api/client'
 import { duration as fmt } from '@/composables/format'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 
@@ -385,7 +385,7 @@ onBeforeUnmount(() => {
 <template>
   <div ref="box" class="media" :class="[`is-${mode}`, { fs: fullscreen }]">
     <!-- 封面始终垫在底下：放大动画结束、视频首帧出来之前都看得到 -->
-    <img v-if="item.cover && mode !== 'images' && !(mode === 'video' && ready && !failed)" class="poster" :src="item.cover" alt="" referrerpolicy="no-referrer" />
+    <img v-if="item.cover && mode !== 'images' && !(mode === 'video' && ready && !failed)" class="poster" :src="imgSrc(item.cover)" alt="" referrerpolicy="no-referrer" />
 
     <iframe
       v-if="mode === 'embed' && active"
@@ -404,7 +404,7 @@ onBeforeUnmount(() => {
         class="video"
         :class="{ ready }"
  :src="mediaSrc(platform, src!)"
- :poster="item.cover ?? undefined"
+ :poster="imgSrc(item.cover)"
         playsinline
         preload="auto"
  loop
@@ -498,7 +498,7 @@ onBeforeUnmount(() => {
     </div>
 
     <template v-else-if="mode === 'images'">
-      <img v-if="images[index]" class="backdrop" :src="images[index]" alt="" referrerpolicy="no-referrer" />
+      <img v-if="images[index]" class="backdrop" :src="imgSrc(images[index])" alt="" referrerpolicy="no-referrer" />
       <div
         class="track"
         :style="trackStyle"
@@ -508,7 +508,7 @@ onBeforeUnmount(() => {
         @pointercancel="onSwipeUp"
       >
  <div v-for="(src, i) in images" :key="src + i" class="slide">
-   <img :src="src" :alt="`第 ${i + 1} 张`" referrerpolicy="no-referrer" :loading="i === 0 ? 'eager' : 'lazy'" />
+   <img :src="imgSrc(src)" :alt="`第 ${i + 1} 张`" referrerpolicy="no-referrer" :loading="i === 0 ? 'eager' : 'lazy'" />
         </div>
       </div>
       <template v-if="images.length > 1">
