@@ -86599,6 +86599,5492 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "rZ096",
+      "x": 0,
+      "y": 17420,
+      "name": "U · 下拉列表 Select · Light",
+      "theme": {
+        "mode": "light"
+      },
+      "clip": true,
+      "width": 1440,
+      "fill": [
+        "$bg",
+        {
+          "type": "shader",
+          "enabled": true,
+          "url": "web-design/dot-matrix.glsl",
+          "uniforms": {
+            "u_bg": "#F3F4F7",
+            "u_dot": "#232838",
+            "u_accent": "#E8414F",
+            "u_spacing": 22,
+            "u_base": 0.14,
+            "u_radius": 220
+          }
+        }
+      ],
+      "layout": "vertical",
+      "gap": 16,
+      "padding": 56,
+      "children": [
+        {
+          "type": "text",
+          "id": "lvRzK",
+          "name": "Heading",
+          "fill": "$ink",
+          "content": "U · 下拉列表 Select：公共组件，替换全部原生 <select>",
+          "fontFamily": "$font",
+          "fontSize": 28,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "zMAdi",
+          "name": "Sub",
+          "fill": "$ink-2",
+          "content": "玻璃胶囊触发器 + 传送到 body 的玻璃菜单，与时间筛选（R）同一套菜单样式；单选，键盘、读屏、触屏都可用",
+          "fontFamily": "$font",
+          "fontSize": 14,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "GY3i0",
+          "name": "Label",
+          "fill": "$ink-2",
+          "content": "① 触发器：高 36、圆角 14、最小宽 150；文字 13px，右侧 chevron 15px。手机上高 44、字号 16（iOS 聚焦不放大）",
+          "fontFamily": "$font",
+          "fontSize": 14,
+          "fontWeight": "600"
+        },
+        {
+          "type": "frame",
+          "id": "f9xyC4",
+          "name": "State · Triggers",
+          "width": "fill_container",
+          "gap": 24,
+          "children": [
+            {
+              "type": "frame",
+              "id": "tbA2K",
+              "name": "Col",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "mxjYe",
+                  "name": "Cap",
+                  "fill": "$ink-3",
+                  "content": "默认",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "C0ojLZ",
+                  "name": "Trigger · 默认",
+                  "width": 150,
+                  "height": 36,
+                  "fill": "$glass",
+                  "cornerRadius": 14,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    10,
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "y5DRQv",
+                      "name": "T",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "简体中文",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "RxKG4",
+                      "name": "Chevron",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$ink-2"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "AMG68",
+              "name": "Col",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "VYDyK",
+                  "name": "Cap",
+                  "fill": "$ink-3",
+                  "content": "悬停：浮起阴影",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "EYX9K",
+                  "name": "Trigger · 悬停",
+                  "width": 150,
+                  "height": 36,
+                  "fill": "$glass",
+                  "cornerRadius": 14,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": [
+                    {
+                      "type": "background_blur",
+                      "radius": 20
+                    },
+                    {
+                      "type": "shadow",
+                      "shadowType": "outer",
+                      "color": "#1B1F2E1C",
+                      "offset": {
+                        "x": 0,
+                        "y": 4
+                      },
+                      "blur": 14
+                    }
+                  ],
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    10,
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "utrDX",
+                      "name": "T",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "简体中文",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "XbNVe",
+                      "name": "Chevron",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$ink-2"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "dM5Tr",
+              "name": "Col",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "aqcbU",
+                  "name": "Cap",
+                  "fill": "$ink-3",
+                  "content": "键盘聚焦：2px 红色描边，偏移 2",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "Urltl",
+                  "name": "Focus Ring",
+                  "cornerRadius": 16,
+                  "stroke": "$red",
+                  "strokeWidth": 2,
+                  "padding": 2,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "q1dGM",
+                      "name": "Trigger · Focus",
+                      "width": 150,
+                      "height": 36,
+                      "fill": "$glass",
+                      "cornerRadius": 14,
+                      "stroke": "$glass-stroke",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "background_blur",
+                        "radius": 20
+                      },
+                      "gap": 8,
+                      "padding": [
+                        0,
+                        10,
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "H5C2q",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "简体中文",
+                          "fontFamily": "$font",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "JTObV",
+                          "name": "Chevron",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "chevron-down",
+                          "library": "lucide",
+                          "fill": "$ink-2"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "aeTTO",
+              "name": "Col",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "aCf6p",
+                  "name": "Cap",
+                  "fill": "$ink-3",
+                  "content": "展开：描边转红、chevron 朝上",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "Pjcv1",
+                  "name": "Trigger · 展开",
+                  "width": 150,
+                  "height": 36,
+                  "fill": "$glass-strong",
+                  "cornerRadius": 14,
+                  "stroke": "#E8414F66",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    10,
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "pBENY",
+                      "name": "T",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "简体中文",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "A9UrX5",
+                      "name": "Chevron",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "chevron-up",
+                      "library": "lucide",
+                      "fill": "$red"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "C27dn9",
+              "name": "Col",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "xr7Iq",
+                  "name": "Cap",
+                  "fill": "$ink-3",
+                  "content": "置灰：45% 透明，悬停给出原因",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "mmcos",
+                  "name": "Trigger · 置灰",
+                  "opacity": 0.45,
+                  "width": 150,
+                  "height": 36,
+                  "fill": "$glass",
+                  "cornerRadius": 14,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    10,
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "FqsTW",
+                      "name": "T",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "简体中文",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "h284x",
+                      "name": "Chevron",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$ink-2"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "y1f10B",
+              "name": "Col",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "vb1Pe",
+                  "name": "Cap",
+                  "fill": "$ink-3",
+                  "content": "前缀图标（平台）",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "WPzBj",
+                  "name": "Trigger · 前缀图标（平台）",
+                  "width": 150,
+                  "height": 36,
+                  "fill": "$glass",
+                  "cornerRadius": 14,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    10,
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "zSGMt",
+                      "name": "Logo",
+                      "width": 18,
+                      "height": 18,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "scripts/assets/logos/xhs.jpg",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 5
+                    },
+                    {
+                      "type": "text",
+                      "id": "qcenq",
+                      "name": "T",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "小红书",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "mFudX",
+                      "name": "Chevron",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$ink-2"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "D4tUQ",
+              "name": "Col",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Ut19s",
+                  "name": "Cap",
+                  "fill": "$ink-3",
+                  "content": "未选：占位文字",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "C5CtOH",
+                  "name": "Trigger · 未选",
+                  "width": 150,
+                  "height": 36,
+                  "fill": "$glass",
+                  "cornerRadius": 14,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    10,
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "L64pX",
+                      "name": "T",
+                      "fill": "$ink-3",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "请选择",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "cCfcd",
+                      "name": "Chevron",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$ink-2"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "xtzYa",
+          "name": "Label",
+          "fill": "$ink-2",
+          "content": "② 展开：菜单与触发器左对齐、宽度不小于触发器（最小 188），下方 8px；选中项红底 + ✓，悬停 / 键盘高亮共用浅灰底",
+          "fontFamily": "$font",
+          "fontSize": 14,
+          "fontWeight": "600"
+        },
+        {
+          "type": "frame",
+          "id": "RVGrm",
+          "name": "State · Open",
+          "width": "fill_container",
+          "height": 470,
+          "gap": 40,
+          "children": [
+            {
+              "type": "frame",
+              "id": "WXSjX",
+              "name": "Language",
+              "width": 520,
+              "height": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Oa9fl",
+                  "name": "Setting Row",
+                  "width": 520,
+                  "fill": "$glass",
+                  "cornerRadius": 20,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 24,
+                  "padding": [
+                    16,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "WE8qG",
+                      "name": "Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 4,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "v56zn",
+                          "name": "Title",
+                          "fill": "$ink",
+                          "content": "语言",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "p2sXgm",
+                          "name": "Desc",
+                          "fill": "$ink-3",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "界面文字的语言；自动时跟随浏览器",
+                          "fontFamily": "$font",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "rXWb0",
+                      "name": "Trigger · Open",
+                      "width": 200,
+                      "height": 36,
+                      "fill": "$glass-strong",
+                      "cornerRadius": 14,
+                      "stroke": "#E8414F66",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "background_blur",
+                        "radius": 20
+                      },
+                      "gap": 8,
+                      "padding": [
+                        0,
+                        10,
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "mGCxm",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "自动（简体中文）",
+                          "fontFamily": "$font",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "kpEvj",
+                          "name": "Chevron",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "chevron-up",
+                          "library": "lucide",
+                          "fill": "$red"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "bjWD1",
+                  "layoutPosition": "absolute",
+                  "x": 300,
+                  "y": 76,
+                  "name": "Menu · Language",
+                  "width": 200,
+                  "fill": "$glass-strong",
+                  "cornerRadius": 16,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": [
+                    {
+                      "type": "background_blur",
+                      "radius": 30
+                    },
+                    {
+                      "type": "shadow",
+                      "shadowType": "outer",
+                      "color": "#1B1F2E1A",
+                      "offset": {
+                        "x": 0,
+                        "y": 16
+                      },
+                      "blur": 40
+                    }
+                  ],
+                  "layout": "vertical",
+                  "gap": 2,
+                  "padding": 6,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "zuYF9",
+                      "name": "Opt 自动（简体中文） · Selected",
+                      "width": "fill_container",
+                      "height": 36,
+                      "fill": "$red-soft",
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "a3UqX",
+                          "name": "T",
+                          "fill": "$red",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "自动（简体中文）",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "UMPnX",
+                          "name": "Check",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "check",
+                          "library": "lucide",
+                          "fill": "$red"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "zl0su",
+                      "name": "Opt 简体中文",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "L6tI5",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "简体中文",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "lyQyy",
+                      "name": "Opt English · Highlight",
+                      "width": "fill_container",
+                      "height": 36,
+                      "fill": "$hair",
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "sdPiH",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "English",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pt8bM",
+                      "name": "Opt 日本語",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "tEFed",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "日本語",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "pTH7N",
+                      "name": "Opt 한국어",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "lk4Tl",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "한국어",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "FEgrv",
+              "name": "Start Platform · Long List",
+              "width": 520,
+              "height": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Xhbaa",
+                  "name": "Setting Row",
+                  "width": 520,
+                  "fill": "$glass",
+                  "cornerRadius": 20,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 24,
+                  "padding": [
+                    16,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "CHWHq",
+                      "name": "Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 4,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "JufL7",
+                          "name": "Title",
+                          "fill": "$ink",
+                          "content": "启动时打开的平台",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "q6j1j",
+                          "name": "Desc",
+                          "fill": "$ink-3",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "地址栏没带平台时进入哪个平台",
+                          "fontFamily": "$font",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "uTTBs",
+                      "name": "Trigger · Open",
+                      "width": 200,
+                      "height": 36,
+                      "fill": "$glass-strong",
+                      "cornerRadius": 14,
+                      "stroke": "#E8414F66",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "background_blur",
+                        "radius": 20
+                      },
+                      "gap": 8,
+                      "padding": [
+                        0,
+                        10,
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "K8O1h",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "上次浏览的",
+                          "fontFamily": "$font",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "h0Rv8f",
+                          "name": "Chevron",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "chevron-up",
+                          "library": "lucide",
+                          "fill": "$red"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "dzJDw",
+                  "layoutPosition": "absolute",
+                  "x": 300,
+                  "y": 76,
+                  "name": "Menu · Long List",
+                  "clip": true,
+                  "width": 220,
+                  "height": 340,
+                  "fill": "$glass-strong",
+                  "cornerRadius": 16,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": [
+                    {
+                      "type": "background_blur",
+                      "radius": 30
+                    },
+                    {
+                      "type": "shadow",
+                      "shadowType": "outer",
+                      "color": "#1B1F2E1A",
+                      "offset": {
+                        "x": 0,
+                        "y": 16
+                      },
+                      "blur": 40
+                    }
+                  ],
+                  "layout": "vertical",
+                  "gap": 2,
+                  "padding": 6,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "UUtSL",
+                      "name": "Opt 上次浏览的 · Selected",
+                      "width": "fill_container",
+                      "height": 36,
+                      "fill": "$red-soft",
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "QeoxK",
+                          "name": "Icon",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "history",
+                          "library": "lucide",
+                          "fill": "$red"
+                        },
+                        {
+                          "type": "text",
+                          "id": "i9Aqb",
+                          "name": "T",
+                          "fill": "$red",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "上次浏览的",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "c1KN9O",
+                          "name": "Check",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "check",
+                          "library": "lucide",
+                          "fill": "$red"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Cffjs",
+                      "name": "Divider Wrap",
+                      "width": "fill_container",
+                      "padding": [
+                        3,
+                        8
+                      ],
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "id": "e62eOZ",
+                          "name": "Divider",
+                          "fill": "$hair",
+                          "width": "fill_container",
+                          "height": 1
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "d8mSVH",
+                      "name": "Opt 小红书",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "YF1or",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/xhs.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "riGBc",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小红书",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "d2thl",
+                      "name": "Opt 抖音 · Highlight",
+                      "width": "fill_container",
+                      "height": 36,
+                      "fill": "$hair",
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "dl8Rc",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/douyin.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "bKzrJ",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "抖音",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "bO8nk",
+                      "name": "Opt 哔哩哔哩",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "B82vX3",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/bilibili.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "LMhS6",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "哔哩哔哩",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "UOSVq",
+                      "name": "Opt TikTok",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "DVe0n",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/tiktok.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "FApkk",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "TikTok",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "MepRt",
+                      "name": "Opt 快手",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "fHLlF",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/kuaishou.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "s779Kc",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "快手",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "V17b2",
+                      "name": "Opt 微博",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "VcBC6",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/weibo.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "MHOWu",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "微博",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YQ5wm",
+                      "name": "Opt X",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "M8NUdX",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/x.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "CdRIZ",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "X",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "m9xME",
+                      "name": "Opt YouTube",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "eIvE5",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/youtube.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "W5Rxgr",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "YouTube",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "vv8Un",
+                      "name": "Opt 闲鱼",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "WXkOa",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/xianyu.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "oHA4x",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "闲鱼",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": [
+                        0,
+                        0,
+                        15,
+                        15
+                      ],
+                      "id": "hI4tC",
+                      "layoutPosition": "absolute",
+                      "x": 1,
+                      "y": 296,
+                      "name": "Fade Bottom",
+                      "fill": {
+                        "type": "gradient",
+                        "gradientType": "linear",
+                        "enabled": true,
+                        "rotation": 180,
+                        "size": {
+                          "height": 1
+                        },
+                        "colors": [
+                          {
+                            "color": "#FFFFFF00",
+                            "position": 0
+                          },
+                          {
+                            "color": "#FFFFFFE6",
+                            "position": 1
+                          }
+                        ]
+                      },
+                      "width": 218,
+                      "height": 43
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "NXUtB",
+                      "layoutPosition": "absolute",
+                      "x": 212,
+                      "y": 10,
+                      "name": "Scrollbar",
+                      "fill": "#1B1F2E33",
+                      "width": 3,
+                      "height": 96
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "U50EJD",
+              "name": "Notes",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                8,
+                0
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "CwDXS",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 超过 8 项时菜单最高 340，内部滚动；细滚动条，底部渐隐提示还有内容",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "RzWwA",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 打开时选中项滚到可见并成为高亮项",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "vlaPs",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 选项可带前缀：平台 logo（18px，圆角 5）或 lucide 图标（16px）",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "W5BKxB",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 可以用分隔线把「特殊项」与普通项分开",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "K7vAf",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 输入字符跳到首字母匹配的项（typeahead）",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "F7CaV",
+          "name": "Label",
+          "fill": "$ink-2",
+          "content": "③ 置灰项悬停给出原因（tooltip 在右侧）；下方放不下时向上弹出，动画原点随之换到底边",
+          "fontFamily": "$font",
+          "fontSize": 14,
+          "fontWeight": "600"
+        },
+        {
+          "type": "frame",
+          "id": "E5zOZT",
+          "name": "State · Disabled & Flip",
+          "width": "fill_container",
+          "height": 300,
+          "gap": 40,
+          "children": [
+            {
+              "type": "frame",
+              "id": "Ytvi9",
+              "name": "Disabled Option",
+              "width": 520,
+              "height": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "kx5v0",
+                  "name": "Trigger · Open",
+                  "width": 188,
+                  "height": 36,
+                  "fill": "$glass-strong",
+                  "cornerRadius": 14,
+                  "stroke": "#E8414F66",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    10,
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "w7m7Cf",
+                      "name": "T",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "40 条",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "e2KWk",
+                      "name": "Chevron",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "chevron-up",
+                      "library": "lucide",
+                      "fill": "$red"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "cPMPY",
+                  "layoutPosition": "absolute",
+                  "x": 0,
+                  "y": 44,
+                  "name": "Menu · Disabled",
+                  "width": 188,
+                  "fill": "$glass-strong",
+                  "cornerRadius": 16,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": [
+                    {
+                      "type": "background_blur",
+                      "radius": 30
+                    },
+                    {
+                      "type": "shadow",
+                      "shadowType": "outer",
+                      "color": "#1B1F2E1A",
+                      "offset": {
+                        "x": 0,
+                        "y": 16
+                      },
+                      "blur": 40
+                    }
+                  ],
+                  "layout": "vertical",
+                  "gap": 2,
+                  "padding": 6,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "R0WIVE",
+                      "name": "Opt 20 条",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "deBPG",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "20 条",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "g48FD4",
+                      "name": "Opt 40 条 · Selected",
+                      "width": "fill_container",
+                      "height": 36,
+                      "fill": "$red-soft",
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "I5Mus1",
+                          "name": "T",
+                          "fill": "$red",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "40 条",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "n0oHn",
+                          "name": "Check",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "check",
+                          "library": "lucide",
+                          "fill": "$red"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "M781Vu",
+                      "name": "Opt 60 条 · Disabled",
+                      "opacity": 0.45,
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "EwM4y",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "60 条",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "EaVDK",
+                      "name": "Opt 100 条 · Disabled",
+                      "opacity": 0.45,
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "lWXcJ",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "100 条",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "SGqQ0",
+                  "layoutPosition": "absolute",
+                  "x": 196,
+                  "y": 120,
+                  "name": "Tooltip",
+                  "fill": "#232838F2",
+                  "cornerRadius": 10,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#0B0D1A33",
+                    "offset": {
+                      "x": 0,
+                      "y": 8
+                    },
+                    "blur": 24
+                  },
+                  "padding": [
+                    7,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "FHqzw",
+                      "name": "Tip Text",
+                      "fill": "#FFFFFF",
+                      "content": "小红书每页最多 40 条",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "qEsoc",
+              "name": "Flip Up",
+              "width": 520,
+              "height": 300,
+              "layout": "none",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "lhvWR",
+                  "layoutPosition": "absolute",
+                  "x": 0,
+                  "y": 88,
+                  "name": "Menu · Flip Up",
+                  "width": 188,
+                  "fill": "$glass-strong",
+                  "cornerRadius": 16,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": [
+                    {
+                      "type": "background_blur",
+                      "radius": 30
+                    },
+                    {
+                      "type": "shadow",
+                      "shadowType": "outer",
+                      "color": "#1B1F2E1A",
+                      "offset": {
+                        "x": 0,
+                        "y": 16
+                      },
+                      "blur": 40
+                    }
+                  ],
+                  "layout": "vertical",
+                  "gap": 2,
+                  "padding": 6,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Gfzy8",
+                      "name": "Opt 跟随系统 · Selected",
+                      "width": "fill_container",
+                      "height": 36,
+                      "fill": "$red-soft",
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "X2cu7",
+                          "name": "T",
+                          "fill": "$red",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "跟随系统",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "ZSC0J",
+                          "name": "Check",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "check",
+                          "library": "lucide",
+                          "fill": "$red"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "R0L79",
+                      "name": "Opt 浅色",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "jEUdI",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "浅色",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "XhfMt",
+                      "name": "Opt 深色 · Highlight",
+                      "width": "fill_container",
+                      "height": 36,
+                      "fill": "$hair",
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ICvjq",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "深色",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "fJT5C",
+                  "layoutPosition": "absolute",
+                  "x": 0,
+                  "y": 220,
+                  "name": "Trigger · Open · Flip Up",
+                  "width": 188,
+                  "height": 36,
+                  "fill": "$glass-strong",
+                  "cornerRadius": 14,
+                  "stroke": "#E8414F66",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    10,
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "h7gtBA",
+                      "name": "T",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "跟随系统",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "tehSP",
+                      "name": "Chevron",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "chevron-up",
+                      "library": "lucide",
+                      "fill": "$red"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "gvnsS",
+                  "layoutPosition": "absolute",
+                  "x": 0,
+                  "y": 262,
+                  "name": "Viewport Edge",
+                  "width": 520,
+                  "height": 2,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 90,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#E8414F00",
+                        "position": 0
+                      },
+                      {
+                        "color": "#E8414F66",
+                        "position": 0.5
+                      },
+                      {
+                        "color": "#E8414F00",
+                        "position": 1
+                      }
+                    ]
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "KO4WC",
+                  "layoutPosition": "absolute",
+                  "x": 200,
+                  "y": 230,
+                  "name": "Edge Cap",
+                  "fill": "$ink-3",
+                  "content": "↓ 视口底边：下方不足菜单高度 + 8px",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "X4N5Q",
+          "name": "Label",
+          "fill": "$ink-2",
+          "content": "④ 交互与规格",
+          "fontFamily": "$font",
+          "fontSize": 14,
+          "fontWeight": "600"
+        },
+        {
+          "type": "frame",
+          "id": "esxZ0",
+          "name": "Specs",
+          "width": "fill_container",
+          "gap": 24,
+          "children": [
+            {
+              "type": "frame",
+              "id": "VsRCO",
+              "name": "Spec · 键盘",
+              "width": "fill_container",
+              "fill": "$glass",
+              "cornerRadius": 16,
+              "stroke": "$glass-stroke",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                16,
+                18
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "i5kTt",
+                  "name": "H",
+                  "fill": "$ink",
+                  "content": "键盘",
+                  "fontFamily": "$font",
+                  "fontSize": 14,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "LOtgl",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 触发器上 ↓ / ↑ / Enter / 空格 打开",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "C9nys",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 菜单里 ↑ ↓ 循环移动（跳过置灰项），Home / End 首尾",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "d6eoCz",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· Enter / 空格 选中并收起，Esc 收起，Tab 收起并移走焦点",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "MdN9x",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 打字跳到首字母匹配的项",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "lDadg",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 选中或收起后焦点回到触发器",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "OQGKk",
+              "name": "Spec · 读屏",
+              "width": "fill_container",
+              "fill": "$glass",
+              "cornerRadius": 16,
+              "stroke": "$glass-stroke",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                16,
+                18
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "QqFnn",
+                  "name": "H",
+                  "fill": "$ink",
+                  "content": "读屏",
+                  "fontFamily": "$font",
+                  "fontSize": 14,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "yRGj8",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 触发器 role=combobox，aria-haspopup=listbox",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "tZDn1",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· aria-expanded、aria-controls、aria-activedescendant",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "hrJOI",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 菜单 role=listbox，选项 role=option + aria-selected",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "q8wyq",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 置灰项 aria-disabled（不用原生 disabled，才能悬停出原因）",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "O2Stc",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 沿用 aria-labelledby / aria-describedby",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "k3ZYuK",
+              "name": "Spec · 动效与定位",
+              "width": "fill_container",
+              "fill": "$glass",
+              "cornerRadius": 16,
+              "stroke": "$glass-stroke",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                16,
+                18
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "iHo6S",
+                  "name": "H",
+                  "fill": "$ink",
+                  "content": "动效与定位",
+                  "fontFamily": "$font",
+                  "fontSize": 14,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "C4BM4",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 菜单传送到 body，fixed 定位，跟随触发器",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "quaKx",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 出现 0.18s expo.out（y −4、scale 0.98 → 1）",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "lLTsZ",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 消失 0.12s power2.in；减少动效时只淡入淡出",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "VJHnG",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 超出右边界向左收到视口内 8px；下方放不下向上弹",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "v95Tk8",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 点外面、页面滚动（菜单内除外）、窗口缩放时收起",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "kyuxP",
+              "name": "Spec · 手机 / 触屏",
+              "width": "fill_container",
+              "fill": "$glass",
+              "cornerRadius": 16,
+              "stroke": "$glass-stroke",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                16,
+                18
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "syaF7",
+                  "name": "H",
+                  "fill": "$ink",
+                  "content": "手机 / 触屏",
+                  "fontFamily": "$font",
+                  "fontSize": 14,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "bLE38",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· ≤ 640px 不弹浮层菜单，改为底部弹层（BottomSheet）",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "sj50V",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 标题取设置项名，选项高 52，选中项 ✓",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "w7Z0zO",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 点选即生效并收起；下滑或点遮罩取消",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "Slcg7",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 触发器高 44、字号 16",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "k82KW",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 长列表在弹层内滚动，最高 70dvh",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Ht44o",
+      "x": 1560,
+      "y": 17420,
+      "name": "U2 · 下拉列表 Select · Dark",
+      "theme": {
+        "mode": "dark"
+      },
+      "clip": true,
+      "width": 1440,
+      "fill": [
+        "$bg",
+        {
+          "type": "shader",
+          "enabled": true,
+          "url": "web-design/dot-matrix.glsl",
+          "uniforms": {
+            "u_bg": "#14172A",
+            "u_dot": "#AEB6D6",
+            "u_accent": "#FF5A67",
+            "u_spacing": 18,
+            "u_base": 0.22,
+            "u_radius": 260
+          }
+        }
+      ],
+      "layout": "vertical",
+      "gap": 16,
+      "padding": 56,
+      "children": [
+        {
+          "type": "text",
+          "id": "w3yX2C",
+          "name": "Heading",
+          "fill": "$ink",
+          "content": "U2 · 下拉列表 Select · 暗色",
+          "fontFamily": "$font",
+          "fontSize": 28,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "SEddY",
+          "name": "Sub",
+          "fill": "$ink-2",
+          "content": "玻璃胶囊触发器 + 传送到 body 的玻璃菜单，与时间筛选（R）同一套菜单样式；单选，键盘、读屏、触屏都可用",
+          "fontFamily": "$font",
+          "fontSize": 14,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "yKhRx",
+          "name": "Label",
+          "fill": "$ink-2",
+          "content": "① 触发器：高 36、圆角 14、最小宽 150；文字 13px，右侧 chevron 15px。手机上高 44、字号 16（iOS 聚焦不放大）",
+          "fontFamily": "$font",
+          "fontSize": 14,
+          "fontWeight": "600"
+        },
+        {
+          "type": "frame",
+          "id": "NFAd3",
+          "name": "State · Triggers",
+          "width": "fill_container",
+          "gap": 24,
+          "children": [
+            {
+              "type": "frame",
+              "id": "hqUE2",
+              "name": "Col",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "W7thK",
+                  "name": "Cap",
+                  "fill": "$ink-3",
+                  "content": "默认",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "H4Er5",
+                  "name": "Trigger · 默认",
+                  "width": 150,
+                  "height": 36,
+                  "fill": "$glass",
+                  "cornerRadius": 14,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    10,
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "TNcQl",
+                      "name": "T",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "简体中文",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "pyqwk",
+                      "name": "Chevron",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$ink-2"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "L1etI3",
+              "name": "Col",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "P6gLNc",
+                  "name": "Cap",
+                  "fill": "$ink-3",
+                  "content": "悬停：浮起阴影",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "euTlY",
+                  "name": "Trigger · 悬停",
+                  "width": 150,
+                  "height": 36,
+                  "fill": "$glass",
+                  "cornerRadius": 14,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": [
+                    {
+                      "type": "background_blur",
+                      "radius": 20
+                    },
+                    {
+                      "type": "shadow",
+                      "shadowType": "outer",
+                      "color": "#1B1F2E1C",
+                      "offset": {
+                        "x": 0,
+                        "y": 4
+                      },
+                      "blur": 14
+                    }
+                  ],
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    10,
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "OeB6N",
+                      "name": "T",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "简体中文",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "y6wRA",
+                      "name": "Chevron",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$ink-2"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "jJvcT",
+              "name": "Col",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "v2gbZF",
+                  "name": "Cap",
+                  "fill": "$ink-3",
+                  "content": "键盘聚焦：2px 红色描边，偏移 2",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "nm1sl",
+                  "name": "Focus Ring",
+                  "cornerRadius": 16,
+                  "stroke": "$red",
+                  "strokeWidth": 2,
+                  "padding": 2,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "kBfqr",
+                      "name": "Trigger · Focus",
+                      "width": 150,
+                      "height": 36,
+                      "fill": "$glass",
+                      "cornerRadius": 14,
+                      "stroke": "$glass-stroke",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "background_blur",
+                        "radius": 20
+                      },
+                      "gap": 8,
+                      "padding": [
+                        0,
+                        10,
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "TZduy",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "简体中文",
+                          "fontFamily": "$font",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "vh19W",
+                          "name": "Chevron",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "chevron-down",
+                          "library": "lucide",
+                          "fill": "$ink-2"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "YsJHY",
+              "name": "Col",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Vqrl5",
+                  "name": "Cap",
+                  "fill": "$ink-3",
+                  "content": "展开：描边转红、chevron 朝上",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "jTnMT",
+                  "name": "Trigger · 展开",
+                  "width": 150,
+                  "height": 36,
+                  "fill": "$glass-strong",
+                  "cornerRadius": 14,
+                  "stroke": "#E8414F66",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    10,
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "xuEND",
+                      "name": "T",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "简体中文",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "C8x0KW",
+                      "name": "Chevron",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "chevron-up",
+                      "library": "lucide",
+                      "fill": "$red"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "yohLW",
+              "name": "Col",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "jYd3M",
+                  "name": "Cap",
+                  "fill": "$ink-3",
+                  "content": "置灰：45% 透明，悬停给出原因",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "MYSPO",
+                  "name": "Trigger · 置灰",
+                  "opacity": 0.45,
+                  "width": 150,
+                  "height": 36,
+                  "fill": "$glass",
+                  "cornerRadius": 14,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    10,
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "vgqqb",
+                      "name": "T",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "简体中文",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "NtMtl",
+                      "name": "Chevron",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$ink-2"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "SVgWB",
+              "name": "Col",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "K7ghf",
+                  "name": "Cap",
+                  "fill": "$ink-3",
+                  "content": "前缀图标（平台）",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "NYmKW",
+                  "name": "Trigger · 前缀图标（平台）",
+                  "width": 150,
+                  "height": 36,
+                  "fill": "$glass",
+                  "cornerRadius": 14,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    10,
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "mCgJN",
+                      "name": "Logo",
+                      "width": 18,
+                      "height": 18,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "scripts/assets/logos/xhs.jpg",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 5
+                    },
+                    {
+                      "type": "text",
+                      "id": "i4HnH",
+                      "name": "T",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "小红书",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "U08Tp",
+                      "name": "Chevron",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$ink-2"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "HBxZw",
+              "name": "Col",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Yeglr",
+                  "name": "Cap",
+                  "fill": "$ink-3",
+                  "content": "未选：占位文字",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "VzOlr",
+                  "name": "Trigger · 未选",
+                  "width": 150,
+                  "height": 36,
+                  "fill": "$glass",
+                  "cornerRadius": 14,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    10,
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ChBHU",
+                      "name": "T",
+                      "fill": "$ink-3",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "请选择",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "mIjTg",
+                      "name": "Chevron",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$ink-2"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "nvZLB",
+          "name": "Label",
+          "fill": "$ink-2",
+          "content": "② 展开：菜单与触发器左对齐、宽度不小于触发器（最小 188），下方 8px；选中项红底 + ✓，悬停 / 键盘高亮共用浅灰底",
+          "fontFamily": "$font",
+          "fontSize": 14,
+          "fontWeight": "600"
+        },
+        {
+          "type": "frame",
+          "id": "OlF1i",
+          "name": "State · Open",
+          "width": "fill_container",
+          "height": 470,
+          "gap": 40,
+          "children": [
+            {
+              "type": "frame",
+              "id": "qBqYF",
+              "name": "Language",
+              "width": 520,
+              "height": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "DtE1D",
+                  "name": "Setting Row",
+                  "width": 520,
+                  "fill": "$glass",
+                  "cornerRadius": 20,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 24,
+                  "padding": [
+                    16,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "o8noIL",
+                      "name": "Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 4,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "MqIlH",
+                          "name": "Title",
+                          "fill": "$ink",
+                          "content": "语言",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "QKFdQ",
+                          "name": "Desc",
+                          "fill": "$ink-3",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "界面文字的语言；自动时跟随浏览器",
+                          "fontFamily": "$font",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ulF6R",
+                      "name": "Trigger · Open",
+                      "width": 200,
+                      "height": 36,
+                      "fill": "$glass-strong",
+                      "cornerRadius": 14,
+                      "stroke": "#E8414F66",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "background_blur",
+                        "radius": 20
+                      },
+                      "gap": 8,
+                      "padding": [
+                        0,
+                        10,
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ls9O1",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "自动（简体中文）",
+                          "fontFamily": "$font",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "Qent6",
+                          "name": "Chevron",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "chevron-up",
+                          "library": "lucide",
+                          "fill": "$red"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Y1kUM",
+                  "layoutPosition": "absolute",
+                  "x": 300,
+                  "y": 76,
+                  "name": "Menu · Language",
+                  "width": 200,
+                  "fill": "$glass-strong",
+                  "cornerRadius": 16,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": [
+                    {
+                      "type": "background_blur",
+                      "radius": 30
+                    },
+                    {
+                      "type": "shadow",
+                      "shadowType": "outer",
+                      "color": "#0B0E1A66",
+                      "offset": {
+                        "x": 0,
+                        "y": 16
+                      },
+                      "blur": 40
+                    }
+                  ],
+                  "layout": "vertical",
+                  "gap": 2,
+                  "padding": 6,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "V9AeG",
+                      "name": "Opt 自动（简体中文） · Selected",
+                      "width": "fill_container",
+                      "height": 36,
+                      "fill": "$red-soft",
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "P539up",
+                          "name": "T",
+                          "fill": "$red",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "自动（简体中文）",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "jvza4",
+                          "name": "Check",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "check",
+                          "library": "lucide",
+                          "fill": "$red"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "r9IoOy",
+                      "name": "Opt 简体中文",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "WghJ7",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "简体中文",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "E6zDcB",
+                      "name": "Opt English · Highlight",
+                      "width": "fill_container",
+                      "height": 36,
+                      "fill": "$hair",
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "OyGhL",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "English",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "IEMHE",
+                      "name": "Opt 日本語",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "rpfof",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "日本語",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "D301C",
+                      "name": "Opt 한국어",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "HoBDb",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "한국어",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "r1rzl",
+              "name": "Start Platform · Long List",
+              "width": 520,
+              "height": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "iylf5",
+                  "name": "Setting Row",
+                  "width": 520,
+                  "fill": "$glass",
+                  "cornerRadius": 20,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 24,
+                  "padding": [
+                    16,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Q5RaaO",
+                      "name": "Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 4,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "zfh9E",
+                          "name": "Title",
+                          "fill": "$ink",
+                          "content": "启动时打开的平台",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "muIZ5",
+                          "name": "Desc",
+                          "fill": "$ink-3",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "地址栏没带平台时进入哪个平台",
+                          "fontFamily": "$font",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "q2tgUg",
+                      "name": "Trigger · Open",
+                      "width": 200,
+                      "height": 36,
+                      "fill": "$glass-strong",
+                      "cornerRadius": 14,
+                      "stroke": "#E8414F66",
+                      "strokeWidth": 1,
+                      "effect": {
+                        "type": "background_blur",
+                        "radius": 20
+                      },
+                      "gap": 8,
+                      "padding": [
+                        0,
+                        10,
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "j6se4",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "上次浏览的",
+                          "fontFamily": "$font",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "VrU5n",
+                          "name": "Chevron",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "chevron-up",
+                          "library": "lucide",
+                          "fill": "$red"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "vFS05",
+                  "layoutPosition": "absolute",
+                  "x": 300,
+                  "y": 76,
+                  "name": "Menu · Long List",
+                  "clip": true,
+                  "width": 220,
+                  "height": 340,
+                  "fill": "$glass-strong",
+                  "cornerRadius": 16,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": [
+                    {
+                      "type": "background_blur",
+                      "radius": 30
+                    },
+                    {
+                      "type": "shadow",
+                      "shadowType": "outer",
+                      "color": "#0B0E1A66",
+                      "offset": {
+                        "x": 0,
+                        "y": 16
+                      },
+                      "blur": 40
+                    }
+                  ],
+                  "layout": "vertical",
+                  "gap": 2,
+                  "padding": 6,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "gJ97S",
+                      "name": "Opt 上次浏览的 · Selected",
+                      "width": "fill_container",
+                      "height": 36,
+                      "fill": "$red-soft",
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "lBw4Z",
+                          "name": "Icon",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "history",
+                          "library": "lucide",
+                          "fill": "$red"
+                        },
+                        {
+                          "type": "text",
+                          "id": "W3X9GO",
+                          "name": "T",
+                          "fill": "$red",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "上次浏览的",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "ZGOMp",
+                          "name": "Check",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "check",
+                          "library": "lucide",
+                          "fill": "$red"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "i1J9WK",
+                      "name": "Divider Wrap",
+                      "width": "fill_container",
+                      "padding": [
+                        3,
+                        8
+                      ],
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "id": "nrDfx",
+                          "name": "Divider",
+                          "fill": "$hair",
+                          "width": "fill_container",
+                          "height": 1
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Cnkuy",
+                      "name": "Opt 小红书",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Mb3cq",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/xhs.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "Nhs02",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "小红书",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BCTox",
+                      "name": "Opt 抖音 · Highlight",
+                      "width": "fill_container",
+                      "height": 36,
+                      "fill": "$hair",
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "nc6VS",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/douyin.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "ViiAV",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "抖音",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Fpgh9",
+                      "name": "Opt 哔哩哔哩",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "CDBLH",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/bilibili.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "oZXic",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "哔哩哔哩",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "QU2zJ",
+                      "name": "Opt TikTok",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "us8vD",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/tiktok.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "LARPo",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "TikTok",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "orSYI",
+                      "name": "Opt 快手",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "DAF5o",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/kuaishou.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "o1sti9",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "快手",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "QGSud",
+                      "name": "Opt 微博",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "t6njIE",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/weibo.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "gErk6",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "微博",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "dwfhc",
+                      "name": "Opt X",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "T68Bw",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/x.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "EYBkK",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "X",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "rBL9v",
+                      "name": "Opt YouTube",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Vb57A",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/youtube.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "tPZW5",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "YouTube",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "luF8I",
+                      "name": "Opt 闲鱼",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "y8mxll",
+                          "name": "Logo",
+                          "width": 18,
+                          "height": 18,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "scripts/assets/logos/xianyu.jpg",
+                            "mode": "cover"
+                          },
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "text",
+                          "id": "XECOL",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "闲鱼",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": [
+                        0,
+                        0,
+                        15,
+                        15
+                      ],
+                      "id": "Xslwe",
+                      "layoutPosition": "absolute",
+                      "x": 1,
+                      "y": 296,
+                      "name": "Fade Bottom",
+                      "fill": {
+                        "type": "gradient",
+                        "gradientType": "linear",
+                        "enabled": true,
+                        "rotation": 180,
+                        "size": {
+                          "height": 1
+                        },
+                        "colors": [
+                          {
+                            "color": "#2A2F4A00",
+                            "position": 0
+                          },
+                          {
+                            "color": "#2A2F4AF2",
+                            "position": 1
+                          }
+                        ]
+                      },
+                      "width": 218,
+                      "height": 43
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "JGmEJ",
+                      "layoutPosition": "absolute",
+                      "x": 212,
+                      "y": 10,
+                      "name": "Scrollbar",
+                      "fill": "#FFFFFF33",
+                      "width": 3,
+                      "height": 96
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Snh93",
+              "name": "Notes",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                8,
+                0
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "aeV0r",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 超过 8 项时菜单最高 340，内部滚动；细滚动条，底部渐隐提示还有内容",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "sH5rh",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 打开时选中项滚到可见并成为高亮项",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "r9SQcQ",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 选项可带前缀：平台 logo（18px，圆角 5）或 lucide 图标（16px）",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "hzR8H",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 可以用分隔线把「特殊项」与普通项分开",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "S48pr",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 输入字符跳到首字母匹配的项（typeahead）",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "Dlp5E",
+          "name": "Label",
+          "fill": "$ink-2",
+          "content": "③ 置灰项悬停给出原因（tooltip 在右侧）；下方放不下时向上弹出，动画原点随之换到底边",
+          "fontFamily": "$font",
+          "fontSize": 14,
+          "fontWeight": "600"
+        },
+        {
+          "type": "frame",
+          "id": "x6rJwA",
+          "name": "State · Disabled & Flip",
+          "width": "fill_container",
+          "height": 300,
+          "gap": 40,
+          "children": [
+            {
+              "type": "frame",
+              "id": "OFZjq",
+              "name": "Disabled Option",
+              "width": 520,
+              "height": "fill_container",
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "YSTdV",
+                  "name": "Trigger · Open",
+                  "width": 188,
+                  "height": 36,
+                  "fill": "$glass-strong",
+                  "cornerRadius": 14,
+                  "stroke": "#E8414F66",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    10,
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "SYWUw",
+                      "name": "T",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "40 条",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "SIiT3",
+                      "name": "Chevron",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "chevron-up",
+                      "library": "lucide",
+                      "fill": "$red"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "YBLRu",
+                  "layoutPosition": "absolute",
+                  "x": 0,
+                  "y": 44,
+                  "name": "Menu · Disabled",
+                  "width": 188,
+                  "fill": "$glass-strong",
+                  "cornerRadius": 16,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": [
+                    {
+                      "type": "background_blur",
+                      "radius": 30
+                    },
+                    {
+                      "type": "shadow",
+                      "shadowType": "outer",
+                      "color": "#0B0E1A66",
+                      "offset": {
+                        "x": 0,
+                        "y": 16
+                      },
+                      "blur": 40
+                    }
+                  ],
+                  "layout": "vertical",
+                  "gap": 2,
+                  "padding": 6,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "UBGSr",
+                      "name": "Opt 20 条",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "v4i7oD",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "20 条",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ovh31",
+                      "name": "Opt 40 条 · Selected",
+                      "width": "fill_container",
+                      "height": 36,
+                      "fill": "$red-soft",
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Sptq0",
+                          "name": "T",
+                          "fill": "$red",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "40 条",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "UWcKY",
+                          "name": "Check",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "check",
+                          "library": "lucide",
+                          "fill": "$red"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HIEpp",
+                      "name": "Opt 60 条 · Disabled",
+                      "opacity": 0.45,
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "rw6r6",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "60 条",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "wtTJ7",
+                      "name": "Opt 100 条 · Disabled",
+                      "opacity": 0.45,
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "MGlkQ",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "100 条",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "i3UiV",
+                  "layoutPosition": "absolute",
+                  "x": 196,
+                  "y": 120,
+                  "name": "Tooltip",
+                  "fill": "#232838F2",
+                  "cornerRadius": 10,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#0B0D1A33",
+                    "offset": {
+                      "x": 0,
+                      "y": 8
+                    },
+                    "blur": 24
+                  },
+                  "padding": [
+                    7,
+                    10
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "w9aj7",
+                      "name": "Tip Text",
+                      "fill": "#FFFFFF",
+                      "content": "小红书每页最多 40 条",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "HRGXa",
+              "name": "Flip Up",
+              "width": 520,
+              "height": 300,
+              "layout": "none",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "T0T7y",
+                  "layoutPosition": "absolute",
+                  "x": 0,
+                  "y": 88,
+                  "name": "Menu · Flip Up",
+                  "width": 188,
+                  "fill": "$glass-strong",
+                  "cornerRadius": 16,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "effect": [
+                    {
+                      "type": "background_blur",
+                      "radius": 30
+                    },
+                    {
+                      "type": "shadow",
+                      "shadowType": "outer",
+                      "color": "#0B0E1A66",
+                      "offset": {
+                        "x": 0,
+                        "y": 16
+                      },
+                      "blur": 40
+                    }
+                  ],
+                  "layout": "vertical",
+                  "gap": 2,
+                  "padding": 6,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "LiiXu",
+                      "name": "Opt 跟随系统 · Selected",
+                      "width": "fill_container",
+                      "height": 36,
+                      "fill": "$red-soft",
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "F8hA9",
+                          "name": "T",
+                          "fill": "$red",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "跟随系统",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "f9Q5Fh",
+                          "name": "Check",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "check",
+                          "library": "lucide",
+                          "fill": "$red"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nzceY",
+                      "name": "Opt 浅色",
+                      "width": "fill_container",
+                      "height": 36,
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "v5oCM",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "浅色",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "b2INMB",
+                      "name": "Opt 深色 · Highlight",
+                      "width": "fill_container",
+                      "height": 36,
+                      "fill": "$hair",
+                      "cornerRadius": 10,
+                      "gap": 10,
+                      "padding": [
+                        0,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "t8DlMq",
+                          "name": "T",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "深色",
+                          "fontFamily": "$font",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "e2g8Ok",
+                  "layoutPosition": "absolute",
+                  "x": 0,
+                  "y": 220,
+                  "name": "Trigger · Open · Flip Up",
+                  "width": 188,
+                  "height": 36,
+                  "fill": "$glass-strong",
+                  "cornerRadius": 14,
+                  "stroke": "#E8414F66",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "background_blur",
+                    "radius": 20
+                  },
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    10,
+                    0,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "yI2Jr",
+                      "name": "T",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "跟随系统",
+                      "fontFamily": "$font",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "T11BB",
+                      "name": "Chevron",
+                      "width": 15,
+                      "height": 15,
+                      "icon": "chevron-up",
+                      "library": "lucide",
+                      "fill": "$red"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "DYl5e",
+                  "layoutPosition": "absolute",
+                  "x": 0,
+                  "y": 262,
+                  "name": "Viewport Edge",
+                  "width": 520,
+                  "height": 2,
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 90,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#E8414F00",
+                        "position": 0
+                      },
+                      {
+                        "color": "#E8414F66",
+                        "position": 0.5
+                      },
+                      {
+                        "color": "#E8414F00",
+                        "position": 1
+                      }
+                    ]
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "EB940",
+                  "layoutPosition": "absolute",
+                  "x": 200,
+                  "y": 230,
+                  "name": "Edge Cap",
+                  "fill": "$ink-3",
+                  "content": "↓ 视口底边：下方不足菜单高度 + 8px",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "Ccx21",
+          "name": "Label",
+          "fill": "$ink-2",
+          "content": "④ 交互与规格",
+          "fontFamily": "$font",
+          "fontSize": 14,
+          "fontWeight": "600"
+        },
+        {
+          "type": "frame",
+          "id": "F1dwm",
+          "name": "Specs",
+          "width": "fill_container",
+          "gap": 24,
+          "children": [
+            {
+              "type": "frame",
+              "id": "phwaX",
+              "name": "Spec · 键盘",
+              "width": "fill_container",
+              "fill": "$glass",
+              "cornerRadius": 16,
+              "stroke": "$glass-stroke",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                16,
+                18
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ybcS3",
+                  "name": "H",
+                  "fill": "$ink",
+                  "content": "键盘",
+                  "fontFamily": "$font",
+                  "fontSize": 14,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "qIPCj",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 触发器上 ↓ / ↑ / Enter / 空格 打开",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "aAiYK",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 菜单里 ↑ ↓ 循环移动（跳过置灰项），Home / End 首尾",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "AXjAT",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· Enter / 空格 选中并收起，Esc 收起，Tab 收起并移走焦点",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "aKO7Q",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 打字跳到首字母匹配的项",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "s4XFN",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 选中或收起后焦点回到触发器",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "l1zmI",
+              "name": "Spec · 读屏",
+              "width": "fill_container",
+              "fill": "$glass",
+              "cornerRadius": 16,
+              "stroke": "$glass-stroke",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                16,
+                18
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "K7pnU",
+                  "name": "H",
+                  "fill": "$ink",
+                  "content": "读屏",
+                  "fontFamily": "$font",
+                  "fontSize": 14,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "NpHFr",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 触发器 role=combobox，aria-haspopup=listbox",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "KT2gs",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· aria-expanded、aria-controls、aria-activedescendant",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "hD5Qr",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 菜单 role=listbox，选项 role=option + aria-selected",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "Ahx4w",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 置灰项 aria-disabled（不用原生 disabled，才能悬停出原因）",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "S1KQQ",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 沿用 aria-labelledby / aria-describedby",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "LwdwV",
+              "name": "Spec · 动效与定位",
+              "width": "fill_container",
+              "fill": "$glass",
+              "cornerRadius": 16,
+              "stroke": "$glass-stroke",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                16,
+                18
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "qE8vC",
+                  "name": "H",
+                  "fill": "$ink",
+                  "content": "动效与定位",
+                  "fontFamily": "$font",
+                  "fontSize": 14,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "S6oyzT",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 菜单传送到 body，fixed 定位，跟随触发器",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "FpDAL",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 出现 0.18s expo.out（y −4、scale 0.98 → 1）",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "DJUrT",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 消失 0.12s power2.in；减少动效时只淡入淡出",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "VXG71",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 超出右边界向左收到视口内 8px；下方放不下向上弹",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "dYDf0",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 点外面、页面滚动（菜单内除外）、窗口缩放时收起",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "n8sY81",
+              "name": "Spec · 手机 / 触屏",
+              "width": "fill_container",
+              "fill": "$glass",
+              "cornerRadius": 16,
+              "stroke": "$glass-stroke",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                16,
+                18
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "s4J5lQ",
+                  "name": "H",
+                  "fill": "$ink",
+                  "content": "手机 / 触屏",
+                  "fontFamily": "$font",
+                  "fontSize": 14,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "F3DZR",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· ≤ 640px 不弹浮层菜单，改为底部弹层（BottomSheet）",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "j0Iq6",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 标题取设置项名，选项高 52，选中项 ✓",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "iDlcJ",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 点选即生效并收起；下滑或点遮罩取消",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "WlrnU",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 触发器高 44、字号 16",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "U1Ec8M",
+                  "name": "T",
+                  "fill": "$ink-2",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 长列表在弹层内滚动，最高 70dvh",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "nbZum",
+      "x": 3120,
+      "y": 17420,
+      "name": "U3 · 下拉列表 手机 Mobile（底部弹层）",
+      "theme": {
+        "mode": "light"
+      },
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$bg",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "d7ta5z",
+          "x": 0,
+          "y": 0,
+          "name": "Settings Page",
+          "width": 390,
+          "layout": "vertical",
+          "gap": 12,
+          "padding": [
+            56,
+            16,
+            16,
+            16
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "VuzsE",
+              "name": "Title",
+              "fill": "$ink",
+              "content": "设置 · 通用",
+              "fontFamily": "$font",
+              "fontSize": 20,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "P0IYJX",
+              "name": "Setting Row",
+              "width": "fill_container",
+              "fill": "$glass",
+              "cornerRadius": 20,
+              "stroke": "$glass-stroke",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 10,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "CnQcg",
+                  "name": "Title",
+                  "fill": "$ink",
+                  "content": "语言",
+                  "fontFamily": "$font",
+                  "fontSize": 15,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "Hk2E4",
+                  "name": "Desc",
+                  "fill": "$ink-3",
+                  "content": "界面文字的语言",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "CmNE1",
+                  "name": "Trigger · Mobile",
+                  "width": "fill_container",
+                  "height": 44,
+                  "fill": "$glass-strong",
+                  "cornerRadius": 14,
+                  "stroke": "#E8414F66",
+                  "strokeWidth": 1,
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    12,
+                    0,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "F2omeA",
+                      "name": "T",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "自动（简体中文）",
+                      "fontFamily": "$font",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "QysSk",
+                      "name": "Chevron",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$ink-2"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ybhYi",
+              "name": "Setting Row",
+              "width": "fill_container",
+              "fill": "$glass",
+              "cornerRadius": 20,
+              "stroke": "$glass-stroke",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 10,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "i45rrh",
+                  "name": "Title",
+                  "fill": "$ink",
+                  "content": "启动时打开的平台",
+                  "fontFamily": "$font",
+                  "fontSize": 15,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "EeSla",
+                  "name": "Desc",
+                  "fill": "$ink-3",
+                  "content": "地址栏没带平台时进入哪个平台",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "u3ioJ0",
+                  "name": "Trigger · Mobile",
+                  "width": "fill_container",
+                  "height": 44,
+                  "fill": "$glass-strong",
+                  "cornerRadius": 14,
+                  "stroke": "$glass-stroke",
+                  "strokeWidth": 1,
+                  "gap": 8,
+                  "padding": [
+                    0,
+                    12,
+                    0,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "g39Ac2",
+                      "name": "T",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "上次浏览的",
+                      "fontFamily": "$font",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "icon",
+                      "id": "l8dgf",
+                      "name": "Chevron",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$ink-2"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "KdBqF",
+          "x": 0,
+          "y": 0,
+          "name": "Scrim",
+          "fill": "#0B0D1A59",
+          "width": 390,
+          "height": 844
+        },
+        {
+          "type": "frame",
+          "id": "Oy3pH",
+          "x": 0,
+          "y": 444,
+          "name": "Bottom Sheet",
+          "width": 390,
+          "height": 400,
+          "fill": "$glass-strong",
+          "cornerRadius": [
+            24,
+            24,
+            0,
+            0
+          ],
+          "stroke": "$glass-stroke",
+          "strokeWidth": 1,
+          "effect": [
+            {
+              "type": "background_blur",
+              "radius": 30
+            },
+            {
+              "type": "shadow",
+              "shadowType": "outer",
+              "color": "#1B1F2E26",
+              "offset": {
+                "x": 0,
+                "y": -8
+              },
+              "blur": 32
+            }
+          ],
+          "layout": "vertical",
+          "gap": 4,
+          "padding": [
+            8,
+            8,
+            34,
+            8
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "Mc3DQ",
+              "name": "Grabber Wrap",
+              "width": "fill_container",
+              "padding": [
+                0,
+                0,
+                6,
+                0
+              ],
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 3,
+                  "id": "h5pSC",
+                  "name": "Grabber",
+                  "fill": "$ink-3",
+                  "width": 36,
+                  "height": 5
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "SbIIi",
+              "name": "Sheet Header",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 2,
+              "padding": [
+                4,
+                12,
+                10,
+                12
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "eisYG",
+                  "name": "Title",
+                  "fill": "$ink",
+                  "content": "语言",
+                  "fontFamily": "$font",
+                  "fontSize": 17,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "m9LFx",
+                  "name": "Desc",
+                  "fill": "$ink-3",
+                  "content": "界面文字的语言",
+                  "fontFamily": "$font",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "s8EA2",
+              "name": "Opt 自动（简体中文） · Selected",
+              "width": "fill_container",
+              "height": 52,
+              "fill": "$red-soft",
+              "cornerRadius": 14,
+              "gap": 10,
+              "padding": [
+                0,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "qwQun",
+                  "name": "T",
+                  "fill": "$red",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "自动（简体中文）",
+                  "fontFamily": "$font",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "icon",
+                  "id": "Dnykt",
+                  "name": "Check",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "check",
+                  "library": "lucide",
+                  "fill": "$red"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "K1mn2",
+              "name": "Opt 简体中文",
+              "width": "fill_container",
+              "height": 52,
+              "cornerRadius": 14,
+              "gap": 10,
+              "padding": [
+                0,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ebPO7",
+                  "name": "T",
+                  "fill": "$ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "简体中文",
+                  "fontFamily": "$font",
+                  "fontSize": 16,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "nRu6o",
+              "name": "Opt English",
+              "width": "fill_container",
+              "height": 52,
+              "cornerRadius": 14,
+              "gap": 10,
+              "padding": [
+                0,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "s1HhNy",
+                  "name": "T",
+                  "fill": "$ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "English",
+                  "fontFamily": "$font",
+                  "fontSize": 16,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "i889Oj",
+              "name": "Opt 日本語",
+              "width": "fill_container",
+              "height": 52,
+              "cornerRadius": 14,
+              "gap": 10,
+              "padding": [
+                0,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "A41SUJ",
+                  "name": "T",
+                  "fill": "$ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "日本語",
+                  "fontFamily": "$font",
+                  "fontSize": 16,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "HiETF",
+              "name": "Opt 한국어",
+              "width": "fill_container",
+              "height": 52,
+              "cornerRadius": 14,
+              "gap": 10,
+              "padding": [
+                0,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "mTujx",
+                  "name": "T",
+                  "fill": "$ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "한국어",
+                  "fontFamily": "$font",
+                  "fontSize": 16,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {

@@ -27,5 +27,8 @@
   },
   "unit": {
     "items": "{n} item | {n} items"
+  },
+  "select": {
+    "placeholder": "Select…"
   }
 }

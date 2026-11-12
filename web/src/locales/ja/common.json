@@ -27,5 +27,8 @@
   },
   "unit": {
     "items": "{n} 件"
+  },
+  "select": {
+    "placeholder": "選択してください"
   }
 }

@@ -93,6 +93,8 @@ function onFocusIn(e: FocusEvent) {
 function onKey(e: KeyboardEvent) {
   if (stack[stack.length - 1] !== id) return
   if (e.key === 'Escape' && props.closeOnEsc) {
+    // 弹层里有展开的浮层菜单（AppSelect 等，带 data-esc-layer）：这次 Esc 归它，只收菜单
+    if (document.querySelector('[data-esc-layer]')) return
     // 捕获阶段拦下：只关最上面这一层，不连带关掉下面的详情卡片等
     e.stopPropagation()
     emit('close')

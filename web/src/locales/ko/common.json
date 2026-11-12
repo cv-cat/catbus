@@ -27,5 +27,8 @@
   },
   "unit": {
     "items": "{n}개"
+  },
+  "select": {
+    "placeholder": "선택하세요"
   }
 }

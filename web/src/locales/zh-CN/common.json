@@ -27,5 +27,8 @@
   },
   "unit": {
     "items": "{n} 条"
+  },
+  "select": {
+    "placeholder": "请选择"
   }
 }
