@@ -90,7 +90,7 @@ export function useHoverPreview(
     timer = setTimeout(async () => {
       active.value = id
       waiting.value = true
-      const u = await resolveUrl(p, it, discover.accountFor(p)?.account ?? null)
+      const u = await resolveUrl(p, it, discover.accountOf(it, p))
       if (my !== token || active.value !== id) return
       waiting.value = false
       if (u) url.value = u

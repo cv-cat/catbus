@@ -15,7 +15,8 @@ export interface Lane {
   platform: string
   /** 最近一次请求的查询（账号 + 排序 + 类型 + 分类 + 时间 + 关键词）；与当前查询相同就不重新请求 */
   key: string | null
-  account: string | null
+  /** 这个渠道本页浏览用的账号（多选时几个账号各请求一次再合并）；空数组表示不带 -a */
+  accounts: string[]
   sort: string
   type: string
   kind: string
@@ -38,7 +39,7 @@ export function newLane(platform: string): Lane {
   return {
     platform,
     key: null,
-    account: null,
+    accounts: [],
     sort: 'general',
     type: 'all',
     kind: 'recommend',
@@ -93,5 +94,41 @@ export function fill(cells: readonly Cell[], platform: string, items: readonly I
     else if (i < items.length) out.push({ ...c, item: items[i++]! })
   }
   while (i < items.length) out.push(itemCell(platform, items[i++]!))
+  return out
+}
+
+// ---------- 多账号：同一查询用几个账号各请求一次，结果合并（AGENTS.md 7.9「多账号合并」） ----------
+
+/** 多账号的翻页位置前缀：之后是 `{账号: cursor}` 的 JSON，只列还有下一页的账号 */
+const MULTI = 'multi:'
+
+/**
+ * 这一次该请求哪些账号、各从哪个 cursor 开始。第一页每个账号都从头请求；
+ * 只有一个账号时 cursor 就是平台自己的（不包一层），多个账号时从 `multi:` 里取，不在里面的账号已经翻完。
+ */
+export function cursorsFor(accounts: readonly string[], cursor: string | null, append: boolean): [string, string | null][] {
+  if (!append) return accounts.map((a) => [a, null])
+  if (accounts.length === 1) return cursor ? [[accounts[0]!, cursor]] : []
+  if (!cursor?.startsWith(MULTI)) return []
+  try {
+    const map = JSON.parse(cursor.slice(MULTI.length)) as Record<string, string>
+    return accounts.filter((a) => typeof map[a] === 'string').map((a) => [a, map[a]!])
+  } catch {
+    return []
+  }
+}
+
+/** 把还有下一页的账号的 cursor 合成一个；都翻完时为 null */
+export function joinCursors(accounts: readonly string[], next: ReadonlyMap<string, string>): string | null {
+  if (!next.size) return null
+  if (accounts.length === 1) return next.get(accounts[0]!) ?? null
+  return MULTI + JSON.stringify(Object.fromEntries(next))
+}
+
+/** 各账号的结果轮流排：第一个账号的第 1 条、第二个账号的第 1 条……（去重由调用方按 id 做，先出现的留下） */
+export function roundRobin<T>(lists: readonly (readonly T[])[]): T[] {
+  const out: T[] = []
+  const n = Math.max(0, ...lists.map((l) => l.length))
+  for (let i = 0; i < n; i++) for (const l of lists) if (i < l.length) out.push(l[i]!)
   return out
 }

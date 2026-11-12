@@ -29,8 +29,9 @@ function hash(s: string): number {
 }
 
 /** `variant`：推荐流的分类或搜索的时间范围（默认值为空串），只用来换一批演示数据 */
-export function mockItems(platform: string, keyword: string, page: number, limit = 20, variant = ''): Envelope<Item[]> {
-  const seed = hash(variant ? `${platform}:${keyword}:${variant}` : `${platform}:${keyword}`)
+/** `shift`：演示多账号时按账号错开几条，同一查询的不同账号结果部分重叠（演示合并去重） */
+export function mockItems(platform: string, keyword: string, page: number, limit = 20, variant = '', shift = 0): Envelope<Item[]> {
+  const seed = hash(variant ? `${platform}:${keyword}:${variant}` : `${platform}:${keyword}`) + shift
   const data: Item[] = Array.from({ length: limit }, (_, i) => {
     const n = seed + page * limit + i
     const ratio = [0.75, 1, 1.33, 0.8, 1.25, 0.66][n % 6]!

@@ -17,10 +17,11 @@ import { useNavStore } from '@/stores/nav'
 const props = defineProps<{
   platforms: PlatformMeta[]
   health: Map<string, Health>
-  /** 当前平台 web 端的全部账号 */
+  /** 全部账号（账号切换按平台取 web 端的） */
   accounts: Account[]
-  /** 本页正在浏览的账号 */
-  account: Account | null
+  /** 某个平台打勾的账号 / 请求实际用的账号（AGENTS.md 7.9「账号切换」） */
+  selectedOf: (platform: string) => string[]
+  browsingOf: (platform: string) => string[]
   isExpired: (a: Account) => boolean
   source: 'live' | 'demo'
   /** 聚合模式选中的渠道（按点选顺序）；单一模式为空 */
@@ -34,10 +35,10 @@ const aggregate = defineModel<boolean>('aggregate', { required: true })
 const emit = defineEmits<{
   /** 聚合模式下点了一个渠道 */
   toggle: [id: string]
-  login: [account?: string]
-  select: [account: string]
-  setDefault: [account: string]
-  remove: [account: string, done: (ok: boolean) => void]
+  login: [platform: string, account?: string]
+  toggleAccount: [platform: string, account: string]
+  setDefault: [platform: string, account: string]
+  remove: [platform: string, account: string, done: (ok: boolean) => void]
 }>()
 
 /**
@@ -55,6 +56,12 @@ const mode = computed(() => (bp.phone ? 'phone' : bp.tablet ? 'tablet' : 'deskto
 const rail = computed(() => mode.value === 'tablet' && !navOpen.value)
 /** 侧栏浮在内容上面（平板展开 / 手机抽屉打开），此时有遮罩 */
 const overlay = computed(() => mode.value !== 'desktop' && navOpen.value)
+
+/** 账号弹窗的渠道 Tab：聚合模式下是选中的渠道（按点选顺序），否则只有当前平台 */
+const tabPlatforms = computed(() => {
+  const ids = aggregate.value && props.selected.length ? props.selected : [active.value]
+  return ids.flatMap((id) => props.platforms.filter((p) => p.id === id))
+})
 
 const aside = ref<HTMLElement>()
 const list = ref<HTMLElement>()
@@ -298,16 +305,20 @@ watch(() => props.platforms, () => nextTick(() => place(true)))
     </nav>
 
     <AccountSwitcher
-      :platform="platforms.find((p) => p.id === active)!"
+      :platforms="tabPlatforms"
+      :focus="platforms.find((p) => p.id === active)!"
+      :aggregate="aggregate"
       :accounts="accounts"
-      :current="account"
+      :selected-of="selectedOf"
+      :browsing-of="browsingOf"
       :is-expired="isExpired"
+      :health="health"
       :source="source"
       :rail="rail"
-      @select="$emit('select', $event)"
-      @set-default="$emit('setDefault', $event)"
-      @remove="(account: string, done: (ok: boolean) => void) => $emit('remove', account, done)"
-      @login="$emit('login', $event)"
+      @toggle="(p: string, a: string) => $emit('toggleAccount', p, a)"
+      @set-default="(p: string, a: string) => $emit('setDefault', p, a)"
+      @remove="(p: string, a: string, done: (ok: boolean) => void) => $emit('remove', p, a, done)"
+      @login="(p: string, a?: string) => $emit('login', p, a)"
     />
   </aside>
 </template>

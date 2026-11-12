@@ -94,7 +94,9 @@ export async function searchItems(p: SearchParams): Promise<Envelope<Item[]>> {
     await new Promise((r) => setTimeout(r, 450))
     // 演示数据按分类 / 时间换一批种子，切换后能看到结果变化
     const variant = p.keyword ? (p.time ?? 'all') : (p.kind ?? 'recommend')
-    return mockItems(p.platform, p.keyword, Number(p.cursor ?? 0), limit, variant === 'all' || variant === 'recommend' ? '' : variant)
+    // 演示账号 acc-<k> 的结果比默认账号错开半页：几个账号同时加载时部分重叠，能看到合并去重
+    const k = Number(/^acc-(\d+)$/.exec(p.account ?? '')?.[1] ?? 0)
+    return mockItems(p.platform, p.keyword, Number(p.cursor ?? 0), limit, variant === 'all' || variant === 'recommend' ? '' : variant, k * Math.ceil(limit / 2))
   }
   const argv =
     p.mode === 'feed' || !p.keyword

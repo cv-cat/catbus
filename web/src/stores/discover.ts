@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia'
 import { computed, reactive, ref, shallowReactive, shallowRef, watch } from 'vue'
-import { isAbort, listAccounts, loadFilters, removeAccount, searchItems, useAccount, type PlatformFilters } from '@/api/client'
+import { isAbort, listAccounts, loadFilters, removeAccount, searchItems, useAccount, type PlatformFilters, type SearchParams } from '@/api/client'
 import type { Account, CatbusError, Item } from '@/api/types'
 import { PLATFORMS, platformById } from '@/data/platforms'
 import { KINDS, ORDERS, SORTS, TIMES, TYPES, parseOrder } from '@/data/filters'
 import { useSelectionStore } from './selection'
 import { useSettingsStore } from './settings'
 import { toast } from './toast'
-import { fill, interleave, itemCell, newLane, skeletonCells, type Cell, type Lane } from './lanes'
+import { cursorsFor, fill, interleave, itemCell, joinCursors, newLane, roundRobin, skeletonCells, type Cell, type Lane } from './lanes'
 import { authorRoute, parseAuthorPath } from './route'
 
 export { KINDS, SORTS, TIMES, TYPES }
@@ -106,7 +106,8 @@ export type Health = { level: 'ok' | 'warn' | 'bad'; total: number; bad: number 
  */
 type ChannelSnapshot = {
   key: string
-  account: string | null
+  /** 请求用的账号（多选时几个） */
+  accounts: string[]
   sort: string
   type: string
   kind: string
@@ -121,8 +122,22 @@ type ChannelSnapshot = {
   scrollTop: number
 }
 
-const channelKey = (s: DiscoverState, account: string | null) =>
-  JSON.stringify([s.platform, account, s.sort, s.type, s.kind, s.time, s.keyword.trim()])
+const channelKey = (s: DiscoverState, accounts: readonly string[]) =>
+  JSON.stringify([s.platform, accounts.join(','), s.sort, s.type, s.kind, s.time, s.keyword.trim()])
+
+/** 多账号请求的结果：合并后的条目（还没按 id 去重）、合起来的翻页位置，以及每个账号的成败 */
+type MultiPage = {
+  ok: boolean
+  items: Item[]
+  cursor: string | null
+  hasMore: boolean
+  /** 第一个出错账号的错误；全部出错时 ok 为 false */
+  error: CatbusError | null
+  results: { account: string; error: CatbusError | null }[]
+}
+
+/** 勾选账号停下这么久再重新请求：连点几个账号只请求一次 */
+const ACCOUNT_DEBOUNCE_MS = 400
 
 /** 一页全是重复时自动再翻，最多连续这么多页，避免平台一直返回同一批数据时死循环 */
 const MAX_EMPTY_PAGES = 3
@@ -330,9 +345,9 @@ export const useDiscoverStore = defineStore('discover', () => {
 
   /** 同一轮里多处触发的搜索（换平台 + 换筛选 + 后退）合并成一次请求 */
   let searchTimer: ReturnType<typeof setTimeout> | undefined
-  function scheduleSearch() {
+  function scheduleSearch(delay = 0) {
     clearTimeout(searchTimer)
-    searchTimer = setTimeout(() => void run(false), 0)
+    searchTimer = setTimeout(() => void run(false), delay)
   }
 
   const items = shallowRef<Item[]>([])
@@ -343,8 +358,8 @@ export const useDiscoverStore = defineStore('discover', () => {
   const hasMore = ref(false)
   const elapsed = ref<number | null>(null)
   const accounts = shallowRef<Account[]>([])
-  /** 每个平台本页浏览用的账号名（点选切换），没选过时用 _current */
-  const browse = reactive<Record<string, string>>({})
+  /** 每个平台本页浏览用的账号（可多选，顺序即勾选的顺序），没勾选过时用 _current */
+  const browse = reactive<Record<string, string[]>>({})
   /** 请求时报登录失效的账号，键为 `平台:账号` */
   const expired = shallowRef(new Set<string>())
   /** 恢复渠道缓存后要回到的滚动位置；每次恢复换一个新对象，页面 watch 它来滚动 */
@@ -353,13 +368,39 @@ export const useDiscoverStore = defineStore('discover', () => {
   const platform = computed(() => platformById(state.platform)!)
   /** 同一渠道里重新请求：旧结果还在、但已经过时（变淡、不可点） */
   const refreshing = computed(() => loading.value && items.value.length > 0)
-  const platformAccounts = computed(() => accounts.value.filter((a) => a.platform === state.platform && a.endpoint === 'web'))
-  /** 某个平台本页浏览用的账号：点选过的，否则 _current */
-  function accountFor(id: string): Account | null {
-    const list = accounts.value.filter((a) => a.platform === id && a.endpoint === 'web')
-    return list.find((a) => a.account === browse[id]) ?? list.find((a) => a.current) ?? null
+  const webAccounts = (id: string) => accounts.value.filter((a) => a.platform === id && a.endpoint === 'web')
+  /** 勾选的账号（还存在的），没勾选过时为 _current */
+  function chosenFor(id: string): string[] {
+    const list = webAccounts(id)
+    const picked = (browse[id] ?? []).filter((n) => list.some((a) => a.account === n))
+    if (picked.length) return picked
+    const cur = list.find((a) => a.current)
+    return cur ? [cur.account] : []
   }
-  const currentAccount = computed(() => accountFor(state.platform))
+  /** 弹窗里打勾的账号：勾选的里面没失效的 */
+  function selectedAccounts(id: string): string[] {
+    return chosenFor(id).filter((n) => !expired.value.has(`${id}:${n}`))
+  }
+  /**
+   * 某个平台请求用的账号：勾选的里面没失效的；都失效时仍用第一个（让页面报出登录失效、给出重新登录）。
+   * 空数组表示这个平台没有账号，请求不带 -a。
+   */
+  function accountsFor(id: string): string[] {
+    const picked = chosenFor(id)
+    const live = picked.filter((n) => !expired.value.has(`${id}:${n}`))
+    return live.length ? live : picked.slice(0, 1)
+  }
+  /** 某个平台本页浏览用的第一个账号（作者页、联想、热搜这些只发一个请求的地方用它） */
+  function accountFor(id: string): Account | null {
+    const name = accountsFor(id)[0]
+    return webAccounts(id).find((a) => a.account === name) ?? null
+  }
+  /** 条目是用哪个账号取到的（详情、评论、悬停预览、下载用它）；不知道时用这个平台的第一个账号 */
+  const itemAccount = new WeakMap<Item, string>()
+  function accountOf(item: Item, platform = platformOf(item)): string | null {
+    const a = itemAccount.get(item)
+    return a !== undefined ? a || null : (accountFor(platform)?.account ?? null)
+  }
 
   function markExpired(platform: string, account: string, on: boolean) {
     const key = `${platform}:${account}`
@@ -432,6 +473,60 @@ export const useDiscoverStore = defineStore('discover', () => {
     return fresh
   }
 
+  /**
+   * 用几个账号各请求一次同样的查询（第一页全部账号；翻页只请求还有下一页的），结果按账号轮流合并。
+   * 只有一个账号时与原来的单次请求完全相同。取消（AbortError）原样抛出。
+   */
+  async function fetchMulti(
+    q: Omit<SearchParams, 'account' | 'cursor' | 'signal'>,
+    accs: string[],
+    cursor: string | null,
+    append: boolean,
+    signal: AbortSignal,
+  ): Promise<MultiPage> {
+    const list = accs.length ? accs : ['']
+    const todo = cursorsFor(list, cursor, append)
+    if (!todo.length) return { ok: true, items: [], cursor: null, hasMore: false, error: null, results: [] }
+    const envs = await Promise.all(
+      todo.map(([a, c]) =>
+        searchItems({ ...q, account: a || null, cursor: c, signal }).catch((e: unknown) => {
+          if (isAbort(e)) throw e
+          return { ok: false, data: null, page: null, error: { code: 'NETWORK', message: (e as Error).message, hint: null, detail: null } as CatbusError }
+        }),
+      ),
+    )
+    const lists: Item[][] = []
+    const next = new Map<string, string>()
+    const results = todo.map(([a], i) => {
+      const env = envs[i]!
+      if (!env.ok) return { account: a, error: env.error ?? { code: 'ERROR', message: '加载失败', hint: null, detail: null } }
+      const got = (env.data ?? []).filter(isAlive)
+      for (const it of got) itemAccount.set(it, a)
+      lists.push(got)
+      if (env.page?.has_more && env.page.cursor) next.set(a, env.page.cursor)
+      return { account: a, error: null }
+    })
+    const failed = results.find((r) => r.error)
+    const ok = results.some((r) => !r.error)
+    const merged = joinCursors(list, next)
+    return { ok, items: roundRobin(lists), cursor: merged, hasMore: merged != null, error: failed?.error ?? null, results }
+  }
+
+  /** 请求回来（且没过期）后：按每个账号的成败标记 / 解除失效；部分账号出错时弹提示（全部出错由调用方整页报错） */
+  function settleAccounts(platform: string, page: MultiPage) {
+    for (const r of page.results) {
+      if (!r.account) continue
+      if (!r.error) markExpired(platform, r.account, false)
+      else if (/^AUTH_(EXPIRED|REQUIRED)$/.test(r.error.code)) markExpired(platform, r.account, true)
+    }
+    if (!page.ok) return
+    for (const r of page.results) {
+      if (!r.error) continue
+      const who = webAccounts(platform).find((a) => a.account === r.account)?.user?.name || r.account
+      toast(`${platformById(platform)!.name} · ${who}：${r.error.message ?? '加载失败'}`, 3200)
+    }
+  }
+
   /** 切回有缓存的渠道：直接换上缓存的结果和翻页状态，不请求 */
   function restoreChannel(snap: ChannelSnapshot) {
     items.value = snap.items
@@ -463,7 +558,7 @@ export const useDiscoverStore = defineStore('discover', () => {
     const signal = singleCtl.signal
     const t0 = performance.now()
     const platform = state.platform
-    const account = currentAccount.value?.account ?? null
+    const accs = accountsFor(platform)
     if (!append) {
       clampFilters()
       syncUrl()
@@ -472,7 +567,7 @@ export const useDiscoverStore = defineStore('discover', () => {
         shownPlatform = platform
         const snap = channels.get(platform)
         // ++seq 已经让还在路上的旧请求作废，加载状态在这里收起
-        if (snap && snap.key === channelKey(synced!, account)) {
+        if (snap && snap.key === channelKey(synced!, accs)) {
           loading.value = loadingMore.value = false
           return restoreChannel(snap)
         }
@@ -482,26 +577,29 @@ export const useDiscoverStore = defineStore('discover', () => {
     append ? (loadingMore.value = true) : (loading.value = true)
     // 缓存按已提交的查询记（输入框里正在打的关键词不算）
     const query = { ...synced!, platform }
-    const key = channelKey(query, account)
+    const key = channelKey(query, accs)
     try {
-      const env = await searchItems({
-        platform: state.platform,
-        keyword: state.keyword.trim(),
-        mode: meta.mode,
-        sort: state.sort,
-        type: state.type,
-        kind: state.kind,
-        time: state.time,
-        cursor: append ? cursor.value : null,
-        // 每页条数取设置，改了之后下一次请求（含翻页）生效
-        limit: settings.pageSize,
-        account,
+      const page = await fetchMulti(
+        {
+          platform: state.platform,
+          keyword: state.keyword.trim(),
+          mode: meta.mode,
+          sort: state.sort,
+          type: state.type,
+          kind: state.kind,
+          time: state.time,
+          // 每页条数取设置，改了之后下一次请求（含翻页）生效
+          limit: settings.pageSize,
+        },
+        accs,
+        cursor.value,
+        append,
         signal,
-      })
+      )
       if (id !== seq) return // 已经有更新的请求
-      if (!env.ok) {
-        error.value = env.error
-        if (account && /^AUTH_(EXPIRED|REQUIRED)$/.test(env.error?.code ?? '')) markExpired(state.platform, account, true)
+      settleAccounts(platform, page)
+      if (!page.ok) {
+        error.value = page.error
         if (!append) {
           items.value = []
           channels.delete(platform)
@@ -511,20 +609,19 @@ export const useDiscoverStore = defineStore('discover', () => {
         }
         return
       }
-      if (account) markExpired(state.platform, account, false)
       if (!append) {
         seenIds = new Set()
         selection.none() // 换了一批结果，原来的选择不再对应
       }
-      const fresh = dedupe((env.data ?? []).filter(isAlive))
+      const fresh = dedupe(page.items)
       // 换成新数组（而不是 push），瀑布流的 computed / watch 才会更新
       items.value = append ? [...items.value, ...fresh] : fresh
-      cursor.value = env.page?.cursor ?? null
-      hasMore.value = Boolean(env.page?.has_more && env.page.cursor)
+      cursor.value = page.cursor
+      hasMore.value = page.hasMore
       elapsed.value = (performance.now() - t0) / 1000
       channels.set(platform, {
         key,
-        account,
+        accounts: accs,
         sort: query.sort,
         type: query.type,
         kind: query.kind,
@@ -584,7 +681,7 @@ export const useDiscoverStore = defineStore('discover', () => {
   /** 这个渠道按页面当前（已提交）的筛选和关键词该发的查询 */
   function laneQuery(id: string) {
     const s = synced ?? state
-    const account = accountFor(id)?.account ?? null
+    const accs = accountsFor(id)
     const q = {
       platform: id,
       keyword: s.keyword.trim(),
@@ -593,7 +690,7 @@ export const useDiscoverStore = defineStore('discover', () => {
       kind: effective(id, 'kind', s.kind),
       time: effective(id, 'time', s.time),
     }
-    return { ...q, account, key: channelKey(q, account) }
+    return { ...q, accounts: accs, key: channelKey(q, accs) }
   }
 
   /**
@@ -607,7 +704,7 @@ export const useDiscoverStore = defineStore('discover', () => {
     if (!snap || snap.key !== q.key) return { lane, cells: [] }
     Object.assign(lane, {
       key: q.key,
-      account: q.account,
+      accounts: q.accounts,
       sort: q.sort,
       type: q.type,
       kind: q.kind,
@@ -655,7 +752,7 @@ export const useDiscoverStore = defineStore('discover', () => {
       if (!l.key || l.error || l.loading || !l.items.length) continue
       channels.set(l.platform, {
         key: l.key,
-        account: l.account,
+        accounts: l.accounts,
         sort: l.sort,
         type: l.type,
         kind: l.kind,
@@ -724,7 +821,6 @@ export const useDiscoverStore = defineStore('discover', () => {
     const t0 = performance.now()
     const live = () => id === lane.seq && lanes.value.includes(lane)
     const fail = (e: CatbusError | null) => {
-      if (lane.account && /^AUTH_(EXPIRED|REQUIRED)$/.test(e?.code ?? '')) markExpired(lane.platform, lane.account, true)
       // 翻页出错：这个渠道不再继续翻（否则滚到底会一直重试），已有的卡片保留
       if (append) lane.hasMore = false
       else {
@@ -735,35 +831,38 @@ export const useDiscoverStore = defineStore('discover', () => {
     }
     if (!append) {
       const q = laneQuery(lane.platform)
-      Object.assign(lane, { key: q.key, account: q.account, sort: q.sort, type: q.type, kind: q.kind, time: q.time, keyword: q.keyword, error: null, empty: 0 })
+      Object.assign(lane, { key: q.key, accounts: q.accounts, sort: q.sort, type: q.type, kind: q.kind, time: q.time, keyword: q.keyword, error: null, empty: 0 })
       lane.loading = true
     }
     try {
-      const env = await searchItems({
-        platform: lane.platform,
-        keyword: lane.keyword,
-        mode: platformById(lane.platform)!.mode,
-        sort: lane.sort,
-        type: lane.type,
-        kind: lane.kind,
-        time: lane.time,
-        cursor: append ? lane.cursor : null,
-        limit: settings.pageSize,
-        account: lane.account,
+      const page = await fetchMulti(
+        {
+          platform: lane.platform,
+          keyword: lane.keyword,
+          mode: platformById(lane.platform)!.mode,
+          sort: lane.sort,
+          type: lane.type,
+          kind: lane.kind,
+          time: lane.time,
+          limit: settings.pageSize,
+        },
+        lane.accounts,
+        lane.cursor,
+        append,
         signal,
-      })
+      )
       if (!live()) return false
-      if (!env.ok) {
-        fail(env.error)
+      settleAccounts(lane.platform, page)
+      if (!page.ok) {
+        fail(page.error)
         return true
       }
-      if (lane.account) markExpired(lane.platform, lane.account, false)
       if (!append) lane.seen = new Set()
-      const fresh = dedupe((env.data ?? []).filter(isAlive), lane.seen)
+      const fresh = dedupe(page.items, lane.seen)
       for (const it of fresh) origin.set(it, lane.platform)
       lane.items = append ? [...lane.items, ...fresh] : fresh
-      lane.cursor = env.page?.cursor ?? null
-      lane.hasMore = Boolean(env.page?.has_more && env.page.cursor)
+      lane.cursor = page.cursor
+      lane.hasMore = page.hasMore
       lane.elapsed = (performance.now() - t0) / 1000
       // 连续几页全是重复：平台在原地打转，不再翻
       lane.empty = append && !fresh.length ? lane.empty + 1 : 0
@@ -855,33 +954,51 @@ export const useDiscoverStore = defineStore('discover', () => {
 
   async function refreshAccounts() {
     const env = await listAccounts().catch(() => null)
+    const before = new Map(accounts.value.map((a) => [`${a.platform}:${a.account}`, a.updated_at]))
     accounts.value = env?.ok && env.data ? env.data : []
+    // 凭证更新过（重新登录）的账号不再算失效：失效的账号不参与请求，不在这里解除就永远等不到成功的那次
+    for (const a of accounts.value) {
+      const was = before.get(`${a.platform}:${a.account}`)
+      if (was && was !== a.updated_at) markExpired(a.platform, a.account, false)
+    }
   }
 
-  /** 点选一行：本页改用这个账号浏览，并重新搜索 */
-  function switchAccount(account: string) {
-    if (browse[state.platform] === account && currentAccount.value?.account === account) return
-    browse[state.platform] = account
-    void run(false)
+  /**
+   * 勾选 / 取消一个账号（AGENTS.md 7.9「账号切换」）：至少保留一个（只剩一个时返回 false），失效的不能勾选。
+   * 停一下再重新请求，连点几个账号只请求一次；聚合模式下只有这个渠道的查询变了，只重新请求它。
+   */
+  function toggleAccount(platform: string, account: string): boolean {
+    const picked = selectedAccounts(platform)
+    if (picked.includes(account)) {
+      if (picked.length <= 1) return false
+      browse[platform] = picked.filter((n) => n !== account)
+    } else {
+      if (expired.value.has(`${platform}:${account}`)) return false
+      browse[platform] = [...picked, account]
+    }
+    scheduleSearch(ACCOUNT_DEBOUNCE_MS)
+    return true
   }
 
-  /** 设为默认（auth use），同时本页也切到这个账号 */
-  async function setDefault(account: string) {
-    await useAccount(state.platform, account)
+  /** 设为默认（auth use）：不改变勾选，所以先把当前勾选固定下来（没勾选过时勾选跟着 _current 走） */
+  async function setDefault(platform: string, account: string) {
+    browse[platform] = chosenFor(platform)
+    await useAccount(platform, account)
     await refreshAccounts()
-    switchAccount(account)
   }
 
-  /** 删除账号；删的是本页正在浏览的账号时回到默认账号重新加载 */
-  async function deleteAccount(account: string) {
-    const platform = state.platform
-    const wasBrowsing = currentAccount.value?.account === account
+  /** 删除账号：从勾选里去掉；它正在参与请求时重新加载 */
+  async function deleteAccount(platform: string, account: string) {
+    const wasBrowsing = accountsFor(platform).includes(account)
     await removeAccount(platform, account)
     markExpired(platform, account, false)
-    if (channels.get(platform)?.account === account) channels.delete(platform)
-    if (browse[platform] === account) delete browse[platform]
+    if (channels.get(platform)?.accounts.includes(account)) channels.delete(platform)
+    if (browse[platform]) {
+      browse[platform] = browse[platform]!.filter((n) => n !== account)
+      if (!browse[platform]!.length) delete browse[platform]
+    }
     await refreshAccounts()
-    if (wasBrowsing && state.platform === platform) void run(false)
+    if (wasBrowsing) scheduleSearch()
   }
 
   return {
@@ -902,13 +1019,14 @@ export const useDiscoverStore = defineStore('discover', () => {
     toggleChannel,
     platformOf,
     accountFor,
+    accountsFor,
+    accountOf,
+    selectedAccounts,
+    toggleAccount,
     accounts,
     platform,
     health,
-    platformAccounts,
-    currentAccount,
     isExpired,
-    switchAccount,
     setDefault,
     deleteAccount,
     search: scheduleSearch,

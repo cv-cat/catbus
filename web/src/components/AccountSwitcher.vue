@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { Check, ChevronDown, ChevronsUpDown, LogIn, Plus, RotateCw, Star, Trash2 } from 'lucide-vue-next'
+import { Check, ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, Layers, Lock, LogIn, Plus, RotateCw, Star, Trash2 } from 'lucide-vue-next'
 import CatbusLoader from '@/components/CatbusLoader.vue'
 import type { Account } from '@/api/types'
 import type { PlatformMeta } from '@/data/platforms'
+import type { Health } from '@/stores/discover'
 import { gsap, prefersReducedMotion } from '@/composables/motion'
 import { since } from '@/composables/format'
 import { useBreakpoint } from '@/composables/useBreakpoint'
@@ -13,22 +14,34 @@ import { imgSrc } from '@/api/client'
 /** 收起时显示几个账号；展开后超过这么多个就改成滚动 */
 const COLLAPSED = 3
 const MAX_VISIBLE = 10
+/** 超过这么多个渠道时 Tab 改成一行横排、两侧出现箭头（设计稿 T ③） */
+const TABS_FLAT = 3
+/** 「至少保留一个账号」的提示显示多久 */
+const LOCK_TIP_MS = 2000
 
 const props = defineProps<{
-  platform: PlatformMeta
+  /** 弹窗里的渠道 Tab：聚合模式下是选中的渠道（按点选顺序），单一模式下只有当前平台 */
+  platforms: PlatformMeta[]
+  /** 当前平台（聚合模式下是最后点选的渠道），弹窗打开时停在它的 Tab 上 */
+  focus: PlatformMeta
+  aggregate: boolean
+  /** 全部账号（各平台、各端），组件里按平台取 web 端的 */
   accounts: Account[]
-  /** 本页正在浏览的账号 */
-  current: Account | null
+  /** 某个平台打勾的账号（勾选的里面没失效的） */
+  selectedOf: (platform: string) => string[]
+  /** 某个平台请求实际用的账号（都失效时仍是第一个），账号卡显示它们 */
+  browsingOf: (platform: string) => string[]
   isExpired: (a: Account) => boolean
+  health: Map<string, Health>
   source: 'live' | 'demo'
   /** 平板的图标窄栏：只显示头像（带状态点），账号列表从侧栏右侧弹出 */
   rail?: boolean
 }>()
 const emit = defineEmits<{
-  select: [account: string]
-  setDefault: [account: string]
-  login: [account?: string]
-  remove: [account: string, done: (ok: boolean) => void]
+  toggle: [platform: string, account: string]
+  setDefault: [platform: string, account: string]
+  login: [platform: string, account?: string]
+  remove: [platform: string, account: string, done: (ok: boolean) => void]
 }>()
 
 const open = ref(false)
@@ -56,11 +69,92 @@ function placeFloat() {
   }
 }
 
-/** 当前浏览账号的状态点（窄栏用） */
-const status = computed(() => (!props.current ? null : props.isExpired(props.current) ? 'expired' : 'online'))
+const webOf = (id: string) => props.accounts.filter((a) => a.platform === id && a.endpoint === 'web')
 
-const canExpand = computed(() => !sheet.value && props.accounts.length > COLLAPSED)
-const scrollable = computed(() => expanded.value && props.accounts.length > MAX_VISIBLE)
+// ---------- 渠道 Tab（聚合模式） ----------
+/** 弹窗里正在看哪个渠道的账号；打开时停在当前平台 */
+const tab = ref(props.focus.id)
+const tabs = computed(() => (props.aggregate && props.platforms.length > 1 ? props.platforms : null))
+const platform = computed(() => props.platforms.find((p) => p.id === tab.value) ?? props.focus)
+const many = computed(() => (tabs.value?.length ?? 0) > TABS_FLAT)
+const strip = ref<HTMLElement>()
+const canLeft = ref(false)
+const canRight = ref(false)
+function onStrip() {
+  const el = strip.value
+  if (!el) return
+  canLeft.value = el.scrollLeft > 1
+  canRight.value = el.scrollLeft + el.clientWidth < el.scrollWidth - 1
+}
+/** 两侧箭头：每次翻一屏（留一点重叠，看得出接续） */
+function page(dir: -1 | 1) {
+  const el = strip.value
+  if (!el) return
+  el.scrollBy({ left: dir * Math.max(80, el.clientWidth - 48), behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
+}
+/** 选中的 Tab 被遮住时滚到可见（不用 scrollIntoView，免得连页面一起滚） */
+function revealTab() {
+  const el = strip.value
+  const t = el?.querySelector<HTMLElement>(`[data-tab="${CSS.escape(tab.value)}"]`)
+  if (!el || !t) return
+  const pad = 24
+  if (t.offsetLeft - pad < el.scrollLeft) el.scrollLeft = Math.max(0, t.offsetLeft - pad)
+  else if (t.offsetLeft + t.offsetWidth + pad > el.scrollLeft + el.clientWidth)
+    el.scrollLeft = t.offsetLeft + t.offsetWidth + pad - el.clientWidth
+  onStrip()
+}
+function pickTab(id: string) {
+  if (tab.value === id) return
+  tab.value = id
+}
+/** Tab 上的左右方向键 */
+function onTabKey(e: KeyboardEvent) {
+  const list = tabs.value
+  if (!list || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return
+  e.preventDefault()
+  const i = list.findIndex((p) => p.id === tab.value)
+  const next = list[(i + (e.key === 'ArrowRight' ? 1 : list.length - 1)) % list.length]!
+  tab.value = next.id
+  nextTick(() => strip.value?.querySelector<HTMLElement>(`[data-tab="${CSS.escape(next.id)}"]`)?.focus())
+}
+// 切 Tab：列表高度从旧的平滑过渡到新的，新列表的行按切换方向错落滑入（watch 在 DOM 更新前运行，先量旧高度）
+watch(tab, async (next, prev) => {
+  confirming.value = null
+  lockTip.value = null
+  expanded.value = false
+  const from = rows.value?.getBoundingClientRect().height
+  const ids = tabs.value?.map((p) => p.id) ?? []
+  const dir = Math.sign(ids.indexOf(next) - ids.indexOf(prev)) || 1
+  await nextTick()
+  revealTab()
+  rows.value?.scrollTo({ top: 0 })
+  resize(true, from)
+  if (!open.value || prefersReducedMotion()) return
+  gsap.fromTo(
+    [...(rows.value?.children ?? [])],
+    { opacity: 0, x: dir * 16 },
+    { opacity: 1, x: 0, duration: 0.36, ease: 'power3.out', stagger: 0.035, clearProps: 'opacity,transform' },
+  )
+})
+// 选中的渠道变了（去掉了正在看的那个）：回到当前平台
+watch(
+  () => props.platforms.map((p) => p.id).join(','),
+  async () => {
+    if (!props.platforms.some((p) => p.id === tab.value)) tab.value = props.focus.id
+    await nextTick()
+    onStrip()
+  },
+)
+
+// ---------- 账号列表 ----------
+const list = computed(() => webOf(platform.value.id))
+const picked = computed(() => props.selectedOf(platform.value.id))
+const isPicked = (a: Account) => picked.value.includes(a.account)
+/** 只剩这一个勾选的账号：复选框锁定 */
+const isLocked = (a: Account) => picked.value.length <= 1 && isPicked(a)
+
+const canExpand = computed(() => !sheet.value && list.value.length > COLLAPSED)
+const scrollable = computed(() => expanded.value && list.value.length > MAX_VISIBLE)
 const atBottom = ref(false)
 
 const PALETTE = ['#E8414F', '#3B6FE0', '#2E9E6A', '#8E5BD9', '#E07A2E', '#C9A227', '#1F8FA8', '#B4486B']
@@ -82,8 +176,52 @@ function onAvatarError(url: string) {
   broken.value = new Set(broken.value).add(url)
 }
 
+/** 正在浏览、默认在前，其余按最近登录；勾选不改变顺序（连续勾选时行不跳动） */
+const sorted = computed(() =>
+  [...list.value].sort((x, y) => Number(y.current) - Number(x.current) || Date.parse(y.updated_at) - Date.parse(x.updated_at)),
+)
+
+// ---------- 侧栏底部的账号卡 ----------
+/** 当前平台请求用的账号（单一模式的账号卡、窄栏的头像都看它） */
+const browsing = computed(() => {
+  const all = webOf(props.focus.id)
+  return props.browsingOf(props.focus.id).flatMap((n) => all.filter((a) => a.account === n))
+})
+const first = computed(() => browsing.value[0] ?? null)
+/** 账号卡的内容：聚合模式汇总选中的渠道，单一模式是当前平台勾选的账号 */
+const card = computed(() => {
+  const ps = tabs.value
+  if (ps) {
+    const per = ps.map((p) => ({ p, n: props.browsingOf(p.id).length, bad: props.health.get(p.id)?.bad ?? 0 }))
+    const total = per.reduce((s, x) => s + x.n, 0)
+    const bad = per.filter((x) => x.bad)
+    return {
+      kind: 'agg' as const,
+      logos: ps.slice(0, 3),
+      more: Math.max(0, ps.length - 3),
+      name: `${ps.length} 渠道 · ${total} 账号`,
+      sub: bad.length
+        ? `${bad.map((x) => x.p.name).join('、')} 有 ${bad.reduce((s, x) => s + x.bad, 0)} 个账号已失效`
+        : per.map((x) => `${x.p.name} ${x.n}`).join(' · '),
+      warn: bad.length > 0,
+      label: `${ps.length} 个渠道，共 ${total} 个账号，切换账号`,
+    }
+  }
+  const accs = browsing.value
+  return {
+    kind: 'acc' as const,
+    accs: accs.slice(0, 3),
+    name: !accs.length ? '未登录 · 点击登录' : accs.length > 1 ? `${nick(accs[0]!)} 等 ${accs.length} 个` : nick(accs[0]!),
+    sub: accs.length > 1 ? `${props.focus.name} · ${accs.length} 个账号` : `${props.focus.name} · web`,
+    warn: false,
+    label: accs.length ? `${accs.map(nick).join('、')}，切换账号` : '未登录，点击登录',
+  }
+})
+/** 当前浏览账号的状态点（窄栏用） */
+const status = computed(() => (!first.value ? null : props.isExpired(first.value) ? 'expired' : 'online'))
+
 function toggle() {
-  if (!props.accounts.length) return emit('login')
+  if (!tabs.value && !webOf(props.focus.id).length) return emit('login', props.focus.id)
   open.value = !open.value
 }
 function close() {
@@ -97,17 +235,53 @@ function heightFor(n: number): number {
   return last ? last.offsetTop + last.offsetHeight : 0
 }
 
-function resize(animated: boolean) {
+/** 列表变高：带一点回弹（弹窗底边固定，列表向上撑开）；变矮：快出慢停，不回弹 */
+const GROW = { duration: 0.55, ease: 'back.out(1.35)' }
+const SHRINK = { duration: 0.42, ease: 'expo.out' }
+
+/** 列表该有的高度：收起时前 3 行、展开时前 10 行；底部弹层自己会滚动，全部显示 */
+function targetHeight(el: HTMLElement): number {
+  if (!sheet.value) return heightFor(expanded.value ? MAX_VISIBLE : COLLAPSED)
+  const prev = el.style.height
+  el.style.height = 'auto'
+  const h = el.offsetHeight
+  el.style.height = prev
+  return h
+}
+
+/**
+ * 按内容重算列表高度。`from` 是内容变化之前量的高度（切 Tab、进出删除确认这类会换掉行的变化要先量）；
+ * 不给时取当前高度（桌面上列表的高度是写死的，内容变了它不变）。
+ */
+function resize(animated: boolean, from?: number) {
   const el = rows.value
   if (!el) return
-  // 底部弹层自己会滚动，全部显示
-  if (sheet.value) return void gsap.set(el, { height: 'auto' })
-  const target = heightFor(expanded.value ? MAX_VISIBLE : COLLAPSED)
-  if (!animated || prefersReducedMotion()) return void gsap.set(el, { height: target })
-  // 展开用回弹（弹窗底边固定，列表向上撑开）；收起干脆利落
-  gsap.to(el, expanded.value
-    ? { height: target, duration: 0.6, ease: 'back.out(1.5)' }
-    : { height: target, duration: 0.35, ease: 'power3.inOut' })
+  gsap.killTweensOf(el, 'height')
+  const to = targetHeight(el)
+  const start = from ?? el.getBoundingClientRect().height
+  // 底部弹层动完后回到 auto，之后内容自然撑开
+  const settle = () => void (sheet.value && gsap.set(el, { height: 'auto' }))
+  if (!animated || !open.value || prefersReducedMotion() || Math.abs(to - start) < 1) {
+    gsap.set(el, { height: sheet.value ? 'auto' : to })
+    return
+  }
+  gsap.fromTo(el, { height: start }, { height: to, ...(to > start ? GROW : SHRINK), onComplete: settle })
+}
+
+/** 「N 个账号同时加载」提示条进出：高度和弹窗的间距一起展开 / 收起，进场带回弹 */
+function mergeEnter(el: Element, done: () => void) {
+  if (prefersReducedMotion()) return done()
+  // 先量出完整高度（含内边距）再过渡；直接补间到 auto 时 GSAP 按 0 内边距解析，结束那一帧会跳
+  const h = (el as HTMLElement).offsetHeight
+  gsap.fromTo(
+    el,
+    { height: 0, opacity: 0, scale: 0.96, marginTop: -8, paddingTop: 0, paddingBottom: 0 },
+    { height: h, opacity: 1, scale: 1, marginTop: 0, paddingTop: 8, paddingBottom: 8, ...GROW, clearProps: 'all', onComplete: done },
+  )
+}
+function mergeLeave(el: Element, done: () => void) {
+  if (prefersReducedMotion()) return done()
+  gsap.to(el, { height: 0, opacity: 0, scale: 0.96, marginTop: -8, paddingTop: 0, paddingBottom: 0, duration: 0.32, ease: 'power3.inOut', onComplete: done })
 }
 
 function toggleExpand() {
@@ -124,7 +298,7 @@ function onScroll() {
 /** 防连点：账号列表刷新回来（或 3 秒后）才解除 */
 function setDefault(a: Account) {
   pending.value = a.account
-  emit('setDefault', a.account)
+  emit('setDefault', platform.value.id, a.account)
   setTimeout(() => (pending.value = null), 3000)
 }
 
@@ -141,7 +315,7 @@ function cancelRemove() {
 }
 function confirmRemove(a: Account) {
   removing.value = a.account
-  emit('remove', a.account, () => {
+  emit('remove', platform.value.id, a.account, () => {
     removing.value = null
     confirming.value = null
   })
@@ -150,88 +324,37 @@ function confirmRemove(a: Account) {
 // 确认行换成两行、比普通行高：进入 / 退出确认后按新的行高重算列表高度，避免被裁掉
 watch(confirming, async () => {
   if (!open.value) return
+  const from = rows.value?.getBoundingClientRect().height
   await nextTick()
-  resize(true)
+  resize(true, from)
 })
 
-// ---------- 排序与切换动效（设计稿 J）----------
-/** 点选后、动画结束前本地先当作正在浏览的账号，列表据此重排 */
-const chosen = ref<string | null>(null)
-/** 切换动画进行中：对勾先不显示，落定后弹出 */
-const moving = ref(false)
-const viewing = computed(() => chosen.value ?? props.current?.account ?? null)
-/** 正在浏览 → 默认 → 其余按最近登录 */
-const sorted = computed(() => {
-  const rank = (a: Account) => (a.account === viewing.value ? 0 : a.current ? 1 : 2)
-  return [...props.accounts].sort((x, y) => rank(x) - rank(y) || Date.parse(y.updated_at) - Date.parse(x.updated_at))
-})
-
-const rowEls = () =>
-  [...(rows.value?.children ?? [])].filter((el): el is HTMLElement => el instanceof HTMLElement && !!el.dataset.account)
-/**
- * FLIP：先记下每行的位置，把 account 设为正在浏览（列表重排），再让每行从旧位置补间回新位置。
- * 选中行浮起（放大 + 投影）越过其他行移到顶部；原来在它上方的行各下移一格，离它近的先动。
- */
-async function flipTo(account: string) {
-  const before = new Map(rowEls().map((el) => [el.dataset.account!, el.offsetTop]))
-  chosen.value = account
-  await nextTick()
-  const tl = gsap.timeline({ paused: true })
-  let lift: HTMLElement | null = null
-  const movers: { el: HTMLElement; dy: number }[] = []
-  for (const el of rowEls()) {
-    const from = before.get(el.dataset.account!)
-    if (from == null) continue
-    const dy = from - el.offsetTop
-    if (el.dataset.account === account) lift = el
-    else if (dy) movers.push({ el, dy })
-  }
-  if (lift) {
-    gsap.set(lift, { y: before.get(account)! - lift.offsetTop, zIndex: 2 })
-    tl.to(lift, { scale: 1.035, boxShadow: '0 10px 28px #1b1f2e33', duration: 0.14, ease: 'power2.out' }, 0)
-      .to(lift, { y: 0, duration: 0.42, ease: 'power3.inOut' }, 0.14)
-      .to(lift, { scale: 1, boxShadow: '0 0 0 #1b1f2e00', duration: 0.2, ease: 'power2.out', clearProps: 'transform,boxShadow,zIndex' }, 0.56)
-  }
-  // 下移量小的离选中行近，先动；依次错开 30ms
-  movers.sort((x, y) => x.dy - y.dy)
-  movers.forEach(({ el, dy }, i) => {
-    gsap.set(el, { y: dy })
-    tl.to(el, { y: 0, duration: 0.38, ease: 'power3.out', clearProps: 'transform' }, 0.14 + i * 0.03)
-  })
-  rows.value?.classList.add('flipping')
-  await new Promise<void>((r) => tl.eventCallback('onComplete', () => r()).play())
-  rows.value?.classList.remove('flipping')
+/** 「至少保留一个账号」提示挂在哪一行上 */
+const lockTip = ref<string | null>(null)
+let lockTimer: ReturnType<typeof setTimeout> | undefined
+function showLock(a: Account) {
+  lockTip.value = a.account
+  clearTimeout(lockTimer)
+  lockTimer = setTimeout(() => (lockTip.value = null), LOCK_TIP_MS)
 }
 
-async function pick(a: Account) {
-  if (confirming.value === a.account || moving.value) return
+/** 点一行：切换勾选（不关闭弹窗）；失效的去重新登录；只剩一个勾选时提示不能取消 */
+function pick(a: Account) {
+  if (confirming.value === a.account) return
   if (props.isExpired(a)) return relogin(a)
-  // 已在第一行、只有一个账号、减少动态效果：不播动画，直接切换
-  if (a.account === sorted.value[0]?.account || props.accounts.length < 2 || prefersReducedMotion()) {
-    emit('select', a.account)
-    return close()
-  }
-  moving.value = true
-  await flipTo(a.account)
-  moving.value = false
-  // 落定后对勾弹出，再切换、收起
-  await nextTick()
-  const check = rows.value?.querySelector('.check')
-  if (check) {
-    await new Promise<void>((r) =>
-      gsap.fromTo(check, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.2, ease: 'back.out(2)', onComplete: r }),
-    )
-  }
-  emit('select', a.account)
-  close()
+  if (isLocked(a)) return showLock(a)
+  lockTip.value = null
+  emit('toggle', platform.value.id, a.account)
 }
 function relogin(a: Account) {
+  const id = platform.value.id
   close()
-  emit('login', a.account)
+  emit('login', id, a.account)
 }
 function add() {
+  const id = platform.value.id
   close()
-  emit('login')
+  emit('login', id)
 }
 
 function onDoc(e: PointerEvent) {
@@ -245,16 +368,15 @@ function onKey(e: KeyboardEvent) {
 }
 watch(open, async (v) => {
   confirming.value = null
-  if (!v) {
-    chosen.value = null
-    moving.value = false
-  }
+  lockTip.value = null
   if (v) {
+    tab.value = props.focus.id
     expanded.value = false
     atBottom.value = false
     placeFloat()
     await nextTick()
     resize(false)
+    revealTab()
     // 底部弹层由遮罩、下滑关闭；其余形态点外面关闭
     if (!sheet.value) document.addEventListener('pointerdown', onDoc)
     document.addEventListener('keydown', onKey)
@@ -267,13 +389,23 @@ watch(open, async (v) => {
 })
 // 形态变了（转屏、窗口缩放跨断点、窄栏展开）就收起，避免停在错误的位置
 watch([sheet, floating], close)
-watch(() => props.platform.id, close)
+// 单一模式下换了平台就收起；聚合模式下点侧栏渠道只是选上 / 去掉，Tab 跟到它上面
+watch(
+  () => props.focus.id,
+  (id) => (tabs.value && open.value ? (tab.value = id) : close()),
+)
 // 账号增减（设为默认、登录后刷新）时重新量一次高度
-watch(() => props.accounts, () => {
+watch(() => props.accounts, async () => {
   pending.value = null
-  if (open.value) nextTick(() => resize(false))
+  if (!open.value) return
+  const from = rows.value?.getBoundingClientRect().height
+  await nextTick()
+  resize(true, from)
 })
-onBeforeUnmount(close)
+onBeforeUnmount(() => {
+  close()
+  clearTimeout(lockTimer)
+})
 </script>
 
 <template>
@@ -290,74 +422,123 @@ onBeforeUnmount(close)
         :role="sheet ? undefined : 'dialog'"
         :aria-label="sheet ? undefined : `${platform.name}账号`"
       >
+        <div v-if="tabs" class="tabs" :class="{ many }">
+          <button v-if="many" type="button" class="arrow" :disabled="!canLeft" aria-label="上一组渠道" @click="page(-1)">
+            <ChevronLeft :size="16" />
+          </button>
+          <div
+            ref="strip"
+            class="strip"
+            :class="{ 'fade-l': many && canLeft, 'fade-r': many && canRight }"
+            role="tablist"
+            aria-label="渠道"
+            @scroll.passive="onStrip"
+            @keydown="onTabKey"
+          >
+            <button
+              v-for="p in tabs"
+              :key="p.id"
+              type="button"
+              role="tab"
+              class="tab"
+              :class="{ on: p.id === tab }"
+              :data-tab="p.id"
+              :aria-selected="p.id === tab"
+              :tabindex="p.id === tab ? 0 : -1"
+              @click="pickTab(p.id)"
+            >
+              <img class="tab-logo" :src="p.logo" alt="" />
+              <span class="tab-name">{{ p.name }}</span>
+              <span class="tab-count mono" :aria-label="`已选 ${selectedOf(p.id).length} 个账号`">{{ selectedOf(p.id).length }}</span>
+              <span v-if="(health.get(p.id)?.bad ?? 0) > 0" class="tab-warn" role="img" aria-label="有账号已失效" />
+            </button>
+          </div>
+          <button v-if="many" type="button" class="arrow" :disabled="!canRight" aria-label="下一组渠道" @click="page(1)">
+            <ChevronRight :size="16" />
+          </button>
+        </div>
+
         <header class="head">
           <div class="title-row">
             <img class="logo" :src="platform.logo" alt="" />
             <span class="title">{{ platform.name }}账号</span>
-            <span class="count mono">{{ accounts.length }}</span>
+            <span v-if="list.length" class="count" :class="{ on: picked.length }">已选 {{ picked.length }} / {{ list.length }}</span>
           </div>
-          <p class="hint">点选切换本次浏览的登录态</p>
+          <p class="hint">
+            {{ tabs ? '聚合模式 · 每个渠道单独选账号，至少各留一个' : '可多选 · 用所选账号同时加载，结果合并去重' }}
+          </p>
         </header>
 
         <div class="list">
-          <div ref="rows" class="rows" :class="{ scrollable, faded: scrollable && !atBottom }" @scroll.passive="onScroll">
+          <div ref="rows" class="rows" :class="{ scrollable, faded: scrollable && !atBottom }" role="group" :aria-label="`${platform.name}账号`" @scroll.passive="onScroll">
             <div
               v-for="a in sorted"
               :key="a.account"
               :data-account="a.account"
               class="row"
-              :class="{ active: a.account === viewing, expired: isExpired(a), confirming: confirming === a.account }"
-              role="button"
+              :class="{ active: isPicked(a), expired: isExpired(a), confirming: confirming === a.account }"
+              role="checkbox"
+              :aria-checked="isPicked(a)"
+              :aria-disabled="isExpired(a) || isLocked(a) || undefined"
               tabindex="0"
               @click="pick(a)"
               @keydown.enter.prevent="pick(a)"
+              @keydown.space.prevent="pick(a)"
             >
               <template v-if="confirming === a.account">
-         <span class="warn-ico" aria-hidden="true"><Trash2 :size="15" /></span>
-  <div class="text">
-           <div class="name-row"><span class="nick">删除「{{ nick(a) }}」？</span></div>
-    <div class="sub">{{ SERVER_LOGOUT.has(platform.id) ? `删除本机登录态，并退出${platform.name}服务端登录` : '只删除本机保存的登录态' }}</div>
-  </div>
-         <div class="confirm-acts">
-           <button type="button" class="act cancel" :disabled="removing === a.account" @click.stop="cancelRemove">取消</button>
-           <button type="button" class="act danger" :disabled="removing === a.account" @click.stop="confirmRemove(a)">
-      <CatbusLoader v-if="removing === a.account" :size="12" label="删除中" />
-      {{ removing === a.account ? '删除中…' : '删除' }}
-           </button>
-         </div>
-       </template>
-       <template v-else>
-              <span class="ava" :style="{ background: color(a) }" aria-hidden="true">
-                <img v-if="avatarOf(a)" :src="imgSrc(avatarOf(a)!)" alt="" referrerpolicy="no-referrer" @error="onAvatarError(avatarOf(a)!)" />
-                <template v-else>{{ nick(a).slice(0, 1) }}</template>
-              </span>
-              <div class="text">
-                <div class="name-row">
-                  <span class="nick">{{ nick(a) }}</span>
-                  <span v-if="a.current" class="badge">默认</span>
+                <span class="warn-ico" aria-hidden="true"><Trash2 :size="15" /></span>
+                <div class="text">
+                  <div class="name-row"><span class="nick">删除「{{ nick(a) }}」？</span></div>
+                  <div class="sub">{{ SERVER_LOGOUT.has(platform.id) ? `删除本机登录态，并退出${platform.name}服务端登录` : '只删除本机保存的登录态' }}</div>
                 </div>
-                <div class="sub">
-                  {{ isExpired(a) ? '登录已失效' : a.account === viewing ? '正在浏览' : `${since(a.updated_at)}登录` }}
+                <div class="confirm-acts">
+                  <button type="button" class="act cancel" :disabled="removing === a.account" @click.stop="cancelRemove">取消</button>
+                  <button type="button" class="act danger" :disabled="removing === a.account" @click.stop="confirmRemove(a)">
+                    <CatbusLoader v-if="removing === a.account" :size="12" label="删除中" />
+                    {{ removing === a.account ? '删除中…' : '删除' }}
+                  </button>
                 </div>
-              </div>
-              <button v-if="isExpired(a)" type="button" class="act relogin" @click.stop="relogin(a)">
-                <RotateCw :size="12" />重新登录
-              </button>
-              <button
-                v-else-if="!a.current"
-                type="button"
-                class="act set-default"
-                :disabled="pending === a.account"
-                @click.stop="setDefault(a)"
-              >
-                <Star :size="12" />设为默认
-              </button>
-              <button v-tip="'删除账号'" type="button" class="act icon del" aria-label="删除账号" @click.stop="askRemove(a)">
-  <Trash2 :size="13" />
-       </button>
-              <Check v-if="a.account === viewing && !moving && !isExpired(a)" class="check" :size="16" />
-       </template>
+              </template>
+              <template v-else>
+                <span class="box" :class="{ on: isPicked(a), off: isExpired(a), locked: isLocked(a) }" aria-hidden="true">
+                  <Check v-if="isPicked(a)" :size="13" :stroke-width="3" />
+                </span>
+                <span class="ava" :style="{ background: color(a) }" aria-hidden="true">
+                  <img v-if="avatarOf(a)" :src="imgSrc(avatarOf(a)!)" alt="" referrerpolicy="no-referrer" @error="onAvatarError(avatarOf(a)!)" />
+                  <template v-else>{{ nick(a).slice(0, 1) }}</template>
+                </span>
+                <div class="text">
+                  <div class="name-row">
+                    <span class="nick">{{ nick(a) }}</span>
+                    <span v-if="a.current" class="badge">默认</span>
+                  </div>
+                  <div class="sub">
+                    {{ isExpired(a) ? '登录已失效 · 不可勾选' : isPicked(a) ? '正在浏览' : `${since(a.updated_at)}登录` }}
+                  </div>
+                </div>
+                <button v-if="isExpired(a)" type="button" class="act relogin" @click.stop="relogin(a)">
+                  <RotateCw :size="12" />重新登录
+                </button>
+                <button
+                  v-else-if="!a.current"
+                  type="button"
+                  class="act set-default"
+                  :disabled="pending === a.account"
+                  @click.stop="setDefault(a)"
+                >
+                  <Star :size="12" />设为默认
+                </button>
+                <button v-tip="'删除账号'" type="button" class="act icon del" aria-label="删除账号" @click.stop="askRemove(a)">
+                  <Trash2 :size="13" />
+                </button>
+                <Transition name="tip">
+                  <span v-if="lockTip === a.account" class="lock-tip" role="status">
+                    <Lock :size="12" />至少保留一个账号
+                  </span>
+                </Transition>
+              </template>
             </div>
+            <p v-if="!list.length" class="empty">还没有{{ platform.name }}账号，在下面添加</p>
           </div>
           <div v-if="canExpand" class="expand-wrap">
             <button
@@ -372,6 +553,12 @@ onBeforeUnmount(close)
             </button>
           </div>
         </div>
+
+        <Transition :css="false" @enter="mergeEnter" @leave="mergeLeave">
+          <p v-if="picked.length > 1" class="merge">
+            <Layers :size="14" />{{ picked.length }} 个账号同时加载 · 重复条目只显示一次
+          </p>
+        </Transition>
 
         <button type="button" class="add" @click="add">
           <span class="plus" aria-hidden="true"><Plus :size="16" /></span>
@@ -389,25 +576,36 @@ onBeforeUnmount(close)
       type="button"
       class="chip"
       :class="{ open }"
-      :title="accounts.length ? '切换账号' : '登录'"
-      :aria-label="rail ? (current ? `${nick(current)}，切换账号` : '未登录，点击登录') : undefined"
+      :title="card.kind === 'agg' || browsing.length ? '切换账号' : '登录'"
+      :aria-label="rail ? card.label : undefined"
       :aria-expanded="open"
       @click="toggle"
     >
       <span class="ava-wrap">
-        <span class="ava" aria-hidden="true">
-          <img v-if="avatarOf(current)" :src="imgSrc(avatarOf(current)!)" alt="" referrerpolicy="no-referrer" @error="onAvatarError(avatarOf(current)!)" />
-          <template v-else>{{ current ? nick(current).slice(0, 1) : '?' }}</template>
+        <!-- 窄栏只放一个头像 -->
+        <span v-if="rail || card.kind === 'acc' && card.accs.length <= 1" class="ava" aria-hidden="true">
+          <img v-if="avatarOf(first)" :src="imgSrc(avatarOf(first)!)" alt="" referrerpolicy="no-referrer" @error="onAvatarError(avatarOf(first)!)" />
+          <template v-else>{{ first ? nick(first).slice(0, 1) : '?' }}</template>
+        </span>
+        <span v-else-if="card.kind === 'acc'" class="stack" aria-hidden="true">
+          <span v-for="a in card.accs" :key="a.account" class="ava" :style="{ background: color(a) }">
+            <img v-if="avatarOf(a)" :src="imgSrc(avatarOf(a)!)" alt="" referrerpolicy="no-referrer" @error="onAvatarError(avatarOf(a)!)" />
+            <template v-else>{{ nick(a).slice(0, 1) }}</template>
+          </span>
+        </span>
+        <span v-else class="stack logos" aria-hidden="true">
+          <img v-for="p in card.logos" :key="p.id" class="stack-logo" :src="p.logo" alt="" />
+          <span v-if="card.more" class="stack-logo more mono">+{{ card.more }}</span>
         </span>
         <span v-if="rail && status" class="dot" :class="status" aria-hidden="true" />
       </span>
       <span class="chip-text">
-        <span class="chip-name">{{ current ? nick(current) : '未登录 · 点击登录' }}</span>
-        <span class="chip-sub">
-          {{ platform.name }} · web<template v-if="source === 'demo'"> · <em>演示数据</em></template>
+        <span class="chip-name">{{ card.name }}</span>
+        <span class="chip-sub" :class="{ warn: card.warn }">
+          {{ card.sub }}<template v-if="source === 'demo'"> · <em>演示数据</em></template>
         </span>
       </span>
-      <LogIn v-if="!accounts.length" :size="16" class="chev" aria-hidden="true" />
+      <LogIn v-if="card.kind === 'acc' && !browsing.length" :size="16" class="chev" aria-hidden="true" />
       <ChevronsUpDown v-else :size="16" class="chev" aria-hidden="true" />
     </button>
   </div>
@@ -569,11 +767,6 @@ onBeforeUnmount(close)
   outline: none;
   transition: background 0.2s, box-shadow 0.2s;
 }
-/* 切换动效进行中：选中行放大后的投影不被列表裁掉（底边仍裁，收起时下面的行不会露出来） */
-.rows.flipping:not(.scrollable) {
-  overflow: visible;
-  clip-path: inset(-24px -10px 0 -10px);
-}
 .row {
   position: relative;
 }
@@ -653,10 +846,6 @@ onBeforeUnmount(close)
 }
 .row.expired .sub {
   color: var(--red);
-}
-.check {
-  color: var(--red);
-  flex: none;
 }
 .act {
   flex: none;
@@ -823,6 +1012,253 @@ onBeforeUnmount(close)
   border: 1.2px solid var(--ink-3);
 }
 
+/* ---------- 多选：复选框、锁定提示、合并说明（设计稿 T） ---------- */
+.box {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  color: #fff;
+  background: var(--glass-strong);
+  border: 1.3px solid var(--ink-3);
+  transition: background 0.18s, border-color 0.18s, box-shadow 0.18s, transform 0.18s var(--ease-out);
+}
+.box.on {
+  background: var(--red);
+  border-color: var(--red);
+  box-shadow: 0 2px 6px #e8414f40;
+}
+.box.on svg {
+  animation: tick 0.22s var(--ease-out);
+}
+.box.off {
+  opacity: 0.4;
+}
+.row:hover .box:not(.on):not(.off) {
+  border-color: var(--red);
+}
+@keyframes tick {
+  from { transform: scale(0.4); opacity: 0; }
+}
+.count.on {
+  color: var(--red);
+  font-weight: 600;
+}
+.lock-tip {
+  /* 盖在行右侧的操作按钮上（列表是 overflow: hidden，不能浮到行外） */
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  translate: 0 -50%;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 9px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #fff;
+  background: var(--navy);
+  box-shadow: 0 6px 16px #0b0d1833;
+  pointer-events: none;
+}
+[data-theme='dark'] .lock-tip {
+  color: #1b1f2e;
+  background: #f2f3f8;
+}
+.tip-enter-active,
+.tip-leave-active {
+  transition: opacity 0.18s, transform 0.18s var(--ease-out);
+}
+.tip-enter-from,
+.tip-leave-to {
+  opacity: 0;
+  transform: translateY(4px);
+}
+.merge {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--red);
+  background: var(--red-soft);
+}
+.merge svg {
+  flex: none;
+}
+.merge {
+  overflow: hidden;
+  transform-origin: 50% 100%;
+}
+.empty {
+  margin: 0;
+  padding: 14px 10px;
+  font-size: 12px;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+/* ---------- 聚合模式的渠道 Tab ---------- */
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  border: 1px solid var(--hair);
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+}
+.strip {
+  /* Tab 的 offsetLeft 相对它算（revealTab 用） */
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.strip::-webkit-scrollbar {
+  display: none;
+}
+.strip.fade-l {
+  mask-image: linear-gradient(to right, transparent, #000 20px);
+}
+.strip.fade-r {
+  mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent);
+}
+.strip.fade-l.fade-r {
+  mask-image: linear-gradient(to right, transparent, #000 20px, #000 calc(100% - 20px), transparent);
+}
+.tab {
+  flex: 1 0 auto;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--ink-2);
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.tabs.many .tab {
+  flex: none;
+}
+.tab:hover {
+  color: var(--ink);
+}
+.tab.on {
+  color: var(--ink);
+  font-weight: 700;
+  background: #fff;
+  box-shadow: 0 2px 8px #1b1f2e14;
+}
+[data-theme='dark'] .tab.on {
+  background: #ffffff1a;
+}
+.tab:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: -2px;
+}
+.tab-logo {
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+}
+.tab-count {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink-2);
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+}
+.tab.on .tab-count {
+  color: #fff;
+  background: var(--red);
+}
+.tab-warn {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--warn);
+}
+.arrow {
+  flex: none;
+  width: 28px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--ink-2);
+  background: var(--glass-strong);
+  border: 1px solid var(--hair);
+  transition: opacity 0.2s, color 0.2s;
+}
+.arrow:hover:not(:disabled) {
+  color: var(--ink);
+}
+.arrow:disabled {
+  opacity: 0.35;
+  background: transparent;
+  border-color: transparent;
+  cursor: default;
+}
+
+/* ---------- 账号卡：多个账号 / 多个渠道时叠放 ---------- */
+.stack {
+  display: flex;
+  align-items: center;
+}
+.stack > * + * {
+  margin-left: -9px;
+}
+.chip .stack .ava {
+  box-shadow: 0 0 0 2px var(--glass-strong);
+}
+.stack.logos > * + * {
+  margin-left: -12px;
+}
+.stack-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  box-shadow: 0 0 0 2px var(--glass-strong);
+}
+.stack-logo.more {
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--navy);
+}
+.chip-sub {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chip-sub.warn {
+  color: var(--warn);
+}
+
 /* ---------- 窄栏（平板）：只显示头像 ---------- */
 .ava-wrap {
   position: relative;
@@ -902,6 +1338,17 @@ onBeforeUnmount(close)
 }
 .in-sheet .title {
   font-size: 16px;
+}
+.in-sheet .tab {
+  height: 40px;
+}
+.in-sheet .arrow {
+  width: 36px;
+  height: 40px;
+}
+.in-sheet .box {
+  width: 22px;
+  height: 22px;
 }
 
 /* ---------- 触屏：没有悬停，操作按钮一直显示，可点区域至少 --tap ---------- */

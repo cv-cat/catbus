@@ -326,7 +326,7 @@ const detail = useDetailStore()
 function targetOf(item: Item) {
   if (props.feed) return props.feed.targetOf(item)
   const platform = discover.platformOf(item)
-  return { platform, account: discover.accountFor(platform)?.account ?? null }
+  return { platform, account: discover.accountOf(item, platform) }
 }
 function onOpen(item: Item, el: HTMLElement) {
   detail.open({

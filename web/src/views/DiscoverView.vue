@@ -71,17 +71,22 @@ const placeholder = computed(() =>
   d.aggregate && lanes.value.length > 1 ? `在 ${lanes.value.length} 个渠道里搜索` : `在${d.platform.name}搜索${d.platform.item}`,
 )
 
-/** 选中的条目按平台各作为一批下载（聚合模式下可能来自几个平台），然后打开下载记录 */
+/** 选中的条目按平台（和账号）各作为一批下载（聚合模式下可能来自几个平台），然后打开下载记录 */
 async function downloadSelected() {
   const picked = sel.pick(d.items)
   if (!picked.length) return
-  const byPlatform = new Map<string, Item[]>()
+  // 同一平台里按取到条目的账号再分（多账号合并时各条可能来自不同账号）
+  const groups = new Map<string, { platform: string; account: string | null; list: Item[] }>()
   for (const it of picked) {
-    const p = d.platformOf(it)
-    byPlatform.set(p, [...(byPlatform.get(p) ?? []), it])
+    const platform = d.platformOf(it)
+    const account = d.accountOf(it, platform)
+    const key = `${platform}\n${account ?? ''}`
+    const g = groups.get(key) ?? { platform, account, list: [] }
+    g.list.push(it)
+    groups.set(key, g)
   }
   try {
-    for (const [p, list] of byPlatform) await downloads.start(p, d.accountFor(p)?.account ?? null, list)
+    for (const g of groups.values()) await downloads.start(g.platform, g.account, g.list)
     sel.none()
     downloads.open = true
   } catch (e) {

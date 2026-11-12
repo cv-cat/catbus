@@ -36,9 +36,9 @@ async function onLogin() {
   if (author.active) author.load(true)
 }
 
-async function removeAccount(account: string, done: (ok: boolean) => void) {
+async function removeAccount(platform: string, account: string, done: (ok: boolean) => void) {
   try {
-    await d.deleteAccount(account)
+    await d.deleteAccount(platform, account)
     done(true)
   } catch (e) {
     done(false)
@@ -46,9 +46,9 @@ async function removeAccount(account: string, done: (ok: boolean) => void) {
   }
 }
 
-async function setDefault(account: string) {
+async function setDefault(platform: string, account: string) {
   try {
-    await d.setDefault(account)
+    await d.setDefault(platform, account)
   } catch (e) {
     alert((e as Error).message)
   }
@@ -81,8 +81,9 @@ onMounted(async () => {
       v-model="d.state.platform"
       :platforms="PLATFORMS"
       :health="d.health"
-      :accounts="d.platformAccounts"
-      :account="d.currentAccount"
+      :accounts="d.accounts"
+      :selected-of="d.selectedAccounts"
+      :browsing-of="d.accountsFor"
       :is-expired="d.isExpired"
       :source="src.source"
       :aggregate="d.aggregate"
@@ -90,8 +91,8 @@ onMounted(async () => {
       :busy="d.busy"
       @update:aggregate="d.setAggregate"
       @toggle="d.toggleChannel"
-      @login="(account?: string) => openLogin(d.state.platform, account)"
-      @select="d.switchAccount"
+      @login="(platform: string, account?: string) => openLogin(platform, account)"
+      @toggle-account="d.toggleAccount"
       @set-default="setDefault"
       @remove="removeAccount"
     />
