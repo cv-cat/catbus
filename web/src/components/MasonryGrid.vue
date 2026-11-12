@@ -28,6 +28,8 @@ const props = defineProps<{
   stale?: boolean
   minColumn?: number
   gap?: number
+  /** 列表不是发现页的（作者页）：详情卡片的平台、账号和翻页按它来；不给时用发现页的 */
+  feed?: { targetOf: (item: Item) => { platform: string; account: string | null }; loadMore: () => void; hasMore: () => boolean }
 }>()
 
 /**
@@ -121,7 +123,7 @@ let raf = 0
 let swallowUntil = 0
 
 function scroller(): HTMLElement | null {
-  return root.value?.closest<HTMLElement>('.discover') ?? null
+  return root.value?.closest<HTMLElement>('.discover, .author-page') ?? null
 }
 
 function apply(current: number) {
@@ -270,6 +272,7 @@ const discover = useDiscoverStore()
 const detail = useDetailStore()
 /** 条目所属的平台和浏览它用的账号（聚合模式下每条都可能不同） */
 function targetOf(item: Item) {
+  if (props.feed) return props.feed.targetOf(item)
   const platform = discover.platformOf(item)
   return { platform, account: discover.accountFor(platform)?.account ?? null }
 }
@@ -282,8 +285,8 @@ function onOpen(item: Item, el: HTMLElement) {
       items: () => items.value,
       targetOf,
       sourceOf: (id) => root.value?.querySelector<HTMLElement>(`.card[data-id="${CSS.escape(id)}"]`) ?? null,
-      loadMore: () => void discover.loadMore(),
-      hasMore: () => discover.hasMore,
+      loadMore: () => void (props.feed ? props.feed.loadMore() : discover.loadMore()),
+      hasMore: () => (props.feed ? props.feed.hasMore() : discover.hasMore),
     },
   })
 }

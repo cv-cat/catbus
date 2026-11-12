@@ -4,6 +4,8 @@ import PixelBackground from '@/components/PixelBackground.vue'
 import AmbientBlobs from '@/components/AmbientBlobs.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import DiscoverView from '@/views/DiscoverView.vue'
+import AuthorView from '@/views/AuthorView.vue'
+import { useAuthorStore } from '@/stores/author'
 import LoginDialog from '@/components/LoginDialog.vue'
 import VerifyDialog from '@/components/VerifyDialog.vue'
 import DetailCard from '@/components/DetailCard.vue'
@@ -21,6 +23,8 @@ import { MQ } from '@/composables/useBreakpoint'
 
 const d = useDiscoverStore()
 const src = useSourceStore()
+// 作者页（AGENTS.md 7.9「作者页」）：发现页保持挂载、藏在后面，后退时原样恢复
+const author = useAuthorStore()
 const settings = useSettingsStore().settings
 // 「减少动效」「人浪动效」两项设置接到 motion.ts（立即生效）
 bindMotionSettings()
@@ -29,6 +33,7 @@ bindMotionSettings()
 async function onLogin() {
   await d.refreshAccounts()
   d.search()
+  if (author.active) author.load(true)
 }
 
 async function removeAccount(account: string, done: (ok: boolean) => void) {
@@ -59,8 +64,10 @@ onMounted(async () => {
     )
   }
   await detectSource()
-  await Promise.all([d.refreshAccounts(), d.initFilters()])
+  await Promise.all([d.refreshAccounts(), d.initFilters(), author.initCaps()])
   d.search()
+  // 直接打开的作者页：账号读到之后再请求
+  if (author.active) author.load()
 })
 </script>
 
@@ -88,7 +95,8 @@ onMounted(async () => {
       @set-default="setDefault"
       @remove="removeAccount"
     />
-    <DiscoverView />
+    <DiscoverView :class="{ behind: author.active }" :inert="author.active || undefined" :aria-hidden="author.active || undefined" />
+    <AuthorView v-if="author.active" />
   </div>
   <DetailCard />
   <Lightbox />
@@ -117,6 +125,11 @@ onMounted(async () => {
   background-size: 22px 22px;
   -webkit-mask-image: linear-gradient(225deg, #000 0%, transparent 65%);
   mask-image: linear-gradient(225deg, #000 0%, transparent 65%);
+}
+/* 在作者页上：发现页不卸载（保留结果和滚动位置），只是藏起来 */
+.behind {
+  visibility: hidden;
+  pointer-events: none;
 }
 .shell {
   position: relative;

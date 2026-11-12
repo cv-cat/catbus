@@ -17,6 +17,8 @@ export interface PlatformFilters {
   kind: string[] | null
   /** 平台私有的字段排序 `--order-by` 的取值（目前只有 mteam）；没有时为 null */
   order: string[] | null
+  /** `user get` 和 `user items` 都已实现：作者可以做成站内的作者页（AGENTS.md 7.9「作者页」） */
+  author: boolean
 }
 
 const FILTERS = ['sort', 'type', 'time'] as const
@@ -40,11 +42,12 @@ export function platformFilters(): Promise<Record<string, PlatformFilters>> {
       const web = p.endpoints.web
       if (!web || web === 'planned') continue
       const cmd = web.commands.get('item search')
-      const entry: PlatformFilters = { search: cmd?.status === 'implemented', sort: null, type: null, time: null, kind: null, order: null }
+      const entry: PlatformFilters = { search: cmd?.status === 'implemented', sort: null, type: null, time: null, kind: null, order: null, author: false }
       for (const k of FILTERS) entry[k] = cmd ? enumValues(cmd.options[k]) : null
       const feed = web.commands.get('feed list')
       entry.kind = feed?.status === 'implemented' ? enumValues(feed.options.kind) : null
       entry.order = cmd ? enumValues(cmd.options.orderBy) : null
+      entry.author = ['user get', 'user items'].every((k) => web.commands.get(k)?.status === 'implemented')
       out[p.id] = entry
     }
     return out

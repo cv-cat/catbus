@@ -24,6 +24,8 @@ export interface PlatformFilters {
   kind?: string[] | null
   /** 平台私有的字段排序 `--order-by` 的取值；旧版 bridge 不给 */
   order?: string[] | null
+  /** `user get` 和 `user items` 都已实现（作者页，AGENTS.md 7.9）；旧版 bridge 不给 */
+  author?: boolean
 }
 
 /** 读不到（旧版 bridge、纯静态预览）时返回 null，页面不置灰任何筛选；演示模式不请求服务端，用演示的取值表 */

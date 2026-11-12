@@ -14,6 +14,7 @@ import { torrentInfo } from '@/composables/torrent'
 import { showInfo } from '@/composables/show'
 import { releaseVideo, useHoverPreview } from '@/composables/useHoverPreview'
 import { useSettingsStore } from '@/stores/settings'
+import { useAuthorStore } from '@/stores/author'
 import { gsap, prefersReducedMotion } from '@/composables/motion'
 
 const props = defineProps<{
@@ -69,6 +70,38 @@ const title = computed(() => torrent.value?.title ?? (props.item.title || props.
 const textOnly = computed(() => !props.item.cover || failed.value)
 const short = computed(() => [...title.value].length <= 24)
 const author = computed(() => props.item.author?.name ?? '')
+
+// ---------- 作者区：点了进入站内的作者页（AGENTS.md 7.9「作者页」） ----------
+const authors = useAuthorStore()
+/** 平台的 user get、user items 都已实现，作者有 url 或 id，才做成站内入口；否则作者区和卡片其他地方一样 */
+const authorLink = computed(() => Boolean(props.platform && authors.refOf(props.item.author) && authors.canOpen(props.platform)))
+/** 新标签页打开平台原主页（⌘ / Ctrl / Shift / 中键）；作者没有 url 时交给卡片，打开条目原链接 */
+function openAuthorTab(e: MouseEvent): boolean {
+  const url = props.item.author?.url
+  if (!url) return false
+  e.preventDefault()
+  e.stopPropagation()
+  window.open(url, '_blank', 'noopener,noreferrer')
+  return true
+}
+function onAuthorClick(e: MouseEvent) {
+  // 选择模式（瀑布流已经切换过选中、拦下了默认行为）：交给卡片，只切换选中
+  if (!authorLink.value || e.defaultPrevented || props.selecting) return
+  if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return void openAuthorTab(e)
+  // 不打开详情，也不跟随卡片的链接
+  e.preventDefault()
+  e.stopPropagation()
+  authors.open(props.platform!, props.item.author)
+}
+function onAuthorAux(e: MouseEvent) {
+  if (e.button === 1 && authorLink.value && !props.selecting) openAuthorTab(e)
+}
+function onAuthorKey(e: KeyboardEvent) {
+  if (!authorLink.value) return
+  e.preventDefault()
+  e.stopPropagation()
+  authors.open(props.platform!, props.item.author)
+}
 // 作者头像点与封面占位色：按 id 哈希取设计稿里的四种品牌色
 const PALETTE = ['#E8414F', '#232838', '#F0B429', '#5A6BD8']
 const seed = computed(() => {
@@ -282,8 +315,19 @@ onBeforeUnmount(() => {
         <span v-if="show.price" class="price"><strong class="mono">{{ show.price }}</strong><small>起</small></span>
       </div>
       <div v-else class="meta">
-        <UserAvatar class="ava" :user="item.author" :letter="false" :style="{ '--tint': tint }" />
-        <span class="author">{{ author }}</span>
+        <span
+          class="by"
+          :class="{ link: authorLink }"
+          :role="authorLink ? 'link' : undefined"
+          :tabindex="authorLink ? 0 : undefined"
+          :aria-label="authorLink ? `${author}的作者页` : undefined"
+          @click="onAuthorClick"
+          @auxclick="onAuthorAux"
+          @keydown.enter="onAuthorKey"
+        >
+          <UserAvatar class="ava" :user="item.author" :letter="false" :style="{ '--tint': tint }" />
+          <span class="author">{{ author }}</span>
+        </span>
         <template v-if="settings.cardStats">
         <span class="stat" :aria-label="`${item.stats.likes ?? 0} 赞`">
           <Heart :size="13" aria-hidden="true" />
@@ -572,6 +616,26 @@ onBeforeUnmount(() => {
 .card.with-chan .badge.size,
 .card.with-chan .badge.sale {
   transform: none;
+}
+/* 作者区：占满统计数字左边的空间；能进作者页时悬停变红 */
+.by {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.by.link {
+  cursor: pointer;
+}
+.by.link:hover .author,
+.by.link:focus-visible .author {
+  color: var(--red);
+}
+.by.link:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 .author.dim {
   color: var(--ink-3);
