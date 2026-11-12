@@ -3,7 +3,7 @@ import { computed, reactive, ref, shallowReactive, shallowRef, watch } from 'vue
 import { listAccounts, loadFilters, removeAccount, searchItems, useAccount, type PlatformFilters } from '@/api/client'
 import type { Account, CatbusError, Item } from '@/api/types'
 import { PLATFORMS, platformById } from '@/data/platforms'
-import { SORTS, TYPES } from '@/data/filters'
+import { ORDERS, SORTS, TYPES, parseOrder } from '@/data/filters'
 import { useSelectionStore } from './selection'
 import { useSettingsStore } from './settings'
 import { toast } from './toast'
@@ -52,7 +52,7 @@ function fromUrl(d: { platform: string; sort: string; type: string }): DiscoverS
   return {
     platform: platformById(id)?.id ?? d.platform,
     keyword: q.get('keyword') ?? '',
-    sort: pick(q.get('sort'), SORTS, d.sort),
+    sort: parseOrder(q.get('sort')) ? q.get('sort')! : pick(q.get('sort'), SORTS, d.sort),
     type: pick(q.get('type'), TYPES, d.type),
   }
 }
@@ -141,6 +141,13 @@ export const useDiscoverStore = defineStore('discover', () => {
     if (!all) return null
     const meta = platformById(id)!
     const f = all[id]
+    // 字段排序（--order-by）：平台声明了这个字段才能用，搜索和浏览都支持
+    const order = kind === 'sort' ? parseOrder(value) : null
+    if (order) {
+      if (f?.order?.includes(order.field)) return null
+      const name = ORDERS.find((o) => o.value === order.field)?.label ?? order.field
+      return `${meta.name}不支持按「${name}」排序`
+    }
     if (meta.mode === 'feed' || !f?.search) return `${meta.name}只有推荐流，不支持筛选`
     const list = f[kind]
     if (list?.includes(value)) return null
@@ -156,11 +163,23 @@ export const useDiscoverStore = defineStore('discover', () => {
   function unsupported(kind: 'sort' | 'type', value: string): string | null {
     if (!aggregate.value) return unsupportedOn(state.platform, kind, value)
     const why = lanes.value.map((l) => unsupportedOn(l.platform, kind, value))
+    // 字段排序要选中的渠道全都支持（否则排序按钮显示的是标准排序那一组）
+    if (kind === 'sort' && parseOrder(value)) return why.find((w) => w) ?? null
     if (why.some((w) => !w)) return null
     if (why.length === 1) return why[0]!
     const label = (kind === 'sort' ? SORTS : TYPES).find((o) => o.value === value)?.label ?? value
     return kind === 'sort' ? `选中的渠道都不支持按「${label}」排序` : `选中的渠道都不支持只看「${label}」`
   }
+
+  /** 排序按钮用字段排序那一组（ORDERS）还是标准排序（SORTS）：当前平台（聚合时为全部选中的渠道）声明了 --order-by */
+  const orderFields = computed<string[] | null>(() => {
+    const all = filters.value
+    if (!all) return null
+    const ids = aggregate.value ? lanes.value.map((l) => l.platform) : [state.platform]
+    const lists = ids.map((id) => all[id]?.order ?? null)
+    if (!lists.length || lists.some((l) => !l?.length)) return null
+    return lists[0]!.filter((f) => lists.every((l) => l!.includes(f)))
+  })
 
   /** 某个渠道实际请求用的取值：支持就用页面上选的，不支持退回默认值 */
   const effective = (id: string, kind: 'sort' | 'type', value: string) =>
@@ -789,6 +808,7 @@ export const useDiscoverStore = defineStore('discover', () => {
     restoredScroll,
     refreshAccounts,
     unsupported,
+    orderFields,
     initFilters,
   }
 })

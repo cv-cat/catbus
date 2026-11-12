@@ -511,3 +511,23 @@ describe('下载交给浏览器 /api/download/<batch>/.../file', () => {
     return join(home.dir, 'cache', 'webui', 'downloads', id)
   }
 })
+
+describe('字段排序：item search / feed list 放行 --order-by 与 --asc', () => {
+  it('搜索和浏览都能带，--asc 是不带值的开关', () => {
+    expect(validateArgv(['mteam', 'item', 'search', 'kw', '--limit', '20', '--order-by', 'size', '--asc'])).toEqual(
+      ['mteam', 'item', 'search', '--limit', '20', '--order-by', 'size', '--asc', '--', 'kw'],
+    )
+    expect(validateArgv(['mteam', 'feed', 'list', '-a', 'work', '--order-by', 'seeders'])).toEqual(
+      ['mteam', 'feed', 'list', '-a', 'work', '--order-by', 'seeders'],
+    )
+    expect(() => validateArgv(['mteam', 'item', 'get', '123', '--asc'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['mteam', 'comment', 'list', '123', '--order-by', 'size'])).toThrow('不允许的选项')
+  })
+
+  it('/api/filters 只给声明了 --order-by 的平台列出取值', async () => {
+    const { platformFilters } = await import('../src/webui/filters.js')
+    const all = await platformFilters()
+    expect(all.mteam!.order).toEqual(['date', 'size', 'seeders', 'leechers', 'name'])
+    expect(all.xhs!.order).toBeNull()
+  })
+})

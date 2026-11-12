@@ -6,6 +6,13 @@ import { animate, gsap } from '@/composables/motion'
 /** disabled 为不能选的原因：按钮置灰、不可点击，鼠标移入 / 聚焦时用 tooltip 显示原因 */
 const props = defineProps<{ options: readonly { value: T; label: string; disabled?: string | null }[]; label: string }>()
 const model = defineModel<T>({ required: true })
+/** reselect：点了已经选中的那一项（字段排序用它切换升序 / 降序） */
+const emit = defineEmits<{ reselect: [value: T] }>()
+function pick(o: { value: T; disabled?: string | null }) {
+  if (o.disabled) return
+  if (model.value === o.value) emit('reselect', o.value)
+  else model.value = o.value
+}
 
 const root = ref<HTMLElement>()
 const thumb = ref<HTMLElement>()
@@ -35,7 +42,7 @@ watch(() => props.options, () => nextTick(() => place(true)))
       v-tip="o.disabled"
       :class="{ active: model === o.value, disabled: !!o.disabled }"
       :aria-disabled="o.disabled ? 'true' : undefined"
-      @click="!o.disabled && (model = o.value)"
+      @click="pick(o)"
     >
       {{ o.label }}
     </button>

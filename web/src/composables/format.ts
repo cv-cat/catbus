@@ -10,6 +10,19 @@ function trim(v: number): string {
   return v.toFixed(1).replace(/\.0$/, '')
 }
 
+/** 字节 → 「20.8 GB」（1024 进制，三位有效数字） */
+export function bytes(n: number | null | undefined): string | null {
+  if (n == null || n < 0) return null
+  const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+  let v = n
+  let i = 0
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024
+    i++
+  }
+  return `${i === 0 || v >= 100 ? Math.round(v) : v >= 10 ? v.toFixed(1) : v.toFixed(2)} ${units[i]}`
+}
+
 export function duration(sec: number | null | undefined): string | null {
   if (!sec) return null
   const s = Math.round(sec)

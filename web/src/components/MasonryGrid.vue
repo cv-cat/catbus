@@ -64,8 +64,10 @@ const count = computed(() =>
   Math.min(6, Math.max(bp.phone ? 2 : 1, Math.floor((width.value + gap.value) / (minColumn.value + gap.value)))),
 )
 
-function ratioOf(item: Item): number {
+function ratioOf(item: Item, platform?: string): number {
+  if (platform === 'maoyan' && item.cover) return 0.72 // 演出海报
   // 纯文字卡没有封面，高度跟着正文走：按每行约 14 字、最多 8 行估算（MediaCard 的 .face）
+  if (item.kind === 'torrent') return item.cover ? 0.68 : 1 / 0.12 // 种子：海报 2:3；没有封面时只有标签一行（MediaCard 的 .tags）
   if (!item.cover) {
     const len = (item.title || item.text || '').length
     const lines = len <= 24 ? 2 : Math.min(8, Math.ceil(len / 14))
@@ -79,6 +81,7 @@ function ratioOf(item: Item): number {
 /** 卡片底部（标题 + 作者 / 互动行）的大致高度；纯文字卡没有标题行，作者和互动都关掉时整行不占位 */
 function footer(item: Item): number {
   const meta = 0.12
+  if (item.kind === 'torrent') return 0.34 + meta // 中文名 + 两行种子名
   return (item.cover ? 0.23 : 0) + meta
 }
 
@@ -93,7 +96,7 @@ const ICON_STAGGER_MAX = 18
 const columns = computed(() => {
   const cols = Array.from({ length: count.value }, () => ({ h: 0, cells: [] as { cell: Cell; ratio: number; delay: number }[] }))
   props.cells.forEach((cell, i) => {
-    const ratio = cell.item ? ratioOf(cell.item) : skeletonRatio(cell.key)
+    const ratio = cell.item ? ratioOf(cell.item, cell.platform) : skeletonRatio(cell.key)
     const col = cols.reduce((a, b) => (b.h < a.h ? b : a))
     col.cells.push({ cell, ratio, delay: Math.min(i, ICON_STAGGER_MAX) * ICON_STAGGER_MS })
     col.h += 1 / ratio + (cell.item ? footer(cell.item) : 0.35) // 标题和作者行的大致高度（以列宽为单位）

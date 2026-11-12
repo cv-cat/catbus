@@ -11,6 +11,8 @@ export interface PlatformFilters {
   search: boolean
   sort: string[] | null
   type: string[] | null
+  /** 平台私有的字段排序 `--order-by` 的取值（目前只有 mteam）；没有时为 null */
+  order: string[] | null
 }
 
 const FILTERS = ['sort', 'type'] as const
@@ -34,8 +36,9 @@ export function platformFilters(): Promise<Record<string, PlatformFilters>> {
       const web = p.endpoints.web
       if (!web || web === 'planned') continue
       const cmd = web.commands.get('item search')
-      const entry: PlatformFilters = { search: cmd?.status === 'implemented', sort: null, type: null }
+      const entry: PlatformFilters = { search: cmd?.status === 'implemented', sort: null, type: null, order: null }
       for (const k of FILTERS) entry[k] = cmd ? enumValues(cmd.options[k]) : null
+      entry.order = cmd ? enumValues(cmd.options.orderBy) : null
       out[p.id] = entry
     }
     return out

@@ -30,6 +30,13 @@ export interface Item {
   stats: { views: number | null; likes: number | null; comments: number | null; collects: number | null; shares: number | null }
   price: { amount: number; currency: string } | null
   status: string | null
+  /** 以下只有种子（`kind: torrent`，AGENTS 6.2 的 Torrent）才有 */
+  size?: number | null
+  file_count?: number | null
+  seeders?: number | null
+  leechers?: number | null
+  completed?: number | null
+  discount?: string | null
 }
 
 export interface Comment {

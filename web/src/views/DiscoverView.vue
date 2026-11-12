@@ -12,6 +12,7 @@ import MasonryGrid from '@/components/MasonryGrid.vue'
 import StateView from '@/components/StateView.vue'
 import LoadingBar from '@/components/LoadingBar.vue'
 import { SORTS, TYPES, useDiscoverStore } from '@/stores/discover'
+import { ORDERS, parseOrder } from '@/data/filters'
 import { animateFrom, wave, waveWhileLoading } from '@/composables/motion'
 import { openLogin } from '@/stores/login'
 import { useSelectionStore } from '@/stores/selection'
@@ -32,7 +33,21 @@ const bp = useBreakpoint()
 const nav = useNavStore()
 
 /** 排序选项：当前平台不支持的置灰，原因放进 tooltip */
-const sortOptions = computed(() => SORTS.map((o) => ({ ...o, disabled: d.unsupported('sort', o.value) })))
+/** 声明了 --order-by 的平台（M-Team）换成字段排序：选中的那一项带方向箭头，再点一次切换升序 / 降序 */
+const sortOptions = computed(() => {
+  const fields = d.orderFields
+  if (!fields) return SORTS.map((o) => ({ ...o, disabled: d.unsupported('sort', o.value) }))
+  const cur = parseOrder(state.sort)
+  return ORDERS.filter((o) => o.value === 'general' || fields.includes(o.value)).map((o) =>
+    cur?.field === o.value
+      ? { value: state.sort, label: `${o.label} ${cur.asc ? '↑' : '↓'}`, disabled: null }
+      : { value: o.value as string, label: o.label as string, disabled: null },
+  )
+})
+function toggleOrder() {
+  const cur = parseOrder(state.sort)
+  if (cur) state.sort = cur.asc ? cur.field : `${cur.field}_asc`
+}
 
 /** 聚合模式下选中的渠道 */
 const lanes = computed(() => d.selected.map((id) => platformById(id)!))
@@ -242,7 +257,7 @@ onBeforeUnmount(() => {
         :class="{ 'fade-l': fade.l, 'fade-r': fade.r }"
         @scroll.passive="updateFade"
       >
-        <SegmentedControl v-model="state.sort" :options="sortOptions" label="排序" />
+        <SegmentedControl v-model="state.sort" :options="sortOptions" label="排序" @reselect="toggleOrder" />
         <FilterChip
           v-for="t in TYPES"
           :key="t.value"

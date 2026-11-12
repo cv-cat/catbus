@@ -2,6 +2,7 @@ import { mockAccounts, mockComments, mockReplies, mockItem, mockItems, mockLogou
 import { loginApi } from './login'
 import type { Account, Comment, Envelope, Item } from './types'
 import { isDemo, useSourceStore, type Source } from '@/stores/source'
+import { parseOrder } from '@/data/filters'
 
 async function call<T>(argv: string[]): Promise<Envelope<T>> {
   const res = await fetch('/api/catbus', {
@@ -17,6 +18,8 @@ export interface PlatformFilters {
   search: boolean
   sort: string[] | null
   type: string[] | null
+  /** 平台私有的字段排序 `--order-by` 的取值；旧版 bridge 不给 */
+  order?: string[] | null
 }
 
 /** 读不到（旧版 bridge、纯静态预览）时返回 null，页面不置灰任何筛选 */
@@ -70,8 +73,14 @@ export async function searchItems(p: SearchParams): Promise<Envelope<Item[]>> {
   if (p.account) argv.push('-a', p.account)
   argv.push('--limit', String(limit))
   if (p.cursor) argv.push('--cursor', p.cursor)
+  // 字段排序（--order-by，M-Team）：搜索和浏览都能用
+  const order = parseOrder(p.sort)
+  if (order) {
+    argv.push('--order-by', order.field)
+    if (order.asc) argv.push('--asc')
+  }
   if (argv[1] === 'item') {
-    if (p.sort && p.sort !== 'general') argv.push('--sort', p.sort)
+    if (p.sort && p.sort !== 'general' && !order) argv.push('--sort', p.sort)
     if (p.type && p.type !== 'all') argv.push('--type', p.type)
   }
   return call<Item[]>(argv)

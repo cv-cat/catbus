@@ -19,15 +19,18 @@ import { ACCOUNT, LoginError, buildLogin, buildLogout, buildUse, cancel, getSess
 
 /** `resource action` → 允许的选项（每个选项都带一个值） */
 const READ_COMMANDS: Record<string, readonly string[]> = {
-  'item search': ['--limit', '--cursor', '--sort', '--type', '--time'],
-  'feed list': ['--limit', '--cursor', '--kind'],
+  // --order-by / --asc：平台私有的字段排序（目前只有 mteam，AGENTS.md 7.9「筛选」）；别的平台带了由 CLI 报 USAGE
+  'item search': ['--limit', '--cursor', '--sort', '--type', '--time', '--order-by'],
+  'feed list': ['--limit', '--cursor', '--kind', '--order-by'],
   // 详情卡片（AGENTS.md 7.9）：<item> 放在 `--` 之后
   'item get': [],
   'comment list': ['--limit', '--cursor'],
   'comment replies': ['--limit', '--cursor'],
 }
-/** 不带值的开关选项：只给 `item get` 放行 `--raw`（详情卡片的原始 JSON，设置「实验性」里打开） */
+/** 不带值的开关选项：`item get` 的 `--raw`（详情卡片的原始 JSON，设置「实验性」里打开），以及字段排序的升序开关 `--asc` */
 const READ_FLAGS: Record<string, readonly string[]> = {
+  'item search': ['--asc'],
+  'feed list': ['--asc'],
   'item get': ['--raw'],
 }
 const COMMENT_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/

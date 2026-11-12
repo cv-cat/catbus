@@ -5,11 +5,13 @@ const shownCovers = new Set<string>()
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { Check, Heart, ImageOff, MessageCircle, Play, Star } from 'lucide-vue-next'
+import { ArrowDown, ArrowUp, Check, HardDrive, Heart, ImageOff, MessageCircle, Play, Star } from 'lucide-vue-next'
 import UserAvatar from '@/components/UserAvatar.vue'
 import type { Item } from '@/api/types'
 import type { PlatformMeta } from '@/data/platforms'
 import { compact, duration } from '@/composables/format'
+import { torrentInfo } from '@/composables/torrent'
+import { showInfo } from '@/composables/show'
 import { releaseVideo, useHoverPreview } from '@/composables/useHoverPreview'
 import { useSettingsStore } from '@/stores/settings'
 import { gsap, prefersReducedMotion } from '@/composables/motion'
@@ -58,7 +60,11 @@ function onCoverLoad() {
 }
 const video = computed(() => props.item.kind === 'video' || props.item.media.some((m) => m.type === 'video'))
 const dur = computed(() => duration(props.item.media.find((m) => m.duration)?.duration))
-const title = computed(() => props.item.title || props.item.text || '（无标题）')
+/** 种子（M-Team，设计稿 K）：标题、角标和底部换一套内容，见 composables/torrent.ts */
+const torrent = computed(() => torrentInfo(props.item))
+/** 演出（猫眼演出，设计稿 M）：角标放分类和开售，底部放演出者和起价，见 composables/show.ts */
+const show = computed(() => showInfo(props.item, null, props.platform))
+const title = computed(() => torrent.value?.title ?? (props.item.title || props.item.text || '（无标题）'))
 /** 没有封面（纯文字推文、微博等）或封面加载失败：正文本身当封面，不画占位图标（设计稿 H） */
 const textOnly = computed(() => !props.item.cover || failed.value)
 const short = computed(() => [...title.value].length <= 24)
@@ -209,11 +215,11 @@ onBeforeUnmount(() => {
     <Transition name="chan" appear>
       <img v-if="channel" class="chan" :src="channel.logo" :alt="channel.name" :title="channel.name" draggable="false" />
     </Transition>
-    <div v-if="textOnly" class="face" :class="{ short }" :style="{ '--tint': tint }">
+    <div v-if="textOnly && !torrent" class="face" :class="{ short }" :style="{ '--tint': tint }">
       <span class="quote" aria-hidden="true">“</span>
       <p class="face-text">{{ title }}</p>
     </div>
-    <div v-else ref="coverEl" class="cover" :class="{ pending: preview.pending.value }" :style="{ aspectRatio: String(ratio), '--tint': tint }">
+    <div v-else-if="!textOnly" ref="coverEl" class="cover" :class="{ pending: preview.pending.value }" :style="{ aspectRatio: String(ratio), '--tint': tint }">
       <img
         v-if="item.cover && !failed"
         :src="item.cover"
@@ -230,10 +236,52 @@ onBeforeUnmount(() => {
         <Play :size="11" fill="currentColor" aria-hidden="true" />
         <span class="mono">{{ dur ?? '视频' }}</span>
       </span>
+      <template v-if="torrent">
+        <span v-if="torrent.discount" class="badge discount" :class="{ free: torrent.free }">
+          <span class="mono">{{ torrent.discount }}</span>
+        </span>
+        <span v-if="torrent.size" class="badge size">
+          <HardDrive :size="11" aria-hidden="true" />
+          <span class="mono">{{ torrent.size }}</span>
+        </span>
+      </template>
+      <template v-if="show">
+        <span v-if="show.category" class="badge">{{ show.category }}</span>
+        <span v-if="show.upcoming" class="badge sale">{{ show.upcoming }}</span>
+      </template>
     </div>
-    <div class="body">
-      <p v-if="!textOnly" class="title">{{ title }}</p>
-      <div class="meta">
+    <div class="body" :class="{ bare: torrent && textOnly }">
+      <!-- 种子没有封面：优惠和体积挪到标题上方 -->
+      <div v-if="torrent && textOnly && (torrent.discount || torrent.size)" class="tags">
+        <span v-if="torrent.discount" class="tag discount" :class="{ free: torrent.free }">
+          <span class="mono">{{ torrent.discount }}</span>
+        </span>
+        <span v-if="torrent.size" class="tag">
+          <HardDrive :size="11" aria-hidden="true" />
+          <span class="mono">{{ torrent.size }}</span>
+        </span>
+      </div>
+      <p v-if="!textOnly || torrent" class="title">{{ title }}</p>
+      <p v-if="torrent?.name" class="sub mono">{{ torrent.name }}</p>
+      <div v-if="torrent" class="meta peers">
+        <template v-if="settings.cardStats">
+          <span class="stat seed" :class="{ dead: torrent.seeders === 0 }" :aria-label="`${torrent.seeders ?? 0} 人做种`">
+            <ArrowUp :size="13" aria-hidden="true" />
+            <span class="mono">{{ compact(torrent.seeders) }}</span>
+          </span>
+          <span class="stat" :aria-label="`${torrent.leechers ?? 0} 人下载`">
+            <ArrowDown :size="13" aria-hidden="true" />
+            <span class="mono">{{ compact(torrent.leechers) }}</span>
+          </span>
+        </template>
+        <span class="time">{{ torrent.time }}</span>
+      </div>
+      <div v-else-if="show" class="meta">
+        <UserAvatar v-if="item.author" class="ava" :user="item.author" :letter="false" :style="{ '--tint': tint }" />
+        <span class="author" :class="{ dim: !item.author }">{{ show.performers ?? show.saleText ?? '' }}</span>
+        <span v-if="show.price" class="price"><strong class="mono">{{ show.price }}</strong><small>起</small></span>
+      </div>
+      <div v-else class="meta">
         <UserAvatar class="ava" :user="item.author" :letter="false" :style="{ '--tint': tint }" />
         <span class="author">{{ author }}</span>
         <template v-if="settings.cardStats">
@@ -505,11 +553,111 @@ onBeforeUnmount(() => {
   font-size: 11px;
   backdrop-filter: blur(12px);
 }
+.badge.discount {
+  background: #232838cc;
+  font-weight: 600;
+}
+.badge.discount.free,
+.tag.discount.free {
+  background: var(--red);
+  color: #fff;
+}
+.badge.size,
+.badge.sale {
+  top: auto;
+  bottom: 12px;
+  background: #1b1f2e99;
+}
+/* 体积、开售角标在左下角，不用给渠道图标让位 */
+.card.with-chan .badge.size,
+.card.with-chan .badge.sale {
+  transform: none;
+}
+.author.dim {
+  color: var(--ink-3);
+}
+.price {
+  flex: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+.price strong {
+  color: var(--red);
+  font-size: 13px;
+  font-weight: 700;
+}
+.price small {
+  font-size: 11px;
+  color: var(--ink-3);
+}
 .body {
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 12px 14px 14px;
+}
+.body.bare {
+  padding-top: 16px;
+}
+.tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* 右上角是选择框 */
+  padding-right: 28px;
+  transition: padding 0.45s var(--ease-out);
+}
+.card.with-chan .tags {
+  padding-left: 32px;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: var(--hair);
+  color: var(--ink-2);
+  font-size: 11px;
+}
+.tag.discount {
+  background: #232838;
+  color: #fff;
+  font-weight: 600;
+}
+.sub {
+  margin: -2px 0 0;
+  color: var(--ink-3);
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.meta.peers {
+  gap: 10px;
+}
+.stat.seed {
+  color: var(--ink);
+  font-weight: 600;
+}
+.stat.seed svg {
+  color: var(--ink-2);
+}
+.stat.seed.dead,
+.stat.seed.dead svg {
+  color: var(--red);
+}
+.meta.peers .stat + .stat {
+  margin-left: 0;
+}
+.time {
+  margin-left: auto;
+  white-space: nowrap;
+  font-size: 11.5px;
 }
 .title {
   margin: 0;
@@ -650,6 +798,21 @@ onBeforeUnmount(() => {
     left: 8px;
     padding: 3px 6px;
     font-size: 10px;
+  }
+  .badge.size,
+  .badge.sale {
+    top: auto;
+    bottom: 8px;
+  }
+  .sub {
+    font-size: 10px;
+    -webkit-line-clamp: 1;
+  }
+  .meta.peers {
+    gap: 8px;
+  }
+  .time {
+    font-size: 10.5px;
   }
   .body {
     gap: 7px;

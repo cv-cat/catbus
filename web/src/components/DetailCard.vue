@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
-import { Braces, Check, ChevronDown, ChevronUp, Download, ExternalLink, Heart, MessageCircle, Share2, ShieldAlert, Star, X } from 'lucide-vue-next'
+import { ArrowDown, ArrowUp, Calendar, Files, MapPin, Tags, Braces, Check, ChevronDown, ChevronUp, Download, ExternalLink, Heart, MessageCircle, Share2, ShieldAlert, Star, X } from 'lucide-vue-next'
 import DetailMedia from './DetailMedia.vue'
 import CommentThread from './CommentThread.vue'
 import UserAvatar from './UserAvatar.vue'
 import EmojiText from './EmojiText.vue'
 import { linkSegments } from '@/composables/linkify'
+import { bbcodeBlocks } from '@/composables/bbcode'
+import { torrentInfo } from '@/composables/torrent'
+import { showInfo } from '@/composables/show'
+import SaleCountdown from './SaleCountdown.vue'
 import CommentMedia from './CommentMedia.vue'
 import CatbusLoader from './CatbusLoader.vue'
 import RawJsonView from './RawJsonView.vue'
@@ -39,6 +43,18 @@ const cur = shallowRef<DetailTarget | null>(null)
 const detail = shallowRef<Item | null>(null)
 const item = computed(() => detail.value ?? cur.value?.item ?? null)
 const platform = computed(() => platformById(cur.value?.platform ?? ''))
+/** 种子（M-Team，设计稿 L）：头部、正文、底部换一套内容，没有评论区 */
+const torrent = computed(() => torrentInfo(item.value, cur.value?.item))
+/** 简介是 BBCode：详情回来后拆成图片、引用、代码和普通文字（列表里的 text 只是副标题，不渲染） */
+const descr = computed(() => (torrent.value && detail.value ? bbcodeBlocks(detail.value.text) : []))
+const badImgs = ref(new Set<string>())
+/** 演出（猫眼演出，设计稿 N）：头部是演出者，正文是时间、场馆、票价和详情长图，底部是起价和开售倒计时，没有评论区 */
+const show = computed(() => showInfo(item.value, cur.value?.item, cur.value?.platform))
+/** 普通条目（不是种子、演出）：作者、正文、评论、互动数 */
+const plain = computed(() => !torrent.value && !show.value)
+/** 演出的 media 是详情长图，放在正文里；左侧只放海报 */
+const showImages = computed(() => (show.value ? (item.value?.media ?? []).filter((m) => m.type === 'image' && m.url).map((m) => m.url!) : []))
+const mediaItem = computed(() => (show.value && item.value?.cover ? { ...item.value, media: [] } : item.value!))
 const loadingItem = ref(false)
 const itemError = ref<CatbusError | null>(null)
 const comments = shallowRef<Comment[]>([])
@@ -127,7 +143,7 @@ const natural = ref<number | null>(null)
 const ratio = computed(() => {
   const m = item.value?.media.find((x) => x.width && x.height)
   if (m) return m.width! / m.height!
-  return natural.value ?? (item.value?.kind === 'video' ? 0.75 : 0.8)
+  return natural.value ?? (item.value?.kind === 'torrent' ? 0.68 : item.value?.kind === 'video' ? 0.75 : 0.8)
 })
 /** 没有封面也没有媒体（纯文字推文、微博等）：不留黑色媒体区，单栏居中（设计稿 I） */
 const textOnly = computed(() => Boolean(item.value && !item.value.cover && !item.value.media.length))
@@ -429,6 +445,7 @@ function reset() {
   resetReplyQueue()
   detail.value = null
   itemError.value = null
+  badImgs.value = new Set()
   comments.value = []
   resetRaw()
   commentCursor.value = null
@@ -453,8 +470,8 @@ async function load(t: DetailTarget) {
   } finally {
     if (my === token) loadingItem.value = false
   }
-  // 评论在详情之后再取，避免同一时刻对平台发两次请求
-  if (my === token) await loadComments()
+  // 评论在详情之后再取，避免同一时刻对平台发两次请求；种子没有评论
+  if (my === token && t.item.kind !== 'torrent' && t.platform !== 'maoyan') await loadComments()
 }
 
 async function loadComments() {
@@ -530,6 +547,14 @@ const published = computed(() => {
 })
 const stats = computed(() => {
   const s = item.value?.stats
+  const t = torrent.value
+  if (t) {
+    return [
+      { key: 'seeders', label: '做种', icon: ArrowUp, v: t.seeders },
+      { key: 'leechers', label: '下载', icon: ArrowDown, v: t.leechers },
+      { key: 'files', label: '文件', icon: Files, v: t.files },
+    ]
+  }
   return [
     { key: 'likes', label: '赞', icon: Heart, v: s?.likes },
     { key: 'collects', label: '收藏', icon: Star, v: s?.collects },
@@ -611,11 +636,26 @@ onBeforeUnmount(() => {
         aria-modal="true"
         :aria-label="title ?? item.text ?? '详情'"
       >
-        <DetailMedia v-if="!textOnly" ref="media" :item="item" :platform="cur.platform" :active="active" :loading="loadingItem" :fullscreen="isCompact" />
+        <DetailMedia v-if="!textOnly" ref="media" :item="mediaItem" :platform="cur.platform" :active="active" :loading="loadingItem" :fullscreen="isCompact" />
 
         <section ref="panel" class="panel">
    <header class="head rv">
+     <div v-if="torrent" class="author nolink">
+       <span v-if="torrent.discount" class="t-badge mono" :class="{ free: torrent.free }">{{ torrent.discount }}</span>
+       <span class="who">
+         <strong>{{ torrent.size ?? '种子' }}</strong>
+         <small>{{ published || platform?.name }}</small>
+       </span>
+     </div>
+     <div v-else-if="show" class="author nolink">
+       <UserAvatar v-if="show.author" class="ava" :user="show.author" :style="{ background: tintOf(show.author.id) }" />
+       <span class="who">
+         <strong>{{ show.performers ?? show.category ?? '演出' }}</strong>
+         <small>{{ [show.performers ? show.category : null, show.city].filter(Boolean).join(' · ') || platform?.name }}</small>
+       </span>
+     </div>
      <a
+       v-else
        class="author"
        :href="item.author?.url ?? undefined"
        target="_blank"
@@ -662,7 +702,7 @@ onBeforeUnmount(() => {
      <RawJsonView v-if="rawView" :value="raw" :loading="rawLoading" :error="rawError" @retry="loadRaw" />
      <template v-else>
      <!-- 纯文字：正文放进与列表卡同色的引号底板，时间和计数也在底板里（设计稿 I） -->
-     <div v-if="textOnly" class="face rv" :class="{ short: [...(item.text ?? '')].length <= 40 }" :style="{ '--tint': faceTint }">
+     <div v-if="textOnly && plain" class="face rv" :class="{ short: [...(item.text ?? '')].length <= 40 }" :style="{ '--tint': faceTint }">
 <span class="quote" aria-hidden="true">“</span>
        <h2 v-if="title" class="title">{{ title }}</h2>
        <p v-if="textSegs.length" class="text">
@@ -680,18 +720,74 @@ onBeforeUnmount(() => {
   </span>
        </div>
      </div>
-     <h2 v-if="!textOnly && title" class="title rv">{{ title }}</h2>
-     <p v-if="!textOnly && textSegs.length" class="text rv">
+     <!-- 种子：中文名 + 种子名，简介按 BBCode 拆块渲染 -->
+     <template v-if="torrent">
+       <h2 class="title t-title rv">{{ torrent.title }}</h2>
+       <p v-if="torrent.name" class="t-name mono rv">{{ torrent.name }}</p>
+       <div v-if="descr.length" class="bb">
+         <template v-for="(b, i) in descr" :key="i">
+           <a v-if="b.type === 'img'" v-show="!badImgs.has(b.url)" class="bb-img" :href="b.url" target="_blank" rel="noopener noreferrer">
+             <img :src="b.url" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" @error="badImgs = new Set(badImgs).add(b.url)" />
+           </a>
+           <pre v-else-if="b.type === 'code'" class="bb-code mono">{{ b.text }}</pre>
+           <blockquote v-else-if="b.type === 'quote'" class="bb-quote"><EmojiText platform="" :text="b.text" /></blockquote>
+           <p v-else class="text"><EmojiText platform="" :text="b.text" /></p>
+         </template>
+       </div>
+       <div v-else-if="loadingItem" class="lines rv" aria-hidden="true">
+         <span /><span /><span class="short" />
+       </div>
+     </template>
+     <!-- 演出：时间、场馆、票价各一行，下面是详情长图；不显示站点的售卖状态文案 -->
+     <template v-if="show">
+       <h2 v-if="item.title" class="title rv">{{ item.title }}</h2>
+       <ul v-if="show.time || show.venue || show.city || show.prices.length" class="s-rows">
+         <li v-if="show.time">
+           <span class="s-ico"><Calendar :size="16" aria-hidden="true" /></span>
+           <span class="s-col"><small>时间</small><strong>{{ show.time }}</strong></span>
+         </li>
+         <li v-if="show.venue || show.city">
+           <span class="s-ico"><MapPin :size="16" aria-hidden="true" /></span>
+           <span class="s-col">
+             <small>场馆</small>
+             <strong>{{ show.venue ?? show.city }}</strong>
+             <span v-if="show.venue && (show.city || show.address)">{{ [show.city, show.address].filter(Boolean).join(' · ') }}</span>
+           </span>
+         </li>
+         <li v-if="show.prices.length">
+           <span class="s-ico"><Tags :size="16" aria-hidden="true" /></span>
+           <span class="s-col">
+             <small>票价</small>
+             <span class="s-chips"><b v-for="p in show.prices" :key="p" class="mono">¥{{ p }}</b></span>
+           </span>
+         </li>
+       </ul>
+       <div v-else-if="loadingItem" class="lines rv" aria-hidden="true">
+         <span /><span /><span class="short" />
+       </div>
+       <template v-if="showImages.length">
+         <div class="divider" />
+         <p class="count">演出详情</p>
+         <div class="bb">
+           <a v-for="u in showImages" v-show="!badImgs.has(u)" :key="u" class="bb-img" :href="u" target="_blank" rel="noopener noreferrer">
+             <img :src="u" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" @error="badImgs = new Set(badImgs).add(u)" />
+           </a>
+         </div>
+       </template>
+     </template>
+     <h2 v-if="!textOnly && plain && title" class="title rv">{{ title }}</h2>
+     <p v-if="!textOnly && plain && textSegs.length" class="text rv">
        <template v-for="(s, i) in textSegs" :key="i">
   <span v-if="s.tag" class="tag">{{ s.t }}</span>
          <EmojiText v-else :platform="cur?.platform ?? ''" :text="s.t" />
        </template>
      </p>
-     <div v-else-if="!textOnly && loadingItem" class="lines rv" aria-hidden="true">
+     <div v-else-if="!textOnly && plain && loadingItem" class="lines rv" aria-hidden="true">
 <span /><span /><span class="short" />
      </div>
      <p v-if="itemError" class="inline-error rv">详情没有加载完整：{{ itemError.message }}</p>
 
+            <template v-if="plain">
             <div v-if="!textOnly" class="divider rv" />
             <p class="count rv">
        {{ item.stats.comments != null ? `共 ${item.stats.comments.toLocaleString('en-US')} 条评论` : '评论' }}
@@ -726,13 +822,19 @@ onBeforeUnmount(() => {
      <p v-else-if="!comments.length" class="c-empty">还没有评论</p>
      <p v-else-if="!commentMore" class="c-end mono">— 到底了 —</p>
             <div ref="sentinel" class="sentinel" aria-hidden="true" />
+            </template>
      </template>
           </div>
 
-          <footer v-if="!textOnly" class="stats rv">
+          <footer v-if="show" class="stats show rv">
+     <span class="s-price"><template v-if="show.price"><strong class="mono">{{ show.price }}</strong><small>起</small></template></span>
+     <SaleCountdown :at="show.saleAt" :text="show.saleText" />
+   </footer>
+          <footer v-else-if="!textOnly || torrent" class="stats rv" :class="{ torrent: !!torrent }">
      <span v-for="s in stats" :key="s.key" class="stat" :aria-label="`${s.v ?? 0} ${s.label}`">
        <component :is="s.icon" :size="18" aria-hidden="true" />
        <span class="mono">{{ compact(s.v) }}</span>
+       <small v-if="torrent">{{ s.label }}</small>
      </span>
    </footer>
         </section>
@@ -931,6 +1033,154 @@ onBeforeUnmount(() => {
 }
 .tag {
   color: var(--link);
+}
+/* ---------- 种子（M-Team，设计稿 L） ---------- */
+.t-badge {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+.t-badge.free {
+  background: var(--red);
+}
+.t-title {
+  margin-bottom: 6px;
+}
+.t-name {
+  margin: 0 0 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-3);
+  overflow-wrap: anywhere;
+}
+.bb {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.bb-img {
+  display: block;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--hair);
+}
+.bb-img img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.bb-quote {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--red);
+  border-radius: 10px;
+  background: var(--hair);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.bb-code {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--hair) 50%, transparent);
+  color: var(--ink-2);
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: pre;
+  overflow-x: auto;
+}
+.stats.torrent {
+  padding-inline: 40px;
+}
+.stat small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+/* ---------- 演出（猫眼演出，设计稿 N） ---------- */
+.s-rows {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.s-rows li {
+  display: flex;
+  gap: 12px;
+}
+.s-ico {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--hair);
+  color: var(--ink-2);
+}
+.s-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-wrap: anywhere;
+}
+.s-col small {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.s-col strong {
+  font-size: 14px;
+  font-weight: 500;
+}
+.s-col > span {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.s-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.s-chips b {
+  padding: 5px 10px;
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+.stats.show {
+  align-items: center;
+  padding: 12px 22px;
+}
+.s-price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.s-price strong {
+  color: var(--red);
+  font-size: 22px;
+  font-weight: 700;
+}
+.s-price small {
+  font-size: 12px;
+  color: var(--ink-3);
 }
 .lines {
   display: flex;
