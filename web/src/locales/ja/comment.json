@@ -1,0 +1,17 @@
+{
+  "title": "コメント",
+  "count": "コメント {n} 件",
+  "anonymous": "匿名ユーザー",
+  "loading": "コメントを読み込み中",
+  "empty": "コメントはまだありません",
+  "end": "— ここまで —",
+  "verify": "認証する",
+  "viewImage": "{n} 枚目の画像を表示",
+  "replies": {
+    "count": "返信 {n} 件",
+    "failed": "返信を読み込めませんでした",
+    "expand": "返信 {n} 件を表示",
+    "expandMore": "さらに返信を表示",
+    "collapse": "閉じる"
+  }
+}

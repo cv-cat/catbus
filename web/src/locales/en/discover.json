@@ -1,0 +1,94 @@
+{
+  "title": "Discover",
+  "end": "— End of the line —",
+  "toTop": "Back to top",
+  "eyebrow": {
+    "search": "{platform} · Search {item}",
+    "feed": "{platform} · Recommended {item}",
+    "sep": ", ",
+    "aggregate": "Multi · {names}",
+    "aggregateMany": "Multi · {names} ({n} channels)"
+  },
+  "search": {
+    "label": "Search",
+    "searching": "Searching",
+    "placeholder": "Search {item} on {platform}",
+    "placeholderMany": "Search {n} channel | Search {n} channels"
+  },
+  "demo": {
+    "title": "Everything on this page is demo data. No platforms are contacted and no real accounts are used",
+    "long": "Demo only",
+    "short": "Demo"
+  },
+  "filter": {
+    "sort": "Sort",
+    "kind": "Feed type",
+    "time": "Time",
+    "timeChip": "Time · {label}"
+  },
+  "count": {
+    "feed": "{kind} · {n} loaded",
+    "search": "{n} item · {elapsed}s | {n} items · {elapsed}s"
+  },
+  "unsupported": {
+    "kind": "{platform} doesn't have a “{label}” feed yet",
+    "noKinds": "{platform} has no feed types",
+    "sort": "{platform} can't sort by “{label}”",
+    "type": "{platform} can't filter to “{label}”",
+    "time": "{platform} doesn't support “{label}”",
+    "feedOnly": "{platform} only has a feed, no filters",
+    "noFilter": {
+      "sort": "{platform} doesn't support sorting",
+      "type": "{platform} doesn't support filtering by type",
+      "time": "{platform} doesn't support filtering by time"
+    }
+  },
+  "unsupportedAll": {
+    "kind": "None of the selected channels has a “{label}” feed",
+    "sort": "None of the selected channels can sort by “{label}”",
+    "type": "None of the selected channels can filter to “{label}”",
+    "time": "None of the selected channels supports “{label}”",
+    "noFilter": {
+      "sort": "None of the selected channels supports sorting",
+      "type": "None of the selected channels supports filtering by type",
+      "time": "None of the selected channels supports filtering by time",
+      "kind": "None of the selected channels supports feed types"
+    }
+  },
+  "toast": {
+    "accountFailed": "{platform} · {account}: {error}",
+    "laneFailed": "{platform}: {error}"
+  },
+  "card": {
+    "untitled": "(Untitled)",
+    "select": "Select",
+    "seeders": "{n} seeder | {n} seeders",
+    "leechers": "{n} leecher | {n} leechers",
+    "priceFrom": "+",
+    "authorPage": "{name}'s profile",
+    "likes": "{n} like | {n} likes",
+    "collects": "{n} save | {n} saves",
+    "comments": "{n} comment | {n} comments"
+  },
+  "show": {
+    "notOnSale": "Not on sale"
+  },
+  "selection": {
+    "label": "Selection actions",
+    "picked": "{n} selected",
+    "all": "All",
+    "none": "None",
+    "invert": "Invert",
+    "download": "Download selected",
+    "downloadCount": "Download {n} selected item | Download {n} selected items"
+  },
+  "suggest": {
+    "hot": "Trending",
+    "suggest": "Suggestions",
+    "hotLabel": "Trending on {platform}",
+    "label": "Search suggestions",
+    "keyMove": "↑↓ Select",
+    "keyEnter": "Enter Search",
+    "keyEsc": "Esc Close"
+  }
+}

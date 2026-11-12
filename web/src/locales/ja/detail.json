@@ -1,0 +1,110 @@
+{
+  "dialog": "詳細",
+  "closeTip": "閉じる（Esc）",
+  "loadingLabel": "読み込み中",
+  "author": {
+    "unknown": "不明な作者"
+  },
+  "published": {
+    "on": "{date} に投稿",
+    "ago": "{time}に投稿"
+  },
+  "stat": {
+    "seeders": "シード",
+    "leechers": "ダウンロード",
+    "files": "ファイル",
+    "likes": "いいね",
+    "collects": "保存",
+    "comments": "コメント",
+    "shares": "シェア",
+    "aria": "{label} {n}"
+  },
+  "torrent": {
+    "fallback": "トレント",
+    "untitled": "（タイトルなし）"
+  },
+  "show": {
+    "fallback": "公演",
+    "time": "日時",
+    "venue": "会場",
+    "prices": "料金",
+    "images": "公演詳細",
+    "priceFrom": "〜"
+  },
+  "head": {
+    "raw": "元の JSON",
+    "rawBack": "詳細に戻る",
+    "rawOpen": "プラットフォームが返した元の JSON を表示（--raw）",
+    "downloaded": "追加済み",
+    "downloadedTip": "ダウンロードに追加しました。上部のダウンロード一覧で確認できます",
+    "downloadTip": "ローカルにダウンロード",
+    "downloading": "ダウンロード中",
+    "origin": "元のリンク",
+    "openOn": "{platform}で開く",
+    "platform": "プラットフォーム"
+  },
+  "itemError": "詳細を完全に読み込めませんでした：{error}",
+  "nav": {
+    "prev": "前へ",
+    "prevTip": "前へ（W / ↑）",
+    "next": "次へ",
+    "nextTip": "次へ（S / ↓）"
+  },
+  "image": {
+    "prev": "前の画像",
+    "next": "次の画像",
+    "nth": "{n} 枚目"
+  },
+  "media": {
+    "video": "動画",
+    "failed": "この動画はここでは再生できません",
+    "noSource": "再生できる動画の URL を取得できませんでした",
+    "openOrigin": "元のリンクで見る",
+    "unmute": "クリックして音声をオン",
+    "back": "{n} 秒戻る",
+    "backTip": "{n} 秒戻る（A）",
+    "forward": "{n} 秒進む",
+    "forwardTip": "{n} 秒進む。長押しで倍速再生（D）",
+    "seek": "{sign}{n} 秒",
+    "fast": "{rate}× 倍速で再生中",
+    "play": "再生",
+    "pause": "一時停止",
+    "progress": "再生位置",
+    "soundOn": "音声をオン",
+    "mute": "ミュート",
+    "fullscreen": "全画面"
+  },
+  "related": {
+    "title": "関連おすすめ",
+    "prev": "左へ",
+    "next": "右へ",
+    "untitled": "タイトルなし"
+  },
+  "lightbox": {
+    "title": "画像を拡大表示"
+  },
+  "raw": {
+    "title": "元の JSON",
+    "expandAll": "すべて展開",
+    "collapseAll": "すべて折りたたむ",
+    "loading": "プラットフォームの元データを取得中…",
+    "demoNote": "デモデータです。通常モードではプラットフォームの API が返した元のオブジェクトが表示されます"
+  },
+  "json": {
+    "items": "{n} 項目",
+    "fields": "{n} フィールド",
+    "expand": "展開",
+    "collapse": "折りたたむ"
+  },
+  "countdown": {
+    "label": "発売まで {time}",
+    "until": "発売まで · {when}",
+    "onSale": "発売中",
+    "unit": {
+      "day": "日",
+      "hour": "時間",
+      "minute": "分",
+      "second": "秒"
+    }
+  }
+}

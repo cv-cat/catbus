@@ -1,0 +1,34 @@
+{
+  "sort": {
+    "general": "종합",
+    "latest": "최신",
+    "popular": "인기",
+    "comments": "댓글순"
+  },
+  "order": {
+    "general": "기본",
+    "date": "등록일",
+    "size": "크기",
+    "seeders": "시더",
+    "leechers": "리처",
+    "name": "이름"
+  },
+  "type": {
+    "all": "전체",
+    "video": "영상",
+    "image": "이미지"
+  },
+  "kind": {
+    "recommend": "추천",
+    "hot": "인기",
+    "following": "팔로잉"
+  },
+  "time": {
+    "all": "전체",
+    "day": "1일 이내",
+    "week": "1주 이내",
+    "month": "1개월 이내",
+    "half_year": "6개월 이내",
+    "year": "1년 이내"
+  }
+}

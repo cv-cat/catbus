@@ -1,0 +1,54 @@
+{
+  "xhs": {
+    "name": "小紅書",
+    "item": "ノート"
+  },
+  "douyin": {
+    "name": "抖音",
+    "item": "作品"
+  },
+  "bilibili": {
+    "name": "ビリビリ",
+    "item": "動画"
+  },
+  "tiktok": {
+    "name": "TikTok",
+    "item": "動画"
+  },
+  "kuaishou": {
+    "name": "快手",
+    "item": "作品"
+  },
+  "weibo": {
+    "name": "微博",
+    "item": "投稿"
+  },
+  "x": {
+    "name": "X",
+    "item": "ポスト"
+  },
+  "youtube": {
+    "name": "YouTube",
+    "item": "動画"
+  },
+  "xianyu": {
+    "name": "閑魚",
+    "item": "出品"
+  },
+  "taobao": {
+    "name": "タオバオ",
+    "item": "商品"
+  },
+  "jd": {
+    "name": "京東",
+    "item": "商品"
+  },
+  "maoyan": {
+    "name": "猫眼",
+    "item": "公演"
+  },
+  "mteam": {
+    "name": "M-Team",
+    "item": "トレント"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "slogan": "타세요, 어떤 플랫폼으로든",
+  "settings": "설정",
+  "loading": "불러오는 중",
+  "mascot": "catbus 마스코트: 버스 차장",
+  "copy": {
+    "done": "클립보드에 복사했어요",
+    "failed": "복사하지 못했어요. 직접 복사하세요"
+  },
+  "nav": {
+    "label": "채널",
+    "open": "채널 열기",
+    "close": "사이드바 접기",
+    "expand": "사이드바 펼치기",
+    "count": "채널 {n}개",
+    "countSelected": "채널 {total}개 중 {n}개 선택"
+  },
+  "mode": {
+    "label": "통합 모드",
+    "single": "단일",
+    "aggregate": "통합",
+    "singleTip": "단일: 한 번에 채널 하나만 봐요",
+    "aggregateTip": "통합: 여러 채널을 함께 봐요. 아래 채널을 눌러 추가하거나 빼세요"
+  },
+  "health": {
+    "ok": "계정 상태 정상",
+    "okMany": "계정 {n}개 상태 정상",
+    "warn": "계정 {n}개 중 {bad}개 로그인 만료",
+    "bad": "계정 로그인 만료",
+    "badAll": "계정 {n}개 모두 로그인 만료"
+  },
+  "theme": {
+    "toDark": "다크 테마로 전환",
+    "toLight": "라이트 테마로 전환",
+    "dark": "다크",
+    "light": "라이트",
+    "darkSystem": "다크 (시스템 설정 따름)",
+    "lightSystem": "라이트 (시스템 설정 따름)"
+  },
+  "state": {
+    "emptyTitle": "찾은 내용이 없어요",
+    "emptyDesc": "다른 검색어를 쓰거나 다른 채널로 바꿔 보세요.",
+    "verifyDesc": "브라우저에서 보안 인증을 한 번 마친 뒤 다시 시도하면 돼요.",
+    "hint": "제안",
+    "copyHint": "{hint}\n클릭해서 복사",
+    "login": "로그인하기",
+    "verify": "인증하기"
+  }
+}

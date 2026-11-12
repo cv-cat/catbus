@@ -1,0 +1,53 @@
+{
+  "title": "ダウンロード履歴",
+  "close": "ダウンロード履歴を閉じる",
+  "clear": "終了した履歴を消去",
+  "empty": "ダウンロードはまだありません。カードを選んでダウンロードを押してください。",
+  "note": "ファイルはブラウザが保存します。保存先はブラウザのダウンロード一覧で確認してください",
+  "batch": {
+    "title": "{platform} · {n} 件",
+    "progress": "ダウンロード中 {done}/{total}",
+    "delivered": "ブラウザに渡しました",
+    "failed": "{n} 件失敗",
+    "expired": "{n} 件のファイルが期限切れ",
+    "finished": "終了"
+  },
+  "status": {
+    "queued": "待機中",
+    "running": "ダウンロード中…",
+    "runningLabel": "ダウンロード中",
+    "failed": "ダウンロード失敗",
+    "expired": "ファイルの期限が切れました。もう一度ダウンロードしてください",
+    "downloaded": "ダウンロード済み · {n} ファイル",
+    "delivered": "ブラウザに渡しました · {n} ファイル"
+  },
+  "action": {
+    "verify": "認証する",
+    "verifyRetryFailed": "認証して失敗分を再試行",
+    "redownload": "再ダウンロード",
+    "retryFailed": "失敗分を再試行",
+    "redownloadExpired": "期限切れ分を再ダウンロード",
+    "resave": "再保存",
+    "resaveBatch": "このバッチを再保存",
+    "remove": "履歴を削除",
+    "cancelRemove": "キャンセルして履歴を削除",
+    "removeBatch": "このバッチの履歴を削除"
+  },
+  "toast": {
+    "done": "ダウンロードが完了し、ブラウザに保存を依頼しました",
+    "saved": "ブラウザに保存を依頼しました"
+  },
+  "error": {
+    "requestFailed": "リクエストに失敗しました（{status}）",
+    "busy": "ダウンロード中です。完了してから削除してください",
+    "nothing": "保存できるファイルがありません",
+    "saveFailed": "保存に失敗しました（HTTP {status}）"
+  },
+  "demoFile": {
+    "title": "catbus デモダウンロード",
+    "platform": "プラットフォーム：{platform}",
+    "items": "件数：{n} 件",
+    "about": "これはデモモードでページ内に生成した説明ファイルです。catbus には接続していません。",
+    "real": "実際のダウンロードでは、ファイルが 1 つならそのまま、複数なら 1 つの zip にまとめて、ブラウザのダウンロード先に保存されます。"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "title": "다운로드 기록",
+  "close": "다운로드 기록 닫기",
+  "clear": "끝난 기록 지우기",
+  "empty": "아직 다운로드가 없어요. 카드를 선택한 뒤 다운로드를 누르세요.",
+  "note": "파일은 브라우저가 저장해요. 위치는 브라우저의 다운로드 목록에서 확인하세요",
+  "batch": {
+    "title": "{platform} · {n}개",
+    "progress": "다운로드 중 {done}/{total}",
+    "delivered": "브라우저로 전달됨",
+    "failed": "{n}개 실패",
+    "expired": "{n}개 파일 만료됨",
+    "finished": "완료됨"
+  },
+  "status": {
+    "queued": "대기 중",
+    "running": "다운로드 중…",
+    "runningLabel": "다운로드 중",
+    "failed": "다운로드 실패",
+    "expired": "파일이 만료됐어요. 다시 다운로드하세요",
+    "downloaded": "다운로드됨 · 파일 {n}개",
+    "delivered": "브라우저로 전달됨 · 파일 {n}개"
+  },
+  "action": {
+    "verify": "인증하기",
+    "verifyRetryFailed": "인증 후 실패한 항목 다시 시도",
+    "redownload": "다시 다운로드",
+    "retryFailed": "실패한 항목 다시 시도",
+    "redownloadExpired": "만료된 항목 다시 다운로드",
+    "resave": "다시 저장",
+    "resaveBatch": "이 묶음 다시 저장",
+    "remove": "기록 삭제",
+    "cancelRemove": "취소하고 기록 삭제",
+    "removeBatch": "이 묶음 기록 삭제"
+  },
+  "toast": {
+    "done": "다운로드 완료. 브라우저로 전달해 저장했어요",
+    "saved": "브라우저로 전달해 저장했어요"
+  },
+  "error": {
+    "requestFailed": "요청 실패 ({status})",
+    "busy": "다운로드 중이에요. 끝난 뒤 삭제하세요",
+    "nothing": "저장할 파일이 없어요",
+    "saveFailed": "저장 실패 (HTTP {status})"
+  },
+  "demoFile": {
+    "title": "catbus 데모 다운로드",
+    "platform": "플랫폼: {platform}",
+    "items": "항목: {n}개",
+    "about": "데모 모드에서 페이지가 만든 안내 파일이에요. catbus에 연결되지 않았어요.",
+    "real": "실제로 다운로드하면 파일이 하나일 때는 그대로, 여러 개일 때는 zip 하나로 묶어 브라우저가 다운로드 위치에 저장해요."
+  }
+}

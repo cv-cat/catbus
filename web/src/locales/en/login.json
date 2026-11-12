@@ -1,0 +1,101 @@
+{
+  "title": "Log in to {platform}",
+  "storage": "Sessions are stored locally in ~/.catbus and used only by catbus",
+  "methodsLabel": "Login method",
+  "submitting": "Logging in…",
+  "submittingLabel": "Logging in",
+  "method": {
+    "qrcode": "QR code",
+    "sms": "SMS code",
+    "password": "Password"
+  },
+  "api": {
+    "requestFailed": "Request failed ({status})"
+  },
+  "error": {
+    "noMethods": "This channel has no login method that works in the WebUI",
+    "bridgeHint": "Start the WebUI with npm run dev, and run npm run build in the repo root",
+    "failed": "Login failed",
+    "setDefaultFailed": "Couldn't set the default account"
+  },
+  "success": {
+    "title": "Logged in",
+    "who": "{name} · account {account}",
+    "alreadyDefault": "Already the default account",
+    "askDefault": "Make {name} the default account?",
+    "currentDefault": "The current default is {account}",
+    "notNow": "Not now",
+    "setDefault": "Set default"
+  },
+  "demo": {
+    "unsupported": "Login disabled in demo",
+    "hint": "Run {command} without --demo to log in to {platform}"
+  },
+  "qrcode": {
+    "alt": "Login QR code",
+    "reload": "Get new code",
+    "loading": "Getting QR code…",
+    "refresh": "Refresh QR code"
+  },
+  "cookie": {
+    "placeholder": "a1=...; web_session=...  or a cookie JSON array exported from your browser",
+    "help": "Log in to {platform} in your browser, open DevTools → Network, and copy the Cookie header of any request."
+  },
+  "apikey": {
+    "placeholder": "Generate one under Console → Lab on the site"
+  },
+  "voice": {
+    "help": "This account also needs a voice code. A call will be placed to {phone}. Answer it and note the code you hear. Verification stays valid for 10 minutes; after that, start the login again.",
+    "status": {
+      "calling": "Placing call…",
+      "idle": "Not called",
+      "called": "Calling, please answer"
+    },
+    "redialIn": "Redial in {n}s",
+    "redial": "Missed it? Call again",
+    "get": "Get voice code",
+    "code": "Voice code",
+    "codePlaceholder": "Code from the call",
+    "reenter": "Re-enter",
+    "refetchIn": "Retry in {n}s",
+    "refetch": "Get a new voice code",
+    "backToUsers": "Back to accounts",
+    "restart": "Start over",
+    "callFailed": "Couldn't place the voice code call. Please try again later",
+    "getFailed": "Couldn't request a voice code",
+    "enterCode": "Enter the code you heard on the call",
+    "verifyAgain": "One more verification is needed. Get a new voice code",
+    "wrongCode": "Wrong or expired code. Re-enter it, or get a new voice code"
+  },
+  "user": {
+    "noName": "(No nickname)",
+    "id": "ID {id}",
+    "pick": "This phone number has several accounts. Choose one to log in:",
+    "changePhone": "Use another number"
+  },
+  "sms": {
+    "phone": "Phone number",
+    "phonePlaceholder": "11-digit phone number",
+    "resendIn": "{n}s",
+    "resend": "Resend",
+    "send": "Send code",
+    "code": "Code",
+    "codePlaceholder": "Code from the SMS"
+  },
+  "password": {
+    "username": "Username",
+    "password": "Password",
+    "email": "Email (needed for 2FA on a new device)",
+    "optional": "Optional",
+    "emailCode": "Email code",
+    "totp": "Code (TOTP, optional)",
+    "emailSent": "A code was sent to your email. Enter your password again; catbus doesn't store passwords."
+  },
+  "account": {
+    "saveAs": "Save as account {account}",
+    "auto": "Auto",
+    "label": "Account name",
+    "placeholder": "Leave empty to pick by logged-in user",
+    "help": "If empty, the same user refreshes their existing account and a new user gets a new one. If you enter a name, login goes to that account and replaces whoever was there."
+  }
+}

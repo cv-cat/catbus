@@ -1,0 +1,110 @@
+{
+  "dialog": "Details",
+  "closeTip": "Close (Esc)",
+  "loadingLabel": "Loading",
+  "author": {
+    "unknown": "Unknown author"
+  },
+  "published": {
+    "on": "Posted on {date}",
+    "ago": "Posted {time}"
+  },
+  "stat": {
+    "seeders": "Seeders",
+    "leechers": "Leechers",
+    "files": "Files",
+    "likes": "Likes",
+    "collects": "Saves",
+    "comments": "Comments",
+    "shares": "Shares",
+    "aria": "{n} {label}"
+  },
+  "torrent": {
+    "fallback": "Torrent",
+    "untitled": "(Untitled)"
+  },
+  "show": {
+    "fallback": "Show",
+    "time": "Date",
+    "venue": "Venue",
+    "prices": "Prices",
+    "images": "Show details",
+    "priceFrom": "+"
+  },
+  "head": {
+    "raw": "Raw JSON",
+    "rawBack": "Back to details",
+    "rawOpen": "View the raw JSON returned by the platform (--raw)",
+    "downloaded": "Added to downloads",
+    "downloadedTip": "Added to downloads. See the download list in the top bar",
+    "downloadTip": "Download",
+    "downloading": "Downloading",
+    "origin": "Source",
+    "openOn": "Open on {platform}",
+    "platform": "the platform"
+  },
+  "itemError": "Details didn't fully load: {error}",
+  "nav": {
+    "prev": "Previous",
+    "prevTip": "Previous (W / ↑)",
+    "next": "Next",
+    "nextTip": "Next (S / ↓)"
+  },
+  "image": {
+    "prev": "Previous image",
+    "next": "Next image",
+    "nth": "Image {n}"
+  },
+  "media": {
+    "video": "Video",
+    "failed": "This video can't play here",
+    "noSource": "No playable video URL was returned",
+    "openOrigin": "Watch on the original site",
+    "unmute": "Tap to turn on sound",
+    "back": "Back {n} second | Back {n} seconds",
+    "backTip": "Back {n} second (A) | Back {n} seconds (A)",
+    "forward": "Forward {n} second | Forward {n} seconds",
+    "forwardTip": "Forward {n} second, hold to speed up (D) | Forward {n} seconds, hold to speed up (D)",
+    "seek": "{sign}{n}s",
+    "fast": "Playing at {rate}×",
+    "play": "Play",
+    "pause": "Pause",
+    "progress": "Playback progress",
+    "soundOn": "Turn on sound",
+    "mute": "Mute",
+    "fullscreen": "Full screen"
+  },
+  "related": {
+    "title": "Related",
+    "prev": "Scroll left",
+    "next": "Scroll right",
+    "untitled": "Untitled"
+  },
+  "lightbox": {
+    "title": "Image viewer"
+  },
+  "raw": {
+    "title": "Raw JSON",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all",
+    "loading": "Fetching the platform's raw object…",
+    "demoNote": "Demo data: in real mode this shows the raw object returned by the platform API"
+  },
+  "json": {
+    "items": "{n} item | {n} items",
+    "fields": "{n} field | {n} fields",
+    "expand": "Expand",
+    "collapse": "Collapse"
+  },
+  "countdown": {
+    "label": "Sale opens in {time}",
+    "until": "Sale opens · {when}",
+    "onSale": "On sale",
+    "unit": {
+      "day": "d",
+      "hour": "h",
+      "minute": "m",
+      "second": "s"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "action": {
+    "cancel": "キャンセル",
+    "confirm": "OK",
+    "close": "閉じる",
+    "retry": "再試行",
+    "save": "保存",
+    "delete": "削除",
+    "copy": "コピー",
+    "copied": "コピーしました",
+    "back": "戻る",
+    "refresh": "更新",
+    "more": "もっと見る",
+    "open": "開く",
+    "download": "ダウンロード",
+    "login": "ログイン",
+    "relogin": "再ログイン"
+  },
+  "state": {
+    "loading": "読み込み中…",
+    "empty": "コンテンツがありません",
+    "failed": "読み込みに失敗しました",
+    "demo": "デモデータ"
+  },
+  "time": {
+    "justNow": "たった今"
+  },
+  "unit": {
+    "items": "{n} 件"
+  }
+}

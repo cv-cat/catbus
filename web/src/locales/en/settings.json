@@ -1,0 +1,99 @@
+{
+  "general": {
+    "language": {
+      "title": "Language",
+      "desc": "The interface language. Auto matches your browser language, then your time zone, and falls back to English.",
+      "auto": "Auto ({name})"
+    },
+    "start": {
+      "title": "Open on start",
+      "desc": "The platform the WebUI opens to: where you left off, or a fixed platform.",
+      "last": "Last visited"
+    },
+    "sort": {
+      "title": "Default sort",
+      "desc": "Sort order when entering a platform; falls back to “Relevant”."
+    },
+    "type": {
+      "title": "Default type",
+      "desc": "Show only videos, only images, or everything when entering a platform."
+    },
+    "pageSize": {
+      "title": "Items per page",
+      "desc": "How many items each request fetches. More is slower and more likely to trigger platform rate limits."
+    }
+  },
+  "dialog": {
+    "title": "Settings",
+    "close": "Close settings",
+    "tabs": "Settings sections",
+    "tab": {
+      "general": "General",
+      "display": "Display",
+      "experimental": "Experimental"
+    },
+    "hint": "Settings are saved in this browser and don't sync to others.",
+    "reset": "Reset to defaults",
+    "resetConfirm": "Click again to confirm"
+  },
+  "display": {
+    "followSystem": "System",
+    "theme": {
+      "title": "Theme",
+      "desc": "With “System”, follows your system's dark mode in real time.",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "density": {
+      "title": "Card density",
+      "desc": "Column width of the grid: Compact fits more cards, Cozy shows larger covers.",
+      "compact": "Compact",
+      "standard": "Standard",
+      "cozy": "Cozy"
+    },
+    "stats": {
+      "title": "Show engagement",
+      "desc": "Likes, comments and views on cards."
+    },
+    "pixel": {
+      "title": "Background & wave effects",
+      "desc": "Pixel blocks behind the page: they light up near the cursor, and a wave sweeps from top right to bottom left on clicks and while loading."
+    },
+    "motion": {
+      "title": "Reduce motion",
+      "desc": "With “Always”, only simple fades are used regardless of system settings.",
+      "always": "Always"
+    }
+  },
+  "experimental": {
+    "note": "These features are experimental. Their behavior and location may change.",
+    "rawJson": {
+      "title": "Show raw JSON",
+      "desc": "Adds a {'{}'} button to the detail card's title bar that switches to the raw object returned by the platform (--raw), handy for checking fields."
+    },
+    "hoverPreview": {
+      "title": "Video preview on hover",
+      "desc": "Hover over a video card and it lifts, grows to the video's shape and plays muted. If the list has no video URL, details are fetched once."
+    }
+  },
+  "server": {
+    "title": "Server settings",
+    "loading": "Loading",
+    "unavailable": "Unavailable",
+    "hint": "Saved in catbus on this machine and applied to all browsers; the command line uses the proxy too. Downloaded files are saved by the browser, at its download location.",
+    "demo": "Demo mode doesn't connect to catbus, so server settings can't be read or changed.",
+    "loadFailed": "Couldn't read server settings: {error}",
+    "notJson": "The bridge didn't return JSON (HTTP {status})",
+    "requestFailed": "Request failed (HTTP {status})",
+    "saving": "Saving",
+    "proxy": {
+      "title": "Proxy",
+      "desc": "Global proxy catbus uses to reach platforms ({key} in config.toml). Supports http, https, socks4, socks5 and socks5h; leave empty for no proxy.",
+      "saved": "Proxy saved",
+      "cleared": "Proxy cleared",
+      "clear": "Clear",
+      "platforms": "Platform proxies (override the global proxy; read-only, change with {command})",
+      "platformPlaceholder": "<platform>"
+    }
+  }
+}

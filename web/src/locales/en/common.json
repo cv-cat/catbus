@@ -1,0 +1,31 @@
+{
+  "action": {
+    "cancel": "Cancel",
+    "confirm": "OK",
+    "close": "Close",
+    "retry": "Retry",
+    "save": "Save",
+    "delete": "Delete",
+    "copy": "Copy",
+    "copied": "Copied",
+    "back": "Back",
+    "refresh": "Refresh",
+    "more": "More",
+    "open": "Open",
+    "download": "Download",
+    "login": "Log in",
+    "relogin": "Log in again"
+  },
+  "state": {
+    "loading": "Loading…",
+    "empty": "Nothing here yet",
+    "failed": "Couldn't load",
+    "demo": "Demo data"
+  },
+  "time": {
+    "justNow": "just now"
+  },
+  "unit": {
+    "items": "{n} item | {n} items"
+  }
+}

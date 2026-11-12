@@ -506,7 +506,7 @@ const isMteam = computed(() => dialog.platform === 'mteam')
               </svg>
               <span class="demo-qr-badge">{{ t('login.demo.unsupported') }}</span>
             </div>
-            <i18n-t keypath="login.demo.hint" tag="p" class="qr-msg">
+            <i18n-t keypath="login.demo.hint" tag="p" class="qr-msg prose">
               <template #platform>{{ platform?.name }}</template>
               <template #command><code class="mono">catbus web</code></template>
             </i18n-t>
@@ -774,6 +774,11 @@ h2 {
     inset 0 1px 0 #ffffffb3,
     0 6px 18px #f5a52440;
   backdrop-filter: blur(10px) saturate(1.6);
+}
+/* 带插槽的整句（i18n-t）：按普通行内排版，flex 会把文字片段拆成多列 */
+.qr-msg.prose {
+  display: block;
+  line-height: 1.6;
 }
 .qr-msg code {
   padding: 1px 6px;
