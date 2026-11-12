@@ -530,4 +530,24 @@ describe('字段排序：item search / feed list 放行 --order-by 与 --asc', (
     expect(all.mteam!.order).toEqual(['date', 'size', 'seeders', 'leechers', 'name'])
     expect(all.xhs!.order).toBeNull()
   })
+
+  it('/api/filters 给出 item search 的 --time 和已实现的 feed list 的 --kind 取值', async () => {
+    const { platformFilters } = await import('../src/webui/filters.js')
+    const all = await platformFilters()
+    expect(all.xhs!.time).toEqual(['all', 'day', 'week', 'half_year'])
+    expect(all.douyin!.kind).toEqual(['recommend', 'hot', 'following'])
+    // 只声明了 recommend 的平台（猫眼）给出单个取值，页面据此不显示分段
+    expect(all.maoyan!.kind).toEqual(['recommend'])
+    expect(all.mteam!.kind).toBeNull()
+    expect(all.mteam!.time).toBeNull()
+    // feed list 没有实现（只占位）的平台不给
+    expect(all.weibo!.kind).toBeNull()
+  })
+
+  it('bridge 放行 feed list --kind 与 item search --time', () => {
+    expect(validateArgv(['douyin', 'feed', 'list', '--kind', 'hot'])).toEqual(['douyin', 'feed', 'list', '--kind', 'hot'])
+    expect(validateArgv(['xhs', 'item', 'search', '露营', '--time', 'week'])).toEqual(['xhs', 'item', 'search', '--time', 'week', '--', '露营'])
+    expect(() => validateArgv(['douyin', 'feed', 'list', '--time', 'day'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['douyin', 'item', 'search', 'x', '--kind', 'hot'])).toThrow('不允许的选项')
+  })
 })

@@ -1,6 +1,7 @@
 <script setup lang="ts" generic="T extends string">
 import { nextTick, onMounted, ref, watch } from 'vue'
 import { animate, gsap } from '@/composables/motion'
+import { flashTip } from '@/directives/tip'
 
 /** iOS 风格分段控件：选中块用 GSAP 在选项之间滑动 */
 /** disabled 为不能选的原因：按钮置灰、不可点击，鼠标移入 / 聚焦时用 tooltip 显示原因 */
@@ -8,8 +9,9 @@ const props = defineProps<{ options: readonly { value: T; label: string; disable
 const model = defineModel<T>({ required: true })
 /** reselect：点了已经选中的那一项（字段排序用它切换升序 / 降序） */
 const emit = defineEmits<{ reselect: [value: T] }>()
-function pick(o: { value: T; disabled?: string | null }) {
-  if (o.disabled) return
+function pick(o: { value: T; disabled?: string | null }, e?: MouseEvent) {
+  // 置灰项：触屏上点按时弹出原因
+  if (o.disabled) return flashTip(e?.currentTarget ?? null)
   if (model.value === o.value) emit('reselect', o.value)
   else model.value = o.value
 }
@@ -42,7 +44,7 @@ watch(() => props.options, () => nextTick(() => place(true)))
       v-tip="o.disabled"
       :class="{ active: model === o.value, disabled: !!o.disabled }"
       :aria-disabled="o.disabled ? 'true' : undefined"
-      @click="pick(o)"
+      @click="pick(o, $event)"
     >
       {{ o.label }}
     </button>
@@ -96,10 +98,21 @@ button {
     min-height: 34px;
   }
 }
+/* 手机：所有可点区域高 44（容器 44、分段项 36，见设计稿 R3） */
 @media (max-width: 640px) {
+  .seg {
+    height: 44px;
+    border-radius: 22px;
+  }
+  .thumb {
+    border-radius: 18px;
+  }
   button {
-    padding: 6px 12px;
-    font-size: 12.5px;
+    height: 36px;
+    min-height: 0;
+    padding: 0 14px;
+    border-radius: 18px;
+    font-size: 14px;
   }
 }
 </style>

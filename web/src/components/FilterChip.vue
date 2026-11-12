@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { flashTip } from '@/directives/tip'
 /** disabled 为不能选的原因：置灰、不触发 click，鼠标移入 / 聚焦时用 tooltip 显示原因 */
 const props = defineProps<{ active?: boolean; disabled?: string | null }>()
 const emit = defineEmits<{ click: [e: MouseEvent] }>()
@@ -12,7 +13,7 @@ const emit = defineEmits<{ click: [e: MouseEvent] }>()
     :class="[active ? 'active' : 'glass', { disabled: !!disabled }]"
     :aria-pressed="active"
     :aria-disabled="disabled ? 'true' : undefined"
-    @click="!props.disabled && emit('click', $event)"
+    @click="props.disabled ? flashTip($event.currentTarget) : emit('click', $event)"
   >
     <slot />
   </button>
@@ -63,10 +64,13 @@ const emit = defineEmits<{ click: [e: MouseEvent] }>()
     min-height: 40px;
   }
 }
+/* 手机：高 44、圆角 22（设计稿 R3） */
 @media (max-width: 640px) {
   .chip {
-    padding: 7px 13px;
-    font-size: 12.5px;
+    height: 44px;
+    padding: 0 16px;
+    border-radius: 22px;
+    font-size: 14px;
   }
 }
 </style>

@@ -28,8 +28,9 @@ function hash(s: string): number {
   return h >>> 0
 }
 
-export function mockItems(platform: string, keyword: string, page: number, limit = 20): Envelope<Item[]> {
-  const seed = hash(`${platform}:${keyword}`)
+/** `variant`：推荐流的分类或搜索的时间范围（默认值为空串），只用来换一批演示数据 */
+export function mockItems(platform: string, keyword: string, page: number, limit = 20, variant = ''): Envelope<Item[]> {
+  const seed = hash(variant ? `${platform}:${keyword}:${variant}` : `${platform}:${keyword}`)
   const data: Item[] = Array.from({ length: limit }, (_, i) => {
     const n = seed + page * limit + i
     const ratio = [0.75, 1, 1.33, 0.8, 1.25, 0.66][n % 6]!
@@ -199,4 +200,31 @@ export function mockLogout(platform: string, account: string) {
 
 export function mockUse(platform: string, account: string) {
   for (const a of demoAccounts) if (a.platform === platform) a.current = a.account === account
+}
+
+/**
+ * 演示模式的筛选取值表（与 GET /api/filters 同结构，取值照各平台注册表里的声明），
+ * `?demo` 下不请求服务端也能演示分类、时间筛选的置灰。
+ */
+export function mockFilters(): Record<string, { search: boolean; sort: string[] | null; type: string[] | null; time: string[] | null; kind: string[] | null; order: string[] | null }> {
+  const f = (sort: string[] | null, type: string[] | null, time: string[] | null, kind: string[] | null, search = true) =>
+    ({ search, sort, type, time, kind, order: null as string[] | null })
+  const T = ['all', 'video', 'image']
+  const HALF = ['all', 'day', 'week', 'half_year']
+  const RF = ['recommend', 'following']
+  return {
+    xhs: f(['general', 'latest', 'popular', 'comments', 'collects'], T, HALF, RF),
+    douyin: f(['general', 'popular', 'latest'], T, HALF, ['recommend', 'hot', 'following']),
+    bilibili: f(['general', 'views', 'latest', 'collects'], ['video', 'article'], null, ['recommend', 'hot', 'following']),
+    tiktok: f(null, null, null, RF),
+    kuaishou: f(null, null, null, RF),
+    weibo: f(null, null, null, null),
+    x: f(['general', 'latest'], T, null, RF),
+    youtube: f(['general', 'popular'], ['all', 'video'], ['all', 'day', 'week', 'month', 'year'], RF),
+    xianyu: f(null, null, null, null, false),
+    taobao: f(null, null, null, null, false),
+    jd: f(['general', 'sales', 'price_asc', 'price_desc', 'comments'], null, null, null),
+    maoyan: f(null, null, null, ['recommend'], false),
+    mteam: { ...f(null, null, null, null), order: ['date', 'size', 'seeders', 'leechers', 'name'] },
+  }
 }
