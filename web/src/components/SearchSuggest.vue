@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { CornerDownLeft, Flame, LoaderCircle, Search, Sparkles } from 'lucide-vue-next'
 import type { Keyword } from '@/api/types'
 import { platformById } from '@/data/platforms'
@@ -7,6 +8,8 @@ import { gsap, prefersReducedMotion } from '@/composables/motion'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useDiscoverStore } from '@/stores/discover'
 import { useSuggestStore } from '@/stores/suggest'
+import { compact } from '@/composables/format'
+import { currentLocale } from '@/i18n'
 
 /**
  * 搜索框下方的联想 / 热搜面板（设计稿 Q / Q2，AGENTS.md 7.9「搜索联想与热搜」）。
@@ -24,6 +27,7 @@ const props = defineProps<{
   inputId: string
 }>()
 const emit = defineEmits<{ pick: [text: string]; close: [] }>()
+const { t } = useI18n()
 
 const d = useDiscoverStore()
 const s = useSuggestStore()
@@ -185,9 +189,10 @@ function close() {
 /* ---------- 显示 ---------- */
 function heat(n: number | null): string {
   if (n == null || !Number.isFinite(n)) return ''
+  if (currentLocale() !== 'zh-CN') return compact(Math.round(n))
   const f = (v: number) => v.toFixed(1).replace(/\.0$/, '')
-  if (n >= 1e8) return `${f(n / 1e8)}亿`
-  if (n >= 1e4) return `${f(n / 1e4)}万`
+  if (n >= 1e8) return `${f(n / 1e8)}亿` // i18n-ignore
+  if (n >= 1e4) return `${f(n / 1e4)}万` // i18n-ignore
   return String(Math.round(n))
 }
 function split(text: string): [string, string] {
@@ -235,9 +240,9 @@ defineExpose({ onKey, close, visible, activeId, listboxId })
         <div class="head">
           <Flame v-if="mode === 'hot'" :size="14" class="icon" aria-hidden="true" />
           <Sparkles v-else :size="14" class="icon" aria-hidden="true" />
-          <span class="title">{{ mode === 'hot' ? '热搜' : '联想' }}</span>
+          <span class="title">{{ mode === 'hot' ? t('discover.suggest.hot') : t('discover.suggest.suggest') }}</span>
           <span class="grow" />
-          <LoaderCircle v-if="loading" :size="14" class="spin" aria-label="加载中" />
+          <LoaderCircle v-if="loading" :size="14" class="spin" :aria-label="t('layout.loading')" />
           <span v-else-if="mode === 'hot'" class="mono pname">{{ platformName }}</span>
         </div>
 
@@ -252,7 +257,7 @@ defineExpose({ onKey, close, visible, activeId, listboxId })
           ref="rows"
           class="rows"
           role="listbox"
-          :aria-label="mode === 'hot' ? `${platformName}热搜` : '搜索联想'"
+          :aria-label="mode === 'hot' ? t('discover.suggest.hotLabel', { platform: platformName }) : t('discover.suggest.label')"
         >
           <div
             v-for="(k, i) in shown"
@@ -280,7 +285,7 @@ defineExpose({ onKey, close, visible, activeId, listboxId })
         </div>
 
         <div v-if="!bp.phone" class="foot mono" aria-hidden="true">
-          <span>↑↓ 选择</span><span>Enter 搜索</span><span>Esc 关闭</span>
+          <span>{{ t('discover.suggest.keyMove') }}</span><span>{{ t('discover.suggest.keyEnter') }}</span><span>{{ t('discover.suggest.keyEsc') }}</span>
         </div>
       </div>
     </Transition>

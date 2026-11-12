@@ -1,3 +1,4 @@
+import { t } from '@/i18n'
 import type { Account, Envelope } from './types'
 
 export type LoginMethod = 'qrcode' | 'sms' | 'password' | 'cookie' | 'apikey'
@@ -38,7 +39,7 @@ export type LoginStep = 'start' | 'verify' | 'select'
 
 async function json<T>(res: Response): Promise<T> {
   const body = (await res.json()) as T & { ok?: boolean; error?: { message: string } }
-  if (!res.ok) throw new Error(body.error?.message ?? `请求失败（${res.status}）`)
+  if (!res.ok) throw new Error(body.error?.message ?? t('login.api.requestFailed', { status: res.status }))
   return body
 }
 
@@ -61,10 +62,17 @@ export const loginApi = {
   cancel: (id: string) => post(`/api/login/cancel/${id}`, null).catch(() => undefined),
 }
 
-export const METHOD_LABEL: Record<LoginMethod, string> = {
-  qrcode: '扫码',
-  sms: '短信验证码',
-  password: '账号密码',
+/** 登录方式的名字：getter，在模板 / computed 里读才会随语言切换 */
+export const METHOD_LABEL: Readonly<Record<LoginMethod, string>> = {
+  get qrcode() {
+    return t('login.method.qrcode')
+  },
+  get sms() {
+    return t('login.method.sms')
+  },
+  get password() {
+    return t('login.method.password')
+  },
   cookie: 'Cookie',
   apikey: 'API Key',
 }

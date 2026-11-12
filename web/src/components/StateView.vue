@@ -2,13 +2,18 @@
 import { SearchX, ShieldCheck, TriangleAlert, LogIn, Copy } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import type { CatbusError } from '@/api/types'
+import { useI18n } from 'vue-i18n'
 import { animateFrom } from '@/composables/motion'
+import { errorTitle } from '@/i18n/errors'
 
 import { verifyUrlOf } from '@/stores/verify'
 import { copyText } from '@/stores/toast'
 
 const props = defineProps<{ kind: 'empty' | 'error'; error?: CatbusError | null }>()
 defineEmits<{ retry: []; login: []; verify: [url: string] }>()
+const { t } = useI18n()
+/** 非中文界面时标题是按 code 的译文，CLI 的原文放在下面一行（中文界面标题就是原文，这里为 null） */
+const original = computed(() => (props.error?.message && errorTitle(props.error) !== props.error.message ? props.error.message : null))
 /** 平台要求人机验证时的网页验证链接 */
 const verifyUrl = computed(() => verifyUrlOf(props.error))
 
@@ -27,15 +32,16 @@ onMounted(() =>
       <TriangleAlert v-else :size="22" />
     </div>
     <template v-if="kind === 'empty'">
-      <h2>没有找到内容</h2>
-      <p>换个关键词，或者切换到别的渠道试试。</p>
+      <h2>{{ t('layout.state.emptyTitle') }}</h2>
+      <p>{{ t('layout.state.emptyDesc') }}</p>
     </template>
     <template v-else>
-      <h2>{{ error?.message ?? '出错了' }}</h2>
-      <p v-if="verifyUrl">需要在浏览器里完成一次人机验证，验证后重试即可。</p>
+      <h2>{{ errorTitle(error) }}</h2>
+      <p v-if="original">{{ original }}</p>
+      <p v-if="verifyUrl">{{ t('layout.state.verifyDesc') }}</p>
       <div v-else-if="error?.hint" class="hint">
-        <span class="hint-label">建议</span>
-        <button type="button" class="cmd mono" :title="`${error.hint}\n点击复制`" @click="copyText(error.hint)">
+        <span class="hint-label">{{ t('layout.state.hint') }}</span>
+        <button type="button" class="cmd mono" :title="t('layout.state.copyHint', { hint: error.hint })" @click="copyText(error.hint)">
           <span class="cmd-text">{{ error.hint }}</span>
           <Copy :size="13" class="cmd-icon" />
         </button>
@@ -43,12 +49,12 @@ onMounted(() =>
       <p class="code mono">{{ error?.code }}</p>
       <div class="actions">
         <button v-if="error?.code?.startsWith('AUTH')" type="button" class="btn primary" @click="$emit('login')">
-          <LogIn :size="15" />去登录
+          <LogIn :size="15" />{{ t('layout.state.login') }}
         </button>
         <button v-if="verifyUrl" type="button" class="btn primary" @click="$emit('verify', verifyUrl)">
-   <ShieldCheck :size="15" />去验证
+   <ShieldCheck :size="15" />{{ t('layout.state.verify') }}
  </button>
-        <button type="button" class="btn" :class="{ primary: !error?.code?.startsWith('AUTH') && !verifyUrl }" @click="$emit('retry')">重试</button>
+        <button type="button" class="btn" :class="{ primary: !error?.code?.startsWith('AUTH') && !verifyUrl }" @click="$emit('retry')">{{ t('common.action.retry') }}</button>
       </div>
     </template>
   </div>

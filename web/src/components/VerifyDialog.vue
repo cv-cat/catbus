@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Check, Copy, ExternalLink, RotateCw, ShieldCheck, X } from 'lucide-vue-next'
 import { platformById } from '@/data/platforms'
 import { useVerifyStore } from '@/stores/verify'
@@ -9,6 +10,7 @@ import BottomSheet from './BottomSheet.vue'
  * 人机验证引导（AGENTS.md 7.9）：平台风控（RISK_CONTROL）给出验证链接时，
  * 引导用户在登录了同一账号的浏览器里打开、完成验证，再回来重试。WebUI 不代为验证。
  */
+const { t } = useI18n()
 const { verify, close } = useVerifyStore()
 const platform = computed(() => platformById(verify.platform))
 const opened = ref(false)
@@ -26,7 +28,7 @@ async function copy() {
     copied.value = true
     setTimeout(() => (copied.value = false), 1600)
   } catch {
-    window.prompt('复制验证链接：', verify.url)
+    window.prompt(t('verify.copyPrompt'), verify.url)
   }
 }
 function done() {
@@ -56,10 +58,10 @@ watch(
        <img v-if="platform" class="logo" :src="platform.logo" alt="" />
      </span>
      <div class="titles">
-       <h2 id="verify-title">完成{{ platform?.name ?? '' }}人机验证</h2>
-       <p>{{ verify.message || '平台暂时拦下了请求，需要你亲自验证一次' }}</p>
+       <h2 id="verify-title">{{ t('verify.title', { platform: platform?.name ?? '' }) }}</h2>
+       <p>{{ verify.message || t('verify.defaultMessage') }}</p>
             </div>
-     <button class="close" type="button" aria-label="关闭" @click="close"><X :size="18" /></button>
+     <button class="close" type="button" :aria-label="t('common.action.close')" @click="close"><X :size="18" /></button>
    </header>
 
    <ol v-if="verify.url" class="steps">
@@ -69,15 +71,17 @@ watch(
   <template v-else>1</template>
        </span>
        <div class="body">
-  <strong>打开验证页</strong>
-  <p>请用<b>已登录同一个{{ platform?.name }}账号</b>的浏览器打开；没登录的话先在新标签页里登录。</p>
+  <strong>{{ t('verify.open.title') }}</strong>
+  <i18n-t keypath="verify.open.desc" tag="p">
+    <template #account><b>{{ t('verify.open.account', { platform: platform?.name ?? '' }) }}</b></template>
+  </i18n-t>
   <div class="row">
     <button type="button" class="open" @click="openPage">
-      <ExternalLink :size="15" />{{ opened ? '再次打开' : '打开验证页' }}
+      <ExternalLink :size="15" />{{ opened ? t('verify.open.again') : t('verify.open.title') }}
     </button>
            <button type="button" class="ghost" :title="verify.url" @click="copy">
       <Check v-if="copied" :size="14" />
-      <Copy v-else :size="14" />{{ copied ? '已复制' : '复制链接' }}
+      <Copy v-else :size="14" />{{ copied ? t('common.action.copied') : t('verify.open.copyLink') }}
     </button>
          </div>
        </div>
@@ -85,26 +89,26 @@ watch(
      <li>
 <span class="no">2</span>
        <div class="body">
-         <strong>按页面提示完成验证</strong>
-         <p>滑块、点选或短信验证码，看到验证通过即可关掉那个标签页。</p>
+         <strong>{{ t('verify.solve.title') }}</strong>
+         <p>{{ t('verify.solve.desc') }}</p>
        </div>
      </li>
      <li>
        <span class="no">3</span>
        <div class="body">
-  <strong>回到这里重试</strong>
-  <p>验证有时要过几秒才生效；仍然被拦时稍等片刻再试，请求别太密。</p>
+  <strong>{{ t('verify.back.title') }}</strong>
+  <p>{{ t('verify.back.desc') }}</p>
        </div>
      </li>
           </ol>
    <p v-else class="none">
-            {{ platform?.name ?? '平台' }}没有给出验证链接。可以在浏览器里打开{{ platform?.name ?? '平台' }}网页版，按提示完成验证；或者过几分钟再试。
+            {{ t('verify.noLink', { platform: platform?.name ?? t('verify.platformFallback') }) }}
    </p>
 
           <footer class="foot">
-     <button type="button" class="ghost" @click="close">稍后再说</button>
+     <button type="button" class="ghost" @click="close">{{ t('verify.later') }}</button>
      <button v-if="verify.retry" type="button" class="primary" :class="{ ready: opened || !verify.url }" @click="done">
-<RotateCw :size="15" />已完成验证，重试
+<RotateCw :size="15" />{{ t('verify.doneRetry') }}
      </button>
           </footer>
         </div>

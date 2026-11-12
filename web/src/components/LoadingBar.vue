@@ -3,12 +3,15 @@
  * 不确定进度的细进度条：品牌红的一段在轨道上循环滑动。
  * 只负责外观，位置由使用方决定（绝对定位到容器的某条边上）。
  */
+import { useI18n } from 'vue-i18n'
+
 defineProps<{ active: boolean }>()
+const { t } = useI18n()
 </script>
 
 <template>
   <Transition name="loading-bar">
-    <div v-if="active" class="loading-bar" role="progressbar" aria-label="加载中" aria-busy="true">
+    <div v-if="active" class="loading-bar" role="progressbar" :aria-label="t('layout.loading')" aria-busy="true">
       <i class="run" />
     </div>
   </Transition>

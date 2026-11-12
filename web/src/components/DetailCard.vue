@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ArrowDown, ArrowUp, Calendar, Files, MapPin, Tags, Braces, Check, ChevronDown, ChevronUp, Download, ExternalLink, Heart, MessageCircle, Share2, ShieldAlert, Star, X } from 'lucide-vue-next'
 import DetailMedia from './DetailMedia.vue'
 import CommentThread from './CommentThread.vue'
@@ -19,7 +20,8 @@ import { useSettingsStore } from '@/stores/settings'
 import { getItem, isAbort, listComments, imgSrc } from '@/api/client'
 import type { CatbusError, Comment, Item } from '@/api/types'
 import { platformById } from '@/data/platforms'
-import { compact, since, tintOf } from '@/composables/format'
+import { compact, number, since, tintOf } from '@/composables/format'
+import { errorDetail, errorTitle } from '@/i18n/errors'
 import { resetReplyQueue } from '@/composables/replyQueue'
 import { cancelRelated } from '@/composables/useRelated'
 import { gsap, prefersReducedMotion } from '@/composables/motion'
@@ -36,6 +38,7 @@ import { openVerify, useVerifyStore, verifyUrlOf } from '@/stores/verify'
  * 打开：封面从瀑布流卡片的位置放大到媒体区，信息栏随后展开；关闭：缩回原卡片。
  * 只读：不能评论、点赞、收藏，互动数只显示数量。
  */
+const { t } = useI18n()
 const detailStore = useDetailStore()
 const { target } = storeToRefs(detailStore)
 const { close, step, canStep, jump } = detailStore
@@ -541,14 +544,14 @@ watch([sentinel, scroller], ([s, b]) => {
 function verifyComments() {
   const t = cur.value
   if (!t || !commentError.value) return
-  openVerify({ platform: t.platform, url: verifyUrlOf(commentError.value), message: commentError.value.message, retry: loadComments })
+  openVerify({ platform: t.platform, url: verifyUrlOf(commentError.value), message: errorTitle(commentError.value), retry: loadComments })
 }
 
 // ---------- 展示 ----------
 /** 正文：去掉小红书的 `[话题]` 标记，话题高亮 */
 function segments(text: string | null | undefined) {
   if (!text) return []
-  const clean = text.replace(/#([^#\n[]+?)\[话题\]#/g, '#$1 ')
+  const clean = text.replace(/#([^#\n[]+?)\[话题\]#/g, '#$1 ') // i18n-ignore：解析小红书的话题标记
   // 链接整段交给 EmojiText 渲染，链接里的 `#` 不当成话题
   return linkSegments(clean).flatMap((l) =>
     l.href
@@ -572,23 +575,24 @@ const published = computed(() => {
   const iso = item.value?.created_at
   if (!iso) return ''
   const s = since(iso)
-  return s.includes('-') || s.includes('/') ? `发布于 ${s}` : `${s}发布`
+  // 一个月以上 since 给的是日期（同 format.ts 的 since）
+  return Date.now() - Date.parse(iso) >= 43_200 * 60_000 ? t('detail.published.on', { date: s }) : t('detail.published.ago', { time: s })
 })
 const stats = computed(() => {
   const s = item.value?.stats
-  const t = torrent.value
-  if (t) {
+  const tor = torrent.value
+  if (tor) {
     return [
-      { key: 'seeders', label: '做种', icon: ArrowUp, v: t.seeders },
-      { key: 'leechers', label: '下载', icon: ArrowDown, v: t.leechers },
-      { key: 'files', label: '文件', icon: Files, v: t.files },
+      { key: 'seeders', label: t('detail.stat.seeders'), icon: ArrowUp, v: tor.seeders },
+      { key: 'leechers', label: t('detail.stat.leechers'), icon: ArrowDown, v: tor.leechers },
+      { key: 'files', label: t('detail.stat.files'), icon: Files, v: tor.files },
     ]
   }
   return [
-    { key: 'likes', label: '赞', icon: Heart, v: s?.likes },
-    { key: 'collects', label: '收藏', icon: Star, v: s?.collects },
-    { key: 'comments', label: '评论', icon: MessageCircle, v: s?.comments },
-    { key: 'shares', label: '分享', icon: Share2, v: s?.shares },
+    { key: 'likes', label: t('detail.stat.likes'), icon: Heart, v: s?.likes },
+    { key: 'collects', label: t('detail.stat.collects'), icon: Star, v: s?.collects },
+    { key: 'comments', label: t('detail.stat.comments'), icon: MessageCircle, v: s?.comments },
+    { key: 'shares', label: t('detail.stat.shares'), icon: Share2, v: s?.shares },
   ]
 })
 /** 纯文字底板里的时间（本地时间到分）与计数；评论数已在评论区标题里 */
@@ -677,7 +681,7 @@ onBeforeUnmount(() => {
         :style="sheetStyle"
  role="dialog"
         aria-modal="true"
-        :aria-label="title ?? item.text ?? '详情'"
+        :aria-label="title ?? item.text ?? t('detail.dialog')"
       >
         <DetailMedia v-if="!textOnly" ref="media" :item="mediaItem" :platform="cur.platform" :active="active" :loading="loadingItem" :fullscreen="isCompact" />
 
@@ -686,14 +690,14 @@ onBeforeUnmount(() => {
      <div v-if="torrent" class="author nolink">
        <span v-if="torrent.discount" class="t-badge mono" :class="{ free: torrent.free }">{{ torrent.discount }}</span>
        <span class="who">
-         <strong>{{ torrent.size ?? '种子' }}</strong>
+         <strong>{{ torrent.size ?? t('detail.torrent.fallback') }}</strong>
          <small>{{ published || platform?.name }}</small>
        </span>
      </div>
      <div v-else-if="show" class="author nolink">
        <UserAvatar v-if="show.author" class="ava" :user="show.author" :style="{ background: tintOf(show.author.id) }" />
        <span class="who">
-         <strong>{{ show.performers ?? show.category ?? '演出' }}</strong>
+         <strong>{{ show.performers ?? show.category ?? t('detail.show.fallback') }}</strong>
          <small>{{ [show.performers ? show.category : null, show.city].filter(Boolean).join(' · ') || platform?.name }}</small>
        </span>
      </div>
@@ -711,7 +715,7 @@ onBeforeUnmount(() => {
      >
        <UserAvatar class="ava" :user="item.author" :style="{ background: tintOf(item.author?.id) }" />
        <span class="who">
-  <strong>{{ item.author?.name ?? '未知作者' }}</strong>
+  <strong>{{ item.author?.name ?? t('detail.author.unknown') }}</strong>
          <small>{{ authorHandle }}</small>
        </span>
             </a>
@@ -721,8 +725,8 @@ onBeforeUnmount(() => {
        :class="{ on: rawView }"
        type="button"
        :aria-pressed="rawView"
-       aria-label="原始 JSON"
-       :title="rawView ? '回到详情' : '查看平台返回的原始 JSON（--raw）'"
+       :aria-label="t('detail.head.raw')"
+       :title="rawView ? t('detail.head.rawBack') : t('detail.head.rawOpen')"
        @click="toggleRaw"
      >
        <Braces :size="14" />
@@ -730,19 +734,19 @@ onBeforeUnmount(() => {
      <button
        class="origin icon"
        type="button"
-       :aria-label="dl === 'done' ? '已加入下载' : '下载'"
+       :aria-label="dl === 'done' ? t('detail.head.downloaded') : t('common.action.download')"
        :disabled="dl === 'busy'"
-       :title="dl === 'done' ? '已加入下载，可在顶栏的下载列表查看' : '下载到本地'"
+       :title="dl === 'done' ? t('detail.head.downloadedTip') : t('detail.head.downloadTip')"
        @click="download"
      >
-       <CatbusLoader v-if="dl === 'busy'" :size="14" label="下载中" />
+       <CatbusLoader v-if="dl === 'busy'" :size="14" :label="t('detail.head.downloading')" />
        <Check v-else-if="dl === 'done'" :size="14" />
        <Download v-else :size="14" />
      </button>
-     <a class="origin icon" :href="item.url" target="_blank" rel="noopener noreferrer" aria-label="原链接" :title="`在${platform?.name ?? '平台'}打开`">
+     <a class="origin icon" :href="item.url" target="_blank" rel="noopener noreferrer" :aria-label="t('detail.head.origin')" :title="t('detail.head.openOn', { platform: platform?.name ?? t('detail.head.platform') })">
        <ExternalLink :size="14" />
      </a>
-     <button v-if="!isCompact || textOnly" ref="closeBtn" class="close" type="button" aria-label="关闭" title="关闭（Esc）" @click="close"><X :size="18" /></button>
+     <button v-if="!isCompact || textOnly" ref="closeBtn" class="close" type="button" :aria-label="t('common.action.close')" :title="t('detail.closeTip')" @click="close"><X :size="18" /></button>
           </header>
 
    <div ref="body" class="body">
@@ -761,7 +765,7 @@ onBeforeUnmount(() => {
 <div class="face-meta">
   <span class="mono">{{ faceTime }}</span>
          <span class="grow" />
-         <span v-for="s in faceStats" :key="s.key" class="f-stat" :aria-label="`${s.v ?? 0} ${s.label}`">
+         <span v-for="s in faceStats" :key="s.key" class="f-stat" :aria-label="t('detail.stat.aria', { n: s.v ?? 0, label: s.label })">
     <component :is="s.icon" :size="14" aria-hidden="true" />
     <span class="mono">{{ compact(s.v) }}</span>
   </span>
@@ -791,12 +795,12 @@ onBeforeUnmount(() => {
        <ul v-if="show.time || show.venue || show.city || show.prices.length" class="s-rows">
          <li v-if="show.time">
            <span class="s-ico"><Calendar :size="16" aria-hidden="true" /></span>
-           <span class="s-col"><small>时间</small><strong>{{ show.time }}</strong></span>
+           <span class="s-col"><small>{{ t('detail.show.time') }}</small><strong>{{ show.time }}</strong></span>
          </li>
          <li v-if="show.venue || show.city">
            <span class="s-ico"><MapPin :size="16" aria-hidden="true" /></span>
            <span class="s-col">
-             <small>场馆</small>
+             <small>{{ t('detail.show.venue') }}</small>
              <strong>{{ show.venue ?? show.city }}</strong>
              <span v-if="show.venue && (show.city || show.address)">{{ [show.city, show.address].filter(Boolean).join(' · ') }}</span>
            </span>
@@ -804,7 +808,7 @@ onBeforeUnmount(() => {
          <li v-if="show.prices.length">
            <span class="s-ico"><Tags :size="16" aria-hidden="true" /></span>
            <span class="s-col">
-             <small>票价</small>
+             <small>{{ t('detail.show.prices') }}</small>
              <span class="s-chips"><b v-for="p in show.prices" :key="p" class="mono">¥{{ p }}</b></span>
            </span>
          </li>
@@ -814,7 +818,7 @@ onBeforeUnmount(() => {
        </div>
        <template v-if="showImages.length">
          <div class="divider" />
-         <p class="count">演出详情</p>
+         <p class="count">{{ t('detail.show.images') }}</p>
          <div class="bb">
            <a v-for="u in showImages" v-show="!badImgs.has(u)" :key="u" class="bb-img" :href="u" target="_blank" rel="noopener noreferrer">
              <img :src="imgSrc(u)" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" @error="badImgs = new Set(badImgs).add(u)" />
@@ -832,7 +836,7 @@ onBeforeUnmount(() => {
      <div v-else-if="!textOnly && plain && loadingItem" class="lines rv" aria-hidden="true">
 <span /><span /><span class="short" />
      </div>
-     <p v-if="itemError" class="inline-error rv">详情没有加载完整：{{ itemError.message }}</p>
+     <p v-if="itemError" class="inline-error rv" :title="errorDetail(itemError) ?? undefined">{{ t('detail.itemError', { error: errorTitle(itemError) }) }}</p>
 
      <RelatedRail
        v-if="plain"
@@ -848,14 +852,14 @@ onBeforeUnmount(() => {
             <template v-if="plain">
             <div v-if="!textOnly" class="divider rv" />
             <p class="count rv">
-       {{ item.stats.comments != null ? `共 ${item.stats.comments.toLocaleString('en-US')} 条评论` : '评论' }}
+       {{ item.stats.comments != null ? t('comment.count', { n: number(item.stats.comments) }, item.stats.comments) : t('comment.title') }}
      </p>
 
      <ul class="comments">
        <li v-for="c in comments" :key="c.id" class="comment">
          <UserAvatar class="ava sm" :user="c.author" :style="{ background: tintOf(c.author?.id) }" />
          <div class="c-body">
-    <span class="c-name">{{ c.author?.name ?? '匿名用户' }}</span>
+    <span class="c-name">{{ c.author?.name ?? t('comment.anonymous') }}</span>
     <p v-if="c.text" class="c-text"><EmojiText :platform="cur?.platform ?? ''" :text="c.text" /></p>
     <CommentMedia :media="c.media" />
     <div class="c-meta">
@@ -868,28 +872,28 @@ onBeforeUnmount(() => {
        </li>
      </ul>
 
-     <div v-if="loadingComments || (loadingItem && !comments.length)" class="c-skeleton" aria-label="评论加载中">
+     <div v-if="loadingComments || (loadingItem && !comments.length)" class="c-skeleton" :aria-label="t('comment.loading')">
        <div v-for="i in comments.length ? 1 : 3" :key="i" class="sk-row"><span class="sk-ava" /><span class="sk-lines"><span /><span /></span></div>
      </div>
      <div v-else-if="commentError" class="c-error">
        <ShieldAlert :size="16" />
-<span>{{ commentError.message }}</span>
-       <button v-if="verifyUrlOf(commentError)" type="button" @click="verifyComments">去验证</button>
-<button v-else type="button" @click="loadComments">重试</button>
+<span :title="errorDetail(commentError) ?? undefined">{{ errorTitle(commentError) }}</span>
+       <button v-if="verifyUrlOf(commentError)" type="button" @click="verifyComments">{{ t('comment.verify') }}</button>
+<button v-else type="button" @click="loadComments">{{ t('common.action.retry') }}</button>
      </div>
-     <p v-else-if="!comments.length" class="c-empty">还没有评论</p>
-     <p v-else-if="!commentMore" class="c-end mono">— 到底了 —</p>
+     <p v-else-if="!comments.length" class="c-empty">{{ t('comment.empty') }}</p>
+     <p v-else-if="!commentMore" class="c-end mono">{{ t('comment.end') }}</p>
             <div ref="sentinel" class="sentinel" aria-hidden="true" />
             </template>
      </template>
           </div>
 
           <footer v-if="show" class="stats show rv">
-     <span class="s-price"><template v-if="show.price"><strong class="mono">{{ show.price }}</strong><small>起</small></template></span>
+     <span class="s-price"><template v-if="show.price"><strong class="mono">{{ show.price }}</strong><small>{{ t('detail.show.priceFrom') }}</small></template></span>
      <SaleCountdown :at="show.saleAt" :text="show.saleText" />
    </footer>
           <footer v-else-if="!textOnly || torrent" class="stats rv" :class="{ torrent: !!torrent }">
-     <span v-for="s in stats" :key="s.key" class="stat" :aria-label="`${s.v ?? 0} ${s.label}`">
+     <span v-for="s in stats" :key="s.key" class="stat" :aria-label="t('detail.stat.aria', { n: s.v ?? 0, label: s.label })">
        <component :is="s.icon" :size="18" aria-hidden="true" />
        <span class="mono">{{ compact(s.v) }}</span>
        <small v-if="torrent">{{ s.label }}</small>
@@ -899,11 +903,11 @@ onBeforeUnmount(() => {
       </article>
       <!-- 上一条 / 下一条：浮动卡片右侧；全屏时不显示（键盘仍可切换） -->
       <div v-if="!isCompact && cur.nav" class="step" :class="{ shown: navShown }" :style="stepStyle">
-        <button type="button" aria-label="上一条" title="上一条（W / ↑）" :disabled="!hasPrev" @click="go(-1)"><ChevronUp :size="20" /></button>
-        <button type="button" aria-label="下一条" title="下一条（S / ↓）" :disabled="!hasNext" @click="go(1)"><ChevronDown :size="20" /></button>
+        <button type="button" :aria-label="t('detail.nav.prev')" :title="t('detail.nav.prevTip')" :disabled="!hasPrev" @click="go(-1)"><ChevronUp :size="20" /></button>
+        <button type="button" :aria-label="t('detail.nav.next')" :title="t('detail.nav.nextTip')" :disabled="!hasNext" @click="go(1)"><ChevronDown :size="20" /></button>
       </div>
       <!-- 全屏时关闭按钮浮在媒体上（不随面板滚动），深色半透明底在亮暗主题下都看得清 -->
-      <button v-if="isCompact && !textOnly" ref="floatClose" class="float-close" type="button" aria-label="关闭" title="关闭（Esc）" @click="close">
+      <button v-if="isCompact && !textOnly" ref="floatClose" class="float-close" type="button" :aria-label="t('common.action.close')" :title="t('detail.closeTip')" @click="close">
         <X :size="20" />
       </button>
     </div>

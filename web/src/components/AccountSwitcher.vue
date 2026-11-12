@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Check, ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, Layers, Lock, LogIn, Plus, RotateCw, Star, Trash2 } from 'lucide-vue-next'
 import CatbusLoader from '@/components/CatbusLoader.vue'
 import type { Account } from '@/api/types'
@@ -44,6 +45,7 @@ const emit = defineEmits<{
   remove: [platform: string, account: string, done: (ok: boolean) => void]
 }>()
 
+const { t } = useI18n()
 const open = ref(false)
 const expanded = ref(false)
 const root = ref<HTMLElement>()
@@ -188,6 +190,8 @@ const browsing = computed(() => {
   return props.browsingOf(props.focus.id).flatMap((n) => all.filter((a) => a.account === n))
 })
 const first = computed(() => browsing.value[0] ?? null)
+/** 失效账号的总数 */
+const badTotal = (bad: { bad: number }[]) => bad.reduce((s, x) => s + x.bad, 0)
 /** 账号卡的内容：聚合模式汇总选中的渠道，单一模式是当前平台勾选的账号 */
 const card = computed(() => {
   const ps = tabs.value
@@ -199,22 +203,26 @@ const card = computed(() => {
       kind: 'agg' as const,
       logos: ps.slice(0, 3),
       more: Math.max(0, ps.length - 3),
-      name: `${ps.length} 渠道 · ${total} 账号`,
+      name: t('account.card.aggName', { channels: ps.length, n: total }, total),
       sub: bad.length
-        ? `${bad.map((x) => x.p.name).join('、')} 有 ${bad.reduce((s, x) => s + x.bad, 0)} 个账号已失效`
+        ? t('account.card.expired', { platforms: bad.map((x) => x.p.name).join(t('account.sep')), n: badTotal(bad) }, badTotal(bad))
         : per.map((x) => `${x.p.name} ${x.n}`).join(' · '),
       warn: bad.length > 0,
-      label: `${ps.length} 个渠道，共 ${total} 个账号，切换账号`,
+      label: t('account.card.aggLabel', { channels: ps.length, n: total }, total),
     }
   }
   const accs = browsing.value
   return {
     kind: 'acc' as const,
     accs: accs.slice(0, 3),
-    name: !accs.length ? '未登录 · 点击登录' : accs.length > 1 ? `${nick(accs[0]!)} 等 ${accs.length} 个` : nick(accs[0]!),
-    sub: accs.length > 1 ? `${props.focus.name} · ${accs.length} 个账号` : `${props.focus.name} · web`,
+    name: !accs.length
+      ? t('account.card.notLoggedIn')
+      : accs.length > 1
+        ? t('account.card.many', { name: nick(accs[0]!), n: accs.length }, accs.length)
+        : nick(accs[0]!),
+    sub: accs.length > 1 ? t('account.card.manySub', { platform: props.focus.name, n: accs.length }, accs.length) : `${props.focus.name} · web`,
     warn: false,
-    label: accs.length ? `${accs.map(nick).join('、')}，切换账号` : '未登录，点击登录',
+    label: accs.length ? t('account.card.switchLabel', { names: accs.map(nick).join(t('account.sep')) }) : t('account.card.notLoggedInLabel'),
   }
 })
 /** 当前浏览账号的状态点（窄栏用） */
@@ -410,7 +418,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="root" class="switcher" :class="{ rail: rail && !sheet }">
-    <BottomSheet :open="open" desktop="inline" :label="`${platform.name}账号`" :z="55" :close-on-esc="false" @close="close">
+    <BottomSheet :open="open" desktop="inline" :label="t('account.dialogLabel', { platform: platform.name })" :z="55" :close-on-esc="false" @close="close">
     <Teleport to="body" :disabled="!floating">
     <Transition :name="floating ? 'pop-side' : 'pop'">
       <div
@@ -420,10 +428,10 @@ onBeforeUnmount(() => {
         :class="{ glass: !sheet, 'in-sheet': sheet, floating }"
         :style="floating ? floatStyle : undefined"
         :role="sheet ? undefined : 'dialog'"
-        :aria-label="sheet ? undefined : `${platform.name}账号`"
+        :aria-label="sheet ? undefined : t('account.dialogLabel', { platform: platform.name })"
       >
         <div v-if="tabs" class="tabs" :class="{ many }">
-          <button v-if="many" type="button" class="arrow" :disabled="!canLeft" aria-label="上一组渠道" @click="page(-1)">
+          <button v-if="many" type="button" class="arrow" :disabled="!canLeft" :aria-label="t('account.tabs.prev')" @click="page(-1)">
             <ChevronLeft :size="16" />
           </button>
           <div
@@ -431,7 +439,7 @@ onBeforeUnmount(() => {
             class="strip"
             :class="{ 'fade-l': many && canLeft, 'fade-r': many && canRight }"
             role="tablist"
-            aria-label="渠道"
+            :aria-label="t('account.tabs.label')"
             @scroll.passive="onStrip"
             @keydown="onTabKey"
           >
@@ -449,11 +457,11 @@ onBeforeUnmount(() => {
             >
               <img class="tab-logo" :src="p.logo" alt="" />
               <span class="tab-name">{{ p.name }}</span>
-              <span class="tab-count mono" :aria-label="`已选 ${selectedOf(p.id).length} 个账号`">{{ selectedOf(p.id).length }}</span>
-              <span v-if="(health.get(p.id)?.bad ?? 0) > 0" class="tab-warn" role="img" aria-label="有账号已失效" />
+              <span class="tab-count mono" :aria-label="t('account.tabs.selected', { n: selectedOf(p.id).length }, selectedOf(p.id).length)">{{ selectedOf(p.id).length }}</span>
+              <span v-if="(health.get(p.id)?.bad ?? 0) > 0" class="tab-warn" role="img" :aria-label="t('account.tabs.expired')" />
             </button>
           </div>
-          <button v-if="many" type="button" class="arrow" :disabled="!canRight" aria-label="下一组渠道" @click="page(1)">
+          <button v-if="many" type="button" class="arrow" :disabled="!canRight" :aria-label="t('account.tabs.next')" @click="page(1)">
             <ChevronRight :size="16" />
           </button>
         </div>
@@ -461,16 +469,16 @@ onBeforeUnmount(() => {
         <header class="head">
           <div class="title-row">
             <img class="logo" :src="platform.logo" alt="" />
-            <span class="title">{{ platform.name }}账号</span>
-            <span v-if="list.length" class="count" :class="{ on: picked.length }">已选 {{ picked.length }} / {{ list.length }}</span>
+            <span class="title">{{ t('account.dialogLabel', { platform: platform.name }) }}</span>
+            <span v-if="list.length" class="count" :class="{ on: picked.length }">{{ t('account.head.selected', { n: picked.length, total: list.length }, picked.length) }}</span>
           </div>
           <p class="hint">
-            {{ tabs ? '聚合模式 · 每个渠道单独选账号，至少各留一个' : '可多选 · 用所选账号同时加载，结果合并去重' }}
+            {{ tabs ? t('account.head.hintAgg') : t('account.head.hint') }}
           </p>
         </header>
 
         <div class="list">
-          <div ref="rows" class="rows" :class="{ scrollable, faded: scrollable && !atBottom }" role="group" :aria-label="`${platform.name}账号`" @scroll.passive="onScroll">
+          <div ref="rows" class="rows" :class="{ scrollable, faded: scrollable && !atBottom }" role="group" :aria-label="t('account.dialogLabel', { platform: platform.name })" @scroll.passive="onScroll">
             <div
               v-for="a in sorted"
               :key="a.account"
@@ -488,14 +496,14 @@ onBeforeUnmount(() => {
               <template v-if="confirming === a.account">
                 <span class="warn-ico" aria-hidden="true"><Trash2 :size="15" /></span>
                 <div class="text">
-                  <div class="name-row"><span class="nick">删除「{{ nick(a) }}」？</span></div>
-                  <div class="sub">{{ SERVER_LOGOUT.has(platform.id) ? `删除本机登录态，并退出${platform.name}服务端登录` : '只删除本机保存的登录态' }}</div>
+                  <div class="name-row"><span class="nick">{{ t('account.remove.ask', { name: nick(a) }) }}</span></div>
+                  <div class="sub">{{ SERVER_LOGOUT.has(platform.id) ? t('account.remove.serverLogout', { platform: platform.name }) : t('account.remove.localOnly') }}</div>
                 </div>
                 <div class="confirm-acts">
-                  <button type="button" class="act cancel" :disabled="removing === a.account" @click.stop="cancelRemove">取消</button>
+                  <button type="button" class="act cancel" :disabled="removing === a.account" @click.stop="cancelRemove">{{ t('common.action.cancel') }}</button>
                   <button type="button" class="act danger" :disabled="removing === a.account" @click.stop="confirmRemove(a)">
-                    <CatbusLoader v-if="removing === a.account" :size="12" label="删除中" />
-                    {{ removing === a.account ? '删除中…' : '删除' }}
+                    <CatbusLoader v-if="removing === a.account" :size="12" :label="t('account.remove.removingLabel')" />
+                    {{ removing === a.account ? t('account.remove.removing') : t('common.action.delete') }}
                   </button>
                 </div>
               </template>
@@ -510,14 +518,14 @@ onBeforeUnmount(() => {
                 <div class="text">
                   <div class="name-row">
                     <span class="nick">{{ nick(a) }}</span>
-                    <span v-if="a.current" class="badge">默认</span>
+                    <span v-if="a.current" class="badge">{{ t('account.row.default') }}</span>
                   </div>
                   <div class="sub">
-                    {{ isExpired(a) ? '登录已失效 · 不可勾选' : isPicked(a) ? '正在浏览' : `${since(a.updated_at)}登录` }}
+                    {{ isExpired(a) ? t('account.row.expired') : isPicked(a) ? t('account.row.browsing') : t('account.row.loggedInAt', { time: since(a.updated_at) }) }}
                   </div>
                 </div>
                 <button v-if="isExpired(a)" type="button" class="act relogin" @click.stop="relogin(a)">
-                  <RotateCw :size="12" />重新登录
+                  <RotateCw :size="12" />{{ t('common.action.relogin') }}
                 </button>
                 <button
                   v-else-if="!a.current"
@@ -526,26 +534,26 @@ onBeforeUnmount(() => {
                   :disabled="pending === a.account"
                   @click.stop="setDefault(a)"
                 >
-                  <Star :size="12" />设为默认
+                  <Star :size="12" />{{ t('account.row.setDefault') }}
                 </button>
-                <button v-tip="'删除账号'" type="button" class="act icon del" aria-label="删除账号" @click.stop="askRemove(a)">
+                <button v-tip="t('account.remove.tip')" type="button" class="act icon del" :aria-label="t('account.remove.tip')" @click.stop="askRemove(a)">
                   <Trash2 :size="13" />
                 </button>
                 <Transition name="tip">
                   <span v-if="lockTip === a.account" class="lock-tip" role="status">
-                    <Lock :size="12" />至少保留一个账号
+                    <Lock :size="12" />{{ t('account.row.keepOne') }}
                   </span>
                 </Transition>
               </template>
             </div>
-            <p v-if="!list.length" class="empty">还没有{{ platform.name }}账号，在下面添加</p>
+            <p v-if="!list.length" class="empty">{{ t('account.row.empty', { platform: platform.name }) }}</p>
           </div>
           <div v-if="canExpand" class="expand-wrap">
             <button
               type="button"
               class="expand"
               :class="{ up: expanded }"
-              :aria-label="expanded ? '收起' : '展开全部账号'"
+              :aria-label="expanded ? t('account.collapse') : t('account.expandAll')"
               :aria-expanded="expanded"
               @click="toggleExpand"
             >
@@ -556,15 +564,15 @@ onBeforeUnmount(() => {
 
         <Transition :css="false" @enter="mergeEnter" @leave="mergeLeave">
           <p v-if="picked.length > 1" class="merge">
-            <Layers :size="14" />{{ picked.length }} 个账号同时加载 · 重复条目只显示一次
+            <Layers :size="14" />{{ t('account.merge', { n: picked.length }, picked.length) }}
           </p>
         </Transition>
 
         <button type="button" class="add" @click="add">
           <span class="plus" aria-hidden="true"><Plus :size="16" /></span>
           <span class="text">
-            <span class="nick">添加{{ platform.name }}账号</span>
-            <span class="sub">扫码 · 短信 · Cookie 导入</span>
+            <span class="nick">{{ t('account.add.title', { platform: platform.name }) }}</span>
+            <span class="sub">{{ t('account.add.methods') }}</span>
           </span>
         </button>
       </div>
@@ -576,7 +584,7 @@ onBeforeUnmount(() => {
       type="button"
       class="chip"
       :class="{ open }"
-      :title="card.kind === 'agg' || browsing.length ? '切换账号' : '登录'"
+      :title="card.kind === 'agg' || browsing.length ? t('account.card.switch') : t('common.action.login')"
       :aria-label="rail ? card.label : undefined"
       :aria-expanded="open"
       @click="toggle"
@@ -602,7 +610,7 @@ onBeforeUnmount(() => {
       <span class="chip-text">
         <span class="chip-name">{{ card.name }}</span>
         <span class="chip-sub" :class="{ warn: card.warn }">
-          {{ card.sub }}<template v-if="source === 'demo'"> · <em>演示数据</em></template>
+          {{ card.sub }}<template v-if="source === 'demo'"> · <em>{{ t('common.state.demo') }}</em></template>
         </span>
       </span>
       <LogIn v-if="card.kind === 'acc' && !browsing.length" :size="16" class="chev" aria-hidden="true" />

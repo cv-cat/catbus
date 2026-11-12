@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ArrowRight, Search } from 'lucide-vue-next'
 import CatbusLoader from '@/components/CatbusLoader.vue'
 import SearchSuggest from '@/components/SearchSuggest.vue'
@@ -11,6 +12,7 @@ const props = withDefaults(
 )
 const emit = defineEmits<{ submit: [origin: { x: number; y: number }] }>()
 const model = defineModel<string>({ required: true })
+const { t } = useI18n()
 
 const input = ref<HTMLInputElement>()
 const go = ref<HTMLButtonElement>()
@@ -65,14 +67,14 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey, true))
 <template>
   <form ref="form" class="search glass" :class="{ compact }" role="search" @submit.prevent="submit">
     <Search class="lead" :size="compact ? 16 : 18" aria-hidden="true" />
-    <label class="sr-only" :for="inputId">搜索</label>
+    <label class="sr-only" :for="inputId">{{ t('discover.search.label') }}</label>
     <input
       :id="inputId"
       ref="input"
       v-model="model"
       type="search"
       autocomplete="off"
-      :placeholder="placeholder ?? '搜索'"
+      :placeholder="placeholder ?? t('discover.search.label')"
       enterkeyhint="search"
       role="combobox"
       aria-autocomplete="list"
@@ -86,8 +88,8 @@ onBeforeUnmount(() => removeEventListener('keydown', onKey, true))
       @compositionend="composing = false"
     />
     <kbd v-if="!compact" class="mono">{{ isMac ? '⌘' : 'Ctrl' }} K</kbd>
-    <button ref="go" class="go" type="submit" :aria-label="loading ? '搜索中' : '搜索'" :disabled="loading">
-      <CatbusLoader v-if="loading" :size="16" label="搜索中" />
+    <button ref="go" class="go" type="submit" :aria-label="loading ? t('discover.search.searching') : t('discover.search.label')" :disabled="loading">
+      <CatbusLoader v-if="loading" :size="16" :label="t('discover.search.searching')" />
       <ArrowRight v-else :size="16" />
     </button>
     <SearchSuggest

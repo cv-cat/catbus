@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ChevronLeft, ChevronRight, X } from 'lucide-vue-next'
 import { closeLightbox, useLightboxStore } from '@/stores/lightbox'
 import { imgSrc } from '@/api/client'
@@ -9,6 +10,7 @@ import { imgSrc } from '@/api/client'
  * 触屏（AGENTS.md 7.9「响应式」）：左右滑动切换、双指缩放和拖动查看（放大时不切换）、双击放大 / 还原、下滑关闭。
  */
 const lb = useLightboxStore()
+const { t } = useI18n()
 
 function go(step: number) {
   const n = lb.images.length
@@ -208,7 +210,7 @@ function onClick(e: MouseEvent) {
         :style="bgStyle"
         role="dialog"
         aria-modal="true"
-        aria-label="查看大图"
+        :aria-label="t('detail.lightbox.title')"
         @click="onClick"
         @pointerdown="onDown"
         @pointermove="onMove"
@@ -226,10 +228,10 @@ function onClick(e: MouseEvent) {
           referrerpolicy="no-referrer"
           draggable="false"
         />
-        <button class="close" type="button" aria-label="关闭" title="关闭（Esc）" @click="closeLightbox"><X :size="20" /></button>
+        <button class="close" type="button" :aria-label="t('common.action.close')" :title="t('detail.closeTip')" @click="closeLightbox"><X :size="20" /></button>
         <template v-if="lb.images.length > 1">
-          <button class="nav prev" type="button" aria-label="上一张" @click="go(-1)"><ChevronLeft :size="22" /></button>
-          <button class="nav next" type="button" aria-label="下一张" @click="go(1)"><ChevronRight :size="22" /></button>
+          <button class="nav prev" type="button" :aria-label="t('detail.image.prev')" @click="go(-1)"><ChevronLeft :size="22" /></button>
+          <button class="nav next" type="button" :aria-label="t('detail.image.next')" @click="go(1)"><ChevronRight :size="22" /></button>
           <span class="counter mono">{{ lb.index + 1 }} / {{ lb.images.length }}</span>
         </template>
       </div>

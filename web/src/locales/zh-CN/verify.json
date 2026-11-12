@@ -1,0 +1,24 @@
+{
+  "title": "完成{platform}人机验证",
+  "defaultMessage": "平台暂时拦下了请求，需要你亲自验证一次",
+  "copyPrompt": "复制验证链接：",
+  "platformFallback": "平台",
+  "open": {
+    "title": "打开验证页",
+    "desc": "请用{account}的浏览器打开；没登录的话先在新标签页里登录。",
+    "account": "已登录同一个{platform}账号",
+    "again": "再次打开",
+    "copyLink": "复制链接"
+  },
+  "solve": {
+    "title": "按页面提示完成验证",
+    "desc": "滑块、点选或短信验证码，看到验证通过即可关掉那个标签页。"
+  },
+  "back": {
+    "title": "回到这里重试",
+    "desc": "验证有时要过几秒才生效；仍然被拦时稍等片刻再试，请求别太密。"
+  },
+  "noLink": "{platform}没有给出验证链接。可以在浏览器里打开{platform}网页版，按提示完成验证；或者过几分钟再试。",
+  "later": "稍后再说",
+  "doneRetry": "已完成验证，重试"
+}

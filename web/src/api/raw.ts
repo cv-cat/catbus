@@ -1,6 +1,7 @@
 import type { Envelope, Item } from './types'
 import { isDemo } from '@/stores/source'
 import { call } from './client'
+import { t } from '@/i18n'
 
 /**
  * 原始 JSON（AGENTS.md 7.9「设置」→ 实验性）：`catbus <p> item get --raw -- <item>`，
@@ -20,7 +21,7 @@ export async function getRawItem(platform: string, item: Item, account?: string 
 /** 演示模式：把演示条目包成一个「像平台原始对象」的结构，字段名是平台风格的 */
 function demoRaw(platform: string, item: Item): unknown {
   return {
-    _demo: '演示数据：真实模式下这里是平台接口返回的原始对象',
+    _demo: t('detail.raw.demoNote'),
     platform,
     note_id: item.id,
     type: item.kind === 'video' ? 'video' : 'normal',

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ChevronRight } from 'lucide-vue-next'
 
 /**
@@ -9,6 +10,7 @@ import { ChevronRight } from 'lucide-vue-next'
 defineOptions({ name: 'JsonNode' })
 const props = defineProps<{ name?: string | number; value: unknown; depth: number; expandTo: number; version: number; last?: boolean }>()
 
+const { t } = useI18n()
 const isArr = computed(() => Array.isArray(props.value))
 const isObj = computed(() => props.value !== null && typeof props.value === 'object')
 const entries = computed<[string | number, unknown][]>(() =>
@@ -20,7 +22,10 @@ watch(
   () => (open.value = props.depth < props.expandTo),
 )
 const brackets = computed(() => (isArr.value ? ['[', ']'] : ['{', '}']))
-const summary = computed(() => (isArr.value ? `${entries.value.length} 项` : `${entries.value.length} 个字段`))
+const summary = computed(() => {
+  const n = entries.value.length
+  return isArr.value ? t('detail.json.items', { n }, n) : t('detail.json.fields', { n }, n)
+})
 const leaf = computed(() => {
   const v = props.value
   if (v === null) return { cls: 'null', text: 'null' }
@@ -35,7 +40,7 @@ const keyText = computed(() => (props.name === undefined ? null : typeof props.n
 <template>
   <div class="node" :style="{ '--d': depth }">
     <div class="line">
-      <button v-if="isObj && entries.length" class="tog" type="button" :aria-expanded="open" :aria-label="open ? '折叠' : '展开'" @click="open = !open">
+      <button v-if="isObj && entries.length" class="tog" type="button" :aria-expanded="open" :aria-label="open ? t('detail.json.collapse') : t('detail.json.expand')" @click="open = !open">
         <ChevronRight :size="12" :class="{ rot: open }" aria-hidden="true" />
       </button>
       <span v-else class="tog-space" aria-hidden="true" />

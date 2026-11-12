@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Braces, ChevronsDownUp, ChevronsUpDown, Copy, RotateCw } from 'lucide-vue-next'
 import JsonNode from './JsonNode.vue'
 import CatbusLoader from './CatbusLoader.vue'
 import { copyText } from '@/stores/toast'
 import type { CatbusError } from '@/api/types'
+import { errorDetail, errorTitle } from '@/i18n/errors'
 
 /**
  * 详情卡片里的原始 JSON 视图（设置「实验性」→ 显示原始 JSON）：`item get --raw` 的 data。
@@ -12,6 +14,7 @@ import type { CatbusError } from '@/api/types'
  */
 const props = defineProps<{ value: unknown; loading: boolean; error: CatbusError | null }>()
 const emit = defineEmits<{ retry: [] }>()
+const { t } = useI18n()
 
 /** 默认展开两层；全部展开 / 全部折叠时改 version 让每个节点重设 */
 const expandTo = ref(2)
@@ -32,20 +35,20 @@ const size = computed(() => {
 </script>
 
 <template>
-  <section class="raw" aria-label="原始 JSON">
+  <section class="raw" :aria-label="t('detail.raw.title')">
     <div class="bar">
-      <span class="label"><Braces :size="14" aria-hidden="true" />原始 JSON<small v-if="!loading && !error && value !== undefined" class="mono">{{ size }}</small></span>
+      <span class="label"><Braces :size="14" aria-hidden="true" />{{ t('detail.raw.title') }}<small v-if="!loading && !error && value !== undefined" class="mono">{{ size }}</small></span>
       <span class="grow" />
       <template v-if="!loading && !error && value !== undefined">
-        <button type="button" title="全部展开" aria-label="全部展开" @click="expandAll"><ChevronsUpDown :size="14" /></button>
-        <button type="button" title="全部折叠" aria-label="全部折叠" @click="collapseAll"><ChevronsDownUp :size="14" /></button>
-        <button type="button" class="copy" @click="copyText(text)"><Copy :size="13" aria-hidden="true" />复制</button>
+        <button type="button" :title="t('detail.raw.expandAll')" :aria-label="t('detail.raw.expandAll')" @click="expandAll"><ChevronsUpDown :size="14" /></button>
+        <button type="button" :title="t('detail.raw.collapseAll')" :aria-label="t('detail.raw.collapseAll')" @click="collapseAll"><ChevronsDownUp :size="14" /></button>
+        <button type="button" class="copy" @click="copyText(text)"><Copy :size="13" aria-hidden="true" />{{ t('common.action.copy') }}</button>
       </template>
     </div>
-    <div v-if="loading" class="state"><CatbusLoader :size="18" label="加载中" /><span>正在取平台的原始对象…</span></div>
+    <div v-if="loading" class="state"><CatbusLoader :size="18" :label="t('detail.loadingLabel')" /><span>{{ t('detail.raw.loading') }}</span></div>
     <div v-else-if="error" class="state err">
-      <span>{{ error.message }}</span>
-      <button type="button" class="copy" @click="emit('retry')"><RotateCw :size="13" aria-hidden="true" />重试</button>
+      <span :title="errorDetail(error) ?? undefined">{{ errorTitle(error) }}</span>
+      <button type="button" class="copy" @click="emit('retry')"><RotateCw :size="13" aria-hidden="true" />{{ t('common.action.retry') }}</button>
     </div>
     <div v-else class="tree">
       <JsonNode :value="value" :depth="0" :expand-to="expandTo" :version="version" last />

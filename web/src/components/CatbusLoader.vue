@@ -6,8 +6,10 @@
  * 小尺寸（< 20px）不画眼睛，只保留剪影，避免糊成一团。
  */
 import { computed, useId } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-const props = withDefaults(defineProps<{ size?: number; label?: string }>(), { size: 16, label: '加载中' })
+const props = withDefaults(defineProps<{ size?: number; label?: string }>(), { size: 16, label: undefined })
+const { t } = useI18n()
 
 const uid = useId()
 const clipId = `cbl-clip-${uid}`
@@ -17,7 +19,7 @@ const box = computed(() => ({ width: `${props.size}px`, height: `${props.size}px
 </script>
 
 <template>
-  <span class="catbus-loader" role="status" :aria-label="label" :style="box">
+  <span class="catbus-loader" role="status" :aria-label="label ?? t('layout.loading')" :style="box">
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
       <defs>
         <!-- 包口以下看不见 -->

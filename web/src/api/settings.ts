@@ -1,4 +1,6 @@
 import type { CatbusError } from './types'
+import { BridgeError } from './client'
+import { t } from '@/i18n'
 
 /** 服务端设置（AGENTS.md 7.9）：bridge 的 GET / PUT /api/settings，只认 proxy */
 export interface ServerSettings {
@@ -9,14 +11,16 @@ export type SettingsPatch = { proxy: string | null }
 
 type Reply = { ok: true; data: ServerSettings } | { ok: false; error: CatbusError }
 
+const bridge = (message: string) => new BridgeError({ code: 'BRIDGE', message, hint: null, detail: null })
+
 async function parse(res: Response): Promise<ServerSettings> {
   let body: Reply
   try {
     body = (await res.json()) as Reply
   } catch {
-    throw new Error(`bridge 没有返回 JSON（HTTP ${res.status}）`)
+    throw bridge(t('settings.server.notJson', { status: res.status }))
   }
-  if (!body.ok) throw new Error(body.error?.message ?? `请求失败（HTTP ${res.status}）`)
+  if (!body.ok) throw body.error ? new BridgeError(body.error) : bridge(t('settings.server.requestFailed', { status: res.status }))
   return body.data
 }
 

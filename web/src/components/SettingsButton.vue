@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { Settings } from 'lucide-vue-next'
 import { useSettingsStore } from '@/stores/settings'
 import { gsap, prefersReducedMotion, wave } from '@/composables/motion'
 
 const store = useSettingsStore()
+const { t } = useI18n()
 const { open } = storeToRefs(store)
 const icon = ref<HTMLElement>()
 /** 累计转角：每次悬停在上次停下的位置继续转，不回弹 */
@@ -32,8 +34,8 @@ function onClick() {
   <button
     class="settings"
     type="button"
-    aria-label="设置"
-    title="设置"
+    :aria-label="t('layout.settings')"
+    :title="t('layout.settings')"
     aria-haspopup="dialog"
     :aria-expanded="open"
     @mouseenter="spin"

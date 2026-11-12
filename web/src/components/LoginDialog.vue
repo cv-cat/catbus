@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ArrowLeft, Check, ChevronRight, LoaderCircle, PhoneCall, PhoneOutgoing, RefreshCw, UserRound, X } from 'lucide-vue-next'
 import CatbusLoader from '@/components/CatbusLoader.vue'
 import SegmentedControl from './SegmentedControl.vue'
@@ -10,9 +11,11 @@ import { platformById } from '@/data/platforms'
 import { useLoginStore } from '@/stores/login'
 import { gsap, prefersReducedMotion } from '@/composables/motion'
 import { useSourceStore } from '@/stores/source'
+import { errorDetail, errorTitle } from '@/i18n/errors'
 
 /** 登录弹窗：登录方式来自 catbus 注册表（AGENTS.md 7.9），凭证经 bridge 交给 catbus 落盘 */
 const emit = defineEmits<{ success: [account: Account] }>()
+const { t } = useI18n()
 const { dialog, close } = useLoginStore()
 const src = useSourceStore()
 
@@ -120,13 +123,13 @@ async function load() {
   try {
     info.value = await loginApi.methods(dialog.platform)
     if (!info.value.methods.length) {
-      error.value = { code: 'UNSUPPORTED', message: '这个渠道没有可以在 WebUI 里完成的登录方式', hint: `catbus ${dialog.platform} auth login`, detail: null }
+      error.value = { code: 'UNSUPPORTED', message: t('login.error.noMethods'), hint: `catbus ${dialog.platform} auth login`, detail: null }
       return
     }
     method.value = info.value.default ?? info.value.methods[0]!
     if (method.value === 'qrcode') void startQr()
   } catch (e) {
-    error.value = { code: 'BRIDGE', message: (e as Error).message, hint: '用 npm run dev 启动 WebUI，并在仓库根目录 npm run build', detail: null }
+    error.value = { code: 'BRIDGE', message: (e as Error).message, hint: t('login.error.bridgeHint'), detail: null }
   }
 }
 
@@ -266,7 +269,8 @@ function startCallCooldown() {
   }, 1000)
 }
 
-const errorDetail = (e: CatbusError | undefined | null) => (e?.message ? e.message : null)
+/** 风控时把 CLI 的原文放进详情 */
+const rawMessage = (e: CatbusError | undefined | null) => (e?.message ? e.message : null)
 
 /** 发起 / 重发语音验证码电话：再执行一次选号步（--user <id>，不带 --code） */
 async function callVoice() {
@@ -293,8 +297,10 @@ async function callVoice() {
     if (env.ok && env.data) return handle(env as Envelope<Account>) // 不需要验证码，直接登录成功
     voiceError.value =
       env.error?.code === 'RISK_CONTROL'
-        ? { message: '语音验证码电话发起失败，请稍后再试', detail: errorDetail(env.error), retry: false }
-        : { message: env.error?.message ?? '发起语音验证码失败', detail: env.error?.hint ?? null, retry: false }
+        ? { message: t('login.voice.callFailed'), detail: rawMessage(env.error), retry: false }
+        : env.error
+          ? { message: errorTitle(env.error), detail: errorDetail(env.error), retry: false }
+          : { message: t('login.voice.getFailed'), detail: null, retry: false }
   } catch (e) {
     voiceError.value = { message: (e as Error).message, detail: null, retry: false }
   } finally {
@@ -308,7 +314,7 @@ async function submitVoice() {
   const code = voiceCode.value.trim()
   if (!v || verifying.value || calling.value) return
   if (!/^[A-Za-z0-9]{3,12}$/.test(code)) {
-    voiceError.value = { message: '请输入电话里听到的验证码', detail: null, retry: false }
+    voiceError.value = { message: t('login.voice.enterCode'), detail: null, retry: false }
     await focusVoiceCode()
     return
   }
@@ -331,13 +337,15 @@ async function submitVoice() {
         resetVoice()
         return
       }
-      voiceError.value = { message: '还需要再验证一次，请重新获取语音验证码', detail: null, retry: true }
+      voiceError.value = { message: t('login.voice.verifyAgain'), detail: null, retry: true }
       return
     }
     voiceError.value =
       env.error?.code === 'RISK_CONTROL'
-        ? { message: '验证码错误或已过期：可以重新输入，或重新获取语音验证码', detail: errorDetail(env.error), retry: true }
-        : { message: env.error?.message ?? '登录失败', detail: env.error?.hint ?? null, retry: false }
+        ? { message: t('login.voice.wrongCode'), detail: rawMessage(env.error), retry: true }
+        : env.error
+          ? { message: errorTitle(env.error), detail: errorDetail(env.error), retry: false }
+          : { message: t('login.error.failed'), detail: null, retry: false }
     await nextTick()
     panel.value?.querySelector<HTMLInputElement>('input[name="voiceCode"]')?.select()
   } catch (e) {
@@ -354,9 +362,9 @@ function backToUsers() {
 }
 
 const voiceStatus = computed(() => {
-  if (calling.value) return '正在发起电话…'
-  if (!voice.value?.called) return '未拨打'
-  return '已拨打，请接听电话'
+  if (calling.value) return t('login.voice.status.calling')
+  if (!voice.value?.called) return t('login.voice.status.idle')
+  return t('login.voice.status.called')
 })
 
 /** 放弃选号，从头输手机号 */
@@ -389,7 +397,7 @@ function handle(env: Envelope<Account> | null) {
     setTimeout(() => dialog.open && success.value && !askDefault.value && close(), 1600)
     return
   }
-  error.value = env?.error ?? { code: 'ERROR', message: '登录失败', hint: null, detail: null }
+  error.value = env?.error ?? { code: 'ERROR', message: t('login.error.failed'), hint: null, detail: null }
 }
 
 async function setDefault() {
@@ -399,7 +407,7 @@ async function setDefault() {
   try {
     const { envelope } = await loginApi.use(dialog.platform, success.value.account)
     if (!envelope.ok || !envelope.data) {
-      error.value = envelope.error ?? { code: 'ERROR', message: '设置默认账号失败', hint: null, detail: null }
+      error.value = envelope.error ?? { code: 'ERROR', message: t('login.error.setDefaultFailed'), hint: null, detail: null }
       return
     }
     success.value = envelope.data
@@ -444,44 +452,51 @@ const isMteam = computed(() => dialog.platform === 'mteam')
 </script>
 
 <template>
-  <BottomSheet :open="dialog.open" :label="`登录${platform?.name ?? ''}`" width="420px" :z="50" @close="close">
+  <BottomSheet :open="dialog.open" :label="t('login.title', { platform: platform?.name ?? '' })" width="420px" :z="50" @close="close">
       <div ref="panel" class="panel">
         <header class="head">
           <img v-if="platform" class="logo" :src="platform.logo" alt="" />
           <div class="titles">
-            <h2>登录{{ platform?.name }}</h2>
-            <p>登录态保存在本机 ~/.catbus，只用于 catbus</p>
+            <h2>{{ t('login.title', { platform: platform?.name ?? '' }) }}</h2>
+            <p>{{ t('login.storage') }}</p>
           </div>
-          <button class="close" type="button" aria-label="关闭" @click="close"><X :size="18" /></button>
+          <button class="close" type="button" :aria-label="t('common.action.close')" @click="close"><X :size="18" /></button>
         </header>
 
         <div v-if="success" class="success">
           <span ref="successIcon" class="ok-icon"><Check :size="26" /></span>
-          <h3>登录成功</h3>
-          <p>{{ success.user?.name ?? success.user?.id }} · 账号 <span class="mono">{{ success.account }}</span></p>
-          <p v-if="success.current && !askDefault" class="sub">已是默认账号</p>
+          <h3>{{ t('login.success.title') }}</h3>
+          <i18n-t keypath="login.success.who" tag="p">
+            <template #name>{{ success.user?.name ?? success.user?.id }}</template>
+            <template #account><span class="mono">{{ success.account }}</span></template>
+          </i18n-t>
+          <p v-if="success.current && !askDefault" class="sub">{{ t('login.success.alreadyDefault') }}</p>
           <div v-if="askDefault" class="ask" role="alertdialog" aria-labelledby="ask-default-title">
             <p id="ask-default-title">
-              要把 <strong>{{ success.user?.name ?? success.account }}</strong> 设为默认账号吗？
-              <span v-if="previous" class="sub">当前默认账号是 <span class="mono">{{ previous }}</span></span>
+              <i18n-t keypath="login.success.askDefault">
+                <template #name><strong>{{ success.user?.name ?? success.account }}</strong></template>
+              </i18n-t>
+              <i18n-t v-if="previous" keypath="login.success.currentDefault" tag="span" class="sub">
+                <template #account><span class="mono">{{ previous }}</span></template>
+              </i18n-t>
             </p>
             <div class="ask-actions">
-              <button type="button" class="ghost" :disabled="busy" @click="close">暂不</button>
+              <button type="button" class="ghost" :disabled="busy" @click="close">{{ t('login.success.notNow') }}</button>
               <button type="button" class="primary" :disabled="busy" @click="setDefault">
-                <LoaderCircle v-if="busy" class="spin" :size="16" />设为默认
+                <LoaderCircle v-if="busy" class="spin" :size="16" />{{ t('login.success.setDefault') }}
               </button>
             </div>
           </div>
           <div v-if="error" class="error" role="alert">
-            <strong>{{ error.message }}</strong>
-            <code v-if="error.hint" class="mono">{{ error.hint }}</code>
+            <strong>{{ errorTitle(error) }}</strong>
+            <code v-if="errorDetail(error)" class="mono">{{ errorDetail(error) }}</code>
           </div>
         </div>
 
         <template v-else>
           <!-- 演示站：二维码占位，不支持登录 -->
           <div v-if="demo" class="qr-wrap">
-            <div class="qr demo-qr" role="img" aria-label="演示站不支持登录">
+            <div class="qr demo-qr" role="img" :aria-label="t('login.demo.unsupported')">
               <svg :viewBox="`-2 -2 ${QR_N + 4} ${QR_N + 4}`" aria-hidden="true">
                 <path :d="qrPlaceholder" />
                 <g v-for="[fx, fy] in QR_FINDERS" :key="`${fx}-${fy}`">
@@ -489,30 +504,33 @@ const isMteam = computed(() => dialog.platform === 'mteam')
                   <rect :x="fx + 2" :y="fy + 2" width="3" height="3" />
                 </g>
               </svg>
-              <span class="demo-qr-badge">演示站不支持登录</span>
+              <span class="demo-qr-badge">{{ t('login.demo.unsupported') }}</span>
             </div>
-            <p class="qr-msg">要登录{{ platform?.name }}，请用 <code class="mono">catbus web</code>（不带 --demo）启动</p>
+            <i18n-t keypath="login.demo.hint" tag="p" class="qr-msg">
+              <template #platform>{{ platform?.name }}</template>
+              <template #command><code class="mono">catbus web</code></template>
+            </i18n-t>
           </div>
 
           <div v-else-if="!info && !error" class="loading"><LoaderCircle class="spin" :size="20" /></div>
 
           <template v-if="!demo && info && info.methods.length">
-            <SegmentedControl v-if="methodOptions.length > 1" v-model="method" :options="methodOptions" label="登录方式" class="methods" />
+            <SegmentedControl v-if="methodOptions.length > 1" v-model="method" :options="methodOptions" :label="t('login.methodsLabel')" class="methods" />
 
             <!-- 扫码 -->
             <div v-if="method === 'qrcode'" class="qr-wrap">
               <div class="qr" :class="{ ready: qr?.qrcode }">
-                <img v-if="qr?.qrcode" :src="qr.qrcode" alt="登录二维码" />
+                <img v-if="qr?.qrcode" :src="qr.qrcode" :alt="t('login.qrcode.alt')" />
                 <LoaderCircle v-else-if="!error" class="spin" :size="22" />
-                <button v-else type="button" class="refresh" @click="startQr"><RefreshCw :size="18" />重新获取</button>
+                <button v-else type="button" class="refresh" @click="startQr"><RefreshCw :size="18" />{{ t('login.qrcode.reload') }}</button>
               </div>
               <p class="qr-msg">
                 <template v-if="!error">
                   <CatbusLoader v-if="!qr?.qrcode" :size="14" />
-                  <span>{{ qr?.message ?? '正在获取二维码…' }}</span>
+                  <span>{{ qr?.message ?? t('login.qrcode.loading') }}</span>
                 </template>
               </p>
-              <button v-if="qr?.qrcode" type="button" class="link" @click="startQr"><RefreshCw :size="13" />刷新二维码</button>
+              <button v-if="qr?.qrcode" type="button" class="link" @click="startQr"><RefreshCw :size="13" />{{ t('login.qrcode.refresh') }}</button>
             </div>
 
             <!-- 表单方式 -->
@@ -520,15 +538,15 @@ const isMteam = computed(() => dialog.platform === 'mteam')
               <template v-if="method === 'cookie'">
                 <label>
                   <span>Cookie</span>
-                  <textarea v-model="form.cookie" name="cookie" rows="5" spellcheck="false" autocomplete="off" placeholder="a1=...; web_session=...  或浏览器导出的 cookie JSON 数组" />
+                  <textarea v-model="form.cookie" name="cookie" rows="5" spellcheck="false" autocomplete="off" :placeholder="t('login.cookie.placeholder')" />
                 </label>
-                <p class="help">在浏览器里登录{{ platform?.name }}，打开开发者工具 → 网络，复制任一请求的 Cookie 请求头。</p>
+                <p class="help">{{ t('login.cookie.help', { platform: platform?.name ?? '' }) }}</p>
               </template>
 
               <template v-else-if="method === 'apikey'">
                 <label>
                   <span>API Key</span>
-                  <input v-model="form.apiKey" name="apiKey" type="password" autocomplete="off" placeholder="在站点「控制台 → 实验室」生成" />
+                  <input v-model="form.apiKey" name="apiKey" type="password" autocomplete="off" :placeholder="t('login.apikey.placeholder')" />
                 </label>
               </template>
 
@@ -539,15 +557,13 @@ const isMteam = computed(() => dialog.platform === 'mteam')
                     <img v-if="voice.user.avatar && !brokenAvatar.has(voice.user.id)" class="avatar" :src="voice.user.avatar" alt="" referrerpolicy="no-referrer" @error="brokenAvatar.add(voice.user.id)" />
                     <span v-else class="avatar placeholder"><UserRound :size="18" /></span>
                     <span class="user-text">
-                      <span class="user-name">{{ voice.user.name || '（无昵称）' }}</span>
-                      <span class="user-id mono">ID {{ voice.user.id }}</span>
+                      <span class="user-name">{{ voice.user.name || t('login.user.noName') }}</span>
+                      <span class="user-id mono">{{ t('login.user.id', { id: voice.user.id }) }}</span>
                     </span>
                   </div>
-                  <p class="help">
-                    这个账号还需要语音验证码。将对手机号
-                    <span v-if="voice.phone" class="mono">{{ voice.phone }}</span>
-                    发起一通语音验证码电话，请接听并记下电话里的验证码。验证状态 10 分钟内有效，过期需要从头登录。
-                  </p>
+                  <i18n-t keypath="login.voice.help" tag="p" class="help">
+                    <template #phone><span v-if="voice.phone" class="mono">{{ voice.phone }}</span></template>
+                  </i18n-t>
                   <div class="voice-call">
                     <span class="voice-state" :class="{ called: voice.called }">
                       <PhoneCall v-if="voice.called" :size="14" />
@@ -556,100 +572,102 @@ const isMteam = computed(() => dialog.platform === 'mteam')
                     </span>
                     <button type="button" class="ghost voice-btn" :disabled="calling || verifying || callIn > 0" @click="callVoice">
                       <LoaderCircle v-if="calling" class="spin" :size="14" />
-                      {{ callIn > 0 ? `${callIn}s 后可重拨` : voice.called ? '没接到？重新拨打' : '获取语音验证码' }}
+                      {{ callIn > 0 ? t('login.voice.redialIn', { n: callIn }, callIn) : voice.called ? t('login.voice.redial') : t('login.voice.get') }}
                     </button>
                   </div>
                 </div>
                 <label v-if="voice.called">
-                  <span>语音验证码</span>
-                  <input v-model="voiceCode" name="voiceCode" inputmode="numeric" autocomplete="one-time-code" maxlength="12" placeholder="电话里听到的验证码" :disabled="verifying" />
+                  <span>{{ t('login.voice.code') }}</span>
+                  <input v-model="voiceCode" name="voiceCode" inputmode="numeric" autocomplete="one-time-code" maxlength="12" :placeholder="t('login.voice.codePlaceholder')" :disabled="verifying" />
                 </label>
                 <div v-if="voiceError" class="error" role="alert">
                   <strong>{{ voiceError.message }}</strong>
                   <span v-if="voiceError.detail" class="detail">{{ voiceError.detail }}</span>
                   <span v-if="voiceError.retry" class="retry">
-                    <button type="button" class="link" :disabled="verifying" @click="(voiceError = null), focusVoiceCode()">重新输入</button>
+                    <button type="button" class="link" :disabled="verifying" @click="(voiceError = null), focusVoiceCode()">{{ t('login.voice.reenter') }}</button>
                     <button type="button" class="link" :disabled="calling || verifying || callIn > 0" @click="callVoice">
-                      {{ callIn > 0 ? `${callIn}s 后可重新获取` : '重新获取语音验证码' }}
+                      {{ callIn > 0 ? t('login.voice.refetchIn', { n: callIn }, callIn) : t('login.voice.refetch') }}
                     </button>
                   </span>
                 </div>
                 <button v-if="voice.called" class="primary" type="submit" :disabled="verifying || calling || !voiceCode.trim()">
-                  <CatbusLoader v-if="verifying" :size="16" label="登录中" />
-                  {{ verifying ? '登录中…' : '登录' }}
+                  <CatbusLoader v-if="verifying" :size="16" :label="t('login.submittingLabel')" />
+                  {{ verifying ? t('login.submitting') : t('common.action.login') }}
                 </button>
                 <span class="voice-links">
-                  <button v-if="users && users.length > 1" type="button" class="link" :disabled="verifying || calling" @click="backToUsers"><ArrowLeft :size="13" />返回选择账号</button>
-                  <button type="button" class="link" :disabled="verifying || calling" @click="restartSms"><RefreshCw :size="13" />从头开始</button>
+                  <button v-if="users && users.length > 1" type="button" class="link" :disabled="verifying || calling" @click="backToUsers"><ArrowLeft :size="13" />{{ t('login.voice.backToUsers') }}</button>
+                  <button type="button" class="link" :disabled="verifying || calling" @click="restartSms"><RefreshCw :size="13" />{{ t('login.voice.restart') }}</button>
                 </span>
               </template>
 
               <template v-else-if="method === 'sms' && users">
-                <p class="help">这个手机号下有多个账号，选择要登录的一个：</p>
+                <p class="help">{{ t('login.user.pick') }}</p>
                 <ul class="users" role="list">
                   <li v-for="u in users" :key="u.id">
                     <button type="button" class="user" :disabled="busy" :aria-busy="picking === u.id" @click="pick(u)">
                       <img v-if="u.avatar && !brokenAvatar.has(u.id)" class="avatar" :src="u.avatar" alt="" referrerpolicy="no-referrer" @error="brokenAvatar.add(u.id)" />
                       <span v-else class="avatar placeholder"><UserRound :size="18" /></span>
                       <span class="user-text">
-                        <span class="user-name">{{ u.name || '（无昵称）' }}</span>
-                        <span class="user-id mono">ID {{ u.id }}</span>
+                        <span class="user-name">{{ u.name || t('login.user.noName') }}</span>
+                        <span class="user-id mono">{{ t('login.user.id', { id: u.id }) }}</span>
                       </span>
                       <LoaderCircle v-if="picking === u.id" class="spin" :size="16" />
                       <ChevronRight v-else :size="16" class="chev" />
                     </button>
                   </li>
                 </ul>
-                <button type="button" class="link" :disabled="busy" @click="restartSms"><RefreshCw :size="13" />换个手机号</button>
+                <button type="button" class="link" :disabled="busy" @click="restartSms"><RefreshCw :size="13" />{{ t('login.user.changePhone') }}</button>
               </template>
 
               <template v-else-if="method === 'sms'">
                 <label>
-                  <span>手机号</span>
+                  <span>{{ t('login.sms.phone') }}</span>
                   <div class="row">
-                    <input v-model="form.phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="11 位手机号" :disabled="!!sent" />
+                    <input v-model="form.phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" :placeholder="t('login.sms.phonePlaceholder')" :disabled="!!sent" />
                     <button type="button" class="ghost" :disabled="busy || resendIn > 0 || !form.phone" @click="(sent = null), submit('start')">
-                      {{ resendIn > 0 ? `${resendIn}s` : sent ? '重新发送' : '发送验证码' }}
+                      {{ resendIn > 0 ? t('login.sms.resendIn', { n: resendIn }, resendIn) : sent ? t('login.sms.resend') : t('login.sms.send') }}
                     </button>
                   </div>
                 </label>
                 <label v-if="sent">
-                  <span>验证码</span>
-                  <input v-model="form.code" name="code" inputmode="numeric" autocomplete="one-time-code" placeholder="短信里的验证码" />
+                  <span>{{ t('login.sms.code') }}</span>
+                  <input v-model="form.code" name="code" inputmode="numeric" autocomplete="one-time-code" :placeholder="t('login.sms.codePlaceholder')" />
                 </label>
               </template>
 
               <template v-else-if="method === 'password'">
                 <label>
-                  <span>用户名</span>
+                  <span>{{ t('login.password.username') }}</span>
                   <input v-model="form.username" name="username" autocomplete="username" :disabled="!!sent" />
                 </label>
                 <label>
-                  <span>密码</span>
+                  <span>{{ t('login.password.password') }}</span>
                   <input v-model="form.password" name="password" type="password" autocomplete="current-password" />
                 </label>
                 <template v-if="isMteam">
                   <label v-if="!sent">
-                    <span>邮箱（新设备两步验证时需要）</span>
-                    <input v-model="form.email" name="email" type="email" autocomplete="email" placeholder="可选" />
+                    <span>{{ t('login.password.email') }}</span>
+                    <input v-model="form.email" name="email" type="email" autocomplete="email" :placeholder="t('login.password.optional')" />
                   </label>
                   <label>
-                    <span>{{ sent ? '邮箱验证码' : '验证码（TOTP，可选）' }}</span>
+                    <span>{{ sent ? t('login.password.emailCode') : t('login.password.totp') }}</span>
                     <input v-model="form.code" name="code" inputmode="numeric" autocomplete="one-time-code" />
                   </label>
-                  <p v-if="sent" class="help">验证码已发到邮箱。密码需要再输入一次，catbus 不保存密码。</p>
+                  <p v-if="sent" class="help">{{ t('login.password.emailSent') }}</p>
                 </template>
               </template>
 
               <details v-if="!users" class="advanced">
-                <summary>保存为账号 <span class="mono">{{ account || '自动' }}</span></summary>
-                <input v-model.trim="account" name="account" class="mono" pattern="[a-z0-9][a-z0-9_\-]{0,31}" aria-label="账号名" placeholder="留空：按登录的用户自动选择" />
-                <p class="help">留空时，同一用户刷新原来的账号，新用户新增账号；填写账号名则登录到这个账号，原来的用户会被替换。</p>
+                <i18n-t keypath="login.account.saveAs" tag="summary">
+                  <template #account><span class="mono">{{ account || t('login.account.auto') }}</span></template>
+                </i18n-t>
+                <input v-model.trim="account" name="account" class="mono" pattern="[a-z0-9][a-z0-9_\-]{0,31}" :aria-label="t('login.account.label')" :placeholder="t('login.account.placeholder')" />
+                <p class="help">{{ t('login.account.help') }}</p>
               </details>
 
               <button v-if="(method !== 'sms' || sent) && !users" class="primary" type="submit" :disabled="busy">
-                <CatbusLoader v-if="busy" :size="16" label="登录中" />
-                {{ busy ? '登录中…' : '登录' }}
+                <CatbusLoader v-if="busy" :size="16" :label="t('login.submittingLabel')" />
+                {{ busy ? t('login.submitting') : t('common.action.login') }}
               </button>
             </form>
           </template>
@@ -657,8 +675,8 @@ const isMteam = computed(() => dialog.platform === 'mteam')
           <p v-if="info?.note && method === 'password'" class="note">{{ info.note }}</p>
 
           <div v-if="error" class="error" role="alert">
-            <strong>{{ error.message }}</strong>
-            <code v-if="error.hint" class="mono">{{ error.hint }}</code>
+            <strong>{{ errorTitle(error) }}</strong>
+            <code v-if="errorDetail(error)" class="mono">{{ errorDetail(error) }}</code>
           </div>
         </template>
       </div>

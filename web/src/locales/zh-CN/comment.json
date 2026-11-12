@@ -1,0 +1,17 @@
+{
+  "title": "评论",
+  "count": "共 {n} 条评论",
+  "anonymous": "匿名用户",
+  "loading": "评论加载中",
+  "empty": "还没有评论",
+  "end": "— 到底了 —",
+  "verify": "去验证",
+  "viewImage": "查看第 {n} 张图",
+  "replies": {
+    "count": "{n} 条回复",
+    "failed": "回复加载失败",
+    "expand": "展开 {n} 条回复",
+    "expandMore": "展开更多回复",
+    "collapse": "收起"
+  }
+}

@@ -7,6 +7,8 @@ import { KINDS, ORDERS, SORTS, TIMES, TYPES, parseOrder } from '@/data/filters'
 import { useSelectionStore } from './selection'
 import { useSettingsStore } from './settings'
 import { toast } from './toast'
+import { t } from '@/i18n'
+import { errorTitle } from '@/i18n/errors'
 import { cursorsFor, fill, interleave, itemCell, joinCursors, newLane, roundRobin, skeletonCells, type Cell, type Lane } from './lanes'
 import { authorRoute, parseAuthorPath } from './route'
 
@@ -173,22 +175,23 @@ export const useDiscoverStore = defineStore('discover', () => {
     // 推荐流分类（feed list --kind）：声明了这个取值才能用
     if (kind === 'kind') {
       if (f?.kind?.includes(value)) return null
-      return f?.kind && f.kind.length > 1 ? `${meta.name}暂不支持「${labelOf(kind, value)}」流` : `${meta.name}没有推荐流分类`
+      return f?.kind && f.kind.length > 1
+        ? t('discover.unsupported.kind', { platform: meta.name, label: labelOf(kind, value) })
+        : t('discover.unsupported.noKinds', { platform: meta.name })
     }
     // 字段排序（--order-by）：平台声明了这个字段才能用，搜索和浏览都支持
     const order = kind === 'sort' ? parseOrder(value) : null
     if (order) {
       if (f?.order?.includes(order.field)) return null
       const name = ORDERS.find((o) => o.value === order.field)?.label ?? order.field
-      return `${meta.name}不支持按「${name}」排序`
+      return t('discover.unsupported.sort', { platform: meta.name, label: name })
     }
-    if (meta.mode === 'feed' || !f?.search) return `${meta.name}只有推荐流，不支持筛选`
+    if (meta.mode === 'feed' || !f?.search) return t('discover.unsupported.feedOnly', { platform: meta.name })
     const list = f[kind]
     if (list?.includes(value)) return null
     const label = labelOf(kind, value)
-    if (!list) return `${meta.name}不支持按${{ sort: '排序', type: '类型', time: '时间' }[kind]}筛选`
-    if (kind === 'time') return `${meta.name}不支持「${label}」`
-    return kind === 'sort' ? `${meta.name}不支持按「${label}」排序` : `${meta.name}不支持只看「${label}」`
+    if (!list) return t(`discover.unsupported.noFilter.${kind}`, { platform: meta.name })
+    return t(`discover.unsupported.${kind}`, { platform: meta.name, label })
   }
 
   /**
@@ -203,16 +206,14 @@ export const useDiscoverStore = defineStore('discover', () => {
     if (why.some((w) => !w)) return null
     if (why.length === 1) return why[0]!
     const label = labelOf(kind, value)
-    if (kind === 'kind') return `选中的渠道都不支持「${label}」流`
-    if (kind === 'time') return `选中的渠道都不支持「${label}」`
-    return kind === 'sort' ? `选中的渠道都不支持按「${label}」排序` : `选中的渠道都不支持只看「${label}」`
+    return t(`discover.unsupportedAll.${kind}`, { label })
   }
 
   /** 整个筛选都用不了时的原因（时间 chip 整体置灰）：除默认值外没有一个取值能用 */
   function unsupportedAll(kind: FilterKind): string | null {
     const first = CHOICES[kind].find((o) => o.value !== DEFAULTS[kind])!.value
     if (CHOICES[kind].some((o) => o.value !== DEFAULTS[kind] && !unsupported(kind, o.value))) return null
-    if (aggregate.value && lanes.value.length > 1) return `选中的渠道都不支持按${{ sort: '排序', type: '类型', time: '时间', kind: '分类' }[kind]}筛选`
+    if (aggregate.value && lanes.value.length > 1) return t(`discover.unsupportedAll.noFilter.${kind}`)
     // 单个渠道：只有推荐流、或者没有这个筛选（如「小红书不支持按时间筛选」），原因与第一个取值的相同
     return unsupportedOn(state.platform, kind, first)
   }
@@ -499,7 +500,7 @@ export const useDiscoverStore = defineStore('discover', () => {
     const next = new Map<string, string>()
     const results = todo.map(([a], i) => {
       const env = envs[i]!
-      if (!env.ok) return { account: a, error: env.error ?? { code: 'ERROR', message: '加载失败', hint: null, detail: null } }
+      if (!env.ok) return { account: a, error: env.error ?? { code: 'ERROR', message: t('common.state.failed'), hint: null, detail: null } }
       const got = (env.data ?? []).filter(isAlive)
       for (const it of got) itemAccount.set(it, a)
       lists.push(got)
@@ -523,7 +524,7 @@ export const useDiscoverStore = defineStore('discover', () => {
     for (const r of page.results) {
       if (!r.error) continue
       const who = webAccounts(platform).find((a) => a.account === r.account)?.user?.name || r.account
-      toast(`${platformById(platform)!.name} · ${who}：${r.error.message ?? '加载失败'}`, 3200)
+      toast(t('discover.toast.accountFailed', { platform: platformById(platform)!.name, account: who, error: errorTitle(r.error) }), 3200)
     }
   }
 
@@ -827,7 +828,7 @@ export const useDiscoverStore = defineStore('discover', () => {
         Object.assign(lane, { error: e, items: [], cursor: null, hasMore: false, seen: new Set() })
         channels.delete(lane.platform)
       }
-      toast(`${platformById(lane.platform)!.name}：${e?.message ?? '加载失败'}`, 3200)
+      toast(t('discover.toast.laneFailed', { platform: platformById(lane.platform)!.name, error: errorTitle(e) }), 3200)
     }
     if (!append) {
       const q = laneQuery(lane.platform)

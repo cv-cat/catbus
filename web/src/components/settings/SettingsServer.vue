@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, useId } from 'vue'
+import { computed, onMounted, reactive, ref, shallowRef, useId } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Globe, Lock } from 'lucide-vue-next'
 import CatbusLoader from '../CatbusLoader.vue'
 import { loadServerSettings, saveServerSettings, type ServerSettings } from '@/api/settings'
+import { errorText } from '@/api/client'
 import { isDemo } from '@/stores/source'
 import { toast } from '@/stores/toast'
 
@@ -12,12 +14,14 @@ import { toast } from '@/stores/toast'
  * 下载由浏览器保存，没有服务端下载目录可设。
  * 演示模式下 bridge 拒绝全部 /api/*，这里整组禁用并说明原因。
  */
+const { t } = useI18n()
 const demo = isDemo()
 const data = ref<ServerSettings | null>(null)
-const loadError = ref<string | null>(null)
+/** 原样存下错误，显示时再取文字（随语言切换） */
+const loadError = shallowRef<unknown>(null)
 const loading = ref(!demo)
 const draft = reactive({ proxy: '' })
-const errors = reactive<{ proxy: string | null }>({ proxy: null })
+const errors = reactive<{ proxy: unknown }>({ proxy: null })
 const saving = reactive({ proxy: false })
 
 const uid = useId()
@@ -33,7 +37,7 @@ onMounted(async () => {
   try {
     apply(await loadServerSettings())
   } catch (e) {
-    loadError.value = (e as Error).message
+    loadError.value = e
   } finally {
     loading.value = false
   }
@@ -41,50 +45,56 @@ onMounted(async () => {
 
 const disabled = computed(() => demo || !data.value)
 const reason = computed(() =>
-  demo ? '演示模式下不连接 catbus，不能读取或修改服务端设置。' : loadError.value ? `读不到服务端设置：${loadError.value}` : null,
+  demo
+    ? t('settings.server.demo')
+    : loadError.value
+      ? t('settings.server.loadFailed', { error: errorText(loadError.value) })
+      : null,
 )
 const platformProxies = computed(() => Object.entries(data.value?.proxy.platforms ?? {}))
 const proxyChanged = computed(() => !!data.value && draft.proxy.trim() !== (data.value.proxy.value ?? ''))
 
-async function save(value: string | null, done: string) {
+async function save(value: string | null, done: () => string) {
   if (disabled.value || saving.proxy) return
   saving.proxy = true
   errors.proxy = null
   try {
     apply(await saveServerSettings({ proxy: value }))
-    toast(done)
+    toast(done())
   } catch (e) {
-    errors.proxy = (e as Error).message
+    errors.proxy = e
   } finally {
     saving.proxy = false
   }
 }
 
-const saveProxy = () => save(draft.proxy.trim() || null, draft.proxy.trim() ? '代理已保存' : '已清空代理')
+const saved = () => t('settings.server.proxy.saved')
+const cleared = () => t('settings.server.proxy.cleared')
+const saveProxy = () => save(draft.proxy.trim() || null, draft.proxy.trim() ? saved : cleared)
 const clearProxy = () => {
   draft.proxy = ''
-  void save(null, '已清空代理')
+  void save(null, cleared)
 }
 </script>
 
 <template>
   <div class="server" data-setting-row>
     <div class="head">
-      <span class="label">服务端设置</span>
-      <span v-if="loading" class="badge"><CatbusLoader :size="12" label="读取中" />读取中</span>
-      <span v-else-if="disabled" class="badge"><Lock :size="11" aria-hidden="true" />不可用</span>
+      <span class="label">{{ t('settings.server.title') }}</span>
+      <span v-if="loading" class="badge"><CatbusLoader :size="12" :label="t('settings.server.loading')" />{{ t('settings.server.loading') }}</span>
+      <span v-else-if="disabled" class="badge"><Lock :size="11" aria-hidden="true" />{{ t('settings.server.unavailable') }}</span>
     </div>
-    <p class="hint">保存在本机的 catbus 里，对所有浏览器生效；命令行同样会用到代理。下载的文件由浏览器保存，位置看浏览器的下载设置。</p>
+    <p class="hint">{{ t('settings.server.hint') }}</p>
     <p v-if="reason" class="reason" role="note">{{ reason }}</p>
   </div>
 
   <!-- 代理 -->
   <div class="srow" :class="{ disabled }" data-setting-row>
     <div class="text">
-      <div :id="ids.proxy" class="title"><Globe :size="15" aria-hidden="true" />代理</div>
-      <p :id="ids.proxyDesc" class="desc">
-        catbus 访问平台时用的全局代理（config.toml 的 <code>proxy</code>），支持 http、https、socks4、socks5、socks5h；留空表示不用代理。
-      </p>
+      <div :id="ids.proxy" class="title"><Globe :size="15" aria-hidden="true" />{{ t('settings.server.proxy.title') }}</div>
+      <i18n-t :id="ids.proxyDesc" keypath="settings.server.proxy.desc" tag="p" class="desc" scope="global">
+        <template #key><code>proxy</code></template>
+      </i18n-t>
     </div>
     <form class="field" @submit.prevent="saveProxy">
       <input
@@ -102,13 +112,15 @@ const clearProxy = () => {
         @input="errors.proxy = null"
       />
       <button class="btn primary" type="submit" :disabled="disabled || !proxyChanged || saving.proxy">
-        <CatbusLoader v-if="saving.proxy" :size="12" label="保存中" />保存
+        <CatbusLoader v-if="saving.proxy" :size="12" :label="t('settings.server.saving')" />{{ t('common.action.save') }}
       </button>
-      <button v-if="data?.proxy.value" class="btn" type="button" :disabled="disabled || saving.proxy" @click="clearProxy">清空</button>
+      <button v-if="data?.proxy.value" class="btn" type="button" :disabled="disabled || saving.proxy" @click="clearProxy">{{ t('settings.server.proxy.clear') }}</button>
     </form>
-    <p v-if="errors.proxy" class="error" role="alert">{{ errors.proxy }}</p>
+    <p v-if="errors.proxy" class="error" role="alert">{{ errorText(errors.proxy) }}</p>
     <div v-if="platformProxies.length" class="platforms">
-      <span class="p-title">平台代理（优先于全局代理，只读；用 <code>catbus config set &lt;平台&gt;.proxy</code> 修改）</span>
+      <i18n-t keypath="settings.server.proxy.platforms" tag="span" class="p-title" scope="global">
+        <template #command><code>catbus config set {{ t('settings.server.proxy.platformPlaceholder') }}.proxy</code></template>
+      </i18n-t>
       <ul>
         <li v-for="[p, v] in platformProxies" :key="p"><span class="p-id">{{ p }}</span><code>{{ v }}</code></li>
       </ul>

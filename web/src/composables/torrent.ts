@@ -1,5 +1,6 @@
 import type { Item } from '@/api/types'
 import { bytes, since } from './format'
+import { t } from '@/i18n'
 
 /**
  * 种子（M-Team，AGENTS.md 7.9「种子卡片」「种子详情」，设计稿 K / L）：没有作者、点赞、评论，
@@ -38,7 +39,7 @@ export function torrentInfo(item: Item | null | undefined, list?: Item | null): 
   const zh = (oneLine(list?.text) ?? oneLine(item.text))?.split('|')[0]?.trim() || ''
   const code = item.discount && item.discount !== 'NORMAL' ? item.discount : null
   return {
-    title: zh || name || '（无标题）',
+    title: zh || name || t('detail.torrent.untitled'),
     name: zh && name ? name : '',
     discount: code ? (DISCOUNTS[code] ?? code) : null,
     free: code === 'FREE' || code === '_2X_FREE',

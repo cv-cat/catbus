@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { AlertCircle, ChevronDown, CircleCheck, Clock, Download, FolderDown, ImageOff, RotateCw, ShieldCheck, TimerOff, Trash2, X } from 'lucide-vue-next'
 import CatbusLoader from '@/components/CatbusLoader.vue'
 import type { Batch, DownloadItem } from '@/api/download'
@@ -10,8 +11,10 @@ import { openVerify } from '@/stores/verify'
 import { prefersReducedMotion, wave } from '@/composables/motion'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { imgSrc } from '@/api/client'
+import { errorTitle } from '@/i18n/errors'
 
 const dl = useDownloadsStore()
+const { t } = useI18n()
 const bp = useBreakpoint()
 const root = ref<HTMLElement>()
 /** 弹层本身：手机上传送到 body 变成底部弹层，不在 root 里 */
@@ -45,21 +48,22 @@ const retryCount = (b: Batch) => counts(b).failed + counts(b).expired
 const retryable = (it: DownloadItem) => it.status === 'failed' || (it.status === 'done' && !!it.expired)
 function batchStatus(b: Batch): string {
   const c = counts(b)
-  if (c.busy) return `下载中 ${c.done + c.failed}/${b.items.length}`
+  if (c.busy) return t('download.batch.progress', { done: c.done + c.failed, total: b.items.length })
   const parts: string[] = []
-  if (c.done > c.expired) parts.push('已交给浏览器')
-  if (c.failed) parts.push(`${c.failed} 条失败`)
-  if (c.expired) parts.push(`${c.expired} 条文件已过期`)
-  return parts.join(' · ') || '已结束'
+  if (c.done > c.expired) parts.push(t('download.batch.delivered'))
+  if (c.failed) parts.push(t('download.batch.failed', { n: c.failed }, c.failed))
+  if (c.expired) parts.push(t('download.batch.expired', { n: c.expired }, c.expired))
+  return parts.join(' · ') || t('download.batch.finished')
 }
 function itemStatus(it: DownloadItem, b: Batch): string {
-  if (it.status === 'queued') return '等待中'
-  if (it.status === 'running') return '下载中…'
-  if (it.status === 'failed') return it.error ?? '下载失败'
-  if (it.expired) return '文件已过期，请重新下载'
-  const n = `${it.files.length} 个文件`
+  if (it.status === 'queued') return t('download.status.queued')
+  if (it.status === 'running') return t('download.status.running')
+  // 失败原因是 CLI 的中文报错：按 code 取译文
+  if (it.status === 'failed') return it.error ? errorTitle({ code: it.code ?? 'ERROR', message: it.error }) : t('download.status.failed')
+  if (it.expired) return t('download.status.expired')
+  const n = it.files.length
   // 整批结束后才交给浏览器
-  return counts(b).busy ? `已下载 · ${n}` : `已交给浏览器 · ${n}`
+  return counts(b).busy ? t('download.status.downloaded', { n }, n) : t('download.status.delivered', { n }, n)
 }
 const name = (p: string) => platformById(p)?.name ?? p
 const logo = (p: string) => platformById(p)?.logo ?? ''
@@ -74,7 +78,7 @@ async function retry(batch: string, item?: string) {
 }
 /** 人机验证：去浏览器验证，回来重试这一条（不给 item 时重试整批失败的） */
 function verifyThen(b: Batch, it: DownloadItem, whole = false) {
-  openVerify({ platform: b.platform, url: it.verify_url ?? null, message: it.error ?? undefined, retry: () => retry(b.id, whole ? undefined : it.id) })
+  openVerify({ platform: b.platform, url: it.verify_url ?? null, message: it.error ? errorTitle({ code: it.code ?? 'ERROR', message: it.error }) : undefined, retry: () => retry(b.id, whole ? undefined : it.id) })
 }
 const firstVerify = (b: Batch) => b.items.find((it) => it.status === 'failed' && it.verify_url)
 
@@ -85,11 +89,11 @@ async function remove(batch: string, item?: string) {
     alert((e as Error).message)
   }
 }
-const removeLabel = (status?: string) => (status === 'queued' ? '取消并删除记录' : '删除记录')
+const removeLabel = (status?: string) => (status === 'queued' ? t('download.action.cancelRemove') : t('download.action.remove'))
 
 function onDoc(e: PointerEvent) {
-  const t = e.target as Node
-  if (!root.value?.contains(t) && !panel.value?.contains(t)) dl.open = false
+  const target = e.target as Node
+  if (!root.value?.contains(target) && !panel.value?.contains(target)) dl.open = false
 }
 
 // ---------- 底部弹层：按住把手（或标题行）下滑关闭 ----------
@@ -145,8 +149,8 @@ onBeforeUnmount(() => (dl.open = false))
       type="button"
       class="trigger glass"
       :class="{ on: dl.open }"
-      aria-label="下载记录"
-      v-tip="'下载记录'"
+      :aria-label="t('download.title')"
+      v-tip="t('download.title')"
       :aria-expanded="dl.open"
       @click="toggle"
     >
@@ -166,7 +170,7 @@ onBeforeUnmount(() => (dl.open = false))
         :class="{ sheet: bp.phone }"
         :style="sheetStyle"
         role="dialog"
-        aria-label="下载记录"
+        :aria-label="t('download.title')"
         :aria-modal="bp.phone || undefined"
       >
         <div
@@ -178,7 +182,7 @@ onBeforeUnmount(() => (dl.open = false))
           @pointercancel="onGripUp"
         >
           <span aria-hidden="true" />
-          <button type="button" class="sr-only" @click="dl.open = false">关闭下载记录</button>
+          <button type="button" class="sr-only" @click="dl.open = false">{{ t('download.close') }}</button>
         </div>
         <header
           class="head"
@@ -187,21 +191,21 @@ onBeforeUnmount(() => (dl.open = false))
           @pointerup="onGripUp"
           @pointercancel="onGripUp"
         >
-   <span class="title">下载记录</span>
+   <span class="title">{{ t('download.title') }}</span>
           <span class="mono n">{{ dl.batches.length }}</span>
           <button
             v-if="dl.batches.some((b) => !counts(b).busy)"
      type="button"
      class="clear"
-            v-tip="'清空已结束的记录'"
-     aria-label="清空已结束的记录"
+            v-tip="t('download.clear')"
+     :aria-label="t('download.clear')"
      @click="dl.clear()"
    >
      <Trash2 :size="14" />
           </button>
         </header>
 
-        <p v-if="!dl.batches.length" class="empty">还没有下载。选中卡片后点下载即可。</p>
+        <p v-if="!dl.batches.length" class="empty">{{ t('download.empty') }}</p>
 
         <TransitionGroup v-else tag="div" name="rec" class="list">
    <section v-for="b in dl.batches" :key="b.id" class="batch" :class="{ expanded: expanded.has(b.id) }">
@@ -216,19 +220,19 @@ onBeforeUnmount(() => (dl.open = false))
   <span v-tip.overflow="b.items[0]!.title || b.items[0]!.id" class="t">{{ b.items[0]!.title || b.items[0]!.id }}</span>
   <span v-tip.overflow="`${name(b.platform)} · ${since(b.created_at)} · ${itemStatus(b.items[0]!, b)}`" class="s" :class="b.items[0]!.status">
     {{ name(b.platform) }} · {{ since(b.created_at) }} ·
-    <span v-if="b.items[0]!.status === 'running'" class="running-text"><CatbusLoader :size="12" label="下载中" />下载中…</span>
+    <span v-if="b.items[0]!.status === 'running'" class="running-text"><CatbusLoader :size="12" :label="t('download.status.runningLabel')" />{{ t('download.status.running') }}</span>
     <template v-else>{{ itemStatus(b.items[0]!, b) }}</template>
   </span>
 </span>
        <template v-if="retryable(b.items[0]!)">
-  <button v-if="b.items[0]!.verify_url" type="button" class="open warn" v-tip="'去验证'" aria-label="去验证" @click="verifyThen(b, b.items[0]!)">
+  <button v-if="b.items[0]!.verify_url" type="button" class="open warn" v-tip="t('download.action.verify')" :aria-label="t('download.action.verify')" @click="verifyThen(b, b.items[0]!)">
     <ShieldCheck :size="15" />
   </button>
-  <button type="button" class="open" :class="{ hot: b.items[0]!.expired }" v-tip="b.items[0]!.expired ? '重新下载' : '重试'" :aria-label="b.items[0]!.expired ? '重新下载' : '重试'" @click="retry(b.id)">
+  <button type="button" class="open" :class="{ hot: b.items[0]!.expired }" v-tip="b.items[0]!.expired ? t('download.action.redownload') : t('common.action.retry')" :aria-label="b.items[0]!.expired ? t('download.action.redownload') : t('common.action.retry')" @click="retry(b.id)">
     <RotateCw :size="14" />
   </button>
        </template>
-       <button v-if="savable(b)" type="button" class="open" v-tip="'重新保存'" aria-label="重新保存" @click="dl.resave(b.id)">
+       <button v-if="savable(b)" type="button" class="open" v-tip="t('download.action.resave')" :aria-label="t('download.action.resave')" @click="dl.resave(b.id)">
   <Download :size="15" />
        </button>
        <button
@@ -267,29 +271,29 @@ onBeforeUnmount(() => (dl.open = false))
     </span>
   </span>
          <span class="text">
-    <span class="t">{{ name(b.platform) }} · {{ b.items.length }} 条</span>
+    <span class="t">{{ t('download.batch.title', { platform: name(b.platform), n: b.items.length }, b.items.length) }}</span>
            <span v-tip.overflow="`${since(b.created_at)} · ${batchStatus(b)}`" class="s" :class="{ failed: counts(b).failed && !counts(b).busy }">{{ since(b.created_at) }} · {{ batchStatus(b) }}</span>
   </span>
          <span v-if="counts(b).busy" class="bar" aria-hidden="true">
            <span :style="{ width: `${((counts(b).done + counts(b).failed) / b.items.length) * 100}%` }" />
   </span>
                 <template v-if="retryCount(b) && !counts(b).busy">
-    <button v-if="firstVerify(b)" type="button" class="open warn" v-tip="'去验证，然后重试失败的'" aria-label="去验证，然后重试失败的" @click.stop="verifyThen(b, firstVerify(b)!, true)">
+    <button v-if="firstVerify(b)" type="button" class="open warn" v-tip="t('download.action.verifyRetryFailed')" :aria-label="t('download.action.verifyRetryFailed')" @click.stop="verifyThen(b, firstVerify(b)!, true)">
       <ShieldCheck :size="15" />
     </button>
-           <button type="button" class="open" v-tip="counts(b).failed ? '重试失败的' : '重新下载过期的'" :aria-label="counts(b).failed ? '重试失败的' : '重新下载过期的'" @click.stop="retry(b.id)">
+           <button type="button" class="open" v-tip="counts(b).failed ? t('download.action.retryFailed') : t('download.action.redownloadExpired')" :aria-label="counts(b).failed ? t('download.action.retryFailed') : t('download.action.redownloadExpired')" @click.stop="retry(b.id)">
       <RotateCw :size="14" />
     </button>
   </template>
-  <button v-if="savable(b)" type="button" class="open" v-tip="'重新保存这一批'" aria-label="重新保存这一批" @click.stop="dl.resave(b.id)">
+  <button v-if="savable(b)" type="button" class="open" v-tip="t('download.action.resaveBatch')" :aria-label="t('download.action.resaveBatch')" @click.stop="dl.resave(b.id)">
     <Download :size="15" />
   </button>
   <button
     v-if="!b.items.some((it) => it.status === 'running')"
     type="button"
     class="open del"
-           v-tip="'删除这一批记录'"
-    aria-label="删除这一批记录"
+           v-tip="t('download.action.removeBatch')"
+    :aria-label="t('download.action.removeBatch')"
     @click.stop="remove(b.id)"
   >
     <X :size="15" />
@@ -305,17 +309,17 @@ onBeforeUnmount(() => (dl.open = false))
       </span>
       <span class="text">
  <span v-tip.overflow="it.title || it.id" class="t">{{ it.title || it.id }}</span>
-        <span v-tip.overflow="itemStatus(it, b)" class="s" :class="it.status"><CatbusLoader v-if="it.status === 'running'" :size="12" label="下载中" />{{ itemStatus(it, b) }}</span>
+        <span v-tip.overflow="itemStatus(it, b)" class="s" :class="it.status"><CatbusLoader v-if="it.status === 'running'" :size="12" :label="t('download.status.runningLabel')" />{{ itemStatus(it, b) }}</span>
       </span>
       <template v-if="retryable(it)">
- <button v-if="it.verify_url" type="button" class="open warn" v-tip="'去验证'" aria-label="去验证" @click="verifyThen(b, it)">
+ <button v-if="it.verify_url" type="button" class="open warn" v-tip="t('download.action.verify')" :aria-label="t('download.action.verify')" @click="verifyThen(b, it)">
    <ShieldCheck :size="14" />
         </button>
- <button type="button" class="open" :class="{ hot: it.expired }" v-tip="it.expired ? '重新下载' : '重试'" :aria-label="it.expired ? '重新下载' : '重试'" @click="retry(b.id, it.id)">
+ <button type="button" class="open" :class="{ hot: it.expired }" v-tip="it.expired ? t('download.action.redownload') : t('common.action.retry')" :aria-label="it.expired ? t('download.action.redownload') : t('common.action.retry')" @click="retry(b.id, it.id)">
    <RotateCw :size="13" />
         </button>
       </template>
-      <button v-if="it.status === 'done' && !it.expired && !counts(b).busy" type="button" class="open" v-tip="'重新保存'" aria-label="重新保存" @click="dl.resave(b.id, it.id)">
+      <button v-if="it.status === 'done' && !it.expired && !counts(b).busy" type="button" class="open" v-tip="t('download.action.resave')" :aria-label="t('download.action.resave')" @click="dl.resave(b.id, it.id)">
  <Download :size="14" />
       </button>
       <button v-if="it.status !== 'running'" type="button" class="open del" v-tip="removeLabel(it.status)" :aria-label="removeLabel(it.status)" @click="remove(b.id, it.id)">
@@ -334,7 +338,7 @@ onBeforeUnmount(() => (dl.open = false))
      </template>
           </section>
         </TransitionGroup>
-        <p class="note"><Download :size="12" aria-hidden="true" />文件由浏览器保存，位置看浏览器的下载列表</p>
+        <p class="note"><Download :size="12" aria-hidden="true" />{{ t('download.note') }}</p>
       </div>
     </Transition>
     </Teleport>

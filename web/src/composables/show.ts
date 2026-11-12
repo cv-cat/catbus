@@ -1,4 +1,5 @@
 import type { Item, UserRef } from '@/api/types'
+import { t } from '@/i18n'
 
 /**
  * 演出（猫眼演出，AGENTS.md 7.9「演出卡片」「演出详情」，设计稿 M / N）：没有点赞、评论、发布时间。
@@ -43,28 +44,28 @@ export function showInfo(item: Item | null | undefined, list: Item | null | unde
   const get = (k: string) => f.get(k) || null
 
   const author = item.author ?? list?.author ?? null
-  const at = get('开售时间') ? Date.parse(get('开售时间')!) : NaN
+  const at = get('开售时间') ? Date.parse(get('开售时间')!) : NaN // i18n-ignore
   const saleAt = Number.isNaN(at) ? null : at
-  const saleText = get('开售')
-  const onSale = saleAt != null ? saleAt <= Date.now() : !saleText || saleText === '已开售'
+  const saleText = get('开售') // i18n-ignore
+  const onSale = saleAt != null ? saleAt <= Date.now() : !saleText || saleText === '已开售' // i18n-ignore
 
   // 场馆：「国家体育馆（天辰东路9号）」，最后一对括号里是地址
-  const place = get('场馆')
+  const place = get('场馆') // i18n-ignore
   const m = place ? /^(.+)（([^（）]+)）$/.exec(place) : null
   const price = item.price ?? list?.price ?? null
 
   return {
-    category: get('分类'),
-    performers: get('演出者') ?? author?.name ?? null,
+    category: get('分类'), // i18n-ignore
+    performers: get('演出者') ?? author?.name ?? null, // i18n-ignore
     author,
     saleText,
     saleAt,
-    upcoming: onSale ? null : saleText && saleText !== '已开售' ? saleText : '未开售',
-    time: get('时间'),
-    city: get('城市'),
+    upcoming: onSale ? null : saleText && saleText !== '已开售' ? saleText : t('discover.show.notOnSale'), // i18n-ignore（匹配站点文案「已开售」）
+    time: get('时间'), // i18n-ignore
+    city: get('城市'), // i18n-ignore
     venue: m ? m[1]! : place,
     address: m ? m[2]! : null,
-    prices: (get('票价') ?? '').split('、').map((s) => s.trim()).filter(Boolean),
+    prices: (get('票价') ?? '').split('、').map((s) => s.trim()).filter(Boolean), // i18n-ignore
     price: price ? yuan(price.amount) : null,
   }
 }

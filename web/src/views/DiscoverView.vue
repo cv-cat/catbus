@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Menu, RefreshCw, Rocket } from 'lucide-vue-next'
 import CatbusLoader from '@/components/CatbusLoader.vue'
 import SearchBar from '@/components/SearchBar.vue'
@@ -25,6 +26,7 @@ import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useNavStore } from '@/stores/nav'
 import { platformById } from '@/data/platforms'
 import type { Item } from '@/api/types'
+import { errorTitle } from '@/i18n/errors'
 
 const d = useDiscoverStore()
 const { state } = d
@@ -33,6 +35,7 @@ const downloads = useDownloadsStore()
 const src = useSourceStore()
 const bp = useBreakpoint()
 const nav = useNavStore()
+const { t } = useI18n()
 
 /** 排序选项：当前平台不支持的置灰，原因放进 tooltip */
 /** 声明了 --order-by 的平台（M-Team）换成字段排序：选中的那一项带方向箭头，再点一次切换升序 / 降序 */
@@ -57,18 +60,23 @@ function toggleOrder() {
  */
 const feedUi = computed(() => !d.committed || (!d.aggregate && d.platform.mode === 'feed'))
 const timeOptions = computed(() => TIMES.map((o) => ({ value: o.value as string, label: o.label as string, disabled: d.unsupported('time', o.value) })))
-const kindLabel = computed(() => KINDS.find((k) => k.value === state.kind)?.label ?? '推荐')
+const kindLabel = computed(() => KINDS.find((k) => k.value === state.kind)?.label ?? t('filters.kind.recommend'))
 
 /** 聚合模式下选中的渠道 */
 const lanes = computed(() => d.selected.map((id) => platformById(id)!))
 /** 顶栏小字：单一模式是「小红书 · 笔记搜索」，聚合模式列出渠道（多了只写前两个） */
 const eyebrow = computed(() => {
-  if (!d.aggregate) return `${d.platform.name} · ${d.platform.item}${d.platform.mode === 'feed' ? '推荐' : '搜索'}`
+  if (!d.aggregate) return t(d.platform.mode === 'feed' ? 'discover.eyebrow.feed' : 'discover.eyebrow.search', { platform: d.platform.name, item: d.platform.item })
   const names = lanes.value.map((p) => p.name)
-  return `聚合 · ${names.length > 3 ? `${names.slice(0, 2).join('、')} 等 ${names.length} 个渠道` : names.join('、')}`
+  const sep = t('discover.eyebrow.sep')
+  return names.length > 3
+    ? t('discover.eyebrow.aggregateMany', { names: names.slice(0, 2).join(sep), n: names.length }, names.length)
+    : t('discover.eyebrow.aggregate', { names: names.join(sep) })
 })
 const placeholder = computed(() =>
-  d.aggregate && lanes.value.length > 1 ? `在 ${lanes.value.length} 个渠道里搜索` : `在${d.platform.name}搜索${d.platform.item}`,
+  d.aggregate && lanes.value.length > 1
+    ? t('discover.search.placeholderMany', { n: lanes.value.length }, lanes.value.length)
+    : t('discover.search.placeholder', { platform: d.platform.name, item: d.platform.item }),
 )
 
 /** 选中的条目按平台（和账号）各作为一批下载（聚合模式下可能来自几个平台），然后打开下载记录 */
@@ -170,7 +178,7 @@ function submit(origin?: { x: number; y: number }) {
 
 /** 人机验证：引导用户去浏览器里验证，回来后重新搜索 */
 function verify(url: string) {
-  openVerify({ platform: d.errorPlatform, url, message: d.error?.message, retry: () => submit() })
+  openVerify({ platform: d.errorPlatform, url, message: d.error ? errorTitle(d.error) : undefined, retry: () => submit() })
 }
 
 /** 错误提示里的 `-a <账号>` 就是要重新登录的账号 */
@@ -275,7 +283,7 @@ onBeforeUnmount(() => {
         v-if="bp.phone"
         type="button"
         class="menu glass reveal"
-        aria-label="打开渠道"
+        :aria-label="t('layout.nav.open')"
         aria-controls="catbus-nav"
         :aria-expanded="nav.navOpen"
         @click="nav.openNav()"
@@ -285,9 +293,9 @@ onBeforeUnmount(() => {
       <div class="title reveal">
         <div class="eyebrow">{{ eyebrow }}</div>
         <div class="heading">
-          <h1>发现</h1>
-          <span v-if="src.source === 'demo'" class="demo-tag" title="页面上的数据都是演示数据，不会访问任何平台，也不会用到真实账号">
-            <i class="demo-dot" aria-hidden="true" /><span class="demo-long">当前状态仅供演示</span><span class="demo-short">演示</span>
+          <h1>{{ t('discover.title') }}</h1>
+          <span v-if="src.source === 'demo'" class="demo-tag" :title="t('discover.demo.title')">
+            <i class="demo-dot" aria-hidden="true" /><span class="demo-long">{{ t('discover.demo.long') }}</span><span class="demo-short">{{ t('discover.demo.short') }}</span>
           </span>
         </div>
       </div>
@@ -316,18 +324,18 @@ onBeforeUnmount(() => {
         <Transition name="fgroup" mode="out-in" @after-enter="updateFade">
           <div v-if="feedUi" key="feed" class="fgroup">
             <KindSwitch v-if="d.kindSwitch" v-model="state.kind" :unsupported="(v) => d.unsupported('kind', v)" />
-            <SegmentedControl v-if="d.orderFields" v-model="state.sort" :options="sortOptions" label="排序" @reselect="toggleOrder" />
+            <SegmentedControl v-if="d.orderFields" v-model="state.sort" :options="sortOptions" :label="t('discover.filter.sort')" @reselect="toggleOrder" />
           </div>
           <div v-else key="search" class="fgroup">
-            <SegmentedControl v-model="state.sort" :options="sortOptions" label="排序" @reselect="toggleOrder" />
+            <SegmentedControl v-model="state.sort" :options="sortOptions" :label="t('discover.filter.sort')" @reselect="toggleOrder" />
             <FilterChip
-              v-for="t in TYPES"
-              :key="t.value"
-              :active="state.type === t.value"
-              :disabled="d.unsupported('type', t.value)"
-              @click="state.type = t.value"
+              v-for="ty in TYPES"
+              :key="ty.value"
+              :active="state.type === ty.value"
+              :disabled="d.unsupported('type', ty.value)"
+              @click="state.type = ty.value"
             >
-              {{ t.label }}
+              {{ ty.label }}
             </FilterChip>
             <TimeFilter v-model="state.time" :options="timeOptions" :disabled="d.unsupportedAll('time')" />
           </div>
@@ -348,14 +356,14 @@ onBeforeUnmount(() => {
         />
       </Transition>
       <span v-if="d.loading && !bp.phone" class="count mono glass loading-count" aria-live="polite">
-        <CatbusLoader :size="14" />加载中…<span class="tick" aria-hidden="true">{{ ticking.toFixed(2) }}s</span>
+        <CatbusLoader :size="14" />{{ t('common.state.loading') }}<span class="tick" aria-hidden="true">{{ ticking.toFixed(2) }}s</span>
       </span>
       <span v-else-if="d.elapsed != null && !d.error && !bp.phone" class="count mono glass done-count">
-        <button type="button" class="refresh" aria-label="刷新" title="刷新" @click="refresh">
+        <button type="button" class="refresh" :aria-label="t('common.action.refresh')" :title="t('common.action.refresh')" @click="refresh">
           <RefreshCw :size="13" />
         </button>
-        <template v-if="feedUi && d.kindSwitch">{{ kindLabel }} · 已加载 {{ d.items.length }} 条</template>
-        <template v-else>{{ d.items.length }} 条 · {{ d.elapsed.toFixed(2) }}s</template>
+        <template v-if="feedUi && d.kindSwitch">{{ t('discover.count.feed', { kind: kindLabel, n: d.items.length }, d.items.length) }}</template>
+        <template v-else>{{ t('discover.count.search', { n: d.items.length, elapsed: d.elapsed.toFixed(2) }, d.items.length) }}</template>
       </span>
       <!-- 筛选栏底边的进度条：跟着筛选栏吸顶，手机上同样贴在筛选栏下沿 -->
       <LoadingBar class="filters-progress" :active="d.loading" />
@@ -366,8 +374,8 @@ onBeforeUnmount(() => {
     <MasonryGrid v-else :cells="d.cells" :aggregate="d.aggregate" :loading="d.loading" :stale="d.refreshing" />
 
     <div ref="sentinel" class="sentinel" aria-hidden="true" />
-    <p v-if="d.loadingMore" class="more mono"><CatbusLoader :size="15" />加载中…</p>
-    <p v-else-if="d.items.length && !d.hasMore" class="more mono">— 到站了 —</p>
+    <p v-if="d.loadingMore" class="more mono"><CatbusLoader :size="15" />{{ t('common.state.loading') }}</p>
+    <p v-else-if="d.items.length && !d.hasMore" class="more mono">{{ t('discover.end') }}</p>
 
     <SelectionActions v-if="bp.phone" bar :items="d.items" @download="downloadSelected" />
 
@@ -377,8 +385,8 @@ onBeforeUnmount(() => {
         class="to-top glass"
         :class="{ launching }"
         type="button"
-        aria-label="回到顶部"
-        title="回到顶部"
+        :aria-label="t('discover.toTop')"
+        :title="t('discover.toTop')"
         @click="toTop"
       >
         <Rocket :size="20" />

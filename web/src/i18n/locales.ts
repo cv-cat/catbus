@@ -1,8 +1,8 @@
 /** WebUI 支持的界面语言（AGENTS.md 7.9「多语言」）。name 用该语言自己的写法，设置里直接显示 */
 export const LOCALES = [
-  { code: 'zh-CN', name: '简体中文' },
+  { code: 'zh-CN', name: '简体中文' }, // i18n-ignore
   { code: 'en', name: 'English' },
-  { code: 'ja', name: '日本語' },
+  { code: 'ja', name: '日本語' }, // i18n-ignore
   { code: 'ko', name: '한국어' },
 ] as const
 

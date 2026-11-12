@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch, type Component } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { FlaskConical, Palette, RotateCcw, SlidersHorizontal, X } from 'lucide-vue-next'
 import BottomSheet from '@/components/BottomSheet.vue'
 import SegmentedControl from '@/components/SegmentedControl.vue'
@@ -21,18 +22,19 @@ const { open, tab } = storeToRefs(store)
 // 主题跟随系统需要有人一直监听：弹窗常驻在 App 里，在这里初始化一次
 useTheme()
 const bp = useBreakpoint()
+const { t } = useI18n()
 
-const TABS: { value: SettingsTab; label: string; icon: Component }[] = [
-  { value: 'general', label: '通用', icon: SlidersHorizontal },
-  { value: 'display', label: '显示', icon: Palette },
-  { value: 'experimental', label: '实验性', icon: FlaskConical },
-]
+const TABS = computed<{ value: SettingsTab; label: string; icon: Component }[]>(() => [
+  { value: 'general', label: t('settings.dialog.tab.general'), icon: SlidersHorizontal },
+  { value: 'display', label: t('settings.dialog.tab.display'), icon: Palette },
+  { value: 'experimental', label: t('settings.dialog.tab.experimental'), icon: FlaskConical },
+])
 const PANELS: Record<SettingsTab, Component> = {
   general: SettingsGeneral,
   display: SettingsDisplay,
   experimental: SettingsExperimental,
 }
-const current = computed(() => TABS.find((t) => t.value === tab.value)!)
+const current = computed(() => TABS.value.find((x) => x.value === tab.value)!)
 
 const root = ref<HTMLElement>()
 const content = ref<HTMLElement>()
@@ -64,11 +66,12 @@ watch(tab, () =>
 function onNavKey(e: KeyboardEvent) {
   if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) return
   e.preventDefault()
-  const i = TABS.findIndex((t) => t.value === tab.value)
-  const n = TABS.length
+  const tabs = TABS.value
+  const i = tabs.findIndex((x) => x.value === tab.value)
+  const n = tabs.length
   const next = e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : (i + (e.key === 'ArrowDown' ? 1 : -1) + n) % n
-  tab.value = TABS[next]!.value
-  void nextTick(() => root.value?.querySelector<HTMLElement>(`[data-nav-item="${TABS[next]!.value}"]`)?.focus())
+  tab.value = tabs[next]!.value
+  void nextTick(() => root.value?.querySelector<HTMLElement>(`[data-nav-item="${tabs[next]!.value}"]`)?.focus())
 }
 
 // ---------- 恢复默认：点两次才生效 ----------
@@ -93,33 +96,33 @@ onBeforeUnmount(() => clearTimeout(confirmTimer))
   <BottomSheet :open="open" labelledby="settings-title" width="800px" :z="60" @close="store.close()">
     <div ref="root" class="settings" :class="{ phone: bp.phone }">
       <header class="head">
-        <h2 id="settings-title">设置</h2>
-        <button class="close" type="button" aria-label="关闭设置" @click="store.close()">
+        <h2 id="settings-title">{{ t('settings.dialog.title') }}</h2>
+        <button class="close" type="button" :aria-label="t('settings.dialog.close')" @click="store.close()">
           <X :size="18" />
         </button>
       </header>
 
       <!-- 手机：菜单变成顶部的分段选择 -->
       <div v-if="bp.phone" class="tabs-top">
-        <SegmentedControl v-model="tab" :options="TABS" label="设置分栏" />
+        <SegmentedControl v-model="tab" :options="TABS" :label="t('settings.dialog.tabs')" />
       </div>
-      <nav v-else class="nav" role="tablist" aria-orientation="vertical" aria-label="设置分栏" @keydown="onNavKey">
+      <nav v-else class="nav" role="tablist" aria-orientation="vertical" :aria-label="t('settings.dialog.tabs')" @keydown="onNavKey">
         <button
-          v-for="t in TABS"
-          :id="`settings-tab-${t.value}`"
-          :key="t.value"
+          v-for="x in TABS"
+          :id="`settings-tab-${x.value}`"
+          :key="x.value"
           type="button"
           role="tab"
           class="nav-item"
-          :class="{ active: tab === t.value }"
-          :data-nav-item="t.value"
-          :aria-selected="tab === t.value"
+          :class="{ active: tab === x.value }"
+          :data-nav-item="x.value"
+          :aria-selected="tab === x.value"
           aria-controls="settings-panel"
-          :tabindex="tab === t.value ? 0 : -1"
-          @click="tab = t.value"
+          :tabindex="tab === x.value ? 0 : -1"
+          @click="tab = x.value"
         >
-          <component :is="t.icon" :size="17" aria-hidden="true" />
-          {{ t.label }}
+          <component :is="x.icon" :size="17" aria-hidden="true" />
+          {{ x.label }}
         </button>
       </nav>
 
@@ -136,10 +139,10 @@ onBeforeUnmount(() => clearTimeout(confirmTimer))
       </section>
 
       <footer class="foot">
-        <span class="hint">设置保存在本浏览器里，换浏览器不会同步。</span>
+        <span class="hint">{{ t('settings.dialog.hint') }}</span>
         <button class="reset" :class="{ confirming }" type="button" @click="onReset">
           <RotateCcw :size="15" aria-hidden="true" />
-          {{ confirming ? '再点一次确认恢复' : '恢复默认' }}
+          {{ confirming ? t('settings.dialog.resetConfirm') : t('settings.dialog.reset') }}
         </button>
       </footer>
     </div>

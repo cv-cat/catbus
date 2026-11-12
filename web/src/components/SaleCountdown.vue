@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { dateTime } from '@/composables/format'
 
 /**
  * 开售倒计时（演出详情底部，AGENTS.md 7.9「演出详情」，设计稿 N）。
@@ -7,6 +9,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
  */
 const props = defineProps<{ at: number | null; text?: string | null }>()
 
+const { t } = useI18n()
 const now = ref(Date.now())
 let timer = 0
 onMounted(() => (timer = window.setInterval(() => (now.value = Date.now()), 1000)))
@@ -21,26 +24,26 @@ const cells = computed(() => {
   const h = Math.floor((s % 86400) / 3600)
   const m = Math.floor((s % 3600) / 60)
   return d > 0
-    ? [[String(d), '天'], [p2(h), '时'], [p2(m), '分']]
-    : [[p2(h), '时'], [p2(m), '分'], [p2(s % 60), '秒']]
+    ? [[String(d), t('detail.countdown.unit.day')], [p2(h), t('detail.countdown.unit.hour')], [p2(m), t('detail.countdown.unit.minute')]]
+    : [[p2(h), t('detail.countdown.unit.hour')], [p2(m), t('detail.countdown.unit.minute')], [p2(s % 60), t('detail.countdown.unit.second')]]
 })
 const when = computed(() => {
   if (props.at == null) return ''
-  const d = new Date(props.at)
-  return `${d.getMonth() + 1}月${d.getDate()}日 ${p2(d.getHours())}:${p2(d.getMinutes())}`
+  // zh-CN 输出「11月3日 09:05」
+  return dateTime(props.at, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 })
 </script>
 
 <template>
-  <span v-if="cells.length" class="countdown" role="timer" :aria-label="`距开售 ${cells.map((c) => c.join('')).join('')}`">
-    <small>距开售 · {{ when }}</small>
+  <span v-if="cells.length" class="countdown" role="timer" :aria-label="t('detail.countdown.label', { time: cells.map((c) => c.join('')).join('') })">
+    <small>{{ t('detail.countdown.until', { when }) }}</small>
     <span class="digits" aria-hidden="true">
       <template v-for="[v, u] in cells" :key="u">
         <b class="mono">{{ v }}</b><i>{{ u }}</i>
       </template>
     </span>
   </span>
-  <span v-else-if="left === 0 || text" class="plain">{{ left === 0 ? '已开售' : text }}</span>
+  <span v-else-if="left === 0 || text" class="plain">{{ left === 0 ? t('detail.countdown.onSale') : text }}</span>
 </template>
 
 <style scoped>

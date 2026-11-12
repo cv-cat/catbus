@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import SegmentedControl from '@/components/SegmentedControl.vue'
 import { KINDS } from '@/data/filters'
 
@@ -9,9 +10,10 @@ import { KINDS } from '@/data/filters'
  */
 const props = defineProps<{ unsupported: (value: string) => string | null }>()
 const model = defineModel<string>({ required: true })
+const { t } = useI18n()
 const options = computed(() => KINDS.map((o) => ({ value: o.value as string, label: o.label as string, disabled: props.unsupported(o.value) })))
 </script>
 
 <template>
-  <SegmentedControl v-model="model" :options="options" label="推荐流分类" />
+  <SegmentedControl v-model="model" :options="options" :label="t('discover.filter.kind')" />
 </template>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ChevronDown, ChevronUp, Heart } from 'lucide-vue-next'
 import CatbusLoader from '@/components/CatbusLoader.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
@@ -7,6 +8,7 @@ import EmojiText from '@/components/EmojiText.vue'
 import CommentMedia from '@/components/CommentMedia.vue'
 import { REPLY_PLATFORMS, listReplies } from '@/api/client'
 import type { CatbusError, Comment, Item } from '@/api/types'
+import { errorTitle } from '@/i18n/errors'
 import { compact, since, tintOf } from '@/composables/format'
 import { enqueueReply, stopReplyQueue } from '@/composables/replyQueue'
 import { openVerify, verifyUrlOf } from '@/stores/verify'
@@ -15,6 +17,7 @@ import { openVerify, verifyUrlOf } from '@/stores/verify'
  * 一条评论下的楼中楼（AGENTS.md 7.9）：默认带出第一条回复，其余点「展开」再取，可以收起。
  */
 const props = defineProps<{ comment: Comment; item: Item; platform: string; account: string | null }>()
+const { t } = useI18n()
 
 const total = computed(() => props.comment.stats.replies ?? 0)
 const supported = computed(() => REPLY_PLATFORMS.has(props.platform) && total.value > 0)
@@ -111,20 +114,20 @@ function collapse() {
 }
 
 function verify() {
-  openVerify({ platform: props.platform, url: verifyUrlOf(error.value), message: error.value?.message, retry: expand })
+  openVerify({ platform: props.platform, url: verifyUrlOf(error.value), message: error.value ? errorTitle(error.value) : undefined, retry: expand })
 }
 </script>
 
 <template>
   <div v-if="total > 0" ref="root" class="thread">
-    <span v-if="!supported" class="count">{{ total }} 条回复</span>
+    <span v-if="!supported" class="count">{{ t('comment.replies.count', { n: total }, total) }}</span>
     <template v-else>
       <ul v-if="shown.length" class="replies">
         <li v-for="r in shown" :key="r.id" class="reply">
           <UserAvatar class="ava" :user="r.author" :style="{ background: tintOf(r.author?.id) }" />
           <div class="r-body">
             <span class="r-name">
-              {{ r.author?.name ?? '匿名用户' }}
+              {{ r.author?.name ?? t('comment.anonymous') }}
               <template v-if="r.parent_id && r.parent_id !== comment.id && nameById.get(r.parent_id)">
                 <span class="arrow">▸</span>{{ nameById.get(r.parent_id) }}
               </template>
@@ -141,18 +144,18 @@ function verify() {
       </ul>
 
       <div class="actions">
-        <span v-if="loading" class="loading"><CatbusLoader :size="14" />加载中…</span>
+        <span v-if="loading" class="loading"><CatbusLoader :size="14" />{{ t('common.state.loading') }}</span>
         <template v-else-if="error">
-          <span class="err">回复加载失败</span>
-          <button v-if="verifyUrlOf(error)" type="button" class="link" @click="verify">去验证</button>
-          <button v-else type="button" class="link" @click="retry">重试</button>
+          <span class="err">{{ t('comment.replies.failed') }}</span>
+          <button v-if="verifyUrlOf(error)" type="button" class="link" @click="verify">{{ t('comment.verify') }}</button>
+          <button v-else type="button" class="link" @click="retry">{{ t('common.action.retry') }}</button>
         </template>
         <template v-else>
           <button v-if="hidden > 0 && (more || replies.length > shown.length)" type="button" class="link" @click="expand">
-            {{ expanded ? `展开更多回复` : `展开 ${hidden} 条回复` }}<ChevronDown :size="14" />
+            {{ expanded ? t('comment.replies.expandMore') : t('comment.replies.expand', { n: hidden }, hidden) }}<ChevronDown :size="14" />
           </button>
           <button v-if="expanded && shown.length > 1" type="button" class="link quiet" @click="collapse">
-            收起<ChevronUp :size="14" />
+            {{ t('comment.replies.collapse') }}<ChevronUp :size="14" />
           </button>
         </template>
       </div>

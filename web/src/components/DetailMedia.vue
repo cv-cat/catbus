@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ExternalLink, FastForward, Maximize, Pause, Play, RotateCw, Volume2, VolumeX } from 'lucide-vue-next'
 import CatbusLoader from '@/components/CatbusLoader.vue'
 import type { Item } from '@/api/types'
@@ -270,6 +271,7 @@ const trackStyle = computed(() => ({
 
 // ---------- 视频快退 / 快进：A / D、左右按钮；长按 D 或右按钮倍速 ----------
 const SEEK = 15
+const { t } = useI18n()
 const HOLD_MS = 320
 const FAST_RATE = 2
 const fast = ref(false)
@@ -288,7 +290,7 @@ function seek(d: number) {
   const end = v.duration || total.value
   v.currentTime = Math.max(0, end ? Math.min(end - 0.1, v.currentTime + d) : v.currentTime + d)
   current.value = v.currentTime
-  showFlash(`${d > 0 ? '+' : '−'}${Math.abs(d)} 秒`)
+  showFlash(t('detail.media.seek', { sign: d > 0 ? '+' : '−', n: Math.abs(d) }, Math.abs(d)))
   poke()
 }
 /** 按下：短按（抬起时还没到 HOLD_MS）快进 15 秒，按住超过 HOLD_MS 改为倍速播放直到松开 */
@@ -301,7 +303,7 @@ function holdStart() {
     fast.value = true
     v.playbackRate = FAST_RATE
     if (v.paused) void v.play().catch(() => {})
-    showFlash(`${FAST_RATE}× 倍速播放中`, true)
+    showFlash(t('detail.media.fast', { rate: FAST_RATE }), true)
   }, HOLD_MS)
 }
 function holdEnd(commit = true) {
@@ -391,7 +393,7 @@ onBeforeUnmount(() => {
       v-if="mode === 'embed' && active"
       class="embed"
       :src="embed!"
-      :title="item.title ?? '视频'"
+      :title="item.title ?? t('detail.media.video')"
       allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
       allowfullscreen
       referrerpolicy="strict-origin-when-cross-origin"
@@ -420,22 +422,22 @@ onBeforeUnmount(() => {
  @mousemove="poke"
       />
       <div v-if="failed" class="notice">
-        <p>视频无法在这里播放</p>
+        <p>{{ t('detail.media.failed') }}</p>
  <div class="notice-actions">
-          <button type="button" @click="retry"><RotateCw :size="14" />重试</button>
-          <a :href="item.url" target="_blank" rel="noopener noreferrer"><ExternalLink :size="14" />去原链接观看</a>
+          <button type="button" @click="retry"><RotateCw :size="14" />{{ t('common.action.retry') }}</button>
+          <a :href="item.url" target="_blank" rel="noopener noreferrer"><ExternalLink :size="14" />{{ t('detail.media.openOrigin') }}</a>
         </div>
       </div>
       <button v-if="mutedByPolicy && !failed" class="unmute" type="button" @click="toggleMute">
-        <VolumeX :size="15" />点击开启声音
+        <VolumeX :size="15" />{{ t('detail.media.unmute') }}
       </button>
       <template v-if="!failed">
-        <button class="nav prev" type="button" aria-label="后退 15 秒" title="后退 15 秒（A）" @click="seek(-SEEK)"><ChevronsLeft :size="20" /></button>
+        <button class="nav prev" type="button" :aria-label="t('detail.media.back', { n: SEEK }, SEEK)" :title="t('detail.media.backTip', { n: SEEK }, SEEK)" @click="seek(-SEEK)"><ChevronsLeft :size="20" /></button>
         <button
           class="nav next"
           type="button"
-          aria-label="快进 15 秒"
-          title="快进 15 秒，按住倍速播放（D）"
+          :aria-label="t('detail.media.forward', { n: SEEK }, SEEK)"
+          :title="t('detail.media.forwardTip', { n: SEEK }, SEEK)"
           @pointerdown="(e: PointerEvent) => e.button === 0 && holdStart()"
           @pointerup="holdEnd()"
           @pointerleave="holdCancel"
@@ -451,7 +453,7 @@ onBeforeUnmount(() => {
           <FastForward v-if="fast" :size="15" fill="currentColor" />{{ flash.text }}
         </div>
       </Transition>
-      <button v-if="paused && ready && !failed" class="big-play" type="button" aria-label="播放" @click="toggle">
+      <button v-if="paused && ready && !failed" class="big-play" type="button" :aria-label="t('detail.media.play')" @click="toggle">
         <Play :size="26" fill="currentColor" />
       </button>
       <div v-if="!failed" class="controls" :class="{ idle }" @mousemove="poke" @pointerdown="poke">
@@ -459,7 +461,7 @@ onBeforeUnmount(() => {
    ref="bar"
           class="bar"
    role="slider"
-   aria-label="播放进度"
+   :aria-label="t('detail.media.progress')"
           :aria-valuenow="Math.round(current)"
           :aria-valuemax="Math.round(total)"
           @pointerdown="onBarDown"
@@ -472,17 +474,17 @@ onBeforeUnmount(() => {
    <span class="knob" :style="{ left: pct(current) }" />
         </div>
  <div class="row">
-          <button type="button" :aria-label="paused ? '播放' : '暂停'" @click="toggle">
+          <button type="button" :aria-label="paused ? t('detail.media.play') : t('detail.media.pause')" @click="toggle">
             <Play v-if="paused" :size="17" fill="currentColor" />
      <Pause v-else :size="17" fill="currentColor" />
    </button>
    <span class="time mono">{{ fmt(current) ?? '00:00' }} / {{ fmt(total) ?? '--:--' }}</span>
    <span class="grow" />
-   <button type="button" :aria-label="muted ? '开启声音' : '静音'" @click="toggleMute">
+   <button type="button" :aria-label="muted ? t('detail.media.soundOn') : t('detail.media.mute')" @click="toggleMute">
      <VolumeX v-if="muted" :size="17" />
      <Volume2 v-else :size="17" />
           </button>
-          <button type="button" aria-label="全屏" @click="fullscreen"><Maximize :size="16" /></button>
+          <button type="button" :aria-label="t('detail.media.fullscreen')" @click="fullscreen"><Maximize :size="16" /></button>
         </div>
       </div>
     </template>
@@ -490,10 +492,10 @@ onBeforeUnmount(() => {
     <CatbusLoader v-else-if="mode === 'pending'" class="pending-loader" :size="40" />
 
     <div v-else-if="mode === 'unplayable'" class="notice">
-      <p>没有拿到可播放的视频地址</p>
+      <p>{{ t('detail.media.noSource') }}</p>
       <div class="notice-actions">
-          <button type="button" @click="retry"><RotateCw :size="14" />重试</button>
-          <a :href="item.url" target="_blank" rel="noopener noreferrer"><ExternalLink :size="14" />去原链接观看</a>
+          <button type="button" @click="retry"><RotateCw :size="14" />{{ t('common.action.retry') }}</button>
+          <a :href="item.url" target="_blank" rel="noopener noreferrer"><ExternalLink :size="14" />{{ t('detail.media.openOrigin') }}</a>
         </div>
     </div>
 
@@ -508,12 +510,12 @@ onBeforeUnmount(() => {
         @pointercancel="onSwipeUp"
       >
  <div v-for="(src, i) in images" :key="src + i" class="slide">
-   <img :src="imgSrc(src)" :alt="`第 ${i + 1} 张`" referrerpolicy="no-referrer" :loading="i === 0 ? 'eager' : 'lazy'" />
+   <img :src="imgSrc(src)" :alt="t('detail.image.nth', { n: i + 1 })" referrerpolicy="no-referrer" :loading="i === 0 ? 'eager' : 'lazy'" />
         </div>
       </div>
       <template v-if="images.length > 1">
- <button class="nav prev" type="button" aria-label="上一张" @click="go(-1)"><ChevronLeft :size="20" /></button>
- <button class="nav next" type="button" aria-label="下一张" @click="go(1)"><ChevronRight :size="20" /></button>
+ <button class="nav prev" type="button" :aria-label="t('detail.image.prev')" @click="go(-1)"><ChevronLeft :size="20" /></button>
+ <button class="nav next" type="button" :aria-label="t('detail.image.next')" @click="go(1)"><ChevronRight :size="20" /></button>
         <div class="dots" aria-hidden="true">
           <span v-for="(_, i) in images" :key="i" :class="{ on: i === index }" />
         </div>

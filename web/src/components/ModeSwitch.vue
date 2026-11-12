@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 /**
  * 侧栏的「单一 / 聚合」开关：磨砂玻璃的轨道，上面一颗玻璃滑块。
@@ -7,6 +8,7 @@ import { ref } from 'vue'
  * 滑块滑动时被拉长一下再回弹，按住时鼓起来、变得更透，像一滴压在玻璃上的水。
  */
 const model = defineModel<boolean>({ required: true })
+const { t } = useI18n()
 /** 切换过才播拉伸动画，避免一进页面就动一下 */
 const touched = ref(false)
 
@@ -18,18 +20,18 @@ function toggle() {
 
 <template>
   <button
-    v-tip="model ? '聚合：同时看几个渠道，点下面的渠道选上或去掉' : '单一：一次看一个渠道'"
+    v-tip="model ? t('layout.mode.aggregateTip') : t('layout.mode.singleTip')"
     type="button"
     class="mode"
     :class="{ touched }"
     role="switch"
     :aria-checked="model"
-    aria-label="聚合模式"
+    :aria-label="t('layout.mode.label')"
     @click="toggle"
   >
     <span class="thumb" aria-hidden="true" />
-    <span class="opt" :class="{ on: !model }" aria-hidden="true">单一</span>
-    <span class="opt" :class="{ on: model }" aria-hidden="true">聚合</span>
+    <span class="opt" :class="{ on: !model }" aria-hidden="true">{{ t('layout.mode.single') }}</span>
+    <span class="opt" :class="{ on: model }" aria-hidden="true">{{ t('layout.mode.aggregate') }}</span>
   </button>
 </template>
 

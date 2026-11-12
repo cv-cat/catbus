@@ -1,5 +1,7 @@
 import { isDemo } from '@/stores/source'
-import type { Item } from './types'
+import type { CatbusError, Item } from './types'
+import { BridgeError } from './client'
+import { t } from '@/i18n'
 
 // 与 server/download.ts 的结构一致
 export type ItemStatus = 'queued' | 'running' | 'done' | 'failed'
@@ -35,8 +37,8 @@ export interface Batch {
 export type DeliverResult = 'ok' | 'expired'
 
 async function json<T>(res: Response): Promise<T> {
-  const body = (await res.json()) as T & { error?: { message: string } }
-  if (!res.ok) throw new Error(body.error?.message ?? `请求失败（${res.status}）`)
+  const body = (await res.json()) as T & { error?: CatbusError }
+  if (!res.ok) throw body.error ? new BridgeError(body.error) : new Error(t('download.error.requestFailed', { status: res.status }))
   return body
 }
 
@@ -55,7 +57,7 @@ function demoTick() {
     if (running) {
       const fail = !retried.has(running.id) && running.id.charCodeAt(running.id.length - 1) % 7 === 0
       Object.assign(running, fail
-        ? { status: 'failed', error: '小红书要求人机验证（HTTP 461）（演示）', code: 'RISK_CONTROL', verify_url: 'https://www.xiaohongshu.com/website-login/captcha?verifyBiz=461' }
+        ? { status: 'failed', error: '小红书要求人机验证（HTTP 461）（演示）', code: 'RISK_CONTROL', verify_url: 'https://www.xiaohongshu.com/website-login/captcha?verifyBiz=461' } // i18n-ignore 演示数据：模拟 CLI 的中文报错
         : { status: 'done', files: [`${running.dir}/${b.platform}_${running.id}_1.jpg`] })
       return
     }
@@ -145,7 +147,7 @@ export const downloadApi = {
       const b = demo.find((x) => x.id === batch)
       if (b) {
         const gone = (it: DownloadItem) => item == null || it.id === item
- if (b.items.some((it) => gone(it) && it.status === 'running')) throw new Error('正在下载，完成后再删除')
+ if (b.items.some((it) => gone(it) && it.status === 'running')) throw new Error(t('download.error.busy'))
         b.items = b.items.filter((it) => !gone(it))
         if (!b.items.length) demo = demo.filter((x) => x !== b)
       }
@@ -163,14 +165,14 @@ export const downloadApi = {
     if (isDemo()) {
       const picked = b.items.filter((it) => it.status === 'done' && (item != null ? it.id === item : !only?.length || only.includes(it.id)))
       const text = [
-        'catbus 演示下载',
+        t('download.demoFile.title'),
         '',
-        `平台：${b.platform}`,
-        `条目：${picked.length} 条`,
+        t('download.demoFile.platform', { platform: b.platform }),
+        t('download.demoFile.items', { n: picked.length }, picked.length),
         ...picked.map((it) => `  · ${it.title || it.id}`),
         '',
-        '这是演示模式在页面里生成的说明文件，没有连接 catbus。',
-        '真实下载时，一个文件直接保存，多个文件打成一个 zip，由浏览器存到它的下载位置。',
+        t('download.demoFile.about'),
+        t('download.demoFile.real'),
         '',
       ].join('\n')
       const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }))
@@ -181,7 +183,7 @@ export const downloadApi = {
     const url = fileUrl(b.id, item, only)
     const head = await fetch(url, { method: 'HEAD', cache: 'no-store' })
     if (head.status === 410) return 'expired'
-    if (!head.ok) throw new Error(head.status === 404 ? '没有可以保存的文件' : `保存失败（HTTP ${head.status}）`)
+    if (!head.ok) throw new Error(head.status === 404 ? t('download.error.nothing') : t('download.error.saveFailed', { status: head.status }))
     trigger(url)
     return 'ok'
   },

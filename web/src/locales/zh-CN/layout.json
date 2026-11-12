@@ -1,0 +1,49 @@
+{
+  "slogan": "上车，开往任何平台",
+  "settings": "设置",
+  "loading": "加载中",
+  "mascot": "catbus 吉祥物：巴士车掌小姐",
+  "copy": {
+    "done": "已复制到剪贴板",
+    "failed": "复制失败，请手动复制"
+  },
+  "nav": {
+    "label": "渠道",
+    "open": "打开渠道",
+    "close": "收起侧栏",
+    "expand": "展开侧栏",
+    "count": "{n} 个渠道",
+    "countSelected": "已选 {n} 个，共 {total} 个渠道"
+  },
+  "mode": {
+    "label": "聚合模式",
+    "single": "单一",
+    "aggregate": "聚合",
+    "singleTip": "单一：一次看一个渠道",
+    "aggregateTip": "聚合：同时看几个渠道，点下面的渠道选上或去掉"
+  },
+  "health": {
+    "ok": "账号状态正常",
+    "okMany": "{n} 个账号状态正常",
+    "warn": "{bad} / {n} 个账号登录失效",
+    "bad": "账号登录失效",
+    "badAll": "全部 {n} 个账号登录失效"
+  },
+  "theme": {
+    "toDark": "切换到暗色主题",
+    "toLight": "切换到亮色主题",
+    "dark": "暗色",
+    "light": "亮色",
+    "darkSystem": "暗色（当前跟随系统）",
+    "lightSystem": "亮色（当前跟随系统）"
+  },
+  "state": {
+    "emptyTitle": "没有找到内容",
+    "emptyDesc": "换个关键词，或者切换到别的渠道试试。",
+    "verifyDesc": "需要在浏览器里完成一次人机验证，验证后重试即可。",
+    "hint": "建议",
+    "copyHint": "{hint}\n点击复制",
+    "login": "去登录",
+    "verify": "去验证"
+  }
+}

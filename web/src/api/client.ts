@@ -1,8 +1,10 @@
 import { mockAccounts, mockComments, mockFilters, mockHot, mockReplies, mockItem, mockItems, mockLogout, mockRelated, mockSuggest, mockUse } from './mock'
 import { loginApi } from './login'
-import type { Account, Comment, Envelope, Item, Keyword } from './types'
+import type { Account, CatbusError, Comment, Envelope, Item, Keyword } from './types'
 import { isDemo, useSourceStore, type Source } from '@/stores/source'
 import { parseOrder } from '@/data/filters'
+import { t } from '@/i18n'
+import { errorTitle } from '@/i18n/errors'
 
 /**
  * 跑一条 catbus 命令（bridge 的 POST /api/catbus）。`signal` 中止时 fetch 断开连接，
@@ -16,6 +18,22 @@ export async function call<T>(argv: string[], signal?: AbortSignal): Promise<Env
     signal,
   })
   return (await res.json()) as Envelope<T>
+}
+
+/**
+ * bridge 返回的错误信封（code / message / hint）。message 是抛出时按当前语言取的 errorTitle，
+ * 只取 e.message 的调用方也能显示译文；常驻显示的地方用 errorText(e)，随语言切换。
+ */
+export class BridgeError extends Error {
+  constructor(readonly error: CatbusError) {
+    super(errorTitle(error))
+    this.name = 'BridgeError'
+  }
+}
+
+/** 显示用的错误文字：bridge 的错误按 code 取译文（AGENTS.md 7.9「多语言」），其他错误用 message */
+export function errorText(e: unknown): string {
+  return e instanceof BridgeError ? errorTitle(e.error) : (e as Error).message
 }
 
 /** 被主动取消的请求（过期了）：调用方当作没发生过，不显示错误、不弹提示、不标失效 */
@@ -233,13 +251,13 @@ export async function listAccounts(): Promise<Envelope<Account[]>> {
 export async function removeAccount(platform: string, account: string): Promise<void> {
   if (isDemo()) return mockLogout(platform, account)
   const { envelope } = await loginApi.logout(platform, account)
-  if (!envelope.ok) throw new Error(envelope.error?.message ?? '删除账号失败')
+  if (!envelope.ok) throw envelope.error ? new BridgeError(envelope.error) : new Error(t('account.error.removeFailed'))
 }
 
 export async function useAccount(platform: string, account: string): Promise<void> {
   if (isDemo()) return mockUse(platform, account)
   const { envelope } = await loginApi.use(platform, account)
-  if (!envelope.ok) throw new Error(envelope.error?.message ?? '设为默认失败')
+  if (!envelope.ok) throw envelope.error ? new BridgeError(envelope.error) : new Error(t('account.error.useFailed'))
 }
 
 /** 热搜（AGENTS.md 7.9「搜索联想与热搜」）：`catbus <p> keyword hot [-a <账号>]` */

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { ArrowLeftRight, CheckCheck, Download, X } from 'lucide-vue-next'
 import type { Item } from '@/api/types'
 import { useSelectionStore } from '@/stores/selection'
@@ -10,31 +11,34 @@ import { useSelectionStore } from '@/stores/selection'
 const props = defineProps<{ items: Item[]; compact?: boolean; bar?: boolean }>()
 const emit = defineEmits<{ download: [] }>()
 const sel = useSelectionStore()
+const { t } = useI18n()
 
 const ACTIONS = [
-  { key: 'all', label: '全选', icon: CheckCheck, run: () => sel.all(props.items) },
-  { key: 'none', label: '全不选', icon: X, run: () => sel.none() },
-  { key: 'invert', label: '反选', icon: ArrowLeftRight, run: () => sel.invert(props.items) },
-  { key: 'download', label: '下载选中', short: '下载', icon: Download, run: () => emit('download') },
+  { key: 'all', labelKey: 'discover.selection.all', icon: CheckCheck, run: () => sel.all(props.items) },
+  { key: 'none', labelKey: 'discover.selection.none', icon: X, run: () => sel.none() },
+  { key: 'invert', labelKey: 'discover.selection.invert', icon: ArrowLeftRight, run: () => sel.invert(props.items) },
+  { key: 'download', labelKey: 'discover.selection.download', shortKey: 'common.action.download', icon: Download, run: () => emit('download') },
 ] as const
 const N = ACTIONS.length
 </script>
 
 <template>
   <Transition v-if="bar" name="bar">
-    <div v-if="sel.active" class="bar glass" role="toolbar" aria-label="选择操作">
-      <span class="picked">已选 <b class="mono">{{ sel.count }}</b></span>
+    <div v-if="sel.active" class="bar glass" role="toolbar" :aria-label="t('discover.selection.label')">
+      <i18n-t keypath="discover.selection.picked" tag="span" class="picked" :plural="sel.count">
+        <template #n><b class="mono">{{ sel.count }}</b></template>
+      </i18n-t>
       <button
         v-for="a in ACTIONS"
         :key="a.key"
         type="button"
         class="bar-act"
         :class="{ primary: a.key === 'download' }"
-        :aria-label="a.key === 'download' ? `下载选中的 ${sel.count} 条` : a.label"
+        :aria-label="a.key === 'download' ? t('discover.selection.downloadCount', { n: sel.count }, sel.count) : t(a.labelKey)"
         @click="a.run()"
       >
         <component :is="a.icon" :size="18" aria-hidden="true" />
-        <span>{{ 'short' in a ? a.short : a.label }}</span>
+        <span>{{ t('shortKey' in a ? a.shortKey : a.labelKey) }}</span>
       </button>
     </div>
   </Transition>
@@ -46,8 +50,8 @@ const N = ACTIONS.length
  class="act glass"
         :class="{ primary: a.key === 'download' }"
  :style="{ '--from': `${(N - i) * (compact ? 44 : 56)}px`, '--in': `${(N - 1 - i) * 45}ms`, '--out': `${i * 30}ms` }"
-        :aria-label="a.label"
- :title="a.label"
+        :aria-label="t(a.labelKey)"
+ :title="t(a.labelKey)"
  @click="a.run()"
       >
         <component :is="a.icon" :size="compact ? 15 : 18" />

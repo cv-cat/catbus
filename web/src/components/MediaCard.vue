@@ -5,6 +5,7 @@ const shownCovers = new Set<string>()
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ArrowDown, ArrowUp, Check, HardDrive, Heart, ImageOff, MessageCircle, Play, Star } from 'lucide-vue-next'
 import UserAvatar from '@/components/UserAvatar.vue'
 import type { Item } from '@/api/types'
@@ -17,6 +18,8 @@ import { useSettingsStore } from '@/stores/settings'
 import { useAuthorStore } from '@/stores/author'
 import { gsap, prefersReducedMotion } from '@/composables/motion'
 import { imgSrc } from '@/api/client'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   item: Item
@@ -88,7 +91,7 @@ const dur = computed(() => duration(props.item.media.find((m) => m.duration)?.du
 const torrent = computed(() => torrentInfo(props.item))
 /** 演出（猫眼演出，设计稿 M）：角标放分类和开售，底部放演出者和起价，见 composables/show.ts */
 const show = computed(() => showInfo(props.item, null, props.platform))
-const title = computed(() => torrent.value?.title ?? (props.item.title || props.item.text || '（无标题）'))
+const title = computed(() => torrent.value?.title ?? (props.item.title || props.item.text || t('discover.card.untitled')))
 /** 没有封面（纯文字推文、微博等）或封面加载失败：正文本身当封面，不画占位图标（设计稿 H） */
 const textOnly = computed(() => !props.item.cover || failed.value)
 const short = computed(() => [...title.value].length <= 24)
@@ -261,7 +264,7 @@ onBeforeUnmount(() => {
       class="check"
       role="checkbox"
       :aria-checked="!!selected"
-      aria-label="选择"
+      :aria-label="t('discover.card.select')"
       @pointerdown="onCheckDown"
       @click.stop.prevent
     >
@@ -297,7 +300,7 @@ onBeforeUnmount(() => {
       <ImageOff v-else class="fallback" :size="22" aria-hidden="true" />
       <span v-if="video" class="badge">
         <Play :size="11" fill="currentColor" aria-hidden="true" />
-        <span class="mono">{{ dur ?? '视频' }}</span>
+        <span class="mono">{{ dur ?? t('filters.type.video') }}</span>
       </span>
       <template v-if="torrent">
         <span v-if="torrent.discount" class="badge discount" :class="{ free: torrent.free }">
@@ -328,11 +331,11 @@ onBeforeUnmount(() => {
       <p v-if="torrent?.name" class="sub mono">{{ torrent.name }}</p>
       <div v-if="torrent" class="meta peers">
         <template v-if="settings.cardStats">
-          <span class="stat seed" :class="{ dead: torrent.seeders === 0 }" :aria-label="`${torrent.seeders ?? 0} 人做种`">
+          <span class="stat seed" :class="{ dead: torrent.seeders === 0 }" :aria-label="t('discover.card.seeders', { n: torrent.seeders ?? 0 }, torrent.seeders ?? 0)">
             <ArrowUp :size="13" aria-hidden="true" />
             <span class="mono">{{ compact(torrent.seeders) }}</span>
           </span>
-          <span class="stat" :aria-label="`${torrent.leechers ?? 0} 人下载`">
+          <span class="stat" :aria-label="t('discover.card.leechers', { n: torrent.leechers ?? 0 }, torrent.leechers ?? 0)">
             <ArrowDown :size="13" aria-hidden="true" />
             <span class="mono">{{ compact(torrent.leechers) }}</span>
           </span>
@@ -342,7 +345,7 @@ onBeforeUnmount(() => {
       <div v-else-if="show" class="meta">
         <UserAvatar v-if="item.author" class="ava" :user="item.author" :letter="false" :style="{ '--tint': tint }" />
         <span class="author" :class="{ dim: !item.author }">{{ show.performers ?? show.saleText ?? '' }}</span>
-        <span v-if="show.price" class="price"><strong class="mono">{{ show.price }}</strong><small>起</small></span>
+        <span v-if="show.price" class="price"><strong class="mono">{{ show.price }}</strong><small>{{ t('discover.card.priceFrom') }}</small></span>
       </div>
       <div v-else class="meta">
         <span
@@ -350,7 +353,7 @@ onBeforeUnmount(() => {
           :class="{ link: authorLink }"
           :role="authorLink ? 'link' : undefined"
           :tabindex="authorLink ? 0 : undefined"
-          :aria-label="authorLink ? `${author}的作者页` : undefined"
+          :aria-label="authorLink ? t('discover.card.authorPage', { name: author }) : undefined"
           @click="onAuthorClick"
           @auxclick="onAuthorAux"
           @keydown.enter="onAuthorKey"
@@ -359,16 +362,16 @@ onBeforeUnmount(() => {
           <span class="author">{{ author }}</span>
         </span>
         <template v-if="settings.cardStats">
-        <span class="stat" :aria-label="`${item.stats.likes ?? 0} 赞`">
+        <span class="stat" :aria-label="t('discover.card.likes', { n: item.stats.likes ?? 0 }, item.stats.likes ?? 0)">
           <Heart :size="13" aria-hidden="true" />
           <span class="mono">{{ compact(item.stats.likes) }}</span>
         </span>
         <!-- 收藏、评论：渠道给了数才显示 -->
-        <span v-if="item.stats.collects != null" class="stat extra" :aria-label="`${item.stats.collects} 收藏`">
+        <span v-if="item.stats.collects != null" class="stat extra" :aria-label="t('discover.card.collects', { n: item.stats.collects }, item.stats.collects)">
           <Star :size="13" aria-hidden="true" />
           <span class="mono">{{ compact(item.stats.collects) }}</span>
         </span>
-        <span v-if="item.stats.comments != null" class="stat extra" :aria-label="`${item.stats.comments} 评论`">
+        <span v-if="item.stats.comments != null" class="stat extra" :aria-label="t('discover.card.comments', { n: item.stats.comments }, item.stats.comments)">
           <MessageCircle :size="13" aria-hidden="true" />
           <span class="mono">{{ compact(item.stats.comments) }}</span>
         </span>

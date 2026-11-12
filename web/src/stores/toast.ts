@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { t } from '@/i18n'
 
 /** 页面顶部的全局提示：任何地方都可以 toast('…') */
 export const useToastStore = defineStore('toast', () => {
@@ -39,10 +40,10 @@ export async function copyText(text: string): Promise<boolean> {
     const ok = document.execCommand('copy')
     ta.remove()
     if (!ok) {
-      toast('复制失败，请手动复制')
+      toast(t('layout.copy.failed'))
       return false
     }
   }
-  toast('已复制到剪贴板')
+  toast(t('layout.copy.done'))
   return true
 }

@@ -3,6 +3,7 @@ import { computed, ref, shallowRef } from 'vue'
 import { downloadApi, type Batch } from '@/api/download'
 import type { Item } from '@/api/types'
 import { toast } from '@/stores/toast'
+import { t } from '@/i18n'
 
 const busy = (b: Batch) => b.items.some((it) => it.status === 'queued' || it.status === 'running')
 const retryable = (it: Batch['items'][number]) => it.status === 'failed' || (it.status === 'done' && !!it.expired)
@@ -70,10 +71,10 @@ export const useDownloadsStore = defineStore('downloads', () => {
     try {
       const r = await downloadApi.deliver(b, item, only)
       if (r === 'expired') {
-        toast('文件已过期，请重新下载', 3200)
+        toast(t('download.status.expired'), 3200)
         // 服务端已把条目标为已过期，刷新后出现重试按钮
         void refresh()
-      } else toast(auto ? '下载完成，已交给浏览器保存' : '已交给浏览器保存', 2400)
+      } else toast(auto ? t('download.toast.done') : t('download.toast.saved'), 2400)
     } catch (e) {
       toast((e as Error).message, 3200)
     }

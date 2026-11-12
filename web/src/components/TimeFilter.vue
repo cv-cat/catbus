@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Check, ChevronDown, ChevronUp } from 'lucide-vue-next'
 import { gsap, prefersReducedMotion } from '@/composables/motion'
 import { flashTip } from '@/directives/tip'
@@ -14,6 +15,7 @@ const props = defineProps<{
   disabled?: string | null
 }>()
 const model = defineModel<string>({ required: true })
+const { t } = useI18n()
 
 const DEFAULT = 'all'
 const MENU_W = 188
@@ -149,7 +151,7 @@ function leave(el: Element, done: () => void) {
     @click="toggle"
     @keydown="onChipKey"
   >
-    时间 · {{ current.label }}
+    {{ t('discover.filter.timeChip', { label: current.label }) }}
     <component :is="open ? ChevronUp : ChevronDown" :size="14" class="chev" aria-hidden="true" />
   </button>
   <Teleport to="body">
@@ -160,7 +162,7 @@ function leave(el: Element, done: () => void) {
         ref="menu"
         class="time-menu"
         role="menu"
-        aria-label="时间"
+        :aria-label="t('discover.filter.time')"
         tabindex="-1"
         :aria-activedescendant="active >= 0 ? `${menuId}-${active}` : undefined"
         :style="{ top: `${pos.top}px`, left: `${pos.left}px` }"

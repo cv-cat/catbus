@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { PlatformMeta } from '@/data/platforms'
 import type { Health } from '@/stores/discover'
 
@@ -18,12 +19,13 @@ const props = defineProps<{
   order?: number
   busy?: boolean
 }>()
+const { t } = useI18n()
 const label = computed(() => {
   const h = props.health
   if (!h) return ''
-  if (h.level === 'ok') return h.total > 1 ? `${h.total} 个账号状态正常` : '账号状态正常'
-  if (h.level === 'warn') return `${h.bad} / ${h.total} 个账号登录失效`
-  return h.total > 1 ? `全部 ${h.total} 个账号登录失效` : '账号登录失效'
+  if (h.level === 'ok') return h.total > 1 ? t('layout.health.okMany', { n: h.total }, h.total) : t('layout.health.ok')
+  if (h.level === 'warn') return t('layout.health.warn', { bad: h.bad, n: h.total }, h.total)
+  return h.total > 1 ? t('layout.health.badAll', { n: h.total }, h.total) : t('layout.health.bad')
 })
 </script>
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { X } from 'lucide-vue-next'
 import MascotAvatar from './MascotAvatar.vue'
 import ChannelItem from './ChannelItem.vue'
@@ -48,6 +49,7 @@ const emit = defineEmits<{
  * - 手机：抽屉，navOpen 时从左边滑入。
  */
 const bp = useBreakpoint()
+const { t } = useI18n()
 const navStore = useNavStore()
 const { navOpen } = storeToRefs(navStore)
 const { openNav, closeNav } = navStore
@@ -230,7 +232,7 @@ watch(() => props.platforms, () => nextTick(() => place(true)))
     class="sidebar glass"
     :class="[mode, { rail, open: navOpen && mode !== 'desktop' }]"
     :style="dragStyle"
-    :aria-label="'渠道'"
+    :aria-label="t('layout.nav.label')"
     :role="overlay ? 'dialog' : undefined"
     :aria-modal="overlay ? 'true' : undefined"
     :aria-hidden="mode === 'phone' && !navOpen ? 'true' : undefined"
@@ -240,7 +242,7 @@ watch(() => props.platforms, () => nextTick(() => place(true)))
     @pointerup="onUp"
     @pointercancel="onUp"
   >
-    <button v-if="overlay" type="button" class="nav-close" aria-label="收起侧栏" @click="closeNav">
+    <button v-if="overlay" type="button" class="nav-close" :aria-label="t('layout.nav.close')" @click="closeNav">
       <X :size="18" />
     </button>
 
@@ -249,10 +251,10 @@ watch(() => props.platforms, () => nextTick(() => place(true)))
     <header class="brand">
       <button
         v-if="rail"
-        v-tip="'展开侧栏'"
+        v-tip="t('layout.nav.expand')"
         type="button"
         class="rail-toggle"
-        aria-label="展开侧栏"
+        :aria-label="t('layout.nav.expand')"
         aria-controls="catbus-nav"
         :aria-expanded="false"
         @click="openNav"
@@ -262,7 +264,7 @@ watch(() => props.platforms, () => nextTick(() => place(true)))
       <MascotAvatar v-else :size="mode === 'phone' ? 88 : 112" />
       <template v-if="!rail">
         <div class="wordmark">catbus</div>
-        <div class="slogan">上车，开往任何平台</div>
+        <div class="slogan">{{ t('layout.slogan') }}</div>
       </template>
     </header>
 
@@ -274,7 +276,7 @@ watch(() => props.platforms, () => nextTick(() => place(true)))
       <span
         class="count mono"
         role="img"
-        :aria-label="aggregate ? `已选 ${selected.length} 个，共 ${platforms.length} 个渠道` : `${platforms.length} 个渠道`"
+        :aria-label="aggregate ? t('layout.nav.countSelected', { n: selected.length, total: platforms.length }, platforms.length) : t('layout.nav.count', { n: platforms.length }, platforms.length)"
       >
         <span class="picked" :class="{ on: aggregate }" aria-hidden="true">
           <span class="picked-in">

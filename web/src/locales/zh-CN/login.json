@@ -1,0 +1,101 @@
+{
+  "title": "登录{platform}",
+  "storage": "登录态保存在本机 ~/.catbus，只用于 catbus",
+  "methodsLabel": "登录方式",
+  "submitting": "登录中…",
+  "submittingLabel": "登录中",
+  "method": {
+    "qrcode": "扫码",
+    "sms": "短信验证码",
+    "password": "账号密码"
+  },
+  "api": {
+    "requestFailed": "请求失败（{status}）"
+  },
+  "error": {
+    "noMethods": "这个渠道没有可以在 WebUI 里完成的登录方式",
+    "bridgeHint": "用 npm run dev 启动 WebUI，并在仓库根目录 npm run build",
+    "failed": "登录失败",
+    "setDefaultFailed": "设置默认账号失败"
+  },
+  "success": {
+    "title": "登录成功",
+    "who": "{name} · 账号 {account}",
+    "alreadyDefault": "已是默认账号",
+    "askDefault": "要把 {name} 设为默认账号吗？",
+    "currentDefault": "当前默认账号是 {account}",
+    "notNow": "暂不",
+    "setDefault": "设为默认"
+  },
+  "demo": {
+    "unsupported": "演示站不支持登录",
+    "hint": "要登录{platform}，请用 {command}（不带 --demo）启动"
+  },
+  "qrcode": {
+    "alt": "登录二维码",
+    "reload": "重新获取",
+    "loading": "正在获取二维码…",
+    "refresh": "刷新二维码"
+  },
+  "cookie": {
+    "placeholder": "a1=...; web_session=...  或浏览器导出的 cookie JSON 数组",
+    "help": "在浏览器里登录{platform}，打开开发者工具 → 网络，复制任一请求的 Cookie 请求头。"
+  },
+  "apikey": {
+    "placeholder": "在站点「控制台 → 实验室」生成"
+  },
+  "voice": {
+    "help": "这个账号还需要语音验证码。将对手机号 {phone} 发起一通语音验证码电话，请接听并记下电话里的验证码。验证状态 10 分钟内有效，过期需要从头登录。",
+    "status": {
+      "calling": "正在发起电话…",
+      "idle": "未拨打",
+      "called": "已拨打，请接听电话"
+    },
+    "redialIn": "{n}s 后可重拨",
+    "redial": "没接到？重新拨打",
+    "get": "获取语音验证码",
+    "code": "语音验证码",
+    "codePlaceholder": "电话里听到的验证码",
+    "reenter": "重新输入",
+    "refetchIn": "{n}s 后可重新获取",
+    "refetch": "重新获取语音验证码",
+    "backToUsers": "返回选择账号",
+    "restart": "从头开始",
+    "callFailed": "语音验证码电话发起失败，请稍后再试",
+    "getFailed": "发起语音验证码失败",
+    "enterCode": "请输入电话里听到的验证码",
+    "verifyAgain": "还需要再验证一次，请重新获取语音验证码",
+    "wrongCode": "验证码错误或已过期：可以重新输入，或重新获取语音验证码"
+  },
+  "user": {
+    "noName": "（无昵称）",
+    "id": "ID {id}",
+    "pick": "这个手机号下有多个账号，选择要登录的一个：",
+    "changePhone": "换个手机号"
+  },
+  "sms": {
+    "phone": "手机号",
+    "phonePlaceholder": "11 位手机号",
+    "resendIn": "{n}s",
+    "resend": "重新发送",
+    "send": "发送验证码",
+    "code": "验证码",
+    "codePlaceholder": "短信里的验证码"
+  },
+  "password": {
+    "username": "用户名",
+    "password": "密码",
+    "email": "邮箱（新设备两步验证时需要）",
+    "optional": "可选",
+    "emailCode": "邮箱验证码",
+    "totp": "验证码（TOTP，可选）",
+    "emailSent": "验证码已发到邮箱。密码需要再输入一次，catbus 不保存密码。"
+  },
+  "account": {
+    "saveAs": "保存为账号 {account}",
+    "auto": "自动",
+    "label": "账号名",
+    "placeholder": "留空：按登录的用户自动选择",
+    "help": "留空时，同一用户刷新原来的账号，新用户新增账号；填写账号名则登录到这个账号，原来的用户会被替换。"
+  }
+}

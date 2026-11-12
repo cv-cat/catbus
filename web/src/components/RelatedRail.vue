@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ChevronLeft, ChevronRight, Play } from 'lucide-vue-next'
 import UserAvatar from './UserAvatar.vue'
 import type { Item } from '@/api/types'
@@ -87,7 +88,8 @@ function page(dir: 1 | -1) {
   rail.value?.scrollBy({ left: dir * 2 * 122, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
 }
 
-const label = (it: Item) => it.title?.trim() || it.text?.trim().split('\n')[0] || '无标题'
+const { t } = useI18n()
+const label = (it: Item) => it.title?.trim() || it.text?.trim().split('\n')[0] || t('detail.related.untitled')
 const views = (it: Item) => (it.kind === 'video' && it.stats.views != null ? compact(it.stats.views) : null)
 
 let ro: ResizeObserver | undefined
@@ -105,13 +107,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section v-if="visible" class="related" aria-label="相关推荐">
+  <section v-if="visible" class="related" :aria-label="t('detail.related.title')">
     <div class="r-head">
-      <h3>相关推荐</h3>
+      <h3>{{ t('detail.related.title') }}</h3>
       <span class="grow" />
       <template v-if="list">
-        <button class="pg" type="button" aria-label="向左翻" :disabled="atStart" @click="page(-1)"><ChevronLeft :size="14" /></button>
-        <button class="pg" type="button" aria-label="向右翻" :disabled="atEnd" @click="page(1)"><ChevronRight :size="14" /></button>
+        <button class="pg" type="button" :aria-label="t('detail.related.prev')" :disabled="atStart" @click="page(-1)"><ChevronLeft :size="14" /></button>
+        <button class="pg" type="button" :aria-label="t('detail.related.next')" :disabled="atEnd" @click="page(1)"><ChevronRight :size="14" /></button>
       </template>
     </div>
     <div ref="rail" class="rail" :class="{ fade: !atEnd }" @scroll.passive="measure">
@@ -125,7 +127,7 @@ onBeforeUnmount(() => {
             <span class="m-title">{{ label(it) }}</span>
             <span class="m-meta">
               <UserAvatar class="m-ava" :user="it.author" :letter="false" :style="{ background: tintOf(it.author?.id) }" />
-              <span class="m-name">{{ it.author?.name ?? '未知作者' }}</span>
+              <span class="m-name">{{ it.author?.name ?? t('detail.author.unknown') }}</span>
             </span>
           </button>
         </template>

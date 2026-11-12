@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { FlaskConical } from 'lucide-vue-next'
 import SettingRow from './SettingRow.vue'
 import SettingSwitch from './SettingSwitch.vue'
@@ -6,17 +7,18 @@ import SettingsServer from './SettingsServer.vue'
 import { useSettingsStore } from '@/stores/settings'
 
 const { settings: s } = useSettingsStore()
+const { t } = useI18n()
 </script>
 
 <template>
   <p class="note" data-setting-row>
     <FlaskConical :size="15" aria-hidden="true" />
-    这些功能还在试验，行为和位置以后可能变化。
+    {{ t('settings.experimental.note') }}
   </p>
-  <SettingRow v-slot="{ labelId, descId }" title="显示原始 JSON" desc="详情卡片标题栏多一个 {} 按钮，切换到平台返回的原始对象（--raw），用来排查字段。">
+  <SettingRow v-slot="{ labelId, descId }" :title="t('settings.experimental.rawJson.title')" :desc="t('settings.experimental.rawJson.desc')">
     <SettingSwitch v-model="s.rawJson" :labelledby="labelId" :describedby="descId" />
   </SettingRow>
-  <SettingRow v-slot="{ labelId, descId }" title="悬停预览视频" desc="鼠标停在视频卡片上，卡片浮起长成视频的比例并静音播放；列表里没有视频地址时会请求一次详情。">
+  <SettingRow v-slot="{ labelId, descId }" :title="t('settings.experimental.hoverPreview.title')" :desc="t('settings.experimental.hoverPreview.desc')">
     <SettingSwitch v-model="s.hoverPreview" :labelledby="labelId" :describedby="descId" />
   </SettingRow>
   <SettingsServer />

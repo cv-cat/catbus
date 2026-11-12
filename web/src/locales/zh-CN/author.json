@@ -1,0 +1,23 @@
+{
+  "title": "作者",
+  "eyebrow": "{platform} · 作者主页",
+  "origin": "原主页",
+  "works": "全部作品",
+  "empty": "这位作者还没有公开的{item}",
+  "loaded": {
+    "withTotal": "已加载 {n} / {total}",
+    "count": "已加载 {n} 条"
+  },
+  "header": {
+    "label": "{name}的主页",
+    "fallbackName": "作者",
+    "loading": "正在加载作者",
+    "unknown": "未知作者"
+  },
+  "stats": {
+    "followers": "粉丝",
+    "following": "关注",
+    "items": "作品",
+    "likes": "获赞"
+  }
+}

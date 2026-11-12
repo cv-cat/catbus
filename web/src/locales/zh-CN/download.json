@@ -1,0 +1,53 @@
+{
+  "title": "下载记录",
+  "close": "关闭下载记录",
+  "clear": "清空已结束的记录",
+  "empty": "还没有下载。选中卡片后点下载即可。",
+  "note": "文件由浏览器保存，位置看浏览器的下载列表",
+  "batch": {
+    "title": "{platform} · {n} 条",
+    "progress": "下载中 {done}/{total}",
+    "delivered": "已交给浏览器",
+    "failed": "{n} 条失败",
+    "expired": "{n} 条文件已过期",
+    "finished": "已结束"
+  },
+  "status": {
+    "queued": "等待中",
+    "running": "下载中…",
+    "runningLabel": "下载中",
+    "failed": "下载失败",
+    "expired": "文件已过期，请重新下载",
+    "downloaded": "已下载 · {n} 个文件",
+    "delivered": "已交给浏览器 · {n} 个文件"
+  },
+  "action": {
+    "verify": "去验证",
+    "verifyRetryFailed": "去验证，然后重试失败的",
+    "redownload": "重新下载",
+    "retryFailed": "重试失败的",
+    "redownloadExpired": "重新下载过期的",
+    "resave": "重新保存",
+    "resaveBatch": "重新保存这一批",
+    "remove": "删除记录",
+    "cancelRemove": "取消并删除记录",
+    "removeBatch": "删除这一批记录"
+  },
+  "toast": {
+    "done": "下载完成，已交给浏览器保存",
+    "saved": "已交给浏览器保存"
+  },
+  "error": {
+    "requestFailed": "请求失败（{status}）",
+    "busy": "正在下载，完成后再删除",
+    "nothing": "没有可以保存的文件",
+    "saveFailed": "保存失败（HTTP {status}）"
+  },
+  "demoFile": {
+    "title": "catbus 演示下载",
+    "platform": "平台：{platform}",
+    "items": "条目：{n} 条",
+    "about": "这是演示模式在页面里生成的说明文件，没有连接 catbus。",
+    "real": "真实下载时，一个文件直接保存，多个文件打成一个 zip，由浏览器存到它的下载位置。"
+  }
+}

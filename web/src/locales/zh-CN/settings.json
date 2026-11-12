@@ -22,5 +22,78 @@
       "title": "每页条数",
       "desc": "每次请求取多少条。条数越多越慢，也更容易触发平台风控。"
     }
+  },
+  "dialog": {
+    "title": "设置",
+    "close": "关闭设置",
+    "tabs": "设置分栏",
+    "tab": {
+      "general": "通用",
+      "display": "显示",
+      "experimental": "实验性"
+    },
+    "hint": "设置保存在本浏览器里，换浏览器不会同步。",
+    "reset": "恢复默认",
+    "resetConfirm": "再点一次确认恢复"
+  },
+  "display": {
+    "followSystem": "跟随系统",
+    "theme": {
+      "title": "主题",
+      "desc": "「跟随系统」时随系统的深色模式实时切换。",
+      "light": "亮色",
+      "dark": "暗色"
+    },
+    "density": {
+      "title": "卡片密度",
+      "desc": "瀑布流的列宽：紧凑一屏放更多卡片，宽松的封面更大。",
+      "compact": "紧凑",
+      "standard": "标准",
+      "cozy": "宽松"
+    },
+    "stats": {
+      "title": "显示互动数据",
+      "desc": "卡片上的点赞、评论、播放数。"
+    },
+    "pixel": {
+      "title": "背景和人浪动效",
+      "desc": "页面背后的方块像素：鼠标附近会亮起，点击和加载时从右上角往左下起一浪。"
+    },
+    "motion": {
+      "title": "减少动效",
+      "desc": "「总是减少」时不论系统设置都只做简单的淡入淡出。",
+      "always": "总是减少"
+    }
+  },
+  "experimental": {
+    "note": "这些功能还在试验，行为和位置以后可能变化。",
+    "rawJson": {
+      "title": "显示原始 JSON",
+      "desc": "详情卡片标题栏多一个 {'{}'} 按钮，切换到平台返回的原始对象（--raw），用来排查字段。"
+    },
+    "hoverPreview": {
+      "title": "悬停预览视频",
+      "desc": "鼠标停在视频卡片上，卡片浮起长成视频的比例并静音播放；列表里没有视频地址时会请求一次详情。"
+    }
+  },
+  "server": {
+    "title": "服务端设置",
+    "loading": "读取中",
+    "unavailable": "不可用",
+    "hint": "保存在本机的 catbus 里，对所有浏览器生效；命令行同样会用到代理。下载的文件由浏览器保存，位置看浏览器的下载设置。",
+    "demo": "演示模式下不连接 catbus，不能读取或修改服务端设置。",
+    "loadFailed": "读不到服务端设置：{error}",
+    "notJson": "bridge 没有返回 JSON（HTTP {status}）",
+    "requestFailed": "请求失败（HTTP {status}）",
+    "saving": "保存中",
+    "proxy": {
+      "title": "代理",
+      "desc": "catbus 访问平台时用的全局代理（config.toml 的 {key}），支持 http、https、socks4、socks5、socks5h；留空表示不用代理。",
+      "saved": "代理已保存",
+      "cleared": "已清空代理",
+      "clear": "清空",
+      "platforms": "平台代理（优先于全局代理，只读；用 {command} 修改）",
+      "platformPlaceholder": "<平台>"
+    }
   }
 }

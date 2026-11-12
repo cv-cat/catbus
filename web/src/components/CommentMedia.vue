@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Media } from '@/api/types'
 import { openLightbox } from '@/stores/lightbox'
 import { imgSrc } from '@/api/client'
 
 /** 评论里附带的图片 / 表情包：缩略图，点击看大图 */
 const props = defineProps<{ media: Media[] | undefined; small?: boolean }>()
+const { t } = useI18n()
 const urls = computed(() => (props.media ?? []).filter((m) => m.type === 'image' && m.url).map((m) => m.url!))
 </script>
 
 <template>
   <div v-if="urls.length" class="c-media" :class="{ small, single: urls.length === 1 }">
-    <button v-for="(u, i) in urls" :key="u + i" type="button" class="thumb" :aria-label="`查看第 ${i + 1} 张图`" @click="openLightbox(urls, i)">
+    <button v-for="(u, i) in urls" :key="u + i" type="button" class="thumb" :aria-label="t('comment.viewImage', { n: i + 1 })" @click="openLightbox(urls, i)">
       <img :src="imgSrc(u)" alt="" loading="lazy" referrerpolicy="no-referrer" />
     </button>
   </div>

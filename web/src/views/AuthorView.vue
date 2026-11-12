@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ArrowLeft, ExternalLink, Menu } from 'lucide-vue-next'
 import AuthorHeader from '@/components/AuthorHeader.vue'
 import CatbusLoader from '@/components/CatbusLoader.vue'
@@ -21,6 +22,7 @@ import { platformById } from '@/data/platforms'
 import { waveWhileLoading } from '@/composables/motion'
 import type { Item } from '@/api/types'
 import type { Cell } from '@/stores/lanes'
+import { errorTitle } from '@/i18n/errors'
 
 /**
  * 作者页（AGENTS.md 7.9「作者页」，设计稿 P / P2 / P4）：返回按钮 + 作者头部 + 「全部作品」+ 瀑布流。
@@ -32,6 +34,7 @@ const sel = useSelectionStore()
 const downloads = useDownloadsStore()
 const nav = useNavStore()
 const bp = useBreakpoint()
+const { t } = useI18n()
 
 const platform = computed(() => platformById(a.route?.platform ?? '')!)
 const cells = computed<Cell[]>(() => a.items.map((item) => ({ key: item.id, platform: platform.value.id, item })))
@@ -48,7 +51,7 @@ watch(
   () => a.route,
   () => (keyword.value = d.state.keyword),
 )
-const placeholder = computed(() => `在${d.platform.name}搜索${d.platform.item}`)
+const placeholder = computed(() => t('discover.search.placeholder', { platform: d.platform.name, item: d.platform.item }))
 
 async function downloadSelected() {
   const picked: Item[] = sel.pick(a.items)
@@ -70,15 +73,15 @@ function login() {
   openLogin(platform.value.id, hinted ?? a.account() ?? undefined)
 }
 function verify(url: string) {
-  openVerify({ platform: platform.value.id, url, message: a.error?.message, retry })
+  openVerify({ platform: platform.value.id, url, message: a.error ? errorTitle(a.error) : undefined, retry })
 }
 
 /** 右侧结果：「已加载 24 / 128 · 0.84s」，总数缺失时「已加载 24 条」 */
 const total = computed(() => a.user?.stats.items ?? null)
 const loaded = computed(() => {
   const n = a.items.length
-  const t = a.elapsed != null ? ` · ${a.elapsed.toFixed(2)}s` : ''
-  return total.value != null ? `已加载 ${n} / ${total.value}${t}` : `已加载 ${n} 条${t}`
+  const time = a.elapsed != null ? ` · ${a.elapsed.toFixed(2)}s` : ''
+  return (total.value != null ? t('author.loaded.withTotal', { n, total: total.value }, n) : t('author.loaded.count', { n }, n)) + time
 })
 
 // ---------- 滚动：换作者回到顶部；滚到底自动翻页 ----------
@@ -120,19 +123,19 @@ onBeforeUnmount(() => {
         v-if="bp.phone"
         type="button"
         class="round glass"
-        aria-label="打开渠道"
+        :aria-label="t('layout.nav.open')"
         aria-controls="catbus-nav"
         :aria-expanded="nav.navOpen"
         @click="nav.openNav()"
       >
         <Menu :size="20" />
       </button>
-      <button type="button" class="round glass back" aria-label="返回" title="返回" @click="a.back()">
+      <button type="button" class="round glass back" :aria-label="t('common.action.back')" :title="t('common.action.back')" @click="a.back()">
         <ArrowLeft :size="18" />
       </button>
       <div class="title">
-        <div v-if="!bp.phone" class="eyebrow">{{ platform.name }} · 作者主页</div>
-        <h1>作者</h1>
+        <div v-if="!bp.phone" class="eyebrow">{{ t('author.eyebrow', { platform: platform.name }) }}</div>
+        <h1>{{ t('author.title') }}</h1>
       </div>
       <div class="spacer" />
       <template v-if="bp.phone">
@@ -142,8 +145,8 @@ onBeforeUnmount(() => {
           :href="a.user.url"
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="原主页"
-          title="原主页"
+          :aria-label="t('author.origin')"
+          :title="t('author.origin')"
         >
           <ExternalLink :size="20" />
         </a>
@@ -158,21 +161,21 @@ onBeforeUnmount(() => {
     <AuthorHeader :user="a.user" :platform="platform" />
 
     <div class="works">
-      <h2>全部作品</h2>
+      <h2>{{ t('author.works') }}</h2>
       <span v-if="total != null" class="pill mono">{{ total }}</span>
       <div class="spacer" />
-      <span v-if="a.loading && !bp.phone" class="count mono"><CatbusLoader :size="13" />加载中…</span>
+      <span v-if="a.loading && !bp.phone" class="count mono"><CatbusLoader :size="13" />{{ t('common.state.loading') }}</span>
       <span v-else-if="a.elapsed != null && !a.error && !bp.phone" class="count mono">{{ loaded }}</span>
       <LoadingBar class="works-progress" :active="a.loading" />
     </div>
 
     <StateView v-if="a.error && !a.items.length" kind="error" :error="a.error" @retry="retry" @login="login" @verify="verify" />
-    <p v-else-if="!a.loading && !a.items.length && a.elapsed != null" class="empty">这位作者还没有公开的{{ platform.item }}</p>
+    <p v-else-if="!a.loading && !a.items.length && a.elapsed != null" class="empty">{{ t('author.empty', { item: platform.item }) }}</p>
     <MasonryGrid v-else :cells="cells" :loading="a.loading" :feed="feed" />
 
     <div ref="sentinel" class="sentinel" aria-hidden="true" />
-    <p v-if="a.loadingMore" class="more mono"><CatbusLoader :size="15" />加载中…</p>
-    <p v-else-if="a.items.length && !a.hasMore" class="more mono">— 到站了 —</p>
+    <p v-if="a.loadingMore" class="more mono"><CatbusLoader :size="15" />{{ t('common.state.loading') }}</p>
+    <p v-else-if="a.items.length && !a.hasMore" class="more mono">{{ t('discover.end') }}</p>
 
     <SelectionActions v-if="bp.phone" bar :items="a.items" @download="downloadSelected" />
   </main>

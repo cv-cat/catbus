@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Moon, Sun } from 'lucide-vue-next'
 import { useTheme } from '@/composables/useTheme'
 import { gsap, prefersReducedMotion, wave } from '@/composables/motion'
 
 const { theme, preference, toggle } = useTheme()
+const { t } = useI18n()
 /** 跟随系统时在提示里说明：点一下会改成固定的亮色 / 暗色 */
-const suffix = computed(() => (preference.value === 'system' ? '（当前跟随系统）' : ''))
+const title = computed(() => {
+  const target = theme.value === 'light' ? 'dark' : 'light'
+  return preference.value === 'system' ? t(`layout.theme.${target}System`) : t(`layout.theme.${target}`)
+})
 const icon = ref<HTMLElement>()
 
 function onClick(e: MouseEvent) {
@@ -24,8 +29,8 @@ watch(theme, () => {
   <button
     class="toggle glass"
     type="button"
-    :aria-label="theme === 'light' ? '切换到暗色主题' : '切换到亮色主题'"
-    :title="(theme === 'light' ? '暗色' : '亮色') + suffix"
+    :aria-label="theme === 'light' ? t('layout.theme.toDark') : t('layout.theme.toLight')"
+    :title="title"
     @click="onClick"
   >
     <span ref="icon" class="icon">

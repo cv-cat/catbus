@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ExternalLink } from 'lucide-vue-next'
 import UserAvatar from './UserAvatar.vue'
 import type { User } from '@/api/types'
 import type { PlatformMeta } from '@/data/platforms'
-import { tintOf } from '@/composables/format'
+import { compact, tintOf } from '@/composables/format'
+import { currentLocale } from '@/i18n'
 import { gsap, prefersReducedMotion } from '@/composables/motion'
 
 /**
@@ -13,12 +15,14 @@ import { gsap, prefersReducedMotion } from '@/composables/motion'
  * `user` 为 null 时显示同尺寸的骨架。计数为 null 的项整项不显示，全部缺失时整行不显示；没有简介时不显示简介行。
  */
 const props = defineProps<{ user: User | null; platform: PlatformMeta }>()
+const { t } = useI18n()
 
-/** 12800 → 12.8万（与平台的中文显示一致） */
+/** 12800 → 12.8万（与平台的中文显示一致）；其他语言用 Intl 的 compact 写法 */
 function wan(n: number): string {
+  if (currentLocale() !== 'zh-CN') return compact(n)
   const trim = (v: number) => v.toFixed(1).replace(/\.0$/, '')
-  if (n >= 1e8) return `${trim(n / 1e8)}亿`
-  if (n >= 1e4) return `${trim(n / 1e4)}万`
+  if (n >= 1e8) return `${trim(n / 1e8)}亿` // i18n-ignore
+  if (n >= 1e4) return `${trim(n / 1e4)}万` // i18n-ignore
   return n.toLocaleString('en-US')
 }
 
@@ -27,12 +31,12 @@ const stats = computed(() => {
   if (!s) return []
   return (
     [
-      ['followers', '粉丝', s.followers],
-      ['following', '关注', s.following],
-      ['items', '作品', s.items],
-      ['likes', '获赞', s.likes],
+      ['followers', s.followers],
+      ['following', s.following],
+      ['items', s.items],
+      ['likes', s.likes],
     ] as const
-  ).flatMap(([key, label, v]) => (v == null ? [] : [{ key, label, value: wan(v) }]))
+  ).flatMap(([key, v]) => (v == null ? [] : [{ key, label: t(`author.stats.${key}`), value: wan(v) }]))
 })
 const handle = computed(() => {
   const h = props.user?.handle?.trim()
@@ -58,7 +62,7 @@ watch(
 </script>
 
 <template>
-  <section ref="root" class="author-head" :aria-busy="!user" :aria-label="user ? `${user.name ?? '作者'}的主页` : '正在加载作者'">
+  <section ref="root" class="author-head" :aria-busy="!user" :aria-label="user ? t('author.header.label', { name: user.name ?? t('author.header.fallbackName') }) : t('author.header.loading')">
     <template v-if="user">
       <div class="ava-wrap reveal">
         <UserAvatar class="ava" :user="user" :style="{ background: tintOf(user.id) }" />
@@ -66,7 +70,7 @@ watch(
       </div>
       <div class="info reveal">
         <div class="name-row">
-          <h2 class="name">{{ user.name ?? '未知作者' }}</h2>
+          <h2 class="name">{{ user.name ?? t('author.header.unknown') }}</h2>
           <span v-if="handle" class="handle mono">{{ handle }}</span>
         </div>
         <p v-if="bio" class="bio">{{ bio }}</p>
@@ -78,7 +82,7 @@ watch(
         </dl>
       </div>
       <a v-if="user.url" class="origin reveal" :href="user.url" target="_blank" rel="noopener noreferrer">
-        <ExternalLink :size="14" aria-hidden="true" />原主页
+        <ExternalLink :size="14" aria-hidden="true" />{{ t('author.origin') }}
       </a>
     </template>
     <template v-else>
