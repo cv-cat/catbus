@@ -13,11 +13,13 @@ export interface Cell {
 /** 聚合模式里的一个渠道：各有各的结果、翻页位置和加载状态 */
 export interface Lane {
   platform: string
-  /** 最近一次请求的查询（账号 + 排序 + 类型 + 关键词）；与当前查询相同就不重新请求 */
+  /** 最近一次请求的查询（账号 + 排序 + 类型 + 分类 + 时间 + 关键词）；与当前查询相同就不重新请求 */
   key: string | null
   account: string | null
   sort: string
   type: string
+  kind: string
+  time: string
   keyword: string
   items: Item[]
   cursor: string | null
@@ -39,6 +41,8 @@ export function newLane(platform: string): Lane {
     account: null,
     sort: 'general',
     type: 'all',
+    kind: 'recommend',
+    time: 'all',
     keyword: '',
     items: [],
     cursor: null,

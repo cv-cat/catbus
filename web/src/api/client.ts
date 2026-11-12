@@ -1,4 +1,4 @@
-import { mockAccounts, mockComments, mockReplies, mockItem, mockItems, mockLogout, mockUse } from './mock'
+import { mockAccounts, mockComments, mockFilters, mockReplies, mockItem, mockItems, mockLogout, mockUse } from './mock'
 import { loginApi } from './login'
 import type { Account, Comment, Envelope, Item } from './types'
 import { isDemo, useSourceStore, type Source } from '@/stores/source'
@@ -18,12 +18,17 @@ export interface PlatformFilters {
   search: boolean
   sort: string[] | null
   type: string[] | null
+  /** `item search` 的时间范围 `--time`；旧版 bridge 不给 */
+  time?: string[] | null
+  /** 已实现的 `feed list` 的流种类 `--kind`；旧版 bridge 不给 */
+  kind?: string[] | null
   /** 平台私有的字段排序 `--order-by` 的取值；旧版 bridge 不给 */
   order?: string[] | null
 }
 
-/** 读不到（旧版 bridge、纯静态预览）时返回 null，页面不置灰任何筛选 */
+/** 读不到（旧版 bridge、纯静态预览）时返回 null，页面不置灰任何筛选；演示模式不请求服务端，用演示的取值表 */
 export async function loadFilters(): Promise<Record<string, PlatformFilters> | null> {
+  if (new URLSearchParams(location.search).has('demo')) return mockFilters()
   try {
     const res = await fetch('/api/filters')
     const env = (await res.json()) as Envelope<Record<string, PlatformFilters>>
@@ -53,6 +58,10 @@ export interface SearchParams {
   mode: 'search' | 'feed'
   sort?: string
   type?: string
+  /** 推荐流的种类（feed list --kind） */
+  kind?: string
+  /** 搜索的时间范围（item search --time） */
+  time?: string
   cursor?: string | null
   limit?: number
   /** 本页浏览用的账号（-a），不传时用 _current */
@@ -64,7 +73,9 @@ export async function searchItems(p: SearchParams): Promise<Envelope<Item[]>> {
   const limit = p.limit ?? 20
   if (isDemo()) {
     await new Promise((r) => setTimeout(r, 450))
-    return mockItems(p.platform, p.keyword, Number(p.cursor ?? 0), limit)
+    // 演示数据按分类 / 时间换一批种子，切换后能看到结果变化
+    const variant = p.keyword ? (p.time ?? 'all') : (p.kind ?? 'recommend')
+    return mockItems(p.platform, p.keyword, Number(p.cursor ?? 0), limit, variant === 'all' || variant === 'recommend' ? '' : variant)
   }
   const argv =
     p.mode === 'feed' || !p.keyword
@@ -82,7 +93,8 @@ export async function searchItems(p: SearchParams): Promise<Envelope<Item[]>> {
   if (argv[1] === 'item') {
     if (p.sort && p.sort !== 'general' && !order) argv.push('--sort', p.sort)
     if (p.type && p.type !== 'all') argv.push('--type', p.type)
-  }
+    if (p.time && p.time !== 'all') argv.push('--time', p.time)
+  } else if (p.kind && p.kind !== 'recommend') argv.push('--kind', p.kind)
   return call<Item[]>(argv)
 }
 

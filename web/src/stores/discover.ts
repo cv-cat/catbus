@@ -3,19 +3,25 @@ import { computed, reactive, ref, shallowReactive, shallowRef, watch } from 'vue
 import { listAccounts, loadFilters, removeAccount, searchItems, useAccount, type PlatformFilters } from '@/api/client'
 import type { Account, CatbusError, Item } from '@/api/types'
 import { PLATFORMS, platformById } from '@/data/platforms'
-import { ORDERS, SORTS, TYPES, parseOrder } from '@/data/filters'
+import { KINDS, ORDERS, SORTS, TIMES, TYPES, parseOrder } from '@/data/filters'
 import { useSelectionStore } from './selection'
 import { useSettingsStore } from './settings'
 import { toast } from './toast'
 import { fill, interleave, itemCell, newLane, skeletonCells, type Cell, type Lane } from './lanes'
 
-export { SORTS, TYPES }
+export { KINDS, SORTS, TIMES, TYPES }
 
 /**
  * 发现页状态的兜底值：平台、排序、类型。综合、全部任何平台都能用（不带选项），
  * 平台不支持设置里的默认排序 / 类型时退回这里。日常的默认值来自设置（见 `useSettingsStore`）。
  */
-export const DEFAULTS = { platform: PLATFORMS[0]!.id, keyword: '', sort: 'general', type: 'all' }
+export const DEFAULTS = { platform: PLATFORMS[0]!.id, keyword: '', sort: 'general', type: 'all', kind: 'recommend', time: 'all' }
+
+/** 置灰规则适用的筛选：排序、类型、时间（有关键词时），推荐流分类（没有关键词时） */
+export type FilterKind = 'sort' | 'type' | 'time' | 'kind'
+const CHOICES = { sort: SORTS, type: TYPES, time: TIMES, kind: KINDS } as const
+const labelOf = (kind: FilterKind, value: string) =>
+  (CHOICES[kind] as readonly { value: string; label: string }[]).find((o) => o.value === value)?.label ?? value
 
 export type DiscoverState = typeof DEFAULTS
 
@@ -39,7 +45,7 @@ function writeLastPlatform(id: string) {
 }
 
 /**
- * 地址栏 ⇄ 页面状态：`/<平台>?agg=<渠道,...>&sort=<排序>&type=<类型>&keyword=<关键词>`，取默认值的参数省略。
+ * 地址栏 ⇄ 页面状态：`/<平台>?agg=<渠道,...>&sort=<排序>&type=<类型>&kind=<分类>&time=<时间>&keyword=<关键词>`，取默认值的参数省略。
  * `agg` 只在聚合模式下出现，按选中的顺序列出渠道，路径里的平台是其中最后点选的那个。
  * 仍是单页应用：切换时只用 history API 改地址，不重新加载页面；未知的平台和取值回到默认。
  * 「默认」是设置里的值：地址没带平台时按「启动时打开的平台」，没带排序 / 类型时用默认排序 / 类型。
@@ -54,6 +60,8 @@ function fromUrl(d: { platform: string; sort: string; type: string }): DiscoverS
     keyword: q.get('keyword') ?? '',
     sort: parseOrder(q.get('sort')) ? q.get('sort')! : pick(q.get('sort'), SORTS, d.sort),
     type: pick(q.get('type'), TYPES, d.type),
+    kind: pick(q.get('kind'), KINDS, DEFAULTS.kind),
+    time: pick(q.get('time'), TIMES, DEFAULTS.time),
   }
 }
 
@@ -73,6 +81,8 @@ function toUrl(s: DiscoverState, d: { sort: string; type: string }, agg: string[
   if (agg) parts.push(`agg=${agg.map(encodeURIComponent).join(',')}`)
   if (s.sort !== d.sort) parts.push(`sort=${encodeURIComponent(s.sort)}`)
   if (s.type !== d.type) parts.push(`type=${encodeURIComponent(s.type)}`)
+  if (s.kind !== DEFAULTS.kind) parts.push(`kind=${encodeURIComponent(s.kind)}`)
+  if (s.time !== DEFAULTS.time) parts.push(`time=${encodeURIComponent(s.time)}`)
   if (s.keyword) parts.push(`keyword=${encodeURIComponent(s.keyword)}`)
   return `/${encodeURIComponent(s.platform)}${parts.length ? `?${parts.join('&')}` : ''}`
 }
@@ -89,7 +99,7 @@ function isAlive(it: Item): boolean {
 export type Health = { level: 'ok' | 'warn' | 'bad'; total: number; bad: number }
 
 /**
- * 渠道缓存（keep-alive）：每个平台最后一次的结果。切回这个平台时，查询（账号 + 排序 + 类型 + 关键词）
+ * 渠道缓存（keep-alive）：每个平台最后一次的结果。切回这个平台时，查询（账号 + 排序 + 类型 + 分类 + 时间 + 关键词）
  * 与缓存相同就直接恢复，不重新请求；不同（前进 / 后退到别的筛选、换了账号）才请求。
  */
 type ChannelSnapshot = {
@@ -97,6 +107,8 @@ type ChannelSnapshot = {
   account: string | null
   sort: string
   type: string
+  kind: string
+  time: string
   keyword: string
   items: Item[]
   cursor: string | null
@@ -108,7 +120,7 @@ type ChannelSnapshot = {
 }
 
 const channelKey = (s: DiscoverState, account: string | null) =>
-  JSON.stringify([s.platform, account, s.sort, s.type, s.keyword.trim()])
+  JSON.stringify([s.platform, account, s.sort, s.type, s.kind, s.time, s.keyword.trim()])
 
 /** 一页全是重复时自动再翻，最多连续这么多页，避免平台一直返回同一批数据时死循环 */
 const MAX_EMPTY_PAGES = 3
@@ -133,14 +145,19 @@ export const useDiscoverStore = defineStore('discover', () => {
 
   /**
    * 某个筛选取值在当前平台能不能用：能用返回 null，不能用返回提示文字（显示在置灰按钮的 tooltip 里）。
-   * 默认值（综合、全部）不带选项，总能用。
+   * 默认值（综合、全部、推荐、不限）不带选项，总能用。
    */
-  function unsupportedOn(id: string, kind: 'sort' | 'type', value: string): string | null {
+  function unsupportedOn(id: string, kind: FilterKind, value: string): string | null {
     if (value === DEFAULTS[kind]) return null
     const all = filters.value
     if (!all) return null
     const meta = platformById(id)!
     const f = all[id]
+    // 推荐流分类（feed list --kind）：声明了这个取值才能用
+    if (kind === 'kind') {
+      if (f?.kind?.includes(value)) return null
+      return f?.kind && f.kind.length > 1 ? `${meta.name}暂不支持「${labelOf(kind, value)}」流` : `${meta.name}没有推荐流分类`
+    }
     // 字段排序（--order-by）：平台声明了这个字段才能用，搜索和浏览都支持
     const order = kind === 'sort' ? parseOrder(value) : null
     if (order) {
@@ -151,25 +168,45 @@ export const useDiscoverStore = defineStore('discover', () => {
     if (meta.mode === 'feed' || !f?.search) return `${meta.name}只有推荐流，不支持筛选`
     const list = f[kind]
     if (list?.includes(value)) return null
-    const label = (kind === 'sort' ? SORTS : TYPES).find((o) => o.value === value)?.label ?? value
-    if (!list) return `${meta.name}不支持按${kind === 'sort' ? '排序' : '类型'}筛选`
+    const label = labelOf(kind, value)
+    if (!list) return `${meta.name}不支持按${{ sort: '排序', type: '类型', time: '时间' }[kind]}筛选`
+    if (kind === 'time') return `${meta.name}不支持「${label}」`
     return kind === 'sort' ? `${meta.name}不支持按「${label}」排序` : `${meta.name}不支持只看「${label}」`
   }
 
   /**
    * 当前页面上这个取值能不能用。聚合模式下只要有一个选中的渠道支持就能用，
-   * 不支持它的渠道各自按默认值（综合、全部）请求（见 `effective`）。
+   * 不支持它的渠道各自按默认值（综合、全部、推荐、不限）请求（见 `effective`）。
    */
-  function unsupported(kind: 'sort' | 'type', value: string): string | null {
+  function unsupported(kind: FilterKind, value: string): string | null {
     if (!aggregate.value) return unsupportedOn(state.platform, kind, value)
     const why = lanes.value.map((l) => unsupportedOn(l.platform, kind, value))
     // 字段排序要选中的渠道全都支持（否则排序按钮显示的是标准排序那一组）
     if (kind === 'sort' && parseOrder(value)) return why.find((w) => w) ?? null
     if (why.some((w) => !w)) return null
     if (why.length === 1) return why[0]!
-    const label = (kind === 'sort' ? SORTS : TYPES).find((o) => o.value === value)?.label ?? value
+    const label = labelOf(kind, value)
+    if (kind === 'kind') return `选中的渠道都不支持「${label}」流`
+    if (kind === 'time') return `选中的渠道都不支持「${label}」`
     return kind === 'sort' ? `选中的渠道都不支持按「${label}」排序` : `选中的渠道都不支持只看「${label}」`
   }
+
+  /** 整个筛选都用不了时的原因（时间 chip 整体置灰）：除默认值外没有一个取值能用 */
+  function unsupportedAll(kind: FilterKind): string | null {
+    const first = CHOICES[kind].find((o) => o.value !== DEFAULTS[kind])!.value
+    if (CHOICES[kind].some((o) => o.value !== DEFAULTS[kind] && !unsupported(kind, o.value))) return null
+    if (aggregate.value && lanes.value.length > 1) return `选中的渠道都不支持按${{ sort: '排序', type: '类型', time: '时间', kind: '分类' }[kind]}筛选`
+    // 单个渠道：只有推荐流、或者没有这个筛选（如「小红书不支持按时间筛选」），原因与第一个取值的相同
+    return unsupportedOn(state.platform, kind, first)
+  }
+
+  /** 推荐流分类分段出不出现：当前平台（聚合时任一选中的渠道）的 feed list 声明了不止一种 --kind */
+  const kindSwitch = computed(() => {
+    const all = filters.value
+    if (!all) return false
+    const ids = aggregate.value ? lanes.value.map((l) => l.platform) : [state.platform]
+    return ids.some((id) => (all[id]?.kind?.length ?? 0) > 1)
+  })
 
   /** 排序按钮用字段排序那一组（ORDERS）还是标准排序（SORTS）：当前平台（聚合时为全部选中的渠道）声明了 --order-by */
   const orderFields = computed<string[] | null>(() => {
@@ -182,12 +219,12 @@ export const useDiscoverStore = defineStore('discover', () => {
   })
 
   /** 某个渠道实际请求用的取值：支持就用页面上选的，不支持退回默认值 */
-  const effective = (id: string, kind: 'sort' | 'type', value: string) =>
+  const effective = (id: string, kind: FilterKind, value: string) =>
     unsupportedOn(id, kind, value) ? DEFAULTS[kind] : value
 
-  /** 当前平台能用的第一个取值（按 SORTS / TYPES 的顺序；综合、全部总能用） */
-  function firstSupported(kind: 'sort' | 'type'): string {
-    return (kind === 'sort' ? SORTS : TYPES).find((o) => !unsupported(kind, o.value))?.value ?? DEFAULTS[kind]
+  /** 当前平台能用的第一个取值（按 SORTS / TYPES / TIMES / KINDS 的顺序；默认值总能用） */
+  function firstSupported(kind: FilterKind): string {
+    return CHOICES[kind].find((o) => !unsupported(kind, o.value))?.value ?? DEFAULTS[kind]
   }
 
   /** 当前平台实际生效的默认排序 / 类型：设置值；平台不支持时回退到它支持的第一个值 */
@@ -200,6 +237,8 @@ export const useDiscoverStore = defineStore('discover', () => {
   function clampFilters() {
     if (unsupported('sort', state.sort)) state.sort = firstSupported('sort')
     if (unsupported('type', state.type)) state.type = firstSupported('type')
+    if (unsupported('kind', state.kind)) state.kind = DEFAULTS.kind
+    if (unsupported('time', state.time)) state.time = DEFAULTS.time
   }
 
   async function initFilters() {
@@ -216,8 +255,11 @@ export const useDiscoverStore = defineStore('discover', () => {
       { sort: effectiveDefault('sort'), type: effectiveDefault('type') },
       aggregate.value ? lanes.value.map((l) => l.platform) : null,
     )
+  /** 已提交的关键词（响应式）：筛选栏按它决定显示推荐流分类还是排序 / 类型 / 时间 */
+  const committed = ref(state.keyword.trim())
   function syncUrl() {
     synced = { ...state, keyword: state.keyword.trim() }
+    committed.value = synced.keyword
     const next = urlFor(synced)
     if (next === location.pathname + location.search) return
     if (urlSynced) history.pushState(null, '', next)
@@ -272,6 +314,8 @@ export const useDiscoverStore = defineStore('discover', () => {
       const snap = channels.get(id)
       state.sort = snap?.sort ?? settings.defaultSort
       state.type = snap?.type ?? settings.defaultType
+      state.kind = snap?.kind ?? DEFAULTS.kind
+      state.time = snap?.time ?? DEFAULTS.time
       if (snap) state.keyword = snap.keyword
     },
   )
@@ -419,6 +463,8 @@ export const useDiscoverStore = defineStore('discover', () => {
         mode: meta.mode,
         sort: state.sort,
         type: state.type,
+        kind: state.kind,
+        time: state.time,
         cursor: append ? cursor.value : null,
         // 每页条数取设置，改了之后下一次请求（含翻页）生效
         limit: settings.pageSize,
@@ -450,6 +496,8 @@ export const useDiscoverStore = defineStore('discover', () => {
         account,
         sort: query.sort,
         type: query.type,
+        kind: query.kind,
+        time: query.time,
         keyword: query.keyword,
         items: items.value,
         cursor: cursor.value,
@@ -499,7 +547,14 @@ export const useDiscoverStore = defineStore('discover', () => {
   function laneQuery(id: string) {
     const s = synced ?? state
     const account = accountFor(id)?.account ?? null
-    const q = { platform: id, keyword: s.keyword.trim(), sort: effective(id, 'sort', s.sort), type: effective(id, 'type', s.type) }
+    const q = {
+      platform: id,
+      keyword: s.keyword.trim(),
+      sort: effective(id, 'sort', s.sort),
+      type: effective(id, 'type', s.type),
+      kind: effective(id, 'kind', s.kind),
+      time: effective(id, 'time', s.time),
+    }
     return { ...q, account, key: channelKey(q, account) }
   }
 
@@ -517,6 +572,8 @@ export const useDiscoverStore = defineStore('discover', () => {
       account: q.account,
       sort: q.sort,
       type: q.type,
+      kind: q.kind,
+      time: q.time,
       keyword: q.keyword,
       items: snap.items,
       cursor: snap.cursor,
@@ -562,6 +619,8 @@ export const useDiscoverStore = defineStore('discover', () => {
         account: l.account,
         sort: l.sort,
         type: l.type,
+        kind: l.kind,
+        time: l.time,
         keyword: l.keyword,
         items: l.items,
         cursor: l.cursor,
@@ -629,7 +688,7 @@ export const useDiscoverStore = defineStore('discover', () => {
     }
     if (!append) {
       const q = laneQuery(lane.platform)
-      Object.assign(lane, { key: q.key, account: q.account, sort: q.sort, type: q.type, keyword: q.keyword, error: null, empty: 0 })
+      Object.assign(lane, { key: q.key, account: q.account, sort: q.sort, type: q.type, kind: q.kind, time: q.time, keyword: q.keyword, error: null, empty: 0 })
       lane.loading = true
     }
     try {
@@ -639,6 +698,8 @@ export const useDiscoverStore = defineStore('discover', () => {
         mode: platformById(lane.platform)!.mode,
         sort: lane.sort,
         type: lane.type,
+        kind: lane.kind,
+        time: lane.time,
         cursor: append ? lane.cursor : null,
         limit: settings.pageSize,
         account: lane.account,
@@ -808,6 +869,9 @@ export const useDiscoverStore = defineStore('discover', () => {
     restoredScroll,
     refreshAccounts,
     unsupported,
+    unsupportedAll,
+    kindSwitch,
+    committed,
     orderFields,
     initFilters,
   }

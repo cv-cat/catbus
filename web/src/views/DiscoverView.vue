@@ -5,13 +5,15 @@ import CatbusLoader from '@/components/CatbusLoader.vue'
 import SearchBar from '@/components/SearchBar.vue'
 import SegmentedControl from '@/components/SegmentedControl.vue'
 import FilterChip from '@/components/FilterChip.vue'
+import KindSwitch from '@/components/KindSwitch.vue'
+import TimeFilter from '@/components/TimeFilter.vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import SelectionActions from '@/components/SelectionActions.vue'
 import DownloadCenter from '@/components/DownloadCenter.vue'
 import MasonryGrid from '@/components/MasonryGrid.vue'
 import StateView from '@/components/StateView.vue'
 import LoadingBar from '@/components/LoadingBar.vue'
-import { SORTS, TYPES, useDiscoverStore } from '@/stores/discover'
+import { KINDS, SORTS, TIMES, TYPES, useDiscoverStore } from '@/stores/discover'
 import { ORDERS, parseOrder } from '@/data/filters'
 import { animateFrom, wave, waveWhileLoading } from '@/composables/motion'
 import { openLogin } from '@/stores/login'
@@ -48,6 +50,14 @@ function toggleOrder() {
   const cur = parseOrder(state.sort)
   if (cur) state.sort = cur.asc ? cur.field : `${cur.field}_asc`
 }
+
+/**
+ * 没有（已提交的）关键词时走推荐流（feed list）：筛选栏换成推荐流分类，排序 / 类型 / 时间不显示；
+ * 只有推荐流的平台（猫眼）总是这样。声明了 --order-by 的平台（M-Team）浏览时仍保留字段排序。
+ */
+const feedUi = computed(() => !d.committed || (!d.aggregate && d.platform.mode === 'feed'))
+const timeOptions = computed(() => TIMES.map((o) => ({ value: o.value as string, label: o.label as string, disabled: d.unsupported('time', o.value) })))
+const kindLabel = computed(() => KINDS.find((k) => k.value === state.kind)?.label ?? '推荐')
 
 /** 聚合模式下选中的渠道 */
 const lanes = computed(() => d.selected.map((id) => platformById(id)!))
@@ -158,7 +168,7 @@ function refresh() {
   root.value?.scrollTo({ top: 0, behavior: 'smooth' })
   d.refresh()
 }
-watch(() => [state.sort, state.type], () => submit())
+watch(() => [state.sort, state.type, state.kind, state.time], () => submit())
 
 /** 加载中右上角实时跳动的耗时：从 0.00s 开始涨，结束后换成最终的条数和耗时 */
 const ticking = ref(0)
@@ -257,16 +267,26 @@ onBeforeUnmount(() => {
         :class="{ 'fade-l': fade.l, 'fade-r': fade.r }"
         @scroll.passive="updateFade"
       >
-        <SegmentedControl v-model="state.sort" :options="sortOptions" label="排序" @reselect="toggleOrder" />
-        <FilterChip
-          v-for="t in TYPES"
-          :key="t.value"
-          :active="state.type === t.value"
-          :disabled="d.unsupported('type', t.value)"
-          @click="state.type = t.value"
-        >
-          {{ t.label }}
-        </FilterChip>
+        <!-- 没有关键词：推荐流分类（+ M-Team 的字段排序）；有关键词：排序、类型、时间。两组交叉淡入 -->
+        <Transition name="fgroup" mode="out-in" @after-enter="updateFade">
+          <div v-if="feedUi" key="feed" class="fgroup">
+            <KindSwitch v-if="d.kindSwitch" v-model="state.kind" :unsupported="(v) => d.unsupported('kind', v)" />
+            <SegmentedControl v-if="d.orderFields" v-model="state.sort" :options="sortOptions" label="排序" @reselect="toggleOrder" />
+          </div>
+          <div v-else key="search" class="fgroup">
+            <SegmentedControl v-model="state.sort" :options="sortOptions" label="排序" @reselect="toggleOrder" />
+            <FilterChip
+              v-for="t in TYPES"
+              :key="t.value"
+              :active="state.type === t.value"
+              :disabled="d.unsupported('type', t.value)"
+              @click="state.type = t.value"
+            >
+              {{ t.label }}
+            </FilterChip>
+            <TimeFilter v-model="state.time" :options="timeOptions" :disabled="d.unsupportedAll('time')" />
+          </div>
+        </Transition>
       </div>
       <SelectionActions v-if="stuck && !bp.phone" compact :items="d.items" @download="downloadSelected" />
       <Transition name="mini-search">
@@ -289,7 +309,8 @@ onBeforeUnmount(() => {
         <button type="button" class="refresh" aria-label="刷新" title="刷新" @click="refresh">
           <RefreshCw :size="13" />
         </button>
-        {{ d.items.length }} 条 · {{ d.elapsed.toFixed(2) }}s
+        <template v-if="feedUi && d.kindSwitch">{{ kindLabel }} · 已加载 {{ d.items.length }} 条</template>
+        <template v-else>{{ d.items.length }} 条 · {{ d.elapsed.toFixed(2) }}s</template>
       </span>
       <!-- 筛选栏底边的进度条：跟着筛选栏吸顶，手机上同样贴在筛选栏下沿 -->
       <LoadingBar class="filters-progress" :active="d.loading" />
@@ -461,6 +482,24 @@ h1 {
 .filter-scroll > * {
   flex: none;
   scroll-snap-align: start;
+}
+/* 一组筛选（推荐流分类 / 排序、类型、时间）：组内同样横排，滚动吸附到每一项 */
+.fgroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fgroup > * {
+  flex: none;
+  scroll-snap-align: start;
+}
+.fgroup-enter-active,
+.fgroup-leave-active {
+  transition: opacity 0.2s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.fgroup-enter-from,
+.fgroup-leave-to {
+  opacity: 0;
 }
 .count {
   flex: none;
@@ -729,9 +768,9 @@ h1 {
     backdrop-filter: blur(30px) saturate(1.6);
   }
   .filter-scroll {
-    padding: 4px calc(12px + var(--safe-right)) 4px calc(12px + var(--safe-left));
+    padding: 4px calc(16px + var(--safe-right)) 4px calc(16px + var(--safe-left));
     margin: -4px 0;
-    scroll-padding-inline: 12px;
+    scroll-padding-inline: 16px;
   }
   .filter-scroll.fade-l {
     --fl: 20px;
@@ -741,7 +780,7 @@ h1 {
     right: calc(12px + var(--safe-right));
   }
   .filter-scroll.fade-r {
-    --fr: 20px;
+    --fr: 40px;
   }
   .to-top {
     right: calc(14px + var(--safe-right));

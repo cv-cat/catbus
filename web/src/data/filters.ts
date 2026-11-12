@@ -33,5 +33,22 @@ export const TYPES = [
   { value: 'image', label: '图文' },
 ] as const
 
+/** 推荐流的种类（`feed list --kind`），只在没有关键词时出现；recommend 是默认，不带选项 */
+export const KINDS = [
+  { value: 'recommend', label: '推荐' },
+  { value: 'hot', label: '热门' },
+  { value: 'following', label: '关注' },
+] as const
+
+/** 搜索的时间范围（`item search --time`），只在有关键词时出现；all 是默认，不带选项 */
+export const TIMES = [
+  { value: 'all', label: '不限' },
+  { value: 'day', label: '一天内' },
+  { value: 'week', label: '一周内' },
+  { value: 'month', label: '一月内' },
+  { value: 'half_year', label: '半年内' },
+  { value: 'year', label: '一年内' },
+] as const
+
 export type SortValue = (typeof SORTS)[number]['value']
 export type TypeValue = (typeof TYPES)[number]['value']
