@@ -56,7 +56,11 @@ export default definePlatform({
         'comment like': 'none',
         'comment unlike': 'none',
 
-        'feed list': { upstream: 'none', options: { kind: filter.kind('recommend', 'hot', 'following') } },
+        // WeiboApis.getHotTimeline / getFriendsTimeline。hot 与 recommend 是同一条流（hottimeline），只声明 recommend / following
+        'feed list': impl('full', 'feedList', {
+          options: { kind: filter.kind('recommend', 'following') },
+          note: '热门（hot）与推荐是同一条流，用 recommend；只支持登录账号',
+        }),
 
         'live get': 'none',
         'live list': 'none',
