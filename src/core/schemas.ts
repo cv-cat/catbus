@@ -212,7 +212,8 @@ export interface Account {
 
 export interface File {
   path: string
-  type: 'image' | 'video' | 'audio' | 'torrent'
+  /** `data` 是 `item download --meta` 写出的帖子信息与评论（ExportDoc，见 core/export.ts）。 */
+  type: 'image' | 'video' | 'audio' | 'torrent' | 'data'
   url: string | null
   size: number
 }

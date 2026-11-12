@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { text as readStdin } from 'node:stream/consumers'
 import { endpointFlag } from '../../../core/auth-store.js'
 import { CatbusError } from '../../../core/errors.js'
+import { exportItem, exportSettings } from '../../../core/export.js'
 import { itemDir } from '../../../core/files.js'
 import { writeFileAtomic } from '../../../core/fsutil.js'
 import { HttpClient } from '../../../core/http.js'
@@ -323,17 +324,21 @@ async function pushToQbit(ctx: HandlerContext, name: string, bytes: Uint8Array):
 
 export async function itemDownload(ctx: HandlerContext): Promise<File[]> {
   const id = resolveItem(ctx.args.item!)
-  const files = await saveTorrent(ctx, id)
-  // --qbit：已存在而跳过下载时，推送本地已有的种子文件
-  if (ctx.options.qbit) await pushToQbit(ctx, `mteam_${id}.torrent`, await readFile(files[0]!.path))
-  return files
-}
-
-async function saveTorrent(ctx: HandlerContext, id: string): Promise<File[]> {
+  // --meta / --comments / --no-media（AGENTS 4.9「下载」）：种子文件不经 downloadMedia，这里同样处理
+  const settings = exportSettings(ctx.options, ctx.log)
+  if (!settings.media && ctx.options.qbit) throw new CatbusError('USAGE', '--qbit 要推送种子文件，不能和 --no-media 一起用')
   // --subdir title 才需要种子标题，多查一次详情
   const title = ctx.options.subdir === 'title' ? normalize.torrent(await new Api(ctx).detail(id)).title : null
   const dir = await itemDir(ctx, id, title)
   await mkdir(dir, { recursive: true })
+  const files = settings.media ? await saveTorrent(ctx, id, dir) : []
+  // --qbit：已存在而跳过下载时，推送本地已有的种子文件
+  if (ctx.options.qbit) await pushToQbit(ctx, `mteam_${id}.torrent`, await readFile(files[0]!.path))
+  if (settings.meta) files.push(await exportItem(ctx, id, dir, settings))
+  return files
+}
+
+async function saveTorrent(ctx: HandlerContext, id: string, dir: string): Promise<File[]> {
   const path = join(dir, `mteam_${id}_1.torrent`)
   const existing = await stat(path).catch(() => null)
   if (existing && !existing.isFile()) throw new CatbusError('USAGE', '种子文件目标路径不是普通文件')

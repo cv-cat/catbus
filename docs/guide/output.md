@@ -115,6 +115,21 @@ catbus bilibili item delete BV1xx411c7mD --dry-run
 
 写操作的返回：成对动作（`like/unlike` 等）、`delete`、`live send` 等返回 `{id}`（目标对象的 id）；`item publish` 返回 Item；`comment add` 返回 Comment；`msg send` 返回 Message；`item download` 返回 File[]。
 
+### item download 导出的帖子信息
+
+`item download` 加 `--meta` 时，在媒体文件旁边多写一个 `<platform>_<id>.json`；加 `--comments <N|all>` 时连同评论一起导出（`--replies <N|all>` 再带上每条评论的回复），加 `--no-media` 时只写这个文件、不下载媒体。返回的 File[] 里这个文件的 `type` 为 `data`。
+
+```jsonc
+{
+  "schema": 1,
+  "platform": "xhs",
+  "exported_at": "2026-11-12T12:00:00+08:00",
+  "item": { /* Item，与 item get 的输出相同 */ },
+  "comments": [ /* Comment，再加 replies: Comment[] */ ],
+  "comments_truncated": false   // 取评论中途遇到风控而停下时为 true，已经取到的照样写出
+}
+```
+
 ## 分页与游标
 
 列表命令默认只取一页：

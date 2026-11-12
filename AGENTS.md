@@ -199,7 +199,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - `item list`：当前账号自己发布的内容，带审核状态，数据来自创作者中心。
 - `item related`：相关推荐。
 - `item media`：可播放 / 可下载的媒体地址。
-- `item download`：下载到本地。
+- `item download`：把{item}的媒体下载到本地，可以同时导出帖子信息和评论（`--meta` / `--comments`，见 4.9「下载」）。
 - `item categories`：发布和搜索时 `--category` 的取值。
 - `feed list --kind recommend|hot|following`：默认 `recommend`。
 - `user update`：修改当前账号的资料（昵称、头像、简介），只改给出的字段。
@@ -422,6 +422,26 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - `--subdir none|id|title`：每个 item 放进 `--dir` 下自己的子目录，默认 `none`（直接放在 `--dir` 里）。`id` 用 item 的 ID；`title` 用标题（没有标题时用正文开头，再没有用 ID）。文件名不变。
   - `title` 的目录名按 Windows、macOS、Linux 都能用的规则清洗：去掉 emoji 和平台表情码（如小红书的 `[笑哭R]`、`#话题[话题]#`）、控制字符和 `<>:"/\|?*`，空白合并成一个空格，去掉首尾的空格和点，避开 Windows 保留名（`CON`、`NUL`、`COM1` 等，前面加 `_`），最长 60 个字符；清洗后为空时用 ID。
   - 同名目录里已经有别的 item 的文件（按文件名前缀 `<platform>_<id>_` 判断）时，目录名后面加 ` (<ID 后 6 位>)`。
+- `--meta`：同时导出帖子信息，在媒体文件旁边（同一个 item 目录，由 `--dir` / `--subdir` 决定）写 `<platform>_<id>.json`（ExportDoc，见下）。帖子信息取自同一平台、同一端的 `item get`。
+- `--comments <N|all>`：同时导出一级评论，N 为正整数，`all` 表示全部；默认不取。给了它就隐含 `--meta`。评论取自同一平台的 `comment list`，自动翻页取满 N 条，翻页间隔用平台默认值。
+- `--replies <N|all>`：每条一级评论再取多少条回复（楼中楼），取自 `comment replies`；默认不取，只和 `--comments` 一起用时有意义（单独给出时 stderr 提示一行并忽略）。平台给出的回复数为 0 的评论不发请求。
+- `--no-media`：不下载媒体，只写 ExportDoc（隐含 `--meta`）；目录规则不变。
+- `--comments` / `--replies` 的取值不是正整数或 `all` 时报 `USAGE`。
+- 取评论或回复时遇到 `RISK_CONTROL`：停止取评论，已经取到的照样写出，`comments_truncated` 为 true，stderr 提示一行；整条命令仍然成功。其他错误照常报错。
+- 平台没有 `comment list` 时 `comments` 为 `[]`，没有 `comment replies` 时不取回复，都只在 stderr 提示一行，不报错。
+- ExportDoc 文件已存在时与媒体一样默认跳过（不发请求），`--overwrite` 时重新导出。输出的 File[] 里多一个 `{path, type: "data", url: null, size}`。
+- ExportDoc 的结构（UTF-8，缩进 2 个空格，权限与凭证文件相同为 0600）：
+
+  ```jsonc
+  {
+    "schema": 1,
+    "platform": "xhs",
+    "exported_at": "2026-11-12T12:00:00+08:00",   // 带时区的 ISO 8601
+    "item": {},                                    // 归一化的 Item（6.2），与 item get 的输出相同
+    "comments": [],                                // Comment（6.2）再加一个字段 replies: Comment[]（没取时为 []）
+    "comments_truncated": false                    // 取评论时遇到风控而停下时为 true
+  }
+  ```
 
 **长连接**：`listen` 总是输出 jsonl，断线自动重连。`--duration <秒|10m|1h>` 指定运行时长，Ctrl-C 正常退出，退出码 0。
 
@@ -818,7 +838,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | 字段 | 取值 |
 |---|---|
 | Item.kind | `video` `image` `text` `article` `goods` `torrent` |
-| File.type | `image` `video` `audio` `torrent` |
+| File.type | `image` `video` `audio` `torrent` `data`（`item download --meta` 写出的 ExportDoc，见 4.9「下载」） |
 | Item.status | `published` `reviewing` `rejected` `private` `draft`；商品另有 `on_sale` `sold` `off_shelf`。只有自己的内容和商品才有，其余为 null |
 | Media.type | `image` `video` `audio` |
 | Live.status | `live` `offline` |

@@ -60,7 +60,7 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `item related` | ✓ | 相关推荐。 |
 | `item list` | ✓ | 我发布的稿件，带审核状态。 |
 | `item media` | ✓ | 稿件的媒体地址。 |
-| `item download` | ✓ | 下载稿件的媒体。 |
+| `item download` | ✓ | 下载稿件的媒体，可同时导出信息和评论（`--meta`、`--comments`）。 |
 | `item like` | ✓ | 点赞。 |
 | `item unlike` | ✓ | 取消点赞。 |
 | `item collect` | ✓ | 收藏。私有选项 `--folder`。 |

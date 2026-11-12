@@ -63,7 +63,7 @@ TikTok **只支持导入 cookie**（上游的登录接口只是占位）。有�
 | `item related` | ✓ | 相关推荐。 |
 | `item list` | ✓ | 我发布的视频，带审核状态。 |
 | `item media` | ◐ | 视频的媒体地址。媒体地址取自视频详情里的 `video.playAddr`（图文取 `imagePost`），上游没有单独解析。 |
-| `item download` | ◐ | 下载视频的媒体。媒体地址同 `item media`。 |
+| `item download` | ◐ | 下载视频的媒体，可同时导出信息和评论（`--meta`、`--comments`）。媒体地址同 `item media`。 |
 | `item like` | ✓ | 点赞。 |
 | `item unlike` | ✓ | 取消点赞。 |
 | `item collect` | ✓ | 收藏。 |

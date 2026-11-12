@@ -58,7 +58,7 @@
 | `item search` | ✓ | 搜索笔记。取值：`--sort` general / latest / popular / comments / collects；`--type` all / video / image；`--time` all / day / week / half_year。 |
 | `item list` | ✓ | 我发布的笔记，带审核状态。走创作者中心（creator 子站点）。 |
 | `item media` | ✓ | 笔记的媒体地址。 |
-| `item download` | ✓ | 下载笔记的媒体。 |
+| `item download` | ✓ | 下载笔记的媒体，可同时导出信息和评论（`--meta`、`--comments`）。 |
 | `item publish` | ✓ | 发布笔记。走创作者中心；`--image` 和 `--video` 二选一，视频要同时给 `--cover`；`--poi` 要和 `--poi-name` 一起用。取值：`--visibility` public / private。不支持 `--mention`、`--category`、`--price`。私有选项 `--poi-name`。 |
 | `item related`、`item like`、`item unlike`、`item collect`、`item uncollect`、`item delete` | ○ | 规划中 |
 
