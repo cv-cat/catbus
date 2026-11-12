@@ -1,8 +1,7 @@
-import { execFile } from 'node:child_process'
 import { createReadStream, statSync } from 'node:fs'
 import { ZipFile } from 'yazl'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { resolveCli } from './cli.js'
+import { AbortedError, runCatbus } from './runner.js'
 import { proxyMedia } from './media.js'
 import { platformFilters } from './filters.js'
 import { DeliveryError, DownloadError, clearFinished, initDownloads, itemRef, listBatches, prepareDelivery, removeRecord, retryFailed, startBatch, type Delivery } from './download.js'
@@ -12,7 +11,7 @@ import { ACCOUNT, LoginError, buildLogin, buildLogout, buildUse, cancel, getSess
 /**
  * WebUI 的 bridge（AGENTS.md 7.9）：浏览器 POST /api/catbus {argv}，这里用子进程跑 catbus 并原样返回信封。
  *
- * - 只放行白名单里的只读命令，参数不经过 shell（execFile）。
+ * - 只放行白名单里的只读命令，参数不经过 shell（execFile）；并发上限、排队和取消在 runner.ts。
  * - 不依赖 Vite：`catbus web` 的服务（server.ts）和开发时的 Vite 插件（web/server/bridge.ts）共用这个 handler。
  * - Host 校验与访问令牌在 server.ts；这里只拒绝跨站请求。
  */
@@ -106,19 +105,6 @@ export function validateArgv(argv: unknown): string[] {
   }
   // 关键词放在 `--` 之后，以 - 开头的文本也不会被当成选项
   return [platform, resource, action, ...options, ...(positional.length ? ['--', ...positional] : [])]
-}
-
-function run(argv: string[]): Promise<string> {
-  const { file, prefix } = resolveCli()
-  // 全局选项放在最前面，避免落到 `--` 之后被当成关键词
-  const full = [...prefix, '-o', 'json', '-q', ...argv]
-  return new Promise((resolve, reject) => {
-    execFile(file, full, { timeout: 90_000, maxBuffer: 32 * 1024 * 1024 }, (err, stdout) => {
-      // catbus 出错时退出码非 0，但 stdout 仍然是一个信封
-      if (stdout.trim()) return resolve(stdout)
-      reject(err ?? new Error('catbus 没有输出'))
-    })
-  })
 }
 
 async function readBody(req: IncomingMessage): Promise<unknown> {
@@ -340,6 +326,11 @@ export function createBridge(options: BridgeOptions = {}): Handler {
 
 async function handleCatbus(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== 'POST') return send(res, 405, bridgeError('只接受 POST'))
+  // 客户端在响应前断开（页面取消了过期的请求、关了标签页）：排队中的直接出队，运行中的结束子进程（runner.ts）
+  const ac = new AbortController()
+  res.on('close', () => {
+    if (!res.writableFinished) ac.abort()
+  })
   let argv: string[]
   try {
     argv = validateArgv(((await readBody(req)) as { argv?: unknown }).argv)
@@ -347,8 +338,10 @@ async function handleCatbus(req: IncomingMessage, res: ServerResponse) {
     return send(res, 400, bridgeError((e as Error).message))
   }
   try {
-    send(res, 200, await run(argv))
+    send(res, 200, await runCatbus(argv, ac.signal))
   } catch (e) {
+    // 连接已经断了，没有人收响应
+    if (e instanceof AbortedError) return
     send(res, 502, bridgeError(`无法运行 catbus：${(e as Error).message}`))
   }
 }
