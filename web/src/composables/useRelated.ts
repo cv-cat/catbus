@@ -44,14 +44,28 @@ export function rememberRelated(platform: string, id: string, list: Item[]) {
   cache.set(keyOf(platform, id), list)
 }
 
-/** 取相关推荐；失败时返回 null。去掉条目自己和重复的，最多 RELATED_LIMIT 条 */
+/**
+ * 同一时间只有一张详情卡片、一行相关推荐：发新的一次（切到别的条目）时，上一次还在路上的直接取消；
+ * 卡片换条目、关闭时 DetailCard 调 cancelRelated()。被取消的结果调用方本来就会丢弃（RelatedRail 的 token）。
+ */
+let ctl: AbortController | null = null
+export function cancelRelated() {
+  ctl?.abort()
+  ctl = null
+}
+
+/** 取相关推荐；失败或被取消时返回 null。去掉条目自己和重复的，最多 RELATED_LIMIT 条 */
 export async function fetchRelated(platform: string, id: string, item: Item, account: string | null): Promise<Item[] | null> {
+  cancelRelated()
+  const mine = (ctl = new AbortController())
   try {
-    const env = await listRelated(platform, item, RELATED_LIMIT, account)
+    const env = await listRelated(platform, item, RELATED_LIMIT, account, mine.signal)
     if (!env.ok || !Array.isArray(env.data)) return null
     const seen = new Set([id])
     return env.data.filter((x) => x && !seen.has(x.id) && Boolean(seen.add(x.id))).slice(0, RELATED_LIMIT)
   } catch {
     return null
+  } finally {
+    if (ctl === mine) ctl = null
   }
 }

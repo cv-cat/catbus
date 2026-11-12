@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef, watch } from 'vue'
 import { getUser, listUserItems } from '@/api/author'
-import { loadFilters } from '@/api/client'
+import { isAbort, loadFilters } from '@/api/client'
 import type { CatbusError, Item, User, UserRef } from '@/api/types'
 import { isDemo } from './source'
 import { useDiscoverStore } from './discover'
@@ -53,6 +53,11 @@ export const useAuthorStore = defineStore('author', () => {
   /** 已加载的是哪位作者、用哪个账号（换了才重新请求） */
   let loadedKey: string | null = null
   let seq = 0
+  /**
+   * 这一位作者（seq）的请求共用的取消器：换了作者 / 账号、重新加载时中止旧的（结果反正要丢），
+   * bridge 随之结束子进程。翻页沿用当前这一轮的；离开作者页不取消（回来时同一位作者不重新请求）。
+   */
+  let ctl = new AbortController()
   let seen = new Set<string>()
 
   const account = () => (route.value ? (discover.accountFor(route.value.platform)?.account ?? null) : null)
@@ -61,13 +66,13 @@ export const useAuthorStore = defineStore('author', () => {
   async function loadUser(r: AuthorRoute, id: number) {
     userLoading.value = true
     try {
-      const env = await getUser(r.platform, r.user, account(), hint)
+      const env = await getUser(r.platform, r.user, account(), hint, ctl.signal)
       if (id !== seq) return
       if (env.ok && env.data) user.value = env.data
       // 作者取不到不单独报错：作品列表出错时整页报错；作品能取到时头部退回卡片上的作者
       else if (!user.value && hint) user.value = fromRef(hint)
-    } catch {
-      if (id === seq && !user.value && hint) user.value = fromRef(hint)
+    } catch (e) {
+      if (id === seq && !isAbort(e) && !user.value && hint) user.value = fromRef(hint)
     } finally {
       if (id === seq) userLoading.value = false
     }
@@ -82,6 +87,7 @@ export const useAuthorStore = defineStore('author', () => {
         limit: settings.pageSize,
         account: account(),
         hint,
+        signal: ctl.signal,
       })
       if (id !== seq) return
       if (!env.ok) {
@@ -104,7 +110,7 @@ export const useAuthorStore = defineStore('author', () => {
         return loadItems(r, id, true, emptyPages + 1)
       }
     } catch (e) {
-      if (id !== seq) return
+      if (id !== seq || isAbort(e)) return
       error.value = { code: 'NETWORK', message: (e as Error).message, hint: null, detail: null }
     } finally {
       if (id === seq) loading.value = loadingMore.value = false
@@ -119,6 +125,8 @@ export const useAuthorStore = defineStore('author', () => {
     if (!force && key === loadedKey) return
     loadedKey = key
     const id = ++seq
+    ctl.abort()
+    ctl = new AbortController()
     // 换了作者：清空旧数据，显示骨架；同一位作者重新请求（登录后、换账号）时保留头部
     const same = user.value && refOf(user.value) === r.user
     if (!same) user.value = null

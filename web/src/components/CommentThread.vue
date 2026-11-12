@@ -39,8 +39,8 @@ function append(list: Comment[], page: { cursor: string | null; has_more: boolea
   more.value = Boolean(page?.has_more && page.cursor)
 }
 
-async function fetchPage(limit?: number) {
-  const env = await listReplies(props.platform, props.item, props.comment.id, cursor.value, limit, props.account)
+async function fetchPage(limit?: number, signal?: AbortSignal) {
+  const env = await listReplies(props.platform, props.item, props.comment.id, cursor.value, limit, props.account, signal)
   if (env.ok && env.data) {
     error.value = null
     append(env.data, env.page)
@@ -60,7 +60,7 @@ function preview() {
   requested = true
   io?.disconnect()
   loading.value = true
-  void enqueueReply(props.platform, () => fetchPage(1))
+  void enqueueReply(props.platform, (signal) => fetchPage(1, signal))
     .then((env) => {
       // 风控时停掉自动预取，避免越拦越多；手动展开仍可用
       if (env && !env.ok && env.error?.code === 'RISK_CONTROL') stopReplyQueue()

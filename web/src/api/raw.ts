@@ -1,11 +1,12 @@
 import type { Envelope, Item } from './types'
 import { isDemo } from '@/stores/source'
+import { call } from './client'
 
 /**
  * 原始 JSON（AGENTS.md 7.9「设置」→ 实验性）：`catbus <p> item get --raw -- <item>`，
  * data 是平台返回的原始对象。原始对象里可能有带签名的媒体链接，不写进日志、不打印到控制台。
  */
-export async function getRawItem(platform: string, item: Item, account?: string | null): Promise<Envelope<unknown>> {
+export async function getRawItem(platform: string, item: Item, account?: string | null, signal?: AbortSignal): Promise<Envelope<unknown>> {
   if (isDemo()) {
     await new Promise((r) => setTimeout(r, 300))
     return { ok: true, data: demoRaw(platform, item), page: null, error: null }
@@ -13,12 +14,7 @@ export async function getRawItem(platform: string, item: Item, account?: string 
   const argv = [platform, 'item', 'get', item.url || item.id]
   if (account) argv.push('-a', account)
   argv.push('--raw')
-  const res = await fetch('/api/catbus', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ argv }),
-  })
-  return (await res.json()) as Envelope<unknown>
+  return call<unknown>(argv, signal)
 }
 
 /** 演示模式：把演示条目包成一个「像平台原始对象」的结构，字段名是平台风格的 */

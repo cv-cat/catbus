@@ -4,13 +4,23 @@ import type { Account, Comment, Envelope, Item, Keyword } from './types'
 import { isDemo, useSourceStore, type Source } from '@/stores/source'
 import { parseOrder } from '@/data/filters'
 
-async function call<T>(argv: string[]): Promise<Envelope<T>> {
+/**
+ * 跑一条 catbus 命令（bridge 的 POST /api/catbus）。`signal` 中止时 fetch 断开连接，
+ * bridge 随之让排队中的出队、结束运行中的子进程（AGENTS.md 7.9「bridge 的边界」）；这里 reject AbortError。
+ */
+export async function call<T>(argv: string[], signal?: AbortSignal): Promise<Envelope<T>> {
   const res = await fetch('/api/catbus', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ argv }),
+    signal,
   })
   return (await res.json()) as Envelope<T>
+}
+
+/** 被主动取消的请求（过期了）：调用方当作没发生过，不显示错误、不弹提示、不标失效 */
+export function isAbort(e: unknown): boolean {
+  return (e as { name?: unknown } | null)?.name === 'AbortError'
 }
 
 /** 各平台 `item search` 支持的筛选取值（来自注册表）；null 表示没有这个筛选 */
@@ -73,6 +83,8 @@ export interface SearchParams {
   limit?: number
   /** 本页浏览用的账号（-a），不传时用 _current */
   account?: string | null
+  /** 取消过期的请求 */
+  signal?: AbortSignal
 }
 
 export async function searchItems(p: SearchParams): Promise<Envelope<Item[]>> {
@@ -102,18 +114,18 @@ export async function searchItems(p: SearchParams): Promise<Envelope<Item[]>> {
     if (p.type && p.type !== 'all') argv.push('--type', p.type)
     if (p.time && p.time !== 'all') argv.push('--time', p.time)
   } else if (p.kind && p.kind !== 'recommend') argv.push('--kind', p.kind)
-  return call<Item[]>(argv)
+  return call<Item[]>(argv, p.signal)
 }
 
 /** 详情：`item get`，补全正文和媒体（AGENTS.md 7.9 详情卡片） */
-export async function getItem(platform: string, item: Item, account?: string | null): Promise<Envelope<Item>> {
+export async function getItem(platform: string, item: Item, account?: string | null, signal?: AbortSignal): Promise<Envelope<Item>> {
   if (isDemo()) {
     await new Promise((r) => setTimeout(r, 350))
     return mockItem(item)
   }
   const argv = [platform, 'item', 'get', item.url || item.id]
   if (account) argv.push('-a', account)
-  return call<Item>(argv)
+  return call<Item>(argv, signal)
 }
 
 /** 评论：`comment list`，一次一页，用 cursor 续翻 */
@@ -122,6 +134,7 @@ export async function listComments(
   item: Item,
   cursor?: string | null,
   account?: string | null,
+  signal?: AbortSignal,
 ): Promise<Envelope<Comment[]>> {
   if (isDemo()) {
     await new Promise((r) => setTimeout(r, 500))
@@ -130,7 +143,7 @@ export async function listComments(
   const argv = [platform, 'comment', 'list', item.url || item.id]
   if (account) argv.push('-a', account)
   if (cursor) argv.push('--cursor', cursor)
-  return call<Comment[]>(argv)
+  return call<Comment[]>(argv, signal)
 }
 
 /** 楼中楼：`comment replies`，limit 为 1 时用作默认展开的那一条 */
@@ -141,6 +154,7 @@ export async function listReplies(
   cursor?: string | null,
   limit?: number,
   account?: string | null,
+  signal?: AbortSignal,
 ): Promise<Envelope<Comment[]>> {
   if (isDemo()) {
     await new Promise((r) => setTimeout(r, 400))
@@ -150,11 +164,17 @@ export async function listReplies(
   if (account) argv.push('-a', account)
   if (limit) argv.push('--limit', String(limit))
   if (cursor) argv.push('--cursor', cursor)
-  return call<Comment[]>(argv)
+  return call<Comment[]>(argv, signal)
 }
 
 /** 相关推荐：`item related`，只取一页（AGENTS.md 7.9「相关推荐」） */
-export async function listRelated(platform: string, item: Item, limit: number, account?: string | null): Promise<Envelope<Item[]>> {
+export async function listRelated(
+  platform: string,
+  item: Item,
+  limit: number,
+  account?: string | null,
+  signal?: AbortSignal,
+): Promise<Envelope<Item[]>> {
   if (isDemo()) {
     await new Promise((r) => setTimeout(r, 600))
     return mockRelated(platform, item, limit)
@@ -162,7 +182,7 @@ export async function listRelated(platform: string, item: Item, limit: number, a
   const argv = [platform, 'item', 'related', item.url || item.id]
   if (account) argv.push('-a', account)
   argv.push('--limit', String(limit))
-  return call<Item[]>(argv)
+  return call<Item[]>(argv, signal)
 }
 
 /** 支持楼中楼的平台（注册表里实现了 comment replies） */
@@ -195,23 +215,28 @@ export async function useAccount(platform: string, account: string): Promise<voi
 }
 
 /** 热搜（AGENTS.md 7.9「搜索联想与热搜」）：`catbus <p> keyword hot [-a <账号>]` */
-export async function keywordHot(platform: string, account?: string | null): Promise<Envelope<Keyword[]>> {
+export async function keywordHot(platform: string, account?: string | null, signal?: AbortSignal): Promise<Envelope<Keyword[]>> {
   if (isDemo()) {
     await new Promise((r) => setTimeout(r, 380))
     return mockHot(platform)
   }
   const argv = [platform, 'keyword', 'hot']
   if (account) argv.push('-a', account)
-  return call<Keyword[]>(argv)
+  return call<Keyword[]>(argv, signal)
 }
 
 /** 搜索联想：`catbus <p> keyword suggest [-a <账号>] -- <前缀>`（bridge 把前缀放到 `--` 之后） */
-export async function keywordSuggest(platform: string, prefix: string, account?: string | null): Promise<Envelope<Keyword[]>> {
+export async function keywordSuggest(
+  platform: string,
+  prefix: string,
+  account?: string | null,
+  signal?: AbortSignal,
+): Promise<Envelope<Keyword[]>> {
   if (isDemo()) {
     await new Promise((r) => setTimeout(r, 220))
     return mockSuggest(platform, prefix)
   }
   const argv = [platform, 'keyword', 'suggest', prefix]
   if (account) argv.push('-a', account)
-  return call<Keyword[]>(argv)
+  return call<Keyword[]>(argv, signal)
 }

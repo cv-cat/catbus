@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, reactive, ref, shallowReactive, shallowRef, watch } from 'vue'
-import { listAccounts, loadFilters, removeAccount, searchItems, useAccount, type PlatformFilters } from '@/api/client'
+import { isAbort, listAccounts, loadFilters, removeAccount, searchItems, useAccount, type PlatformFilters } from '@/api/client'
 import type { Account, CatbusError, Item } from '@/api/types'
 import { PLATFORMS, platformById } from '@/data/platforms'
 import { KINDS, ORDERS, SORTS, TIMES, TYPES, parseOrder } from '@/data/filters'
@@ -385,6 +385,23 @@ export const useDiscoverStore = defineStore('discover', () => {
   })
 
   let seq = 0
+  /**
+   * 单一模式这一轮请求共用的取消器：发起新的一次搜索（seq 变了、旧结果反正要丢）时中止旧的，
+   * bridge 随之结束对应的子进程，过期的请求不再打到平台。翻页沿用当前这一轮的，不另外取消。
+   */
+  let singleCtl = new AbortController()
+  function abortSingle() {
+    singleCtl.abort()
+    singleCtl = new AbortController()
+  }
+  /** 聚合模式每个渠道自己的取消器（规则同上，按 lane.seq） */
+  const laneCtl = new WeakMap<Lane, AbortController>()
+  /** 渠道的请求作废：seq 加一并中止还在路上的请求 */
+  function invalidateLane(l: Lane) {
+    l.seq++
+    laneCtl.get(l)?.abort()
+    laneCtl.delete(l)
+  }
 
   /** 当前列表属于哪个平台：换了渠道就不能再显示旧平台的卡片 */
   let shownPlatform: string | null = null
@@ -441,6 +458,9 @@ export const useDiscoverStore = defineStore('discover', () => {
     }
     const meta = platformById(state.platform)!
     const id = ++seq
+    // 新的一次搜索：上一轮还在路上的请求（含翻页）都已作废，直接取消
+    if (!append) abortSingle()
+    const signal = singleCtl.signal
     const t0 = performance.now()
     const platform = state.platform
     const account = currentAccount.value?.account ?? null
@@ -476,6 +496,7 @@ export const useDiscoverStore = defineStore('discover', () => {
         // 每页条数取设置，改了之后下一次请求（含翻页）生效
         limit: settings.pageSize,
         account,
+        signal,
       })
       if (id !== seq) return // 已经有更新的请求
       if (!env.ok) {
@@ -518,7 +539,8 @@ export const useDiscoverStore = defineStore('discover', () => {
         return void (await run(true, emptyPages + 1))
       }
     } catch (e) {
-      if (id !== seq) return
+      // 取消只发生在请求作废之后；保险起见，取消一律不当成错误
+      if (id !== seq || isAbort(e)) return
       error.value = { code: 'NETWORK', message: (e as Error).message, hint: null, detail: null }
     } finally {
       if (id === seq) loading.value = loadingMore.value = false
@@ -598,12 +620,13 @@ export const useDiscoverStore = defineStore('discover', () => {
     if (!aggregate.value) {
       // 单一模式还在路上的请求作废
       ++seq
+      abortSingle()
       loading.value = loadingMore.value = false
       error.value = null
       aggregate.value = true
     }
     const old = lanes.value
-    for (const l of old) if (!want.includes(l.platform)) l.seq++
+    for (const l of old) if (!want.includes(l.platform)) invalidateLane(l)
     let cells = sequence.value.filter((c) => want.includes(c.platform))
     lanes.value = want.map((id) => {
       const kept = old.find((l) => l.platform === id)
@@ -619,7 +642,7 @@ export const useDiscoverStore = defineStore('discover', () => {
   function leaveAggregate() {
     if (!aggregate.value) return
     for (const l of lanes.value) {
-      l.seq++
+      invalidateLane(l)
       if (!l.key || l.error || l.loading || !l.items.length) continue
       channels.set(l.platform, {
         key: l.key,
@@ -681,6 +704,14 @@ export const useDiscoverStore = defineStore('discover', () => {
   /** 请求一个渠道的一页。返回 false 表示响应已经过期（渠道被去掉，或又发了新的请求），调用方什么都不用做 */
   async function fetchLane(lane: Lane, append: boolean): Promise<boolean> {
     const id = ++lane.seq
+    // 重新加载第一页：这个渠道上一轮的请求（含翻页）都已作废，直接取消；翻页沿用当前这一轮的
+    let ctl = laneCtl.get(lane)
+    if (!append || !ctl) {
+      ctl?.abort()
+      ctl = new AbortController()
+      laneCtl.set(lane, ctl)
+    }
+    const signal = ctl.signal
     const t0 = performance.now()
     const live = () => id === lane.seq && lanes.value.includes(lane)
     const fail = (e: CatbusError | null) => {
@@ -710,6 +741,7 @@ export const useDiscoverStore = defineStore('discover', () => {
         cursor: append ? lane.cursor : null,
         limit: settings.pageSize,
         account: lane.account,
+        signal,
       })
       if (!live()) return false
       if (!env.ok) {
@@ -729,7 +761,8 @@ export const useDiscoverStore = defineStore('discover', () => {
       if (lane.empty >= MAX_EMPTY_PAGES) lane.hasMore = false
       return true
     } catch (e) {
-      if (!live()) return false
+      // 被取消的请求不报错、不弹提示、不动渠道缓存和账号状态
+      if (!live() || isAbort(e)) return false
       fail({ code: 'NETWORK', message: (e as Error).message, hint: null, detail: null })
       return true
     } finally {

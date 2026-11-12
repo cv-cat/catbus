@@ -16,11 +16,12 @@ import RawJsonView from './RawJsonView.vue'
 import RelatedRail from './RelatedRail.vue'
 import { getRawItem } from '@/api/raw'
 import { useSettingsStore } from '@/stores/settings'
-import { getItem, listComments } from '@/api/client'
+import { getItem, isAbort, listComments } from '@/api/client'
 import type { CatbusError, Comment, Item } from '@/api/types'
 import { platformById } from '@/data/platforms'
 import { compact, since, tintOf } from '@/composables/format'
 import { resetReplyQueue } from '@/composables/replyQueue'
+import { cancelRelated } from '@/composables/useRelated'
 import { gsap, prefersReducedMotion } from '@/composables/motion'
 import { storeToRefs } from 'pinia'
 import { useDetailStore, type DetailTarget } from '@/stores/detail'
@@ -90,12 +91,12 @@ async function loadRaw() {
   rawLoading.value = true
   rawError.value = null
   try {
-    const env = await getRawItem(t.platform, t.item, t.account)
+    const env = await getRawItem(t.platform, t.item, t.account, loads.signal)
     if (my !== token) return
     if (env.ok) raw.value = env.data
     else rawError.value = env.error
   } catch (e) {
-    if (my === token) rawError.value = { code: 'BRIDGE', message: (e as Error).message, hint: null, detail: null }
+    if (my === token && !isAbort(e)) rawError.value = { code: 'BRIDGE', message: (e as Error).message, hint: null, detail: null }
   } finally {
     if (my === token) rawLoading.value = false
   }
@@ -445,6 +446,9 @@ watch(target, async (t, before) => {
     void load(t)
     await playOpen(t)
   } else if (before && cur.value) {
+    // 关闭：还在路上的详情、评论、回复、相关推荐都不要了
+    token++
+    abortLoads()
     const c = cur.value
     await playClose(c)
     if (!target.value) cur.value = null
@@ -453,9 +457,21 @@ watch(target, async (t, before) => {
 
 // ---------- 数据：先显示搜索结果，再用 item get 补全、comment list 取评论 ----------
 let token = 0
+/**
+ * 这一条（token）的请求共用的取消器：换条目、关闭卡片时中止，bridge 随之结束子进程，
+ * 过期的 item get / comment list / raw / 回复预取 / 相关推荐不再打到平台。
+ * 取消只发生在 token 变了之后，结果本来就会被丢弃；catch 里另外按 isAbort 跳过，不显示成错误。
+ */
+let loads = new AbortController()
+function abortLoads() {
+  loads.abort()
+  loads = new AbortController()
+  resetReplyQueue()
+  cancelRelated()
+}
 function reset() {
   token++
-  resetReplyQueue()
+  abortLoads()
   detail.value = null
   itemError.value = null
   badImgs.value = new Set()
@@ -474,12 +490,12 @@ async function load(t: DetailTarget) {
   const my = token
   loadingItem.value = true
   try {
-    const env = await getItem(t.platform, t.item, t.account)
+    const env = await getItem(t.platform, t.item, t.account, loads.signal)
     if (my !== token) return
     if (env.ok && env.data) detail.value = { ...env.data, url: env.data.url || t.item.url }
     else itemError.value = env.error
   } catch (e) {
-    if (my === token) itemError.value = { code: 'BRIDGE', message: (e as Error).message, hint: null, detail: null }
+    if (my === token && !isAbort(e)) itemError.value = { code: 'BRIDGE', message: (e as Error).message, hint: null, detail: null }
   } finally {
     if (my === token) loadingItem.value = false
   }
@@ -494,7 +510,7 @@ async function loadComments() {
   loadingComments.value = true
   commentError.value = null
   try {
-    const env = await listComments(t.platform, detail.value ?? t.item, commentCursor.value, t.account)
+    const env = await listComments(t.platform, detail.value ?? t.item, commentCursor.value, t.account, loads.signal)
     if (my !== token) return
     if (env.ok && env.data) {
       const seen = new Set(comments.value.map((c) => c.id))
@@ -503,7 +519,7 @@ async function loadComments() {
       commentMore.value = Boolean(env.page?.has_more && env.page.cursor)
     } else commentError.value = env.error
   } catch (e) {
-    if (my === token) commentError.value = { code: 'BRIDGE', message: (e as Error).message, hint: null, detail: null }
+    if (my === token && !isAbort(e)) commentError.value = { code: 'BRIDGE', message: (e as Error).message, hint: null, detail: null }
   } finally {
     if (my === token) loadingComments.value = false
   }
@@ -641,6 +657,8 @@ onBeforeUnmount(() => {
   removeEventListener('keydown', onKey)
   removeEventListener('keyup', onKeyUp)
   clearTimeout(loadTimer)
+  token++
+  abortLoads()
   io?.disconnect()
   tl?.kill()
 })

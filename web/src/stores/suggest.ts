@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { reactive } from 'vue'
-import { keywordHot, keywordSuggest } from '@/api/client'
+import { isAbort, keywordHot, keywordSuggest } from '@/api/client'
 import { MOCK_KEYWORD_SUPPORT } from '@/api/mock'
 import type { Keyword } from '@/api/types'
 import { isDemo } from './source'
@@ -32,13 +32,13 @@ export const useSuggestStore = defineStore('suggest', () => {
 
   const account = (platform: string) => d.accountFor(platform)?.account ?? null
 
-  /** 统一处理失败：不弹提示，只把平台停用 */
+  /** 统一处理失败：不弹提示，只把平台停用；被取消的（输入又变了）不算失败，不停用 */
   async function guard(platform: string, run: () => ReturnType<typeof keywordHot>): Promise<Keyword[] | null> {
     try {
       const env = await run()
       if (env.ok && Array.isArray(env.data)) return env.data.filter((k) => k && typeof k.text === 'string' && k.text.trim())
-    } catch {
-      /* 静默 */
+    } catch (e) {
+      if (isAbort(e)) return null
     }
     blocked.add(platform)
     return null
@@ -63,13 +63,22 @@ export const useSuggestStore = defineStore('suggest', () => {
 
   const normalize = (prefix: string) => [...prefix.trim()].slice(0, PREFIX_MAX).join('')
   const cachedSuggest = (platform: string, prefix: string) => suggestCache.get(`${platform}\n${normalize(prefix)}`)
+  /**
+   * 联想只采用最后一次的结果（SearchSuggest 的 seq）：发新的一次时，上一次还在路上的直接取消，
+   * 过期的前缀不再打到平台。热搜每个平台只取一次、多处共用，不取消。
+   */
+  let suggestCtl: AbortController | null = null
   /** 同一平台同一前缀缓存 */
   async function suggest(platform: string, prefix: string): Promise<Keyword[] | null> {
+    suggestCtl?.abort()
+    suggestCtl = null
     const q = normalize(prefix)
     const key = `${platform}\n${q}`
     const hit = suggestCache.get(key)
     if (hit) return hit
-    const r = await guard(platform, () => keywordSuggest(platform, q, account(platform)))
+    const ctl = (suggestCtl = new AbortController())
+    const r = await guard(platform, () => keywordSuggest(platform, q, account(platform), ctl.signal))
+    if (suggestCtl === ctl) suggestCtl = null
     if (!r) return null
     const list = r.slice(0, SUGGEST_MAX)
     suggestCache.set(key, list)

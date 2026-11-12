@@ -90,19 +90,52 @@ async function downloadSelected() {
 }
 
 const root = ref<HTMLElement>()
-const filters = ref<HTMLElement>()
 const stuck = ref(false)
 /** 滚过这段距离后右下角出现回顶按钮 */
 const TOP_BUTTON_AFTER = 640
 const showTop = ref(false)
 const launching = ref(false)
-function onScroll() {
+/**
+ * 回顶按钮：滚过 TOP_BUTTON_AFTER 后出现。不监听 scroll 读 scrollTop（页面上一直有 CSS 动画，样式每帧都是脏的，
+ * 读一次就强制一次样式重算），改用 IntersectionObserver 看一个绝对定位在这个深度的 1px 哨兵：哨兵整个滚出容器顶部（scrollTop > TOP_BUTTON_AFTER）即出现。
+ */
+const topSentinel = ref<HTMLElement>()
+let topIo: IntersectionObserver | undefined
+function observeTop() {
+  topIo = new IntersectionObserver(
+    ([e]) => {
+      if (!e) return
+      const above = e.rootBounds ? e.boundingClientRect.bottom <= e.rootBounds.top : false
+      showTop.value = !e.isIntersecting && above
+    },
+    { root: root.value },
+  )
+  topIo.observe(topSentinel.value!)
+}
+
+/*
+ * 吸顶：筛选栏滚到容器内容区顶部（scrollTop > 筛选栏原位 − 容器 padding-top）时算吸顶。
+ * 不在滚动事件里读样式和布局（会强制重算），改用 IntersectionObserver 看筛选栏前面的顶栏：
+ * 顶栏底边越过「容器顶 + padding-top − 顶栏下外边距」时吸顶。顶栏高度变化（手机上两行）由 IO 自己处理；
+ * padding-top、下外边距只随断点和安全区变，在容器尺寸变化时重算一次。
+ */
+const header = ref<HTMLElement>()
+let stuckIo: IntersectionObserver | undefined
+let stuckRo: ResizeObserver | undefined
+let stuckMargin: number | undefined
+function observeStuck() {
   const el = root.value
-  const y = el?.scrollTop ?? 0
-  // 筛选栏贴到顶部时算吸顶：手机上顶栏有两行，不能写死高度
-  const f = filters.value
-  stuck.value = el && f ? y > f.offsetTop - parseFloat(getComputedStyle(el).paddingTop) : y > 72
-  showTop.value = y > TOP_BUTTON_AFTER
+  const h = header.value
+  if (!el || !h) return
+  const margin = parseFloat(getComputedStyle(h).marginBottom) - parseFloat(getComputedStyle(el).paddingTop)
+  if (margin === stuckMargin && stuckIo) return
+  stuckMargin = margin
+  stuckIo?.disconnect()
+  stuckIo = new IntersectionObserver(([e]) => e && (stuck.value = !e.isIntersecting), {
+    root: el,
+    rootMargin: `${margin}px 0px 0px 0px`,
+  })
+  stuckIo.observe(h)
 }
 
 function toTop() {
@@ -214,18 +247,25 @@ onMounted(() => {
   fadeRo = new ResizeObserver(updateFade)
   fadeRo.observe(scroller.value!)
   updateFade()
+  stuckRo = new ResizeObserver(observeStuck)
+  stuckRo.observe(root.value!)
+  observeTop()
 })
 onBeforeUnmount(() => {
   io?.disconnect()
   fadeRo?.disconnect()
+  stuckRo?.disconnect()
+  stuckIo?.disconnect()
+  topIo?.disconnect()
   clearInterval(tickTimer)
   waveWhileLoading(false)
 })
 </script>
 
 <template>
-  <main ref="root" class="discover" :class="{ 'has-bar': bp.phone && sel.active }" @scroll.passive="onScroll">
-    <header class="top">
+  <main ref="root" class="discover" :class="{ 'has-bar': bp.phone && sel.active }">
+    <i ref="topSentinel" class="top-sentinel" :style="{ top: `${TOP_BUTTON_AFTER - 1}px` }" aria-hidden="true" />
+    <header ref="header" class="top">
       <button
         v-if="bp.phone"
         type="button"
@@ -260,7 +300,7 @@ onBeforeUnmount(() => {
       <ThemeToggle class="tool reveal" />
     </header>
 
-    <div ref="filters" class="filters reveal" :class="{ stuck }">
+    <div class="filters reveal" :class="{ stuck }">
       <div
         ref="scroller"
         class="filter-scroll"
@@ -343,6 +383,15 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+/* 回顶按钮的哨兵：脱离文档流，不占位置，只给 IntersectionObserver 看 */
+.top-sentinel {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+  visibility: hidden;
+}
 .discover {
   position: absolute;
   /* 左边留 12px 内边距（整体左移 12px，内容位置不变）：

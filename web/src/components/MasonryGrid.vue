@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import MediaCard from './MediaCard.vue'
 import SkeletonCard from './SkeletonCard.vue'
 import type { Item } from '@/api/types'
@@ -10,13 +10,16 @@ import { useDiscoverStore } from '@/stores/discover'
 import { useDetailStore } from '@/stores/detail'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useSettingsStore, type Density } from '@/stores/settings'
-import { gsap, prefersReducedMotion } from '@/composables/motion'
+import { prefersReducedMotion } from '@/composables/motion'
 
 /**
  * 瀑布流：按封面宽高比估算高度，依次放进当前最矮的一列。
  * 同样的顺序总是得到同样的分配，所以追加下一页时已有的卡片不会跳动。
  *
  * 每一格（`Cell`）外面包一层 `.cell`：格子的 key 不变时这层元素也不变，里面是卡片，或渠道还在加载时的骨架占位。
+ * 所有 `.cell` 都是 `.masonry` 下的同级节点（一个扁平的 keyed 列表），绝对定位：
+ * 列由上面的估算决定，每列里的 top 按量到的真实高度（ResizeObserver）累加，容器高度取最高的一列。
+ * 所以格子换列、换顺序时组件实例和 DOM 节点都不变，只改 left / top。
  * 格子换了位置（聚合模式加、减渠道，换密度）时，从旧位置平滑移到新位置（FLIP）。
  */
 const props = defineProps<{
@@ -53,18 +56,26 @@ const gap = computed(() => props.gap ?? GAP[settings.density][size.value])
 const minColumn = computed(() => props.minColumn ?? COLUMN[settings.density][size.value])
 
 const root = ref<HTMLElement>()
+/** 量宽度用的零高度元素：直接量 .masonry 的话，它的高度随排版变，会在 ResizeObserver 里引出一轮多余的通知 */
+const sizer = ref<HTMLElement>()
 const width = ref(0)
 let ro: ResizeObserver | undefined
 
 onMounted(() => {
+  width.value = sizer.value!.clientWidth
   ro = new ResizeObserver(([e]) => (width.value = e!.contentRect.width))
-  ro.observe(root.value!)
+  ro.observe(sizer.value!)
+  void nextTick(() => relayout(false))
 })
-onBeforeUnmount(() => ro?.disconnect())
+onBeforeUnmount(() => {
+  ro?.disconnect()
+  cellRo.disconnect()
+})
 
 const count = computed(() =>
   Math.min(6, Math.max(bp.phone ? 2 : 1, Math.floor((width.value + gap.value) / (minColumn.value + gap.value)))),
 )
+const colWidth = computed(() => Math.max(0, (width.value - gap.value * (count.value - 1)) / count.value))
 
 function ratioOf(item: Item, platform?: string): number {
   if (platform === 'maoyan' && item.cover) return 0.72 // 演出海报
@@ -91,20 +102,61 @@ function footer(item: Item): number {
 const SKELETONS = [0.75, 1, 0.8, 1.25, 0.7, 0.9, 1.1, 0.8, 0.75, 1, 0.66, 0.85]
 const skeletonRatio = (key: string) => SKELETONS[(Number(key.slice(key.lastIndexOf('#') + 1)) || 0) % SKELETONS.length]!
 
-/** 渠道图标依次弹出的间隔；只错开最前面的一屏，后面的一起出 */
+/** 每一格放在哪一列、封面比例和估算高度（以列宽为单位）：只由顺序和条目决定，不看量到的高度 */
+const placement = computed(() => {
+  const h = Array.from({ length: count.value }, () => 0)
+  const out = new Map<string, { col: number; ratio: number; est: number }>()
+  for (const cell of props.cells) {
+    const ratio = cell.item ? ratioOf(cell.item, cell.platform) : skeletonRatio(cell.key)
+    let col = 0
+    for (let c = 1; c < h.length; c++) if (h[c]! < h[col]!) col = c
+    const est = 1 / ratio + (cell.item ? footer(cell.item) : 0.35) // 标题和作者行的大致高度
+    out.set(cell.key, { col, ratio, est })
+    h[col]! += est
+  }
+  return out
+})
+const ratioFor = (key: string) => placement.value.get(key)?.ratio ?? 1
+
+/**
+ * DOM 里的顺序：已有的格子保持原来的先后，新格子接在最后。
+ * 聚合模式重排时只改 left / top，不挪动节点（挪动节点会让里面的 CSS 动画重播、图片重新解码）。
+ * 单一模式里一直是追加，DOM 顺序就是显示顺序。
+ */
+let domOrder: string[] = []
+const rendered = computed(() => {
+  const by = new Map(props.cells.map((c) => [c.key, c]))
+  const out: Cell[] = []
+  for (const k of domOrder) {
+    const c = by.get(k)
+    if (c) {
+      out.push(c)
+      by.delete(k)
+    }
+  }
+  for (const c of props.cells) if (by.has(c.key)) out.push(c)
+  domOrder = out.map((c) => c.key)
+  return out
+})
+
+/**
+ * 渠道图标依次弹出的延迟：格子第一次在聚合模式里出现时按这一批里的先后定下来，之后不再变
+ * （变了的话 CSS 动画会按新的延迟重播）；离开聚合模式时清空。只错开最前面的一屏，后面的一起出。
+ */
 const ICON_STAGGER_MS = 32
 const ICON_STAGGER_MAX = 18
-
-const columns = computed(() => {
-  const cols = Array.from({ length: count.value }, () => ({ h: 0, cells: [] as { cell: Cell; ratio: number; delay: number }[] }))
-  props.cells.forEach((cell, i) => {
-    const ratio = cell.item ? ratioOf(cell.item, cell.platform) : skeletonRatio(cell.key)
-    const col = cols.reduce((a, b) => (b.h < a.h ? b : a))
-    col.cells.push({ cell, ratio, delay: Math.min(i, ICON_STAGGER_MAX) * ICON_STAGGER_MS })
-    col.h += 1 / ratio + (cell.item ? footer(cell.item) : 0.35) // 标题和作者行的大致高度（以列宽为单位）
-  })
-  return cols
-})
+const chanDelay = new Map<string, string>()
+watch(
+  () => [props.cells, props.aggregate] as const,
+  ([cells, aggregate]) => {
+    if (!aggregate) return chanDelay.clear()
+    const keep = new Set(cells.map((c) => c.key))
+    for (const k of chanDelay.keys()) if (!keep.has(k)) chanDelay.delete(k)
+    let n = 0
+    for (const c of cells) if (!chanDelay.has(c.key)) chanDelay.set(c.key, `${Math.min(n++, ICON_STAGGER_MAX) * ICON_STAGGER_MS}ms`)
+  },
+  { immediate: true, flush: 'pre' },
+)
 
 /** 列表里的条目（不含骨架占位），顺序即显示顺序：连选、详情的上一条 / 下一条都按它 */
 const items = computed(() => props.cells.flatMap((c) => (c.item ? [c.item] : [])))
@@ -291,134 +343,242 @@ function onOpen(item: Item, el: HTMLElement) {
   })
 }
 
+// ---------- 排版 ----------
+// relayout()：量新格子（或列宽变了时全部格子）的真实高度，按 placement 的列逐列累加出 top，写进 left / top。
+// 高度只取决于列宽，和 top 无关，所以写位置不会再触发 ResizeObserver，不会量 → 排 → 再量地循环。
+// 之后高度再变（字体、互动数据开关、图片失败换成纯文字卡等），由 cellRo 量到后重排（不做动效）。
+
+type Pos = { x: number; y: number; w: number; h: number }
+type Placed = Pos & { el: HTMLElement; key: string; flip: string; skeleton: boolean }
+
+const flipKey = (cell: Cell) => (cell.item ? `${cell.platform}:${cell.item.id}` : cell.key)
+
+/** key → 元素（模板里的函数 ref 维护） */
+const elOf = new Map<string, HTMLElement>()
+/** key → 量到的高度和量的时候格子里装的是什么（条目 id，占位为空串）；列宽变了全部作废 */
+const heights = new Map<string, { h: number; sig: string }>()
+const sigOf = (cell: Cell) => cell.item?.id ?? ''
+let measuredAt = -1
+/** 上一次排好的位置（不含动效里的位移），按 key 和 flipKey 都能找 */
+let prev: { byKey: Map<string, Placed>; byFlip: Map<string, Placed>; aggregate: boolean } | null = null
+
+const cellRo = new ResizeObserver((entries) => {
+  let changed = false
+  for (const e of entries) {
+    const key = (e.target as HTMLElement).dataset.key
+    if (!key || !elOf.has(key)) continue
+    const h = e.borderBoxSize?.[0]?.blockSize ?? (e.target as HTMLElement).offsetHeight
+    const old = heights.get(key)
+    if (old && Math.abs(old.h - h) >= 1) {
+      old.h = h
+      changed = true
+    }
+  }
+  if (changed) relayout(false)
+})
+
+function bindCell(key: string, el: unknown) {
+  if (el instanceof HTMLElement) {
+    if (elOf.get(key) === el) return
+    const old = elOf.get(key)
+    if (old) cellRo.unobserve(old)
+    elOf.set(key, el)
+    cellRo.observe(el)
+  } else {
+    const old = elOf.get(key)
+    if (old) cellRo.unobserve(old)
+    elOf.delete(key)
+    heights.delete(key)
+  }
+}
+
 // ---------- 布局变化的动效（FLIP） ----------
-// 换密度、聚合模式加减渠道、占位换成卡片时，格子的位置和高度会变：
-// 更新前记下每一格在屏幕上的位置，更新后让它从旧位置滑到新位置。
+// 换密度、聚合模式加减渠道、占位换成卡片时，格子的位置和高度会变：位置是自己算的，旧位置就在 prev 里，不用读 DOM。
 // - 留下来的格子：平移（列宽变了时连同缩放）；
 // - 占位换成了卡片、而且变高了：自上而下展开，和下面被挤下去的卡片同步；
 // - 新出现的格子：依次浮现；
 // - 聚合模式里被拿走的格子：留一个残影在原位淡出。
-// 只动视口附近的格子，远处的直接到位。
+// 只动视口附近的格子，远处的直接到位；只在末尾追加、已有格子都没动时不做位移。
+// 动效用 Web Animations（el.animate），不往元素上写内联样式，结束后什么都不用清；
+// 下一次排版只取消上一次动过的那些。
 
-type Shot = { el: HTMLElement; key: string; rect: DOMRect; skeleton: boolean }
-let shots: { list: Shot[]; byEl: WeakMap<Element, Shot>; byKey: Map<string, Shot>; aggregate: boolean } | null = null
-
-const flipKey = (cell: Cell) => (cell.item ? `${cell.platform}:${cell.item.id}` : cell.key)
-const cellEls = () => [...(root.value?.querySelectorAll<HTMLElement>('.cell') ?? [])]
-const layout = () => [settings.density, props.cells, count.value] as const
-const MOVE = { duration: 0.75, ease: 'expo.out' }
+const EXPO_OUT = 'cubic-bezier(0.16, 1, 0.3, 1)'
+const POWER3_OUT = 'cubic-bezier(0.215, 0.61, 0.355, 1)'
+const POWER2_IN = 'cubic-bezier(0.55, 0.085, 0.68, 0.53)'
+const MOVE_MS = 750
 const MAX_GHOSTS = 36
+const NEAR = 240
 
-watch(
-  layout,
-  () => {
-    shots = null
-    if (prefersReducedMotion() || !root.value) return
-    const list = cellEls().map((el) => ({
-      el,
-      key: el.dataset.flip!,
-      rect: el.getBoundingClientRect(),
-      skeleton: el.dataset.skeleton != null,
-    }))
-    shots = {
-      list,
-      byEl: new WeakMap(list.map((s) => [s.el, s])),
-      byKey: new Map(list.map((s) => [s.key, s])),
-      aggregate: !!props.aggregate,
-    }
-  },
-  { flush: 'pre' },
-)
-watch(
-  layout,
-  () => {
-    const old = shots
-    shots = null
-    if (!old || !root.value) return
-    const els = cellEls()
-    // 上一次的动效可能还没走完：先停掉、清掉变换，量到的才是新布局里的真实位置
-    gsap.killTweensOf(els)
-    gsap.set(els, { clearProps: 'transform,transformOrigin,clipPath,opacity,filter' })
-    const view = scroller()?.getBoundingClientRect()
-    const near = (r: DOMRect) => !view || (r.bottom > view.top - 240 && r.top < view.bottom + 240)
-    const now = els.map((el) => ({ el, rect: el.getBoundingClientRect() }))
-    const radius = bp.phone ? 14 : 20
-    const fresh: HTMLElement[] = []
-    let moved = false
+/** 上一次动过的格子：位移动效（打断时要接着当前的位置走）和浮现动效 */
+const moving = new Map<HTMLElement, Animation>()
+const appearing = new Set<Animation>()
 
-    for (const { el, rect: b } of now) {
-      const shot = old.byEl.get(el) ?? old.byKey.get(el.dataset.flip!)
-      if (!shot) {
-        if (near(b)) fresh.push(el)
-        continue
-      }
-      const a = shot.rect
-      if (!near(a) && !near(b)) continue
-      const dx = a.left - b.left
-      const dy = a.top - b.top
-      const k = a.width / b.width
-      // 占位换成卡片后多出来的高度：先裁掉，再随动效展开
-      const grow = shot.skeleton && el.dataset.skeleton == null ? b.height - a.height / k : 0
-      if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(k - 1) < 0.01 && grow <= 1) continue
-      moved = true
-      const from: gsap.TweenVars = { x: dx, y: dy, scaleX: k, scaleY: k, transformOrigin: '0 0' }
-      const to: gsap.TweenVars = { x: 0, y: 0, scaleX: 1, scaleY: 1, ...MOVE, clearProps: 'transform,transformOrigin,clipPath' }
-      if (grow > 1) {
-        from.clipPath = `inset(0px 0px ${grow}px 0px round ${radius}px)`
-        to.clipPath = `inset(0px 0px 0px 0px round ${radius}px)`
-      }
-      // 越靠下的越晚一点动身，整片像被依次推开
-      if (view) to.delay = Math.min(1, Math.max(0, (b.top - view.top) / view.height)) * 0.1
-      gsap.fromTo(el, from, to)
-    }
-
-    if (fresh.length) {
-      const top = new Map(now.map((n) => [n.el, n.rect]))
-      fresh.sort((x, y) => top.get(x)!.top - top.get(y)!.top || top.get(x)!.left - top.get(y)!.left)
-      gsap.fromTo(
-        fresh,
-        { y: moved ? 0 : 26, scale: moved ? 0.86 : 0.96, opacity: 0, filter: 'blur(8px)' },
-        {
-          y: 0,
-          scale: 1,
-          opacity: 1,
-          filter: 'blur(0px)',
-          duration: 0.7,
-          ease: 'power3.out',
-          // 别的格子在让位时，新格子等它们动起来再出现
-          delay: moved ? 0.1 : 0,
-          stagger: Math.min(0.04, 0.6 / fresh.length),
-          clearProps: 'transform,opacity,filter',
-        },
-      )
-    }
-
-    if (old.aggregate || props.aggregate) leaveGhosts(old.list, new Set(els.map((el) => el.dataset.flip!)), near)
-  },
-  { flush: 'post' },
-)
-
-/** 被拿走的格子：把旧元素的副本放回原位，淡出后移除（真正的元素已经不在了） */
-function leaveGhosts(list: Shot[], kept: Set<string>, near: (r: DOMRect) => boolean) {
+function relayout(animate: boolean) {
   const host = root.value
   if (!host) return
-  const origin = host.getBoundingClientRect()
-  const gone = list.filter((s) => !kept.has(s.key) && near(s.rect)).slice(0, MAX_GHOSTS)
-  for (const { el, rect } of gone) {
-    const ghost = el.cloneNode(true) as HTMLElement
-    ghost.removeAttribute('data-flip')
+  const cells = props.cells
+  if (!cells.length) {
+    host.style.height = ''
+    prev = { byKey: new Map(), byFlip: new Map(), aggregate: !!props.aggregate }
+    return
+  }
+  animate = animate && !!prev && !prefersReducedMotion()
+  const colW = colWidth.value
+  const g = gap.value
+
+  // 1. 打断进行中的位移：记下它现在实际在哪（只读上一次动过的那些），再停掉
+  const inflight = new Map<HTMLElement, { dx: number; dy: number; k: number }>()
+  if (animate)
+    for (const [el, anim] of moving) {
+      if (anim.playState !== 'running' || !el.isConnected) continue
+      const m = new DOMMatrixReadOnly(getComputedStyle(el).transform)
+      if (!m.isIdentity) inflight.set(el, { dx: m.m41, dy: m.m42, k: m.a })
+    }
+  for (const a of moving.values()) a.cancel()
+  moving.clear()
+  for (const a of appearing) a.cancel()
+  appearing.clear()
+
+  // 2. 量高度：列宽变了全部重量，否则只量还没量过的和换了内容的（占位换成卡片等；先读完再写）
+  if (Math.abs(colW - measuredAt) > 0.01) {
+    heights.clear()
+    measuredAt = colW
+  }
+  const place = placement.value
+  for (const cell of cells) {
+    const sig = sigOf(cell)
+    if (heights.get(cell.key)?.sig === sig) continue
+    const el = elOf.get(cell.key)
+    heights.set(cell.key, { h: el ? el.offsetHeight : (place.get(cell.key)?.est ?? 1) * colW, sig })
+  }
+
+  // 3. 逐列累加
+  const tops = Array.from({ length: count.value }, () => 0)
+  const now: Placed[] = []
+  for (const cell of cells) {
+    const el = elOf.get(cell.key)
+    const p = place.get(cell.key)
+    if (!el || !p) continue
+    const h = heights.get(cell.key)!.h
+    const col = Math.min(p.col, tops.length - 1)
+    now.push({ el, key: cell.key, flip: flipKey(cell), skeleton: !cell.item, x: col * (colW + g), y: tops[col]!, w: colW, h })
+    tops[col]! += h + g
+  }
+  const total = Math.max(0, Math.max(...tops) - g)
+
+  // 4. 视口在网格里的范围（排版前读，读完再写）
+  let view: { top: number; bottom: number } | null = null
+  const old = prev
+  if (animate) {
+    const box = scroller()?.getBoundingClientRect()
+    const r = host.getBoundingClientRect()
+    if (box) view = { top: box.top - r.top, bottom: box.bottom - r.top }
+  }
+  const near = (p: { y: number; h: number }) => !view || (p.y + p.h > view.top - NEAR && p.y < view.bottom + NEAR)
+
+  // 5. 写位置
+  for (const p of now) {
+    const s = p.el.style
+    const left = `${p.x}px`
+    const top = `${p.y}px`
+    if (s.left !== left) s.left = left
+    if (s.top !== top) s.top = top
+  }
+  host.style.height = `${total}px`
+
+  prev = {
+    byKey: new Map(now.map((p) => [p.key, p])),
+    byFlip: new Map(now.map((p) => [p.flip, p])),
+    aggregate: !!props.aggregate,
+  }
+  if (!animate || !old) return
+
+  // 6. 动效
+  const radius = bp.phone ? 14 : 20
+  const fresh: Placed[] = []
+  let moved = false
+  for (const b of now) {
+    const a = old.byKey.get(b.key) ?? old.byFlip.get(b.flip)
+    if (!a) {
+      if (near(b)) fresh.push(b)
+      continue
+    }
+    if (!near(a) && !near(b)) continue
+    // 上一次的位移被打断：从它当时实际所在的位置接着走
+    const cur = a.el === b.el ? inflight.get(b.el) : undefined
+    const ax = a.x + (cur?.dx ?? 0)
+    const ay = a.y + (cur?.dy ?? 0)
+    const aw = a.w * (cur?.k ?? 1)
+    const dx = ax - b.x
+    const dy = ay - b.y
+    const k = aw / b.w
+    // 占位换成卡片后多出来的高度：先裁掉，再随动效展开
+    const grow = a.skeleton && !b.skeleton ? b.h - a.h / k : 0
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(k - 1) < 0.01 && grow <= 1) continue
+    moved = true
+    const from: Keyframe = { transform: `translate(${dx}px, ${dy}px) scale(${k})`, transformOrigin: '0 0' }
+    const to: Keyframe = { transform: 'none', transformOrigin: '0 0' }
+    if (grow > 1) {
+      from.clipPath = `inset(0px 0px ${grow}px 0px round ${radius}px)`
+      to.clipPath = `inset(0px 0px 0px 0px round ${radius}px)`
+    }
+    // 越靠下的越晚一点动身，整片像被依次推开
+    const delay = view ? Math.min(1, Math.max(0, (b.y - view.top) / (view.bottom - view.top || 1))) * 100 : 0
+    moving.set(b.el, b.el.animate([from, to], { duration: MOVE_MS, easing: EXPO_OUT, delay, fill: 'backwards' }))
+  }
+
+  if (fresh.length) {
+    fresh.sort((x, y) => x.y - y.y || x.x - y.x)
+    const stagger = Math.min(40, 600 / fresh.length)
+    const lift = moved ? 0 : 26
+    const scale = moved ? 0.86 : 0.96
+    fresh.forEach((p, i) => {
+      const anim = p.el.animate(
+        [
+          { transform: `translateY(${lift}px) scale(${scale})`, opacity: 0, filter: 'blur(8px)' },
+          { transform: 'none', opacity: 1, filter: 'blur(0px)' },
+        ],
+        // 别的格子在让位时，新格子等它们动起来再出现
+        { duration: 700, easing: POWER3_OUT, delay: (moved ? 100 : 0) + i * stagger, fill: 'backwards' },
+      )
+      appearing.add(anim)
+      anim.onfinish = () => appearing.delete(anim)
+    })
+  }
+
+  if (old.aggregate || props.aggregate) leaveGhosts(host, [...old.byKey.values()], near)
+}
+
+/** 被拿走的格子：把旧元素的副本放回原位，淡出后移除（真正的元素已经不在了） */
+function leaveGhosts(host: HTMLElement, list: Placed[], near: (p: Pos) => boolean) {
+  const kept = prev!.byFlip
+  const keptKeys = prev!.byKey
+  const gone = list.filter((s) => !keptKeys.has(s.key) && !kept.has(s.flip) && near(s)).slice(0, MAX_GHOSTS)
+  for (const s of gone) {
+    const ghost = s.el.cloneNode(true) as HTMLElement
+    ghost.removeAttribute('data-key')
     ghost.classList.replace('cell', 'ghost')
     ghost.setAttribute('aria-hidden', 'true')
-    Object.assign(ghost.style, {
-      left: `${rect.left - origin.left}px`,
-      top: `${rect.top - origin.top}px`,
-      width: `${rect.width}px`,
-      height: `${rect.height}px`,
-    })
+    Object.assign(ghost.style, { left: `${s.x}px`, top: `${s.y}px`, width: `${s.w}px`, height: `${s.h}px` })
     host.appendChild(ghost)
-    gsap.to(ghost, { opacity: 0, scale: 0.9, filter: 'blur(6px)', duration: 0.32, ease: 'power2.in', onComplete: () => ghost.remove() })
+    ghost
+      .animate([{ opacity: 1 }, { opacity: 0, transform: 'scale(0.9)', filter: 'blur(6px)' }], {
+        duration: 320,
+        easing: POWER2_IN,
+        fill: 'forwards',
+      })
+      .finished.then(
+        () => ghost.remove(),
+        () => ghost.remove(),
+      )
   }
 }
+
+watch(
+  () => [props.cells, colWidth.value, gap.value, count.value] as const,
+  () => relayout(true),
+  { flush: 'post' },
+)
 onBeforeUnmount(() => root.value?.querySelectorAll('.ghost').forEach((g) => g.remove()))
 </script>
 
@@ -426,47 +586,47 @@ onBeforeUnmount(() => root.value?.querySelectorAll('.ghost').forEach((g) => g.re
   <div
     ref="root"
     class="masonry"
-    :class="{ stale }"
-    :style="{ gap: `${gap}px` }"
+    :class="{ stale, flat: !(loading && !cells.length) }"
+    :style="{ gap: `${gap}px`, '--col-w': `${colWidth}px` }"
     :aria-busy="loading"
     :inert="stale || undefined"
     @pointerdown.capture="onDownCapture"
     @click.capture="onClickCapture"
     @contextmenu="onContextMenu"
   >
+    <div ref="sizer" class="sizer" aria-hidden="true" />
     <template v-if="loading && !cells.length">
       <div v-for="c in count" :key="`s${c}`" class="col" :style="{ gap: `${gap}px` }">
         <SkeletonCard v-for="(r, i) in SKELETONS.filter((_, j) => j % count === c - 1)" :key="i" :ratio="r" />
       </div>
     </template>
     <template v-else>
-      <div v-for="(col, c) in columns" :key="c" class="col" :style="{ gap: `${gap}px` }">
-        <div
-          v-for="{ cell, ratio, delay } in col.cells"
-          :key="cell.key"
-          class="cell"
-          :data-flip="flipKey(cell)"
-          :data-skeleton="cell.item ? undefined : ''"
-          :style="{ '--chan-delay': `${delay}ms` }"
-        >
-          <MediaCard
-            v-if="cell.item"
-            :key="cell.item.id"
-            :item="cell.item"
-            :ratio="ratio"
-            :platform="cell.platform"
-            :channel="aggregate ? platformById(cell.platform) : undefined"
-            :selected="sel.selected.has(cell.item.id)"
-            :selecting="sel.active"
-            @pick="onPick(cell.item, $event)"
-            @press="onPress(cell.item, $event)"
-            @open="onOpen(cell.item, $event)"
-          />
-          <!-- 占位换成卡片：骨架盖在卡片上淡出 -->
-          <Transition name="sk">
-            <SkeletonCard v-if="!cell.item" :ratio="ratio" :channel="platformById(cell.platform)" busy />
-          </Transition>
-        </div>
+      <div
+        v-for="cell in rendered"
+        :key="cell.key"
+        :ref="(el) => bindCell(cell.key, el)"
+        class="cell"
+        :data-key="cell.key"
+        :data-skeleton="cell.item ? undefined : ''"
+        :style="{ '--chan-delay': chanDelay.get(cell.key) }"
+      >
+        <MediaCard
+          v-if="cell.item"
+          :key="cell.item.id"
+          :item="cell.item"
+          :ratio="ratioFor(cell.key)"
+          :platform="cell.platform"
+          :channel="aggregate ? platformById(cell.platform) : undefined"
+          :selected="sel.selected.has(cell.item.id)"
+          :selecting="sel.active"
+          @pick="onPick(cell.item, $event)"
+          @press="onPress(cell.item, $event)"
+          @open="onOpen(cell.item, $event)"
+        />
+        <!-- 占位换成卡片：骨架盖在卡片上淡出 -->
+        <Transition name="sk">
+          <SkeletonCard v-if="!cell.item" :ratio="ratioFor(cell.key)" :channel="platformById(cell.platform)" busy />
+        </Transition>
       </div>
     </template>
   </div>
@@ -478,9 +638,30 @@ onBeforeUnmount(() => root.value?.querySelectorAll('.ghost').forEach((g) => g.re
   display: flex;
   align-items: flex-start;
 }
+/* 扁平排版：格子绝对定位，left / top 由脚本写（relayout），容器高度取最高的一列 */
+.masonry.flat {
+  display: block;
+  /* 格子都脱离了文档流，父元素是 flex 列（作者页）时不能被压扁 */
+  flex-shrink: 0;
+}
+.sizer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
 .cell {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--col-w);
   min-width: 0;
+  /* 位置的过渡由脚本（FLIP）做；减少动效时全局样式给所有元素一个极短的 transition-duration，
+     默认的 transition-property: all 会让每次改 left / top 都生成一个过渡，这里关掉 */
+  transition-property: none;
 }
 .sk-leave-active {
   position: absolute;

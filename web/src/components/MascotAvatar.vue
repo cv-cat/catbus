@@ -131,14 +131,44 @@ async function flash(frames: number[], ms: number) {
   return true
 }
 
-/** 切帧时的挤压回弹，把帧与帧之间的跳变藏进一个弹性动作里 */
+/**
+ * GSAP 的 elastic.out(1.1, 0.45)，采样成 CSS 的 linear() 缓动。
+ * 不支持 linear() 的浏览器退回一条带回弹的 cubic-bezier。
+ */
+const ELASTIC = (() => {
+  const a = 1.1
+  const w = (2 * Math.PI) / 0.45
+  const shift = Math.asin(1 / a) / w
+  const ease = (t: number) => (t === 1 ? 1 : a * 2 ** (-10 * t) * Math.sin((t - shift) * w) + 1)
+  const pts = Array.from({ length: 41 }, (_, i) => +ease(i / 40).toFixed(4))
+  const linear = `linear(${pts.join(', ')})`
+  return typeof CSS !== 'undefined' && CSS.supports('animation-timing-function', linear)
+    ? linear
+    : 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+})()
+let squashAnims: Animation[] = []
+/**
+ * 切帧时的挤压回弹，把帧与帧之间的跳变藏进一个弹性动作里。
+ * 用 Web Animations，不用 GSAP：空闲时每次眨眼都会回弹一下，用 GSAP 的话 ticker 每次要多空转约 120 帧才休眠，
+ * 空闲时主线程就一直有帧。平时用 replace 模式（把 GSAP 留下的内联 transform 拼进关键帧），能放到合成器上跑；
+ * 探身、缩回时 GSAP 正在改这个元素的位移，才改用 composite: add 叠在上面（这时在主线程上跑）。
+ * 扒着圆环的手那一层平时是隐藏的，只在探出来时才一起回弹。
+ */
 function squash(strength = 1) {
   if (prefersReducedMotion() || !body.value) return
-  gsap.fromTo(
-    [body.value, hands.value],
-    { scaleX: 1 + 0.05 * strength, scaleY: 1 - 0.06 * strength },
-    { scaleX: 1, scaleY: 1, duration: 0.55, ease: 'elastic.out(1.1, 0.45)', overwrite: 'auto' },
-  )
+  for (const a of squashAnims) a.cancel()
+  const from = `scale(${1 + 0.05 * strength}, ${1 - 0.06 * strength})`
+  const targets = popped.value ? [body.value, hands.value] : [body.value]
+  squashAnims = targets
+    .filter((el): el is HTMLElement => !!el)
+    .map((el) => {
+      const timing: KeyframeAnimationOptions = { duration: 550, easing: ELASTIC }
+      if (gsap.isTweening(el)) {
+        return el.animate([{ transform: from }, { transform: 'scale(1, 1)' }], { ...timing, composite: 'add' })
+      }
+      const base = el.style.transform && el.style.transform !== 'none' ? `${el.style.transform} ` : ''
+      return el.animate([{ transform: `${base}${from}` }, { transform: `${base}scale(1, 1)` }], timing)
+    })
 }
 
 // ---------- 空闲 ----------
@@ -214,6 +244,8 @@ async function peek() {
   const t = ++token
   clearTimeout(timer)
   playing = 'peek'
+  // replace 模式的回弹会盖住 GSAP 写的位移，探身前先停掉
+  for (const a of squashAnims) a.cancel()
   popped.value = true
   const clip = clips.peek
   frame.value = clip.in[1] ?? clip.in[0]
@@ -412,17 +444,8 @@ function onWindowMove(e: PointerEvent) {
   if (!playing) frame.value = dir ? clips.look.frames[dir] : NEUTRAL
 }
 
-let float: gsap.core.Tween | undefined
-function startFloat() {
-  float?.kill()
-  float = undefined
-  if (prefersReducedMotion() || !stage.value) return
-  float = gsap.to([stage.value, band.value], { y: -3, duration: 2.4, ease: 'sine.inOut', yoyo: true, repeat: -1 })
-}
-
 onMounted(() => {
   applyClip()
-  startFloat()
   // 图集空闲时再加载；没到之前只显示中立帧
   const img = new Image()
   img.onload = () => {
@@ -440,20 +463,19 @@ onMounted(() => {
   if (import.meta.env.DEV) Object.assign(window, { __mascot: { peek, play, sleep } })
 })
 watch(() => props.size, applyClip, { flush: 'post' })
+// 呼吸漂浮是 CSS 动画（.float），减少动效时去掉这个类即停
 watch(reducedMotion, (r) => {
-  startFloat()
   if (r) {
     clearTimeout(idleTimer)
     retract()
-    gsap.set([stage.value!, band.value!], { y: 0 })
   } else scheduleIdle()
 })
 onBeforeUnmount(() => {
   token++
   clearTimeout(timer)
   clearTimeout(idleTimer)
-  float?.kill()
-  gsap.killTweensOf([pop, body.value, hands.value, stage.value, band.value])
+  for (const a of squashAnims) a.cancel()
+  gsap.killTweensOf([pop, body.value, hands.value, band.value])
   window.removeEventListener('pointermove', onWindowMove)
   window.removeEventListener('keydown', onActivity)
   window.removeEventListener('pointerdown', onActivity)
@@ -464,7 +486,7 @@ onBeforeUnmount(() => {
   <div
     ref="root"
     class="avatar"
-    :class="{ interactive, popped }"
+    :class="{ interactive, popped, float: !reducedMotion }"
     :style="{ width: `${size}px`, height: `${size}px` }"
     role="img"
     aria-label="catbus 吉祥物：巴士车掌小姐"
@@ -523,6 +545,17 @@ onBeforeUnmount(() => {
 }
 .popped .stage {
   z-index: 3;
+}
+/*
+ * 空闲时的呼吸漂浮：圆环里的角色和扒着圆环的手一起上下浮动 3px。
+ * 用合成器上跑的 CSS 动画，不用 GSAP 逐帧写 style.transform，空闲时主线程不出帧。
+ */
+.float .stage {
+  animation: mascot-float 4.8s ease-in-out infinite;
+}
+@keyframes mascot-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -3px, 0); }
 }
 .band {
   z-index: 4;
