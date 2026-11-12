@@ -1,0 +1,54 @@
+{
+  "xhs": {
+    "name": "小红书",
+    "item": "笔记"
+  },
+  "douyin": {
+    "name": "抖音",
+    "item": "作品"
+  },
+  "bilibili": {
+    "name": "哔哩哔哩",
+    "item": "稿件"
+  },
+  "tiktok": {
+    "name": "TikTok",
+    "item": "视频"
+  },
+  "kuaishou": {
+    "name": "快手",
+    "item": "作品"
+  },
+  "weibo": {
+    "name": "微博",
+    "item": "微博"
+  },
+  "x": {
+    "name": "X",
+    "item": "推文"
+  },
+  "youtube": {
+    "name": "YouTube",
+    "item": "视频"
+  },
+  "xianyu": {
+    "name": "闲鱼",
+    "item": "闲置"
+  },
+  "taobao": {
+    "name": "淘宝",
+    "item": "商品"
+  },
+  "jd": {
+    "name": "京东",
+    "item": "商品"
+  },
+  "maoyan": {
+    "name": "猫眼演出",
+    "item": "演出"
+  },
+  "mteam": {
+    "name": "M-Team",
+    "item": "资源"
+  }
+}

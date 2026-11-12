@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { reactive, ref, watch } from 'vue'
 import { PLATFORMS } from '@/data/platforms'
 import { SORTS, TYPES } from '@/data/filters'
+import { LOCALES, type LocalePref } from '@/i18n/locales'
 
 /**
  * WebUI 的设置（AGENTS.md 7.9「设置」）：只存在浏览器的 localStorage（键 `catbus.settings`），
@@ -15,6 +16,8 @@ export type SettingsTab = 'general' | 'display' | 'experimental'
 
 export interface Settings {
   // 通用
+  /** 界面语言：system = 按浏览器语言、时区自动匹配（AGENTS.md 7.9「多语言」） */
+  locale: LocalePref
   /** 打开时进入的平台：'last' = 上次浏览的，否则是平台规范 id */
   startPlatform: string
   defaultSort: (typeof SORTS)[number]['value']
@@ -37,6 +40,7 @@ const LEGACY_THEME_KEY = 'catbus.theme'
 const VERSION = 2
 
 export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
+  locale: 'system',
   startPlatform: 'last',
   defaultSort: 'general',
   defaultType: 'all',
@@ -60,6 +64,7 @@ type Validators = { [K in keyof Settings]: (v: unknown) => v is Settings[K] }
 /** 懒构建：只在读设置时才用到 SORTS / TYPES，避免模块循环引用时读到未初始化的值 */
 let validators: Validators | null = null
 const valid = (): Validators => (validators ??= {
+  locale: oneOf<LocalePref>(['system', ...LOCALES.map((l) => l.code)]),
   startPlatform: oneOf(['last', ...PLATFORMS.map((p) => p.id)]),
   defaultSort: oneOf(SORTS.map((o) => o.value)),
   defaultType: oneOf(TYPES.map((o) => o.value)),

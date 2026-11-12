@@ -1,0 +1,34 @@
+{
+  "sort": {
+    "general": "综合",
+    "latest": "最新",
+    "popular": "最热",
+    "comments": "评论最多"
+  },
+  "order": {
+    "general": "默认",
+    "date": "发布时间",
+    "size": "体积",
+    "seeders": "做种",
+    "leechers": "下载",
+    "name": "名称"
+  },
+  "type": {
+    "all": "全部",
+    "video": "视频",
+    "image": "图文"
+  },
+  "kind": {
+    "recommend": "推荐",
+    "hot": "热门",
+    "following": "关注"
+  },
+  "time": {
+    "all": "不限",
+    "day": "一天内",
+    "week": "一周内",
+    "month": "一月内",
+    "half_year": "半年内",
+    "year": "一年内"
+  }
+}

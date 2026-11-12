@@ -1,14 +1,27 @@
-/** 12000 → 1.2w，与平台的显示习惯一致 */
+import { currentLocale, t } from '@/i18n'
+
+/**
+ * 计数的简写：中文沿用平台的显示习惯（12000 → 1.2w，1.2 亿 → 1.2亿），
+ * 其他语言用 Intl 的 compact 写法（12K、1.2万、1.2만）。
+ */
 export function compact(n: number | null | undefined): string {
   if (n == null) return '—'
-  if (n >= 1e8) return `${trim(n / 1e8)}亿`
-  if (n >= 1e4) return `${trim(n / 1e4)}w`
-  return n.toLocaleString('en-US')
+  const loc = currentLocale()
+  if (loc === 'zh-CN') {
+    if (n >= 1e8) return `${trim(n / 1e8)}亿` // i18n-ignore
+    if (n >= 1e4) return `${trim(n / 1e4)}w`
+    return n.toLocaleString(loc)
+  }
+  if (n < 1e4) return n.toLocaleString(loc)
+  return new Intl.NumberFormat(loc, { notation: 'compact', maximumFractionDigits: 1 }).format(n)
 }
 
 function trim(v: number): string {
   return v.toFixed(1).replace(/\.0$/, '')
 }
+
+/** 整数按当前语言加千分位：12000 → 12,000 */
+export const number = (n: number) => n.toLocaleString(currentLocale())
 
 /** 字节 → 「20.8 GB」（1024 进制，三位有效数字） */
 export function bytes(n: number | null | undefined): string | null {
@@ -30,16 +43,25 @@ export function duration(sec: number | null | undefined): string | null {
   return `${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
 }
 
-/** ISO 时间 → 「刚刚登录」「3 小时前登录」「2 天前登录」 */
+/** ISO 时间 → 相对时间：「刚刚」「3 分钟前」「2 天前」，一个月以上给日期。按当前语言输出 */
 export function since(iso: string | null | undefined): string {
-  const t = iso ? Date.parse(iso) : NaN
-  if (Number.isNaN(t)) return ''
-  const m = Math.max(0, Math.floor((Date.now() - t) / 60_000))
-  if (m < 1) return '刚刚'
-  if (m < 60) return `${m} 分钟前`
-  if (m < 1440) return `${Math.floor(m / 60)} 小时前`
-  if (m < 43_200) return `${Math.floor(m / 1440)} 天前`
-  return new Date(t).toLocaleDateString('zh-CN')
+  const t0 = iso ? Date.parse(iso) : NaN
+  if (Number.isNaN(t0)) return ''
+  const loc = currentLocale()
+  const m = Math.max(0, Math.floor((Date.now() - t0) / 60_000))
+  if (m < 1) return t('common.time.justNow')
+  const rtf = new Intl.RelativeTimeFormat(loc, { numeric: 'always' })
+  if (m < 60) return rtf.format(-m, 'minute')
+  if (m < 1440) return rtf.format(-Math.floor(m / 60), 'hour')
+  if (m < 43_200) return rtf.format(-Math.floor(m / 1440), 'day')
+  return new Date(t0).toLocaleDateString(loc)
+}
+
+/** 日期时间按当前语言格式化，options 同 Intl.DateTimeFormat */
+export function dateTime(iso: string | number | Date | null | undefined, options?: Intl.DateTimeFormatOptions): string {
+  if (iso == null) return ''
+  const d = iso instanceof Date ? iso : new Date(iso)
+  return Number.isNaN(d.getTime()) ? '' : new Intl.DateTimeFormat(currentLocale(), options).format(d)
 }
 
 /** 头像占位色：按用户 id 哈希取一种品牌色 */

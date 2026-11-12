@@ -1,15 +1,26 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import SettingRow from './SettingRow.vue'
 import SettingSelect from './SettingSelect.vue'
 import SegmentedControl from '@/components/SegmentedControl.vue'
 import { PLATFORMS } from '@/data/platforms'
 import { SORTS, TYPES } from '@/data/filters'
+import { LOCALES, detectLocale, localeName, type LocalePref } from '@/i18n'
 import { useSettingsStore, type PageSize } from '@/stores/settings'
 
 const { settings: s } = useSettingsStore()
+const { t } = useI18n()
 
-const startOptions = [{ value: 'last', label: '上次浏览的' }, ...PLATFORMS.map((p) => ({ value: p.id, label: p.name }))]
+/** 语言：自动（括号里是自动匹配到的语言）+ 各语言自己的写法 */
+const localeOptions = computed<{ value: LocalePref; label: string }[]>(() => [
+  { value: 'system', label: t('settings.general.language.auto', { name: localeName(detectLocale()) }) },
+  ...LOCALES.map((l) => ({ value: l.code, label: l.name })),
+])
+const startOptions = computed(() => [
+  { value: 'last', label: t('settings.general.start.last') },
+  ...PLATFORMS.map((p) => ({ value: p.id, label: p.name })),
+])
 const PAGE_SIZES = [
   { value: '20', label: '20' },
   { value: '40', label: '40' },
@@ -23,16 +34,19 @@ const pageSize = computed({
 </script>
 
 <template>
-  <SettingRow v-slot="{ labelId, descId }" title="启动时打开" desc="打开 WebUI 时进入的平台：接着上次浏览的，或者固定某个平台。">
+  <SettingRow v-slot="{ labelId, descId }" :title="t('settings.general.language.title')" :desc="t('settings.general.language.desc')">
+    <SettingSelect v-model="s.locale" :options="localeOptions" :labelledby="labelId" :describedby="descId" />
+  </SettingRow>
+  <SettingRow v-slot="{ labelId, descId }" :title="t('settings.general.start.title')" :desc="t('settings.general.start.desc')">
     <SettingSelect v-model="s.startPlatform" :options="startOptions" :labelledby="labelId" :describedby="descId" />
   </SettingRow>
-  <SettingRow title="默认排序" desc="进入平台时的排序；平台不支持时退回「综合」。">
-    <SegmentedControl v-model="s.defaultSort" :options="SORTS" label="默认排序" />
+  <SettingRow :title="t('settings.general.sort.title')" :desc="t('settings.general.sort.desc')">
+    <SegmentedControl v-model="s.defaultSort" :options="SORTS" :label="t('settings.general.sort.title')" />
   </SettingRow>
-  <SettingRow title="默认类型" desc="进入平台时只看视频、图文，或者全部。">
-    <SegmentedControl v-model="s.defaultType" :options="TYPES" label="默认类型" />
+  <SettingRow :title="t('settings.general.type.title')" :desc="t('settings.general.type.desc')">
+    <SegmentedControl v-model="s.defaultType" :options="TYPES" :label="t('settings.general.type.title')" />
   </SettingRow>
-  <SettingRow title="每页条数" desc="每次请求取多少条。条数越多越慢，也更容易触发平台风控。">
-    <SegmentedControl v-model="pageSize" :options="PAGE_SIZES" label="每页条数" />
+  <SettingRow :title="t('settings.general.pageSize.title')" :desc="t('settings.general.pageSize.desc')">
+    <SegmentedControl v-model="pageSize" :options="PAGE_SIZES" :label="t('settings.general.pageSize.title')" />
   </SettingRow>
 </template>
