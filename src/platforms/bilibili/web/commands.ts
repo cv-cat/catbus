@@ -517,6 +517,40 @@ export async function seriesAdd(ctx: Ctx) {
   return { id: bvid }
 }
 
+export async function seriesSort(ctx: Ctx) {
+  const b = await bili(ctx)
+  b.requireLogin()
+  const season = await findSeason(b, ctx.args.series!)
+  if (season.sectionId == null) throw new CatbusError('USAGE', `合集「${season.title}」没有小节，无法排序`, { hint: '先在网页端给合集建一个小节' })
+  const sec: any = await api.seasonSection(b, Number(season.sectionId ?? season.id))
+  const section = sec?.section ?? {}
+  const episodes: any[] = sec?.episodes ?? []
+  if (episodes.length < 2) return { id: String(season.id), moved: 0 }
+
+  // 取每个稿件的发布时间（/x/web-interface/view，逐条，17 条以内可接受）
+  const pub = new Map<string, number>()
+  for (const e of episodes) {
+    try {
+      const v: any = await b.get('https://api.bilibili.com/x/web-interface/view', { query: [['bvid', String(e.bvid)]] })
+      pub.set(String(e.bvid), Number(v?.pubdate ?? 0))
+    } catch {
+      pub.set(String(e.bvid), 0)
+    }
+  }
+
+  const order = String(ctx.args.order ?? 'asc')
+  const sorted = [...episodes].sort((x, y) => {
+    const dx = pub.get(String(x.bvid)) ?? 0
+    const dy = pub.get(String(y.bvid)) ?? 0
+    return order === 'desc' ? dy - dx : dx - dy
+  })
+  const sorts = sorted.map((e, i) => ({ id: Number(e.id), sort: i + 1 }))
+  const changed = sorted.some((e, i) => Number(e.order) !== i + 1)
+  if (!changed) return { id: String(season.id), moved: 0 }
+  await api.editSectionSorts(b, { id: Number(section.id), seasonId: Number(section.seasonId ?? season.id), title: String(section.title ?? '正片') }, sorts)
+  return { id: String(season.id), moved: sorts.length }
+}
+
 /** 换视频：先上传，拿到 filename 与 cid（biz_id）。 */
 async function replaceVideo(b: Bili, input: string, A: any): Promise<{ filename: string; biz_id: unknown; title: string; desc: string }> {
   const video = await uploadVideo(b, await readMedia(b.http, input))

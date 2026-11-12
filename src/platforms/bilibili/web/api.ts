@@ -470,6 +470,26 @@ export function seasons(b: Bili, pn: number, ps: number) {
   })
 }
 
+/** 合集小节里的视频（`season/section`），排序要用。 */
+export function seasonSection(b: Bili, seasonId: number) {
+  const h = headers('GET', { origin: ORIGIN.member, sameOrigin: true }).referer(UPLOAD_PAGE)
+  return b.get(`${MEMBER}/x2/creative/web/season/section`, { headers: h.get(), query: [['id', seasonId]] })
+}
+
+/** 重排小节顺序（`season/section/edit`）：sorts 里给出 id 与 sort（1 开始）。 */
+export function editSectionSorts(
+  b: Bili,
+  section: { id: number; seasonId: number; title: string; type?: number },
+  sorts: { id: number; sort: number }[],
+) {
+  const h = headers('POST', { origin: ORIGIN.member, sameOrigin: true }).referer(UPLOAD_PAGE)
+  return b.post(`${MEMBER}/x2/creative/web/season/section/edit`, {
+    headers: h.get(),
+    query: [['csrf', b.csrf]],
+    json: { section: { type: 1, ...section }, sorts },
+  })
+}
+
 /** 把稿件加进合集的小节（`season/section/episodes/add`）。 */
 export function addSeasonEpisodes(b: Bili, sectionId: number, episodes: { aid: number; cid: number; title: string }[]) {
   const h = headers('POST', { origin: ORIGIN.member, sameOrigin: true }).referer(UPLOAD_PAGE)

@@ -227,6 +227,16 @@ export default definePlatform({
           handler: h('seriesAdd'),
           note: '非上游：x2/creative/web/season/section/episodes/add，只能加进自己创建的合集，挂到合集的第一个小节下',
         },
+        'series sort': {
+          upstream: 'partial',
+          summary: '按发布时间重排合集顺序',
+          args: [{ name: 'series', summary: '合集：合集 ID，或空间页合集链接（带 sid=）' }],
+          options: { order: z.enum(['asc', 'desc']).default('asc').describe('asc 最早在前，desc 最新在前') },
+          auth: 'required',
+          output: '{id}',
+          handler: h('seriesSort'),
+          note: '非上游：x2/creative/web/season/section/edit，只改小节内顺序；合集自己的「排序方式」开关仍需网页端设置',
+        },
         'item subtitles': { upstream: 'full', summary: '字幕', args: [item], auth: 'required', output: 'Subtitle[]', handler: h('itemSubtitles') },
         'danmaku list': { upstream: 'full', summary: '视频弹幕', args: [item], auth: 'required', output: 'Danmaku[]', handler: h('danmakuList') },
         'danmaku send': {
