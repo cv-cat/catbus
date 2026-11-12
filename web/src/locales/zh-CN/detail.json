@@ -34,7 +34,7 @@
   "head": {
     "raw": "原始 JSON",
     "rawBack": "回到详情",
-    "rawOpen": "查看平台返回的原始 JSON（--raw）",
+    "rawOpen": "查看平台返回的原始数据",
     "downloaded": "已加入下载",
     "downloadedTip": "已加入下载，可在顶栏的下载列表查看",
     "downloadTip": "下载到本地",
@@ -87,7 +87,7 @@
     "title": "原始 JSON",
     "expandAll": "全部展开",
     "collapseAll": "全部折叠",
-    "loading": "正在取平台的原始对象…",
+    "loading": "正在加载原始数据…",
     "demoNote": "演示数据：真实模式下这里是平台接口返回的原始对象"
   },
   "json": {

@@ -34,7 +34,7 @@
   "head": {
     "raw": "元の JSON",
     "rawBack": "詳細に戻る",
-    "rawOpen": "プラットフォームが返した元の JSON を表示（--raw）",
+    "rawOpen": "プラットフォームが返した元のデータを表示",
     "downloaded": "追加済み",
     "downloadedTip": "ダウンロードに追加しました。上部のダウンロード一覧で確認できます",
     "downloadTip": "ローカルにダウンロード",
@@ -87,7 +87,7 @@
     "title": "元の JSON",
     "expandAll": "すべて展開",
     "collapseAll": "すべて折りたたむ",
-    "loading": "プラットフォームの元データを取得中…",
+    "loading": "元のデータを読み込み中…",
     "demoNote": "デモデータです。通常モードではプラットフォームの API が返した元のオブジェクトが表示されます"
   },
   "json": {

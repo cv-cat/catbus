@@ -92,9 +92,7 @@ const clearProxy = () => {
   <div class="srow" :class="{ disabled }" data-setting-row>
     <div class="text">
       <div :id="ids.proxy" class="title"><Globe :size="15" aria-hidden="true" />{{ t('settings.server.proxy.title') }}</div>
-      <i18n-t :id="ids.proxyDesc" keypath="settings.server.proxy.desc" tag="p" class="desc" scope="global">
-        <template #key><code>proxy</code></template>
-      </i18n-t>
+      <p :id="ids.proxyDesc" class="desc">{{ t('settings.server.proxy.desc') }}</p>
     </div>
     <form class="field" @submit.prevent="saveProxy">
       <input

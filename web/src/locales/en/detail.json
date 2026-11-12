@@ -34,7 +34,7 @@
   "head": {
     "raw": "Raw JSON",
     "rawBack": "Back to details",
-    "rawOpen": "View the raw JSON returned by the platform (--raw)",
+    "rawOpen": "View the raw data returned by the platform",
     "downloaded": "Added to downloads",
     "downloadedTip": "Added to downloads. See the download list in the top bar",
     "downloadTip": "Download",
@@ -87,7 +87,7 @@
     "title": "Raw JSON",
     "expandAll": "Expand all",
     "collapseAll": "Collapse all",
-    "loading": "Fetching the platform's raw object…",
+    "loading": "Loading raw data…",
     "demoNote": "Demo data: in real mode this shows the raw object returned by the platform API"
   },
   "json": {

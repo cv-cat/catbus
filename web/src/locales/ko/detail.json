@@ -34,7 +34,7 @@
   "head": {
     "raw": "원본 JSON",
     "rawBack": "상세로 돌아가기",
-    "rawOpen": "플랫폼이 반환한 원본 JSON 보기 (--raw)",
+    "rawOpen": "플랫폼이 반환한 원본 데이터 보기",
     "downloaded": "다운로드에 추가됨",
     "downloadedTip": "다운로드에 추가됐어요. 상단 바의 다운로드 목록에서 볼 수 있어요",
     "downloadTip": "기기에 다운로드",
@@ -87,7 +87,7 @@
     "title": "원본 JSON",
     "expandAll": "모두 펼치기",
     "collapseAll": "모두 접기",
-    "loading": "플랫폼의 원본 객체를 가져오는 중…",
+    "loading": "원본 데이터를 불러오는 중…",
     "demoNote": "데모 데이터예요. 실제 모드에서는 여기에 플랫폼 API가 반환한 원본 객체가 표시돼요"
   },
   "json": {

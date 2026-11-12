@@ -14,7 +14,7 @@
   },
   "error": {
     "noMethods": "This channel has no login method that works in the WebUI",
-    "bridgeHint": "Start the WebUI with npm run dev, and run npm run build in the repo root",
+    "bridgeHint": "Make sure catbus web is still running, then try again",
     "failed": "Login failed",
     "setDefaultFailed": "Couldn't set the default account"
   },

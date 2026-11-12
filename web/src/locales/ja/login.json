@@ -14,7 +14,7 @@
   },
   "error": {
     "noMethods": "このチャンネルには WebUI で完了できるログイン方法がありません",
-    "bridgeHint": "npm run dev で WebUI を起動し、リポジトリのルートで npm run build を実行してください",
+    "bridgeHint": "catbus web が起動しているか確認して、もう一度お試しください",
     "failed": "ログインに失敗しました",
     "setDefaultFailed": "既定のアカウントを設定できませんでした"
   },

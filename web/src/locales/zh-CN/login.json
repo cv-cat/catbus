@@ -14,7 +14,7 @@
   },
   "error": {
     "noMethods": "这个渠道没有可以在 WebUI 里完成的登录方式",
-    "bridgeHint": "用 npm run dev 启动 WebUI，并在仓库根目录 npm run build",
+    "bridgeHint": "请确认 catbus web 还在运行，然后重试",
     "failed": "登录失败",
     "setDefaultFailed": "设置默认账号失败"
   },

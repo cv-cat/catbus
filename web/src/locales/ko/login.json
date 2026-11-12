@@ -14,7 +14,7 @@
   },
   "error": {
     "noMethods": "이 채널은 WebUI에서 할 수 있는 로그인 방식이 없어요",
-    "bridgeHint": "npm run dev로 WebUI를 실행하고, 저장소 루트에서 npm run build를 실행하세요",
+    "bridgeHint": "catbus web이 실행 중인지 확인한 뒤 다시 시도하세요",
     "failed": "로그인 실패",
     "setDefaultFailed": "기본 계정으로 설정하지 못했어요"
   },

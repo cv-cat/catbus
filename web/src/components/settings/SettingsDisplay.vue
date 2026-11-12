@@ -35,7 +35,7 @@ const theme = computed({
 </script>
 
 <template>
-  <SettingRow :title="t('settings.display.theme.title')" :desc="t('settings.display.theme.desc')">
+  <SettingRow :title="t('settings.display.theme.title')">
     <div @pointerdown="origin = { x: $event.clientX, y: $event.clientY }">
       <SegmentedControl v-model="theme" :options="THEMES" :label="t('settings.display.theme.title')" />
     </div>
