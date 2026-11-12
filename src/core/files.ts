@@ -85,7 +85,8 @@ export async function itemDir(ctx: HandlerContext, itemId: string, title?: strin
 export interface DownloadOptions {
   /** `--subdir title` 用的标题；没有标题时传正文。 */
   title?: string | null
-  headers?: HeaderInit
+  /** 请求头；函数形式按每个媒体计算（例如 YouTube 的直链按来源客户端选 UA）。 */
+  headers?: HeaderInit | ((media: Media, index: number) => HeaderInit)
   /** 指定扩展名，例如 B 站 DASH 的音视频分轨。 */
   ext?: (media: Media, index: number) => string | undefined
   /**
@@ -120,6 +121,7 @@ export async function downloadMedia(ctx: HandlerContext, http: HttpClient, itemI
     ctx.log.info(`下载 ${i + 1}/${media.length}：${basename(path)}`)
     const tmp = `${path}.part`
     const chunks = options.chunked?.(m)
+    const headers = typeof options.headers === 'function' ? options.headers(m, i) : options.headers
     try {
       if (chunks) {
         // 分段：依次请求 [start, end]，追加写入同一个临时文件
@@ -127,12 +129,12 @@ export async function downloadMedia(ctx: HandlerContext, http: HttpClient, itemI
         for (let start = 0; start < chunks.total; start += chunks.bytes) {
           const end = Math.min(start + chunks.bytes, chunks.total) - 1
           const url = chunks.url(start, end)
-          const res = await http.request({ url, headers: options.headers })
+          const res = await http.request({ url, headers })
           if (!res.ok) throw new CatbusError('UPSTREAM', `下载失败：HTTP ${res.status}`, { detail: { status: res.status, url, range: [start, end] } })
           await pipeline(res.body ? Readable.fromWeb(res.body as unknown as WebReadableStream) : Readable.from([Buffer.from(await res.arrayBuffer())]), createWriteStream(tmp, { flags: 'a' }))
         }
       } else {
-        const res = await http.request({ url: m.url, headers: options.headers })
+        const res = await http.request({ url: m.url, headers })
         if (!res.ok) throw new CatbusError('UPSTREAM', `下载失败：HTTP ${res.status}`, { detail: { status: res.status, url: m.url } })
         if (res.body) await pipeline(Readable.fromWeb(res.body as unknown as WebReadableStream), createWriteStream(tmp))
         else await pipeline(Readable.from([Buffer.from(await res.arrayBuffer())]), createWriteStream(tmp))

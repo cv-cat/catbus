@@ -27,6 +27,8 @@ export const ROTATE_INTERVAL_MIN = 60
 interface YtConfig {
   clientVersion: string
   visitorData: string
+  /** 首页 ytcfg 的 PLAYER_JS_URL：player JS（签名解算、STS）的路径，见 playerjs.ts。 */
+  playerJsUrl?: string
   fetchedAt: number
 }
 
@@ -61,6 +63,25 @@ const POT_CLIENT = {
 }
 const POT_CLIENT_ID = '5'
 export const POT_UA = 'com.google.ios.youtube/20.10.4 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X;)'
+
+/**
+ * tv_samsung（Samsung Tizen 电视）客户端，yt-dlp 现在的首选下载客户端（_DEFAULT_CLIENTS 的第一位）。
+ * 实测（2026-11-12）：player 请求必须带 watch 页的 visitorData 和 signatureTimestamp（STS，
+ * 从 player JS 里提取，见 playerjs.ts），否则整个响应 UNPLAYABLE（「The page needs to be reloaded」）。
+ * 给的 27 个格式全部是 signatureCipher（s 挑战）且 URL 带 n 挑战，解算方式见 playerjs.ts；
+ * 解出后直链可下载（itag 313 的 4K 实测 200），格式上限比 visionos 高（visionos 止步 313/401，
+ * 不给 h265/av01 的更高码率变体）。
+ */
+const TV_CLIENT = {
+  clientName: 'TVHTML5',
+  clientVersion: '5.20260707',
+  deviceMake: 'Samsung',
+  deviceModel: 'UKS9800',
+  osName: 'Tizen',
+  osVersion: '2.4.0',
+}
+const TV_CLIENT_ID = '7'
+export const TV_UA = 'Mozilla/5.0 (SMART-TV; Linux; Tizen 2.4.0) AppleWebKit/538.1 (KHTML, like Gecko) Version/2.4.0 TV Safari/538.1'
 
 /** 会改动账号数据的 InnerTube 接口：网络出错时不自动重试。 */
 const WRITE_PATH = /^(like|subscription|comment|browse\/edit_playlist|live_chat\/send|playlist|upload|channel\/create)/
@@ -132,6 +153,7 @@ export class YtClient {
     const html = await res.text()
     const clientVersion = html.match(/"INNERTUBE_CLIENT_VERSION":"([^"]+)"/)?.[1]
     const visitorData = html.match(/"VISITOR_DATA":"([^"]+)"/)?.[1]
+    const playerJsUrl = html.match(/"PLAYER_JS_URL":"([^"]+)"/)?.[1]
     if (!clientVersion || !visitorData) {
       if (/consent\.(youtube|google)\.com/.test(html)) {
         throw new CatbusError('RISK_CONTROL', 'YouTube 要求先同意 cookie 政策', {
@@ -141,7 +163,7 @@ export class YtClient {
       }
       throw new CatbusError('UPSTREAM', 'YouTube 首页里没有找到 ytcfg', { hint: '页面结构可能已变更' })
     }
-    const cfg: YtConfig = { clientVersion, visitorData, fetchedAt: rand.now() }
+    const cfg: YtConfig = { clientVersion, visitorData, playerJsUrl, fetchedAt: rand.now() }
     this.ctx.credential.device.ytcfg = cfg
     return cfg
   }
@@ -176,7 +198,7 @@ export class YtClient {
   }
 
   /**
-   * 取媒体地址用的 player 请求：WEB 客户端只给 SABR 流或要签名解算的地址，VISIONOS 客户端直接给可下载的地址。
+   * 取媒体地址用的 player 请求：VISIONOS 客户端直接给可下载的地址（明文 URL）。
    * 这个客户端不支持 cookie，一律以游客身份请求；同一出口 IP 请求过多时会被要求「Sign in to confirm you're not a bot」。
    */
   async mediaPlayer<T = any>(videoId: string): Promise<T> {
@@ -190,6 +212,34 @@ export class YtClient {
     ]
     const client = { ...MEDIA_CLIENT, hl: HL, gl: GL, visitorData: cfg.visitorData }
     return this.post('player', headers, { context: { client }, ...playerBody(videoId) }, this.bare)
+  }
+
+  /**
+   * tv_samsung 的 player 请求（首选下载客户端）：带 signatureTimestamp（STS，player JS 里提取），
+   * 否则 UNPLAYABLE。地址全是 signatureCipher，由调用方解算（playerjs.ts）。
+   */
+  async tvPlayer<T = any>(videoId: string, sts: number): Promise<T> {
+    const cfg = await this.config()
+    const headers: HeaderPairs = [
+      ['User-Agent', TV_UA],
+      ['Content-Type', 'application/json'],
+      ['X-Goog-Visitor-Id', cfg.visitorData],
+      ['X-Youtube-Client-Name', TV_CLIENT_ID],
+      ['X-Youtube-Client-Version', TV_CLIENT.clientVersion],
+      ['Origin', ORIGIN],
+      ['Referer', `${ORIGIN}/watch?v=${videoId}`],
+    ]
+    const client = { ...TV_CLIENT, hl: HL, gl: GL, visitorData: cfg.visitorData }
+    return this.post(
+      'player',
+      headers,
+      {
+        context: { client },
+        ...playerBody(videoId),
+        playbackContext: { contentPlaybackContext: { html5Preference: 'HTML5_PREF_WANTS', signatureTimestamp: sts } },
+      },
+      this.bare,
+    )
   }
 
   /** GET 一个文本资源（首页、interpreter 脚本、RotateCookiesPage 等），带页面请求头。 */
