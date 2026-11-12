@@ -221,7 +221,7 @@
 - **登录**：上游没有，只支持 cookie 登录。
 - **上游凭证来源**：无。仓库另带一个 FastAPI 服务 `app.py`，不移植。
 - **API**
-  - `apis/weibo_apis.py` 的 `WeiboApis`：`get_self_info`、`getUserInfo`、`getUserPosted`、`getWordComments`、`getWorkInfo`、`searchSome`、`get_user_all_posted`
+  - `apis/weibo_apis.py` 的 `WeiboApis`：`get_self_info`、`getUserInfo`、`getUserPosted`、`getWordComments`、`getWorkInfo`、`searchSome`、`get_user_all_posted`、`getHotTimeline`（推荐流 → `feed list`，`hot` 是同一条流；翻页把上一页响应里的 `since_id` 对象序列化成紧凑 JSON 原样回传）、`getFriendsTimeline`（关注流 → `feed list --kind following`，翻页带上一页的 `max_id`）
   - `apis/weibo_mobile_apis.py` 的 `WeiboMobileApis`（m.weibo.cn，上游不带 cookie；catbus 带访客 cookie，见 1.2）：`getWorkInfo`（`item get`，`comment list` 缺作者 uid 时也用它查）、`searchSome`（`item search`：访客从第二页起是登录墙，只取第一页）。
   - `apis/weibo_creator_apis.py` 的 `WeiboCreaterApis.post_weibo`。`type`（请求里的 `visible`）：0 公开、1 仅自己、6 朋友圈（互相关注）、10 粉丝，对应 `--visibility public / private / friends / fans`
 - **没有移植的**
