@@ -66,7 +66,7 @@ function loadLocale(code) {
   return out
 }
 
-const placeholders = (s) => [...s.matchAll(/\{\s*([\w.]+)\s*\}/g)].map((m) => m[1]).sort().join(',')
+const placeholders = (s) => [...new Set([...s.matchAll(/\{\s*([\w.]+)\s*\}/g)].map((m) => m[1]))].sort().join(",")
 const branches = (s) => s.split(/(?<!\\)\|/).length
 
 const source = loadLocale(SOURCE)
