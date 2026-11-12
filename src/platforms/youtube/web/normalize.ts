@@ -441,32 +441,138 @@ export function formatExt(mime: string | undefined): string {
   return type === 'audio' ? 'm4a' : 'mp4'
 }
 
+// ---------------------------------------------------------------- 格式排序（yt-dlp 的 FormatSorter 子集）
+
 /**
- * player 的 adaptiveFormats → 最清晰的一路视频 + 码率最高的一路音频（DASH 分轨，与 B 站的处理相同）。
- * 同样高度时优先 mp4（H.264 兼容性最好）。没有分轨时退回到音视频合一的 formats。
+ * 编码偏好（yt-dlp FormatSorter.settings 的 vcodec / acodec 顺序）：序号越小越优。
+ * vcodec av01 > vp9.2 > vp9 > h265 > h264 > vp8；acodec opus 之前还有 flac 等，youtube 上实际出现的是
+ * opus（webm）与 aac（mp4），opus 优于 aac。
  */
-export function playMedia(player: any): Media[] {
+const VCODEC_ORDER: [RegExp, number][] = [
+  [/^av0?1/, 0],
+  [/^vp0?9\.0?2/, 1],
+  [/^vp0?9/, 2],
+  [/^[hx]265|^he?vc?/, 3],
+  [/^[hx]264|^avc/, 4],
+  [/^vp0?8/, 5],
+]
+const ACODEC_ORDER: [RegExp, number][] = [
+  [/^[af]lac/, 0],
+  [/^opus/, 2],
+  [/^vorbis|^ogg/, 3],
+  [/^aac|^mp?4a?/, 4],
+  [/^mp3/, 5],
+]
+
+function orderOf(mime: string | undefined, table: [RegExp, number][]): number {
+  const codec = /codecs="([^"]+)"/.exec(mime ?? '')?.[1] ?? ''
+  const first = codec.split('.')[0] ?? ''
+  for (const [re, v] of table) if (re.test(first)) return v
+  return table.length + 1
+}
+
+/**
+ * yt-dlp 的排序关键（FormatSorter.default 的实际生效子集）：视频 lang→quality→res→fps→vcodec，
+ * 音频 quality→abr→acodec。quality（yt-dlp 的 formatQuality）按高度 / 码率的档位，直链里
+ * 等价于 bitrate 的粗排；这里直接用 res/bitrate 细排，结果一致。
+ * 返回值越小越优。
+ */
+function videoKey(f: any): number[] {
+  return [
+    -(f.height ?? 0), // res 大者优先
+    -(f.fps ?? 0),
+    orderOf(f.mimeType, VCODEC_ORDER),
+    -(f.bitrate ?? 0),
+  ]
+}
+
+function audioKey(f: any): number[] {
+  return [
+    -(f.bitrate ?? 0), // abr 大者优先
+    orderOf(f.mimeType, ACODEC_ORDER),
+  ]
+}
+
+function less(a: number[], b: number[]): boolean {
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return a[i] < b[i]
+  }
+  return false
+}
+
+/** 原始 format（含 cipher 字段）里拿明文地址：url 优先，否则 signatureCipher 解出的 url；n 挑战一并替换。 */
+export function formatUrl(f: any, sig: Map<string, string>, nSolved: Map<string, string>): string | null {
+  let base: string | null = f.url ?? null
+  if (!base) {
+    const sc = f.signatureCipher
+    if (!sc) return null
+    const params = new URLSearchParams(sc)
+    const u = params.get('url')
+    const s = params.get('s')
+    const sp = params.get('sp') ?? 'signature'
+    if (!u || !s) return null
+    const sigValue = sig.get(s)
+    if (!sigValue) return null
+    base = `${u}&${sp}=${encodeURIComponent(sigValue)}`
+  }
+  // n 挑战：tv_samsung 的 URL 带未解的 n，要换成解算值。按原文替换保持参数顺序
+  // （googlevideo 的直链参数顺序敏感，不能重新编码整个 query）。
+  const oldN = formatN(f)
+  if (oldN != null && nSolved.has(oldN)) {
+    const newN = nSolved.get(oldN)!
+    base = base.replace(new RegExp(`([?&])n=${escapeRe(oldN)}`), `$1n=${newN}`)
+  }
+  return base
+}
+
+function escapeRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/** 原始 format 的 n 挑战值（URL 的 n 参数），没有时为 null。 */
+export function formatN(f: any): string | null {
+  const url = f.url ?? /(?:^|&)url=([^&]+)/.exec(f.signatureCipher ?? '')?.[1]
+  if (!url) return null
+  try {
+    return new URL(decodeURIComponent(url)).searchParams.get('n')
+  } catch {
+    return null
+  }
+}
+
+/**
+ * player 的 streamingData → 最优的一路视频 + 最优的一路音频（DASH 分轨），没有可用分轨时
+ * 退回到音视频合一的 formats（muxed）。输入的 formats 未解算（cipher 与 n 由这里处理），
+ * sig / nSolved 是解算结果（playerjs.solveChallenges 的输出）。按 yt-dlp 的格式排序选最优。
+ */
+export function playMedia(player: any, sig: Map<string, string> = new Map(), nSolved: Map<string, string> = new Map(), client: 'tv' | 'visionos' = 'visionos'): Media[] {
   const sd = player?.streamingData ?? {}
   const duration = n.seconds(player?.videoDetails?.lengthSeconds)
-  const adaptive: any[] = (sd.adaptiveFormats ?? []).filter((f: any) => f.url)
-  const isMp4 = (f: any) => (f.mimeType ?? '').startsWith('video/mp4')
-  const videos = adaptive.filter((f) => (f.mimeType ?? '').startsWith('video/'))
-  const audios = adaptive.filter((f) => (f.mimeType ?? '').startsWith('audio/'))
-  const video = videos.sort((a, b) => (b.height ?? 0) - (a.height ?? 0) || Number(isMp4(b)) - Number(isMp4(a)) || (b.bitrate ?? 0) - (a.bitrate ?? 0))[0]
-  const audio = audios.sort((a, b) => Number((b.mimeType ?? '').startsWith('audio/mp4')) - Number((a.mimeType ?? '').startsWith('audio/mp4')) || (b.bitrate ?? 0) - (a.bitrate ?? 0))[0]
-  const muxed = (sd.formats ?? []).filter((f: any) => f.url).sort((a: any, b: any) => (b.height ?? 0) - (a.height ?? 0))[0]
-  const pick = video && audio ? [video, audio] : muxed ? [muxed] : []
-  return pick.map((f) =>
+  // OTF（not_live 的分段流）与 DRM 不能直接下载，跳过（yt-dlp 同款）
+  const ok = (f: any) => (f.url || f.signatureCipher) && !f.drmFamilies && f.streamType !== 'FORMAT_STREAM_TYPE_OTF'
+  const adaptive: any[] = (sd.adaptiveFormats ?? []).filter(ok)
+  const muxedFmts: any[] = (sd.formats ?? []).filter(ok)
+  const isVideo = (f: any) => (f.mimeType ?? '').startsWith('video/')
+  const isAudio = (f: any) => (f.mimeType ?? '').startsWith('audio/')
+  const solve = (list: any[]) =>
+    list
+      .map((f) => ({ f, url: formatUrl(f, sig, nSolved) }))
+      .filter((x): x is { f: any; url: string } => x.url != null)
+  const videos = solve(adaptive.filter(isVideo)).sort((a, b) => (less(videoKey(b.f), videoKey(a.f)) ? -1 : 1))
+  const audios = solve(adaptive.filter(isAudio)).sort((a, b) => (less(audioKey(b.f), audioKey(a.f)) ? -1 : 1))
+  const muxed = solve(muxedFmts).sort((a, b) => (b.f.height ?? 0) - (a.f.height ?? 0))
+  const pick = videos.length && audios.length ? [videos[0], audios[0]] : muxed[0] ? [muxed[0]] : []
+  return pick.map((x) =>
     n.media(
       {
-        id: String(f.itag),
-        type: (f.mimeType ?? '').startsWith('audio/') ? 'audio' : 'video',
-        url: f.url,
-        width: f.width ?? null,
-        height: f.height ?? null,
-        duration: n.seconds(f.approxDurationMs) != null ? Number(f.approxDurationMs) / 1000 : duration,
+        id: String(x.f.itag),
+        type: isAudio(x.f) ? 'audio' : 'video',
+        url: x.url,
+        width: x.f.width ?? null,
+        height: x.f.height ?? null,
+        duration: n.seconds(x.f.approxDurationMs) != null ? Number(x.f.approxDurationMs) / 1000 : duration,
       },
-      f,
+      { ...x.f, client },
     ),
   )
 }

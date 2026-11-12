@@ -691,6 +691,18 @@ Google 会定期轮换登录会话的时效性 cookie（`SIDCC`、`__Secure-1PSI
 - **与浏览器共存**：轮换会让浏览器里那份 cookie 的时效性 cookie 失效（反之亦然），与 5.7 的浏览器写回是同一个取舍：catbus 用着的时候，导出 cookie 的那个浏览器会话应保持关闭。
 - **测试**：离线测试用 fixture 回放 RotateCookiesPage 与 /RotateCookies 的真实响应（裁剪），校验触发时机、请求体、节流与 Set-Cookie 写回。
 
+### 5.9 YouTube 的媒体下载（照 yt-dlp 的方式）
+
+`youtube` 的 `item media` / `item download` 按 yt-dlp 的客户端顺序与解算方式取可下载的媒体地址（登录后的 WEB 客户端只给 SABR 流，没有可直接下载的地址）：
+
+- **客户端顺序**：tv_samsung（首选，格式上限最高）→ visionos（明文直链，格式上限较低）→ 被人机验证拦下时走 iOS + PO token 的兜底（同 yt-dlp 的 PO Token Provider，见 `pot.ts`）。tv_samsung 与 visionos 都不带登录。
+- **tv_samsung**：TVHTML5 客户端（clientVersion `5.20260707`、TV UA、`X-Youtube-Client-Name: 7`），player 请求必须带首页 ytcfg 的 visitorData 与 player JS 里的 `signatureTimestamp`（STS），缺了整个响应 UNPLAYABLE。
+- **player JS**：路径取首页 ytcfg 的 `PLAYER_JS_URL`，没有时按 yt-dlp 的方式从 `/iframe_api` 拿当前版本再拼 `/s/player/<id>/base.js`。STS 用 yt-dlp 同款正则取；player JS 缓存在 `cache/youtube/`（AGENTS 5.1，按 player id 存文件，可随时删除），体积下限防止 HTML 错误页落缓存。
+- **签名解算**：tv_samsung 的地址全是 `signatureCipher`（s 签名）且 URL 带 n 挑战。照 yt-dlp 的 EJS 方式：它的 solver core（`vendor/yt.solver.core.js`，Unlicense）原样复制进 `static/youtube/`，在 `node:vm` 里执行（AGENTS 7.4），AST 库 meriyah + astring 注入 context，批量解出 s 与 n 后拼回 URL；n 的替换按原文替换参数值，保持 query 参数顺序（googlevideo 的直链参数顺序敏感）。解算失败报 `UPSTREAM`，上层退到 visionos。
+- **格式排序**：与 yt-dlp 的 FormatSorter 默认一致——视频分辨率 → 帧率 → 编码（av01 > vp9.2 > vp9 > h265 > h264 > vp8）→ 码率，音频码率 → 编码（opus 优先）；各取一路最优，没有分轨时用 muxed。OTF 流（`FORMAT_STREAM_TYPE_OTF`）与 DRM 不能直接下载，跳过（yt-dlp 同款）。
+- **下载**：googlevideo 拒绝整文件请求。tv_samsung 的地址带 Range 请求头也会被 403，必须用它的 TV UA 加 `&range=<start>-<end>` 参数分段（每段 10 MB）；visionos 的地址沿用通用分段。地址来源客户端记在原始对象上，按来源选 UA。
+- **测试**：离线测试用合成 mini player fixture（满足 solver 的 AST 约定，`tests/fixtures/youtube/mini-player.js`）与真实响应裁剪的 fixture，覆盖 tv_samsung 首选、UNPLAYABLE 退回 visionos、人机验证退 PO token、分段下载与 UA 选择。
+
 ## 6. 输出
 
 ### 6.1 信封与格式
@@ -965,7 +977,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | 图像处理 | @techstark/opencv-js |
 | 图片编解码 | @napi-rs/canvas，不用 sharp |
 | 验证码 OCR | 移植 ddddocr：模型跑在 onnxruntime-web 上，可参考 ddddocr-node。模型来自 ddddocr 1.6.1 的 wheel，放在 `@cv-cat/catbus-assets-ocr`（见 7.2） |
-| 签名 JS 的依赖 | jsdom（JD）、crypto-js（XHS）、@napi-rs/canvas（JD、KS） |
+| 签名 JS 的依赖 | jsdom（JD）、crypto-js（XHS）、@napi-rs/canvas（JD、KS）、meriyah + astring（YouTube 的 player JS 解算，AGENTS 5.9） |
 | 校验 | zod |
 | 参数解析 | `node:util` 的 `parseArgs`，加上注册表。不用 CLI 框架 |
 | 配置 | smol-toml |

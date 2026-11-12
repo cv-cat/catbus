@@ -36,7 +36,7 @@
 - 列表（`feed list`、`item search`）里的 Shorts 没有作者和发布时间，需要的话对这条再 `item get`。
 - 未验证账号每天的上传数有限，超了会报 `RISK_CONTROL`（`detail.kind` 为 `rate_limit`）。测试别连续发。
 - 国内网络需要代理（`catbus config set youtube.proxy <url>`），没配时请求超时报 `NETWORK`。
-- 媒体地址走不带登录的 VISIONOS 客户端：同一出口 IP 请求多了会报 `RISK_CONTROL`（YouTube 要人机验证），过一段时间再试，不要连续重试。年龄限制、会员专享视频拿不到。下载得到视频轨、音频轨两个文件。
+- 媒体地址按 yt-dlp 的顺序走：tv_samsung（4K 等 2160p 高格式）→ VISIONOS → 被人机验证时 iOS + PO token。同一出口 IP 请求多了会报 `RISK_CONTROL`（YouTube 要人机验证），过一段时间再试，不要连续重试。年龄限制、会员专享视频拿不到。下载得到视频轨、音频轨两个文件。
 - 没有开频道的 Google 账号：`user get me` 报错，不能发评论；点赞、订阅、稍后观看可以用。
 - 列表里的 `created_at` 是由「3 days ago」推算的近似时间，要精确时间用 `item get`。
 - 发评论、点赞、订阅都以用户本人的账号公开进行，执行前先把内容给用户确认。

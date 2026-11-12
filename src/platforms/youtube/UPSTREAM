@@ -4,7 +4,7 @@ endpoints:
   bootstrap: GET /（ytcfg：INNERTUBE_CLIENT_VERSION、VISITOR_DATA、LOGGED_IN）
   search: /youtubei/v1/search（params 为筛选 protobuf 的 base64）
   next: /youtubei/v1/next（watch 页：推荐、评论入口、直播聊天入口；continuation 翻评论 / 回复 / 推荐）
-  player: /youtubei/v1/player（videoDetails、microformat；媒体地址用 VISIONOS 客户端请求）
+  player: /youtubei/v1/player（videoDetails、microformat；媒体地址按 yt-dlp 的客户端顺序：tv_samsung（TVHTML5，clientVersion 5.20260707，需首页 ytcfg 的 visitorData 与 player JS 的 signatureTimestamp）→ VISIONOS → 人机验证时 iOS + PO token）
   studio: https://studio.youtube.com/youtubei/v1/<path>（WEB_CREATOR 客户端，ytcfg 取自 Studio 首页，含 delegation context）：creator/list_creator_videos；写操作的会话：att/get（CREATOR_STUDIO_ACTION、UNBOUND）、att/esr、security/get_web_reauth_url、ars/grst；写操作：upload/createvideo、video_manager/metadata_update、video/delete（写请求的 context.request 带 sessionInfo.token，createvideo 另带 attestationResponseData）
   botguard: att/get 返回的 bgChallenge.interpreterUrl 指向的 interpreter 脚本，由 Node 取回，在无头 Chromium 的 Studio 页面里求值并计算校验结果（AGENTS 5.7）
   upload: https://upload.youtube.com/upload/studio（resumable：start → upload → upload, finalize）
@@ -14,4 +14,5 @@ endpoints:
   account: /youtubei/v1/account/account_menu（登录校验）
   cookie rotate: GET accounts.youtube.com/RotateCookiesPage?origin=https://www.youtube.com&yt_pid=1（页内 init('<token>', m, o, l, interval)）→ POST accounts.youtube.com/RotateCookies（body 为 protobuf-over-JSON 数组 [m, token, o, l]，0 写 null；响应 )]}' 前缀，[0][1] 为下次间隔秒数，最小 60）：轮换 SIDCC / __Secure-1PSIDCC / __Secure-3PSIDCC / __Secure-1PSIDTS / __Secure-3PSIDTS，logged_in=0 时触发（AGENTS 5.8）
   suggest: https://suggestqueries-clients6.youtube.com/complete/search
-note: 无上游开源仓库，直接对接 YouTube web 端的 InnerTube 接口；协议细节参考 yt-dlp 与 YouTube.js 的公开实现（只参考，不移植代码）
+  player JS: 首页 ytcfg 的 PLAYER_JS_URL（没有时 GET /iframe_api 的 `player?/<id>?/` 拼出 /s/player/<id>/base.js）；signatureTimestamp 用 yt-dlp 同款正则从 player JS 里取；s 签名与 n 挑战用 yt-dlp 的 EJS solver core（vendor/yt.solver.core.js，Unlicense，Unlicense 许可，复制进 static/youtube/）借 meriyah + astring 解算
+note: 无上游开源仓库，直接对接 YouTube web 端的 InnerTube 接口；协议细节参考 yt-dlp 与 YouTube.js 的公开实现（只参考，不移植代码；媒体下载的客户端顺序、格式排序与签名解算照 yt-dlp 的行为移植）
