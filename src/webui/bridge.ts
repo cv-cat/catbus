@@ -26,6 +26,8 @@ const READ_COMMANDS: Record<string, readonly string[]> = {
   'item get': [],
   'comment list': ['--limit', '--cursor'],
   'comment replies': ['--limit', '--cursor'],
+  // 详情卡片的相关推荐（AGENTS.md 7.9「相关推荐」）：只取一页
+  'item related': ['--limit'],
 }
 /** 不带值的开关选项：`item get` 的 `--raw`（详情卡片的原始 JSON，设置「实验性」里打开），以及字段排序的升序开关 `--asc` */
 const READ_FLAGS: Record<string, readonly string[]> = {
@@ -57,7 +59,7 @@ export function validateArgv(argv: unknown): string[] {
     const kw = rest.shift()
     if (!kw) throw new Error('缺少搜索关键词')
     positional.push(kw)
-  } else if ((resource === 'item' && action === 'get') || (resource === 'comment' && action === 'list')) {
+  } else if ((resource === 'item' && (action === 'get' || action === 'related')) || (resource === 'comment' && action === 'list')) {
     positional.push(itemRef(rest.shift()))
   } else if (resource === 'comment' && action === 'replies') {
     const item = itemRef(rest.shift())

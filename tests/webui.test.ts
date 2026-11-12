@@ -189,6 +189,30 @@ describe('原始 JSON：item get 放行 --raw', () => {
   })
 })
 
+describe('相关推荐：item related', () => {
+  it('放行 item related，<item> 只接受链接或 ID，只能带 --limit 和 -a', () => {
+    expect(validateArgv(['bilibili', 'item', 'related', 'BV1xx411c7mD', '-a', 'work', '--limit', '12'])).toEqual(
+      ['bilibili', 'item', 'related', '-a', 'work', '--limit', '12', '--', 'BV1xx411c7mD'],
+    )
+    expect(validateArgv(['tiktok', 'item', 'related', 'https://www.tiktok.com/@a/video/1'])).toEqual(
+      ['tiktok', 'item', 'related', '--', 'https://www.tiktok.com/@a/video/1'],
+    )
+    expect(() => validateArgv(['bilibili', 'item', 'related'])).toThrow('缺少条目')
+    expect(() => validateArgv(['bilibili', 'item', 'related', '--limit'])).toThrow()
+    expect(() => validateArgv(['bilibili', 'item', 'related', 'file:///etc/passwd'])).toThrow('http(s)')
+    expect(() => validateArgv(['bilibili', 'item', 'related', 'BV1', '--cursor', 'x'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['bilibili', 'item', 'related', 'BV1', '--raw'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['bilibili', 'item', 'related', 'BV1', '-a', 'guest'])).toThrow('账号名不合法')
+  })
+
+  it('/api/filters 按注册表给出 item related 是否已实现', async () => {
+    const { platformFilters } = await import('../src/webui/filters.js')
+    const all = await platformFilters()
+    for (const p of ['tiktok', 'bilibili', 'kuaishou', 'jd', 'youtube']) expect(all[p]!.related).toBe(true)
+    for (const p of ['xhs', 'douyin', 'mteam', 'maoyan']) expect(all[p]!.related).toBe(false)
+  })
+})
+
 describe('服务端设置 /api/settings', () => {
   const home = tempHome
   const req = (port: number, method: string, body?: unknown, headers: Record<string, string> = {}) =>
