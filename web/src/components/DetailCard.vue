@@ -23,6 +23,7 @@ import { resetReplyQueue } from '@/composables/replyQueue'
 import { gsap, prefersReducedMotion } from '@/composables/motion'
 import { storeToRefs } from 'pinia'
 import { useDetailStore, type DetailTarget } from '@/stores/detail'
+import { useAuthorStore } from '@/stores/author'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useDetailSwipe } from '@/composables/useDetailSwipe'
 import { useDownloadsStore } from '@/stores/downloads'
@@ -572,6 +573,18 @@ const faceTime = computed(() => {
 })
 const faceStats = computed(() => stats.value.filter((s) => s.key !== 'comments' && s.v != null))
 const authorHandle = computed(() => [platform.value?.name, published.value].filter(Boolean).join(' · '))
+/** 头部的作者：平台支持时点了关闭详情、进入站内的作者页（AGENTS.md 7.9「作者页」）；⌘ / Ctrl / Shift / 中键仍是原主页外链 */
+const authors = useAuthorStore()
+const authorLink = computed(() => Boolean(cur.value && authors.refOf(item.value?.author) && authors.canOpen(cur.value.platform)))
+function onAuthor(e: MouseEvent | KeyboardEvent) {
+  if (!authorLink.value || !cur.value) return
+  if (e instanceof MouseEvent && (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)) return
+  e.preventDefault()
+  const platform = cur.value.platform
+  const author = item.value?.author
+  close()
+  authors.open(platform, author)
+}
 
 // ---------- 键盘：Esc 关闭；W / S、↑ / ↓ 上一条 / 下一条；A / D、← / → 切图或快退快进；空格播放 ----------
 const modified = (e: KeyboardEvent) => e.metaKey || e.ctrlKey || e.altKey
@@ -660,7 +673,11 @@ onBeforeUnmount(() => {
        :href="item.author?.url ?? undefined"
        target="_blank"
        rel="noopener noreferrer"
-       :class="{ nolink: !item.author?.url }"
+       :class="{ nolink: !item.author?.url && !authorLink }"
+       :role="authorLink && !item.author?.url ? 'link' : undefined"
+       :tabindex="authorLink && !item.author?.url ? 0 : undefined"
+       @click="onAuthor"
+       @keydown.enter="onAuthor"
      >
        <UserAvatar class="ava" :user="item.author" :style="{ background: tintOf(item.author?.id) }" />
        <span class="who">

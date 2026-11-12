@@ -531,3 +531,32 @@ describe('字段排序：item search / feed list 放行 --order-by 与 --asc', (
     expect(all.xhs!.order).toBeNull()
   })
 })
+
+describe('作者页：user get / user items', () => {
+  it('放行 user get、user items，<user> 放在 -- 之后，只接受 http(s) 链接或 ID', () => {
+    expect(validateArgv(['xhs', 'user', 'get', 'https://www.xiaohongshu.com/user/profile/5f?xsec_token=a', '-a', 'work'])).toEqual([
+      'xhs', 'user', 'get', '-a', 'work', '--', 'https://www.xiaohongshu.com/user/profile/5f?xsec_token=a',
+    ])
+    expect(validateArgv(['douyin', 'user', 'items', 'MS4wLjABAAAA', '--limit', '20', '--cursor', 'c1'])).toEqual([
+      'douyin', 'user', 'items', '--limit', '20', '--cursor', 'c1', '--', 'MS4wLjABAAAA',
+    ])
+    expect(() => validateArgv(['xhs', 'user', 'get', '-x'])).toThrow()
+    expect(() => validateArgv(['xhs', 'user', 'items', 'javascript:alert(1)'])).toThrow()
+    expect(() => validateArgv(['xhs', 'user', 'items'])).toThrow()
+    expect(() => validateArgv(['xhs', 'user', 'get', 'abc', '--limit', '5'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['xhs', 'user', 'items', 'abc', '--raw'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['xhs', 'user', 'follow', 'abc'])).toThrow('暂不开放')
+    expect(() => validateArgv(['xhs', 'user', 'update', '--name', 'x'])).toThrow('暂不开放')
+  })
+
+  it('/api/filters 的 author：user get 和 user items 都已实现才为 true', async () => {
+    const { platformFilters } = await import('../src/webui/filters.js')
+    const all = await platformFilters()
+    expect(all.xhs!.author).toBe(true)
+    expect(all.douyin!.author).toBe(true)
+    // 闲鱼、淘宝没有 user items，京东只有 user get（只支持 me）
+    expect(all.xianyu!.author).toBe(false)
+    expect(all.taobao!.author).toBe(false)
+    expect(all.jd!.author).toBe(false)
+  })
+})

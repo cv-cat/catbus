@@ -8,6 +8,17 @@ export interface UserRef {
   avatar?: string | null
 }
 
+/** 作者页的用户（AGENTS 6.2 User）：`stats` 里的计数取不到时为 null */
+export interface User {
+  id: string
+  name: string | null
+  handle: string | null
+  avatar: string | null
+  url: string | null
+  bio: string | null
+  stats: { followers: number | null; following: number | null; items: number | null; likes: number | null }
+}
+
 export interface Media {
   id: string | null
   type: 'image' | 'video' | 'audio'

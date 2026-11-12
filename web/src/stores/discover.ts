@@ -8,6 +8,7 @@ import { useSelectionStore } from './selection'
 import { useSettingsStore } from './settings'
 import { toast } from './toast'
 import { fill, interleave, itemCell, newLane, skeletonCells, type Cell, type Lane } from './lanes'
+import { authorRoute, parseAuthorPath } from './route'
 
 export { SORTS, TYPES }
 
@@ -45,7 +46,8 @@ function writeLastPlatform(id: string) {
  * 「默认」是设置里的值：地址没带平台时按「启动时打开的平台」，没带排序 / 类型时用默认排序 / 类型。
  */
 function fromUrl(d: { platform: string; sort: string; type: string }): DiscoverState {
-  const id = decodeURIComponent(location.pathname.replace(/^\/+|\/+$/g, ''))
+  // 直接打开作者页（`/<平台>/user?u=...`）：发现页在后台停在作者的平台
+  const id = parseAuthorPath()?.platform ?? decodeURIComponent(location.pathname.replace(/^\/+|\/+$/g, ''))
   const q = new URLSearchParams(location.search)
   const pick = (v: string | null, list: readonly { value: string }[], d: string) =>
     v && list.some((o) => o.value === v) ? v : d
@@ -218,6 +220,8 @@ export const useDiscoverStore = defineStore('discover', () => {
     )
   function syncUrl() {
     synced = { ...state, keyword: state.keyword.trim() }
+    // 在作者页上：发现页在后台更新，地址栏归作者页（之后写地址用 push，不替换掉作者页）
+    if (authorRoute.value) return void (urlSynced = true)
     const next = urlFor(synced)
     if (next === location.pathname + location.search) return
     if (urlSynced) history.pushState(null, '', next)
@@ -243,6 +247,9 @@ export const useDiscoverStore = defineStore('discover', () => {
 
   /** 浏览器前进 / 后退：按地址恢复状态再搜索（平台、筛选的 watch 也会触发 search，合并成一次）。store 只建一次，监听也只挂一次 */
   addEventListener('popstate', () => {
+    // 作者页的前进 / 后退由 stores/author 处理；从作者页后退回来、地址就是发现页上次写的：状态没变，不重新请求
+    if (parseAuthorPath()) return
+    if (synced && location.pathname + location.search === urlFor(synced)) return
     const next = fromUrl(urlDefaults())
     restoring = next.platform !== state.platform
     Object.assign(state, next)
@@ -810,5 +817,7 @@ export const useDiscoverStore = defineStore('discover', () => {
     unsupported,
     orderFields,
     initFilters,
+    /** 发现页当前该在的地址（作者页回到发现页时用）；还没搜索过时为 null */
+    discoverUrl: () => (synced ? urlFor(synced) : null),
   }
 })
