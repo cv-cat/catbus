@@ -56,7 +56,12 @@ export default definePlatform({
         'comment like': 'none',
         'comment unlike': 'none',
 
-        'feed list': { upstream: 'none', options: { kind: filter.kind('recommend', 'hot', 'following') } },
+        // weibo.com 网页版自己的接口，上游没有（AGENTS 7.5 的无上游命令）。
+        // hot 与 recommend 是同一条流（hottimeline），第一版只做 recommend / following
+        'feed list': impl('partial', 'feedList', {
+          options: { kind: filter.kind('recommend', 'following') },
+          note: '热门（hot）与推荐是同一条流，用 recommend；只支持登录账号',
+        }),
 
         'live get': 'none',
         'live list': 'none',

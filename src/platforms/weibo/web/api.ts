@@ -87,6 +87,25 @@ export function comments(w: Weibo, uid: string, mid: string, maxId?: string) {
   return w.json('com', { url: `${WEB}/ajax/statuses/buildComments`, headers: commonHeaders(w.xsrf), query: params })
 }
 
+// ================================================================ feed（weibo.com 网页版自己的接口，上游没有）
+
+/**
+ * 推荐流（hottimeline）：网页「发现」页的推荐，与「热门」页是同一条流。
+ * group_id / containerid 固定为热门流 102803；不带它们时 ok=0。
+ * 翻页：把上一页响应里的 since_id（对象 {ul_sid, ul_hid, since_id}）原样回传成 since_id 参数。
+ */
+export function feedRecommend(w: Weibo, sinceId: string | null) {
+  const params: Pairs = [['since_id', sinceId ?? '0'], ['refresh', '0'], ['group_id', '102803'], ['containerid', '102803'], ['extparam', 'discover|new_feed'], ['max_id', '0'], ['count', '20']]
+  return w.json('com', { url: `${WEB}/ajax/feed/hottimeline`, headers: commonHeaders(w.xsrf), query: params })
+}
+
+/** 关注流（friendstimeline）：关注的人的最新微博；since_id=0 从头开始，翻页带上一页的 max_id。 */
+export function feedFollowing(w: Weibo, maxId: string | null) {
+  const params: Pairs = [['list_id', ''], ['refresh', '4'], ['since_id', '0'], ['count', '20']]
+  if (maxId) params.push(['max_id', maxId])
+  return w.json('com', { url: `${WEB}/ajax/feed/friendstimeline`, headers: commonHeaders(w.xsrf), query: params })
+}
+
 // ================================================================ WeiboMobileApis（m.weibo.cn）
 
 const RENDER_RE = /var \$render_data = \[([\s\S]*?)\]\[0\] \|\| \{\};\n {2}var __wb_performance_data=\{v:"v8",m:"mainsite",pwa:1,sw:0\};/

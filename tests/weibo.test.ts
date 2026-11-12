@@ -1,8 +1,10 @@
-import { mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CatbusError } from '../src/core/errors.js'
+import { parseCookieInput } from '../src/core/cookies.js'
+import { newCredential, setCurrent, writeCredential } from '../src/core/auth-store.js'
 import { fakeResponse, mockSender } from '../src/core/http.js'
 import { plainText } from '../src/core/normalize.js'
 import { RAW } from '../src/core/schemas.js'
@@ -466,5 +468,115 @@ describe('weibo 纯算', () => {
 
   it('正文 HTML → 纯文本', () => {
     expect(plainText('a<br />b <a href="x"><span class="surl-text">#话题#</span></a><img alt="[笑]" src="y"/> &lt;&amp;&gt;')).toBe('a\nb #话题#[笑] <&>')
+  })
+})
+
+// ---------------------------------------------------------------- feed list（weibo.com 网页版自己的接口，上游没有；fixture 回放）
+
+const feedFixture = (name: string) => readFileSync(join(import.meta.dirname, 'fixtures/weibo', name), 'utf8')
+
+function mockFeed(routes: Record<string, string>) {
+  const calls: { url: string; query: URLSearchParams }[] = []
+  return {
+    calls,
+    restore: mockSender((p) => {
+      const u = new URL(p.url)
+      calls.push({ url: p.url, query: u.searchParams })
+      const body = routes[u.pathname]
+      if (!body) throw new Error(`未录制的请求：${u.pathname}`)
+      return fakeResponse(body, { headers: [['content-type', 'application/json']] })
+    }),
+  }
+}
+
+describe('weibo feed list（无上游，fixture 回放）', () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  it('默认 recommend：hottimeline，cursor 是上一页 since_id 对象的 JSON 原文', async () => {
+    const m = mockFeed({ '/ajax/feed/hottimeline': feedFixture('feed_hot.json') })
+    try {
+      const result = await cmd.feedList(loggedCtx())
+      const r = result as { data: any[]; page: { cursor: string | null; has_more: boolean } }
+      expect(m.calls[0]!.url).toBe(
+        'https://weibo.com/ajax/feed/hottimeline?since_id=0&refresh=0&group_id=102803&containerid=102803&extparam=discover%7Cnew_feed&max_id=0&count=20',
+      )
+      expect(r.data[0]).toMatchObject({ id: '5369000000000000', kind: 'video', author: { id: '10000', name: '测试用户0' } })
+      expect(r.page.cursor).toBe('{"ul_sid":"","ul_hid":"","since_id":"5368000000000001"}')
+      expect(r.page.has_more).toBe(true)
+    } finally {
+      m.restore()
+    }
+  })
+
+  it('recommend 翻页：把 cursor 原样回传成 since_id 参数', async () => {
+    const m = mockFeed({ '/ajax/feed/hottimeline': feedFixture('feed_hot.json') })
+    try {
+      const ctx = loggedCtx({ cursor: '{"ul_sid":"","ul_hid":"","since_id":"5368000000000001"}' })
+      await cmd.feedList(ctx)
+      expect(m.calls[0]!.query.get('since_id')).toBe('{"ul_sid":"","ul_hid":"","since_id":"5368000000000001"}')
+    } finally {
+      m.restore()
+    }
+  })
+
+  it('following：friendstimeline，cursor 是上一页的 max_id；第二页带 max_id', async () => {
+    const m = mockFeed({ '/ajax/feed/friendstimeline': feedFixture('feed_friends.json') })
+    try {
+      const first = { result: await cmd.feedList(loggedCtx({ options: { kind: 'following' } })) }
+      expect(m.calls[0]!.url).toBe('https://weibo.com/ajax/feed/friendstimeline?list_id=&refresh=4&since_id=0&count=20')
+      const r1 = (first as { result: any }).result as { page: { cursor: string | null } }
+      expect(r1.page.cursor).toBe('5368000000000099')
+
+      m.calls.length = 0
+      const second = { result: await cmd.feedList(loggedCtx({ options: { kind: 'following' }, cursor: r1.page.cursor! })) }
+      expect(m.calls[0]!.query.get('max_id')).toBe('5368000000000099')
+    } finally {
+      m.restore()
+    }
+  })
+
+  it('hot 与 recommend 是同一条流：同样的请求', async () => {
+    const m = mockFeed({ '/ajax/feed/hottimeline': feedFixture('feed_hot.json') })
+    try {
+      await cmd.feedList(loggedCtx({ options: { kind: 'hot' } }))
+      expect(m.calls[0]!.url).toContain('/ajax/feed/hottimeline?')
+    } finally {
+      m.restore()
+    }
+  })
+
+})
+
+describe('weibo feed list（CLI）', () => {
+  useTempHome()
+
+  it('未登录报 AUTH_REQUIRED（web 端 feed 需要登录）', async () => {
+    const r = await cli('weibo', 'feed', 'list')
+    expect(r.env.error).toMatchObject({ code: 'AUTH_REQUIRED', hint: 'catbus weibo auth login' })
+    expect(r.code).toBe(3)
+  })
+
+  it('登录后输出信封与 Item；--kind following 同样可用', async () => {
+    const cred = newCredential({ platform: 'weibo', endpoint: 'web', account: 'default', method: 'cookie' })
+    cred.scopes.main!.cookies = parseCookieInput(COOKIES, '.weibo.com')
+    await writeCredential(cred)
+    await setCurrent('weibo', 'web', 'default')
+    const m = mockFeed({
+      '/ajax/feed/hottimeline': feedFixture('feed_hot.json'),
+      '/ajax/feed/friendstimeline': feedFixture('feed_friends.json'),
+    })
+    try {
+      const r = await cli('weibo', 'feed', 'list', '--limit', '1')
+      expect(r.code).toBe(0)
+      expect(r.env).toMatchObject({ ok: true, platform: 'weibo', resource: 'feed', action: 'list', account: 'default', error: null })
+      expect(r.env.data[0]).toMatchObject({ id: '5369000000000000', kind: 'video' })
+      expect(r.env.page.has_more).toBe(true)
+
+      const r2 = await cli('weibo', 'feed', 'list', '--kind', 'following', '-o', 'jsonl')
+      expect(r2.code).toBe(0)
+      expect(r2.stdout.split('\n').filter(Boolean)).toHaveLength(1)
+    } finally {
+      m.restore()
+    }
   })
 })

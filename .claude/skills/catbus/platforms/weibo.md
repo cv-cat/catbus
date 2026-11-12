@@ -8,14 +8,14 @@
 
 ## 能做
 
-- **读**：`item search`（只有第一页）/ `get`；`user get` / `items`；`comment list`（只有一级评论）。
+- **读**：`item search`（只有第一页）/ `get`；`user get` / `items`；`comment list`（只有一级评论）；`feed list`（推荐流 `--kind recommend`、关注流 `--kind following`，都要登录；接口是 weibo.com 网页版自己的，上游没有）。
 - **写**：`item publish`（仅自己可见的发布已真机验证）；`media upload`。
 
 能力比较少，用户要的东西多半在「做不到」里，先查 `catbus platforms weibo`。
 
 ## 做不到
 
-推荐流、热搜、用户搜索、关注、点赞、转发、发评论、删微博、私信、通知、直播都还没有；`item media` / `download` 也没有，要媒体地址时看详情里的 `media[].url`。
+热搜、用户搜索、关注、点赞、转发、发评论、删微博、私信、通知、直播都还没有；`item media` / `download` 也没有，要媒体地址时看详情里的 `media[].url`。
 
 ## 参数
 
