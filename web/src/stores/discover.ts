@@ -809,6 +809,7 @@ export const useDiscoverStore = defineStore('discover', () => {
     refreshAccounts,
     unsupported,
     orderFields,
+    filters,
     initFilters,
   }
 })

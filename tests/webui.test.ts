@@ -531,3 +531,35 @@ describe('字段排序：item search / feed list 放行 --order-by 与 --asc', (
     expect(all.xhs!.order).toBeNull()
   })
 })
+
+describe('搜索联想与热搜：放行 keyword suggest / keyword hot', () => {
+  it('前缀放在 -- 之后，可带 -a，不接受其他选项', () => {
+    expect(validateArgv(['xhs', 'keyword', 'suggest', '-猫', '-a', 'work'])).toEqual(['xhs', 'keyword', 'suggest', '-a', 'work', '--', '-猫'])
+    expect(validateArgv(['jd', 'keyword', 'hot'])).toEqual(['jd', 'keyword', 'hot'])
+    expect(validateArgv(['jd', 'keyword', 'hot', '-a', 'work'])).toEqual(['jd', 'keyword', 'hot', '-a', 'work'])
+    expect(() => validateArgv(['xhs', 'keyword', 'suggest', '猫', '--limit', '5'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['xhs', 'keyword', 'hot', '--raw'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['xhs', 'keyword', 'hot', '-a', 'guest'])).toThrow('账号名不合法')
+  })
+
+  it('前缀不能为空，也不能超过 100 个字符', () => {
+    expect(() => validateArgv(['xhs', 'keyword', 'suggest'])).toThrow('缺少联想前缀')
+    expect(() => validateArgv(['xhs', 'keyword', 'suggest', '   '])).toThrow('缺少联想前缀')
+    expect(validateArgv(['xhs', 'keyword', 'suggest', '猫'.repeat(100)])).toEqual(['xhs', 'keyword', 'suggest', '--', '猫'.repeat(100)])
+    expect(() => validateArgv(['xhs', 'keyword', 'suggest', '猫'.repeat(101)])).toThrow('不能超过 100')
+  })
+
+  it('keyword 下别的动作不放行', () => {
+    expect(() => validateArgv(['xhs', 'keyword', 'list'])).toThrow('暂不开放')
+  })
+
+  it('/api/filters 按注册表给出 suggest / hot', async () => {
+    const { platformFilters } = await import('../src/webui/filters.js')
+    const all = await platformFilters()
+    expect(all.xhs).toMatchObject({ suggest: true, hot: true })
+    expect(all.jd).toMatchObject({ suggest: true, hot: true })
+    expect(all.tiktok).toMatchObject({ suggest: true, hot: false })
+    expect(all.youtube).toMatchObject({ suggest: true, hot: false })
+    expect(all.douyin).toMatchObject({ suggest: false, hot: false })
+  })
+})

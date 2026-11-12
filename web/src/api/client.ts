@@ -1,6 +1,6 @@
-import { mockAccounts, mockComments, mockReplies, mockItem, mockItems, mockLogout, mockUse } from './mock'
+import { mockAccounts, mockComments, mockHot, mockReplies, mockItem, mockItems, mockLogout, mockSuggest, mockUse } from './mock'
 import { loginApi } from './login'
-import type { Account, Comment, Envelope, Item } from './types'
+import type { Account, Comment, Envelope, Item, Keyword } from './types'
 import { isDemo, useSourceStore, type Source } from '@/stores/source'
 import { parseOrder } from '@/data/filters'
 
@@ -20,6 +20,9 @@ export interface PlatformFilters {
   type: string[] | null
   /** 平台私有的字段排序 `--order-by` 的取值；旧版 bridge 不给 */
   order?: string[] | null
+  /** 搜索联想 / 热搜是否已实现；旧版 bridge 不给，当作不支持 */
+  suggest?: boolean
+  hot?: boolean
 }
 
 /** 读不到（旧版 bridge、纯静态预览）时返回 null，页面不置灰任何筛选 */
@@ -161,4 +164,26 @@ export async function useAccount(platform: string, account: string): Promise<voi
   if (isDemo()) return mockUse(platform, account)
   const { envelope } = await loginApi.use(platform, account)
   if (!envelope.ok) throw new Error(envelope.error?.message ?? '设为默认失败')
+}
+
+/** 热搜（AGENTS.md 7.9「搜索联想与热搜」）：`catbus <p> keyword hot [-a <账号>]` */
+export async function keywordHot(platform: string, account?: string | null): Promise<Envelope<Keyword[]>> {
+  if (isDemo()) {
+    await new Promise((r) => setTimeout(r, 380))
+    return mockHot(platform)
+  }
+  const argv = [platform, 'keyword', 'hot']
+  if (account) argv.push('-a', account)
+  return call<Keyword[]>(argv)
+}
+
+/** 搜索联想：`catbus <p> keyword suggest [-a <账号>] -- <前缀>`（bridge 把前缀放到 `--` 之后） */
+export async function keywordSuggest(platform: string, prefix: string, account?: string | null): Promise<Envelope<Keyword[]>> {
+  if (isDemo()) {
+    await new Promise((r) => setTimeout(r, 220))
+    return mockSuggest(platform, prefix)
+  }
+  const argv = [platform, 'keyword', 'suggest', prefix]
+  if (account) argv.push('-a', account)
+  return call<Keyword[]>(argv)
 }

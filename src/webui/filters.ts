@@ -13,6 +13,9 @@ export interface PlatformFilters {
   type: string[] | null
   /** 平台私有的字段排序 `--order-by` 的取值（目前只有 mteam）；没有时为 null */
   order: string[] | null
+  /** 搜索联想 `keyword suggest`、热搜 `keyword hot` 是否已实现（AGENTS.md 7.9「搜索联想与热搜」） */
+  suggest: boolean
+  hot: boolean
 }
 
 const FILTERS = ['sort', 'type'] as const
@@ -36,7 +39,14 @@ export function platformFilters(): Promise<Record<string, PlatformFilters>> {
       const web = p.endpoints.web
       if (!web || web === 'planned') continue
       const cmd = web.commands.get('item search')
-      const entry: PlatformFilters = { search: cmd?.status === 'implemented', sort: null, type: null, order: null }
+      const entry: PlatformFilters = {
+        search: cmd?.status === 'implemented',
+        sort: null,
+        type: null,
+        order: null,
+        suggest: web.commands.get('keyword suggest')?.status === 'implemented',
+        hot: web.commands.get('keyword hot')?.status === 'implemented',
+      }
       for (const k of FILTERS) entry[k] = cmd ? enumValues(cmd.options[k]) : null
       entry.order = cmd ? enumValues(cmd.options.orderBy) : null
       out[p.id] = entry

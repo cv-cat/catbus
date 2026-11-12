@@ -79,3 +79,9 @@ export interface Envelope<T> {
   page: { cursor: string | null; has_more: boolean } | null
   error: CatbusError | null
 }
+
+/** 搜索联想 / 热搜词（AGENTS.md 6.2 Keyword） */
+export interface Keyword {
+  text: string
+  heat: number | null
+}
