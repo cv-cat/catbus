@@ -1319,3 +1319,51 @@ describe('bilibili 双封面（16:9 + 4:3）与只改资料', () => {
     expect(editBody(cancel.bodies).dtime).toBe(0)
   })
 })
+
+describe('bilibili 合集（series）', () => {
+  const SEASONS = 'https://member.bilibili.com/x2/creative/web/seasons'
+  const ADD = 'https://member.bilibili.com/x2/creative/web/season/section/episodes/add'
+
+  const route = (over: { seasons?: unknown } = {}) => (url: string) => {
+    if (url.startsWith(SEASONS)) {
+      return over.seasons ?? ok({
+        total: 1,
+        seasons: [
+          {
+            season: { id: 9514897, title: '鲸鱼娘打工日记', ep_num: 14 },
+            sections: { sections: [{ id: 10660317, type: 1, title: '正片', epCount: 14 }] },
+          },
+        ],
+      })
+    }
+    if (url.includes('/x/web/archive/videos')) return ok({ archive: { aid: 80433022, bvid: BVID, title: '旧标题' }, videos: [{ cid: 43455154355, index: 1, title: '旧标题' }] })
+    if (url.startsWith(ADD)) return ok({})
+    return { code: 0, message: '0', ttl: 1 }
+  }
+
+  it('series list：id / 标题 / 集数 / 链接，只能列自己的', async () => {
+    const { result, error } = await runCommand('seriesList', {}, route())
+    expect(error).toBeUndefined()
+    expect(result.data).toEqual([{ id: '9514897', name: '鲸鱼娘打工日记', count: 14, url: expect.stringContaining('/channel/collectiondetail?sid=9514897') }])
+    expect(result.page).toEqual({ cursor: null, has_more: false })
+    const other = await runCommand('seriesList', { args: { user: '2' } }, route())
+    expect(other.error).toMatchObject({ code: 'UNSUPPORTED' })
+  })
+
+  it('series add：按合集 ID 找到小节，用 season/switch 挂稿', async () => {
+    const { bodies, error, result } = await runCommand('seriesAdd', { args: { series: '9514897', item: BVID } }, route())
+    expect(error).toBeUndefined()
+    expect(result).toEqual({ id: BVID })
+    const addBody = bodies.map((b) => String(b)).find((b) => b.includes('sectionId'))
+    expect(JSON.parse(String(addBody))).toEqual({ sectionId: 10660317, episodes: [{ aid: 80433022, cid: 43455154355, title: '旧标题', charging_pay: 0 }] })
+  })
+
+  it('series add：合集链接也能识别，找不到合集时报 USAGE', async () => {
+    const link = 'https://space.bilibili.com/1/channel/collectiondetail?sid=9514897'
+    const hit = await runCommand('seriesAdd', { args: { series: link, item: BVID } }, route())
+    expect(hit.error).toBeUndefined()
+    const miss = await runCommand('seriesAdd', { args: { series: '404', item: BVID } }, route())
+    expect(miss.error).toMatchObject({ code: 'USAGE' })
+    expect(miss.urls.every((u) => !u.includes('episodes/add'))).toBe(true)
+  })
+})

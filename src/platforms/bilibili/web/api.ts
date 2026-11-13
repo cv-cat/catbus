@@ -456,6 +456,56 @@ export function deleteReply(b: Bili, oid: string, rpid: string, type = 1) {
   return b.post(`${API}/x/v2/reply/del`, { headers: h.get(), form })
 }
 
+/** 我的合集列表（创作中心「合集管理」，按修改时间倒序）。 */
+export function seasons(b: Bili, pn: number, ps: number) {
+  const h = headers('GET', { origin: ORIGIN.member, sameOrigin: true }).referer(UPLOAD_PAGE)
+  return b.get(`${MEMBER}/x2/creative/web/seasons`, {
+    headers: h.get(),
+    query: [
+      ['pn', pn],
+      ['ps', ps],
+      ['order', 'mtime'],
+      ['sort', 'desc'],
+    ],
+  })
+}
+
+/** 合集小节里的视频（`season/section`），排序要用。 */
+export function seasonSection(b: Bili, seasonId: number) {
+  const h = headers('GET', { origin: ORIGIN.member, sameOrigin: true }).referer(UPLOAD_PAGE)
+  return b.get(`${MEMBER}/x2/creative/web/season/section`, { headers: h.get(), query: [['id', seasonId]] })
+}
+
+/** 重排小节顺序（`season/section/edit`）：sorts 里给出 id 与 sort（1 开始）。 */
+export function editSectionSorts(
+  b: Bili,
+  section: { id: number; seasonId: number; title: string; type?: number },
+  sorts: { id: number; sort: number }[],
+) {
+  const h = headers('POST', { origin: ORIGIN.member, sameOrigin: true }).referer(UPLOAD_PAGE)
+  return b.post(`${MEMBER}/x2/creative/web/season/section/edit`, {
+    headers: h.get(),
+    query: [['csrf', b.csrf]],
+    json: { section: { type: 1, ...section }, sorts },
+  })
+}
+
+/** 把稿件加进合集的小节（`season/section/episodes/add`）。 */
+export function addSeasonEpisodes(b: Bili, sectionId: number, episodes: { aid: number; cid: number; title: string }[]) {
+  const h = headers('POST', { origin: ORIGIN.member, sameOrigin: true }).referer(UPLOAD_PAGE)
+  return b.post(`${MEMBER}/x2/creative/web/season/section/episodes/add`, {
+    headers: h.get(),
+    query: [['csrf', b.csrf]],
+    json: { sectionId, episodes: episodes.map((e) => ({ aid: e.aid, cid: e.cid, title: e.title, charging_pay: 0 })) },
+  })
+}
+
+/** 稿件分 P 的 cid（加合集要用；只读，自己或别人已发布的稿件都能查）。 */
+export function archiveVideos(b: Bili, aid: number) {
+  const h = headers('GET', { origin: ORIGIN.member, sameOrigin: true }).referer(UPLOAD_PAGE)
+  return b.get(`${MEMBER}/x/web/archive/videos`, { headers: h.get(), query: [['aid', aid]] })
+}
+
 /** 置顶 / 取消置顶一级评论（`x/v2/reply/top`）。只能在自己管理的评论区里操作，且只能置顶一级评论。 */
 export function pinReply(b: Bili, oid: string, rpid: string, on: boolean, type = 1) {
   const h = headers('FORM').referer(`${MAIN}/`)
