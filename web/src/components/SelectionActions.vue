@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowLeftRight, CheckCheck, Download, SlidersHorizontal, X } from 'lucide-vue-next'
+import { ArrowLeftRight, CheckCheck, ChevronDown, Download, SlidersHorizontal, X } from 'lucide-vue-next'
 import type { Item } from '@/api/types'
 import DownloadMenu from '@/components/DownloadMenu.vue'
 import { useSelectionStore } from '@/stores/selection'
@@ -9,7 +9,7 @@ import { useSelectionStore } from '@/stores/selection'
 /**
  * 有卡片被选中时，从搜索框左侧依次向左弹出：全选、全不选、反选、下载。
  * `bar`：手机上改成固定在底部的操作条（带文字），从底部滑入。
- * 下载右边是「下载选项」：打开下载面板选内容和格式；直接点下载按上次的选择下载。
+ * 下载是一个分体按钮：左半边按上次的选择直接下载，右半边的箭头打开下载面板选内容和格式。
  * platforms：选中条目所属的平台（下载面板据此判断能不能带评论）。
  */
 const props = defineProps<{ items: Item[]; compact?: boolean; bar?: boolean; platforms?: string[] }>()
@@ -24,12 +24,15 @@ const ACTIONS = [
   { key: 'download', labelKey: 'discover.selection.download', shortKey: 'common.action.download', icon: Download, run: () => emit('download') },
   { key: 'options', labelKey: 'download.panel.open', shortKey: 'download.panel.short', icon: SlidersHorizontal, run: (e: MouseEvent) => openMenu(e) },
 ] as const
-const N = ACTIONS.length
+/** 桌面、平板上前三个是圆按钮，下载和下载选项合成一个分体按钮 */
+const ROUND = ACTIONS.slice(0, 3)
+const N = ROUND.length + 1
+const split = ref<HTMLElement | null>(null)
 
 const menuOpen = ref(false)
 const anchor = ref<HTMLElement | null>(null)
 function openMenu(e: MouseEvent) {
-  anchor.value = e.currentTarget as HTMLElement
+  anchor.value = (props.bar ? null : split.value) ?? (e.currentTarget as HTMLElement)
   menuOpen.value = !menuOpen.value
 }
 </script>
@@ -56,20 +59,51 @@ function openMenu(e: MouseEvent) {
     </div>
   </Transition>
   <div v-else class="actions" :class="{ compact }">
-    <Transition v-for="(a, i) in ACTIONS" :key="a.key" name="slide">
+    <Transition v-for="(a, i) in ROUND" :key="a.key" name="slide">
       <button
         v-if="sel.active"
         type="button"
- class="act glass"
-        :class="{ primary: a.key === 'download' }"
- :style="{ '--from': `${(N - i) * (compact ? 44 : 56)}px`, '--in': `${(N - 1 - i) * 45}ms`, '--out': `${i * 30}ms` }"
+        class="act glass"
+        :style="{ '--from': `${(N - i) * (compact ? 44 : 56)}px`, '--in': `${(N - 1 - i) * 45}ms`, '--out': `${i * 30}ms` }"
         :aria-label="t(a.labelKey)"
- :title="t(a.labelKey)"
- @click="a.run($event)"
+        :title="t(a.labelKey)"
+        @click="a.run($event)"
       >
         <component :is="a.icon" :size="compact ? 15 : 18" />
-        <span v-if="a.key === 'download'" class="count mono">{{ sel.count }}</span>
       </button>
+    </Transition>
+    <Transition name="slide">
+      <div
+        v-if="sel.active"
+        ref="split"
+        class="split"
+        role="group"
+        :aria-label="t('common.action.download')"
+        :style="{ '--from': `${compact ? 44 : 56}px`, '--in': '0ms', '--out': `${(N - 1) * 30}ms` }"
+      >
+        <button
+          type="button"
+          class="split-main"
+          :aria-label="t('discover.selection.downloadCount', { n: sel.count }, sel.count)"
+          :title="t('discover.selection.download')"
+          @click="emit('download')"
+        >
+          <Download :size="compact ? 15 : 17" aria-hidden="true" />
+          <span v-if="!compact" class="split-label">{{ t('common.action.download') }}</span>
+          <span class="split-count mono">{{ sel.count }}</span>
+        </button>
+        <button
+          type="button"
+          class="split-more"
+          :aria-label="t('download.panel.open')"
+          :title="t('download.panel.open')"
+          aria-haspopup="dialog"
+          :aria-expanded="menuOpen"
+          @click="openMenu($event)"
+        >
+          <ChevronDown :size="compact ? 14 : 16" class="chev" :class="{ open: menuOpen }" aria-hidden="true" />
+        </button>
+      </div>
     </Transition>
   </div>
   <DownloadMenu
@@ -110,28 +144,82 @@ function openMenu(e: MouseEvent) {
   transform: translateY(-2px);
   box-shadow: 0 10px 24px #1b1f2e1f;
 }
-.act.primary {
+.split {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  height: 48px;
+  border-radius: 999px;
+  overflow: hidden;
   color: #fff;
   background: var(--red);
-  border-color: var(--red);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--red) 30%, transparent);
+  transition: transform 0.25s var(--ease-out), box-shadow 0.25s;
 }
-.act.primary:hover {
-  color: #fff;
+.compact .split {
+  height: 36px;
 }
-.count {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 9px;
+.split:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--red) 38%, transparent);
+}
+.split-main,
+.split-more {
+  display: flex;
+  align-items: center;
+  color: inherit;
+  transition: background 0.15s;
+}
+.split-main {
+  gap: 7px;
+  padding: 0 12px 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.compact .split-main {
+  gap: 5px;
+  padding: 0 8px 0 11px;
+}
+.split-more {
+  justify-content: center;
+  width: 38px;
+  border-left: 1px solid #ffffff4d;
+}
+.compact .split-more {
+  width: 28px;
+}
+.split-main:hover,
+.split-more:hover,
+.split-more[aria-expanded='true'] {
+  background: #0000001a;
+}
+.split-main:focus-visible,
+.split-more:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -4px;
+}
+.split-count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--red);
-  background: var(--glass-strong);
-  box-shadow: 0 2px 6px #1b1f2e26;
+  background: #fff;
+}
+.compact .split-count {
+  min-width: 17px;
+  height: 17px;
+  font-size: 10px;
+}
+.chev {
+  transition: transform 0.2s;
+}
+.chev.open {
+  transform: rotate(180deg);
 }
 
 /* 从搜索框底下（右侧）滑出，越靠左的走得越远、越晚出现 */
@@ -147,7 +235,8 @@ function openMenu(e: MouseEvent) {
   transform: translateX(var(--from)) scale(0.6);
 }
 @media (hover: none) {
-  .act:hover {
+  .act:hover,
+  .split:hover {
     transform: none;
   }
 }
