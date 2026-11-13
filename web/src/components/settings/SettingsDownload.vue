@@ -18,22 +18,25 @@ const risky = computed(() => s.commentLimit === 'all' || s.commentLimit > COMMEN
 </script>
 
 <template>
-  <SettingRow v-slot="{ labelId, descId }" :title="t('settings.download.comments.title')" :desc="t('settings.download.comments.desc')">
-    <AppSelect
-      v-model="s.commentLimit"
-      :options="commentOptions"
-      :title="t('settings.download.comments.title')"
-      :desc="t('settings.download.comments.desc')"
-      :labelledby="labelId"
-      :describedby="descId"
-    />
-  </SettingRow>
-  <Transition name="risk">
-    <p v-if="risky" class="risk" role="alert">
-      <TriangleAlert :size="15" aria-hidden="true" />
-      {{ t('settings.download.comments.risk') }}
-    </p>
-  </Transition>
+  <!-- 风险提示属于「评论下载条数」这一项：分割线放在提示下面，不压在提示上 -->
+  <div class="group">
+    <SettingRow v-slot="{ labelId, descId }" :title="t('settings.download.comments.title')" :desc="t('settings.download.comments.desc')">
+      <AppSelect
+        v-model="s.commentLimit"
+        :options="commentOptions"
+        :title="t('settings.download.comments.title')"
+        :desc="t('settings.download.comments.desc')"
+        :labelledby="labelId"
+        :describedby="descId"
+      />
+    </SettingRow>
+    <Transition name="risk">
+      <p v-if="risky" class="risk" role="alert">
+        <TriangleAlert :size="15" aria-hidden="true" />
+        {{ t('settings.download.comments.risk') }}
+      </p>
+    </Transition>
+  </div>
   <SettingRow v-slot="{ labelId, descId }" :title="t('settings.download.replies.title')" :desc="t('settings.download.replies.desc')">
     <AppSelect
       v-model="s.replyLimit"
@@ -47,11 +50,17 @@ const risky = computed(() => s.commentLimit === 'all' || s.commentLimit > COMMEN
 </template>
 
 <style scoped>
+.group {
+  border-bottom: 1px solid var(--hair);
+}
+.group > :deep([data-setting-row]) {
+  border-bottom: none;
+}
 .risk {
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  margin: -4px 0 10px;
+  margin: 0 0 14px;
   padding: 9px 12px;
   border-radius: 12px;
   font-size: 12.5px;
