@@ -119,7 +119,7 @@ export const VOCAB: Record<string, CommandSpec> = {
   'item related': list('相关推荐', [arg.item], 'Item[]'),
   'item list': list('我发布的{item}，带审核状态', [], 'Item[]', { auth: 'required' }),
   'item media': read('{item}的媒体地址', [arg.item], 'Media[]'),
-  'item download': read('下载{item}的媒体', [arg.item], 'File[]', { options: DOWNLOAD }),
+  'item download': read('下载{item}的媒体和信息', [arg.item], 'File[]', { options: DOWNLOAD }),
   'item like': write('点赞', [arg.item]),
   'item unlike': write('取消点赞', [arg.item]),
   'item collect': write('收藏', [arg.item]),

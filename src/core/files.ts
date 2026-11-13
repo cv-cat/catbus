@@ -5,6 +5,7 @@ import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import type { ReadableStream as WebReadableStream } from 'node:stream/web'
 import { CatbusError } from './errors.js'
+import { exportItem, exportSettings } from './export.js'
 import type { HeaderInit, HttpClient } from './http.js'
 import type { HandlerContext } from './registry.js'
 import type { File, Media } from './schemas.js'
@@ -99,11 +100,21 @@ export interface DownloadOptions {
 /**
  * 把一组媒体下载到 `--dir`（`--subdir` 时放进 item 自己的子目录），文件名 `<platform>_<id>_<序号>.<ext>`；
  * 已有文件默认跳过，`--overwrite` 时覆盖。
+ *
+ * 各平台的 item download 都经这里落盘，所以 `--meta` / `--comments` / `--replies` / `--no-media`（AGENTS 4.9）也在这里处理：
+ * `--no-media` 时不下载媒体，目录规则不变；需要导出时媒体之后写 `<platform>_<id>.json`（core/export.ts）。
  */
 export async function downloadMedia(ctx: HandlerContext, http: HttpClient, itemId: string, media: Media[], options: DownloadOptions = {}): Promise<File[]> {
+  const settings = exportSettings(ctx.options, ctx.log)
   const dir = await itemDir(ctx, itemId, options.title)
-  const overwrite = Boolean(ctx.options.overwrite)
   await mkdir(dir, { recursive: true })
+  const files = settings.media ? await saveMedia(ctx, http, dir, itemId, media, options) : []
+  if (settings.meta) files.push(await exportItem(ctx, itemId, dir, settings))
+  return files
+}
+
+async function saveMedia(ctx: HandlerContext, http: HttpClient, dir: string, itemId: string, media: Media[], options: DownloadOptions): Promise<File[]> {
+  const overwrite = Boolean(ctx.options.overwrite)
   const files: File[] = []
   for (const [i, m] of media.entries()) {
     if (!m.url) {

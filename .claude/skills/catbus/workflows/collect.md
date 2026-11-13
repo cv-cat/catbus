@@ -65,6 +65,16 @@ catbus xhs item download "<笔记 url>" --dir ./xhs   # 存到本地，文件名
 
 `--subdir title` 让每条内容放进以标题命名的子目录（如 `./xhs/<标题>/xhs_<id>_1.jpg`），目录名已清洗成各系统都能用的形式；`--subdir id` 按 ID 分目录。
 
+同时导出帖子信息和评论：
+
+```bash
+catbus xhs item download "<笔记 url>" --dir ./xhs --meta                          # 旁边多一个 xhs_<id>.json：作者、正文、互动数
+catbus xhs item download "<笔记 url>" --dir ./xhs --comments 50 --replies 10      # 再带上前 50 条评论、每条前 10 条回复
+catbus xhs item download "<笔记 url>" --dir ./xhs --comments all --no-media       # 不下载媒体，只要信息和全部评论
+```
+
+`<platform>_<id>.json` 的结构是 `{schema, platform, exported_at, item, comments, comments_truncated}`：`item` 与 `item get` 的输出相同，`comments` 是 Comment 再加 `replies`。取评论中途遇到风控时停下，已经取到的照样写出，`comments_truncated` 为 true，命令仍然成功。评论多时请求也多，`--comments all` 慎用。
+
 ## 跨平台
 
 同一个关键词在几个平台上搜，把结果合在一起，每条加上 `platform`：

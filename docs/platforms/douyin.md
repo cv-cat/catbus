@@ -59,7 +59,7 @@
 | `item search` | ✓ | 搜索作品。`--type video` 走视频频道搜索，其余走综合频道；`--type image` 只要图文。取值：`--sort` general / popular / latest；`--time` all / day / week / half_year；`--type` all / video / image。私有选项 `--length`、`--range`。 |
 | `item list` | ◐ | 我发布的作品，带审核状态。取发布页的作品预览（work_list）；定时未发布的作品 status 为 draft。 |
 | `item media` | ✓ | 作品的媒体地址。 |
-| `item download` | ✓ | 下载作品的媒体。 |
+| `item download` | ✓ | 下载作品的媒体，可同时导出信息和评论（`--meta`、`--comments`）。 |
 | `item like` | ✓ | 点赞。 |
 | `item unlike` | ✓ | 取消点赞。 |
 | `item collect` | ✓ | 收藏。私有选项 `--folder`。 |
