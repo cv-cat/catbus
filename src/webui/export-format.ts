@@ -152,8 +152,9 @@ export function toText(doc: ExportDoc): string {
   const text = (item.text ?? '').replace(/\r\n?/g, '\n').trim()
   if (text) lines.push('', '正文：', text)
 
-  const exported = doc.comments.reduce((n, c) => n + 1 + c.replies.length, 0)
-  const head = [s.comments != null ? `共 ${s.comments} 条` : null, `已导出 ${exported} 条`]
+  const replies = doc.comments.reduce((n, c) => n + c.replies.length, 0)
+  const exported = replies ? `已导出 ${doc.comments.length} 条评论、${replies} 条回复` : `已导出 ${doc.comments.length} 条`
+  const head = [s.comments != null ? `共 ${s.comments} 条` : null, exported]
   if (doc.comments_truncated) head.push('因平台风控提前停止，未取全')
   lines.push('', `评论（${head.filter(Boolean).join('，')}）`)
   if (!doc.comments.length) lines.push('（无）')
