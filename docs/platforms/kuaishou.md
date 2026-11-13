@@ -62,7 +62,7 @@
 | `item related` | ✓ | 相关推荐。 |
 | `item list` | ✓ | 我发布的作品，带审核状态。 |
 | `item media` | ✓ | 作品的媒体地址。 |
-| `item download` | ✓ | 下载作品的媒体。 |
+| `item download` | ✓ | 下载作品的媒体，可同时导出信息和评论（`--meta`、`--comments`）。 |
 | `item publish` | ◐ | 发布作品。只支持部分发布选项（见下面的「不支持」）。`--image`（1～31 张，每张不超过 15MB）和 `--video` 二选一。取值：`--visibility` public / private / friends。不支持 `--cover`、`--mention`、`--poi`、`--category`、`--price`。 |
 | `item like`、`item unlike`、`item collect`、`item uncollect`、`item delete` | ○ | 规划中 |
 

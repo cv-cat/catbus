@@ -8,6 +8,7 @@
 
 ### Added
 
+- `item download` 同时导出帖子信息和评论：`--meta` 在媒体文件旁边写 `<platform>_<id>.json`（`{schema platform exported_at item comments comments_truncated}`，`item` 与 `item get` 的输出相同）；`--comments <N|all>` 带上一级评论（隐含 `--meta`），`--replies <N|all>` 再带上每条评论的回复，自动翻页取满；`--no-media` 只写这个文件、不下载媒体。由 core 调用同一平台的 `item get` / `comment list` / `comment replies`，所有有 `item download` 的平台都支持；取评论中途遇到风控时停下、已取到的照样写出（`comments_truncated: true`），平台没有评论命令时 `comments` 为 `[]`。File.type 新增 `data`
 - maoyan：`feed list`、`item get` 的 `text` 多一行「开售时间：<带时区的 ISO 8601>」（取自接口的 `onSaleTime`）。原来只有「明天开售」这类相对文案，算不出距开售还有多久
 - 全局选项 `--fields <路径,...>`：只输出 `data` 条目里的这些字段，点号进入嵌套对象，经过数组时作用到每个元素，没有的字段为 null；json、jsonl 都适用，在 `--raw` 之后生效
 - 全局选项 `--dry-run`：做完参数、选项、是否已实现、本地登录态的检查就停下，不调用平台接口；`data` 为 `{args options confirm}`，凭证类选项打码

@@ -5,6 +5,7 @@ import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import type { ReadableStream as WebReadableStream } from 'node:stream/web'
 import { CatbusError } from './errors.js'
+import { exportItem, exportSettings } from './export.js'
 import type { HeaderInit, HttpClient } from './http.js'
 import { toNetworkError } from './http.js'
 import * as rand from './rand.js'
@@ -126,11 +127,21 @@ async function parkTmp(tmp: string, start: number): Promise<void> {
  * 分段下载（chunked）支持容错：单段失败重试两次（网络错误、429/5xx），命令失败时保留
  * `<文件>.part` 并按段边界截齐，重跑命令从未完成的段续传（直链过期的话重解析后会拿到新 URL，
  * range 位置与 URL 无关，照样续得上）。
+ *
+ * 各平台的 item download 都经这里落盘，所以 `--meta` / `--comments` / `--replies` / `--no-media`（AGENTS 4.9）也在这里处理：
+ * `--no-media` 时不下载媒体，目录规则不变；需要导出时媒体之后写 `<platform>_<id>.json`（core/export.ts）。
  */
 export async function downloadMedia(ctx: HandlerContext, http: Pick<HttpClient, 'request'>, itemId: string, media: Media[], options: DownloadOptions = {}): Promise<File[]> {
+  const settings = exportSettings(ctx.options, ctx.log)
   const dir = await itemDir(ctx, itemId, options.title)
-  const overwrite = Boolean(ctx.options.overwrite)
   await mkdir(dir, { recursive: true })
+  const files = settings.media ? await saveMedia(ctx, http, dir, itemId, media, options) : []
+  if (settings.meta) files.push(await exportItem(ctx, itemId, dir, settings))
+  return files
+}
+
+async function saveMedia(ctx: HandlerContext, http: Pick<HttpClient, 'request'>, dir: string, itemId: string, media: Media[], options: DownloadOptions): Promise<File[]> {
+  const overwrite = Boolean(ctx.options.overwrite)
   const files: File[] = []
   for (const [i, m] of media.entries()) {
     if (!m.url) {

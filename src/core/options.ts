@@ -75,10 +75,17 @@ export const PUBLISH = {
  */
 export const QUOTE = z.string().optional().describe('引用一条内容：ID 或 URL')
 
+/** `--comments` / `--replies` 的取值：正整数或 all。 */
+const COUNT_RE = /^(all|[1-9]\d*)$/
+
 export const DOWNLOAD = {
   dir: z.string().optional().describe('下载目录，默认当前目录'),
   overwrite: z.boolean().optional().describe('覆盖已有文件，默认跳过'),
   subdir: z.enum(['none', 'id', 'title']).optional().describe('每条内容放进自己的子目录：none（默认）、id、title（按标题）'),
+  meta: z.boolean().optional().describe('同时把帖子信息写成 <platform>_<id>.json'),
+  comments: z.string().regex(COUNT_RE, '取值为正整数或 all').optional().describe('同时导出一级评论：条数或 all，默认不取（隐含 --meta）'),
+  replies: z.string().regex(COUNT_RE, '取值为正整数或 all').optional().describe('每条一级评论再取多少条回复：条数或 all，默认不取'),
+  noMedia: z.boolean().optional().describe('不下载媒体，只写帖子信息（隐含 --meta）'),
 }
 
 const DURATION_RE = /^(\d+(?:\.\d+)?)(s|m|h)?$/

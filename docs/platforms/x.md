@@ -57,7 +57,7 @@ catbus x auth login --cookie @x-cookie.txt
 | `item get` | ✓ | 推文详情。 |
 | `item search` | ✓ | 搜索推文。`--type video / image` 走媒体搜索，按类型过滤，不能和 `--sort latest` 一起用。取值：`--sort` general / latest；`--type` all / video / image。 |
 | `item media` | ✓ | 推文的媒体地址。 |
-| `item download` | ✓ | 下载推文的媒体。 |
+| `item download` | ✓ | 下载推文的媒体，可同时导出信息和评论（`--meta`、`--comments`）。 |
 | `item like` | ✓ | 点赞。 |
 | `item unlike` | ✓ | 取消点赞。 |
 | `item collect` | ✓ | 收藏。 |
