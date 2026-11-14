@@ -7,22 +7,37 @@ export const useToastStore = defineStore('toast', () => {
   const text = ref('')
   const show = ref(false)
   const key = ref(0)
+  /** 可选的一个按钮（如「去设置」「重试推送」），点了执行并收起 */
+  const action = ref<ToastAction | null>(null)
   let timer: ReturnType<typeof setTimeout> | undefined
 
-  function push(next: string, ms = 1800) {
+  function push(next: string, ms = 1800, act: ToastAction | null = null) {
     text.value = next
+    action.value = act
     key.value++
     show.value = true
     clearTimeout(timer)
     timer = setTimeout(() => (show.value = false), ms)
   }
 
-  return { text, show, key, push }
+  function act() {
+    const a = action.value
+    show.value = false
+    clearTimeout(timer)
+    a?.run()
+  }
+
+  return { text, show, key, action, push, act }
 })
 
+export interface ToastAction {
+  label: string
+  run: () => void
+}
+
 /** 在任何地方弹提示（组件外也可以）：store 在调用时才取 */
-export function toast(text: string, ms = 1800) {
-  useToastStore().push(text, ms)
+export function toast(text: string, ms = 1800, action: ToastAction | null = null) {
+  useToastStore().push(text, ms, action)
 }
 
 /** 复制文本到剪贴板并在页面顶部提示；失败时返回 false */

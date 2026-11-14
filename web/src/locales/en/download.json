@@ -84,5 +84,43 @@
     "comments": "Comments {n}/{limit}",
     "commentsAll": "Comments {n}",
     "truncated": " (stopped by rate limiting)"
+  },
+  "qbit": {
+    "title": "Send to qBittorrent",
+    "desc": "After downloading, add it to qBittorrent on the computer running catbus",
+    "torrent": "Torrent file",
+    "torrentDesc": ".torrent, saved by your browser",
+    "torrentOptional": "Optional when only sending",
+    "category": "Category",
+    "categoryInvalid": "No \\ / : * ? \" < > | or control characters, up to 64 characters",
+    "savepath": "Save path",
+    "savepathPlaceholder": "qBittorrent's default folder",
+    "savepathInvalid": "Use an absolute path (starting with / or a drive letter) without ..",
+    "paused": "Add paused",
+    "where": "Sending is done by the computer running catbus",
+    "go": {
+      "both": "Download and send",
+      "bothCount": "Download and send {n} | Download and send {n}",
+      "push": "Send",
+      "pushCount": "Send {n} | Send {n}"
+    },
+    "retry": "Retry sending",
+    "got": {
+      "torrent": "Torrent ✓",
+      "added": "Sent",
+      "exists": "Already in the list",
+      "failed": "Sending failed (torrent saved)",
+      "reason": ": {reason}"
+    },
+    "batch": {
+      "added": "{n} sent",
+      "exists": "{n} already in the list"
+    },
+    "toast": {
+      "added": "Sent {n} to qBittorrent | Sent {n} to qBittorrent",
+      "exists": "{added} sent, {exists} already in qBittorrent's list",
+      "failed": "{n} failed to send; the torrent file is saved | {n} failed to send; the torrent files are saved"
+    },
+    "metaDesc": "Title, description, size, seeders"
   }
 }

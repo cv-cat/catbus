@@ -63,6 +63,13 @@
       "title": "减少动效",
       "desc": "「总是减少」时忽略系统设置，尽量少用动画。",
       "always": "总是减少"
+    },
+    "mteam": {
+      "section": "M-Team",
+      "adult": {
+        "title": "显示成人分区",
+        "desc": "打开后浏览筛选和收藏里多一个「成人」分区"
+      }
     }
   },
   "experimental": {

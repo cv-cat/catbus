@@ -188,3 +188,51 @@ export interface Poi {
   name: string
   address: string | null
 }
+
+// ---------- M-Team（AGENTS.md 4.7 mteam、7.9「M-Team「我的」页与筛选」） ----------
+
+/** `seed stats`：tracker 上当前的做种数和下载数 */
+export interface SeedStats {
+  seeding: number | null
+  leeching: number | null
+}
+
+/** `bonus get`：时魔 */
+export interface BonusRate {
+  per_hour: number | null
+  a: number | null
+  seeding_count: number | null
+  seeding_size_gb: number | null
+  two_factor: boolean | null
+}
+
+/** `exam get` 的一项考核 */
+export interface Exam {
+  id: string
+  title: string | null
+  status: string | null
+  start_at: string | null
+  end_at: string | null
+  note: string | null
+  items: { name: 'download' | 'upload' | 'bonus' | string; current: number | null; target: number | null; done: boolean }[]
+}
+
+/** `bonus history` 的一条（AGENTS 6.2 BonusRecord） */
+export interface BonusRecord {
+  id: string
+  time: string | null
+  type: string | null
+  before: number | null
+  after: number | null
+  change: number | null
+  user: UserRef | null
+  note: string | null
+  url: string | null
+}
+
+/** `item categories`（AGENTS 6.2 Category） */
+export interface Category {
+  id: string
+  name: string
+  parent_id: string | null
+}

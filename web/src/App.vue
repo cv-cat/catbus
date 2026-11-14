@@ -6,6 +6,8 @@ import AppSidebar from '@/components/AppSidebar.vue'
 import DiscoverView from '@/views/DiscoverView.vue'
 import AuthorView from '@/views/AuthorView.vue'
 import RailView from '@/views/RailView.vue'
+import MteamMeView from '@/views/MteamMeView.vue'
+import { useMteamStore } from '@/stores/mteam'
 import { useAuthorStore } from '@/stores/author'
 import { useRailStore } from '@/stores/rail'
 import LoginDialog from '@/components/LoginDialog.vue'
@@ -29,6 +31,8 @@ const src = useSourceStore()
 const author = useAuthorStore()
 // 12306 查询页（AGENTS.md 7.9「12306 查询页」）：同样盖在发现页上面，发现页在后台不动
 const rail = useRailStore()
+// M-Team「我的」页（AGENTS.md 7.9「M-Team「我的」页与筛选」）：同样盖在发现页上面
+const me = useMteamStore()
 const settings = useSettingsStore().settings
 // 「减少动效」「人浪动效」两项设置接到 motion.ts（立即生效）
 bindMotionSettings()
@@ -38,6 +42,14 @@ async function onLogin() {
   await d.refreshAccounts()
   d.search()
   if (author.active) author.load(true)
+  if (me.active) me.refresh()
+}
+
+/** 在「我的」页上点了「发现」或别的渠道：离开「我的」页，回到发现页 */
+function leaveMe(id: string) {
+  me.leave()
+  if (id === d.state.platform) d.search()
+  else d.state.platform = id
 }
 
 /** 在查询页上点了别的渠道：离开查询页再切过去；点的正是发现页停着的渠道时，平台不变，要自己触发一次搜索 */
@@ -78,6 +90,7 @@ onMounted(async () => {
   await Promise.all([d.refreshAccounts(), d.initFilters(), author.initCaps()])
   // 直接打开的查询页：发现页先不请求（离开查询页时再搜），查询页按地址查询
   if (rail.active) rail.start()
+  else if (me.active) me.ensureLoaded()
   else d.search()
   // 直接打开的作者页：账号读到之后再请求
   if (author.active) author.load()
@@ -103,7 +116,10 @@ onMounted(async () => {
       :selected="d.selected"
       :busy="d.busy"
       :rail-page="rail.active"
+      :me-page="me.active"
       @open-rail="rail.open()"
+      @open-me="me.open()"
+      @leave-me="leaveMe"
       @leave-rail="leaveRail"
       @update:aggregate="d.setAggregate"
       @toggle="d.toggleChannel"
@@ -113,12 +129,13 @@ onMounted(async () => {
       @remove="removeAccount"
     />
     <DiscoverView
-      :class="{ behind: author.active || rail.active }"
-      :inert="author.active || rail.active || undefined"
-      :aria-hidden="author.active || rail.active || undefined"
+      :class="{ behind: author.active || rail.active || me.active }"
+      :inert="author.active || rail.active || me.active || undefined"
+      :aria-hidden="author.active || rail.active || me.active || undefined"
     />
-    <AuthorView v-if="author.active && !rail.active" />
+    <AuthorView v-if="author.active && !rail.active && !me.active" />
     <RailView v-if="rail.active" />
+    <MteamMeView v-if="me.active && !rail.active" />
   </div>
   <DetailCard />
   <Lightbox />

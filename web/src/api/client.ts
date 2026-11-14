@@ -1,4 +1,4 @@
-import { mockAccounts, mockComments, mockFilters, mockHot, mockReplies, mockItem, mockItems, mockLogout, mockRelated, mockSuggest, mockUse } from './mock'
+import { mockAccounts, mockComments, mockFilters, mockHot, mockReplies, mockItem, mockItems, mockLogout, mockRelated, mockSuggest, mockTorrents, mockUse } from './mock'
 import { loginApi } from './login'
 import type { Account, CatbusError, Comment, Envelope, Item, Keyword } from './types'
 import { isDemo, useSourceStore, type Source } from '@/stores/source'
@@ -105,6 +105,8 @@ export interface SearchParams {
   limit?: number
   /** 本页浏览用的账号（-a），不传时用 _current */
   account?: string | null
+  /** M-Team 的浏览筛选（AGENTS.md 7.9「M-Team「我的」页与筛选」）：分区、子类、只看免费；别的平台不传 */
+  mteam?: { mode: string; category: string; free: boolean } | null
   /** 取消过期的请求 */
   signal?: AbortSignal
 }
@@ -119,6 +121,10 @@ export async function searchItems(p: SearchParams): Promise<Envelope<Item[]>> {
     // 演示账号 acc-<k> 的结果比默认账号错开半页：几个账号同时加载时部分重叠，能看到合并去重
     const k = Number(/^acc-(\d+)$/.exec(p.account ?? '')?.[1] ?? 0)
     if (p.platform === 'maoyan') return mockItems(p.platform, p.keyword, Number(p.cursor ?? 0), limit, p.city ?? '')
+    if (p.platform === 'mteam') {
+      const m = p.mteam
+      return mockTorrents(p.keyword, Number(p.cursor ?? 0), limit, m?.mode ?? 'normal', m?.category ?? '', !!m?.free, p.sort ?? '')
+    }
     return mockItems(p.platform, p.keyword, Number(p.cursor ?? 0), limit, variant === 'all' || variant === 'recommend' ? '' : variant, k * Math.ceil(limit / 2))
   }
   const argv =
@@ -128,6 +134,11 @@ export async function searchItems(p: SearchParams): Promise<Envelope<Item[]>> {
   if (p.account) argv.push('-a', p.account)
   argv.push('--limit', String(limit))
   if (p.cursor) argv.push('--cursor', p.cursor)
+  if (p.mteam) {
+    if (p.mteam.mode !== 'normal') argv.push('--mode', p.mteam.mode)
+    if (p.mteam.category) argv.push('--category', p.mteam.category)
+    if (p.mteam.free) argv.push('--free')
+  }
   // 字段排序（--order-by，M-Team）：搜索和浏览都能用
   const order = parseOrder(p.sort)
   if (order) {

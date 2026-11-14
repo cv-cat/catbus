@@ -19,8 +19,9 @@ import { ACCOUNT, LoginError, buildLogin, buildLogout, buildUse, cancel, getSess
 /** `resource action` → 允许的选项（每个选项都带一个值） */
 const READ_COMMANDS: Record<string, readonly string[]> = {
   // --order-by / --asc：平台私有的字段排序（目前只有 mteam，AGENTS.md 7.9「筛选」）；别的平台带了由 CLI 报 USAGE
-  'item search': ['--limit', '--cursor', '--sort', '--type', '--time', '--order-by'],
-  'feed list': ['--limit', '--cursor', '--kind', '--order-by'],
+  // --mode / --category / --free：M-Team 的分区、分类、只看免费（AGENTS.md 7.9「M-Team「我的」页与筛选」），取值见 MTEAM_FILTER_VALUES
+  'item search': ['--limit', '--cursor', '--sort', '--type', '--time', '--order-by', '--mode', '--category'],
+  'feed list': ['--limit', '--cursor', '--kind', '--order-by', '--mode', '--category'],
   // 详情卡片（AGENTS.md 7.9）：<item> 放在 `--` 之后
   'item get': [],
   'comment list': ['--limit', '--cursor'],
@@ -38,8 +39,8 @@ const READ_COMMANDS: Record<string, readonly string[]> = {
 }
 /** 不带值的开关选项：`item get` 的 `--raw`（详情卡片的原始 JSON，设置「实验性」里打开），以及字段排序的升序开关 `--asc` */
 const READ_FLAGS: Record<string, readonly string[]> = {
-  'item search': ['--asc'],
-  'feed list': ['--asc'],
+  'item search': ['--asc', '--free'],
+  'feed list': ['--asc', '--free'],
   'item get': ['--raw'],
 }
 const COMMENT_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/
@@ -122,6 +123,59 @@ function validateRail(resource: string | undefined, action: string | undefined, 
   return [RAIL_PLATFORM, resource!, action!, ...options, '--', ...positional]
 }
 
+/**
+ * M-Team「我的」页与分类菜单（AGENTS.md 7.9「M-Team「我的」页与筛选」）：只认平台 mteam 的只读命令，
+ * 没有位置参数，可带 -a；`true` 表示不带值的开关。
+ */
+const MTEAM_PLATFORM = 'mteam'
+const MTEAM_MODES = ['normal', 'movie', 'tvshow', 'music', 'anime', 'adult']
+const MTEAM_STATUS = ['seeding', 'leeching', 'completed', 'incomplete', 'uploaded']
+/** 分类：1–16 个逗号分隔的数字 ID */
+const MTEAM_CATEGORY = /^\d{1,6}(,\d{1,6}){0,15}$/
+const pageLimit = (v: string) => /^[1-9]\d{0,2}$/.test(v) && Number(v) <= 100
+const pageCursor = (v: string) => !v.startsWith('-')
+const MTEAM_COMMANDS: Record<string, Record<string, ((v: string) => boolean) | true>> = {
+  'seed stats': {},
+  'bonus get': {},
+  'exam get': {},
+  'item categories': {},
+  'seed list': { '--status': (v) => MTEAM_STATUS.includes(v), '--limit': pageLimit, '--cursor': pageCursor },
+  'bonus history': { '--limit': pageLimit, '--cursor': pageCursor },
+  'user collects': { '--mode': (v) => MTEAM_MODES.includes(v), '--limit': pageLimit, '--cursor': pageCursor },
+}
+/** M-Team 浏览筛选（`item search` / `feed list`）的取值规则；别的平台带了由 CLI 报 USAGE */
+const MTEAM_FILTER_VALUES: Record<string, (v: string) => boolean> = {
+  '--mode': (v) => MTEAM_MODES.includes(v),
+  '--category': (v) => MTEAM_CATEGORY.test(v),
+}
+
+/** mteam 的「我的」页命令：-a 之后只有白名单里的选项 */
+function validateMteam(resource: string | undefined, action: string | undefined, rest: string[]): string[] {
+  const spec = MTEAM_COMMANDS[`${resource} ${action}`]!
+  const options: string[] = []
+  if (rest[0] === '-a') {
+    const acc = rest[1]
+    if (!acc || !ACCOUNT.test(acc) || acc === 'guest') throw new Error('账号名不合法')
+    options.push('-a', acc)
+    rest = rest.slice(2)
+  }
+  const seen = new Set<string>()
+  for (let i = 0; i < rest.length; i++) {
+    const opt = rest[i]!
+    const rule = Object.hasOwn(spec, opt) ? spec[opt] : undefined
+    if (!rule || seen.has(opt)) throw new Error(`不允许的选项：${opt}`)
+    seen.add(opt)
+    if (rule === true) {
+      options.push(opt)
+      continue
+    }
+    const val = rest[++i]
+    if (val === undefined || !rule(val)) throw new Error(`选项取值不合法：${opt}`)
+    options.push(opt, val)
+  }
+  return [MTEAM_PLATFORM, resource!, action!, ...options]
+}
+
 export function validateArgv(argv: unknown): string[] {
   if (!Array.isArray(argv) || !argv.every((a) => typeof a === 'string' && SAFE_VALUE.test(a))) {
     throw new Error('argv 必须是非空字符串数组')
@@ -134,6 +188,7 @@ export function validateArgv(argv: unknown): string[] {
   const [platform, resource, action, ...rest] = args
   if (!PLATFORM.test(platform)) throw new Error('未知平台')
   if (platform === RAIL_PLATFORM) return validateRail(resource, action, rest)
+  if (platform === MTEAM_PLATFORM && Object.hasOwn(MTEAM_COMMANDS, `${resource} ${action}`)) return validateMteam(resource, action, rest)
   const cmd = `${resource} ${action}`
   const allowed = READ_COMMANDS[cmd]
   if (!allowed) throw new Error(`WebUI 暂不开放命令：${resource} ${action}`)
@@ -182,7 +237,7 @@ export function validateArgv(argv: unknown): string[] {
       continue
     }
     const val = rest[i + 1]
-    const rule = Object.hasOwn(rules, opt) ? rules[opt] : undefined
+    const rule = (Object.hasOwn(rules, opt) ? rules[opt] : undefined) ?? MTEAM_FILTER_VALUES[opt]
     if ((!allowed.includes(opt) && !rule) || val === undefined || val.startsWith('-')) {
       throw new Error(`不允许的选项：${opt}`)
     }

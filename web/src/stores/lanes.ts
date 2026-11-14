@@ -24,6 +24,8 @@ export interface Lane {
   keyword: string
   /** 猫眼演出的城市（空串为默认城市）；别的平台恒为空串 */
   city: string
+  /** M-Team 的筛选（别的平台为 null） */
+  mt: { mode: string; category: string; free: boolean } | null
   items: Item[]
   cursor: string | null
   hasMore: boolean
@@ -48,6 +50,7 @@ export function newLane(platform: string): Lane {
     time: 'all',
     keyword: '',
     city: '',
+    mt: null,
     items: [],
     cursor: null,
     hasMore: false,

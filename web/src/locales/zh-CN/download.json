@@ -84,5 +84,43 @@
     "comments": "评论 {n}/{limit}",
     "commentsAll": "评论 {n}",
     "truncated": "（遇到风控，已停止）"
+  },
+  "qbit": {
+    "title": "推送到 qBittorrent",
+    "desc": "下载后添加到运行 catbus 那台电脑上的 qBittorrent",
+    "torrent": "种子文件",
+    "torrentDesc": ".torrent，交给浏览器保存",
+    "torrentOptional": "只推送时可以不勾",
+    "category": "分类",
+    "categoryInvalid": "分类不能含 \\ / : * ? \" < > | 和控制字符，最长 64 个字符",
+    "savepath": "保存目录",
+    "savepathPlaceholder": "用 qBittorrent 的默认目录",
+    "savepathInvalid": "要写绝对路径（/ 开头或盘符开头），不能含 ..",
+    "paused": "添加后暂停",
+    "where": "推送由运行 catbus 的电脑完成",
+    "go": {
+      "both": "下载并推送",
+      "bothCount": "下载并推送 {n} 条",
+      "push": "推送",
+      "pushCount": "推送 {n} 条"
+    },
+    "retry": "重试推送",
+    "got": {
+      "torrent": "种子 ✓",
+      "added": "已推送",
+      "exists": "已在任务列表",
+      "failed": "推送失败（种子已保存）",
+      "reason": "：{reason}"
+    },
+    "batch": {
+      "added": "已推送 {n} 条",
+      "exists": "{n} 条已在任务列表"
+    },
+    "toast": {
+      "added": "已推送 {n} 个到 qBittorrent",
+      "exists": "{added} 个已推送，{exists} 个已在 qBittorrent 的任务列表里",
+      "failed": "{n} 个推送失败，种子文件已保存"
+    },
+    "metaDesc": "标题、简介、体积、做种数"
   }
 }

@@ -131,7 +131,9 @@ async function download() {
   if (!c || !it || dl.value === 'busy') return
   dl.value = 'busy'
   try {
-    await downloads.start(c.platform, c.account, [it], commentsSupported(c.platform))
+    // 种子：item get 的 text 是整段简介，中文名取列表里那一条的 text
+    const target = it.kind === 'torrent' ? { ...it, text: c.item.text ?? it.text } : it
+    await downloads.start(c.platform, c.account, [target], commentsSupported(c.platform))
     dl.value = 'done'
     clearTimeout(dlTimer)
     dlTimer = window.setTimeout(() => (dl.value = 'idle'), 2400)

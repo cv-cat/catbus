@@ -10,6 +10,7 @@ const t = useToastStore()
     <Transition name="toast">
       <div v-if="t.show" :key="t.key" class="toast" role="status" aria-live="polite">
         <Check :size="15" />{{ t.text }}
+        <button v-if="t.action" type="button" class="act" @click="t.act()">{{ t.action.label }}</button>
       </div>
     </Transition>
   </Teleport>
@@ -35,6 +36,28 @@ const t = useToastStore()
   font-size: 13px;
   pointer-events: none;
 }
+.toast:has(.act) {
+  pointer-events: auto;
+  padding-right: 6px;
+}
+.act {
+  flex: none;
+  margin-left: 6px;
+  min-height: 28px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 999px;
+  background: var(--red);
+  color: #fff;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.act:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
 .toast svg {
   flex: none;
   color: var(--online);
@@ -50,6 +73,9 @@ const t = useToastStore()
     font-size: 14px;
     line-height: 1.4;
     text-align: left;
+  }
+  .act {
+    min-height: var(--tap);
   }
 }
 .toast-enter-active,

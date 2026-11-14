@@ -63,6 +63,13 @@
       "title": "Reduce motion",
       "desc": "With “Always”, animations are kept to a minimum regardless of system settings.",
       "always": "Always"
+    },
+    "mteam": {
+      "section": "M-Team",
+      "adult": {
+        "title": "Show the adult section",
+        "desc": "Adds an Adult section to browse filters and bookmarks"
+      }
     }
   },
   "experimental": {

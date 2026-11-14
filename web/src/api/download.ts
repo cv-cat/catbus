@@ -3,7 +3,7 @@ import type { CatbusError, Item } from './types'
 import { BridgeError } from './client'
 import { t } from '@/i18n'
 import type { CommentLimit, ExportFormat, ReplyLimit } from '@/stores/settings'
-import { demoExport, demoText } from './mock'
+import { demoExport, demoText, mockQbit } from './mock'
 
 // 与 server/download.ts 的结构一致
 export type ItemStatus = 'queued' | 'running' | 'done' | 'failed'
@@ -26,7 +26,33 @@ export interface DownloadItem {
   data?: string | null
   /** 这一条取到了什么（下载完成后才有） */
   got?: ItemGot | null
+  /** 推送到 qBittorrent 的结果（M-Team）；没推送时没有 */
+  qbit?: ItemQbit | null
 }
+
+/** 一条的推送结果：added 已推送、exists 已在任务列表、failed 推送失败（种子文件已保存） */
+export interface ItemQbit {
+  status: 'added' | 'exists' | 'failed'
+  category: string | null
+  savepath: string | null
+  paused: boolean
+  /** 推送失败时 catbus 的错误码（NETWORK / ERROR / UPSTREAM） */
+  code?: string | null
+  http_status?: number | null
+}
+
+/** `item download --qbit` 的选项（AGENTS.md 4.7 mteam、7.9「推送到 qBittorrent」） */
+export interface QbitOptions {
+  category: string
+  savepath: string | null
+  paused: boolean
+}
+
+/** 能推送到 qBittorrent 的平台 */
+export const QBIT_PLATFORMS: readonly string[] = ['mteam']
+
+/** 推送失败、但种子文件已保存：仍可交给浏览器 */
+export const pushFailedWithFiles = (it: DownloadItem) => it.status === 'failed' && it.qbit?.status === 'failed' && it.files.length > 0
 
 export interface ItemGot {
   media: number
@@ -45,6 +71,8 @@ export interface DownloadOptions {
   comments: 0 | CommentLimit
   replies: 0 | ReplyLimit
   format: ExportFormat
+  /** 推送到 qBittorrent（只对 mteam）；不推送时为 null 或没有 */
+  qbit?: QbitOptions | null
 }
 
 export interface Batch {
@@ -79,10 +107,27 @@ let demo: Batch[] = []
 /** 演示：重试过的不再失败，模拟「验证后重试成功」 */
 const retried = new Set<string>()
 
+/** 演示：推送到 qBittorrent 的结果（约三分之一已在任务列表、三分之一连不上，重试后成功） */
+function demoPush(b: Batch, it: DownloadItem): Partial<DownloadItem> {
+  const q = b.opts!.qbit!
+  const done = demoDone(b, it)
+  const status = mockQbit(it.id, retried.has(it.id) ? 1 : 0)
+  const qbit: ItemQbit = { status, category: q.category, savepath: q.savepath, paused: q.paused, code: null, http_status: null }
+  if (status !== 'failed') return { status: 'done', ...done, qbit }
+  return {
+    status: 'failed',
+    ...done,
+    qbit: { ...qbit, code: 'NETWORK' },
+    code: 'NETWORK',
+    error: '连不上 qBittorrent Web UI（http://127.0.0.1:25254）（演示）', // i18n-ignore 演示数据：模拟 CLI 的中文报错
+  }
+}
+
 function demoTick() {
   for (const b of [...demo].reverse()) {
     const running = b.items.find((it) => it.status === 'running')
     if (running) {
+      if (b.opts?.qbit) return void Object.assign(running, demoPush(b, running))
       const fail = !retried.has(running.id) && running.id.charCodeAt(running.id.length - 1) % 7 === 0
       Object.assign(running, fail
         ? { status: 'failed', error: '小红书要求人机验证（HTTP 461）（演示）', code: 'RISK_CONTROL', verify_url: 'https://www.xiaohongshu.com/website-login/captcha?verifyBiz=461' } // i18n-ignore 演示数据：模拟 CLI 的中文报错
@@ -142,7 +187,9 @@ const clone = (b: Batch[]) => JSON.parse(JSON.stringify(b)) as Batch[]
 
 export const downloadApi = {
   async start(platform: string, account: string | null, items: Item[], opts: DownloadOptions): Promise<Batch> {
-    const payload = items.map((it) => ({ id: it.id, url: it.url, title: it.title || it.text, cover: it.cover, kind: it.kind }))
+    // 种子的标题用中文名（`text` 的第一段），种子名是英文的发布名
+    const titleOf = (it: Item) => (it.kind === 'torrent' ? it.text?.split('|')[0]?.trim() || it.title : it.title || it.text)
+    const payload = items.map((it) => ({ id: it.id, url: it.url, title: titleOf(it), cover: it.cover, kind: it.kind }))
     if (isDemo()) {
       const batch: Batch = {
         id: `demo-${Date.now()}`,
@@ -165,7 +212,10 @@ export const downloadApi = {
       startDemoTicker()
       return batch
     }
-    return (await json<{ batch: Batch }>(await post('/api/download/start', { platform, account, items: payload, ...opts }))).batch
+    // bridge 收的是平铺的字段：qbit / qbitCategory / qbitSavepath / qbitPaused
+    const { qbit, ...rest } = opts
+    const push = qbit ? { qbit: true, qbitCategory: qbit.category, qbitSavepath: qbit.savepath || undefined, qbitPaused: qbit.paused } : {}
+    return (await json<{ batch: Batch }>(await post('/api/download/start', { platform, account, items: payload, ...rest, ...push }))).batch
   },
 
   /** 失败的、文件已过期的重新排队（不给 item 时整批都重试） */
@@ -174,7 +224,7 @@ export const downloadApi = {
       for (const it of demo.find((x) => x.id === batch)?.items ?? []) {
         if (!(it.status === 'failed' || (it.status === 'done' && it.expired)) || (item != null && it.id !== item)) continue
         retried.add(it.id)
-        Object.assign(it, { status: 'queued', files: [], error: null, code: null, verify_url: null, expired: false })
+        Object.assign(it, { status: 'queued', files: [], error: null, code: null, verify_url: null, expired: false, qbit: null })
       }
       return clone(demo)
     }
@@ -203,7 +253,7 @@ export const downloadApi = {
    */
   async deliver(b: Batch, item?: string, only?: string[]): Promise<DeliverResult> {
     if (isDemo()) {
-      const picked = b.items.filter((it) => it.status === 'done' && (item != null ? it.id === item : !only?.length || only.includes(it.id)))
+      const picked = b.items.filter((it) => (it.status === 'done' || pushFailedWithFiles(it)) && (item != null ? it.id === item : !only?.length || only.includes(it.id)))
       // 下了信息：按格式在页面里生成导出文件（xlsx 不进前端包，退化成 json）
       if (b.opts?.meta) {
         const docs = picked.map((it) => demoExport(b.platform, it, b.opts!))

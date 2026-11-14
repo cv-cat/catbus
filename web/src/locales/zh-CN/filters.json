@@ -30,5 +30,24 @@
     "month": "一月内",
     "half_year": "半年内",
     "year": "一年内"
+  },
+  "mteam": {
+    "mode": {
+      "label": "分区",
+      "normal": "综合",
+      "movie": "电影",
+      "tvshow": "剧集",
+      "music": "音乐",
+      "anime": "动漫",
+      "adult": "成人"
+    },
+    "category": {
+      "label": "分类",
+      "all": "全部分类",
+      "unavailable": "分类表取不到，暂时不能按分类筛选"
+    },
+    "free": "只看免费",
+    "adultOff": "成人分区没有打开，已切到综合",
+    "toSettings": "去设置"
   }
 }

@@ -8,6 +8,7 @@ import { gsap, prefersReducedMotion } from '@/composables/motion'
 import { commentsSupported } from '@/composables/useCommentsSupport'
 import { platformById } from '@/data/platforms'
 import { useSettingsStore } from '@/stores/settings'
+import { QBIT_PLATFORMS } from '@/api/download'
 
 /**
  * 下载按钮旁的下拉面板（AGENTS.md 7.9「批量选择与下载」）：桌面、平板上是传送到 body 的玻璃面板，
@@ -31,6 +32,9 @@ const commentsDisabled = computed(() => {
   const names = props.platforms.map((p) => platformById(p)?.name ?? p).join(t('download.panel.listSep'))
   return t('download.panel.commentsUnsupported', { platform: names })
 })
+
+/** 这次有 M-Team 的条目：面板里多一节「推送到 qBittorrent」 */
+const qbit = computed(() => props.platforms.some((p) => QBIT_PLATFORMS.includes(p)))
 
 function place() {
   const r = props.anchor?.getBoundingClientRect()
@@ -103,7 +107,7 @@ function leave(el: Element, done: () => void) {
   <BottomSheet v-if="bp.phone" :open="open" :label="t('download.panel.title')" :z="70" @close="emit('close')">
     <div class="sheet">
       <h2 class="title">{{ t('download.panel.title') }}</h2>
-      <DownloadOptions :comments-disabled="commentsDisabled" :count="count" @download="download" @settings="toSettings" />
+      <DownloadOptions :comments-disabled="commentsDisabled" :count="count" :qbit="qbit" @download="download" @settings="toSettings" />
     </div>
   </BottomSheet>
   <Teleport v-else to="body">
@@ -118,7 +122,7 @@ function leave(el: Element, done: () => void) {
         :style="{ top: `${pos.top}px`, left: `${pos.left}px`, width: `${W}px` }"
         @keydown="onKey"
       >
-        <DownloadOptions :comments-disabled="commentsDisabled" :count="count" @download="download" @settings="toSettings" />
+        <DownloadOptions :comments-disabled="commentsDisabled" :count="count" :qbit="qbit" @download="download" @settings="toSettings" />
       </div>
     </Transition>
   </Teleport>
@@ -135,6 +139,11 @@ function leave(el: Element, done: () => void) {
   backdrop-filter: blur(30px) saturate(1.6);
   box-shadow: 0 16px 40px #1b1f2e1a;
   outline: none;
+  /* 多了推送一节后可能放不下：面板内部滚动 */
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 [data-theme='dark'] .dl-menu {
   box-shadow: 0 16px 40px #0b0e1a66;

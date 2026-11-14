@@ -50,6 +50,19 @@ export interface DownloadItem {
   data?: string | null
   /** 这一条取到了什么：下载完成后从 File[] 和 ExportDoc 得出，下载记录据此显示 */
   got?: ItemGot | null
+  /** 推送到 qBittorrent 的结果（M-Team，AGENTS.md 7.9「推送到 qBittorrent」）；没推送时没有 */
+  qbit?: ItemQbit | null
+}
+
+/** 一条的推送结果：added 已推送、exists 已在任务列表、failed 推送失败（种子文件已保存） */
+export interface ItemQbit {
+  status: 'added' | 'exists' | 'failed'
+  category: string | null
+  savepath: string | null
+  paused: boolean
+  /** 推送失败时 catbus 的错误码（NETWORK / ERROR / UPSTREAM） */
+  code?: string | null
+  http_status?: number | null
 }
 
 /** 一条下载的结果：媒体文件数、是否写了信息、评论条数（含楼中楼）、是否遇到风控提前停止 */
@@ -70,6 +83,50 @@ export interface DownloadOptions {
   comments: number | 'all'
   replies: number | 'all'
   format: ExportFormat
+  /** 推送到 qBittorrent（只对 mteam）；不推送时为 null 或没有 */
+  qbit?: QbitOptions | null
+}
+
+/** `item download --qbit` 的选项（AGENTS.md 4.7 mteam、7.9「推送到 qBittorrent」） */
+export interface QbitOptions {
+  category: string
+  savepath: string | null
+  paused: boolean
+}
+
+/** 能推送到 qBittorrent 的平台 */
+export const QBIT_PLATFORMS: readonly string[] = ['mteam']
+export const QBIT_DEFAULT_CATEGORY = 'mteam'
+// 控制字符（含换行）一律拒绝；分类另外拒绝路径和通配符字符
+const QBIT_CATEGORY = /^[^\p{Cc}\\/:*?"<>|]{1,64}$/u
+const QBIT_SAVEPATH_MAX = 512
+
+/** 保存目录：绝对路径（`/` 开头，或 Windows 的 `X:\` / `X:/`），不含控制字符和 `..` 段 */
+export function validSavepath(v: string): boolean {
+  if (!v || v.length > QBIT_SAVEPATH_MAX || /\p{Cc}/u.test(v)) return false
+  if (!/^(\/|[A-Za-z]:[\\/])/.test(v)) return false
+  return !v.split(/[\\/]/).includes('..')
+}
+
+/** 下载请求里的 qbit / qbitCategory / qbitSavepath / qbitPaused；不推送时返回 null */
+export function parseQbit(b: Record<string, unknown>, platform: string): QbitOptions | null {
+  const on = b.qbit
+  if (on === undefined || on === null || on === false) return null
+  if (on !== true) throw new DownloadError('下载选项 qbit 不合法')
+  if (!QBIT_PLATFORMS.includes(platform)) throw new DownloadError('只有 M-Team 的条目可以推送到 qBittorrent')
+  let category = QBIT_DEFAULT_CATEGORY
+  if (b.qbitCategory != null && b.qbitCategory !== '') {
+    if (typeof b.qbitCategory !== 'string' || !QBIT_CATEGORY.test(b.qbitCategory) || b.qbitCategory.trim() !== b.qbitCategory) throw new DownloadError('qBittorrent 分类不合法')
+    category = b.qbitCategory
+  }
+  let savepath: string | null = null
+  if (b.qbitSavepath != null && b.qbitSavepath !== '') {
+    if (typeof b.qbitSavepath !== 'string' || !validSavepath(b.qbitSavepath)) throw new DownloadError('保存目录必须是绝对路径，且不能含控制字符或 ..')
+    savepath = b.qbitSavepath
+  }
+  const paused = b.qbitPaused == null ? false : b.qbitPaused
+  if (typeof paused !== 'boolean') throw new DownloadError('下载选项 qbitPaused 不合法')
+  return { category, savepath, paused }
 }
 
 export const DEFAULT_OPTIONS: Readonly<DownloadOptions> = Object.freeze({ media: true, meta: false, comments: 0, replies: 0, format: 'json' })
@@ -78,7 +135,7 @@ const REPLY_LIMITS: readonly (number | 'all')[] = [0, 3, 10, 20, 50, 100, 'all']
 const FORMATS: readonly ExportFormat[] = ['json', 'txt', 'xlsx']
 
 /** 逐个校验下载选项（白名单），缺省取默认值；什么都不下载时报错 */
-export function parseOptions(b: Record<string, unknown>): DownloadOptions {
+export function parseOptions(b: Record<string, unknown>, platform?: string): DownloadOptions {
   const pick = <T>(key: string, list: readonly T[], fallback: T): T => {
     const v = b[key]
     if (v === undefined || v === null) return fallback
@@ -93,13 +150,24 @@ export function parseOptions(b: Record<string, unknown>): DownloadOptions {
     format: pick('format', FORMATS, DEFAULT_OPTIONS.format),
   }
   if (!opts.media && !opts.meta && opts.comments === 0) throw new DownloadError('没有要下载的内容：媒体、信息、评论至少选一项')
+  // 推送要先有种子文件：CLI 的 --qbit 不能和 --no-media 一起用
+  const qbit = platform == null ? null : parseQbit(b, platform)
+  if (qbit) {
+    if (!opts.media) throw new DownloadError('推送到 qBittorrent 要下载种子文件')
+    opts.qbit = qbit
+  }
   return opts
 }
 
 /** 旧记录没有 opts，或记录文件被改过：不合法时按默认值 */
 function optionsOf(batch: Batch): DownloadOptions {
   try {
-    return batch.opts ? parseOptions(batch.opts as unknown as Record<string, unknown>) : { ...DEFAULT_OPTIONS }
+    if (!batch.opts) return { ...DEFAULT_OPTIONS }
+    const raw = batch.opts as unknown as Record<string, unknown>
+    const q = (raw.qbit ?? null) as Record<string, unknown> | null
+    // 记录里的 qbit 是解析后的形状，换回请求的形状再按同一套规则校验
+    const flat = q ? { ...raw, qbit: true, qbitCategory: q.category, qbitSavepath: q.savepath, qbitPaused: q.paused } : { ...raw, qbit: null }
+    return parseOptions(flat, batch.platform)
   } catch {
     return { ...DEFAULT_OPTIONS }
   }
@@ -112,13 +180,55 @@ export function optionArgs(o: DownloadOptions): string[] {
   if (o.comments !== 0) out.push('--comments', String(o.comments))
   if (o.comments !== 0 && o.replies !== 0) out.push('--replies', String(o.replies))
   if (!o.media) out.push('--no-media')
+  if (o.qbit) {
+    out.push('--qbit', '--qbit-category', o.qbit.category)
+    if (o.qbit.savepath) out.push('--qbit-savepath', o.qbit.savepath)
+    if (o.qbit.paused) out.push('--qbit-paused')
+  }
   return out
 }
 
 class CliError extends Error {
-  constructor(message: string, readonly code: string | null, readonly verifyUrl: string | null) {
+  constructor(
+    message: string,
+    readonly code: string | null,
+    readonly verifyUrl: string | null,
+    /** 推送到 qBittorrent 失败（`detail.qbit === 'failed'`）：已保存的文件和 Web UI 的 HTTP 状态 */
+    readonly qbitFailed: { files: CliFile[]; http_status: number | null } | null = null,
+  ) {
     super(message)
   }
+}
+
+type CliFile = { path: string; type: string | null }
+/** 下载一条的结果：文件，以及带 --qbit 时的推送结果 */
+type CliResult = { files: CliFile[]; qbit: { status: 'added' | 'exists' } | null }
+
+const toFiles = (v: unknown): CliFile[] =>
+  (Array.isArray(v) ? v : [])
+    .filter((f): f is { path: string; type?: unknown } => typeof f?.path === 'string')
+    .map((f) => ({ path: f.path, type: typeof f.type === 'string' ? f.type : null }))
+
+/**
+ * 解析 `item download` 的信封（AGENTS.md 4.7 mteam、7.9「推送到 qBittorrent」）：
+ * 不带 --qbit 时 data 是 File[]；带 --qbit 时是 `{id files qbit}`；推送失败是错误信封，`detail.qbit` 为 `failed`、`detail.files` 是已保存的文件。
+ */
+export function parseDownloadEnvelope(env: unknown): CliResult {
+  const e = (env ?? {}) as {
+    ok?: boolean
+    data?: unknown
+    error?: { code?: string; message?: string; detail?: { verify_url?: unknown; qbit?: unknown; files?: unknown; http_status?: unknown } | null }
+  }
+  if (!e.ok) {
+    const err = e.error
+    const d = err?.detail
+    const qbitFailed = d?.qbit === 'failed' ? { files: toFiles(d.files), http_status: typeof d.http_status === 'number' ? d.http_status : null } : null
+    throw new CliError(err?.message ?? '下载失败', err?.code ?? null, httpsUrl(d?.verify_url), qbitFailed)
+  }
+  if (Array.isArray(e.data)) return { files: toFiles(e.data), qbit: null }
+  const data = (e.data ?? {}) as { files?: unknown; qbit?: { status?: unknown } | null }
+  const status = data.qbit?.status
+  return { files: toFiles(data.files), qbit: status === 'added' || status === 'exists' ? { status } : null }
 }
 
 const httpsUrl = (v: unknown): string | null => (typeof v === 'string' && /^https:\/\/[^\s]+$/.test(v) && v.length <= 4096 ? v : null)
@@ -276,6 +386,10 @@ export function itemRef(v: unknown): string {
   return v
 }
 
+/** 能交给浏览器的条目：已完成的，以及推送 qBittorrent 失败、但种子文件已经保存的 */
+export const deliverable = (it: DownloadItem) =>
+  it.status === 'done' || (it.status === 'failed' && it.qbit?.status === 'failed' && it.files.length > 0)
+
 const busy = (b: Batch) => b.items.some((it) => it.status === 'queued' || it.status === 'running')
 
 /** 路径（按字面）是否在目录里面 */
@@ -312,7 +426,7 @@ export function startBatch(body: unknown): Batch {
   }
   if (!Array.isArray(b.items) || !b.items.length) throw new DownloadError('没有要下载的条目')
   if (b.items.length > MAX_ITEMS) throw new DownloadError(`一次最多下载 ${MAX_ITEMS} 条`)
-  const opts = parseOptions(b)
+  const opts = parseOptions(b, b.platform)
   const id = randomUUID()
   const dir = batchDir(id)
   const base = join(dir, b.platform)
@@ -379,7 +493,7 @@ export function retryFailed(body: unknown): Batch[] {
   if (!batch) throw new DownloadError('下载记录不存在')
   const targets = batch.items.filter((it) => (it.status === 'failed' || (it.status === 'done' && it.expired)) && (b.item == null || it.id === b.item))
   if (!targets.length) throw new DownloadError('没有可以重试的条目')
-  for (const it of targets) Object.assign(it, { status: 'queued', files: it.status === 'done' ? [] : it.files, data: null, got: null, error: null, code: null, verify_url: null, expired: false })
+  for (const it of targets) Object.assign(it, { status: 'queued', files: it.status === 'done' ? [] : it.files, data: null, got: null, qbit: null, error: null, code: null, verify_url: null, expired: false })
   save()
   void pump()
   return batches
@@ -481,7 +595,7 @@ export async function prepareDelivery(batchId: string, item: string | null, only
     picked = only.map((id) => batch.items.find((x) => x.id === id)).filter((x): x is DownloadItem => !!x)
     if (picked.length !== new Set(only).size) throw new DeliveryError(404, '下载记录里没有这一条')
   } else picked = batch.items
-  const done = picked.filter((it) => it.status === 'done')
+  const done = picked.filter(deliverable)
   if (done.some((it) => it.expired)) throw new DeliveryError(410, '文件已过期，请重新下载')
   if (!done.length || !done.some((it) => it.files.length)) throw new DeliveryError(404, '没有可以交给浏览器的文件')
 
@@ -580,10 +694,10 @@ async function pump() {
       try {
         mkdirSync(batch.dir, { recursive: true, mode: 0o700 })
         mkdirSync(dir, { recursive: true, mode: 0o700 })
-        const out = await download(batch, item, dir)
-        item.files = out.map((f) => f.path)
-        item.data = out.find((f) => f.type === 'data')?.path ?? null
-        item.got = summarize(out, item.data)
+        const { files: out, qbit } = await download(batch, item, dir)
+        keepFiles(item, out)
+        const q = optionsOf(batch).qbit
+        item.qbit = q ? { ...q, status: qbit?.status ?? 'added', code: null, http_status: null } : null
         tighten(batch.dir)
         item.status = 'done'
         item.expired = false
@@ -591,6 +705,13 @@ async function pump() {
         item.status = 'failed'
         item.error = (e as Error).message
         if (e instanceof CliError) Object.assign(item, { code: e.code, verify_url: e.verifyUrl })
+        // 推送失败：种子文件已经保存，记下来（仍可交给浏览器），推送结果记为失败
+        const q = optionsOf(batch).qbit
+        if (e instanceof CliError && e.qbitFailed && q) {
+          keepFiles(item, e.qbitFailed.files)
+          tighten(batch.dir)
+          item.qbit = { ...q, status: 'failed', code: e.code, http_status: e.qbitFailed.http_status }
+        }
       }
       batch.finished_at = new Date().toISOString()
       save()
@@ -598,6 +719,12 @@ async function pump() {
   } finally {
     running = false
   }
+}
+
+function keepFiles(item: DownloadItem, out: CliFile[]) {
+  item.files = out.map((f) => f.path)
+  item.data = out.find((f) => f.type === 'data')?.path ?? null
+  item.got = summarize(out, item.data)
 }
 
 /** 下载结果里取到了什么：帖子信息文件读出评论条数和是否被风控截断 */
@@ -617,7 +744,7 @@ function summarize(out: { path: string; type: string | null }[], data: string | 
   return got
 }
 
-function download(batch: Batch, item: DownloadItem, dir: string): Promise<{ path: string; type: string | null }[]> {
+function download(batch: Batch, item: DownloadItem, dir: string): Promise<CliResult> {
   const { file, prefix } = resolveCli()
   const opts = optionsOf(batch)
   const argv = [...prefix, '-o', 'json', '-q', batch.platform, 'item', 'download']
@@ -625,25 +752,17 @@ function download(batch: Batch, item: DownloadItem, dir: string): Promise<{ path
   argv.push('--dir', dir, ...optionArgs(opts), '--', item.url)
   return new Promise((resolve, reject) => {
     execFile(file, argv, { timeout: 10 * 60_000, maxBuffer: 8 * 1024 * 1024 }, (err, stdout) => {
-      let env: {
-        ok?: boolean
-        data?: { path?: string; type?: string }[]
-        error?: { code?: string; message?: string; hint?: string | null; detail?: { verify_url?: unknown } | null }
-      } | null = null
+      let env: unknown
       try {
         env = JSON.parse(stdout)
       } catch {
         return reject(err ?? new Error('catbus 没有输出'))
       }
-      if (!env?.ok) {
-        const e = env?.error
-        return reject(new CliError(e?.message ?? '下载失败', e?.code ?? null, httpsUrl(e?.detail?.verify_url)))
+      try {
+        resolve(parseDownloadEnvelope(env))
+      } catch (e) {
+        reject(e)
       }
-      resolve(
-        (env.data ?? [])
-          .filter((f): f is { path: string; type?: string } => typeof f?.path === 'string')
-          .map((f) => ({ path: f.path, type: typeof f.type === 'string' ? f.type : null })),
-      )
     })
   })
 }
