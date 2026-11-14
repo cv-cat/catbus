@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { AlertCircle, ChevronDown, CircleCheck, Clock, Download, FolderDown, ImageOff, RotateCw, ShieldCheck, TimerOff, Trash2, X } from 'lucide-vue-next'
 import CatbusLoader from '@/components/CatbusLoader.vue'
-import type { Batch, DownloadItem } from '@/api/download'
+import { pushFailedWithFiles, type Batch, type DownloadItem } from '@/api/download'
 import { useDownloadsStore } from '@/stores/downloads'
 import { platformById } from '@/data/platforms'
 import { since } from '@/composables/format'
@@ -38,10 +38,10 @@ const counts = (b: Batch) => ({
   expired: b.items.filter((it) => it.status === 'done' && it.expired).length,
   busy: b.items.some((it) => it.status === 'queued' || it.status === 'running'),
 })
-/** 可以重新保存：结束了、有没过期的已完成条目 */
+/** 可以重新保存：结束了、有没过期的已完成条目（推送失败但种子已保存的也算） */
 const savable = (b: Batch) => {
   const c = counts(b)
-  return !c.busy && c.done > c.expired
+  return !c.busy && (c.done > c.expired || b.items.some(pushFailedWithFiles))
 }
 /** 可以重试：失败的、文件已过期的 */
 const retryCount = (b: Batch) => counts(b).failed + counts(b).expired
@@ -50,6 +50,15 @@ function batchStatus(b: Batch): string {
   const c = counts(b)
   if (c.busy) return t('download.batch.progress', { done: c.done + c.failed, total: b.items.length })
   const parts: string[] = []
+  if (b.opts?.qbit) {
+    // 推送的一批：按推送结果汇总（只推送时页面没交给浏览器，不写「已交给浏览器」）
+    const q = (s: string) => b.items.filter((it) => it.qbit?.status === s).length
+    if (q('added')) parts.push(t('download.qbit.batch.added', { n: q('added') }, q('added')))
+    if (q('exists')) parts.push(t('download.qbit.batch.exists', { n: q('exists') }, q('exists')))
+    if (c.failed) parts.push(t('download.batch.failed', { n: c.failed }, c.failed))
+    if (c.expired) parts.push(t('download.batch.expired', { n: c.expired }, c.expired))
+    return parts.join(' · ') || t('download.batch.finished')
+  }
   if (c.done > c.expired) parts.push(t('download.batch.delivered'))
   if (c.failed) parts.push(t('download.batch.failed', { n: c.failed }, c.failed))
   if (c.expired) parts.push(t('download.batch.expired', { n: c.expired }, c.expired))
@@ -58,6 +67,7 @@ function batchStatus(b: Batch): string {
 function itemStatus(it: DownloadItem, b: Batch): string {
   if (it.status === 'queued') return t('download.status.queued')
   if (it.status === 'running') return t('download.status.running')
+  if (it.qbit && !it.expired) return qbitText(it)
   // 失败原因是 CLI 的中文报错：按 code 取译文
   if (it.status === 'failed') return it.error ? errorTitle({ code: it.code ?? 'ERROR', message: it.error }) : t('download.status.failed')
   if (it.expired) return t('download.status.expired')
@@ -83,6 +93,18 @@ function gotText(it: DownloadItem, b: Batch): string | null {
   }
   return parts.join(' · ')
 }
+/** 推送到 qBittorrent 的结果：「种子 ✓ · 已推送」「种子 ✓ · 已在任务列表」「种子 ✓ · 推送失败（种子已保存）：原因」 */
+function qbitText(it: DownloadItem): string {
+  const q = it.qbit!
+  const head = t('download.qbit.got.torrent')
+  if (q.status === 'added') return `${head} · ${t('download.qbit.got.added')}`
+  if (q.status === 'exists') return `${head} · ${t('download.qbit.got.exists')}`
+  const reason = it.error ? errorTitle({ code: q.code ?? it.code ?? 'ERROR', message: it.error }) : null
+  return `${head} · ${t('download.qbit.got.failed')}${reason ? t('download.qbit.got.reason', { reason }) : ''}`
+}
+const pushFailed = (it: DownloadItem) => it.qbit?.status === 'failed'
+const retryLabel = (it: DownloadItem) =>
+  it.expired ? t('download.action.redownload') : pushFailed(it) ? t('download.qbit.retry') : t('common.action.retry')
 const partial = (it: DownloadItem) => it.status === 'done' && !it.expired && !!it.got?.truncated
 const name = (p: string) => platformById(p)?.name ?? p
 const logo = (p: string) => platformById(p)?.logo ?? ''
@@ -247,7 +269,7 @@ onBeforeUnmount(() => (dl.open = false))
   <button v-if="b.items[0]!.verify_url" type="button" class="open warn" v-tip="t('download.action.verify')" :aria-label="t('download.action.verify')" @click="verifyThen(b, b.items[0]!)">
     <ShieldCheck :size="15" />
   </button>
-  <button type="button" class="open" :class="{ hot: b.items[0]!.expired }" v-tip="b.items[0]!.expired ? t('download.action.redownload') : t('common.action.retry')" :aria-label="b.items[0]!.expired ? t('download.action.redownload') : t('common.action.retry')" @click="retry(b.id)">
+  <button type="button" class="open" :class="{ hot: b.items[0]!.expired || pushFailed(b.items[0]!) }" v-tip="retryLabel(b.items[0]!)" :aria-label="retryLabel(b.items[0]!)" @click="retry(b.id)">
     <RotateCw :size="14" />
   </button>
        </template>
@@ -334,11 +356,11 @@ onBeforeUnmount(() => (dl.open = false))
  <button v-if="it.verify_url" type="button" class="open warn" v-tip="t('download.action.verify')" :aria-label="t('download.action.verify')" @click="verifyThen(b, it)">
    <ShieldCheck :size="14" />
         </button>
- <button type="button" class="open" :class="{ hot: it.expired }" v-tip="it.expired ? t('download.action.redownload') : t('common.action.retry')" :aria-label="it.expired ? t('download.action.redownload') : t('common.action.retry')" @click="retry(b.id, it.id)">
+ <button type="button" class="open" :class="{ hot: it.expired || pushFailed(it) }" v-tip="retryLabel(it)" :aria-label="retryLabel(it)" @click="retry(b.id, it.id)">
    <RotateCw :size="13" />
         </button>
       </template>
-      <button v-if="it.status === 'done' && !it.expired && !counts(b).busy" type="button" class="open" v-tip="t('download.action.resave')" :aria-label="t('download.action.resave')" @click="dl.resave(b.id, it.id)">
+      <button v-if="((it.status === 'done' && !it.expired) || pushFailedWithFiles(it)) && !counts(b).busy" type="button" class="open" v-tip="t('download.action.resave')" :aria-label="t('download.action.resave')" @click="dl.resave(b.id, it.id)">
  <Download :size="14" />
       </button>
       <button v-if="it.status !== 'running'" type="button" class="open del" v-tip="removeLabel(it.status)" :aria-label="removeLabel(it.status)" @click="remove(b.id, it.id)">

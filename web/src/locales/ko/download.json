@@ -84,5 +84,43 @@
     "comments": "댓글 {n}/{limit}",
     "commentsAll": "댓글 {n}",
     "truncated": " (제한에 걸려 중단됨)"
+  },
+  "qbit": {
+    "title": "qBittorrent로 보내기",
+    "desc": "다운로드 후 catbus를 실행하는 컴퓨터의 qBittorrent에 추가합니다",
+    "torrent": "토렌트 파일",
+    "torrentDesc": ".torrent, 브라우저로 저장",
+    "torrentOptional": "보내기만 할 때는 선택하지 않아도 됩니다",
+    "category": "분류",
+    "categoryInvalid": "\\ / : * ? \" < > | 와 제어 문자는 쓸 수 없고 64자까지입니다",
+    "savepath": "저장 경로",
+    "savepathPlaceholder": "qBittorrent 기본 폴더",
+    "savepathInvalid": "절대 경로(/ 또는 드라이브 문자로 시작)를 쓰고 ..는 넣을 수 없습니다",
+    "paused": "추가 후 일시 정지",
+    "where": "보내기는 catbus를 실행하는 컴퓨터에서 합니다",
+    "go": {
+      "both": "다운로드하고 보내기",
+      "bothCount": "{n}개 다운로드하고 보내기",
+      "push": "보내기",
+      "pushCount": "{n}개 보내기"
+    },
+    "retry": "다시 보내기",
+    "got": {
+      "torrent": "토렌트 ✓",
+      "added": "보냄",
+      "exists": "이미 목록에 있음",
+      "failed": "보내기 실패(토렌트는 저장됨)",
+      "reason": ": {reason}"
+    },
+    "batch": {
+      "added": "{n}개 보냄",
+      "exists": "{n}개 이미 목록에 있음"
+    },
+    "toast": {
+      "added": "qBittorrent로 {n}개를 보냈습니다",
+      "exists": "{added}개 보냄, {exists}개는 이미 qBittorrent 목록에 있습니다",
+      "failed": "{n}개 보내기 실패, 토렌트 파일은 저장됨"
+    },
+    "metaDesc": "제목, 소개, 크기, 시더 수"
   }
 }

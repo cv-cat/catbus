@@ -84,5 +84,43 @@
     "comments": "コメント {n}/{limit}",
     "commentsAll": "コメント {n}",
     "truncated": "（制限にかかったため停止）"
+  },
+  "qbit": {
+    "title": "qBittorrent に送る",
+    "desc": "ダウンロード後、catbus を実行しているパソコンの qBittorrent に追加します",
+    "torrent": "トレントファイル",
+    "torrentDesc": ".torrent、ブラウザで保存",
+    "torrentOptional": "送るだけなら不要",
+    "category": "カテゴリ",
+    "categoryInvalid": "\\ / : * ? \" < > | と制御文字は使えません。64 文字まで",
+    "savepath": "保存先",
+    "savepathPlaceholder": "qBittorrent の既定のフォルダ",
+    "savepathInvalid": "絶対パス（/ またはドライブ文字で始まる）で、.. を含めないでください",
+    "paused": "追加後に一時停止",
+    "where": "送信は catbus を実行しているパソコンが行います",
+    "go": {
+      "both": "ダウンロードして送る",
+      "bothCount": "{n} 件をダウンロードして送る",
+      "push": "送る",
+      "pushCount": "{n} 件を送る"
+    },
+    "retry": "送信を再試行",
+    "got": {
+      "torrent": "トレント ✓",
+      "added": "送信済み",
+      "exists": "すでにリストにあります",
+      "failed": "送信失敗（トレントは保存済み）",
+      "reason": "：{reason}"
+    },
+    "batch": {
+      "added": "{n} 件送信済み",
+      "exists": "{n} 件はすでにリストにあります"
+    },
+    "toast": {
+      "added": "{n} 件を qBittorrent に送りました",
+      "exists": "{added} 件を送信、{exists} 件はすでに qBittorrent のリストにあります",
+      "failed": "{n} 件の送信に失敗しました。トレントファイルは保存済みです"
+    },
+    "metaDesc": "タイトル、紹介、サイズ、シード数"
   }
 }
