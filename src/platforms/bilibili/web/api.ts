@@ -617,6 +617,9 @@ export interface ArchiveInput {
   private?: boolean
   /** 0 公开、1 仅自己可见；编辑时用原稿的值，避免把私密稿改公开。 */
   onlySelf?: number
+  /** 正式话题 ID 与名称（须同时指定）。 */
+  topicId?: number
+  topicName?: string
   /** 同步到动态的文案。 */
   dynamic?: string
   /** 定时发布的时间戳（unix 秒）；B 站要求 2 小时后、15 天内。 */
@@ -690,9 +693,9 @@ export function submitArchive(b: Bili, a: ArchiveInput) {
     ...(a.dtime !== undefined ? { dtime: a.dtime } : {}),
     videos: a.videos.map((v) => ({ filename: v.filename, title: v.title || a.title, desc: v.desc ?? '', cid: v.biz_id ?? null })),
     human_type2: 0,
-    topic_id: 0,
+    topic_id: a.topicId ?? 0,
     mission_id: 0,
-    topic_name: '',
+    topic_name: a.topicName ?? '',
     topic_from: '',
     act_reserve_create: 0,
     is_only_self: a.private === false ? 0 : 1,

@@ -368,6 +368,14 @@ export async function itemPublish(ctx: Ctx) {
   if (!o.title) throw new CatbusError('USAGE', 'B 站投稿需要 --title')
   if (!o.tag?.length) throw new CatbusError('USAGE', 'B 站投稿至少需要一个 --tag')
   if (!o.category) throw new CatbusError('USAGE', 'B 站投稿需要 --category（分区 id）', { hint: 'catbus bilibili item categories' })
+  const topics = o.topic as string[] | undefined
+  const topicName = typeof o.topicName === 'string' ? o.topicName.trim() : ''
+  const rawTopic = topics?.[0]
+  const topicId = rawTopic === undefined ? undefined : Number(rawTopic)
+  if ((topics !== undefined || o.topicName !== undefined) &&
+      (topics?.length !== 1 || !rawTopic || !/^[1-9]\d*$/.test(rawTopic) || !Number.isSafeInteger(topicId) || !topicName)) {
+    throw new CatbusError('USAGE', 'B 站投稿话题须同时提供一个正整数 --topic ID 和非空 --topic-name')
+  }
   const dtime = o.schedule ? scheduleSeconds(o.schedule) : undefined
   const video = await uploadVideo(b, await readMedia(b.http, o.video))
   const cover = o.cover ? await uploadCover(b, o.cover, '16:9') : ''
@@ -386,6 +394,8 @@ export async function itemPublish(ctx: Ctx) {
     dynamic: o.dynamic ?? '',
     dtime,
     noReprint: o.allowReprint ? 0 : 1,
+    topicId,
+    topicName: topicId === undefined ? undefined : topicName,
   })
   if (o.series) await joinSeason(b, String(o.series), { aid: Number(d.aid) || Number(bv2av(d.bvid)), cid: Number(video.biz_id), title: String(o.title), bvid: d.bvid })
   return n.item({ id: d.bvid, kind: 'video', url: norm.videoUrl(d.bvid), title: o.title, text: o.text ?? null, cover: cover || null, status: 'reviewing' }, d)

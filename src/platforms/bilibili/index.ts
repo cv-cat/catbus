@@ -82,8 +82,9 @@ export default definePlatform({
         'item collect': impl('full', 'itemCollect', { options: { folder: FOLDER } }),
         'item uncollect': impl('full', 'itemUncollect', { options: { folder: FOLDER } }),
         'item publish': impl('full', 'itemPublish', {
-          supports: ['title', 'text', 'video', 'cover', 'tag', 'category', 'visibility', 'schedule'],
+          supports: ['title', 'text', 'video', 'cover', 'tag', 'topic', 'category', 'visibility', 'schedule'],
           options: {
+            topicName: z.string().optional().describe('话题名称；与 --topic <话题 ID> 同时提供，B 站一次只支持一个话题'),
             cover43: z.string().optional().describe('4:3 封面图片路径（稿件列表页）；B 站双封面，和 --cover 各给一张'),
             series: z.string().optional().describe('发布后加进合集（合集 ID 或合集链接）；挂到合集第一个小节下'),
             visibility: visibility('public', 'private'),
