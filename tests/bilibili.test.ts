@@ -1367,3 +1367,55 @@ describe('bilibili 合集（series）', () => {
     expect(miss.urls.every((u) => !u.includes('episodes/add'))).toBe(true)
   })
 })
+
+describe('bilibili 投稿话题', () => {
+  it('投稿请求携带话题 ID 与名称，未指定时保留原来的默认值', async () => {
+    const requests: PreparedRequest[] = []
+    const restore = mockSender((p) => {
+      requests.push(p)
+      return fakeResponse({ code: 0, message: '0', data: { bvid: BVID } }, { headers: [['content-type', 'application/json']], url: p.url })
+    })
+    const base = { videos: [{ filename: 'n1', biz_id: 9 }], title: 't', tid: 17, tag: 'a' }
+    try {
+      await logged((b) => api.submitArchive(b, { ...base, topicId: 1255303, topicName: 'AI IN ALL！' }))
+      await logged((b) => api.submitArchive(b, base))
+    } finally { restore() }
+    const bodies = requests.map((p) => JSON.parse(Buffer.from(p.body as Uint8Array).toString('utf8')))
+    expect(bodies[0]).toMatchObject({ topic_id: 1255303, topic_name: 'AI IN ALL！' })
+    expect(bodies[1]).toMatchObject({ topic_id: 0, topic_name: '' })
+  })
+
+  it('投稿命令将话题参数传到最终提交请求', async () => {
+    const { error, bodies } = await runCommand('itemPublish', {
+      options: { video: COVER_FILE, title: 't', tag: ['a'], category: '17', topic: ['1255303'], topicName: 'AI IN ALL！' },
+    }, (url) => {
+      if (url.includes('/preupload?')) return { OK: 1, endpoint: 'https://upload.example', upos_uri: 'upos://demo/test.mp4', auth: 'fake', biz_id: 9, chunk_size: 1024 }
+      if (url.includes('uploads&')) return { OK: 1, upload_id: 'fake-upload' }
+      if (url.startsWith('https://upload.example/')) return { OK: 1 }
+      if (url.includes('/x/vu/web/add/v3')) return { code: 0, message: '0', data: { bvid: BVID } }
+      return { code: 0, message: '0', data: {} }
+    })
+    expect(error).toBeUndefined()
+    const body = bodies.find((b) => typeof b === 'string' && b.includes('"topic_id"'))
+    expect(JSON.parse(String(body))).toMatchObject({ topic_id: 1255303, topic_name: 'AI IN ALL！' })
+  })
+
+  it('无效的话题参数在上传前报错', async () => {
+    for (const options of [
+      { topic: ['1255303'] }, { topicName: 'AI IN ALL！' },
+      { topic: ['abc'], topicName: 'AI IN ALL！' }, { topic: ['1', '2'], topicName: '话题' },
+      { topic: ['0'], topicName: '话题' }, { topic: ['9007199254740992'], topicName: '话题' },
+      { topic: ['1255303'], topicName: '  ' },
+    ]) {
+      const { error, urls } = await runCommand('itemPublish', { options: { video: COVER_FILE, title: 't', tag: ['a'], category: '17', ...options } }, () => ({}))
+      expect(error, JSON.stringify(options)).toMatchObject({ code: 'USAGE' })
+      expect(urls).toEqual([])
+    }
+  })
+
+  it('投稿命令暴露话题选项', () => {
+    const c = web().commands.get('item publish')!
+    expect(c.options).toHaveProperty('topic')
+    expect(c.options).toHaveProperty('topicName')
+  })
+})
