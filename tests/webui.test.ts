@@ -213,6 +213,54 @@ describe('相关推荐：item related', () => {
   })
 })
 
+describe('12306 查询页：免登录的只读命令', () => {
+  it('放行车站联想、直达、经停、中转，位置参数放到 -- 之后', () => {
+    expect(validateArgv(['12306', 'station', 'search', 'shangh'])).toEqual(['12306', 'station', 'search', '--', 'shangh'])
+    expect(validateArgv(['12306', 'ticket', 'search', '北京南', '上海虹桥', '--date', '2026-11-16', '--type', 'G,D', '--available'])).toEqual(
+      ['12306', 'ticket', 'search', '--date', '2026-11-16', '--type', 'G,D', '--available', '--', '北京南', '上海虹桥'],
+    )
+    expect(validateArgv(['12306', 'route', 'get', '240000G53106', 'VNP', 'AOH', '--date', '2026-11-16'])).toEqual(
+      ['12306', 'route', 'get', '--date', '2026-11-16', '--', '240000G53106', 'VNP', 'AOH'],
+    )
+    expect(validateArgv(['12306', 'transfer', 'search', 'beijing', '上海 虹桥', '--via', '南京南', '--limit', '20'])).toEqual(
+      ['12306', 'transfer', 'search', '--via', '南京南', '--limit', '20', '--', 'beijing', '上海 虹桥'],
+    )
+  })
+
+  it('参数和选项逐个校验', () => {
+    // 车站：以 - 开头、带标点、超长的都不行
+    expect(() => validateArgv(['12306', 'station', 'search', '-x'])).toThrow('参数不合法')
+    expect(() => validateArgv(['12306', 'station', 'search', '北京;rm'])).toThrow('参数不合法')
+    expect(() => validateArgv(['12306', 'station', 'search', 'a'.repeat(33)])).toThrow('参数不合法')
+    expect(() => validateArgv(['12306', 'ticket', 'search', '北京南'])).toThrow('缺少参数')
+    // 日期：格式和真实日期
+    expect(() => validateArgv(['12306', 'ticket', 'search', 'a', 'b', '--date', '2026/11/16'])).toThrow('取值不合法')
+    expect(() => validateArgv(['12306', 'ticket', 'search', 'a', 'b', '--date', '2026-02-30'])).toThrow('取值不合法')
+    expect(() => validateArgv(['12306', 'ticket', 'search', 'a', 'b', '--date'])).toThrow('取值不合法')
+    // 车型：逗号分隔的单个字母或数字
+    expect(() => validateArgv(['12306', 'ticket', 'search', 'a', 'b', '--type', 'GD'])).toThrow('取值不合法')
+    expect(() => validateArgv(['12306', 'ticket', 'search', 'a', 'b', '--type', 'G,'])).toThrow('取值不合法')
+    // 车次编号、中转数量
+    expect(() => validateArgv(['12306', 'route', 'get', '24-00', 'a', 'b'])).toThrow('参数不合法')
+    expect(() => validateArgv(['12306', 'transfer', 'search', 'a', 'b', '--limit', '0'])).toThrow('取值不合法')
+    expect(() => validateArgv(['12306', 'transfer', 'search', 'a', 'b', '--limit', '51'])).toThrow('取值不合法')
+    // 选项只认各自的白名单：不接受 -a、--cursor、别的命令的选项，也不能重复
+    expect(() => validateArgv(['12306', 'ticket', 'search', 'a', 'b', '-a', 'work'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['12306', 'ticket', 'search', 'a', 'b', '--via', 'c'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['12306', 'route', 'get', 'G1', 'a', 'b', '--available'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['12306', 'ticket', 'search', 'a', 'b', '--available', '--available'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['12306', 'ticket', 'search', 'a', 'b', '__proto__', 'x'])).toThrow('不允许的选项')
+  })
+
+  it('只放行这四条：票价、别的命令都不开放', () => {
+    expect(() => validateArgv(['12306', 'ticket', 'price', 'G1'])).toThrow('暂不开放')
+    expect(() => validateArgv(['12306', 'item', 'search', 'kw'])).toThrow('暂不开放')
+    expect(() => validateArgv(['12306', 'auth', 'login'])).toThrow('暂不开放')
+    // 别的平台没有这些命令
+    expect(() => validateArgv(['xhs', 'ticket', 'search', 'a', 'b'])).toThrow('暂不开放')
+  })
+})
+
 describe('服务端设置 /api/settings', () => {
   const home = tempHome
   const req = (port: number, method: string, body?: unknown, headers: Record<string, string> = {}) =>

@@ -46,6 +46,67 @@ const PLATFORM = /^[a-z0-9-]{1,16}$/
 /** 联想前缀的长度上限（按字符计） */
 const PREFIX_MAX = 100
 
+/**
+ * 12306 查询页（AGENTS.md 7.9「12306 查询页」）的免登录只读命令：`<resource action>` → 位置参数的个数和各选项的取值规则。
+ * 只认平台 12306、不接受 -a；`true` 表示不带值的开关。
+ */
+const RAIL_PLATFORM = '12306'
+/** 车站：站名、电报码、拼音或城市 */
+const STATION = /^[\p{L}\p{N}][\p{L}\p{N} ·-]{0,31}$/u
+/** 车型：逗号分隔的单个字母或数字（如 G,D） */
+const TRAIN_TYPES = /^[A-Za-z0-9](,[A-Za-z0-9]){0,15}$/
+const TRAIN_NO = /^[A-Za-z0-9]{1,16}$/
+const RAIL_LIMIT_MAX = 50
+
+function railDate(v: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v)
+  if (!m) return false
+  const d = new Date(Date.UTC(+m[1]!, +m[2]! - 1, +m[3]!))
+  return d.getUTCFullYear() === +m[1]! && d.getUTCMonth() === +m[2]! - 1 && d.getUTCDate() === +m[3]!
+}
+const railLimit = (v: string) => /^[1-9]\d{0,1}$/.test(v) && Number(v) <= RAIL_LIMIT_MAX
+
+const RAIL_COMMANDS: Record<string, { args: ((v: string) => boolean)[]; options: Record<string, ((v: string) => boolean) | true> }> = {
+  'station search': { args: [(v) => STATION.test(v)], options: {} },
+  'ticket search': {
+    args: [(v) => STATION.test(v), (v) => STATION.test(v)],
+    options: { '--date': railDate, '--type': (v) => TRAIN_TYPES.test(v), '--available': true },
+  },
+  'route get': {
+    args: [(v) => TRAIN_NO.test(v), (v) => STATION.test(v), (v) => STATION.test(v)],
+    options: { '--date': railDate },
+  },
+  'transfer search': {
+    args: [(v) => STATION.test(v), (v) => STATION.test(v)],
+    options: { '--date': railDate, '--via': (v) => STATION.test(v), '--limit': railLimit },
+  },
+}
+
+/** 12306 的命令：位置参数逐个校验后放到 `--` 之后，选项按白名单和取值规则校验 */
+function validateRail(resource: string | undefined, action: string | undefined, rest: string[]): string[] {
+  const spec = RAIL_COMMANDS[`${resource} ${action}`]
+  if (!spec) throw new Error(`WebUI 暂不开放命令：${RAIL_PLATFORM} ${resource} ${action}`)
+  const positional = rest.splice(0, spec.args.length)
+  if (positional.length !== spec.args.length) throw new Error('缺少参数')
+  positional.forEach((v, i) => {
+    if (!spec.args[i]!(v)) throw new Error(`参数不合法：${v}`)
+  })
+  const options: string[] = []
+  for (let i = 0; i < rest.length; i++) {
+    const opt = rest[i]!
+    const rule = Object.hasOwn(spec.options, opt) ? spec.options[opt] : undefined
+    if (!rule || options.includes(opt)) throw new Error(`不允许的选项：${opt}`)
+    if (rule === true) {
+      options.push(opt)
+      continue
+    }
+    const val = rest[++i]
+    if (val === undefined || !rule(val)) throw new Error(`选项取值不合法：${opt}`)
+    options.push(opt, val)
+  }
+  return [RAIL_PLATFORM, resource!, action!, ...options, '--', ...positional]
+}
+
 export function validateArgv(argv: unknown): string[] {
   if (!Array.isArray(argv) || !argv.every((a) => typeof a === 'string' && SAFE_VALUE.test(a))) {
     throw new Error('argv 必须是非空字符串数组')
@@ -57,6 +118,7 @@ export function validateArgv(argv: unknown): string[] {
 
   const [platform, resource, action, ...rest] = args
   if (!PLATFORM.test(platform)) throw new Error('未知平台')
+  if (platform === RAIL_PLATFORM) return validateRail(resource, action, rest)
   const allowed = READ_COMMANDS[`${resource} ${action}`]
   const flags = READ_FLAGS[`${resource} ${action}`] ?? []
   if (!allowed) throw new Error(`WebUI 暂不开放命令：${resource} ${action}`)
