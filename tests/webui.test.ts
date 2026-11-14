@@ -685,3 +685,37 @@ describe('搜索联想与热搜：放行 keyword suggest / keyword hot', () => {
     expect(all.douyin).toMatchObject({ suggest: false, hot: false })
   })
 })
+
+describe('猫眼演出：poi search、feed list --city、item get --tickets', () => {
+  it('城市搜索只认 maoyan，关键词放在 -- 之后并校验字符', () => {
+    expect(validateArgv(['maoyan', 'poi', 'search', '州'])).toEqual(['maoyan', 'poi', 'search', '--', '州'])
+    expect(validateArgv(['maoyan', 'poi', 'search', '上海', '-a', 'default'])).toEqual(['maoyan', 'poi', 'search', '-a', 'default', '--', '上海'])
+    expect(() => validateArgv(['douyin', 'poi', 'search', '上海'])).toThrow('暂不开放')
+    expect(() => validateArgv(['maoyan', 'poi', 'search'])).toThrow('城市关键词不合法')
+    expect(() => validateArgv(['maoyan', 'poi', 'search', '--city'])).toThrow('城市关键词不合法')
+    expect(() => validateArgv(['maoyan', 'poi', 'search', '上海;rm'])).toThrow('城市关键词不合法')
+    expect(() => validateArgv(['maoyan', 'poi', 'search', 'x'.repeat(33)])).toThrow('城市关键词不合法')
+    expect(() => validateArgv(['maoyan', 'poi', 'search', '上海', '--limit', '5'])).toThrow('不允许的选项')
+  })
+
+  it('feed list --city 只对 maoyan 放行，取值是城市名或 ID', () => {
+    expect(validateArgv(['maoyan', 'feed', 'list', '--limit', '20', '--city', '上海'])).toEqual(['maoyan', 'feed', 'list', '--limit', '20', '--city', '上海'])
+    expect(validateArgv(['maoyan', 'feed', 'list', '-a', 'default', '--city', '10'])).toEqual(['maoyan', 'feed', 'list', '-a', 'default', '--city', '10'])
+    expect(() => validateArgv(['xhs', 'feed', 'list', '--city', '上海'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['maoyan', 'item', 'search', 'kw', '--city', '上海'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['maoyan', 'feed', 'list', '--city', '上海/../x'])).toThrow('选项取值不合法')
+    expect(() => validateArgv(['maoyan', 'feed', 'list', '--city', '-x'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['maoyan', 'feed', 'list', '--city'])).toThrow('不允许的选项')
+  })
+
+  it('item get --tickets 是只对 maoyan 放行的开关，可以和 --raw、-a 一起用', () => {
+    expect(validateArgv(['maoyan', 'item', 'get', '458416', '-a', 'default', '--tickets'])).toEqual(
+      ['maoyan', 'item', 'get', '-a', 'default', '--tickets', '--', '458416'],
+    )
+    expect(validateArgv(['maoyan', 'item', 'get', 'https://show.maoyan.com/qqw#/detail/458416', '--tickets', '--tickets'])).toEqual(
+      ['maoyan', 'item', 'get', '--tickets', '--', 'https://show.maoyan.com/qqw#/detail/458416'],
+    )
+    expect(() => validateArgv(['xhs', 'item', 'get', 'abc', '--tickets'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['maoyan', 'feed', 'list', '--tickets'])).toThrow('不允许的选项')
+  })
+})

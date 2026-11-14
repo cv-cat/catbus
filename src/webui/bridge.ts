@@ -33,6 +33,8 @@ const READ_COMMANDS: Record<string, readonly string[]> = {
   'keyword hot': [],
   // 详情卡片的相关推荐（AGENTS.md 7.9「相关推荐」）：只取一页
   'item related': ['--limit'],
+  // 猫眼演出的城市搜索（AGENTS.md 7.9「猫眼演出的 bridge 命令」）：只认 maoyan，关键词放在 `--` 之后
+  'poi search': [],
 }
 /** 不带值的开关选项：`item get` 的 `--raw`（详情卡片的原始 JSON，设置「实验性」里打开），以及字段排序的升序开关 `--asc` */
 const READ_FLAGS: Record<string, readonly string[]> = {
@@ -43,6 +45,19 @@ const READ_FLAGS: Record<string, readonly string[]> = {
 const COMMENT_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/
 const SAFE_VALUE = /^[^\0\r\n]{1,512}$/
 const PLATFORM = /^[a-z0-9-]{1,16}$/
+/**
+ * 猫眼演出（AGENTS.md 7.9「猫眼演出的城市」「猫眼演出的场次与票档」）：只有平台是 maoyan 时才放行的选项和开关。
+ * `feed list --city <城市名或 ID>`、`item get --tickets`，以及 `poi search -- <关键词>`。
+ */
+const MAOYAN = 'maoyan'
+/** 城市名、演出城市 ID 或城市搜索的关键词 */
+const CITY = /^[\p{L}\p{N}][\p{L}\p{N} ·-]{0,31}$/u
+const MAOYAN_OPTIONS: Record<string, Record<string, (v: string) => boolean>> = {
+  'feed list': { '--city': (v) => CITY.test(v) },
+}
+const MAOYAN_FLAGS: Record<string, readonly string[]> = {
+  'item get': ['--tickets'],
+}
 /** 联想前缀的长度上限（按字符计） */
 const PREFIX_MAX = 100
 
@@ -119,9 +134,11 @@ export function validateArgv(argv: unknown): string[] {
   const [platform, resource, action, ...rest] = args
   if (!PLATFORM.test(platform)) throw new Error('未知平台')
   if (platform === RAIL_PLATFORM) return validateRail(resource, action, rest)
-  const allowed = READ_COMMANDS[`${resource} ${action}`]
-  const flags = READ_FLAGS[`${resource} ${action}`] ?? []
+  const cmd = `${resource} ${action}`
+  const allowed = READ_COMMANDS[cmd]
   if (!allowed) throw new Error(`WebUI 暂不开放命令：${resource} ${action}`)
+  const rules = platform === MAOYAN ? (MAOYAN_OPTIONS[cmd] ?? {}) : {}
+  const flags = [...(READ_FLAGS[cmd] ?? []), ...(platform === MAOYAN ? (MAOYAN_FLAGS[cmd] ?? []) : [])]
 
   const positional: string[] = []
   if (resource === 'item' && action === 'search') {
@@ -143,6 +160,11 @@ export function validateArgv(argv: unknown): string[] {
     if (!prefix?.trim()) throw new Error('缺少联想前缀')
     if ([...prefix].length > PREFIX_MAX) throw new Error(`联想前缀不能超过 ${PREFIX_MAX} 个字符`)
     positional.push(prefix)
+  } else if (resource === 'poi' && action === 'search') {
+    if (platform !== MAOYAN) throw new Error(`WebUI 暂不开放命令：${resource} ${action}`)
+    const kw = rest.shift()
+    if (!kw || !CITY.test(kw)) throw new Error('城市关键词不合法')
+    positional.push(kw)
   }
   const options: string[] = []
   // 全局选项 -a：只改本次浏览用的账号，不改 _current
@@ -160,9 +182,11 @@ export function validateArgv(argv: unknown): string[] {
       continue
     }
     const val = rest[i + 1]
-    if (!allowed.includes(opt) || val === undefined || val.startsWith('-')) {
+    const rule = Object.hasOwn(rules, opt) ? rules[opt] : undefined
+    if ((!allowed.includes(opt) && !rule) || val === undefined || val.startsWith('-')) {
       throw new Error(`不允许的选项：${opt}`)
     }
+    if (rule && !rule(val)) throw new Error(`选项取值不合法：${opt}`)
     options.push(opt, val)
   }
   // 关键词放在 `--` 之后，以 - 开头的文本也不会被当成选项
