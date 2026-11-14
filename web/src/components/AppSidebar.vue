@@ -460,6 +460,7 @@ watch(() => props.platforms, () => nextTick(() => place(true)))
 }
 .subnav {
   display: flex;
+  flex: none;
   flex-direction: column;
   gap: 2px;
   margin: 0 0 6px 30px;

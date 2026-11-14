@@ -63,6 +63,8 @@ const label = computed(() => {
   gap: 10px;
   width: 100%;
   height: 36px;
+  /* 列表是可滚动的纵向 flex：放不下时滚动，不压扁每一行 */
+  flex: none;
   padding: 0 10px;
   border-radius: 12px;
   color: var(--ink-2);
