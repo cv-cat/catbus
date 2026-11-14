@@ -5,7 +5,7 @@ import { CatbusError } from '../../../core/errors.js'
 import { downloadMedia, readMedia } from '../../../core/files.js'
 import { imageSize } from '../../../core/image.js'
 import { parseJson } from '../../../core/http.js'
-import { cookieCredential, finishLogin, freshCredential, loginContext, poll, readPassword, showQrcode, smsLogin } from '../../../core/login.js'
+import { cookieCredential, finishLogin, freshCredential, loginContext, poll, qrcodeScanned, readPassword, showQrcode, smsLogin } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import * as pb from '../../../core/pb.js'
 import { jsonLoads } from '../../../core/py.js'
@@ -79,7 +79,7 @@ export async function authLogin(ctx: Ctx) {
       const code = r.data?.code
       if (code === 0) return r.data.refresh_token ?? ''
       if (code === 86038) throw new CatbusError('AUTH_REQUIRED', '二维码已失效', { hint: '重新执行 catbus bilibili auth login' })
-      if (code === 86090 && last !== code) ctx.log.info('已扫码，请在手机上确认')
+      if (code === 86090 && last !== code) qrcodeScanned(ctx)
       last = code ?? null
       return undefined
     })

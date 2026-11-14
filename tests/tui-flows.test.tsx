@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { z } from 'zod'
-import { finishLogin, freshCredential, poll, prompt, showQrcode } from '../src/core/login.js'
+import { finishLogin, freshCredential, poll, prompt, qrcodeScanned, showQrcode } from '../src/core/login.js'
 import { definePlatform, type HandlerContext } from '../src/core/registry.js'
 import { readCredential } from '../src/core/auth-store.js'
 import { KEYS, type Session, start } from './tui-harness.js'
@@ -13,6 +13,11 @@ const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 let scanned = false
 const confirmScan = () => {
   scanned = true
+}
+/** 假平台的“手机已扫码、还没确认”：测试里调用 phoneScan() 让轮询报一次已扫码。 */
+let phoneScanned = false
+const phoneScan = () => {
+  phoneScanned = true
 }
 
 /** 假平台：扫码要轮询两次才算成功；短信先问手机号再问验证码；监听持续吐弹幕。 */
@@ -32,7 +37,17 @@ const fake = definePlatform({
             const credential = freshCredential(ctx, method as never)
             if (method === 'qrcode') {
               await showQrcode(ctx, 'https://demo.example/login?key=abc123', '请用演示站 App 扫码')
-              await poll(async () => (scanned ? true : undefined), { interval: 20 })
+              let told = false
+              await poll(
+                async () => {
+                  if (phoneScanned && !told) {
+                    told = true
+                    qrcodeScanned(ctx)
+                  }
+                  return scanned ? true : undefined
+                },
+                { interval: 20 },
+              )
             } else if (method === 'sms') {
               const phone = (ctx.options.phone as string) || (await prompt('手机号：'))
               const code = await prompt(`验证码（发到 ${phone}）：`)
@@ -77,6 +92,7 @@ describe('tui 登录 / 监听 / 账号', () => {
     s?.stop()
     s = null
     scanned = false
+    phoneScanned = false
   })
   const open = async (cols = 120, rows = 34) => (s = await start({ columns: cols, rows, platforms: [fake] }))
   const text = () => s!.screen().join('\n')
@@ -95,6 +111,12 @@ describe('tui 登录 / 监听 / 账号', () => {
     expect(s!.raw()).toMatch(/48;2;255;255;255/)
     expect(s!.raw()).toMatch(/38;2;0;0;0/)
     expect(text()).toContain('等待扫码')
+    phoneScan() // 手机已扫码、还没确认
+    await s!.settle(150)
+    expect(text()).toContain('✓')
+    expect(text()).toContain('已扫码，请在手机上确认')
+    expect(text()).not.toContain('等待扫码和确认')
+    expect(text()).toContain('二维码图片') // 码还在，只是标出已扫码
     confirmScan() // 手机上确认
     await s!.settle(200)
     expect(text()).toContain('已登录')

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { getCurrent, listAccounts, newCredential, readCredential, setCurrent, writeCredential } from '../src/core/auth-store.js'
-import { accountNameFor, finishLogin } from '../src/core/login.js'
+import { accountNameFor, finishLogin, qrcodeScanned, SCANNED_PREFIX, setLoginUi } from '../src/core/login.js'
 import type { HandlerContext } from '../src/core/registry.js'
 import type { AccountUser } from '../src/core/schemas.js'
 import { findPlatform } from '../src/platforms/index.js'
@@ -99,5 +99,38 @@ describe('auth login --auto-bind 的参数校验', () => {
     const s = await cli('xhs', 'auth', 'login', '--auto-bind', '--scope', 'creator')
     expect(s.env.error.code).toBe('USAGE')
     expect(s.env.error.hint).toBe('catbus xhs auth login -a <账号> --scope creator')
+  })
+})
+
+describe('qrcodeScanned（AGENTS 5.3 扫码）', () => {
+  it('没有界面钩子：stderr 写一行以「已扫码」开头的提示', () => {
+    const { ctx, logs } = loginCtx('default')
+    qrcodeScanned(ctx)
+    expect(logs).toEqual(['info 已扫码，请在手机上确认'])
+    expect(logs[0]!.slice(5).startsWith(SCANNED_PREFIX)).toBe(true)
+  })
+
+  it('有界面钩子：同一句提示交给 LoginUi.scanned，stderr 照写；说明可以换', () => {
+    const seen: string[] = []
+    const undo = setLoginUi({ interactive: true, signal: new AbortController().signal, qrcode() {}, link() {}, prompt: async () => '', scanned: (h) => seen.push(h) })
+    try {
+      const { ctx, logs } = loginCtx('default')
+      qrcodeScanned(ctx, '平台要求二次验证')
+      expect(seen).toEqual(['已扫码，平台要求二次验证'])
+      expect(logs).toEqual(['info 已扫码，平台要求二次验证'])
+    } finally {
+      undo()
+    }
+  })
+
+  it('界面钩子没有 scanned（旧界面）：只写 stderr，不报错', () => {
+    const undo = setLoginUi({ interactive: true, signal: new AbortController().signal, qrcode() {}, link() {}, prompt: async () => '' })
+    try {
+      const { ctx, logs } = loginCtx('default')
+      expect(() => qrcodeScanned(ctx)).not.toThrow()
+      expect(logs).toHaveLength(1)
+    } finally {
+      undo()
+    }
   })
 })

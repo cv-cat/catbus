@@ -513,9 +513,9 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
   - **执行只有一份规则**：校验、身份解析、凭证落盘都在 `src/cli/dispatch.ts`；`src/cli/exec.ts` 的 `prepare` / `invoke` 按 `runPlatform` 的顺序调用同一批函数，界面只经它运行命令。给 `runPlatform` 加一步检查或加工时，写成 `dispatch.ts` 里的导出函数，并在 `exec.ts` 里补上同一步，界面就跟着生效；`tests/exec.test.ts` 会检查两边一致，漏了会失败。
   - **新增动作**：界面按动作名判断能不能运行（白名单，见下一条）。新增的只读动作加进 `src/tui/model.ts` 的 `READ_ACTIONS` 和下一条的列表；不加的话命令在界面里显示为 `○`、只给出等价命令，不会被误运行。
 - **能在界面里运行的命令**：读取类（动作是 `get` `list` `search` `related` `media` `items` `replies` `categories` `suggest` `hot` `count` `history` `status` `price` `likes` `collects` `reposts` `followers` `following` `rank` `gifts` `products` `replays` `subtitles` `stats`）、长连接的 `listen`，以及账号管理（`auth login` `auth use` `auth logout` `auth status`，在账号页里做）。其余命令（写入、成对动作、`delete`、`publish`、`download`、`upload`、`send`、`coin`、`triple`、`start`、`stop`、`revoke`、`read`）在命令栏里显示为 `○`，选中时显示等价的 CLI 命令，不能在界面里执行。这样 4.11 的危险操作确认不需要在 TUI 里重做。
-- **登录在界面里完成**（5.3 的流程不变）：二维码画在界面里（黑码白底，固定色，不随主题；放不下时提示并可按 `o` 用系统图片查看器打开 `cache/<p>/qrcode.png`），短信验证码、密码（隐藏输入）、人机验证和浏览器授权（`oauth`）的链接、cookie 导入都在界面里输入；平台在提问前打的说明（发往哪个手机号、待选账号列表）显示在提问上方。
+- **登录在界面里完成**（5.3 的流程不变）：二维码画在界面里（黑码白底，固定色，不随主题；放不下时提示并可按 `o` 用系统图片查看器打开 `cache/<p>/qrcode.png`；手机已扫码、还没确认时，二维码下面的「等待扫码和确认」换成绿色的 ✓ 和平台的提示，换了新二维码时恢复），短信验证码、密码（隐藏输入）、人机验证和浏览器授权（`oauth`）的链接、cookie 导入都在界面里输入；平台在提问前打的说明（发往哪个手机号、待选账号列表）显示在提问上方。
   - **登录页的表单读注册表**：`auth login` 的选项里，这个登录方式能用的都列出来，文本可填、开关可切，不手写。选项属于哪种登录方式，看说明末尾的标注，例如 `手机号（sms）`、`记住设备（sms / password）`；不标注的对所有方式显示。所以平台或词表新增登录选项时，**说明末尾标上适用的登录方式**，界面就自动出现。不进表单的只有：`--method`、`--scope`（登录页有单独的两行），分步登录用的 `--code`、`--user`（界面里一步完成，由 handler 提问），以及名字以 `-stdin` 结尾的（界面里由 handler 提问）。
-  - **实现**：`core/login.ts` 提供 `LoginUi` 钩子（`setLoginUi`）：二维码、浏览器链接、提问、是否可交互四处走钩子，CLI 里默认走 stderr 和 readline，TUI 里换成界面。平台的登录流程里要用户输入时一律用 `core/login.ts` 的 `interactive()` / `prompt()`，要用户打开链接时用 `showLink()`，**不要直接读 `process.stdin`、不要自己开 readline**：直接读的在界面里收不到输入。非交互分支（管道喂验证码）可以读 stdin，但要先判断 `interactive()`。
+  - **实现**：`core/login.ts` 提供 `LoginUi` 钩子（`setLoginUi`）：二维码、已扫码、浏览器链接、提问、是否可交互五处走钩子，CLI 里默认走 stderr 和 readline，TUI 里换成界面。平台在扫码登录里查到「已扫码、等确认」时一律调用 `qrcodeScanned(ctx[, 说明])`，不要自己写日志（见 5.3 的 `qrcode`）。平台的登录流程里要用户输入时一律用 `core/login.ts` 的 `interactive()` / `prompt()`，要用户打开链接时用 `showLink()`，**不要直接读 `process.stdin`、不要自己开 readline**：直接读的在界面里收不到输入。非交互分支（管道喂验证码）可以读 stdin，但要先判断 `interactive()`。
   - **stdin 归界面**：TUI 启动时调用 `claimStdin()`。之后没有登录钩子时（运行读取类命令、监听），`interactive()` 为 false、`prompt()` 报 `USAGE`，不会去抢 stdin。
 - **监听在界面里运行**：`live listen`、`msg listen` 显示成滚动的事件流，可暂停、按类型过滤，`--duration` 变成倒计时，`Esc` 停止（与 Ctrl-C 一样走同一个 AbortSignal）。界面不保存事件；要录制用 `-o jsonl`。
 - **下一步与返回**：结果页选中一项后，`Enter` 列出可以接着做的命令（同一平台里首个参数是这类对象的读取类命令，参数已按 4.8 的规则填好：优先 URL，其次 ID），选中即运行；`Esc` 回到上一页结果。这是 4.8 “输出里的 `id` 和 `url` 可以直接作为下一条命令的参数” 在界面里的对应。
@@ -597,7 +597,7 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth|api
 
 | 方式 | 选项 | 流程 |
 |---|---|---|
-| `qrcode` | — | 二维码画到 stderr，同时把 PNG 存到 `cache/<p>/`，然后等待扫码 |
+| `qrcode` | — | 二维码画到 stderr，同时把 PNG 存到 `cache/<p>/`，然后等待扫码。上游能查到「已扫码、还没确认」的，查到时由 `core/login.ts` 的 `qrcodeScanned` 在 stderr 写一行以 `[catbus] 已扫码` 开头的提示（默认「已扫码，请在手机上确认」；平台要求二次验证等情况换后半句），同时调用 `LoginUi.scanned`；状态变化时才写，不在每次轮询里重复。WebUI、TUI 据此标出已扫码，这行的前缀不要改 |
 | `sms` | `--phone`、`--code` | TTY 下先发验证码，再交互输入。非 TTY 下分两步：`--phone` 发验证码并保存中间态（10 分钟有效），再单独用 `--code` 完成登录 |
 | `password` | `--username`、`--password-stdin` | 密码只从 stdin 读取，TTY 下隐藏输入。需要两步验证的平台（mteam）另用 `--code`，流程同 `sms` 的两步：非 TTY 下第一步发码并保存中间态，第二步带 `--code` 完成 |
 | `cookie` | `--cookie <str\|@file\|->` | 导入后调一次 `me` 校验。也接受浏览器导出的 cookie JSON 数组；douyin、tiktok 另外接受一个 JSON 对象，把 ticket、证书、私钥等设备数据一并导入（这两个平台的写操作需要它们） |
