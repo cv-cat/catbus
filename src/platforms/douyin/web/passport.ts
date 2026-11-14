@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { CatbusError } from '../../../core/errors.js'
 import { writeFileAtomic } from '../../../core/fsutil.js'
-import { interactive, prompt } from '../../../core/login.js'
+import { interactive, prompt, qrcodeScanned } from '../../../core/login.js'
 import type { HttpResponse } from '../../../core/http.js'
 import { cacheDir, staticFile } from '../../../core/paths.js'
 import { compactJson, jsonDumps, jsonLoads, parseQsl, quote, urlencode } from '../../../core/py.js'
@@ -800,7 +800,7 @@ export class Passport {
             fresh = false
           } else if (last.status === 'scanned') {
             scanned = true
-            d.ctx.log.info('换码前发现已扫码，请在手机上确认')
+            qrcodeScanned(d.ctx)
             pending = last
           } else {
             d.ctx.log.info('二维码到期，换一张')
@@ -841,7 +841,7 @@ export class Passport {
             verify2046Started = true
             if (hasSmsWay(info)) {
               const mobile = smsMobile(info)
-              d.ctx.log.info(`已扫码，抖音风控要求二次验证。catbus 选择短信验证${mobile ? `（发往 ${mobile}）` : ''}，正在发送验证码…`)
+              qrcodeScanned(d.ctx, `抖音风控要求二次验证。catbus 选择短信验证${mobile ? `（发往 ${mobile}）` : ''}，正在发送验证码…`)
               await sendSms(d, info)
               d.ctx.log.info('验证码已发送，请输入短信验证码（6 位；直接回车跳过，改为等待 App 端验证）：')
               const code = await readVerifyCode(d.ctx.signal, '短信验证码（留空跳过，改为等待 App 端验证）：')
@@ -853,7 +853,7 @@ export class Passport {
                 await writeFileAtomic(verifyScriptFile, `${String(info.url ?? info.verify_url ?? '')}\n`)
               }
             } else {
-              d.ctx.log.info(`已扫码，抖音风控要求二次验证，但本会话没有短信验证选项。请在抖音 App 上完成验证；或用浏览器加载验证组件（脚本地址已落盘 ${verifyScriptFile}）`)
+              qrcodeScanned(d.ctx, `抖音风控要求二次验证，但本会话没有短信验证选项。请在抖音 App 上完成验证；或用浏览器加载验证组件（脚本地址已落盘 ${verifyScriptFile}）`)
               await writeFileAtomic(verifyScriptFile, `${String(info.url ?? info.verify_url ?? '')}\n`)
             }
             const wants = [verifyMaterial2046(info), info.check_token != null ? 'check_token' : null, info.uid != null ? 'uid' : null].filter((x) => x)
@@ -877,7 +877,7 @@ export class Passport {
         }
         if (status === 'scanned' && !scanned) {
           scanned = true
-          d.ctx.log.info('已扫码，请在手机上确认')
+          qrcodeScanned(d.ctx)
         }
         await rand.sleep(wait, d.ctx.signal)
       }

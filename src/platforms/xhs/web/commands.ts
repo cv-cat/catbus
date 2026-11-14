@@ -1,7 +1,7 @@
 import { CatbusError } from '../../../core/errors.js'
 import { imageSize } from '../../../core/image.js'
 import { downloadMedia, type LocalMedia, readMedia } from '../../../core/files.js'
-import { cookieCredential, finishLogin, freshCredential, interactive, loginContext, poll, prompt, showQrcode, smsLogin } from '../../../core/login.js'
+import { cookieCredential, finishLogin, freshCredential, interactive, loginContext, poll, prompt, qrcodeScanned, showQrcode, smsLogin } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import { jsonLoads } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
@@ -127,7 +127,7 @@ async function loginQrcode(ctx: Ctx) {
       const s = await login.qrcodeStatus(p, qr.qrId, qr.code)
       if (s === 2) return true
       if (s === 3) throw new CatbusError('AUTH_REQUIRED', '二维码已过期', { hint: '重新执行 catbus xhs auth login' })
-      if (s === 1 && last !== 1) ctx.log.info('已扫码，请在手机上确认')
+      if (s === 1 && last !== 1) qrcodeScanned(ctx)
       last = s
       return undefined
     })
@@ -390,7 +390,7 @@ async function loginCreator(ctx: Ctx, method: 'qrcode' | 'sms') {
         const s = await l.qrcodeStatus(qr!.id)
         if (s === 1) return true
         if (s === 0 || s === 4 || s == null) throw new CatbusError('AUTH_REQUIRED', s === 4 ? '二维码已过期' : '二维码状态异常', { hint: '重新执行 catbus xhs auth login --scope creator' })
-        if (s === 3 && last !== 3) ctx.log.info('已扫码，请在手机上确认')
+        if (s === 3 && last !== 3) qrcodeScanned(ctx)
         last = s
         return undefined
       },
