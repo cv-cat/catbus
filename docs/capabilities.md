@@ -324,7 +324,7 @@
 | 平台 | 命令 |
 |---|---|
 | tiktok | `folder add` ✓ |
-| bilibili | `item edit` ✓ · `item coin` ✓ · `item triple` ✓ · `item subtitles` ✓ · `comment pin` ✓ · `comment unpin` ✓ · `series add` ◐ · `danmaku list` ✓ · `danmaku send` ✓ · `dynamic publish` ✓ · `dynamic delete` ✓ · `article publish` ✓ · `draft get` ✓ · `draft delete` ✓ |
+| bilibili | `item edit` ✓ · `item coin` ✓ · `item triple` ✓ · `item subtitles` ✓ · `comment pin` ✓ · `comment unpin` ✓ · `series add` ◐ · `series sort` ◐ · `danmaku list` ✓ · `danmaku send` ✓ · `dynamic publish` ✓ · `dynamic delete` ✓ · `article publish` ✓ · `draft get` ✓ · `draft delete` ✓ |
 | jd | `order list` ✓ · `cart count` ✓ · `coupon list` ✓ |
 | x | `article publish` ✓ · `article delete` ✓ |
 | youtube | `channel create` ✓ |
