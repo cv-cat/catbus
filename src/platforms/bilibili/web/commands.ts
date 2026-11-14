@@ -531,15 +531,20 @@ export async function seriesSort(ctx: Ctx) {
   // 取每个稿件的发布时间（/x/web-interface/view，逐条，17 条以内可接受）
   const pub = new Map<string, number>()
   for (const e of episodes) {
+    const bvid = String(e.bvid)
+    let timestamp: number
     try {
-      const v: any = await b.get('https://api.bilibili.com/x/web-interface/view', { query: [['bvid', String(e.bvid)]] })
-      pub.set(String(e.bvid), Number(v?.pubdate ?? 0))
-    } catch {
-      pub.set(String(e.bvid), 0)
+      const v: any = await b.get('https://api.bilibili.com/x/web-interface/view', { query: [['bvid', bvid]] })
+      timestamp = Number(v?.pubdate)
+      if (!Number.isFinite(timestamp) || timestamp <= 0) throw new Error('发布时间缺失或无效')
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err)
+      throw new CatbusError('UPSTREAM', `无法读取稿件 ${bvid} 的发布时间，未修改合集顺序`, { detail: { bvid, reason } })
     }
+    pub.set(bvid, timestamp)
   }
 
-  const order = String(ctx.args.order ?? 'asc')
+  const order = String(ctx.options.order ?? 'asc')
   const sorted = [...episodes].sort((x, y) => {
     const dx = pub.get(String(x.bvid)) ?? 0
     const dy = pub.get(String(y.bvid)) ?? 0

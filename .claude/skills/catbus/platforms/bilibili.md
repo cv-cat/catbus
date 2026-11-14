@@ -9,7 +9,7 @@
 ## 能做
 
 - **读**：`item search` / `get` / `related` / `media` / `download` / `list` / `categories` / `subtitles`（字幕，带时间轴）；`user get` / `search` / `items`（`--keyword` 过滤）；`comment list`（稿件、专栏、纯文字 / 转发 / 图文动态）；`comment replies`（视频、专栏、图文动态根评论下的可见楼中楼）；`feed list`（`--kind recommend|hot|following`，following 只列关注的人的视频投稿，需要登录）；`live get` / `search` / `categories` / `listen` / `history` / `gifts` / `media`；`folder list` / `items`；`danmaku list`；`draft get`；`series list`（我创建的合集）。
-- **写**：`item like` / `unlike` / `collect` / `uncollect`（`--folder`）/ `publish` / `edit`（换视频、改资料、换 16:9 / 4:3 封面，不给 `--video` 时只改资料）/ `delete`；`item coin`、`item triple`；`comment add` / `delete`；`series add`（把稿件加进合集）；`danmaku send`；`dynamic publish` / `delete`；`article publish`（专栏）/ `draft delete`；`live send` / `start` / `stop`；`media upload`；`user update`（`--name` / `--avatar` / `--bio`，改当前账号资料）。
+- **写**：`item like` / `unlike` / `collect` / `uncollect`（`--folder`）/ `publish` / `edit`（换视频、改资料、换 16:9 / 4:3 封面，不给 `--video` 时只改资料）/ `delete`；`item coin`、`item triple`；`comment add` / `delete`；`series add` / `sort`（把稿件加进合集）；`danmaku send`；`dynamic publish` / `delete`；`article publish`（专栏）/ `draft delete`；`live send` / `start` / `stop`；`media upload`；`user update`（`--name` / `--avatar` / `--bio`，改当前账号资料）。
 
 B 站写操作是 10 个平台里验证最充分的：点赞、收藏、评论增删、发弹幕、专栏草稿都已真机通过。
 
@@ -32,6 +32,8 @@ B 站写操作是 10 个平台里验证最充分的：点赞、收藏、评论�
 `item search`：`--sort general|views|latest|collects`，`--type video|article`。
 
 ## 坑
+
+- `series sort` 只重排自己创建的合集第一个小节，默认按发布时间升序；`--order desc` 最新在前。发布时间不可用时不会提交变更。
 
 - `comment replies` 是非上游接口，读取视频、专栏及图文动态指定根评论下可见的楼中楼；纯文字和转发动态的楼中楼尚未验证，不支持。默认每页 10 条，用 `--limit` / `--all` 自动翻页，续读时原样传回 `page.cursor`。`parent_id` 是直接父评论 ID，可能指向另一条子回复；原始 `root` / `parent` 用 `--raw` 取。`comment list --raw` 的 `replies` 只是预览。
 - 图文动态先请求非上游动态详情接口，用 `basic.comment_type=11`、`comment_id_str` 定位相簿评论区；输出 `item_id` 仍为动态 ID。翻页复用本次解析结果，不写入凭证。

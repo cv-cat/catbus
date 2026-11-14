@@ -1367,3 +1367,52 @@ describe('bilibili 合集（series）', () => {
     expect(miss.urls.every((u) => !u.includes('episodes/add'))).toBe(true)
   })
 })
+
+describe('bilibili 合集排序回归', () => {
+  const EDIT = '/x2/creative/web/season/section/edit'
+  function route(episodes: { id: number; bvid: string; order: number }[], dates: Record<string, unknown>) {
+    return (url: string) => {
+      if (url.includes('/x2/creative/web/seasons?')) return ok({ total: 1, seasons: [{ season: { id: 123, title: '测试合集' }, sections: { sections: [{ id: 456 }] } }] })
+      if (url.includes('/x2/creative/web/season/section?')) return ok({ section: { id: 456, seasonId: 123, title: '正片' }, episodes })
+      if (url.includes('/x/web-interface/view?')) {
+        const id = new URL(url).searchParams.get('bvid')!
+        return dates[id] === 'error' ? { code: -404, message: '不可用' } : ok({ pubdate: dates[id] })
+      }
+      if (url.includes(EDIT)) return ok({})
+      return ok({})
+    }
+  }
+  const oldestFirst = [{ id: 1, bvid: 'BVold', order: 1 }, { id: 2, bvid: 'BVnew', order: 2 }]
+  const newestFirst = [{ id: 2, bvid: 'BVnew', order: 1 }, { id: 1, bvid: 'BVold', order: 2 }]
+  const dates = { BVold: 100, BVnew: 200 }
+  const args = { series: '123' }
+
+  it('asc 把旧视频排在前面，desc 把新视频排在前面', async () => {
+    const asc = await runCommand('seriesSort', { args, options: { order: 'asc' } }, route(newestFirst, dates))
+    expect(asc.error).toBeUndefined()
+    const desc = await runCommand('seriesSort', { args, options: { order: 'desc' } }, route(oldestFirst, dates))
+    expect(desc.error).toBeUndefined()
+    const body = (r: typeof asc) => JSON.parse(String(r.bodies[r.urls.findIndex((u) => u.includes(EDIT))]))
+    expect(body(asc).sorts).toEqual([{ id: 1, sort: 1 }, { id: 2, sort: 2 }])
+    expect(body(desc).sorts).toEqual([{ id: 2, sort: 1 }, { id: 1, sort: 2 }])
+  })
+
+  it('已经按要求排序时不发写请求；相同发布时间保持原有顺序', async () => {
+    for (const [episodes, times, order] of [
+      [oldestFirst, dates, 'asc'], [newestFirst, dates, 'desc'], [oldestFirst, { BVold: 100, BVnew: 100 }, 'desc'],
+    ] as const) {
+      const r = await runCommand('seriesSort', { args, options: { order } }, route(episodes, times))
+      expect(r.error).toBeUndefined()
+      expect(r.result).toEqual({ id: '123', moved: 0 })
+      expect(r.urls.some((u) => u.includes(EDIT))).toBe(false)
+    }
+  })
+
+  it('发布时间请求失败或缺失时中止，不提交排序', async () => {
+    for (const value of ['error', undefined, 0, 'invalid']) {
+      const r = await runCommand('seriesSort', { args, options: { order: 'asc' } }, route(oldestFirst, { BVold: value, BVnew: 200 }))
+      expect(r.error, String(value)).toMatchObject({ code: 'UPSTREAM' })
+      expect(r.urls.some((u) => u.includes(EDIT))).toBe(false)
+    }
+  })
+})

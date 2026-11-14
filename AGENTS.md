@@ -256,6 +256,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | bilibili | `item triple <item>` | 一键三连 | `{id}` |
 | bilibili | `item edit <item> [--video <文件>] [--title <标题>] [--text <简介>] [--cover <16:9 图>] [--cover43 <4:3 图>] [--schedule <ISO 时间>\|none] [--tag <标签>...] [--category <分区 id>] [--visibility public\|private]` | 编辑已投稿件；给出 `--video` 时替换视频（先上传新文件，再走 `x/vu/web/edit`），不给则只改资料，分 P 沿用原稿的 `filename` + `cid`，可见性沿用原稿的 `is_only_self`，提交后重新审核。缺省沿用原标题/简介/封面/标签/分区。B 站封面分 16:9（`--cover`，播放页）与 4:3（`--cover43`，稿件列表页）两张，只给一张时另一张沿用原图。`--schedule` 改期、`none` 取消定时，不给时沿用原稿的定时 | Item |
 | bilibili | `series add <series> <item>` | 把已发布的稿件加进合集（`x2/creative/web/season/section/episodes/add`），挂到合集的第一个小节下；只能加进自己创建的合集 | `{id}`（稿件 BV 号） |
+| bilibili | `series sort <series> [--order asc|desc]` | 按发布时间重排自己合集的第一个小节；默认 asc，desc 最新在前。任一发布时间不可用时中止且不写入，排序一致时不提交 | `{id moved}` |
 | bilibili | `item subtitles <item>` | 字幕 | Subtitle[] |
 | bilibili | `danmaku list <item>` | 视频弹幕 | Danmaku[] |
 | bilibili | `danmaku send <item> <text> --offset <秒> [--color] [--font-size] [--position]` | 发视频弹幕。`--color` 为 `#RRGGBB` 或十进制，`--font-size` 默认 25，`--position scroll\|top\|bottom` 默认 `scroll` | `{id}` |

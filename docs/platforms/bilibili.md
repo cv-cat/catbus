@@ -154,6 +154,7 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `series list` | ◐ | 我创建的合集：id、标题、集数、链接。非上游：创作中心合集管理接口（`x2/creative/web/seasons`），只能列自己的合集。 |
 | `series items` | ○ | 规划中。 |
 | `series add` | ✓ | 把已发布的稿件加进合集（`x2/creative/web/season/section/episodes/add`），挂到合集的第一个小节下。平台扩展。 |
+| `series sort` | ◐ | 按发布时间重排自己合集的第一个小节；`--order asc` 最早在前（默认），`desc` 最新在前。发布时间不可用时中止且不写入。平台扩展。 |
 
 ### 整组规划中
 
