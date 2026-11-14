@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Info, Menu, RefreshCw, TrainFront } from 'lucide-vue-next'
 import ThemeToggle from '@/components/ThemeToggle.vue'
@@ -9,6 +9,7 @@ import SettingSwitch from '@/components/settings/SettingSwitch.vue'
 import LoadingBar from '@/components/LoadingBar.vue'
 import CatbusLoader from '@/components/CatbusLoader.vue'
 import StateView from '@/components/StateView.vue'
+import BackToTop from '@/components/BackToTop.vue'
 import RailForm from '@/components/rail/RailForm.vue'
 import TicketRow from '@/components/rail/TicketRow.vue'
 import TransferCard from '@/components/rail/TransferCard.vue'
@@ -71,13 +72,27 @@ const summary = computed(() => {
   if (!q) return ''
   return `${q.from} → ${q.to} · ${monthDay(q.date)} ${weekday(q.date)}`
 })
+/**
+ * 吸顶：查询表单滚到顶时停在上面（手机上表单太高，不吸顶）。
+ * 不在滚动事件里读布局，用 IntersectionObserver 看表单前面的顶栏：顶栏整个滚出容器时算吸顶，表单加深阴影。
+ */
+const root = ref<HTMLElement>()
+const header = ref<HTMLElement>()
+const stuck = ref(false)
+let stuckIo: IntersectionObserver | undefined
+onMounted(() => {
+  stuckIo = new IntersectionObserver(([e]) => e && (stuck.value = !e.isIntersecting), { root: root.value })
+  stuckIo.observe(header.value!)
+})
+onBeforeUnmount(() => stuckIo?.disconnect())
+
 /** 骨架行数 */
 const skeleton = 6
 </script>
 
 <template>
-  <main class="rail-page">
-    <header class="top">
+  <main ref="root" class="rail-page">
+    <header ref="header" class="top">
       <button
         v-if="bp.phone"
         type="button"
@@ -103,7 +118,7 @@ const skeleton = 6
       <ThemeToggle class="tool" />
     </header>
 
-    <RailForm />
+    <RailForm class="rail-form" :class="{ stuck: stuck && !bp.phone }" />
 
     <template v-if="rail.query">
       <div class="filters">
@@ -229,6 +244,7 @@ const skeleton = 6
       <h2>{{ t('rail.empty.intro') }}</h2>
       <p>{{ t('rail.empty.introDesc') }}</p>
     </div>
+    <BackToTop />
   </main>
 </template>
 
@@ -310,6 +326,16 @@ h1 {
   background: linear-gradient(135deg, #f5b82438 0%, #f5a5241a 100%);
   border-color: #f5c84259;
   box-shadow: inset 0 1px 0 #ffffff1f, 0 4px 16px #f5a52426;
+}
+
+/* ---------- 查询表单吸顶 ---------- */
+.rail-page .rail-form {
+  position: sticky;
+  top: -8px;
+  transition: box-shadow 0.3s;
+}
+.rail-page .rail-form.stuck {
+  box-shadow: var(--shadow-card), 0 12px 32px #1b1f2e1f;
 }
 
 /* ---------- 筛选栏 ---------- */
@@ -530,6 +556,10 @@ h1 {
   }
 }
 @media (max-width: 640px) {
+  /* 手机上表单有好几行，吸顶会占掉半屏 */
+  .rail-page .rail-form {
+    position: relative;
+  }
   .rail-page {
     padding: calc(12px + var(--safe-top)) calc(12px + var(--safe-right)) calc(32px + var(--safe-bottom)) calc(12px + var(--safe-left));
   }
