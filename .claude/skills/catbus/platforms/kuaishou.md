@@ -8,12 +8,12 @@
 
 ## 能做
 
-- **读**：`item search`（没有筛选）/ `get` / `related` / `media` / `download` / `list`；`user get` / `search` / `items` / `collects`；`user likes` / `followers` / `following`（只 me）；`comment list` / `replies`；`feed list`（推荐；关注流只有首屏）；`live get` / `list` / `categories` / `listen` / `gifts` / `replays`；`notice count`。
+- **读**：`item search`（没有筛选）/ `get` / `related` / `media` / `download` / `list`；`user get` / `search` / `items` / `collects`；`user likes` / `followers` / `following`（只 me）；`comment list` / `replies`；`feed list`（推荐；关注流只有首屏）；`live get` / `list` / `categories` / `listen` / `gifts` / `replays`；`notice count`；`keyword hot`（热榜：走旧版网页端的接口，新版网页端已不展示热榜，随时可能下线）。
 - **写**：`item publish`（仅自己可见的图集发布已真机验证）；`media upload`。
 
 ## 做不到
 
-点赞、收藏、评论、关注、删作品；私信（`msg` 全部）；`live send` / `search` / `media`；`keyword`；`notice list`。
+点赞、收藏、评论、关注、删作品；私信（`msg` 全部）；`live send` / `search` / `media`；`keyword suggest`；`notice list`。
 
 ## 参数
 

@@ -8,7 +8,7 @@
 | 上游仓库 | [cv-cat/DouYin_Spider](https://github.com/cv-cat/DouYin_Spider) |
 | 移植基线 | `fix-dtrait-blob` 分支的 [`c28ee5f`](https://github.com/cv-cat/DouYin_Spider/commit/c28ee5fc4d1542039601d503c97da6a1bdf0522a)（还没合进上游 master），记录在 [`src/platforms/douyin/UPSTREAM`](../../src/platforms/douyin/UPSTREAM) |
 | 端 | web ✓ · app ○ 规划中 · pc ○ 规划中 |
-| 命令（web） | 已实现 40 条（✓ 34 · ◐ 6），规划中 ○ 31 条 |
+| 命令（web） | 已实现 41 条（✓ 34 · ◐ 7），规划中 ○ 30 条 |
 
 命令表由注册表生成，与 `catbus platforms douyin` 一致；选项以 `catbus douyin <resource> <action> --help` 为准。通用的命令语法、输出结构见 [AGENTS.md 第 4 节](../../AGENTS.md#4-命令规范)。
 
@@ -131,13 +131,19 @@
 | `folder list` | ✓ | 收藏夹列表。 |
 | `folder items`、`folder create`、`folder update`、`folder delete` | ○ | 规划中 |
 
+### keyword
+
+| 命令 | 状态 | 说明 |
+|---|---|---|
+| `keyword hot` | ◐ | 热搜词：网页端热榜（douyin.com/hot），按榜单顺序，`heat` 为热度值。非上游：请求按网页端补的（`aweme/v1/web/hot/search/list`），不含置顶词和实时上升热点。 |
+| `keyword suggest` | ○ | 规划中 |
+
 ### 整组规划中
 
 下面这些 resource 在本平台还没有已实现的命令，执行时都返回 `NOT_IMPLEMENTED`（退出码 4）。
 
 | resource | 命令 |
 |---|---|
-| `keyword` | `suggest` `hot` |
 | `series` | `list` `items` |
 | `history` | `list` |
 | `topic` | `search` |

@@ -129,6 +129,15 @@ export async function userInfo(ks: Ks): Promise<Json> {
   return data?.data?.userInfo ?? {}
 }
 
+/**
+ * 非上游：热榜（`keyword hot`）。上游没有这个方法，按旧版网页端首页的 visionHotRank 补的，没有对拍。
+ * 新版网页端（ks-web）已经不展示热榜，接口仍然可用，随时可能下线。
+ */
+export async function hotRank(ks: Ks): Promise<Json> {
+  const data = await ks.graphql('visionHotRank', { page: 'home' }, gql.HOT_RANK, `${WWW}/`)
+  return data?.data?.visionHotRank ?? {}
+}
+
 // ================================================================ 登录：KuaishouLoginAPI
 
 export const SID_LIVE = 'kuaishou.live.web'

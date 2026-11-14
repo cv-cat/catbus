@@ -79,7 +79,9 @@ export default definePlatform({
         'live stop': 'none',
 
         'keyword suggest': 'none',
-        'keyword hot': 'none',
+        'keyword hot': impl('partial', 'keywordHot', {
+          note: '非上游：上游没有热搜接口，请求按网页端热搜榜补的（weibo.com/ajax/side/hotSearch），没有对拍；去掉广告位，不含置顶词',
+        }),
 
         'notice list': 'none',
         'notice count': 'none',

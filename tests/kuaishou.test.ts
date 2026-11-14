@@ -1228,3 +1228,39 @@ describe('kuaishou 短信多用户（官方 result 100110031：手机号下有�
     await expect(replaySms({ method: 'sms', user: '20002' }, {})).rejects.toMatchObject({ code: 'USAGE', message: expect.stringContaining('待选') })
   })
 })
+
+describe('kuaishou keyword hot（非上游，没有对拍）', () => {
+  it('发 visionHotRank GraphQL；按 rank 顺序输出，热度「万」换成整数，置顶词（没有热度）不收', async () => {
+    const { keywordHot } = await import('../src/platforms/kuaishou/web/commands.js')
+    const items = [
+      { id: '置顶词', rank: 0, name: '置顶词', hotValue: null },
+      { id: '热榜一', rank: 1, name: '热榜一', hotValue: '1113.8万' },
+      { id: '热榜二', rank: 2, name: '热榜二', hotValue: '98765' },
+    ]
+    const { requests, result, error } = await session(
+      (req) => (req.url.pathname === '/graphql' ? { data: { visionHotRank: { result: 1, pcursor: 'no_more', items } } } : { result: 1 }),
+      () => keywordHot(makeCtx({ platform: 'kuaishou' })) as Promise<any>,
+    )
+    expect(error).toBeUndefined()
+    expect(result).toEqual([
+      { text: '热榜一', heat: 11138000 },
+      { text: '热榜二', heat: 98765 },
+    ])
+    const gql = requests.find((r) => r.url.pathname === '/graphql')!
+    expect([gql.url.origin, gql.body.operationName, gql.body.variables]).toEqual(['https://www.kuaishou.com', 'visionHotRank', { page: 'home' }])
+    expect(gql.body.query).not.toContain('tag')
+  })
+
+  it('result 不是 1 时按业务码报错；注册表标注非上游', async () => {
+    const { keywordHot } = await import('../src/platforms/kuaishou/web/commands.js')
+    const { error } = await session(
+      (req) => (req.url.pathname === '/graphql' ? { data: { visionHotRank: { result: 2 } } } : { result: 1 }),
+      () => keywordHot(makeCtx({ platform: 'kuaishou' })) as Promise<any>,
+    )
+    expect(error).toMatchObject({ code: 'RISK_CONTROL' })
+    const { default: kuaishou } = await import('../src/platforms/kuaishou/index.js')
+    const web = kuaishou.endpoints.web
+    if (web === 'planned') throw new Error('web 是 planned')
+    expect(web.commands.get('keyword hot')).toMatchObject({ upstream: 'partial', note: expect.stringContaining('非上游') })
+  })
+})

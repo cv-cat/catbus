@@ -883,6 +883,19 @@ function feedCursor(cursor: string | null): [pcursor: string, pages: number] {
   return [i < 0 ? cursor : cursor.slice(0, i), pages]
 }
 
+// ================================================================ keyword
+
+/** 热榜（非上游，见 api.hotRank）：按 rank 顺序；hotValue 是「1113.8万」这样的展示值，置顶词（rank 0，没有热度）不收。 */
+export async function keywordHot(ctx: Ctx) {
+  return run(ctx, 'www', async (k) => {
+    const r = await api.hotRank(k)
+    if (r?.result != null && r.result !== 1) k.check(r, '热榜')
+    return ((r.items ?? []) as Json[])
+      .map((x) => n.keyword({ text: String(x?.name ?? ''), heat: n.count(x?.hotValue) }, x))
+      .filter((kw) => kw.text && kw.heat != null)
+  })
+}
+
 // ================================================================ live
 
 const ROOM_CACHE_TTL = 6 * 3600_000

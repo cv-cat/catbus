@@ -173,7 +173,9 @@ export default definePlatform({
         'live stop': impl('full', 'liveStop'),
 
         'keyword suggest': 'none',
-        'keyword hot': 'none',
+        'keyword hot': impl('partial', 'keywordHot', {
+          note: '非上游：上游没有热搜接口，请求按网页端搜索框补的（x/web-interface/wbi/search/square），没有对拍；最多 50 条，不含置顶词',
+        }),
 
         'notice list': 'none',
         'notice count': 'none',

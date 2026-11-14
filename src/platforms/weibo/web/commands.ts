@@ -199,6 +199,18 @@ export async function feedList(ctx: Ctx) {
   return paged(list.map((m) => norm.mblog(m)), next, Boolean(next && list.length))
 }
 
+// ================================================================ keyword
+
+/** 热搜榜（非上游，见 api.hotSearch）：按榜单顺序，去掉广告位；置顶词（hotgov）没有热度，不收。 */
+export async function keywordHot(ctx: Ctx) {
+  const w = new Weibo(ctx)
+  const body = await api.hotSearch(w)
+  return ((body.data?.realtime ?? []) as any[])
+    .filter((x) => !x?.is_ad)
+    .map((x) => n.keyword({ text: String(x?.word || x?.note || ''), heat: n.count(x?.num) }, x))
+    .filter((k) => k.text)
+}
+
 // ================================================================ comment
 
 export async function commentList(ctx: Ctx) {

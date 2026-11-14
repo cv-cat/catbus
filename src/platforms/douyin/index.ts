@@ -117,7 +117,9 @@ export default definePlatform({
         'live stop': 'none',
 
         'keyword suggest': 'none',
-        'keyword hot': 'none',
+        'keyword hot': read('partial', 'keywordHot', {
+          note: '非上游：上游没有热搜接口，请求按网页端热榜页补的（aweme/v1/web/hot/search/list），没有对拍；不含置顶词和实时上升热点',
+        }),
 
         'notice list': read('full', 'noticeList', {
           options: { group: z.enum(['all', 'fans', 'mention', 'comment', 'like', 'danmaku']).optional().describe('通知分组，不带时为默认分组') },

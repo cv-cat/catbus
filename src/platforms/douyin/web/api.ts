@@ -538,6 +538,23 @@ export async function feed(d: Douyin, count = '20', refreshIndex = '2'): Promise
   return getJson(d, `${WWW}/aweme/v1/web/module/feed/`, h, p)
 }
 
+/**
+ * 非上游：热搜榜（`keyword hot`）。上游没有这个接口，按网页端热榜页（douyin.com/hot）的请求补的，没有对拍。
+ * data.word_list 是热搜榜（置顶词也在里面），data.trending_list 是实时上升热点。
+ */
+export async function hotSearch(d: Douyin): Promise<DyJson> {
+  const h = headerUifid(d, headers('GET').referer(`${WWW}/hot`))
+  const p = new Params()
+  p.add('device_platform', 'webapp').add('aid', '6383').add('channel', 'channel_pc_web').add('detail_list', '1').add('source', '6')
+  p.update(platformParams('0'))
+  await withWebId(d, p)
+  withUifid(d, p)
+  withVerifyFp(d, p)
+  await withMsToken(d, p)
+  withABogus(d, p)
+  return getJson(d, `${WWW}/aweme/v1/web/hot/search/list/`, h, p)
+}
+
 // ================================================================ 写操作：点赞、收藏、评论
 
 export async function digg(d: Douyin, awemeId: string, type: '1' | '0'): Promise<DyJson> {

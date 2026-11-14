@@ -1376,3 +1376,38 @@ describe('douyin 审查修复：TOS 上传', () => {
     }
   })
 })
+
+describe('douyin keyword hot（非上游，没有对拍）', () => {
+  useTempHome()
+
+  it('请求网页端热榜接口；按榜单顺序输出，置顶词（没有热度）不收，实时上升热点不收', async () => {
+    const { keywordHot } = await commands()
+    const data = {
+      word_list: [
+        { word: '置顶词', hot_value: 0, position: 0 },
+        { word: '热搜一', hot_value: 12106988, position: 1, label: 3 },
+        { word: '热搜二', hot_value: '1.1万', position: 2 },
+        { word: '', hot_value: 100, position: 3 },
+      ],
+      trending_list: [{ word: '上升热点', hot_value: 0 }],
+      trending_desc: '实时上升热点',
+    }
+    await withServer([['/aweme/v1/web/hot/search/list/', () => fakeResponse({ status_code: 0, data })]], async (seen) => {
+      const r: any = await keywordHot(loggedFrom('search_general'))
+      expect(r).toEqual([
+        { text: '热搜一', heat: 12106988 },
+        { text: '热搜二', heat: 11000 },
+      ])
+      const hot = seen.find((s) => s.url.includes('/hot/search/list/'))!
+      const q = query(hot)
+      expect([q.get('device_platform'), q.get('aid'), q.get('channel'), q.get('detail_list'), q.get('source')]).toEqual(['webapp', '6383', 'channel_pc_web', '1', '6'])
+      expect(q.get('a_bogus')).toBeTruthy()
+      expect(q.get('msToken')).toBeTruthy()
+      expect(hot.headers).toContainEqual(['referer', 'https://www.douyin.com/hot'])
+    })
+    const { default: douyin } = await import('../src/platforms/douyin/index.js')
+    const web = douyin.endpoints.web
+    if (web === 'planned') throw new Error('web 是 planned')
+    expect(web.commands.get('keyword hot')).toMatchObject({ upstream: 'partial', note: expect.stringContaining('非上游') })
+  })
+})

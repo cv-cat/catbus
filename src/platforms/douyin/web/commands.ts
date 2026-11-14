@@ -273,6 +273,18 @@ export async function feedList(ctx: Ctx) {
   return paged(list, Number(index) + 1, body.has_more == null ? list.length > 0 : more(body.has_more))
 }
 
+// ================================================================ keyword
+
+/** 热搜榜（非上游，见 api.hotSearch）：word_list 按榜单顺序，置顶词没有热度、不收；实时上升热点（trending_list）不在这里。 */
+export async function keywordHot(ctx: Ctx) {
+  const d = await douyin(ctx)
+  const body = check(ctx, await api.hotSearch(d))
+  return ((body.data?.word_list ?? []) as any[])
+    .filter((x) => n.count(x?.hot_value))
+    .map((x) => n.keyword({ text: String(x?.word ?? ''), heat: n.count(x?.hot_value) }, x))
+    .filter((k) => k.text)
+}
+
 /** 通知分组（上游 get_notice_list 的 notice_group）；不带时用上游默认的 960。 */
 const NOTICE_GROUP: Record<string, string> = { all: '700', fans: '401', mention: '601', comment: '2', like: '3', danmaku: '520' }
 

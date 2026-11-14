@@ -25,3 +25,9 @@ export const VISION_PROFILE_REDUCED =
 
 export const CHECK_LOGIN =
   "query checkLoginQuery {\n  checkLogin\n}\n"
+
+/**
+ * 非上游：旧版网页端首页热榜（visionHotRank）。上游没有这条 query；旧版带的 `tag` 字段服务端已经不认（GRAPHQL_VALIDATION_FAILED），这里去掉了。
+ */
+export const HOT_RANK =
+  "query visionHotRank($page: String) {\n  visionHotRank(page: $page) {\n    result\n    pcursor\n    items {\n      id\n      rank\n      name\n      hotValue\n      __typename\n    }\n    __typename\n  }\n}\n"

@@ -8,14 +8,14 @@
 
 ## 能做
 
-- **读**：`item search` / `get` / `media` / `download` / `list`（自己的）；`user get` / `search` / `items` / `likes` / `followers` / `following`；`comment list` / `replies`（也能列商品评价）；`feed list`（只有推荐）；`product get`；`live get` / `search` / `listen` / `history`（最近 15 条）/ `rank` / `products` / `media`；`notice list`；`msg listen`（收新私信）；`folder list`。
+- **读**：`item search` / `get` / `media` / `download` / `list`（自己的）；`user get` / `search` / `items` / `likes` / `followers` / `following`；`comment list` / `replies`（也能列商品评价）；`feed list`（只有推荐）；`product get`；`live get` / `search` / `listen` / `history`（最近 15 条）/ `rank` / `products` / `media`；`notice list`；`msg listen`（收新私信）；`folder list`；`keyword hot`（热榜）。
 - **写**：`item like` / `unlike` / `collect` / `uncollect` / `publish`；`comment add`；`live send` / `like`；`msg send`；`media upload`。
 
 **写操作目前基本跑不通**：发布、评论、点赞、收藏、私信要带设备风控头（dtrait），实测发布被拦下（报 `RISK_CONTROL`），点赞还可能让登录态失效、需要重新扫码。用户要做写操作时先把这个情况告诉他，不要在他的常用账号上反复尝试。
 
 ## 做不到
 
-`msg list` / `history`（能发私信、能收新私信，但列不出会话和历史）、`user collects` / `follow`、`item delete` / `related`、`keyword hot` / `suggest`、`notice count`、`feed list --kind hot|following`。
+`msg list` / `history`（能发私信、能收新私信，但列不出会话和历史）、`user collects` / `follow`、`item delete` / `related`、`keyword suggest`、`notice count`、`feed list --kind hot|following`。
 
 ## 参数
 
