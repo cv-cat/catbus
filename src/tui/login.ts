@@ -13,7 +13,8 @@ import { webEndpoint } from './model.js'
 
 export type LoginView =
   | { type: 'working'; text: string }
-  | { type: 'qrcode'; content: string; png: string; hint: string }
+  /** scanned：手机已扫码、等确认时的提示（LoginUi.scanned），换了新二维码时为 null */
+  | { type: 'qrcode'; content: string; png: string; hint: string; scanned: string | null }
   | { type: 'prompt'; question: string; hidden: boolean }
   | { type: 'link'; url: string; hint: string; title: string }
   | { type: 'done'; account: Account }
@@ -120,10 +121,15 @@ export function startLogin(req: LoginRequest, emit: (v: LoginView) => void): Log
     if (!controller.signal.aborted) emit(v)
   }
   let waiting: ((text: string) => void) | null = null
+  let lastQr: Extract<LoginView, { type: 'qrcode' }> | null = null
   const hook: LoginUi = {
     interactive: true,
     signal: controller.signal,
-    qrcode: (content, png, hint) => onView({ type: 'qrcode', content, png, hint }),
+    qrcode: (content, png, hint) => onView((lastQr = { type: 'qrcode', content, png, hint, scanned: null })),
+    // 已扫码：在当前这张码上标出来；还没出过码（不该发生）时忽略
+    scanned: (hint) => {
+      if (lastQr) onView((lastQr = { ...lastQr, scanned: hint }))
+    },
     link: (url, hint, title) => onView({ type: 'link', url, hint, title }),
     prompt: (question, options) =>
       new Promise<string>((resolve, reject) => {

@@ -24,6 +24,8 @@ export interface LoginUi {
   interactive: true
   /** 展示二维码。content 是二维码内容，png 是已经写好的图片路径。 */
   qrcode(content: string, png: string, hint: string): void
+  /** 手机已扫码、还没确认（扫码登录）。hint 是完整的提示，以「已扫码」开头。换了新二维码时界面自己清掉这个状态。 */
+  scanned?(hint: string): void
   prompt(question: string, options: { hidden?: boolean }): Promise<string>
   /** 需要用户在浏览器里完成的一步（极验人机验证、即梦授权）：显示链接，等用户操作；完成后平台流程自己继续。 */
   link(url: string, hint: string, title: string): void
@@ -186,6 +188,19 @@ export async function showQrcode(ctx: HandlerContext, content: string, hint = '�
   process.stderr.write(art + '\n')
   ctx.log.info(`${hint}。二维码图片：${png}`)
   return png
+}
+
+/** 「已扫码」提示的固定开头：WebUI 等调用方按 stderr 里以 `[catbus] 已扫码` 开头的行判断扫码进度（AGENTS 5.3）。 */
+export const SCANNED_PREFIX = '已扫码'
+
+/**
+ * 扫码登录：手机已扫码、还没确认时调用（AGENTS 5.3）。各平台不要自己写「已扫码」的提示，一律经这里：
+ * stderr 写一行 `[catbus] 已扫码，<detail>`，界面里另外走 `LoginUi.scanned`。detail 是之后要用户做什么。
+ */
+export function qrcodeScanned(ctx: HandlerContext, detail = '请在手机上确认'): void {
+  const hint = `${SCANNED_PREFIX}，${detail}`
+  ui?.scanned?.(hint)
+  ctx.log.info(hint)
 }
 
 /** 轮询时最多容忍的连续网络错误次数（含最后一次）。 */

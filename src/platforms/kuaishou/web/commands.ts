@@ -2,7 +2,7 @@ import { basename, extname } from 'node:path'
 import { endpointFlag, GUEST } from '../../../core/auth-store.js'
 import { CatbusError } from '../../../core/errors.js'
 import { downloadMedia, type LocalMedia, readMedia } from '../../../core/files.js'
-import { cookieCredential, finishLogin, freshCredential, interactive, loginContext, poll, prompt, showQrcode, type SmsIntermediate, smsLogin, smsState } from '../../../core/login.js'
+import { cookieCredential, finishLogin, freshCredential, interactive, loginContext, poll, prompt, qrcodeScanned, showQrcode, type SmsIntermediate, smsLogin, smsState } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
@@ -149,7 +149,7 @@ async function qrcodeLogin(ctx: Ctx) {
       { interval: 1000, timeout: deadline - rand.now(), what: '扫码登录' },
     )
   await wait('scan')
-  ctx.log.info('已扫码，请在手机上确认')
+  qrcodeScanned(ctx)
   const accepted = await wait('accept')
   const qrToken = accepted.qrToken ?? accepted.qr_token
   if (!qrToken) throw new CatbusError('UPSTREAM', '确认登录后没有拿到 qrToken', { detail: { stage: 'acceptResult' } })
