@@ -869,3 +869,57 @@ console.log(JSON.stringify({ ok: true, data: { id: item, files, qbit: { status: 
     }
   })
 })
+
+describe('扫码登录的已扫码状态（AGENTS 7.9「登录」）', () => {
+  // 假的 catbus（shebang 脚本）：Windows 上不能直接执行，跳过
+  it.skipIf(process.platform === 'win32')('stderr 出现「已扫码」时标记 scanned，换新二维码时清掉', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'catbus-fake-'))
+    const bin = join(dir, 'catbus')
+    const png = join(dir, 'qrcode.png')
+    writeFileSync(png, Buffer.from('89504e470d0a1a0a', 'hex'))
+    // 每一步等测试放一个标记文件再往下走，不靠计时
+    writeFileSync(bin, `#!${process.execPath}
+const fs = require('node:fs'), path = require('node:path')
+const dir = ${JSON.stringify(dir)}
+const wait = (n) => new Promise((r) => { const t = setInterval(() => { if (fs.existsSync(path.join(dir, 'go' + n))) { clearInterval(t); r() } }, 10) })
+;(async () => {
+  process.stderr.write('[catbus] 请用 B 站 App 扫码并确认。二维码图片：${png}\\n')
+  await wait(1)
+  process.stderr.write('[catbus] 已扫码，请在手机上确认\\n')
+  await wait(2)
+  process.stderr.write('[catbus] 二维码到期，换一张\\n[catbus] 请用抖音 App 扫码并确认。二维码图片：${png}\\n')
+  await wait(3)
+  process.stderr.write('[catbus] 换码前发现已扫码，请在手机上确认\\n')
+  await wait(4)
+  console.log(JSON.stringify({ ok: true, data: { account: 'default' }, error: null }))
+})()
+`, { mode: 0o755 })
+    const prev = process.env.CATBUS_BIN
+    process.env.CATBUS_BIN = bin
+    const { startQrcode, getSession, publicSession } = await import('../src/webui/login.js')
+    const until = async (ok: () => boolean) => {
+      for (let i = 0; i < 300 && !ok(); i++) await new Promise((r) => setTimeout(r, 10))
+      expect(ok()).toBe(true)
+    }
+    try {
+      const s = startQrcode('bilibili', ['bilibili', 'auth', 'login'])
+      const view = () => publicSession(getSession(s.id)!)
+      await until(() => view().state === 'qrcode')
+      expect(view().scanned).toBe(false)
+      writeFileSync(join(dir, 'go1'), '')
+      await until(() => view().scanned)
+      expect(view().message).toBe('已扫码，请在手机上确认')
+      writeFileSync(join(dir, 'go2'), '')
+      await until(() => view().message === '请用抖音 App 扫码并确认')
+      expect(view().scanned).toBe(false)
+      writeFileSync(join(dir, 'go3'), '')
+      await until(() => view().scanned)
+      writeFileSync(join(dir, 'go4'), '')
+      await until(() => view().state === 'done')
+    } finally {
+      if (prev === undefined) delete process.env.CATBUS_BIN
+      else process.env.CATBUS_BIN = prev
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+})

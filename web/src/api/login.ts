@@ -13,6 +13,8 @@ export interface QrSession {
   id: string
   state: 'running' | 'qrcode' | 'done' | 'error'
   qrcode: string | null
+  /** 手机已扫码、还没确认 */
+  scanned?: boolean
   message: string | null
   envelope: Envelope<Account> | null
 }

@@ -33,6 +33,7 @@
   },
   "qrcode": {
     "alt": "로그인 QR 코드",
+    "scanned": "스캔했습니다. 휴대폰에서 확인하세요",
     "reload": "다시 받기",
     "loading": "QR 코드를 받는 중…",
     "refresh": "QR 코드 새로고침"

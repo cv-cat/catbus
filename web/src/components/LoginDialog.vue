@@ -519,10 +519,16 @@ const isMteam = computed(() => dialog.platform === 'mteam')
 
             <!-- 扫码 -->
             <div v-if="method === 'qrcode'" class="qr-wrap">
-              <div class="qr" :class="{ ready: qr?.qrcode }">
+              <div class="qr" :class="{ ready: qr?.qrcode, scanned: qr?.qrcode && qr.scanned }">
                 <img v-if="qr?.qrcode" :src="qr.qrcode" :alt="t('login.qrcode.alt')" />
                 <LoaderCircle v-else-if="!error" class="spin" :size="22" />
                 <button v-else type="button" class="refresh" @click="startQr"><RefreshCw :size="18" />{{ t('login.qrcode.reload') }}</button>
+                <!-- 已扫码、等手机确认：二维码虚化，中间绿底白勾 -->
+                <Transition name="scanned">
+                  <span v-if="qr?.qrcode && qr.scanned" class="scanned-badge" role="img" :aria-label="t('login.qrcode.scanned')">
+                    <Check :size="40" :stroke-width="3" />
+                  </span>
+                </Transition>
               </div>
               <p class="qr-msg">
                 <template v-if="!error">
@@ -794,6 +800,41 @@ h2 {
   width: 100%;
   height: 100%;
   image-rendering: pixelated;
+  transition: filter 0.35s, opacity 0.35s;
+}
+/* 已扫码：二维码虚化，中间绿底白勾 */
+.qr {
+  position: relative;
+}
+.qr.scanned img {
+  filter: blur(6px);
+  opacity: 0.45;
+}
+.scanned-badge {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: #1fae5b;
+  box-shadow:
+    0 0 0 6px #1fae5b33,
+    0 10px 24px #1fae5b55;
+}
+.scanned-enter-active {
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease-out;
+}
+.scanned-leave-active {
+  transition: transform 0.2s ease-in, opacity 0.2s ease-in;
+}
+.scanned-enter-from,
+.scanned-leave-to {
+  opacity: 0;
+  transform: scale(0.4);
 }
 .qr-msg {
   margin: 0;

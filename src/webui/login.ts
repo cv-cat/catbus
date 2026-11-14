@@ -32,6 +32,8 @@ export interface Session {
   platform: string
   state: 'running' | 'qrcode' | 'done' | 'error'
   qrcode: string | null
+  /** 手机已扫码、还没确认（AGENTS 7.9「登录」）；换了新二维码时清掉 */
+  scanned: boolean
   message: string | null
   envelope: unknown
   child: ChildProcess | null
@@ -142,6 +144,11 @@ export function buildLogout(req: { platform?: unknown; account?: unknown }): str
 
 const sessions = new Map<string, Session>()
 const QR_LINE = /二维码图片：(.+\.png)\s*$/
+/**
+ * 已扫码：扫码登录的各平台（bilibili、xhs、douyin、kuaishou、jd、xianyu、maoyan）在手机扫码、还没确认时
+ * 都会在 stderr 写一行以「已扫码」开头的 info（抖音换码前查到已扫码时是「换码前发现已扫码」）。
+ */
+const SCANNED_LINE = /^\[catbus\]\s*(?:换码前发现)?已扫码/
 const QR_TIMEOUT = 240_000
 
 function spawnCli(argv: string[], stdin: string | null): ChildProcess {
@@ -179,7 +186,7 @@ export function runOnce(argv: string[], stdin: string | null): Promise<unknown> 
 export function startQrcode(platform: string, argv: string[]): Session {
   // 同一平台同时只保留一个扫码会话
   for (const s of sessions.values()) if (s.platform === platform) cancel(s.id)
-  const s: Session = { id: randomUUID(), platform, state: 'running', qrcode: null, message: '正在获取二维码…', envelope: null, child: null, updatedAt: Date.now() }
+  const s: Session = { id: randomUUID(), platform, state: 'running', qrcode: null, scanned: false, message: '正在获取二维码…', envelope: null, child: null, updatedAt: Date.now() }
   sessions.set(s.id, s)
   const child = spawnCli(argv, null)
   s.child = child
@@ -195,6 +202,7 @@ export function startQrcode(platform: string, argv: string[]): Session {
       if (!line.startsWith('[catbus]')) continue // 终端字符画二维码等
       const qr = QR_LINE.exec(line)
       if (qr) {
+        s.scanned = false // 新二维码（过期后换码）还没被扫
         void readFile(qr[1]!).then((png) => {
           s.qrcode = `data:image/png;base64,${png.toString('base64')}`
           s.state = 'qrcode'
@@ -202,6 +210,7 @@ export function startQrcode(platform: string, argv: string[]): Session {
         })
         s.message = line.replace(/^\[catbus\]\s*/, '').replace(/。?二维码图片：.*$/, '')
       } else {
+        if (SCANNED_LINE.test(line)) s.scanned = true
         s.message = line.replace(/^\[catbus\]\s*/, '')
       }
       s.updatedAt = Date.now()
@@ -243,7 +252,7 @@ function sweep() {
 }
 
 export function publicSession(s: Session) {
-  return { id: s.id, state: s.state, qrcode: s.qrcode, message: s.message, envelope: s.envelope }
+  return { id: s.id, state: s.state, qrcode: s.qrcode, scanned: s.scanned, message: s.message, envelope: s.envelope }
 }
 
 export { LoginError }

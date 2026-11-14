@@ -33,6 +33,7 @@
   },
   "qrcode": {
     "alt": "Login QR code",
+    "scanned": "Scanned. Confirm on your phone",
     "reload": "Get new code",
     "loading": "Getting QR code…",
     "refresh": "Refresh QR code"
