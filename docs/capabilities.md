@@ -141,7 +141,7 @@
 - `item publish` 不支持的标准选项：xhs --mention --category --price；douyin --category --price；tiktok --title --poi --category --schedule --price；bilibili --image --topic --mention --poi --price；kuaishou --cover --mention --poi --category --price；weibo --title --cover --tag --mention --poi --category --schedule --price；xianyu --video --cover --tag --topic --mention --poi --category --schedule；x --title --cover --tag --topic --mention --poi --category --schedule --price；youtube --image --topic --mention --poi --category --price
 - `item publish --visibility` 取值：默认 public / private / friends；xhs public / private；bilibili public / private；weibo public / private / friends / fans；xianyu public；x public；youtube public / private
 - `item publish --poi-name`：xhs、douyin、weibo
-- `item publish --series`：douyin
+- `item publish --series`：douyin、bilibili
 - `item publish --hotspot`：douyin
 - `item publish --no-download`：douyin
 - `item publish --allow-comment`：tiktok
@@ -261,7 +261,7 @@
 | folder items | ○ | ○ | ✓ | ◐ | ○ | ○ | — | — | — | ○ | — | — | — | — | — |
 | folder create / update | ○ | ○ | ✓ | ○ | ○ | — | — | — | — | ○ | — | — | — | — | — |
 | folder delete | ○ | ○ | ○ | ○ | ○ | — | — | — | — | ○ | — | — | — | — | — |
-| series list | ○ | ○ | ✓ | ○ | ○ | — | — | — | — | — | ✓ | — | — | — | — |
+| series list | ○ | ○ | ✓ | ◐ | ○ | — | — | — | — | — | ✓ | — | — | — | — |
 | series items | ○ | ○ | ○ | ○ | ○ | — | — | — | — | — | ✓ | — | — | — | — |
 | history list | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ✓ | — | ✓ | — | — | — | — |
 | topic search | ✓ | ○ | ○ | ○ | ○ | ○ | — | — | — | — | — | — | — | — | — |
@@ -270,6 +270,7 @@
 - xhs `folder list`：只列公开的收藏夹（上游只有这一个接口），收藏夹里的笔记上游没有
 - bilibili `folder list`：只列用户自己创建的收藏夹，一次返回全部
 - bilibili `folder items`：非上游：上游没有收藏夹内容接口，请求按网页端收藏夹页补的（x/v3/fav/resource/list），没有对拍；只列出稿件
+- bilibili `series list`：非上游：创作中心合集管理接口（x2/creative/web/seasons），只能列自己的合集
 - youtube `series list`：频道公开的播放列表；me 为自己的全部播放列表（需要登录）
 - youtube `series items`：<series> 为播放列表 ID（PL…）或带 list= 的链接
 - tiktok `poi search`：在推荐地点里按关键词筛选
@@ -323,7 +324,7 @@
 | 平台 | 命令 |
 |---|---|
 | tiktok | `folder add` ✓ |
-| bilibili | `item edit` ✓ · `item coin` ✓ · `item triple` ✓ · `item subtitles` ✓ · `comment pin` ✓ · `comment unpin` ✓ · `danmaku list` ✓ · `danmaku send` ✓ · `dynamic publish` ✓ · `dynamic delete` ✓ · `article publish` ✓ · `draft get` ✓ · `draft delete` ✓ |
+| bilibili | `item edit` ✓ · `item coin` ✓ · `item triple` ✓ · `item subtitles` ✓ · `comment pin` ✓ · `comment unpin` ✓ · `series add` ◐ · `danmaku list` ✓ · `danmaku send` ✓ · `dynamic publish` ✓ · `dynamic delete` ✓ · `article publish` ✓ · `draft get` ✓ · `draft delete` ✓ |
 | jd | `order list` ✓ · `cart count` ✓ · `coupon list` ✓ |
 | x | `article publish` ✓ · `article delete` ✓ |
 | youtube | `channel create` ✓ |

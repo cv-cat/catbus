@@ -10,12 +10,15 @@
 
 - `item download` 同时导出帖子信息和评论：`--meta` 在媒体文件旁边写 `<platform>_<id>.json`（`{schema platform exported_at item comments comments_truncated}`，`item` 与 `item get` 的输出相同）；`--comments <N|all>` 带上一级评论（隐含 `--meta`），`--replies <N|all>` 再带上每条评论的回复，自动翻页取满；`--no-media` 只写这个文件、不下载媒体。由 core 调用同一平台的 `item get` / `comment list` / `comment replies`，所有有 `item download` 的平台都支持；取评论中途遇到风控时停下、已取到的照样写出（`comments_truncated: true`），平台没有评论命令时 `comments` 为 `[]`。File.type 新增 `data`
 - maoyan：`feed list`、`item get` 的 `text` 多一行「开售时间：<带时区的 ISO 8601>」（取自接口的 `onSaleTime`）。原来只有「明天开售」这类相对文案，算不出距开售还有多久
+- maoyan：`item get --tickets` 的票档行加上票面价和每单限购（如「票档：A，票面价 1080，实售价 648，余票 3，限购 6」），每个场次后多一行「场次时间：<带时区的 ISO 8601>」（取自接口的 `startTime`）
+- 12306：Ticket 新增 `start{code name}`、`end{code name}`（本车次的始发站和终到站；`from.code` 与 `start.code` 相同表示在始发站上车，`to.code` 与 `end.code` 相同表示坐到终到站）；`transfer search` 每一段（TransferLeg）的 `url` 由 null 改为这一段的余票深链，日期是这一段的上车日期，接口没给电报码或日期时仍为 null
 - 全局选项 `--fields <路径,...>`：只输出 `data` 条目里的这些字段，点号进入嵌套对象，经过数组时作用到每个元素，没有的字段为 null；json、jsonl 都适用，在 `--raw` 之后生效
 - 全局选项 `--dry-run`：做完参数、选项、是否已实现、本地登录态的检查就停下，不调用平台接口；`data` 为 `{args options confirm}`，凭证类选项打码
 - UserRef 带上头像：作者、评论者、主播、观众、私信对方等所有 UserRef 改为 `id name url avatar`，`avatar` 从同一个原始对象里取（统一成 https，不额外请求），取不到时为 null。AccountUser 的字段与 UserRef 相同，类型名保留
 - 评论带上图片：Comment 新增 `media: Media[]`（评论附带的图片、表情包、商品评价的晒图；动图也记为 `image`，正文里的行内表情不算），取自同一个原始评论对象，不额外请求。xhs（`pictures`）、douyin / tiktok（`image_list`、`sticker`，商品评价的晒图）、bilibili（`content.pictures`）、weibo（`url_struct` / `pic_infos` / `pic`）、x（回复推文的 `extended_entities`）、jd（评价的 `pictureInfoList`）；kuaishou 的评论查询不返回图片、youtube 评论没有图片，为 `[]`
 - `item download --subdir none|id|title`：每条内容放进 `--dir` 下自己的子目录，默认 `none`（行为不变）。`title` 按标题命名（没有标题用正文开头，再没有用 ID），目录名去掉 emoji、平台表情码（如 `[笑哭R]`、`#话题[话题]#`）和 Windows / macOS / Linux 不允许的字符，避开 Windows 保留名，最长 60 个字符；同名目录里已有别的内容时加上 ID 后 6 位。文件名不变。支持所有有 `item download` 的平台（mteam 在 `title` 模式下多查一次种子详情取标题）
 - 账号带上头像：Account 与 AuthStatus 的 `user` 改为新类型 AccountUser（`id name url avatar`），凭证文件的 `user` 也保存 `avatar`。登录、cookie 导入和 `auth status` 复用流程里原有的那次当前用户请求取头像（统一成 https），不额外请求；`auth status` 拿到新的昵称 / 头像会写回凭证。旧凭证文件没有 `avatar` 时读成 null，不需要迁移。taobao、xianyu、jd、jimeng 的校验接口不给头像，为 null
+- bilibili：`series list`（我的合集）与 `series add <合集> <稿件>`（把已发布稿件加进合集，`x2/creative/web/season/section/episodes/add`）；`item publish` 新增私有选项 `--series <合集>`，发布后自动加进合集
 - 新增 `youtube`（YouTube，别名 `yt`）平台的 web 端。没有上游仓库，直接对接 YouTube 网页背后的 InnerTube 接口（`/youtubei/v1/`），接口说明见 `src/platforms/youtube/UPSTREAM`：
   - 不登录可用：`item get` / `search`（`--sort general|popular`、`--time`、`--type`）/ `related` / `media` / `download`，`comment list` / `replies`，`user get` / `search` / `items`，`series list` / `items`（播放列表），`keyword suggest`，`live get` / `search` / `history` / `listen`（直播聊天）
   - 需要登录：`feed list`（首页推荐、订阅流），`history list`，`notice list` / `count`，`user likes` / `collects`（稍后观看）/ `following`（只能看自己的），`item like` / `unlike` / `collect` / `uncollect`，`user follow` / `unfollow`（订阅），`comment add`（含 `--reply-to`）/ `delete` / `like` / `unlike`

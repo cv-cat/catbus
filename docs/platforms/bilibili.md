@@ -65,7 +65,7 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `item unlike` | ✓ | 取消点赞。 |
 | `item collect` | ✓ | 收藏。私有选项 `--folder`。 |
 | `item uncollect` | ✓ | 取消收藏。私有选项 `--folder`。 |
-| `item publish` | ✓ | 发布稿件。必须给 `--video`、`--title`、至少一个 `--tag` 和 `--category`（取值见 `item categories`）。取值：`--visibility` public / private。支持 `--schedule` 定时发布（ISO 时间，B 站要求 2 小时后、15 天内）。不支持 `--image`、`--topic`、`--mention`、`--poi`、`--price`。私有选项 `--source`、`--dynamic`、`--allow-reprint`、`--cover43`。 |
+| `item publish` | ✓ | 发布稿件。必须给 `--video`、`--title`、至少一个 `--tag` 和 `--category`（取值见 `item categories`）。取值：`--visibility` public / private。支持 `--schedule` 定时发布（ISO 时间，B 站要求 2 小时后、15 天内）。不支持 `--image`、`--topic`、`--mention`、`--poi`、`--price`。私有选项 `--source`、`--dynamic`、`--allow-reprint`、`--cover43`、`--series`。 |
 | `item edit` | ✓ | 编辑已投稿件。不给 `--video` 时只改资料，按编辑页接口取原稿的分 P（`filename` + `cid`）；`--cover` 是 16:9（播放页）、`--cover43` 是 4:3（稿件列表页），缺省沿用原图；`--schedule` 改期 / `none` 取消定时，缺省沿用原稿；不给 `--visibility` 时沿用原稿的可见性。提交后进入重新审核。平台扩展。 |
 | `item delete` | ◐ | 删除稿件。需要人机验证（极验点选），catbus 还不能自动通过，会报 `RISK_CONTROL`。危险操作，需要确认。 |
 | `item categories` | ✓ | 稿件分类，即 `--category` 的取值。 |
@@ -147,6 +147,14 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `draft get` | ✓ | 专栏草稿。平台扩展。 |
 | `draft delete` | ✓ | 删专栏草稿。平台扩展。危险操作，需要确认。 |
 
+### series
+
+| 命令 | 状态 | 说明 |
+|---|---|---|
+| `series list` | ◐ | 我创建的合集：id、标题、集数、链接。非上游：创作中心合集管理接口（`x2/creative/web/seasons`），只能列自己的合集。 |
+| `series items` | ○ | 规划中。 |
+| `series add` | ✓ | 把已发布的稿件加进合集（`x2/creative/web/season/section/episodes/add`），挂到合集的第一个小节下。平台扩展。 |
+
 ### 整组规划中
 
 下面这些 resource 在本平台还没有已实现的命令，执行时都返回 `NOT_IMPLEMENTED`（退出码 4）。
@@ -156,7 +164,6 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `keyword` | `suggest` `hot` |
 | `notice` | `list` `count` |
 | `msg` | `list` `history` `send` `listen` `read` `revoke` `delete` |
-| `series` | `list` `items` |
 | `history` | `list` |
 | `topic` | `search` |
 

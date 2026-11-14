@@ -255,6 +255,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | bilibili | `item coin <item> [--count 1\|2] [--like]` | 投币；`--like` 同时点赞 | `{id}` |
 | bilibili | `item triple <item>` | 一键三连 | `{id}` |
 | bilibili | `item edit <item> [--video <文件>] [--title <标题>] [--text <简介>] [--cover <16:9 图>] [--cover43 <4:3 图>] [--schedule <ISO 时间>\|none] [--tag <标签>...] [--category <分区 id>] [--visibility public\|private]` | 编辑已投稿件；给出 `--video` 时替换视频（先上传新文件，再走 `x/vu/web/edit`），不给则只改资料，分 P 沿用原稿的 `filename` + `cid`，可见性沿用原稿的 `is_only_self`，提交后重新审核。缺省沿用原标题/简介/封面/标签/分区。B 站封面分 16:9（`--cover`，播放页）与 4:3（`--cover43`，稿件列表页）两张，只给一张时另一张沿用原图。`--schedule` 改期、`none` 取消定时，不给时沿用原稿的定时 | Item |
+| bilibili | `series add <series> <item>` | 把已发布的稿件加进合集（`x2/creative/web/season/section/episodes/add`），挂到合集的第一个小节下；只能加进自己创建的合集 | `{id}`（稿件 BV 号） |
 | bilibili | `item subtitles <item>` | 字幕 | Subtitle[] |
 | bilibili | `danmaku list <item>` | 视频弹幕 | Danmaku[] |
 | bilibili | `danmaku send <item> <text> --offset <秒> [--color] [--font-size] [--position]` | 发视频弹幕。`--color` 为 `#RRGGBB` 或十进制，`--font-size` 默认 25，`--position scroll\|top\|bottom` 默认 `scroll` | `{id}` |
@@ -265,7 +266,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | bilibili | `draft delete <id>` | 删专栏草稿 | `{id}` |
 | bilibili | `user items <user> [--keyword <词>]` | 私有选项：只看投稿里匹配关键词的 | Item[] |
 | bilibili | `item collect` / `uncollect <item> [--folder <收藏夹 id>]` | 私有选项：收藏进 / 移出指定收藏夹，多个用逗号分隔。不给时收藏进第一个收藏夹，取消时从所有收藏夹移出 | `{id}` |
-| bilibili | `item publish [--source <来源>] [--dynamic <文案>] [--allow-reprint] [--cover43 <4:3 图>]` | 私有选项：`--source` 表示转载并给出来源，不给为自制；`--dynamic` 为同步到动态的文案；默认禁止转载，`--allow-reprint` 允许；`--cover43` 是稿件列表页的 4:3 封面，和 `--cover`（播放页 16:9）一起构成 B 站的双封面 | Item |
+| bilibili | `item publish [--source <来源>] [--dynamic <文案>] [--allow-reprint] [--cover43 <4:3 图>] [--series <合集>] | 私有选项：`--source` 表示转载并给出来源，不给为自制；`--dynamic` 为同步到动态的文案；默认禁止转载，`--allow-reprint` 允许；`--cover43` 是稿件列表页的 4:3 封面，和 `--cover`（播放页 16:9）一起构成 B 站的双封面；`--series` 发布后把稿件加进合集（合集 ID 或合集链接），挂到合集第一个小节下 | Item |
 | bilibili | `comment add <item> <text> --reply-to <comment> [--root <comment>]` | 私有选项：回复楼中楼时 `--root` 给根评论、`--reply-to` 给被回复的那条；不给 `--root` 时 `--reply-to` 就是根评论 | Comment |
 | bilibili | `comment pin <item> <comment>` / `comment unpin <item> <comment>` | 置顶 / 取消置顶一级评论（`x/v2/reply/top`）。只能置顶自己管理的评论区里的一级评论；已有置顶时再置顶报 12029 | `{id}`（评论 ID） |
 | bilibili | `live send <room> <text> [--color] [--font-size] [--position] [--reply-user <user>]` | 私有选项：弹幕样式同 `danmaku send`；`--reply-user` 为回复的观众（UID 或空间链接） | `{id}` |
@@ -296,7 +297,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | x | `article delete <article>` | 删文章：草稿或已发布的都可以，已发布的连同文章推文一起删 | `{id}` |
 | youtube | `channel create [--name <名称>] [--handle <handle>]` | 给当前 Google 账号开 YouTube 频道（上传、评论、直播聊天都要求有频道）。名称默认用账号名，handle 默认用 YouTube 推荐的；已有频道时报 `USAGE` | User |
 | maoyan | `feed list [--city <城市>]` | 私有选项：城市，城市名或演出城市 ID（`poi search` 输出的 `id`），默认北京 | Item[] |
-| maoyan | `item get <item> [--tickets]` | 私有选项：同时查场次、票档、实售价、余票，逐行追加到 `text`，原始字段在 `--raw` 的 `shows`。只有这个选项需要登录，未登录报 `AUTH_REQUIRED` | Item |
+| maoyan | `item get <item> [--tickets]` | 私有选项：同时查场次（含开始时间）、票档、票面价、实售价、余票、每单限购，逐行追加到 `text`（格式见 4.8），原始字段在 `--raw` 的 `shows`。只有这个选项需要登录，未登录报 `AUTH_REQUIRED` | Item |
 | 12306 | `station search <keyword>` | 车站搜索（支持站名、拼音前缀、电报码） | Station[] |
 | 12306 | `ticket search <from> <to> [--date <YYYY-MM-DD>] [--type <G,D...>] [--available]` | 直达车次与余票（`--date` 默认今天；`--type` 过滤车型；`--available` 只看有票车次） | Ticket[] |
 | 12306 | `ticket price <train> --from-no <序号> --to-no <序号> --seat-types <编码> [--date <YYYY-MM-DD>]` | 票价详情（参数取自 ticket search 输出的 train_no、from.no、to.no、seat_types） | Fare |
@@ -343,7 +344,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - bilibili 的 `comment list` / `replies` 读取图文动态时，先用非上游的动态详情接口取 `basic.comment_type=11` 与 `comment_id_str`（相簿 ID），不能把动态 ID 当作评论区 oid；输出 `Comment.item_id` 仍为动态 ID。同一条命令翻页时复用解析结果。`comment add` / `delete` 仍只支持纯文字和转发动态。
 - `msg send --item <item>`：对商品卖家 / 客服发消息（闲鱼、淘宝、京东）。
 - `msg send --to <user> --item <item>`：就这件商品给指定用户发消息（闲鱼：卖家主动联系买家）。不支持的平台报 `UNSUPPORTED`。
-- maoyan：演出（item）的场次时间、城市、场馆、票价档、售卖状态没有对应的 Item 字段，按「键：值」逐行写进 `text`，原始字段用 `--raw`。接口给了开售时间（`onSaleTime`）时，`feed list` 和 `item get` 的 `text` 另有一行「开售时间：<带时区的 ISO 8601>」（已开售的演出同样有，是过去的时间）；`feed list` 的「开售」仍是站点的相对文案（如「明天开售」）。`poi search` 只搜演出城市，`id` 是 `feed list --city` 的取值。`item get --tickets` 的场次和票档同样写进 `text`，不新增类型。
+- maoyan：演出（item）的场次时间、城市、场馆、票价档、售卖状态没有对应的 Item 字段，按「键：值」逐行写进 `text`，原始字段用 `--raw`。接口给了开售时间（`onSaleTime`）时，`feed list` 和 `item get` 的 `text` 另有一行「开售时间：<带时区的 ISO 8601>」（已开售的演出同样有，是过去的时间）；`feed list` 的「开售」仍是站点的相对文案（如「明天开售」）。`poi search` 只搜演出城市，`id` 是 `feed list --city` 的取值。`item get --tickets` 的场次和票档同样写进 `text`，不新增类型：每个场次一行「场次：<站点的场次名>」（如「场次：2026-11-14 周六 19:30」），接口给了开始时间（`startTime`）时下一行是「场次时间：<带时区的 ISO 8601>」，写法与「开售时间」一致；之后该场次的每个票档一行，如「票档：A，票面价 1080，实售价 648，余票 3，限购 6」，依次是票档名（`ticketName`，站点给的是 `A`、`L` 这样的字母，不是价格）、票面价（`ticketPriceVO.ticketPrice`）、实售价（`ticketPriceVO.sellPrice`，打折时低于票面价）、余票（`remainingStock`）、每单限购张数（`ticketBuyLimitVO.maxBuyLimit`），售罄（`showStatus` 为 2）时末尾加「售罄」；取不到的项省略，站点不显示的票档不输出。实测（2026-11-14）余票只出现过不超过限购数的值、限购数又常与余票相同，看起来余票封顶在每单限购数：余票等于限购时应理解为「至少这么多张」，不是精确库存。还没开票的演出没有场次（`--raw` 的 `shows` 为空数组），`text` 里不出现场次行和票档行。
 - taobao 没有按用户查询、按用户发起会话的接口：`user get <user>` 的 `<user>` 只接受商品链接，返回这件商品的卖家；`msg send` 不支持 `--to`（报 `UNSUPPORTED`）。
 - weibo 的转发微博（Item）：`id`、`url`、`author`、正文和计数仍取转发这条自己的（转发语和转发者）。转发这条自己没有媒体（没有 `page_info`，也没有图片）时，`kind`、`cover`、`media`、文章的 `title` 和视频的 `stats.views` 取原微博（`retweeted_status`），否则详情里只剩转发语、看不到被转发的视频和图片；原微博本身仍挂在 `--raw` 的 `retweeted_status` 上。
 - x 的推文归一化（Item）：转推（`legacy.retweeted_status_result`）按原推归一化：`id`、`url`、`author`、正文、媒体和计数都取原推，因为外层只有截断的「RT @…」正文，没有媒体，计数也是 0；原始的转推对象仍挂在 `--raw` 上。推文自己没有媒体时，`cover` 依次退到被引用推文（`quoted_status_result`）的第一张媒体，再退到链接卡片（`card.legacy.binding_values`）的缩略图；`media` 只放推文自己的媒体。
@@ -852,14 +853,16 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | Order | `id status total:Price items:Item[] created_at` |
 | Coupon | `id title discount:Price threshold:Price\|null start_at end_at` |
 | Station | `id name code pinyin abbr city url:null` |
-| Ticket | `id url train_no type from{code name no} to{code name no} depart arrive duration date bookable has_ticket seats remaining prices seat_types` |
+| Ticket | `id url train_no type start{code name} end{code name} from{code name no} to{code name no} depart arrive duration date bookable has_ticket seats remaining prices seat_types` |
 | Stop | `id station arrive depart stopover in_range url:null` |
 | Fare | `id train_no date prices url:null` |
 | Transfer | `id via same_station same_train kind depart arrive duration_minutes wait legs url:null` |
-| TransferLeg | `id train_no from to depart arrive duration seats remaining prices url:null` |
+| TransferLeg | `id url train_no from to depart arrive duration seats remaining prices`，`url` 取不到时为 null |
 
 **铁路与出行扩展字段说明**：
 - `Ticket.url` 为 12306 官方余票查询深链（`https://kyfw.12306.cn/otn/leftTicket/init?...`），可直接在浏览器打开。
+- `Ticket.start` / `end` 为本车次的始发站和终到站（`from` / `to` 是乘车区间）：`from.code` 与 `start.code` 相同表示在始发站上车，`to.code` 与 `end.code` 相同表示坐到终到站。站名先取余票接口响应里的 `map`，再取车站表，都没有时用电报码。
+- `TransferLeg.url` 为这一段的余票深链，格式同 `Ticket.url`：站名和电报码取这一段的出发站、到达站，日期为这一段的上车日期（第一段取方案的 `train_date`，之后的段取 `middle_date`；段里的 `start_train_date` 是车次的始发日期，不用）。接口没给电报码或日期时为 null。`Transfer.url` 仍为 null。
 - `prices` 中每个席别的值均为 `Price { amount, currency: 'CNY' }`，单位为元。
 - `remaining` 为每个席别的余票张数：≤20 时为精确整数，≥21 时为封顶对象 `{ min: 21 }`；无座张数不封顶，为精确整数。
 - `Transfer.kind`：同一车次分段有座（`same_train: true`）标为 `同车换座`，不同车次换乘标为 `换乘`。
