@@ -377,15 +377,17 @@ describe('mteam：官方 API 适配', () => {
       { id: '1', createdDate: '2026-11-14 18:43:28', operation: 'TRACKER', bonus: '0.0', uploaded: '1621350000', downloaded: '0', relatedId: '1001', text: '[TID=1001][DP=P50][IP=2001:db8::7][EXAM]' },
       { id: '2', createdDate: '2026-11-14 18:00:00', operation: 'TRACKER', bonus: '0.0', uploaded: '0', downloaded: '1048576', relatedId: '1002', text: '[TID=1002][IP=192.0.2.7][SN_DL_DIFF][EXAM]' },
       { id: '3', createdDate: '2026-11-14 17:00:00', operation: 'TRACKER', bonus: '46.3', uploaded: '0', downloaded: '0', relatedId: null, text: '[做種積分][考核期間無加成][EXAM]' },
+      { id: '5', createdDate: '2026-11-14 16:30:00', operation: 'OTHER', bonus: '1', uploaded: '0', downloaded: '0', relatedId: null, text: '考核獎勵 [EXAM]' },
       { id: '4', createdDate: '2026-11-14 16:00:00', operation: 'OTHER', bonus: '-10', uploaded: '0', downloaded: '0', relatedId: null, text: '手动调整 192.0.2.9 [NOTE=fe80::1]' },
     ]
-    mock({ '/api/credit/logs': () => ok({ pageNumber: 1, pageSize: 20, total: 4, totalPages: 1, data: logs }) })
+    mock({ '/api/credit/logs': () => ok({ pageNumber: 1, pageSize: 20, total: logs.length, totalPages: 1, data: logs }) })
     const result = await cli('mt', 'bonus', 'history')
     expect(result.code).toBe(0)
     expect(result.env.data.map((r: any) => [r.note, r.url])).toEqual([
       ['促销：50%；考核期间；上传：1.51 GiB', 'https://kp.m-team.cc/detail/1001'],
       ['[SN_DL_DIFF]；考核期间；下载：1.00 MiB', 'https://kp.m-team.cc/detail/1002'],
-      ['做種積分；考核期間無加成；考核期间', null],
+      ['做種積分；考核期間無加成', null],
+      ['考核獎勵', null],
       ['手动调整；[NOTE=]', null],
     ])
     expect(result.stdout).not.toMatch(/192\.0\.2|2001:db8|fe80/)
