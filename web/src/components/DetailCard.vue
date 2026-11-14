@@ -11,6 +11,8 @@ import { bbcodeBlocks } from '@/composables/bbcode'
 import { torrentInfo } from '@/composables/torrent'
 import { showInfo } from '@/composables/show'
 import SaleCountdown from './SaleCountdown.vue'
+import ShowTickets from './maoyan/ShowTickets.vue'
+import { ticketCache, ticketKey } from '@/composables/ticketCache'
 import CommentMedia from './CommentMedia.vue'
 import CatbusLoader from './CatbusLoader.vue'
 import RawJsonView from './RawJsonView.vue'
@@ -62,6 +64,11 @@ const show = computed(() => showInfo(item.value, cur.value?.item, cur.value?.pla
 const plain = computed(() => !torrent.value && !show.value)
 /** 演出的 media 是详情长图，放在正文里；左侧只放海报 */
 const showImages = computed(() => (show.value ? (item.value?.media ?? []).filter((m) => m.type === 'image' && m.url).map((m) => m.url!) : []))
+/** 演出查到了场次（AGENTS.md 7.9「猫眼演出的场次与票档」）：隐藏原来的「票价」一行，票档表里已经有了 */
+const ticketsShown = computed(() => {
+  const c = cur.value
+  return !!c && (ticketCache.get(ticketKey(c.platform, c.item.id))?.sessions.length ?? 0) > 0
+})
 const mediaItem = computed(() => (show.value && item.value?.cover ? { ...item.value, media: [] } : item.value!))
 const loadingItem = ref(false)
 const itemError = ref<CatbusError | null>(null)
@@ -824,7 +831,7 @@ onBeforeUnmount(() => {
              <span v-if="show.venue && (show.city || show.address)">{{ [show.city, show.address].filter(Boolean).join(' · ') }}</span>
            </span>
          </li>
-         <li v-if="show.prices.length">
+         <li v-if="show.prices.length && !ticketsShown">
            <span class="s-ico"><Tags :size="16" aria-hidden="true" /></span>
            <span class="s-col">
              <small>{{ t('detail.show.prices') }}</small>
@@ -835,6 +842,9 @@ onBeforeUnmount(() => {
        <div v-else-if="loadingItem" class="lines rv" aria-hidden="true">
          <span /><span /><span class="short" />
        </div>
+       <!-- 场次与票档：点了才查（item get --tickets，需要登录） -->
+       <div class="divider" />
+       <ShowTickets :platform="cur.platform" :item="cur.item" :account="cur.account" />
        <template v-if="showImages.length">
          <div class="divider" />
          <p class="count">{{ t('detail.show.images') }}</p>

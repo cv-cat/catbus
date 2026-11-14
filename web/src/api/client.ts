@@ -99,6 +99,8 @@ export interface SearchParams {
   kind?: string
   /** 搜索的时间范围（item search --time） */
   time?: string
+  /** 猫眼演出的城市（feed list --city，AGENTS.md 7.9「猫眼演出的城市」）；空串或不给时用默认城市，别的平台忽略 */
+  city?: string
   cursor?: string | null
   limit?: number
   /** 本页浏览用的账号（-a），不传时用 _current */
@@ -116,6 +118,7 @@ export async function searchItems(p: SearchParams): Promise<Envelope<Item[]>> {
     const variant = p.keyword ? (p.time ?? 'all') : (p.kind ?? 'recommend')
     // 演示账号 acc-<k> 的结果比默认账号错开半页：几个账号同时加载时部分重叠，能看到合并去重
     const k = Number(/^acc-(\d+)$/.exec(p.account ?? '')?.[1] ?? 0)
+    if (p.platform === 'maoyan') return mockItems(p.platform, p.keyword, Number(p.cursor ?? 0), limit, p.city ?? '')
     return mockItems(p.platform, p.keyword, Number(p.cursor ?? 0), limit, variant === 'all' || variant === 'recommend' ? '' : variant, k * Math.ceil(limit / 2))
   }
   const argv =
@@ -136,6 +139,7 @@ export async function searchItems(p: SearchParams): Promise<Envelope<Item[]>> {
     if (p.type && p.type !== 'all') argv.push('--type', p.type)
     if (p.time && p.time !== 'all') argv.push('--time', p.time)
   } else if (p.kind && p.kind !== 'recommend') argv.push('--kind', p.kind)
+  if (p.platform === 'maoyan' && p.city) argv.push('--city', p.city)
   return call<Item[]>(argv, p.signal)
 }
 

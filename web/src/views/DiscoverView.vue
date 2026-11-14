@@ -8,6 +8,8 @@ import SegmentedControl from '@/components/SegmentedControl.vue'
 import FilterChip from '@/components/FilterChip.vue'
 import KindSwitch from '@/components/KindSwitch.vue'
 import TimeFilter from '@/components/TimeFilter.vue'
+import CityFilter from '@/components/maoyan/CityFilter.vue'
+import { cityName } from '@/data/cities'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import SelectionActions from '@/components/SelectionActions.vue'
 import DownloadCenter from '@/components/DownloadCenter.vue'
@@ -67,6 +69,8 @@ const kindLabel = computed(() => KINDS.find((k) => k.value === state.kind)?.labe
 const lanes = computed(() => d.selected.map((id) => platformById(id)!))
 /** 顶栏小字：单一模式是「小红书 · 笔记搜索」，聚合模式列出渠道（多了只写前两个） */
 const eyebrow = computed(() => {
+  // 猫眼演出：小字里带上当前城市（设计稿 W1）
+  if (!d.aggregate && d.cityFilter) return t('maoyan.city.eyebrow', { platform: d.platform.name, city: cityName(state.city) })
   if (!d.aggregate) return t(d.platform.mode === 'feed' ? 'discover.eyebrow.feed' : 'discover.eyebrow.search', { platform: d.platform.name, item: d.platform.item })
   const names = lanes.value.map((p) => p.name)
   const sep = t('discover.eyebrow.sep')
@@ -218,7 +222,7 @@ function refresh() {
   root.value?.scrollTo({ top: 0, behavior: 'smooth' })
   d.refresh()
 }
-watch(() => [state.sort, state.type, state.kind, state.time], () => submit())
+watch(() => [state.sort, state.type, state.kind, state.time, state.city], () => submit())
 
 /** 加载中右上角实时跳动的耗时：从 0.00s 开始涨，结束后换成最终的条数和耗时 */
 const ticking = ref(0)
@@ -324,6 +328,8 @@ onBeforeUnmount(() => {
         :class="{ 'fade-l': fade.l, 'fade-r': fade.r }"
         @scroll.passive="updateFade"
       >
+        <!-- 猫眼演出的城市：单一模式下是猫眼、聚合模式下选中了猫眼时显示，只对猫眼生效（AGENTS.md 7.9「猫眼演出的城市」） -->
+        <CityFilter v-if="d.cityFilter" :city="cityName(state.city)" @pick="d.setCity" />
         <!-- 没有关键词：推荐流分类（+ M-Team 的字段排序）；有关键词：排序、类型、时间。两组交叉淡入 -->
         <Transition name="fgroup" mode="out-in" @after-enter="updateFade">
           <div v-if="feedUi" key="feed" class="fgroup">
@@ -366,6 +372,7 @@ onBeforeUnmount(() => {
         <button type="button" class="refresh" :aria-label="t('common.action.refresh')" :title="t('common.action.refresh')" @click="refresh">
           <RefreshCw :size="13" />
         </button>
+        <template v-if="d.cityFilter && !d.aggregate">{{ cityName(state.city) }} · </template>
         <template v-if="feedUi && d.kindSwitch">{{ t('discover.count.feed', { kind: kindLabel, n: d.items.length }, d.items.length) }}</template>
         <template v-else>{{ t('discover.count.search', { n: d.items.length, elapsed: d.elapsed.toFixed(2) }, d.items.length) }}</template>
       </span>

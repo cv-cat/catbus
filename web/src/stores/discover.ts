@@ -11,6 +11,7 @@ import { t } from '@/i18n'
 import { errorTitle } from '@/i18n/errors'
 import { cursorsFor, fill, interleave, itemCell, joinCursors, newLane, roundRobin, skeletonCells, type Cell, type Lane } from './lanes'
 import { authorRoute, isRailPath, parseAuthorPath, railActive } from './route'
+import { CITY, DEFAULT_CITY } from '@/data/cities'
 
 export { KINDS, SORTS, TIMES, TYPES }
 
@@ -18,7 +19,14 @@ export { KINDS, SORTS, TIMES, TYPES }
  * 发现页状态的兜底值：平台、排序、类型。综合、全部任何平台都能用（不带选项），
  * 平台不支持设置里的默认排序 / 类型时退回这里。日常的默认值来自设置（见 `useSettingsStore`）。
  */
-export const DEFAULTS = { platform: PLATFORMS[0]!.id, keyword: '', sort: 'general', type: 'all', kind: 'recommend', time: 'all' }
+export const DEFAULTS = { platform: PLATFORMS[0]!.id, keyword: '', sort: 'general', type: 'all', kind: 'recommend', time: 'all', city: '' }
+
+/** 只有它用城市（feed list --city，AGENTS.md 7.9「猫眼演出的城市」） */
+const CITY_PLATFORM = 'maoyan'
+/** 地址里的城市：不合法的、等于默认城市（北京）的都当作默认（空串） */
+const cityParam = (v: string | null) => (v && v !== DEFAULT_CITY && CITY.test(v) ? v : '')
+/** 这个平台请求用的城市：只有猫眼带，别的平台恒为空串（渠道缓存的查询里也就不含城市） */
+const cityFor = (platform: string, city: string) => (platform === CITY_PLATFORM ? city : '')
 
 /** 置灰规则适用的筛选：排序、类型、时间（有关键词时），推荐流分类（没有关键词时） */
 export type FilterKind = 'sort' | 'type' | 'time' | 'kind'
@@ -66,6 +74,7 @@ function fromUrl(d: { platform: string; sort: string; type: string }): DiscoverS
     type: pick(q.get('type'), TYPES, d.type),
     kind: pick(q.get('kind'), KINDS, DEFAULTS.kind),
     time: pick(q.get('time'), TIMES, DEFAULTS.time),
+    city: cityParam(q.get('city')),
   }
 }
 
@@ -83,6 +92,8 @@ function toUrl(s: DiscoverState, d: { sort: string; type: string }, agg: string[
   // 演示模式的 ?demo 原样保留（client.ts 据此只用演示数据）
   if (new URLSearchParams(location.search).has('demo')) parts.push('demo')
   if (agg) parts.push(`agg=${agg.map(encodeURIComponent).join(',')}`)
+  // 猫眼的城市：路径或聚合的渠道里有猫眼时才写，默认城市省略
+  if (s.city && (s.platform === CITY_PLATFORM || agg?.includes(CITY_PLATFORM))) parts.push(`city=${encodeURIComponent(s.city)}`)
   if (s.sort !== d.sort) parts.push(`sort=${encodeURIComponent(s.sort)}`)
   if (s.type !== d.type) parts.push(`type=${encodeURIComponent(s.type)}`)
   if (s.kind !== DEFAULTS.kind) parts.push(`kind=${encodeURIComponent(s.kind)}`)
@@ -115,6 +126,8 @@ type ChannelSnapshot = {
   kind: string
   time: string
   keyword: string
+  /** 猫眼的城市（别的平台为空串） */
+  city: string
   items: Item[]
   cursor: string | null
   hasMore: boolean
@@ -125,7 +138,7 @@ type ChannelSnapshot = {
 }
 
 const channelKey = (s: DiscoverState, accounts: readonly string[]) =>
-  JSON.stringify([s.platform, accounts.join(','), s.sort, s.type, s.kind, s.time, s.keyword.trim()])
+  JSON.stringify([s.platform, accounts.join(','), s.sort, s.type, s.kind, s.time, s.keyword.trim(), cityFor(s.platform, s.city)])
 
 /** 多账号请求的结果：合并后的条目（还没按 id 去重）、合起来的翻页位置，以及每个账号的成败 */
 type MultiPage = {
@@ -284,7 +297,8 @@ export const useDiscoverStore = defineStore('discover', () => {
     // 在作者页 / 12306 查询页上：发现页在后台更新，地址栏归它们（之后写地址用 push，不替换掉它们）
     if (authorRoute.value || railActive.value) return void (urlSynced = true)
     const next = urlFor(synced)
-    if (next === location.pathname + location.search) return
+    // 打开时地址已经是规范地址：同样算同步过，之后换筛选用 push（否则第一次改动会替换掉打开时的那一条，后退直接离开页面）
+    if (next === location.pathname + location.search) return void (urlSynced = true)
     if (urlSynced) history.pushState(null, '', next)
     else history.replaceState(null, '', next)
     urlSynced = true
@@ -312,6 +326,9 @@ export const useDiscoverStore = defineStore('discover', () => {
     if (parseAuthorPath() || isRailPath()) return
     if (synced && location.pathname + location.search === urlFor(synced)) return
     const next = fromUrl(urlDefaults())
+    // 地址里没有猫眼（不在路径、也不在 agg 里）时不写城市：沿用页面上的城市，切回猫眼时还是它
+    const agg0 = aggFromUrl()
+    if (next.platform !== CITY_PLATFORM && !agg0?.includes(CITY_PLATFORM)) next.city = state.city
     restoring = next.platform !== state.platform
     Object.assign(state, next)
     // 已提交的查询以地址为准（run() 里会重新记下），聚合的渠道按新的查询去对缓存
@@ -592,6 +609,7 @@ export const useDiscoverStore = defineStore('discover', () => {
           type: state.type,
           kind: state.kind,
           time: state.time,
+          city: cityFor(platform, query.city),
           // 每页条数取设置，改了之后下一次请求（含翻页）生效
           limit: settings.pageSize,
         },
@@ -631,6 +649,7 @@ export const useDiscoverStore = defineStore('discover', () => {
         kind: query.kind,
         time: query.time,
         keyword: query.keyword,
+        city: cityFor(platform, query.city),
         items: items.value,
         cursor: cursor.value,
         hasMore: hasMore.value,
@@ -693,6 +712,7 @@ export const useDiscoverStore = defineStore('discover', () => {
       type: effective(id, 'type', s.type),
       kind: effective(id, 'kind', s.kind),
       time: effective(id, 'time', s.time),
+      city: cityFor(id, s.city),
     }
     return { ...q, accounts: accs, key: channelKey(q, accs) }
   }
@@ -714,6 +734,7 @@ export const useDiscoverStore = defineStore('discover', () => {
       kind: q.kind,
       time: q.time,
       keyword: q.keyword,
+      city: q.city,
       items: snap.items,
       cursor: snap.cursor,
       hasMore: snap.hasMore,
@@ -762,6 +783,7 @@ export const useDiscoverStore = defineStore('discover', () => {
         kind: l.kind,
         time: l.time,
         keyword: l.keyword,
+        city: l.city,
         items: l.items,
         cursor: l.cursor,
         hasMore: l.hasMore,
@@ -835,7 +857,7 @@ export const useDiscoverStore = defineStore('discover', () => {
     }
     if (!append) {
       const q = laneQuery(lane.platform)
-      Object.assign(lane, { key: q.key, accounts: q.accounts, sort: q.sort, type: q.type, kind: q.kind, time: q.time, keyword: q.keyword, error: null, empty: 0 })
+      Object.assign(lane, { key: q.key, accounts: q.accounts, sort: q.sort, type: q.type, kind: q.kind, time: q.time, keyword: q.keyword, city: q.city, error: null, empty: 0 })
       lane.loading = true
     }
     try {
@@ -848,6 +870,7 @@ export const useDiscoverStore = defineStore('discover', () => {
           type: lane.type,
           kind: lane.kind,
           time: lane.time,
+          city: lane.city,
           limit: settings.pageSize,
         },
         lane.accounts,
@@ -1005,8 +1028,17 @@ export const useDiscoverStore = defineStore('discover', () => {
     if (wasBrowsing) scheduleSearch()
   }
 
+  /** 城市 chip 出不出现：单一模式下是猫眼，或聚合模式下选中了猫眼 */
+  const cityFilter = computed(() => (aggregate.value ? lanes.value.some((l) => l.platform === CITY_PLATFORM) : state.platform === CITY_PLATFORM))
+  /** 换城市（默认城市存成空串）；筛选的 watch 会重新请求 */
+  function setCity(name: string) {
+    state.city = name === DEFAULT_CITY ? '' : name
+  }
+
   return {
     state,
+    cityFilter,
+    setCity,
     items: view.items,
     cells: view.cells,
     loading: view.loading,

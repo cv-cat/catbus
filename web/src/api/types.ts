@@ -181,3 +181,10 @@ export interface Transfer {
   wait: string
   legs: TransferLeg[]
 }
+
+/** 地点（AGENTS.md 6.2）：猫眼演出的 `poi search` 只搜演出城市，id 即 `feed list --city` 的取值，address 恒为 null */
+export interface Poi {
+  id: string
+  name: string
+  address: string | null
+}
