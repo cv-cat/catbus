@@ -91,6 +91,7 @@
     "torrent": "种子文件",
     "torrentDesc": ".torrent，交给浏览器保存",
     "torrentOptional": "只推送时可以不勾",
+    "formatNoMeta": "格式只用于信息和评论，只下种子时不影响",
     "category": "分类",
     "categoryInvalid": "分类不能含 \\ / : * ? \" < > | 和控制字符，最长 64 个字符",
     "savepath": "保存目录",

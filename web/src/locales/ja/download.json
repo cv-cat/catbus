@@ -91,6 +91,7 @@
     "torrent": "トレントファイル",
     "torrentDesc": ".torrent、ブラウザで保存",
     "torrentOptional": "送るだけなら不要",
+    "formatNoMeta": "形式は情報とコメントにのみ適用されます",
     "category": "カテゴリ",
     "categoryInvalid": "\\ / : * ? \" < > | と制御文字は使えません。64 文字まで",
     "savepath": "保存先",

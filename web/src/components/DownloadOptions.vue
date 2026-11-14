@@ -183,7 +183,7 @@ const FORMATS = computed<{ value: ExportFormat; label: string }[]>(() => [
     <div class="format" :class="{ dim: !metaOn }">
       <SegmentedControl v-model="s.dlFormat" :options="FORMATS" :label="t('download.panel.format')" />
     </div>
-    <p class="note">{{ metaOn ? t(`download.panel.formatNote.${s.dlFormat}`) : t('download.panel.formatNoMeta') }}</p>
+    <p class="note">{{ metaOn ? t(`download.panel.formatNote.${s.dlFormat}`) : t(props.qbit ? 'download.qbit.formatNoMeta' : 'download.panel.formatNoMeta') }}</p>
 
     <button type="button" class="go" :aria-disabled="invalid || undefined" :class="{ dis: invalid }" @click="go">
       <component :is="pushOn ? Send : Download" :size="16" aria-hidden="true" />

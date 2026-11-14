@@ -91,6 +91,7 @@
     "torrent": "Torrent file",
     "torrentDesc": ".torrent, saved by your browser",
     "torrentOptional": "Optional when only sending",
+    "formatNoMeta": "The format only applies to info and comments",
     "category": "Category",
     "categoryInvalid": "No \\ / : * ? \" < > | or control characters, up to 64 characters",
     "savepath": "Save path",

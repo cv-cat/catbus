@@ -91,6 +91,7 @@
     "torrent": "토렌트 파일",
     "torrentDesc": ".torrent, 브라우저로 저장",
     "torrentOptional": "보내기만 할 때는 선택하지 않아도 됩니다",
+    "formatNoMeta": "형식은 정보와 댓글에만 적용됩니다",
     "category": "분류",
     "categoryInvalid": "\\ / : * ? \" < > | 와 제어 문자는 쓸 수 없고 64자까지입니다",
     "savepath": "저장 경로",
