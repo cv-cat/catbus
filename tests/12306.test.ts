@@ -5,7 +5,7 @@ import { RequestError } from 'wreq-js'
 import { fakeResponse, type HeaderPairs, type HttpResponse, mockSender, type PreparedRequest } from '../src/core/http.js'
 import * as rand from '../src/core/rand.js'
 import { resetSession } from '../src/platforms/12306/web/client.js'
-import { hasTicket, parseStations, parseYp } from '../src/platforms/12306/web/normalize.js'
+import { hasTicket, parseStations, parseTickets, parseTransfers, parseYp } from '../src/platforms/12306/web/normalize.js'
 import { cli, mockTrain, useTempHome } from './helpers.js'
 
 const fixture = (name: string) => readFileSync(join(import.meta.dirname, 'fixtures/12306', name), 'utf8')
@@ -188,6 +188,8 @@ describe('12306 平台（web）', () => {
         expect(g531).toMatchObject({
           train_no: '240000G53106',
           type: 'G',
+          start: { code: 'VNP', name: '北京南' },
+          end: { code: 'AOH', name: '上海虹桥' },
           from: { code: 'VNP', name: '北京南', no: '01' },
           to: { code: 'AOH', name: '上海虹桥', no: '13' },
           depart: '06:08',
@@ -205,6 +207,18 @@ describe('12306 平台（web）', () => {
       } finally {
         restore()
       }
+    })
+
+    it('start / end：过路车的始发、终到站名取 map，再取车站表，都没有时用电报码', () => {
+      const data = JSON.parse(fixture('left_ticket.json')).data
+      const row = data.result[0].split('|')
+      row[4] = 'HBB' // 始发：不在 map 里，在车站表里
+      row[5] = 'XXQ' // 终到：两边都没有
+      const [t] = parseTickets({ map: data.map, result: [row.join('|')] }, DATE, { HBB: '哈尔滨', VNP: '车站表里的名字' })
+      expect(t!.start).toEqual({ code: 'HBB', name: '哈尔滨' })
+      expect(t!.end).toEqual({ code: 'XXQ', name: 'XXQ' })
+      expect(t!.from).toEqual({ code: 'VNP', name: '北京南', no: '01' })
+      expect(parseTickets({ result: [row.join('|')] }, DATE)[0]!.start).toEqual({ code: 'HBB', name: 'HBB' })
     })
 
     it('--type 与 --available 过滤', async () => {
@@ -316,9 +330,37 @@ describe('12306 平台（web）', () => {
         expect(data[0].id).toMatch(/^\w+\+\w+@南京南$/)
         expect(data[0].kind).toBe(data[0].same_train ? '同车换座' : '换乘')
         expect(data[0].legs[0].remaining).toBeTypeOf('object')
+        expect(data[0].url).toBeNull()
+        expect(data[0].legs.map((l: any) => l.url)).toEqual([
+          'https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=dc&fs=%E5%8C%97%E4%BA%AC%E5%8D%97%2CVNP&ts=%E5%8D%97%E4%BA%AC%E5%8D%97%2CNKH&date=2026-10-10&flag=N%2CN%2CY',
+          'https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=dc&fs=%E5%8D%97%E4%BA%AC%E5%8D%97%2CNKH&ts=%E6%9D%AD%E5%B7%9E%E4%B8%9C%2CHGH&date=2026-10-10&flag=N%2CN%2CY',
+        ])
       } finally {
         restore()
       }
+    })
+
+    it('中转每段的 url：日期取上车日期（第二段用 middle_date），缺电报码或日期时为 null', () => {
+      const plan = JSON.parse(fixture('transfer.json')).data.middleList[0]
+      const date = (url: string | null) => (url ? new URL(url).searchParams.get('date') : null)
+
+      // 第一段夜里到、第二段过了零点才上车：start_train_date 是车次的始发日期，不是上车日期
+      const overnight = structuredClone(plan)
+      overnight.middle_date = '2026-10-11'
+      overnight.fullList[1].start_train_date = '20261009'
+      expect(parseTransfers([overnight])[0]!.legs.map((l) => date(l.url))).toEqual(['2026-10-10', '2026-10-11'])
+
+      const noCode = structuredClone(plan)
+      delete noCode.fullList[0].from_station_telecode
+      noCode.fullList[1].to_station_telecode = ''
+      expect(parseTransfers([noCode])[0]!.legs.map((l) => l.url)).toEqual([null, null])
+
+      const noDate = structuredClone(plan)
+      delete noDate.train_date
+      noDate.middle_date = ''
+      const [t] = parseTransfers([noDate])
+      expect(t!.legs.map((l) => l.url)).toEqual([null, null])
+      expect(t!.url).toBeNull()
     })
   })
 })

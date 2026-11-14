@@ -835,14 +835,16 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | Order | `id status total:Price items:Item[] created_at` |
 | Coupon | `id title discount:Price threshold:Price\|null start_at end_at` |
 | Station | `id name code pinyin abbr city url:null` |
-| Ticket | `id url train_no type from{code name no} to{code name no} depart arrive duration date bookable has_ticket seats remaining prices seat_types` |
+| Ticket | `id url train_no type start{code name} end{code name} from{code name no} to{code name no} depart arrive duration date bookable has_ticket seats remaining prices seat_types` |
 | Stop | `id station arrive depart stopover in_range url:null` |
 | Fare | `id train_no date prices url:null` |
 | Transfer | `id via same_station same_train kind depart arrive duration_minutes wait legs url:null` |
-| TransferLeg | `id train_no from to depart arrive duration seats remaining prices url:null` |
+| TransferLeg | `id url train_no from to depart arrive duration seats remaining prices`，`url` 取不到时为 null |
 
 **铁路与出行扩展字段说明**：
 - `Ticket.url` 为 12306 官方余票查询深链（`https://kyfw.12306.cn/otn/leftTicket/init?...`），可直接在浏览器打开。
+- `Ticket.start` / `end` 为本车次的始发站和终到站（`from` / `to` 是乘车区间）：`from.code` 与 `start.code` 相同表示在始发站上车，`to.code` 与 `end.code` 相同表示坐到终到站。站名先取余票接口响应里的 `map`，再取车站表，都没有时用电报码。
+- `TransferLeg.url` 为这一段的余票深链，格式同 `Ticket.url`：站名和电报码取这一段的出发站、到达站，日期为这一段的上车日期（第一段取方案的 `train_date`，之后的段取 `middle_date`；段里的 `start_train_date` 是车次的始发日期，不用）。接口没给电报码或日期时为 null。`Transfer.url` 仍为 null。
 - `prices` 中每个席别的值均为 `Price { amount, currency: 'CNY' }`，单位为元。
 - `remaining` 为每个席别的余票张数：≤20 时为精确整数，≥21 时为封顶对象 `{ min: 21 }`；无座张数不封顶，为精确整数。
 - `Transfer.kind`：同一车次分段有座（`same_train: true`）标为 `同车换座`，不同车次换乘标为 `换乘`。

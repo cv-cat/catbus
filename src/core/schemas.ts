@@ -273,6 +273,10 @@ export interface Ticket {
   url: string
   train_no: string
   type: string
+  /** 本车次的始发站 */
+  start: { code: string; name: string }
+  /** 本车次的终到站 */
+  end: { code: string; name: string }
   from: TicketStation
   to: TicketStation
   depart: string
