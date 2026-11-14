@@ -11,5 +11,6 @@
   "taobao": { "name": "타오바오", "item": "상품" },
   "jd": { "name": "징둥", "item": "상품" },
   "maoyan": { "name": "마오옌 공연", "item": "공연" },
-  "mteam": { "name": "M-Team", "item": "토렌트" }
+  "mteam": { "name": "M-Team", "item": "토렌트" },
+  "12306": { "name": "12306", "item": "열차" }
 }

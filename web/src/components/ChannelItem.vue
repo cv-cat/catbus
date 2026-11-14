@@ -18,6 +18,10 @@ const props = defineProps<{
   multi?: boolean
   order?: number
   busy?: boolean
+  /** 名字右侧的小标签（12306 的「免登录」） */
+  tag?: string
+  /** 不能点的原因（聚合模式下的 12306）：置灰，提示里写原因 */
+  disabled?: string | null
 }>()
 const { t } = useI18n()
 const label = computed(() => {
@@ -31,17 +35,19 @@ const label = computed(() => {
 
 <template>
   <button
-    v-tip="compact ? (label ? `${platform.name} · ${label}` : platform.name) : null"
+    v-tip="disabled || (compact ? (label ? `${platform.name} · ${label}` : platform.name) : null)"
     type="button"
     class="channel"
-    :class="{ active, compact, picked: multi && active, busy }"
+    :class="{ active, compact, picked: multi && active, busy, disabled: !!disabled }"
     :aria-current="!multi && active ? 'page' : undefined"
-    :aria-pressed="multi ? active : undefined"
+    :aria-pressed="multi && !disabled ? active : undefined"
+    :aria-disabled="disabled ? 'true' : undefined"
     :aria-label="compact ? platform.name : undefined"
     :data-id="platform.id"
   >
     <img class="logo" :src="platform.logo" alt="" draggable="false" />
     <span v-if="!compact" class="name">{{ platform.name }}</span>
+    <span v-if="tag && !compact" class="tag">{{ tag }}</span>
     <Transition name="ord">
       <span v-if="multi && active && order" class="ord mono" aria-hidden="true">{{ order }}</span>
     </Transition>
@@ -131,6 +137,27 @@ const label = computed(() => {
 .channel.active {
   color: var(--ink);
   font-weight: 600;
+}
+.tag {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 8px;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--ink-3);
+  background: var(--hair);
+}
+/* 置灰（聚合模式下的 12306）：不响应悬停，原因在提示里 */
+.channel.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.channel.disabled:hover {
+  background: none;
+  color: var(--ink-2);
+}
+.channel.disabled:hover .logo {
+  transform: none;
 }
 .logo {
   width: 22px;

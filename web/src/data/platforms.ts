@@ -51,3 +51,19 @@ export const PLATFORMS: PlatformMeta[] = (
 }))
 
 export const platformById = (id: string) => PLATFORMS.find((p) => p.id === id)
+
+/**
+ * 12306（AGENTS.md 7.9「12306 查询页」）：放在渠道列表最后、单独一页的车票查询，不是内容平台，
+ * 所以不在 PLATFORMS 里（不进发现页、聚合、筛选和渠道缓存）。名字同样按语言取（platforms.12306.name）。
+ */
+export const RAIL: PlatformMeta = {
+  id: '12306',
+  get name() {
+    return t('platforms.12306.name')
+  },
+  get item() {
+    return t('platforms.12306.item')
+  },
+  logo: logo('12306'),
+  mode: 'search',
+}

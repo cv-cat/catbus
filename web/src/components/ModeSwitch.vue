@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { flashTip } from '@/directives/tip'
 
 /**
  * 侧栏的「单一 / 聚合」开关：磨砂玻璃的轨道，上面一颗玻璃滑块。
@@ -8,11 +9,14 @@ import { useI18n } from 'vue-i18n'
  * 滑块滑动时被拉长一下再回弹，按住时鼓起来、变得更透，像一滴压在玻璃上的水。
  */
 const model = defineModel<boolean>({ required: true })
+/** 不能切换的原因（在 12306 查询页上）：置灰，提示里写原因 */
+const props = defineProps<{ disabled?: string | null }>()
 const { t } = useI18n()
 /** 切换过才播拉伸动画，避免一进页面就动一下 */
 const touched = ref(false)
 
-function toggle() {
+function toggle(e: MouseEvent) {
+  if (props.disabled) return flashTip(e.currentTarget)
   touched.value = true
   model.value = !model.value
 }
@@ -20,10 +24,11 @@ function toggle() {
 
 <template>
   <button
-    v-tip="model ? t('layout.mode.aggregateTip') : t('layout.mode.singleTip')"
+    v-tip="disabled || (model ? t('layout.mode.aggregateTip') : t('layout.mode.singleTip'))"
     type="button"
     class="mode"
-    :class="{ touched }"
+    :class="{ touched, disabled: !!disabled }"
+    :aria-disabled="disabled ? 'true' : undefined"
     role="switch"
     :aria-checked="model"
     :aria-label="t('layout.mode.label')"
@@ -181,5 +186,10 @@ function toggle() {
     position: absolute;
     inset: -8px;
   }
+}
+/* 在 12306 查询页上：置灰，不能切换 */
+.mode.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 </style>

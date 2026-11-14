@@ -1,0 +1,132 @@
+{
+  "eyebrow": "12306 · 免登录查询",
+  "title": "车票查询",
+  "nav": {
+    "tag": "免登录",
+    "noAggregate": "12306 不参与聚合"
+  },
+  "account": {
+    "title": "无需登录",
+    "sub": "购票请前往 12306 官方"
+  },
+  "form": {
+    "from": "出发站",
+    "to": "到达站",
+    "date": "出发日期",
+    "swap": "交换出发站和到达站",
+    "submit": "查询",
+    "placeholder": "站名、拼音或电报码",
+    "pickFrom": "选择出发站",
+    "pickTo": "选择到达站",
+    "stations": "车站",
+    "results": "{n} 个结果",
+    "noMatch": "没有匹配的车站，可以直接查询",
+    "keys": "↑ ↓ 选择 · Enter 确认 · Esc 收起",
+    "useText": "直接用「{name}」查询"
+  },
+  "date": {
+    "today": "今天",
+    "tomorrow": "明天",
+    "more": "更多日期",
+    "prevMonth": "上个月",
+    "nextMonth": "下个月",
+    "todayIs": "今天 {date}",
+    "range": "可选今天起 {n} 天内"
+  },
+  "view": {
+    "label": "直达或中转",
+    "direct": "直达",
+    "transfer": "中转"
+  },
+  "kind": {
+    "label": "车型",
+    "all": "全部",
+    "G": "高铁",
+    "D": "动车",
+    "C": "城际",
+    "Z": "直达",
+    "T": "特快",
+    "K": "快速",
+    "other": "其他"
+  },
+  "available": "只看有票",
+  "sort": {
+    "label": "排序",
+    "early": "出发最早",
+    "late": "出发最晚",
+    "fast": "历时最短",
+    "transfer": {
+      "fast": "全程最短",
+      "early": "出发最早",
+      "wait": "等候最短"
+    }
+  },
+  "via": {
+    "label": "途经",
+    "any": "不限中转站"
+  },
+  "count": {
+    "trains": "{n} 趟 · {elapsed}s",
+    "plans": "{n} 个方案 · {elapsed}s",
+    "trainsShort": "{n} 趟",
+    "plansShort": "{n} 个方案"
+  },
+  "sameCity": "含同城车站",
+  "mark": {
+    "start": "始",
+    "end": "终",
+    "pass": "过",
+    "startTip": "始发站上车",
+    "endTip": "坐到终到站",
+    "passTip": "途经站"
+  },
+  "seat": {
+    "plenty": "有",
+    "none": "无",
+    "count": "{n} 张"
+  },
+  "time": {
+    "minutes": "{m}分",
+    "hours": "{h}小时",
+    "hoursMinutes": "{h}小时{m}分",
+    "nextDay": "{n} 天后到达"
+  },
+  "open": "在 12306 打开",
+  "route": {
+    "title": "经停站",
+    "count": "{n} 站",
+    "legend": "红色为你的乘车区间",
+    "loading": "正在取经停站…",
+    "error": "经停站没有取到",
+    "empty": "没有经停信息",
+    "origin": "始发",
+    "terminal": "终到",
+    "stop": "停 {m} 分",
+    "expand": "展开 {train} 的经停站",
+    "collapse": "收起 {train} 的经停站",
+    "disclaim": "catbus 只查询时刻和余票，购票请在 12306 官方完成。"
+  },
+  "transfer": {
+    "note": "中转方案要在 12306 分段购买，每一段单独出票；每段右侧可以打开对应的余票页。",
+    "sameTrain": "同车换座",
+    "change": "换乘",
+    "changeStation": "需换站",
+    "via": "经 {station} 中转",
+    "total": "全程 {time}",
+    "waitSameTrain": "不用下车，在 {station} 换个座位 · 等候 {wait}",
+    "waitSameStation": "在 {station} 换乘 · 等候 {wait}",
+    "waitChange": "在 {from} 下车，前往 {to} 换乘 · 等候 {wait}"
+  },
+  "empty": {
+    "intro": "输入出发站和到达站，查询车次和余票",
+    "introDesc": "免登录，只查询时刻、余票和票价；购票请在 12306 官方完成。",
+    "direct": "没有直达车次",
+    "directDesc": "{date} {from} 到 {to} 没有直达车次，可以看看中转方案。",
+    "toTransfer": "查看中转方案",
+    "filtered": "没有符合筛选的车次",
+    "filteredDesc": "换个车型，或者关掉「只看有票」。",
+    "clear": "清除筛选",
+    "transfer": "没有找到中转方案",
+    "transferDesc": "换个日期或中转站再试试。"
+  }
+}

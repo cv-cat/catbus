@@ -96,3 +96,88 @@ export interface Keyword {
   text: string
   heat: number | null
 }
+
+// ---------- 12306（AGENTS.md 6.2 的铁路扩展类型；查询页见 7.9「12306 查询页」） ----------
+
+/** 余票：≤ 20 张是精确数，≥ 21 张是封顶对象 `{ min: 21 }` */
+export type Remaining = number | { min: number }
+
+export interface Station {
+  id: string
+  name: string
+  code: string
+  pinyin: string
+  abbr: string
+  city: string
+  url: null
+}
+
+export interface Ticket {
+  /** 车次，如 G1 */
+  id: string
+  /** 12306 官方余票查询深链 */
+  url: string
+  train_no: string
+  /** 车次首字母（G / D / C / Z / T / K…），纯数字车次为数字 */
+  type: string
+  /** 始发站、终到站：与 from / to 比较，得出「始」「终」「过」 */
+  start: { code: string; name: string }
+  end: { code: string; name: string }
+  from: { code: string; name: string; no: string }
+  to: { code: string; name: string; no: string }
+  depart: string
+  arrive: string
+  /** HH:MM */
+  duration: string
+  date: string
+  bookable: boolean
+  has_ticket: boolean
+  seats: Record<string, string>
+  remaining: Record<string, Remaining>
+  prices: Record<string, { amount: number; currency: string }>
+  seat_types: string
+}
+
+export interface Stop {
+  id: string
+  station: string
+  /** HH:MM；始发站为 ---- */
+  arrive: string
+  /** HH:MM；终到站为 ---- */
+  depart: string
+  /** 「2分钟」；始发、终到为 ---- */
+  stopover: string
+  in_range: boolean
+  url: null
+}
+
+export interface TransferLeg {
+  id: string
+  /** 这一段的余票深链；取不到时为 null */
+  url: string | null
+  train_no: string
+  from: string
+  to: string
+  depart: string
+  arrive: string
+  duration: string
+  seats: Record<string, string>
+  remaining: Record<string, Remaining>
+  prices: Record<string, { amount: number; currency: string }>
+}
+
+export interface Transfer {
+  id: string
+  url: null
+  via: string
+  same_station: boolean
+  same_train: boolean
+  kind: string
+  /** YYYY-MM-DD HH:MM */
+  depart: string
+  arrive: string
+  duration_minutes: number
+  /** 「2分钟」「1小时3分钟」 */
+  wait: string
+  legs: TransferLeg[]
+}

@@ -1,0 +1,132 @@
+{
+  "eyebrow": "12306 · No sign-in needed",
+  "title": "Train tickets",
+  "nav": {
+    "tag": "No sign-in",
+    "noAggregate": "12306 can't be aggregated"
+  },
+  "account": {
+    "title": "No sign-in needed",
+    "sub": "Buy tickets on the official 12306"
+  },
+  "form": {
+    "from": "From",
+    "to": "To",
+    "date": "Date",
+    "swap": "Swap stations",
+    "submit": "Search",
+    "placeholder": "Name, pinyin or code",
+    "pickFrom": "Choose departure station",
+    "pickTo": "Choose arrival station",
+    "stations": "Stations",
+    "results": "{n} result | {n} results",
+    "noMatch": "No matching station — you can still search",
+    "keys": "↑ ↓ select · Enter confirm · Esc close",
+    "useText": "Search with “{name}”"
+  },
+  "date": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "more": "More dates",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "todayIs": "Today {date}",
+    "range": "Within {n} days from today"
+  },
+  "view": {
+    "label": "Direct or transfer",
+    "direct": "Direct",
+    "transfer": "Transfer"
+  },
+  "kind": {
+    "label": "Type",
+    "all": "All",
+    "G": "High-speed",
+    "D": "EMU",
+    "C": "Intercity",
+    "Z": "Direct",
+    "T": "Express",
+    "K": "Fast",
+    "other": "Other"
+  },
+  "available": "Available only",
+  "sort": {
+    "label": "Sort",
+    "early": "Earliest",
+    "late": "Latest",
+    "fast": "Shortest",
+    "transfer": {
+      "fast": "Shortest",
+      "early": "Earliest",
+      "wait": "Least wait"
+    }
+  },
+  "via": {
+    "label": "Via",
+    "any": "Any station"
+  },
+  "count": {
+    "trains": "{n} train · {elapsed}s | {n} trains · {elapsed}s",
+    "plans": "{n} plan · {elapsed}s | {n} plans · {elapsed}s",
+    "trainsShort": "{n} train | {n} trains",
+    "plansShort": "{n} plan | {n} plans"
+  },
+  "sameCity": "includes same-city stations",
+  "mark": {
+    "start": "S",
+    "end": "E",
+    "pass": "P",
+    "startTip": "Boards at the origin",
+    "endTip": "Rides to the terminus",
+    "passTip": "Intermediate stop"
+  },
+  "seat": {
+    "plenty": "Yes",
+    "none": "None",
+    "count": "{n} left"
+  },
+  "time": {
+    "minutes": "{m}m",
+    "hours": "{h}h",
+    "hoursMinutes": "{h}h {m}m",
+    "nextDay": "Arrives {n} day later | Arrives {n} days later"
+  },
+  "open": "Open in 12306",
+  "route": {
+    "title": "Stops",
+    "count": "{n} stop | {n} stops",
+    "legend": "Red is your trip",
+    "loading": "Loading stops…",
+    "error": "Couldn't load the stops",
+    "empty": "No stop information",
+    "origin": "Origin",
+    "terminal": "Terminus",
+    "stop": "{m} min stop",
+    "expand": "Show stops of {train}",
+    "collapse": "Hide stops of {train}",
+    "disclaim": "catbus only looks up times and availability; buy tickets on the official 12306."
+  },
+  "transfer": {
+    "note": "Transfer plans are bought leg by leg on 12306, one ticket per leg; each leg links to its availability page.",
+    "sameTrain": "Same train",
+    "change": "Change",
+    "changeStation": "Change station",
+    "via": "Via {station}",
+    "total": "Total {time}",
+    "waitSameTrain": "Stay on board, change seats at {station} · wait {wait}",
+    "waitSameStation": "Change at {station} · wait {wait}",
+    "waitChange": "Get off at {from}, go to {to} to change · wait {wait}"
+  },
+  "empty": {
+    "intro": "Enter departure and arrival stations to look up trains",
+    "introDesc": "No sign-in needed; times, availability and fares only. Buy tickets on the official 12306.",
+    "direct": "No direct trains",
+    "directDesc": "No direct trains from {from} to {to} on {date}. Try a transfer plan.",
+    "toTransfer": "See transfer plans",
+    "filtered": "No trains match the filters",
+    "filteredDesc": "Pick another type, or turn off “Available only”.",
+    "clear": "Clear filters",
+    "transfer": "No transfer plans found",
+    "transferDesc": "Try another date or transfer station."
+  }
+}

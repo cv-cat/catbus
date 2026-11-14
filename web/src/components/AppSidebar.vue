@@ -7,7 +7,9 @@ import ChannelItem from './ChannelItem.vue'
 import AccountSwitcher from './AccountSwitcher.vue'
 import SettingsButton from './SettingsButton.vue'
 import ModeSwitch from './ModeSwitch.vue'
-import type { PlatformMeta } from '@/data/platforms'
+import RailAccountCard from './rail/RailAccountCard.vue'
+import { RAIL, type PlatformMeta } from '@/data/platforms'
+import { flashTip } from '@/directives/tip'
 import type { Account } from '@/api/types'
 import type { Health } from '@/stores/discover'
 import { animate, animateFrom, gsap } from '@/composables/motion'
@@ -29,6 +31,8 @@ const props = defineProps<{
   selected: string[]
   /** 第一页还在加载的渠道 */
   busy: Set<string>
+  /** 正在看 12306 查询页（AGENTS.md 7.9「12306 查询页」） */
+  railPage: boolean
 }>()
 const active = defineModel<string>({ required: true })
 /** 单一 / 聚合：聚合模式下点渠道是选上 / 去掉，不是切换 */
@@ -40,6 +44,10 @@ const emit = defineEmits<{
   toggleAccount: [platform: string, account: string]
   setDefault: [platform: string, account: string]
   remove: [platform: string, account: string, done: (ok: boolean) => void]
+  /** 点了 12306：进入查询页 */
+  openRail: []
+  /** 在查询页上点了别的渠道：先离开查询页，再切过去 */
+  leaveRail: [id: string]
 }>()
 
 /**
@@ -69,16 +77,32 @@ const aside = ref<HTMLElement>()
 const list = ref<HTMLElement>()
 const highlight = ref<HTMLElement>()
 
+/** 侧栏上高亮的渠道：查询页上是 12306 */
+const current = computed(() => (props.railPage ? RAIL.id : active.value))
+/** 聚合模式下 12306 不参与聚合（置灰）；在查询页上「单一 / 聚合」开关置灰 */
+const railOff = computed(() => (aggregate.value ? t('rail.nav.noAggregate') : null))
+
 /** 选中块跟着当前渠道滑动 */
 function place(instant = false) {
-  const el = list.value?.querySelector<HTMLElement>(`[data-id="${active.value}"]`)
+  const el = list.value?.querySelector<HTMLElement>(`[data-id="${current.value}"]`)
   if (!el || !highlight.value) return
   const vars = { y: el.offsetTop, height: el.offsetHeight, opacity: 1, duration: 0.5, ease: 'power3.out' }
   instant ? gsap.set(highlight.value, vars) : animate(highlight.value, vars)
   el.scrollIntoView({ block: 'nearest', behavior: instant ? 'auto' : 'smooth' })
 }
 
+function pickRail(e: MouseEvent) {
+  if (railOff.value) return flashTip(e.currentTarget)
+  if (!props.railPage) emit('openRail')
+  if (mode.value !== 'desktop') closeNav()
+}
+
 function pick(id: string) {
+  if (props.railPage) {
+    emit('leaveRail', id)
+    if (mode.value !== 'desktop') closeNav()
+    return
+  }
   if (aggregate.value) {
     // 至少留一个：只剩它时点不掉，晃一下
     if (props.selected.length === 1 && props.selected[0] === id) {
@@ -147,7 +171,7 @@ watch(overlay, async (open) => {
             (el) => !aside.value?.contains(el) && el.offsetParent !== null,
           ) ?? null
     await nextTick()
-    const target = list.value?.querySelector<HTMLElement>(`[data-id="${active.value}"]`) ?? focusables()[0]
+    const target = list.value?.querySelector<HTMLElement>(`[data-id="${current.value}"]`) ?? focusables()[0]
     // 指针打开时不画焦点环（键盘打开时浏览器仍会显示）
     target?.focus({ preventScroll: true, focusVisible: false } as FocusOptions)
   } else {
@@ -215,7 +239,7 @@ onBeforeUnmount(() => {
   removeEventListener('keydown', onKey)
   document.documentElement.classList.remove('nav-locked')
 })
-watch(active, () => place())
+watch(current, () => place())
 // 回到单一模式：滑动的选中块直接落到当前渠道上，再淡入
 watch(aggregate, () => nextTick(() => place(true)))
 watch(() => props.platforms, () => nextTick(() => place(true)))
@@ -271,12 +295,12 @@ watch(() => props.platforms, () => nextTick(() => place(true)))
     <div class="divider" />
 
     <div v-if="!rail" class="label">
-      <ModeSwitch v-model="aggregate" />
+      <ModeSwitch v-model="aggregate" :disabled="railPage ? t('rail.nav.noAggregate') : null" />
       <!-- 13 → 1/13：「1/」从 13 的后面向左滑出来 -->
       <span
         class="count mono"
         role="img"
-        :aria-label="aggregate ? t('layout.nav.countSelected', { n: selected.length, total: platforms.length }, platforms.length) : t('layout.nav.count', { n: platforms.length }, platforms.length)"
+        :aria-label="aggregate ? t('layout.nav.countSelected', { n: selected.length, total: platforms.length }, platforms.length) : t('layout.nav.count', { n: platforms.length + 1 }, platforms.length + 1)"
       >
         <span class="picked" :class="{ on: aggregate }" aria-hidden="true">
           <span class="picked-in">
@@ -286,7 +310,8 @@ watch(() => props.platforms, () => nextTick(() => place(true)))
             <span class="slash">/</span>
           </span>
         </span>
-        <span class="total" aria-hidden="true">{{ platforms.length }}</span>
+        <!-- 单一模式算上 12306；聚合模式的总数只算参与聚合的 -->
+        <span class="total" aria-hidden="true">{{ aggregate ? platforms.length : platforms.length + 1 }}</span>
       </span>
     </div>
 
@@ -296,7 +321,7 @@ watch(() => props.platforms, () => nextTick(() => place(true)))
         v-for="p in platforms"
         :key="p.id"
         :platform="p"
-        :active="aggregate ? selected.includes(p.id) : p.id === active"
+        :active="aggregate ? selected.includes(p.id) : !railPage && p.id === active"
         :health="health.get(p.id) ?? null"
         :compact="rail"
         :multi="aggregate"
@@ -304,9 +329,21 @@ watch(() => props.platforms, () => nextTick(() => place(true)))
         :busy="busy.has(p.id)"
         @click="pick(p.id)"
       />
+      <div class="rail-sep" aria-hidden="true" />
+      <ChannelItem
+        :platform="RAIL"
+        :active="railPage"
+        :health="null"
+        :compact="rail"
+        :tag="t('rail.nav.tag')"
+        :disabled="railOff"
+        @click="pickRail"
+      />
     </nav>
 
+    <RailAccountCard v-if="railPage" :rail="rail" />
     <AccountSwitcher
+      v-else
       :platforms="tabPlatforms"
       :focus="platforms.find((p) => p.id === active)!"
       :aggregate="aggregate"
@@ -441,6 +478,13 @@ watch(() => props.platforms, () => nextTick(() => place(true)))
 }
 .highlight {
   transition: opacity 0.25s ease-out;
+}
+/* 12306 与内容平台之间的分隔线 */
+.rail-sep {
+  flex: none;
+  height: 1px;
+  margin: 6px 10px;
+  background: var(--hair);
 }
 .highlight {
   position: absolute;

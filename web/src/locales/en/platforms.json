@@ -50,5 +50,9 @@
   "mteam": {
     "name": "M-Team",
     "item": "torrents"
+  },
+  "12306": {
+    "name": "12306",
+    "item": "train"
   }
 }

@@ -10,7 +10,7 @@ import { toast } from './toast'
 import { t } from '@/i18n'
 import { errorTitle } from '@/i18n/errors'
 import { cursorsFor, fill, interleave, itemCell, joinCursors, newLane, roundRobin, skeletonCells, type Cell, type Lane } from './lanes'
-import { authorRoute, parseAuthorPath } from './route'
+import { authorRoute, isRailPath, parseAuthorPath, railActive } from './route'
 
 export { KINDS, SORTS, TIMES, TYPES }
 
@@ -263,8 +263,11 @@ export const useDiscoverStore = defineStore('discover', () => {
     filters.value = await loadFilters()
   }
 
-  /** 第一次同步用 replace：把不规范的地址（如 `/`、未知平台）改成规范地址，不多出一条历史 */
-  let urlSynced = false
+  /**
+   * 第一次同步用 replace：把不规范的地址（如 `/`、未知平台）改成规范地址，不多出一条历史。
+   * 从 12306 查询页打开的：查询页那一条要留在历史里，之后一律 push
+   */
+  let urlSynced = isRailPath()
   /** 上次写进地址栏的状态（关键词是提交时的，不是输入框里正在打的） */
   let synced: DiscoverState | null = null
   const urlFor = (s: DiscoverState) =>
@@ -278,8 +281,8 @@ export const useDiscoverStore = defineStore('discover', () => {
   function syncUrl() {
     synced = { ...state, keyword: state.keyword.trim() }
     committed.value = synced.keyword
-    // 在作者页上：发现页在后台更新，地址栏归作者页（之后写地址用 push，不替换掉作者页）
-    if (authorRoute.value) return void (urlSynced = true)
+    // 在作者页 / 12306 查询页上：发现页在后台更新，地址栏归它们（之后写地址用 push，不替换掉它们）
+    if (authorRoute.value || railActive.value) return void (urlSynced = true)
     const next = urlFor(synced)
     if (next === location.pathname + location.search) return
     if (urlSynced) history.pushState(null, '', next)
@@ -306,7 +309,7 @@ export const useDiscoverStore = defineStore('discover', () => {
   /** 浏览器前进 / 后退：按地址恢复状态再搜索（平台、筛选的 watch 也会触发 search，合并成一次）。store 只建一次，监听也只挂一次 */
   addEventListener('popstate', () => {
     // 作者页的前进 / 后退由 stores/author 处理；从作者页后退回来、地址就是发现页上次写的：状态没变，不重新请求
-    if (parseAuthorPath()) return
+    if (parseAuthorPath() || isRailPath()) return
     if (synced && location.pathname + location.search === urlFor(synced)) return
     const next = fromUrl(urlDefaults())
     restoring = next.platform !== state.platform

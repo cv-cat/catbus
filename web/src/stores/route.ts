@@ -34,3 +34,12 @@ export function authorPath(r: AuthorRoute): string {
 
 /** 正在看的作者页；null 表示在发现页。打开页面时按地址初始化 */
 export const authorRoute = shallowRef<AuthorRoute | null>(parseAuthorPath())
+
+/**
+ * 12306 查询页（AGENTS.md 7.9「12306 查询页」）：地址 `/12306?from=…&to=…&date=…&view=transfer&via=…`。
+ * 发现页在后台不动（不改地址、不响应查询页的前进 / 后退）；状态在 stores/rail。
+ */
+export const RAIL_ID = '12306'
+export const isRailPath = () => /^\/12306\/?$/.test(location.pathname)
+/** 正在看 12306 查询页；打开页面时按地址初始化 */
+export const railActive = shallowRef(isRailPath())

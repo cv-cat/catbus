@@ -5,7 +5,9 @@ import AmbientBlobs from '@/components/AmbientBlobs.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import DiscoverView from '@/views/DiscoverView.vue'
 import AuthorView from '@/views/AuthorView.vue'
+import RailView from '@/views/RailView.vue'
 import { useAuthorStore } from '@/stores/author'
+import { useRailStore } from '@/stores/rail'
 import LoginDialog from '@/components/LoginDialog.vue'
 import VerifyDialog from '@/components/VerifyDialog.vue'
 import DetailCard from '@/components/DetailCard.vue'
@@ -25,6 +27,8 @@ const d = useDiscoverStore()
 const src = useSourceStore()
 // 作者页（AGENTS.md 7.9「作者页」）：发现页保持挂载、藏在后面，后退时原样恢复
 const author = useAuthorStore()
+// 12306 查询页（AGENTS.md 7.9「12306 查询页」）：同样盖在发现页上面，发现页在后台不动
+const rail = useRailStore()
 const settings = useSettingsStore().settings
 // 「减少动效」「人浪动效」两项设置接到 motion.ts（立即生效）
 bindMotionSettings()
@@ -34,6 +38,13 @@ async function onLogin() {
   await d.refreshAccounts()
   d.search()
   if (author.active) author.load(true)
+}
+
+/** 在查询页上点了别的渠道：离开查询页再切过去；点的正是发现页停着的渠道时，平台不变，要自己触发一次搜索 */
+function leaveRail(id: string) {
+  rail.leave()
+  if (id === d.state.platform) d.search()
+  else d.state.platform = id
 }
 
 async function removeAccount(platform: string, account: string, done: (ok: boolean) => void) {
@@ -65,7 +76,9 @@ onMounted(async () => {
   }
   await detectSource()
   await Promise.all([d.refreshAccounts(), d.initFilters(), author.initCaps()])
-  d.search()
+  // 直接打开的查询页：发现页先不请求（离开查询页时再搜），查询页按地址查询
+  if (rail.active) rail.start()
+  else d.search()
   // 直接打开的作者页：账号读到之后再请求
   if (author.active) author.load()
 })
@@ -89,6 +102,9 @@ onMounted(async () => {
       :aggregate="d.aggregate"
       :selected="d.selected"
       :busy="d.busy"
+      :rail-page="rail.active"
+      @open-rail="rail.open()"
+      @leave-rail="leaveRail"
       @update:aggregate="d.setAggregate"
       @toggle="d.toggleChannel"
       @login="(platform: string, account?: string) => openLogin(platform, account)"
@@ -96,8 +112,13 @@ onMounted(async () => {
       @set-default="setDefault"
       @remove="removeAccount"
     />
-    <DiscoverView :class="{ behind: author.active }" :inert="author.active || undefined" :aria-hidden="author.active || undefined" />
-    <AuthorView v-if="author.active" />
+    <DiscoverView
+      :class="{ behind: author.active || rail.active }"
+      :inert="author.active || rail.active || undefined"
+      :aria-hidden="author.active || rail.active || undefined"
+    />
+    <AuthorView v-if="author.active && !rail.active" />
+    <RailView v-if="rail.active" />
   </div>
   <DetailCard />
   <Lightbox />
