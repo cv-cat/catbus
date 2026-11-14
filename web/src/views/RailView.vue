@@ -74,14 +74,16 @@ const summary = computed(() => {
 })
 /**
  * 吸顶：查询表单滚到顶时停在上面（手机上表单太高，不吸顶）。
- * 不在滚动事件里读布局，用 IntersectionObserver 看表单前面的顶栏：顶栏整个滚出容器时算吸顶，表单加深阴影。
+ * 不在滚动事件里读布局，用 IntersectionObserver 看表单前面的顶栏：表单碰到容器顶边时算吸顶，换成铺满宽度的玻璃条。
  */
 const root = ref<HTMLElement>()
 const header = ref<HTMLElement>()
 const stuck = ref(false)
 let stuckIo: IntersectionObserver | undefined
 onMounted(() => {
-  stuckIo = new IntersectionObserver(([e]) => e && (stuck.value = !e.isIntersecting), { root: root.value })
+  // 表单到顶时顶栏底边正好在容器顶上方「顶栏下外边距」处
+  const margin = parseFloat(getComputedStyle(header.value!).marginBottom)
+  stuckIo = new IntersectionObserver(([e]) => e && (stuck.value = !e.isIntersecting), { root: root.value, rootMargin: `${margin}px 0px 0px 0px` })
   stuckIo.observe(header.value!)
 })
 onBeforeUnmount(() => stuckIo?.disconnect())
@@ -253,7 +255,10 @@ const skeleton = 6
   position: absolute;
   inset: 0 0 0 var(--content-left);
   overflow-y: auto;
-  padding: 16px calc(24px + var(--safe-right)) calc(40px + var(--safe-bottom)) 28px;
+  /* 左右内边距单独成变量：吸顶的表单要伸进去铺满宽度 */
+  --pad-l: 28px;
+  --pad-r: calc(24px + var(--safe-right));
+  padding: 16px var(--pad-r) calc(40px + var(--safe-bottom)) var(--pad-l);
   z-index: 2;
   transition: left 0.5s var(--ease-out);
   scrollbar-width: thin;
@@ -329,13 +334,21 @@ h1 {
 }
 
 /* ---------- 查询表单吸顶 ---------- */
+/* 与发现页的筛选栏一致：贴着容器顶边，左右伸进容器的内边距铺满，上边直角、下边圆角 */
 .rail-page .rail-form {
   position: sticky;
-  top: -8px;
-  transition: box-shadow 0.3s;
+  top: -16px;
+  transition: background 0.3s, box-shadow 0.3s, border-radius 0.3s;
 }
 .rail-page .rail-form.stuck {
-  box-shadow: var(--shadow-card), 0 12px 32px #1b1f2e1f;
+  margin: 0 calc(-1 * var(--pad-r)) 0 calc(-1 * var(--pad-l));
+  padding-left: calc(20px + var(--pad-l));
+  padding-right: calc(20px + var(--pad-r));
+  border-color: transparent;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  background: var(--glass);
+  backdrop-filter: blur(30px) saturate(1.6);
+  box-shadow: 0 8px 24px #1b1f2e10;
 }
 
 /* ---------- 筛选栏 ---------- */
@@ -549,7 +562,7 @@ h1 {
 
 @media (max-width: 1024px) {
   .rail-page {
-    padding-left: 20px;
+    --pad-l: 20px;
   }
   .filters {
     flex-wrap: wrap;
