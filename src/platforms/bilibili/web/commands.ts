@@ -261,6 +261,33 @@ export async function itemRelated(ctx: Ctx) {
   return paged((d?.Related ?? []).filter((v: any) => v.bvid).map(norm.video), null, false)
 }
 
+/** 投稿话题搜索：创作中心返回的是条目偏移，而非页码。 */
+export async function topicSearch(ctx: Ctx) {
+  const rawCursor = ctx.cursor ?? '0'
+  if (!/^\d+$/.test(rawCursor) || !Number.isSafeInteger(Number(rawCursor))) {
+    throw new CatbusError('USAGE', '话题搜索游标必须是非负整数')
+  }
+  const offset = Number(rawCursor)
+  const b = await bili(ctx)
+  b.requireLogin()
+  const d: any = await api.searchPublishTopics(b, ctx.args.keyword!, offset)
+  const result = d?.result
+  if (!result || !Array.isArray(result.topics) || !result.page_info) {
+    throw new CatbusError('UPSTREAM', '话题搜索响应缺少结果或分页信息')
+  }
+  const list = result.topics.map((t: any) => n.topic({
+    id: n.id(t.id), name: String(t.name ?? ''),
+    url: `https://www.bilibili.com/v/topic/detail?topic_id=${encodeURIComponent(n.id(t.id))}`,
+    stats: { views: n.count(t.arc_play_vv) },
+  }, t))
+  const more = Boolean(result.page_info.has_more)
+  const next = Number(result.page_info.offset)
+  if (more && (!Number.isSafeInteger(next) || next <= offset)) {
+    throw new CatbusError('UPSTREAM', '话题搜索返回的分页偏移无效')
+  }
+  return paged(list, more ? String(next) : null, more)
+}
+
 export async function itemList(ctx: Ctx) {
   const b = await bili(ctx)
   const p = page(ctx)

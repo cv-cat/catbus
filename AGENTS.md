@@ -197,6 +197,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 
 各动作的说明：
 - `item list`：当前账号自己发布的内容，带审核状态，数据来自创作者中心。
+- B 站 `topic search <keyword>` 使用创作中心投稿话题接口，返回话题 ID、名称、话题页和稿件播放量；支持偏移游标续页，登录必需。
 - `item related`：相关推荐。
 - `item media`：可播放 / 可下载的媒体地址。
 - `item download`：把{item}的媒体下载到本地，可以同时导出帖子信息和评论（`--meta` / `--comments`，见 4.9「下载」）。

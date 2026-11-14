@@ -565,6 +565,15 @@ export async function sendVideoDanmaku(b: Bili, aid: string, cid: string | numbe
 
 const UPLOAD_PAGE = 'https://member.bilibili.com/platform/upload/video/frame'
 
+/** 创作中心投稿话题搜索（非上游；offset 为条目偏移量）。 */
+export function searchPublishTopics(b: Bili, keyword: string, offset: number) {
+  const h = headers('GET', { origin: ORIGIN.member, sameOrigin: true }).referer(UPLOAD_PAGE)
+  return b.get(`${MEMBER}/x/vupre/web/topic/search`, {
+    headers: h.get(),
+    query: [['page_size', 20], ['offset', offset], ['keywords', keyword]],
+  })
+}
+
 export function archivePre(b: Bili) {
   const h = headers('GET', { origin: ORIGIN.member, sameOrigin: true }).referer(UPLOAD_PAGE)
   return b.get(`${MEMBER}/x/vupre/web/archive/pre`, {

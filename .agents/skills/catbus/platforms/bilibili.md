@@ -8,7 +8,7 @@
 
 ## 能做
 
-- **读**：`item search` / `get` / `related` / `media` / `download` / `list` / `categories` / `subtitles`（字幕，带时间轴）；`user get` / `search` / `items`（`--keyword` 过滤）；`comment list`（稿件、专栏、动态）；`feed list`；`live get` / `search` / `categories` / `listen` / `history` / `gifts` / `media`；`folder list` / `items`；`danmaku list`；`draft get`；`series list`（我的合集）。
+- **读**：`item search` / `get` / `related` / `media` / `download` / `list` / `categories` / `subtitles`（字幕，带时间轴）；`user get` / `search` / `items`（`--keyword` 过滤）；`comment list`（稿件、专栏、动态）；`feed list`；`live get` / `search` / `categories` / `listen` / `history` / `gifts` / `media`；`folder list` / `items`；`danmaku list`；`draft get`；`topic search`（投稿话题 ID 和名称）；`series list`（我的合集）。
 - **写**：`item like` / `unlike` / `collect` / `uncollect`（`--folder`）/ `publish` / `edit`（换视频、改资料、换 16:9 / 4:3 封面）/ `delete`；`item coin`、`item triple`；`comment add` / `delete`；`series add`；`danmaku send`；`dynamic publish` / `delete`；`article publish`（专栏）/ `draft delete`；`live send` / `start` / `stop`；`media upload`。
 
 B 站写操作是 10 个平台里验证最充分的：点赞、收藏、评论增删、发弹幕、专栏草稿都已真机通过。
@@ -32,6 +32,8 @@ B 站写操作是 10 个平台里验证最充分的：点赞、收藏、评论�
 `item search`：`--sort general|views|latest|collects`，`--type video|article`。
 
 ## 坑
+
+- `topic search` 查询创作中心投稿话题，支持游标续页；`stats.views` 是稿件播放量。
 
 - **`danmaku list` 不完整**：6 分钟以内的视频只返回前 2 分钟的弹幕且不报错，更长的报 `UPSTREAM`。不要用它做完整统计，要告诉用户。
 - `item delete` 需要极验点选，catbus 过不了，会报 `RISK_CONTROL`：让用户在网页端撤稿。

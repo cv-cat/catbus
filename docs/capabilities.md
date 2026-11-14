@@ -264,7 +264,7 @@
 | series list | ○ | ○ | ✓ | ◐ | ○ | — | — | — | — | — | ✓ | — | — | — | — |
 | series items | ○ | ○ | ○ | ○ | ○ | — | — | — | — | — | ✓ | — | — | — | — |
 | history list | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ○ | ✓ | — | ✓ | — | — | — | — |
-| topic search | ✓ | ○ | ○ | ○ | ○ | ○ | — | — | — | — | — | — | — | — | — |
+| topic search | ✓ | ○ | ○ | ◐ | ○ | ○ | — | — | — | — | — | — | — | — | — |
 | poi search | ✓ | ○ | ◐ | — | ○ | ○ | — | — | — | — | — | — | — | ◐ | — |
 
 - xhs `folder list`：只列公开的收藏夹（上游只有这一个接口），收藏夹里的笔记上游没有
@@ -273,6 +273,7 @@
 - bilibili `series list`：非上游：创作中心合集管理接口（x2/creative/web/seasons），只能列自己的合集
 - youtube `series list`：频道公开的播放列表；me 为自己的全部播放列表（需要登录）
 - youtube `series items`：<series> 为播放列表 ID（PL…）或带 list= 的链接
+- bilibili `topic search`：非上游：创作中心投稿话题搜索；stats.views 是稿件播放量，支持偏移游标
 - tiktok `poi search`：在推荐地点里按关键词筛选
 - maoyan `poi search`：只搜演出城市（内置城市表），id 即 feed list --city 的取值
 - `folder create --visibility` 取值：tiktok public / private
@@ -324,7 +325,7 @@
 | 平台 | 命令 |
 |---|---|
 | tiktok | `folder add` ✓ |
-| bilibili | `item edit` ✓ · `item coin` ✓ · `item triple` ✓ · `item subtitles` ✓ · `comment pin` ✓ · `comment unpin` ✓ · `series add` ◐ · `danmaku list` ✓ · `danmaku send` ✓ · `dynamic publish` ✓ · `dynamic delete` ✓ · `article publish` ✓ · `draft get` ✓ · `draft delete` ✓ |
+| bilibili | `item edit` ✓ · `item coin` ✓ · `item triple` ✓ · `item subtitles` ✓ · `comment pin` ✓ · `comment unpin` ✓ · `series add` ◐ · `series sort` ◐ · `danmaku list` ✓ · `danmaku send` ✓ · `dynamic publish` ✓ · `dynamic delete` ✓ · `article publish` ✓ · `draft get` ✓ · `draft delete` ✓ |
 | jd | `order list` ✓ · `cart count` ✓ · `coupon list` ✓ |
 | x | `article publish` ✓ · `article delete` ✓ |
 | youtube | `channel create` ✓ |

@@ -1367,3 +1367,67 @@ describe('bilibili 合集（series）', () => {
     expect(miss.urls.every((u) => !u.includes('episodes/add'))).toBe(true)
   })
 })
+
+describe('bilibili 投稿话题搜索', () => {
+  const TOPIC = '/x/vupre/web/topic/search'
+  const page = (offset: number, more: boolean, topics: unknown[]) => ok({ result: { topics, page_info: { offset, has_more: more } } })
+  const search = (cursor: string | null, response: unknown) => runCommand('topicSearch' as keyof typeof commands, { args: { keyword: 'AI IN ALL' }, cursor }, () => response)
+
+  it('使用创作中心接口返回话题 ID、名称、网址和下一页偏移', async () => {
+    const topic = { id: 1255303, name: 'AI IN ALL！', arc_play_vv: 63064020, state: 0 }
+    const r = await search(null, page(2, true, [topic]))
+    expect(r.error).toBeUndefined()
+    const url = new URL(r.urls.find((u) => u.includes(TOPIC))!)
+    expect(url.searchParams.get('keywords')).toBe('AI IN ALL')
+    expect(url.searchParams.get('offset')).toBe('0')
+    expect(url.searchParams.get('page_size')).toBe('20')
+    expect(r.result.data).toEqual([{ id: '1255303', name: 'AI IN ALL！', url: 'https://www.bilibili.com/v/topic/detail?topic_id=1255303', stats: { views: 63064020, items: null } }])
+    expect(r.result.data[0][RAW]).toEqual(topic)
+    expect(r.result.page).toEqual({ cursor: '2', has_more: true })
+  })
+
+  it('传入游标按偏移继续，末页没有下一游标', async () => {
+    const r = await search('2', page(3, false, [{ id: 1, name: '示例' }]))
+    expect(r.error).toBeUndefined()
+    expect(new URL(r.urls[0]!).searchParams.get('offset')).toBe('2')
+    expect(r.result.page).toEqual({ cursor: null, has_more: false })
+    expect(r.result.data[0].stats).toEqual({ views: null, items: null })
+  })
+
+  it('拒绝非法游标和无法前进的分页，避免重复结果或无限翻页', async () => {
+    const bad = await search('-1', page(2, true, []))
+    expect(bad.error).toMatchObject({ code: 'USAGE' })
+    expect(bad.urls).toEqual([])
+    const stuck = await search('2', page(2, true, [{ id: 1, name: '示例' }]))
+    expect(stuck.error).toMatchObject({ code: 'UPSTREAM' })
+  })
+
+  describe('CLI 分页', () => {
+    useTempHome()
+    it('limit 截断后游标能继续读取余下结果', async () => {
+      await writeCredential(loggedCtx().credential)
+      const calls: number[] = []
+      const restore = mockSender((p) => {
+        const offset = Number(new URL(p.url).searchParams.get('offset'))
+        calls.push(offset)
+        const topics = offset === 0 ? [{ id: 1, name: '一' }, { id: 2, name: '二' }] : [{ id: 3, name: '三' }, { id: 4, name: '四' }]
+        return fakeResponse(page(offset + 2, offset === 0, topics), { headers: [['content-type', 'application/json']], url: p.url })
+      })
+      try {
+        const first = await cli('bilibili', 'topic', 'search', 'AI', '--limit', '3', '--account', 'default')
+        expect(first.env.ok, JSON.stringify(first.env)).toBe(true)
+        expect(first.env.data.map((t: any) => t.id)).toEqual(['1', '2', '3'])
+        expect(first.env.page).toEqual({ cursor: '2#skip=1', has_more: true })
+        const next = await cli('bilibili', 'topic', 'search', 'AI', '--cursor', first.env.page.cursor, '--account', 'default')
+        expect(next.env.data.map((t: any) => t.id)).toEqual(['4'])
+        expect(next.env.page).toEqual({ cursor: null, has_more: false })
+        expect(calls).toEqual([0, 2, 2])
+      } finally { restore() }
+    })
+  })
+
+  it('命令注册为已实现的可分页搜索', () => {
+    const c = web().commands.get('topic search')!
+    expect(c).toMatchObject({ status: 'implemented', paged: true })
+  })
+})

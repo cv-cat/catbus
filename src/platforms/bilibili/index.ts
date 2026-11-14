@@ -201,7 +201,7 @@ export default definePlatform({
         'series items': 'none',
 
         'history list': 'none',
-        'topic search': 'none',
+        'topic search': impl('partial', 'topicSearch', { note: '非上游：创作中心投稿话题搜索；stats.views 是稿件播放量，支持偏移游标' }),
 
         // 平台扩展（AGENTS 4.7）
         'item coin': {
