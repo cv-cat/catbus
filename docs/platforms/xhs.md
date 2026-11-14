@@ -42,11 +42,11 @@
 
 | 命令 | 状态 | 说明 |
 |---|---|---|
-| `user get` | ✓ | 用户资料。 |
+| `user get` | ✓ | 用户资料。`stats.likes` 是「获赞与收藏」的合计。 |
 | `user search` | ✓ | 搜索用户。 |
-| `user items` | ✓ | 用户发布的笔记。 |
-| `user likes` | ✓ | 用户点赞的笔记。 |
-| `user collects` | ✓ | 用户收藏的笔记。 |
+| `user items` | ✓ | 用户发布的笔记。列表卡片只有点赞数（过万时平台只给「1.2万」这样的展示值，换算后精度到千位），收藏、评论、分享为 null。 |
+| `user likes` | ✓ | 用户点赞的笔记。列表卡片只有点赞数（过万时平台只给「1.2万」这样的展示值，换算后精度到千位），收藏、评论、分享为 null。 |
+| `user collects` | ✓ | 用户收藏的笔记。列表卡片只有点赞数（过万时平台只给「1.2万」这样的展示值，换算后精度到千位），收藏、评论、分享为 null。 |
 | `user following` | ◐ | 关注列表。只支持 me。 |
 | `user followers`、`user follow`、`user unfollow` | ○ | 规划中 |
 
@@ -54,8 +54,8 @@
 
 | 命令 | 状态 | 说明 |
 |---|---|---|
-| `item get` | ✓ | 笔记详情。 |
-| `item search` | ✓ | 搜索笔记。取值：`--sort` general / latest / popular / comments / collects；`--type` all / video / image；`--time` all / day / week / half_year。 |
+| `item get` | ✓ | 笔记详情。点赞、收藏、评论、分享数过万时，平台只给「1.1万」这样的展示值，换算后精度到千位；要精确值用 `item search`。 |
+| `item search` | ✓ | 搜索笔记。点赞、收藏、评论、分享数是精确值。取值：`--sort` general / latest / popular / comments / collects；`--type` all / video / image；`--time` all / day / week / half_year。 |
 | `item list` | ✓ | 我发布的笔记，带审核状态。走创作者中心（creator 子站点）。 |
 | `item media` | ✓ | 笔记的媒体地址。 |
 | `item download` | ✓ | 下载笔记的媒体，可同时导出信息和评论（`--meta`、`--comments`）。 |
@@ -74,7 +74,7 @@
 
 | 命令 | 状态 | 说明 |
 |---|---|---|
-| `feed list` | ◐ | 推荐 / 热门 / 关注流。following 规划中。取值：`--kind` recommend / following。 |
+| `feed list` | ◐ | 推荐 / 热门 / 关注流。following 规划中；列表卡片只有点赞数（过万时平台只给「1.2万」这样的展示值，换算后精度到千位），收藏、评论、分享为 null。取值：`--kind` recommend / following。 |
 | `feed categories` | ✓ | 推荐流分类。 |
 
 ### live
@@ -208,6 +208,11 @@ catbus xhs live listen <room_id> --duration 10m > live.jsonl
   其他验证方式（如 `124` App 扫码、滑块）仍报 `RISK_CONTROL`（`detail.kind` 为 `captcha`），`hint` 提示改用 cookie 导入。cookie 导入实测可用。
 - **评论接口间歇性要求人机验证**：`comment list` 偶尔返回 HTTP 461（`verifytype 124`），请求越密越容易触发。报 `RISK_CONTROL`，`error.hint` 和 `detail.verify_url` 里是网页验证链接：在登录了同一账号的浏览器里打开、完成验证后再重试。不验证时有时几分钟自己恢复，也见过持续 8 小时以上的；批量翻页时放慢节奏。
 - **字段恒为空**：列表里的 `stats.views`（公开接口不返回播放量）、`keyword hot` 的 `heat`（热搜接口不给热度值）。
+- **互动数的精度因命令而异**（[#7](https://github.com/cv-cat/catbus/issues/7)）：平台只在搜索接口给精确值，其他接口过万后只给「1.1万」这样的展示值，catbus 按 [AGENTS.md 6.2](../../AGENTS.md#62-归一化类型) 换算成整数（11000），精度到千位，所以同一篇笔记在不同命令里的数可能对不上。2026-11-14 实测同一篇笔记：`item search` 的收藏是 11155，`item get` 是 11000（原始值 `"1.1万"`），`user items` 只有点赞数。
+  - `item search`：点赞、收藏、评论、分享都是精确值。
+  - `item get`：四项都有，过万后是取整值。
+  - `user items` / `likes` / `collects`、`feed list`：列表卡片只有点赞数（过万后是取整值），收藏、评论、分享为 null。
+  - `user get`：`stats.likes` 是「获赞与收藏」的合计（精确值），不是单纯的获赞数。
 - **还没真机验证**：`msg send` / `read` / `revoke` / `delete`、`msg listen`、`live listen`、`live send`。关注列表与群聊的字段名参考了第三方代码（上游没有样本）。
 - **删不掉笔记**：`item delete` 上游没有（○），发出去的笔记要在 App 里手动删除。测试发布请用 `--visibility private`。
 - **视频发布要给封面**：catbus 不解码视频，截不了首帧，`--video` 必须配 `--cover`。

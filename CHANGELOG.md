@@ -46,6 +46,7 @@
 
 ### Fixed
 
+- xhs：写明各命令互动数的口径（#7）。平台只在搜索接口给精确值，`item get` 过万后只给「1.1万」这样的展示值（换算成 11000，精度到千位），`user items` / `likes` / `collects`、`feed list` 的列表卡片只有点赞数；`user get` 的 `stats.likes` 是「获赞与收藏」的合计。写进注册表的 note（`catbus platforms xhs`、能力矩阵）、平台说明的已知限制和 Agent 技能
 - xhs：扫码确认后的短信人机验证适配主站 2026-11-09 实测的新协议（HTTP 471，`verifyType 213` 登录强制短信验证，替代 0.3.0 适配的验证页链 120）。在登录链的会话上直接验证（不重建验证页会话、无 vc/init），验证码发到输入的手机号（`--phone` 或终端输入，需与账号绑定手机一致；非交互下与验证码一起从 stdin 读两行）；getverifyuserinfo / vc/send / vc/check 的请求键序照实测。120 链保留：服务端按环境在两条验证间切换。短信登录（`--method sms`）的独立链路不变
 
 ## [0.3.0] - 2026-11-05

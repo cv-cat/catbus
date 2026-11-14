@@ -53,15 +53,19 @@
 | user unfollow | ○ | ○ | ✓ | ○ | ○ | ○ | ○ | — | — | ✓ | ✓ | — | — | — | — |
 | user update | — | — | — | ◐ | — | — | — | — | — | — | — | — | — | — | — |
 
+- xhs `user get`：stats.likes 是「获赞与收藏」的合计
 - tiktok `user get`：me 部分支持
 - xianyu `user get`：只支持 me；查询他人规划中
 - taobao `user get`：参数只接受商品链接（淘宝 / 天猫商品页或 m.tb.cn 分享短链），返回这件商品的卖家；me 规划中
 - jd `user get`：只支持 me
 - youtube `user get`：<user> 为频道 ID（UC…）、@handle 或频道链接
 - mteam `user get`：只支持 me；PT 上传量、下载量等账号字段可用 --raw 查看
+- xhs `user items`：列表卡片只有点赞数（过万时平台只给「1.2万」这样的展示值，换算后精度到千位），收藏、评论、分享为 null
 - youtube `user items`：频道「视频」tab，不含 Shorts 和直播
+- xhs `user likes`：列表卡片只有点赞数（过万时平台只给「1.2万」这样的展示值，换算后精度到千位），收藏、评论、分享为 null
 - kuaishou `user likes`：只支持 me
 - youtube `user likes`：只能看自己的（me），即「已点赞的视频」播放列表
+- xhs `user collects`：列表卡片只有点赞数（过万时平台只给「1.2万」这样的展示值，换算后精度到千位），收藏、评论、分享为 null
 - youtube `user collects`：只能看自己的（me），即「稍后观看」列表
 - mteam `user collects`：只支持 me；按分区列出（--mode）
 - kuaishou `user followers`：只支持 me
@@ -97,7 +101,9 @@
 | item delete | ○ | ○ | ○ | ◐ | ○ | ○ | ○ | — | — | ✓ | ✓ | — | — | — | — |
 | item categories | — | — | — | ✓ | — | — | ○ | — | — | — | — | — | — | — | ✓ |
 
+- xhs `item get`：点赞、收藏、评论、分享数过万时，平台只给「1.1万」这样的展示值，换算后精度到千位；要精确值用 item search
 - maoyan `item get`：场次时间、场馆、票价档、售卖状态写在 text 里；--tickets 需要登录
+- xhs `item search`：点赞、收藏、评论、分享数是精确值
 - douyin `item search`：--type video 走视频频道搜索，其余走综合频道；--type image 只要图文
 - kuaishou `item search`：没有筛选（--sort / --type / --time），只按关键词搜
 - weibo `item search`：只能取第一页（m.weibo.cn 的访客从第二页起要求登录）
@@ -208,7 +214,7 @@
 | keyword suggest | ✓ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ○ | ✓ | — | — | — | — |
 | keyword hot | ✓ | ○ | ○ | ○ | ○ | ○ | — | — | ✓ | ○ | — | — | — | — | — |
 
-- xhs `feed list`：following 规划中
+- xhs `feed list`：following 规划中；列表卡片只有点赞数（过万时平台只给「1.2万」这样的展示值，换算后精度到千位），收藏、评论、分享为 null
 - douyin `feed list`：hot、following 规划中
 - bilibili `feed list`：following 非上游：上游没有动态流接口，请求按网页端动态页补的（x/polymer/web-dynamic/v1/feed/all），没有对拍；只列关注的人的视频投稿，需要登录
 - kuaishou `feed list`：following 只有首屏
