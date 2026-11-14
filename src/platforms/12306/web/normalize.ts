@@ -29,7 +29,7 @@ const SEATS: Record<string, string> = {
 }
 
 const FIELD: Record<string, number> = {
-  train_no: 2, code: 3, from: 6, to: 7, depart: 8, arrive: 9, duration: 10, can_buy: 11,
+  train_no: 2, code: 3, start: 4, end: 5, from: 6, to: 7, depart: 8, arrive: 9, duration: 10, can_buy: 11,
   from_no: 16, to_no: 17, yp_info_new: 39, gr_num: 21, qt_num: 22, rw_num: 23, rz_num: 24, tz_num: 25, wz_num: 26,
   yw_num: 28, yz_num: 29, ze_num: 30, zy_num: 31, swz_num: 32, srrb_num: 33, seat_types: 35,
 }
@@ -90,8 +90,17 @@ export function ticketUrl(from: { name: string; code: string }, to: { name: stri
   return `${BASE}/otn/leftTicket/init?${q}`
 }
 
-export function parseTickets(data: { map?: Record<string, string>; result: string[] }, date: string): Ticket[] {
+/**
+ * `stations` 是车站表（电报码 → 站名）：响应的 `map` 只有出发、到达城市的车站，
+ * 始发站、终到站多半不在里面，再到车站表里找，都没有时用电报码。
+ */
+export function parseTickets(
+  data: { map?: Record<string, string>; result: string[] },
+  date: string,
+  stations: Record<string, string> = {},
+): Ticket[] {
   const names = data.map ?? {}
+  const station = (code: string) => ({ code, name: names[code] ?? stations[code] ?? code })
   return data.result.map((row) => {
     const p = row.split('|')
     const get = (k: string) => p[FIELD[k]!]
@@ -105,6 +114,8 @@ export function parseTickets(data: { map?: Record<string, string>; result: strin
       url: ticketUrl(from, to, date),
       train_no: get('train_no')!,
       type: code[0]!,
+      start: station(get('start')!),
+      end: station(get('end')!),
       from,
       to,
       depart: get('depart')!,
@@ -143,11 +154,22 @@ export function parsePrices(data: Record<string, any>): Record<string, Price> {
   return prices
 }
 
+/**
+ * 一段的余票深链。乘车日期：第一段是方案的 `train_date`，后面的段是 `middle_date`（换乘站的上车日期，
+ * 候车跨过零点时已经是第二天）。段里的 `start_train_date` 是车次从始发站发车的日期，不是上车日期，不能用。
+ */
+function legUrl(l: any, date: unknown): string | null {
+  const from = l.from_station_telecode
+  const to = l.to_station_telecode
+  if (!from || !to || typeof date !== 'string' || !/^\d{4}-\d\d-\d\d$/.test(date)) return null
+  return ticketUrl({ name: l.from_station_name, code: from }, { name: l.to_station_name, code: to }, date)
+}
+
 export function parseTransfers(list: any[]): Transfer[] {
   return list.map((r) => {
-    const legs: TransferLeg[] = r.fullList.map((l: any) => ({
+    const legs: TransferLeg[] = r.fullList.map((l: any, i: number) => ({
       id: l.station_train_code,
-      url: null,
+      url: legUrl(l, i === 0 ? r.train_date : r.middle_date),
       train_no: l.train_no,
       from: l.from_station_name,
       to: l.to_station_name,
