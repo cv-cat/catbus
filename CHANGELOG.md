@@ -47,6 +47,7 @@
 ### Fixed
 
 - xhs：扫码确认后的短信人机验证适配主站 2026-11-09 实测的新协议（HTTP 471，`verifyType 213` 登录强制短信验证，替代 0.3.0 适配的验证页链 120）。在登录链的会话上直接验证（不重建验证页会话、无 vc/init），验证码发到输入的手机号（`--phone` 或终端输入，需与账号绑定手机一致；非交互下与验证码一起从 stdin 读两行）；getverifyuserinfo / vc/send / vc/check 的请求键序照实测。120 链保留：服务端按环境在两条验证间切换。短信登录（`--method sms`）的独立链路不变
+- douyin：发布（`create_v2`）被安全网关要求二次身份验证时，不再误报成「接口返回空响应，通常是签名参数不对」（#17）。网关的决策头 `x-tt-verify-passport-decision` 值里有中文，wreq-js 会丢掉值不是纯 ASCII 的响应头，catbus 一直读不到它；现在按同一响应里的 `bd_passport_security_gateway: 1` 与 `access-control-expose-headers` 认出来，报 `RISK_CONTROL`（`detail.reason: passport_verify`，读得到决策头时带上 `scene` / `verify_reason`），说明要先完成短信、人脸或密码验证，catbus 还不能代为完成。与真浏览器对照过：同一账号在创作者中心发布也被同样拦下，两边响应头除决策头外完全相同，签名、dtrait、cookie 都没有问题。平台说明的已知限制与 Agent 技能同步更正
 
 ## [0.3.0] - 2026-11-05
 

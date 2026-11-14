@@ -477,13 +477,20 @@ export async function riskJson<T = DyJson>(res: HttpResponse): Promise<T> {
     })
   }
   const pp = res.headers.get('x-tt-verify-passport-decision')
-  if (pp) {
+  // 安全网关要求二次验证时，决策头的值里有中文（UTF-8 字节），wreq-js 会丢掉值不是纯 ASCII 的响应头，pp 读出来是 null（#17）。
+  // 同一个响应里的 bd_passport_security_gateway 与 access-control-expose-headers 还在，据此认出来。
+  const gateway = !trimmed && res.headers.get('bd_passport_security_gateway') === '1' && /x-tt-verify-passport-decision/i.test(res.headers.get('access-control-expose-headers') ?? '')
+  if (pp || gateway) {
     let scene = ''
+    let reason = ''
     try {
-      scene = jsonLoads(pp).event_params.verify_scene ?? ''
+      const ev = jsonLoads(pp ?? '').event_params ?? {}
+      scene = ev.verify_scene ?? ''
+      reason = ev.verify_reason ?? ''
     } catch {}
-    throw new CatbusError('RISK_CONTROL', `需要二次身份验证（scene=${scene || '未知'}），多为缺少 x-tt-session-dtrait 或账号风控`, {
-      detail: { kind: 'blocked', scene, logid },
+    throw new CatbusError('RISK_CONTROL', `抖音的安全网关要求先完成二次身份验证（短信、人脸或密码，scene=${scene || '未知'}），catbus 还不能代为完成`, {
+      hint: '在浏览器里用同一个账号做一次同样的操作（发布在 creator.douyin.com）会弹出这个验证；在浏览器里验证后 catbus 这边是否放行还没有验证过',
+      detail: { kind: 'blocked', reason: 'passport_verify', scene: scene || null, verify_reason: reason || null, decision_header: pp ? 'present' : 'dropped', logid },
     })
   }
   if (!trimmed) {

@@ -207,7 +207,10 @@ catbus douyin comment list "<product_url>" --label 差评
 
 ## 已知限制
 
-- **写操作受设备风控（dtrait）限制**：发布、评论、点赞、收藏、私信等高风险接口要求带 `x-tt-session-dtrait` 头，内层的设备特征 blob 原本只能由浏览器生成。catbus 已集成上游 `fix-dtrait-blob` 分支的做法（用随包的设备档案现算；发布、评论、收藏、收藏夹移动必须按请求 path 现算，导入的成品 `session_dtrait` 不能用），但**发布仍然失败**：`create_v2` 返回 HTTP 200 空响应，catbus 报 `RISK_CONTROL`；上游在扫码后立即发布也同样失败。
+- **写操作受设备风控（dtrait）限制**：发布、评论、点赞、收藏、私信等高风险接口要求带 `x-tt-session-dtrait` 头，内层的设备特征 blob 原本只能由浏览器生成。catbus 已集成上游 `fix-dtrait-blob` 分支的做法（用随包的设备档案现算；发布、评论、收藏、收藏夹移动必须按请求 path 现算，导入的成品 `session_dtrait` 不能用）。
+- **发布被安全网关要求二次身份验证**（[#17](https://github.com/cv-cat/catbus/issues/17)）：`create_v2` 返回 HTTP 200 空正文，响应头 `x-tt-verify-passport-decision` 要求先完成身份验证（`verify_reason` 为 `gateway_web_authlv_check`，`verify_scene` 为 `creator`，可选短信、人脸、密码）。2026-11-15 用同一账号在真浏览器的创作者中心发布对照过：浏览器同样被拦下、弹出短信验证，两边的 `create_v2` 响应头除了这个决策头以外完全相同（`bd-ticket-guard-sign-res-static-sign: 1102`、`bd-ticket-guard-key-sign-result: 2` 在浏览器里也是这个值，不是签名出错），说明 catbus 的签名、dtrait、cookie 都被接受了，拦下的原因是账号的认证等级。
+  - catbus 报 `RISK_CONTROL`，`error.detail.reason` 为 `passport_verify`，还不能代为完成这一步。上游 README 的「发布链二次验证」一节把 `gateway_web_authlv_check` 记为认证等级不足：扫码不够，要短信、人脸或密码，纯 HTTP 会话发验证码会被拒（error_code=16），建议改用已信任设备上浏览器会话的 cookie 导入。在浏览器里验证、或改用浏览器会话导入后 catbus 这边是否放行，还没有验证过。
+  - 决策头的值里有中文（UTF-8 字节），catbus 用的 HTTP 库 wreq-js 会丢掉值不是纯 ASCII 的响应头，所以 `detail.scene` 常为 null（`detail.decision_header` 为 `dropped`）；catbus 按同一响应里的 `bd_passport_security_gateway: 1` 与 `access-control-expose-headers` 认出这种情况。以前这里报的是「接口返回空响应，通常是签名参数不对」，容易让人以为是签名问题。
 - **点赞可能连累登录态**：实测不带 dtrait 点赞返回 HTTP 403，之后登录态被踢，只能重新扫码。点赞、收藏、评论、私信、直播发言都还没有真机验证通过，请谨慎在常用账号上尝试。
 - **综合搜索的筛选还没真机验证**：上游 `c28ee5f` 起综合频道把筛选值放进 `filter_selected` 发出（`--type image` 也随之恢复），catbus 已同步，但结果是否真的按筛选返回还没在真机上确认。
 - **字段恒为空**：作品的 `title`（抖音作品只有描述，放在 `text`）、列表里的 `stats.views`。
