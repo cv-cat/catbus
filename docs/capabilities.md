@@ -109,7 +109,7 @@
 - youtube `item media`：最清晰的视频轨 + 音频轨（分轨）。走 VISIONOS 客户端、不带登录，同一出口 IP 请求过多会触发人机验证；年龄限制等视频拿不到
 - tiktok `item download`：媒体地址同 item media
 - youtube `item download`：下载 item media 的视频轨和音频轨两个文件，不合流
-- mteam `item download`：种子文件含个人 passkey，权限 0600，临时下载链接不输出；--qbit 推送到本机 qBittorrent Web UI（CATBUS_MTEAM_QBIT_URL，默认 http://127.0.0.1:25254），--qbit-savepath 指定保存目录
+- mteam `item download`：种子文件含个人 passkey，权限 0600，临时下载链接不输出；--qbit 推送到本机 qBittorrent Web UI（CATBUS_MTEAM_QBIT_URL，默认 http://127.0.0.1:25254），--qbit-savepath 指定保存目录；带 --qbit 时输出 {id files qbit}，qbit.status 为 added / exists，推送失败报错，error.detail.files 是已保存的文件
 - youtube `item unlike`：取消点赞（也会取消点踩）
 - youtube `item collect`：加入稍后观看
 - youtube `item uncollect`：移出稍后观看
@@ -324,7 +324,7 @@
 | 平台 | 命令 |
 |---|---|
 | tiktok | `folder add` ✓ |
-| bilibili | `item edit` ✓ · `item coin` ✓ · `item triple` ✓ · `item subtitles` ✓ · `comment pin` ✓ · `comment unpin` ✓ · `series add` ◐ · `danmaku list` ✓ · `danmaku send` ✓ · `dynamic publish` ✓ · `dynamic delete` ✓ · `article publish` ✓ · `draft get` ✓ · `draft delete` ✓ |
+| bilibili | `item edit` ✓ · `item coin` ✓ · `item triple` ✓ · `item subtitles` ✓ · `comment pin` ✓ · `comment unpin` ✓ · `series add` ◐ · `series sort` ◐ · `danmaku list` ✓ · `danmaku send` ✓ · `dynamic publish` ✓ · `dynamic delete` ✓ · `article publish` ✓ · `draft get` ✓ · `draft delete` ✓ |
 | jd | `order list` ✓ · `cart count` ✓ · `coupon list` ✓ |
 | x | `article publish` ✓ · `article delete` ✓ |
 | youtube | `channel create` ✓ |
