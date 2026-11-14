@@ -1,0 +1,53 @@
+{
+  "sort": {
+    "general": "Relevant",
+    "latest": "Latest",
+    "popular": "Popular",
+    "comments": "Comments"
+  },
+  "order": {
+    "general": "Default",
+    "date": "Date",
+    "size": "Size",
+    "seeders": "Seeders",
+    "leechers": "Leechers",
+    "name": "Name"
+  },
+  "type": {
+    "all": "All",
+    "video": "Videos",
+    "image": "Images"
+  },
+  "kind": {
+    "recommend": "For you",
+    "hot": "Trending",
+    "following": "Following"
+  },
+  "time": {
+    "all": "Any time",
+    "day": "Past day",
+    "week": "Past week",
+    "month": "Past month",
+    "half_year": "Past 6 months",
+    "year": "Past year"
+  },
+  "mteam": {
+    "mode": {
+      "label": "Section",
+      "normal": "General",
+      "movie": "Movies",
+      "tvshow": "TV",
+      "music": "Music",
+      "anime": "Anime",
+      "adult": "Adult"
+    },
+    "category": {
+      "label": "Category",
+      "all": "All categories",
+      "unavailable": "Couldn't load categories, so category filtering isn't available right now"
+    },
+    "free": "Free only",
+    "adultOff": "The adult section is turned off, switched to General",
+    "toSettings": "Settings"
+  }
+}

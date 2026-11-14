@@ -1,0 +1,34 @@
+{
+  "action": {
+    "cancel": "取消",
+    "confirm": "确定",
+    "close": "关闭",
+    "retry": "重试",
+    "save": "保存",
+    "delete": "删除",
+    "copy": "复制",
+    "copied": "已复制",
+    "back": "返回",
+    "refresh": "刷新",
+    "more": "更多",
+    "open": "打开",
+    "download": "下载",
+    "login": "登录",
+    "relogin": "重新登录"
+  },
+  "state": {
+    "loading": "加载中…",
+    "empty": "暂无内容",
+    "failed": "加载失败",
+    "demo": "演示数据"
+  },
+  "time": {
+    "justNow": "刚刚"
+  },
+  "unit": {
+    "items": "{n} 条"
+  },
+  "select": {
+    "placeholder": "请选择"
+  }
+}

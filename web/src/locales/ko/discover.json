@@ -1,0 +1,94 @@
+{
+  "title": "탐색",
+  "end": "— 종점이에요 —",
+  "toTop": "맨 위로",
+  "eyebrow": {
+    "search": "{platform} · {item} 검색",
+    "feed": "{platform} · {item} 추천",
+    "sep": ", ",
+    "aggregate": "통합 · {names}",
+    "aggregateMany": "통합 · {names} 외 채널 {n}개"
+  },
+  "search": {
+    "label": "검색",
+    "searching": "검색 중",
+    "placeholder": "{platform}에서 {item} 검색",
+    "placeholderMany": "채널 {n}개에서 검색"
+  },
+  "demo": {
+    "title": "페이지의 데이터는 모두 데모 데이터예요. 어떤 플랫폼에도 접속하지 않고 실제 계정도 사용하지 않아요",
+    "long": "데모 전용 화면이에요",
+    "short": "데모"
+  },
+  "filter": {
+    "sort": "정렬",
+    "kind": "추천 피드 분류",
+    "time": "기간",
+    "timeChip": "기간 · {label}"
+  },
+  "count": {
+    "feed": "{kind} · {n}개 불러옴",
+    "search": "{n}개 · {elapsed}s"
+  },
+  "unsupported": {
+    "kind": "{platform}은(는) 아직 「{label}」 피드를 지원하지 않아요",
+    "noKinds": "{platform}에는 추천 피드 분류가 없어요",
+    "sort": "{platform}은(는) 「{label}」 정렬을 지원하지 않아요",
+    "type": "{platform}은(는) 「{label}」만 보기를 지원하지 않아요",
+    "time": "{platform}은(는) 「{label}」을(를) 지원하지 않아요",
+    "feedOnly": "{platform}은(는) 추천 피드만 있어서 필터를 지원하지 않아요",
+    "noFilter": {
+      "sort": "{platform}은(는) 정렬 필터를 지원하지 않아요",
+      "type": "{platform}은(는) 유형 필터를 지원하지 않아요",
+      "time": "{platform}은(는) 기간 필터를 지원하지 않아요"
+    }
+  },
+  "unsupportedAll": {
+    "kind": "선택한 채널 모두 「{label}」 피드를 지원하지 않아요",
+    "sort": "선택한 채널 모두 「{label}」 정렬을 지원하지 않아요",
+    "type": "선택한 채널 모두 「{label}」만 보기를 지원하지 않아요",
+    "time": "선택한 채널 모두 「{label}」을(를) 지원하지 않아요",
+    "noFilter": {
+      "sort": "선택한 채널 모두 정렬 필터를 지원하지 않아요",
+      "type": "선택한 채널 모두 유형 필터를 지원하지 않아요",
+      "time": "선택한 채널 모두 기간 필터를 지원하지 않아요",
+      "kind": "선택한 채널 모두 분류 필터를 지원하지 않아요"
+    }
+  },
+  "toast": {
+    "accountFailed": "{platform} · {account}: {error}",
+    "laneFailed": "{platform}: {error}"
+  },
+  "card": {
+    "untitled": "(제목 없음)",
+    "select": "선택",
+    "seeders": "시더 {n}명",
+    "leechers": "리처 {n}명",
+    "priceFrom": "부터",
+    "authorPage": "{name} 님의 작성자 페이지",
+    "likes": "좋아요 {n}",
+    "collects": "저장 {n}",
+    "comments": "댓글 {n}"
+  },
+  "show": {
+    "notOnSale": "판매 전"
+  },
+  "selection": {
+    "label": "선택 작업",
+    "picked": "{n}개 선택",
+    "all": "전체 선택",
+    "none": "선택 해제",
+    "invert": "선택 반전",
+    "download": "선택 항목 다운로드",
+    "downloadCount": "선택한 {n}개 다운로드"
+  },
+  "suggest": {
+    "hot": "인기 검색어",
+    "suggest": "추천 검색어",
+    "hotLabel": "{platform} 인기 검색어",
+    "label": "검색어 추천",
+    "keyMove": "↑↓ 선택",
+    "keyEnter": "Enter 검색",
+    "keyEsc": "Esc 닫기"
+  }
+}

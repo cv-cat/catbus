@@ -1,0 +1,110 @@
+{
+  "dialog": "상세",
+  "closeTip": "닫기 (Esc)",
+  "loadingLabel": "불러오는 중",
+  "author": {
+    "unknown": "알 수 없는 작성자"
+  },
+  "published": {
+    "on": "{date} 게시",
+    "ago": "{time} 게시"
+  },
+  "stat": {
+    "seeders": "시더",
+    "leechers": "리처",
+    "files": "파일",
+    "likes": "좋아요",
+    "collects": "저장",
+    "comments": "댓글",
+    "shares": "공유",
+    "aria": "{label} {n}"
+  },
+  "torrent": {
+    "fallback": "토렌트",
+    "untitled": "(제목 없음)"
+  },
+  "show": {
+    "fallback": "공연",
+    "time": "일시",
+    "venue": "공연장",
+    "prices": "가격",
+    "images": "공연 상세",
+    "priceFrom": "부터"
+  },
+  "head": {
+    "raw": "원본 JSON",
+    "rawBack": "상세로 돌아가기",
+    "rawOpen": "플랫폼이 반환한 원본 데이터 보기",
+    "downloaded": "다운로드에 추가됨",
+    "downloadedTip": "다운로드에 추가됐어요. 상단 바의 다운로드 목록에서 볼 수 있어요",
+    "downloadTip": "기기에 다운로드",
+    "downloading": "다운로드 중",
+    "origin": "원본 링크",
+    "openOn": "{platform}에서 열기",
+    "platform": "플랫폼"
+  },
+  "itemError": "상세 정보를 다 불러오지 못했어요: {error}",
+  "nav": {
+    "prev": "이전",
+    "prevTip": "이전 (W / ↑)",
+    "next": "다음",
+    "nextTip": "다음 (S / ↓)"
+  },
+  "image": {
+    "prev": "이전 이미지",
+    "next": "다음 이미지",
+    "nth": "{n}번째"
+  },
+  "media": {
+    "video": "영상",
+    "failed": "여기서는 영상을 재생할 수 없어요",
+    "noSource": "재생할 수 있는 영상 주소를 받지 못했어요",
+    "openOrigin": "원본 링크에서 보기",
+    "unmute": "클릭해서 소리 켜기",
+    "back": "{n}초 뒤로",
+    "backTip": "{n}초 뒤로 (A)",
+    "forward": "{n}초 앞으로",
+    "forwardTip": "{n}초 앞으로, 길게 누르면 배속 재생 (D)",
+    "seek": "{sign}{n}초",
+    "fast": "{rate}× 배속 재생 중",
+    "play": "재생",
+    "pause": "일시정지",
+    "progress": "재생 위치",
+    "soundOn": "소리 켜기",
+    "mute": "음소거",
+    "fullscreen": "전체 화면"
+  },
+  "related": {
+    "title": "관련 추천",
+    "prev": "왼쪽으로",
+    "next": "오른쪽으로",
+    "untitled": "제목 없음"
+  },
+  "lightbox": {
+    "title": "크게 보기"
+  },
+  "raw": {
+    "title": "원본 JSON",
+    "expandAll": "모두 펼치기",
+    "collapseAll": "모두 접기",
+    "loading": "원본 데이터를 불러오는 중…",
+    "demoNote": "데모 데이터예요. 실제 모드에서는 여기에 플랫폼 API가 반환한 원본 객체가 표시돼요"
+  },
+  "json": {
+    "items": "{n}개 항목",
+    "fields": "{n}개 필드",
+    "expand": "펼치기",
+    "collapse": "접기"
+  },
+  "countdown": {
+    "label": "판매 시작까지 {time}",
+    "until": "판매 시작까지 · {when}",
+    "onSale": "판매 중",
+    "unit": {
+      "day": "일",
+      "hour": "시간",
+      "minute": "분",
+      "second": "초"
+    }
+  }
+}

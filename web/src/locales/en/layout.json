@@ -1,0 +1,49 @@
+{
+  "slogan": "All aboard, every platform",
+  "settings": "Settings",
+  "loading": "Loading",
+  "mascot": "catbus mascot: the bus conductor",
+  "copy": {
+    "done": "Copied to clipboard",
+    "failed": "Copy failed, please copy it manually"
+  },
+  "nav": {
+    "label": "Channels",
+    "open": "Open channels",
+    "close": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "count": "{n} channel | {n} channels",
+    "countSelected": "{n} of {total} channel selected | {n} of {total} channels selected"
+  },
+  "mode": {
+    "label": "Multi-channel mode",
+    "single": "Single",
+    "aggregate": "Multi",
+    "singleTip": "Single: one channel at a time",
+    "aggregateTip": "Multi: view several channels at once. Click channels below to add or remove them"
+  },
+  "health": {
+    "ok": "Account OK",
+    "okMany": "All {n} accounts OK",
+    "warn": "{bad} / {n} accounts expired",
+    "bad": "Account session expired",
+    "badAll": "All {n} accounts expired"
+  },
+  "theme": {
+    "toDark": "Switch to dark theme",
+    "toLight": "Switch to light theme",
+    "dark": "Dark",
+    "light": "Light",
+    "darkSystem": "Dark (following system)",
+    "lightSystem": "Light (following system)"
+  },
+  "state": {
+    "emptyTitle": "Nothing found",
+    "emptyDesc": "Try another keyword, or switch to a different channel.",
+    "verifyDesc": "Complete a verification check in your browser, then retry.",
+    "hint": "Tip",
+    "copyHint": "{hint}\nClick to copy",
+    "login": "Log in",
+    "verify": "Verify"
+  }
+}

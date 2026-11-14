@@ -1,0 +1,119 @@
+{
+  "general": {
+    "language": {
+      "title": "语言",
+      "desc": "界面使用的语言。",
+      "auto": "自动（{name}）"
+    },
+    "start": {
+      "title": "启动时打开",
+      "desc": "打开 WebUI 时进入的平台。",
+      "last": "上次浏览的"
+    },
+    "sort": {
+      "title": "默认排序",
+      "desc": "进入平台时默认的排序。"
+    },
+    "type": {
+      "title": "默认类型",
+      "desc": "进入平台时默认看的内容类型。"
+    },
+    "pageSize": {
+      "title": "每页条数",
+      "desc": "每次加载多少条；越多越慢，也越容易触发平台风控。"
+    }
+  },
+  "dialog": {
+    "title": "设置",
+    "close": "关闭设置",
+    "tabs": "设置分栏",
+    "tab": {
+      "general": "通用",
+      "display": "显示",
+      "experimental": "实验性",
+      "download": "下载"
+    },
+    "hint": "设置保存在本浏览器里，换浏览器不会同步。",
+    "reset": "恢复默认",
+    "resetConfirm": "再点一次确认恢复"
+  },
+  "display": {
+    "followSystem": "跟随系统",
+    "theme": {
+      "title": "主题",
+      "light": "亮色",
+      "dark": "暗色"
+    },
+    "density": {
+      "title": "卡片密度",
+      "desc": "紧凑一屏放更多卡片，宽松的封面更大。",
+      "compact": "紧凑",
+      "standard": "标准",
+      "cozy": "宽松"
+    },
+    "stats": {
+      "title": "显示互动数据",
+      "desc": "卡片上的点赞、评论、播放数。"
+    },
+    "pixel": {
+      "title": "背景动效",
+      "desc": "页面背景的像素动画。"
+    },
+    "motion": {
+      "title": "减少动效",
+      "desc": "「总是减少」时忽略系统设置，尽量少用动画。",
+      "always": "总是减少"
+    },
+    "mteam": {
+      "section": "M-Team",
+      "adult": {
+        "title": "显示成人分区",
+        "desc": "打开后浏览筛选和收藏里多一个「成人」分区"
+      }
+    }
+  },
+  "experimental": {
+    "note": "这些功能还在试验，行为和位置以后可能变化。",
+    "rawJson": {
+      "title": "显示原始 JSON",
+      "desc": "在详情里查看平台返回的原始数据。"
+    },
+    "hoverPreview": {
+      "title": "悬停预览视频",
+      "desc": "鼠标停在视频卡片上时静音播放预览。"
+    }
+  },
+  "server": {
+    "title": "服务端设置",
+    "loading": "读取中",
+    "unavailable": "不可用",
+    "hint": "保存在本机的 catbus 里，所有浏览器和命令行都会用到。",
+    "demo": "演示模式下不连接 catbus，不能读取或修改服务端设置。",
+    "loadFailed": "读不到服务端设置：{error}",
+    "notJson": "服务端返回了无法识别的内容（HTTP {status}）",
+    "requestFailed": "请求失败（HTTP {status}）",
+    "saving": "保存中",
+    "proxy": {
+      "title": "代理",
+      "desc": "访问平台时使用的代理，支持 http、https、socks5 等；留空表示不用代理。",
+      "saved": "代理已保存",
+      "cleared": "已清空代理",
+      "clear": "清空",
+      "platforms": "平台代理（优先于全局代理，只读；用 {command} 修改）",
+      "platformPlaceholder": "<平台>"
+    }
+  },
+  "download": {
+    "all": "全部",
+    "count": "{n} 条",
+    "comments": {
+      "title": "评论下载条数",
+      "desc": "下载时每条帖子取多少条评论",
+      "risk": "评论取得越多，请求越多，容易触发平台风控或要求账号验证。"
+    },
+    "replies": {
+      "title": "子评论下载条数",
+      "desc": "每条评论下取多少条回复"
+    }
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "general": {
+    "language": {
+      "title": "Language",
+      "desc": "The language of the interface.",
+      "auto": "Auto ({name})"
+    },
+    "start": {
+      "title": "Open on start",
+      "desc": "The platform the WebUI opens to.",
+      "last": "Last visited"
+    },
+    "sort": {
+      "title": "Default sort",
+      "desc": "Default sort order when entering a platform."
+    },
+    "type": {
+      "title": "Default type",
+      "desc": "Default content type when entering a platform."
+    },
+    "pageSize": {
+      "title": "Items per page",
+      "desc": "How many items to load at a time. More is slower and more likely to trigger platform rate limits."
+    }
+  },
+  "dialog": {
+    "title": "Settings",
+    "close": "Close settings",
+    "tabs": "Settings sections",
+    "tab": {
+      "general": "General",
+      "display": "Display",
+      "experimental": "Experimental",
+      "download": "Downloads"
+    },
+    "hint": "Settings are saved in this browser and don't sync to others.",
+    "reset": "Reset to defaults",
+    "resetConfirm": "Click again to confirm"
+  },
+  "display": {
+    "followSystem": "System",
+    "theme": {
+      "title": "Theme",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "density": {
+      "title": "Card density",
+      "desc": "Compact fits more cards on screen; Cozy shows larger covers.",
+      "compact": "Compact",
+      "standard": "Standard",
+      "cozy": "Cozy"
+    },
+    "stats": {
+      "title": "Show engagement",
+      "desc": "Likes, comments and views on cards."
+    },
+    "pixel": {
+      "title": "Background animation",
+      "desc": "Animated pixels behind the page."
+    },
+    "motion": {
+      "title": "Reduce motion",
+      "desc": "With “Always”, animations are kept to a minimum regardless of system settings.",
+      "always": "Always"
+    },
+    "mteam": {
+      "section": "M-Team",
+      "adult": {
+        "title": "Show the adult section",
+        "desc": "Adds an Adult section to browse filters and bookmarks"
+      }
+    }
+  },
+  "experimental": {
+    "note": "These features are experimental. Their behavior and location may change.",
+    "rawJson": {
+      "title": "Show raw JSON",
+      "desc": "View the raw data returned by the platform in the detail view."
+    },
+    "hoverPreview": {
+      "title": "Video preview on hover",
+      "desc": "Play a muted preview when hovering over a video card."
+    }
+  },
+  "server": {
+    "title": "Server settings",
+    "loading": "Loading",
+    "unavailable": "Unavailable",
+    "hint": "Saved in catbus on this machine; used by all browsers and the command line.",
+    "demo": "Demo mode doesn't connect to catbus, so server settings can't be read or changed.",
+    "loadFailed": "Couldn't read server settings: {error}",
+    "notJson": "The server returned an unexpected response (HTTP {status})",
+    "requestFailed": "Request failed (HTTP {status})",
+    "saving": "Saving",
+    "proxy": {
+      "title": "Proxy",
+      "desc": "Proxy used to reach platforms. Supports http, https, socks5 and more; leave empty for no proxy.",
+      "saved": "Proxy saved",
+      "cleared": "Proxy cleared",
+      "clear": "Clear",
+      "platforms": "Platform proxies (override the global proxy; read-only, change with {command})",
+      "platformPlaceholder": "<platform>"
+    }
+  },
+  "download": {
+    "all": "All",
+    "count": "{n}",
+    "comments": {
+      "title": "Comments to download",
+      "desc": "How many comments to fetch for each post",
+      "risk": "The more comments you fetch, the more requests are made, which can trigger the platform's rate limits or account verification."
+    },
+    "replies": {
+      "title": "Replies to download",
+      "desc": "How many replies to fetch under each comment"
+    }
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "title": "发现",
+  "end": "— 到站了 —",
+  "toTop": "回到顶部",
+  "eyebrow": {
+    "search": "{platform} · {item}搜索",
+    "feed": "{platform} · {item}推荐",
+    "sep": "、",
+    "aggregate": "聚合 · {names}",
+    "aggregateMany": "聚合 · {names} 等 {n} 个渠道"
+  },
+  "search": {
+    "label": "搜索",
+    "searching": "搜索中",
+    "placeholder": "在{platform}搜索{item}",
+    "placeholderMany": "在 {n} 个渠道里搜索"
+  },
+  "demo": {
+    "title": "页面上的数据都是演示数据，不会访问任何平台，也不会用到真实账号",
+    "long": "当前状态仅供演示",
+    "short": "演示"
+  },
+  "filter": {
+    "sort": "排序",
+    "kind": "推荐流分类",
+    "time": "时间",
+    "timeChip": "时间 · {label}"
+  },
+  "count": {
+    "feed": "{kind} · 已加载 {n} 条",
+    "search": "{n} 条 · {elapsed}s"
+  },
+  "unsupported": {
+    "kind": "{platform}暂不支持「{label}」流",
+    "noKinds": "{platform}没有推荐流分类",
+    "sort": "{platform}不支持按「{label}」排序",
+    "type": "{platform}不支持只看「{label}」",
+    "time": "{platform}不支持「{label}」",
+    "feedOnly": "{platform}只有推荐流，不支持筛选",
+    "noFilter": {
+      "sort": "{platform}不支持按排序筛选",
+      "type": "{platform}不支持按类型筛选",
+      "time": "{platform}不支持按时间筛选"
+    }
+  },
+  "unsupportedAll": {
+    "kind": "选中的渠道都不支持「{label}」流",
+    "sort": "选中的渠道都不支持按「{label}」排序",
+    "type": "选中的渠道都不支持只看「{label}」",
+    "time": "选中的渠道都不支持「{label}」",
+    "noFilter": {
+      "sort": "选中的渠道都不支持按排序筛选",
+      "type": "选中的渠道都不支持按类型筛选",
+      "time": "选中的渠道都不支持按时间筛选",
+      "kind": "选中的渠道都不支持按分类筛选"
+    }
+  },
+  "toast": {
+    "accountFailed": "{platform} · {account}：{error}",
+    "laneFailed": "{platform}：{error}"
+  },
+  "card": {
+    "untitled": "（无标题）",
+    "select": "选择",
+    "seeders": "{n} 人做种",
+    "leechers": "{n} 人下载",
+    "priceFrom": "起",
+    "authorPage": "{name}的作者页",
+    "likes": "{n} 赞",
+    "collects": "{n} 收藏",
+    "comments": "{n} 评论"
+  },
+  "show": {
+    "notOnSale": "未开售"
+  },
+  "selection": {
+    "label": "选择操作",
+    "picked": "已选 {n}",
+    "all": "全选",
+    "none": "全不选",
+    "invert": "反选",
+    "download": "下载选中",
+    "downloadCount": "下载选中的 {n} 条"
+  },
+  "suggest": {
+    "hot": "热搜",
+    "suggest": "联想",
+    "hotLabel": "{platform}热搜",
+    "label": "搜索联想",
+    "keyMove": "↑↓ 选择",
+    "keyEnter": "Enter 搜索",
+    "keyEsc": "Esc 关闭"
+  }
+}

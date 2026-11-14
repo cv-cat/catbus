@@ -1,0 +1,17 @@
+{
+  "title": "댓글",
+  "count": "댓글 {n}개",
+  "anonymous": "익명 사용자",
+  "loading": "댓글 불러오는 중",
+  "empty": "아직 댓글이 없어요",
+  "end": "— 끝 —",
+  "verify": "인증하기",
+  "viewImage": "{n}번째 이미지 보기",
+  "replies": {
+    "count": "답글 {n}개",
+    "failed": "답글을 불러오지 못했어요",
+    "expand": "답글 {n}개 보기",
+    "expandMore": "답글 더 보기",
+    "collapse": "접기"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "title": "Comments",
+  "count": "{n} comment | {n} comments",
+  "anonymous": "Anonymous",
+  "loading": "Loading comments",
+  "empty": "No comments yet",
+  "end": "— That's all —",
+  "verify": "Verify",
+  "viewImage": "View image {n}",
+  "replies": {
+    "count": "{n} reply | {n} replies",
+    "failed": "Couldn't load replies",
+    "expand": "View {n} reply | View {n} replies",
+    "expandMore": "View more replies",
+    "collapse": "Hide"
+  }
+}

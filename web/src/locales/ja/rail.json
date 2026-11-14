@@ -1,0 +1,132 @@
+{
+  "eyebrow": "12306 · ログイン不要",
+  "title": "乗車券検索",
+  "nav": {
+    "tag": "ログイン不要",
+    "noAggregate": "12306 はまとめ表示に含められません"
+  },
+  "account": {
+    "title": "ログイン不要",
+    "sub": "購入は 12306 公式で"
+  },
+  "form": {
+    "from": "出発駅",
+    "to": "到着駅",
+    "date": "出発日",
+    "swap": "出発駅と到着駅を入れ替え",
+    "submit": "検索",
+    "placeholder": "駅名・ピンイン・電報コード",
+    "pickFrom": "出発駅を選択",
+    "pickTo": "到着駅を選択",
+    "stations": "駅",
+    "results": "{n} 件",
+    "noMatch": "一致する駅がありません。そのまま検索できます",
+    "keys": "↑ ↓ 選択 · Enter 決定 · Esc 閉じる",
+    "useText": "「{name}」で検索"
+  },
+  "date": {
+    "today": "今日",
+    "tomorrow": "明日",
+    "more": "ほかの日付",
+    "prevMonth": "前の月",
+    "nextMonth": "次の月",
+    "todayIs": "今日 {date}",
+    "range": "今日から {n} 日以内"
+  },
+  "view": {
+    "label": "直通または乗り換え",
+    "direct": "直通",
+    "transfer": "乗り換え"
+  },
+  "kind": {
+    "label": "車種",
+    "all": "すべて",
+    "G": "高速鉄道",
+    "D": "動車組",
+    "C": "都市間",
+    "Z": "直達",
+    "T": "特急",
+    "K": "快速",
+    "other": "その他"
+  },
+  "available": "空席ありのみ",
+  "sort": {
+    "label": "並べ替え",
+    "early": "出発が早い順",
+    "late": "出発が遅い順",
+    "fast": "所要時間順",
+    "transfer": {
+      "fast": "全行程が短い順",
+      "early": "出発が早い順",
+      "wait": "待ち時間が短い順"
+    }
+  },
+  "via": {
+    "label": "経由",
+    "any": "乗換駅を指定しない"
+  },
+  "count": {
+    "trains": "{n} 本 · {elapsed}s",
+    "plans": "{n} 件のプラン · {elapsed}s",
+    "trainsShort": "{n} 本",
+    "plansShort": "{n} 件のプラン"
+  },
+  "sameCity": "同じ都市の駅を含む",
+  "mark": {
+    "start": "始",
+    "end": "終",
+    "pass": "過",
+    "startTip": "始発駅から乗車",
+    "endTip": "終着駅まで乗車",
+    "passTip": "途中駅"
+  },
+  "seat": {
+    "plenty": "あり",
+    "none": "なし",
+    "count": "{n} 席"
+  },
+  "time": {
+    "minutes": "{m}分",
+    "hours": "{h}時間",
+    "hoursMinutes": "{h}時間{m}分",
+    "nextDay": "{n} 日後に到着"
+  },
+  "open": "12306 で開く",
+  "route": {
+    "title": "停車駅",
+    "count": "{n} 駅",
+    "legend": "赤はあなたの乗車区間",
+    "loading": "停車駅を取得中…",
+    "error": "停車駅を取得できませんでした",
+    "empty": "停車駅の情報がありません",
+    "origin": "始発",
+    "terminal": "終着",
+    "stop": "{m} 分停車",
+    "expand": "{train} の停車駅を表示",
+    "collapse": "{train} の停車駅を閉じる",
+    "disclaim": "catbus は時刻と空席を調べるだけです。購入は 12306 公式で行ってください。"
+  },
+  "transfer": {
+    "note": "乗り換えプランは 12306 で区間ごとに購入し、区間ごとに発券されます。各区間の右側から空席ページを開けます。",
+    "sameTrain": "同じ列車で座席変更",
+    "change": "乗り換え",
+    "changeStation": "駅の移動あり",
+    "via": "{station} で乗り換え",
+    "total": "全行程 {time}",
+    "waitSameTrain": "降りずに {station} で座席を変更 · 待ち {wait}",
+    "waitSameStation": "{station} で乗り換え · 待ち {wait}",
+    "waitChange": "{from} で降りて {to} へ移動して乗り換え · 待ち {wait}"
+  },
+  "empty": {
+    "intro": "出発駅と到着駅を入力して列車と空席を検索",
+    "introDesc": "ログイン不要。時刻・空席・運賃のみ。購入は 12306 公式で。",
+    "direct": "直通列車がありません",
+    "directDesc": "{date} の {from} から {to} への直通列車はありません。乗り換えプランをご覧ください。",
+    "toTransfer": "乗り換えプランを見る",
+    "filtered": "条件に合う列車がありません",
+    "filteredDesc": "車種を変えるか「空席ありのみ」をオフにしてください。",
+    "clear": "条件をクリア",
+    "transfer": "乗り換えプランが見つかりません",
+    "transferDesc": "日付や乗換駅を変えてお試しください。"
+  }
+}

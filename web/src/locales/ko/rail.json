@@ -1,0 +1,132 @@
+{
+  "eyebrow": "12306 · 로그인 불필요",
+  "title": "승차권 조회",
+  "nav": {
+    "tag": "로그인 불필요",
+    "noAggregate": "12306은 모아보기에 포함되지 않습니다"
+  },
+  "account": {
+    "title": "로그인 불필요",
+    "sub": "구매는 12306 공식에서"
+  },
+  "form": {
+    "from": "출발역",
+    "to": "도착역",
+    "date": "출발일",
+    "swap": "출발역과 도착역 바꾸기",
+    "submit": "조회",
+    "placeholder": "역명, 병음 또는 전보 코드",
+    "pickFrom": "출발역 선택",
+    "pickTo": "도착역 선택",
+    "stations": "역",
+    "results": "{n}개 결과",
+    "noMatch": "일치하는 역이 없습니다. 그대로 조회할 수 있습니다",
+    "keys": "↑ ↓ 선택 · Enter 확인 · Esc 닫기",
+    "useText": "「{name}」(으)로 조회"
+  },
+  "date": {
+    "today": "오늘",
+    "tomorrow": "내일",
+    "more": "다른 날짜",
+    "prevMonth": "이전 달",
+    "nextMonth": "다음 달",
+    "todayIs": "오늘 {date}",
+    "range": "오늘부터 {n}일 이내"
+  },
+  "view": {
+    "label": "직행 또는 환승",
+    "direct": "직행",
+    "transfer": "환승"
+  },
+  "kind": {
+    "label": "열차 종류",
+    "all": "전체",
+    "G": "고속철",
+    "D": "동차",
+    "C": "도시간",
+    "Z": "직달",
+    "T": "특급",
+    "K": "쾌속",
+    "other": "기타"
+  },
+  "available": "잔여석만",
+  "sort": {
+    "label": "정렬",
+    "early": "이른 출발순",
+    "late": "늦은 출발순",
+    "fast": "소요 시간순",
+    "transfer": {
+      "fast": "전체 시간순",
+      "early": "이른 출발순",
+      "wait": "대기 시간순"
+    }
+  },
+  "via": {
+    "label": "경유",
+    "any": "환승역 무관"
+  },
+  "count": {
+    "trains": "{n}편 · {elapsed}s",
+    "plans": "{n}개 방안 · {elapsed}s",
+    "trainsShort": "{n}편",
+    "plansShort": "{n}개 방안"
+  },
+  "sameCity": "같은 도시의 역 포함",
+  "mark": {
+    "start": "시",
+    "end": "종",
+    "pass": "경",
+    "startTip": "시발역에서 승차",
+    "endTip": "종착역까지 승차",
+    "passTip": "중간역"
+  },
+  "seat": {
+    "plenty": "있음",
+    "none": "없음",
+    "count": "{n}석"
+  },
+  "time": {
+    "minutes": "{m}분",
+    "hours": "{h}시간",
+    "hoursMinutes": "{h}시간 {m}분",
+    "nextDay": "{n}일 후 도착"
+  },
+  "open": "12306에서 열기",
+  "route": {
+    "title": "정차역",
+    "count": "{n}개 역",
+    "legend": "빨간색이 승차 구간",
+    "loading": "정차역을 불러오는 중…",
+    "error": "정차역을 불러오지 못했습니다",
+    "empty": "정차역 정보가 없습니다",
+    "origin": "시발",
+    "terminal": "종착",
+    "stop": "{m}분 정차",
+    "expand": "{train} 정차역 펼치기",
+    "collapse": "{train} 정차역 접기",
+    "disclaim": "catbus는 시각과 잔여석만 조회합니다. 구매는 12306 공식에서 하세요."
+  },
+  "transfer": {
+    "note": "환승 방안은 12306에서 구간별로 따로 구매하며 구간마다 발권됩니다. 각 구간 오른쪽에서 잔여석 페이지를 열 수 있습니다.",
+    "sameTrain": "같은 열차 좌석 변경",
+    "change": "환승",
+    "changeStation": "역 이동 필요",
+    "via": "{station} 환승",
+    "total": "전체 {time}",
+    "waitSameTrain": "내리지 않고 {station}에서 좌석 변경 · 대기 {wait}",
+    "waitSameStation": "{station}에서 환승 · 대기 {wait}",
+    "waitChange": "{from}에서 내려 {to}(으)로 이동해 환승 · 대기 {wait}"
+  },
+  "empty": {
+    "intro": "출발역과 도착역을 입력해 열차와 잔여석을 조회하세요",
+    "introDesc": "로그인 불필요. 시각, 잔여석, 요금만 조회합니다. 구매는 12306 공식에서.",
+    "direct": "직행 열차가 없습니다",
+    "directDesc": "{date} {from}에서 {to}(으)로 가는 직행 열차가 없습니다. 환승 방안을 확인해 보세요.",
+    "toTransfer": "환승 방안 보기",
+    "filtered": "조건에 맞는 열차가 없습니다",
+    "filteredDesc": "열차 종류를 바꾸거나 '잔여석만'을 끄세요.",
+    "clear": "조건 지우기",
+    "transfer": "환승 방안을 찾지 못했습니다",
+    "transferDesc": "다른 날짜나 환승역으로 다시 시도해 보세요."
+  }
+}

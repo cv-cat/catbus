@@ -1,0 +1,16 @@
+{
+  "xhs": { "name": "샤오홍슈", "item": "노트" },
+  "douyin": { "name": "더우인", "item": "작품" },
+  "bilibili": { "name": "빌리빌리", "item": "영상" },
+  "tiktok": { "name": "TikTok", "item": "영상" },
+  "kuaishou": { "name": "콰이쇼우", "item": "작품" },
+  "weibo": { "name": "웨이보", "item": "게시물" },
+  "x": { "name": "X", "item": "게시물" },
+  "youtube": { "name": "YouTube", "item": "영상" },
+  "xianyu": { "name": "셴위", "item": "중고 상품" },
+  "taobao": { "name": "타오바오", "item": "상품" },
+  "jd": { "name": "징둥", "item": "상품" },
+  "maoyan": { "name": "마오옌 공연", "item": "공연" },
+  "mteam": { "name": "M-Team", "item": "토렌트" },
+  "12306": { "name": "12306", "item": "열차" }
+}

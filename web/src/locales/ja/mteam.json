@@ -1,0 +1,87 @@
+{
+  "nav": {
+    "label": "M-Team のページ",
+    "discover": "発見",
+    "me": "マイページ"
+  },
+  "stats": {
+    "seeding": "シード中",
+    "leeching": "ダウンロード中 {n}",
+    "bonus": "時間ボーナス",
+    "perHour": "/ 時間",
+    "counted": "{n} 件 · {size} を計上",
+    "a": "A 値",
+    "aDesc": "時間ボーナスはこの値で計算されます",
+    "twoFactor": "2 段階認証",
+    "on": "有効",
+    "off": "無効",
+    "setOnSite": "M-Team のサイトで設定",
+    "twoFactorOk": "アカウントは 2 段階認証で保護されています"
+  },
+  "exam": {
+    "label": "審査",
+    "left": "残り {d} 日 {h} 時間",
+    "ongoing": "進行中",
+    "none": "進行中の審査はありません",
+    "done": "達成",
+    "lack": "あと {v}",
+    "item": {
+      "download": "ダウンロード量",
+      "upload": "アップロード量",
+      "bonus": "ボーナス"
+    }
+  },
+  "seeds": {
+    "title": "マイトレント",
+    "tab": {
+      "seeding": "シード中",
+      "leeching": "ダウンロード中",
+      "completed": "完了",
+      "incomplete": "未完了",
+      "uploaded": "投稿済み"
+    },
+    "loaded": "{n} 件読み込み済み",
+    "loadedOf": "{n} / {total} 件読み込み済み",
+    "col": {
+      "torrent": "トレント",
+      "size": "サイズ",
+      "up": "自分のアップ",
+      "down": "自分のダウン",
+      "ratio": "共有率"
+    },
+    "empty": {
+      "seeding": "シード中のトレントはありません",
+      "leeching": "ダウンロード中のトレントはありません",
+      "completed": "完了したトレントはありません",
+      "incomplete": "未完了のトレントはありません",
+      "uploaded": "まだトレントを投稿していません"
+    }
+  },
+  "bonus": {
+    "title": "ボーナス履歴",
+    "today": "今日",
+    "yesterday": "昨日",
+    "onlyChange": "ボーナスの増減のみ",
+    "empty": "ボーナスの記録はまだありません",
+    "emptyChange": "読み込んだ記録にボーナスの増減はありません",
+    "foot": "アップロード・ダウンロードの変化は各記録に書かれています。サイトは前後の残高を提供していません"
+  },
+  "collects": {
+    "title": "お気に入り",
+    "mode": "カテゴリ区分",
+    "empty": "この区分にはお気に入りがありません",
+    "emptyDesc": "M-Team のサイトでお気に入りにしたトレントがここに表示されます"
+  },
+  "me": {
+    "title": "マイページ",
+    "updated": "{time} に更新",
+    "updatedIn": "{time} に更新 · {s}s",
+    "refresh": "更新",
+    "method": {
+      "apikey": "API Key",
+      "password": "パスワード"
+    },
+    "login": "M-Team にログインすると、シード・ボーナス・審査を確認できます",
+    "loginDesc": "API Key とパスワードのどちらでもログインできます"
+  }
+}

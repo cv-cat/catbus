@@ -1,0 +1,102 @@
+{
+  "title": "{platform} 로그인",
+  "storage": "로그인 정보는 이 기기의 ~/.catbus에 저장되고 catbus에서만 쓰여요",
+  "methodsLabel": "로그인 방식",
+  "submitting": "로그인 중…",
+  "submittingLabel": "로그인 중",
+  "method": {
+    "qrcode": "QR 코드",
+    "sms": "문자 인증",
+    "password": "비밀번호"
+  },
+  "api": {
+    "requestFailed": "요청 실패 ({status})"
+  },
+  "error": {
+    "noMethods": "이 채널은 WebUI에서 할 수 있는 로그인 방식이 없어요",
+    "bridgeHint": "catbus web이 실행 중인지 확인한 뒤 다시 시도하세요",
+    "failed": "로그인 실패",
+    "setDefaultFailed": "기본 계정으로 설정하지 못했어요"
+  },
+  "success": {
+    "title": "로그인 성공",
+    "who": "{name} · 계정 {account}",
+    "alreadyDefault": "이미 기본 계정이에요",
+    "askDefault": "{name} 님을 기본 계정으로 설정할까요?",
+    "currentDefault": "현재 기본 계정은 {account}이에요",
+    "notNow": "나중에",
+    "setDefault": "기본으로 설정"
+  },
+  "demo": {
+    "unsupported": "데모에서는 로그인 불가",
+    "hint": "{platform} 로그인: {command} 실행 (--demo 없이)"
+  },
+  "qrcode": {
+    "alt": "로그인 QR 코드",
+    "scanned": "스캔했습니다. 휴대폰에서 확인하세요",
+    "reload": "다시 받기",
+    "loading": "QR 코드를 받는 중…",
+    "refresh": "QR 코드 새로고침"
+  },
+  "cookie": {
+    "placeholder": "a1=...; web_session=...  또는 브라우저에서 내보낸 cookie JSON 배열",
+    "help": "브라우저에서 {platform}에 로그인한 뒤 개발자 도구 → 네트워크를 열고, 아무 요청의 Cookie 요청 헤더를 복사하세요."
+  },
+  "apikey": {
+    "placeholder": "사이트의 「控制台 → 实验室」에서 생성"
+  },
+  "voice": {
+    "help": "이 계정은 음성 인증번호가 더 필요해요. 휴대폰 번호 {phone}(으)로 음성 인증 전화를 걸 테니, 받아서 전화 속 인증번호를 적어 두세요. 인증 상태는 10분 동안 유효하고, 지나면 처음부터 다시 로그인해야 해요.",
+    "status": {
+      "calling": "전화 거는 중…",
+      "idle": "아직 걸지 않음",
+      "called": "전화를 걸었어요. 받아 주세요"
+    },
+    "redialIn": "{n}s 후 다시 걸기",
+    "redial": "못 받았나요? 다시 걸기",
+    "get": "음성 인증번호 받기",
+    "code": "음성 인증번호",
+    "codePlaceholder": "전화로 들은 인증번호",
+    "reenter": "다시 입력",
+    "refetchIn": "{n}s 후 다시 받기",
+    "refetch": "음성 인증번호 다시 받기",
+    "backToUsers": "계정 선택으로 돌아가기",
+    "restart": "처음부터",
+    "callFailed": "음성 인증 전화를 걸지 못했어요. 잠시 후 다시 시도하세요",
+    "getFailed": "음성 인증번호를 요청하지 못했어요",
+    "enterCode": "전화로 들은 인증번호를 입력하세요",
+    "verifyAgain": "한 번 더 인증해야 해요. 음성 인증번호를 다시 받으세요",
+    "wrongCode": "인증번호가 틀렸거나 만료됐어요. 다시 입력하거나 음성 인증번호를 다시 받으세요"
+  },
+  "user": {
+    "noName": "(닉네임 없음)",
+    "id": "ID {id}",
+    "pick": "이 휴대폰 번호에 계정이 여러 개 있어요. 로그인할 계정을 고르세요:",
+    "changePhone": "다른 번호 사용"
+  },
+  "sms": {
+    "phone": "휴대폰 번호",
+    "phonePlaceholder": "11자리 휴대폰 번호",
+    "resendIn": "{n}s",
+    "resend": "다시 보내기",
+    "send": "인증번호 받기",
+    "code": "인증번호",
+    "codePlaceholder": "문자로 받은 인증번호"
+  },
+  "password": {
+    "username": "사용자 이름",
+    "password": "비밀번호",
+    "email": "이메일 (새 기기 2단계 인증 시 필요)",
+    "optional": "선택",
+    "emailCode": "이메일 인증번호",
+    "totp": "인증번호 (TOTP, 선택)",
+    "emailSent": "인증번호를 이메일로 보냈어요. catbus는 비밀번호를 저장하지 않으니 한 번 더 입력하세요."
+  },
+  "account": {
+    "saveAs": "계정 {account}(으)로 저장",
+    "auto": "자동",
+    "label": "계정 이름",
+    "placeholder": "비워 두면 로그인한 사용자에 따라 자동 선택",
+    "help": "비워 두면 같은 사용자는 기존 계정을 갱신하고, 새 사용자는 계정을 추가해요. 계정 이름을 적으면 그 계정으로 로그인하고, 기존 사용자는 바뀌어요."
+  }
+}

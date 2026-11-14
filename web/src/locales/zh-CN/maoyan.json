@@ -1,0 +1,62 @@
+{
+  "city": {
+    "chip": "城市：{city}，点击切换",
+    "title": "选择城市",
+    "current": "当前 {city}",
+    "search": "搜索城市",
+    "clear": "清除",
+    "recent": "最近选择",
+    "hot": "热门城市",
+    "results": "城市搜索结果",
+    "noMatch": "没有找到「{kw}」",
+    "noMatchHint": "只能搜索有演出的城市，换个城市名试试",
+    "failed": "城市搜索失败，稍后再试",
+    "eyebrow": "{platform} · {city} · 演出推荐"
+  },
+  "tickets": {
+    "title": "场次与票档",
+    "total": "共 {n} 场",
+    "sessions": "场次",
+    "loading": "正在查询场次与余票",
+    "idle": {
+      "title": "查看每一场的票档和余票",
+      "hint": "点一下才查询，不会自动刷新",
+      "action": "查看场次与余票"
+    },
+    "auth": {
+      "title": "登录后查看场次与余票",
+      "hint": "用大众点评扫码登录，约七天有效",
+      "action": "登录"
+    },
+    "expired": {
+      "title": "登录已失效",
+      "hint": "重新登录后查看场次与余票",
+      "action": "重新登录"
+    },
+    "error": {
+      "title": "没能查到场次与余票"
+    },
+    "none": {
+      "title": "还没有场次信息",
+      "hint": "演出开票后这里会列出场次和票档"
+    },
+    "noTiers": {
+      "title": "这一场暂时没有票档信息",
+      "hint": "可以换一个场次，或稍后再看"
+    },
+    "allSoldOut": "全部场次已售罄",
+    "col": {
+      "tier": "票档",
+      "face": "票面价",
+      "sell": "实售价",
+      "stock": "余票"
+    },
+    "soldOut": "售罄",
+    "plenty": "有票",
+    "few": "余 {n} 张",
+    "queriedAt": "{time} 查询",
+    "refresh": "重新查询",
+    "note": "余票为查询时的数量，较多时只显示有票",
+    "open": "在猫眼打开"
+  }
+}

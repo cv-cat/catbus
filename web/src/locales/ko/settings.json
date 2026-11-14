@@ -1,0 +1,119 @@
+{
+  "general": {
+    "language": {
+      "title": "언어",
+      "desc": "화면에 쓰는 언어예요.",
+      "auto": "자동 ({name})"
+    },
+    "start": {
+      "title": "시작 화면",
+      "desc": "WebUI를 열 때 들어갈 플랫폼이에요.",
+      "last": "마지막으로 본 플랫폼"
+    },
+    "sort": {
+      "title": "기본 정렬",
+      "desc": "플랫폼에 들어갈 때 기본 정렬이에요."
+    },
+    "type": {
+      "title": "기본 유형",
+      "desc": "플랫폼에 들어갈 때 기본으로 볼 콘텐츠 유형이에요."
+    },
+    "pageSize": {
+      "title": "페이지당 개수",
+      "desc": "한 번에 불러올 개수예요. 많을수록 느리고 플랫폼 보안 제한에 걸리기도 쉬워요."
+    }
+  },
+  "dialog": {
+    "title": "설정",
+    "close": "설정 닫기",
+    "tabs": "설정 탭",
+    "tab": {
+      "general": "일반",
+      "display": "화면",
+      "experimental": "실험실",
+      "download": "다운로드"
+    },
+    "hint": "설정은 이 브라우저에 저장되고, 다른 브라우저와 동기화되지 않아요.",
+    "reset": "기본값 복원",
+    "resetConfirm": "한 번 더 누르면 복원"
+  },
+  "display": {
+    "followSystem": "시스템 설정",
+    "theme": {
+      "title": "테마",
+      "light": "라이트",
+      "dark": "다크"
+    },
+    "density": {
+      "title": "카드 밀도",
+      "desc": "촘촘하게는 한 화면에 카드를 더 많이, 넓게는 표지를 더 크게 보여 줘요.",
+      "compact": "촘촘하게",
+      "standard": "보통",
+      "cozy": "넓게"
+    },
+    "stats": {
+      "title": "반응 수 표시",
+      "desc": "카드에 좋아요, 댓글, 조회수를 보여 줘요."
+    },
+    "pixel": {
+      "title": "배경 애니메이션",
+      "desc": "페이지 배경의 픽셀 애니메이션이에요."
+    },
+    "motion": {
+      "title": "동작 줄이기",
+      "desc": "「항상 줄이기」면 시스템 설정과 상관없이 애니메이션을 최소로 줄여요.",
+      "always": "항상 줄이기"
+    },
+    "mteam": {
+      "section": "M-Team",
+      "adult": {
+        "title": "성인 구역 표시",
+        "desc": "켜면 필터와 즐겨찾기에 '성인' 구역이 추가됩니다"
+      }
+    }
+  },
+  "experimental": {
+    "note": "아직 실험 중인 기능이에요. 동작과 위치가 나중에 바뀔 수 있어요.",
+    "rawJson": {
+      "title": "원본 JSON 표시",
+      "desc": "상세 화면에서 플랫폼이 반환한 원본 데이터를 볼 수 있어요."
+    },
+    "hoverPreview": {
+      "title": "마우스오버 영상 미리보기",
+      "desc": "영상 카드에 마우스를 올리면 음소거로 미리보기를 재생해요."
+    }
+  },
+  "server": {
+    "title": "서버 설정",
+    "loading": "읽는 중",
+    "unavailable": "사용 불가",
+    "hint": "이 기기의 catbus에 저장되고, 모든 브라우저와 명령줄에서 써요.",
+    "demo": "데모 모드에서는 catbus에 연결하지 않아 서버 설정을 읽거나 바꿀 수 없어요.",
+    "loadFailed": "서버 설정을 읽지 못했어요: {error}",
+    "notJson": "서버가 예상하지 못한 응답을 보냈어요 (HTTP {status})",
+    "requestFailed": "요청 실패 (HTTP {status})",
+    "saving": "저장 중",
+    "proxy": {
+      "title": "프록시",
+      "desc": "플랫폼에 접속할 때 쓰는 프록시예요. http, https, socks5 등을 지원하고, 비워 두면 프록시를 쓰지 않아요.",
+      "saved": "프록시를 저장했어요",
+      "cleared": "프록시를 지웠어요",
+      "clear": "지우기",
+      "platforms": "플랫폼 프록시 (전역 프록시보다 우선, 읽기 전용. {command}로 변경)",
+      "platformPlaceholder": "<플랫폼>"
+    }
+  },
+  "download": {
+    "all": "전체",
+    "count": "{n}개",
+    "comments": {
+      "title": "댓글 다운로드 개수",
+      "desc": "다운로드할 때 게시물마다 가져올 댓글 수",
+      "risk": "댓글을 많이 가져올수록 요청이 늘어나 플랫폼 제한이나 계정 인증이 발생하기 쉽습니다."
+    },
+    "replies": {
+      "title": "답글 다운로드 개수",
+      "desc": "댓글마다 가져올 답글 수"
+    }
+  }
+}

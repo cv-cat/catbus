@@ -1,0 +1,127 @@
+{
+  "title": "ダウンロード履歴",
+  "close": "ダウンロード履歴を閉じる",
+  "clear": "終了した履歴を消去",
+  "empty": "ダウンロードはまだありません。カードを選んでダウンロードを押してください。",
+  "note": "ファイルはブラウザが保存します。保存先はブラウザのダウンロード一覧で確認してください",
+  "batch": {
+    "title": "{platform} · {n} 件",
+    "progress": "ダウンロード中 {done}/{total}",
+    "delivered": "ブラウザに渡しました",
+    "failed": "{n} 件失敗",
+    "expired": "{n} 件のファイルが期限切れ",
+    "finished": "終了"
+  },
+  "status": {
+    "queued": "待機中",
+    "running": "ダウンロード中…",
+    "runningLabel": "ダウンロード中",
+    "failed": "ダウンロード失敗",
+    "expired": "ファイルの期限が切れました。もう一度ダウンロードしてください",
+    "downloaded": "ダウンロード済み · {n} ファイル",
+    "delivered": "ブラウザに渡しました · {n} ファイル"
+  },
+  "action": {
+    "verify": "認証する",
+    "verifyRetryFailed": "認証して失敗分を再試行",
+    "redownload": "再ダウンロード",
+    "retryFailed": "失敗分を再試行",
+    "redownloadExpired": "期限切れ分を再ダウンロード",
+    "resave": "再保存",
+    "resaveBatch": "このバッチを再保存",
+    "remove": "履歴を削除",
+    "cancelRemove": "キャンセルして履歴を削除",
+    "removeBatch": "このバッチの履歴を削除"
+  },
+  "toast": {
+    "done": "ダウンロードが完了し、ブラウザに保存を依頼しました",
+    "saved": "ブラウザに保存を依頼しました",
+    "demoXlsx": "デモモードでは Excel を作成しないため、JSON ファイルにしました"
+  },
+  "error": {
+    "requestFailed": "リクエストに失敗しました（{status}）",
+    "busy": "ダウンロード中です。完了してから削除してください",
+    "nothing": "保存できるファイルがありません",
+    "saveFailed": "保存に失敗しました（HTTP {status}）"
+  },
+  "demoFile": {
+    "title": "catbus デモダウンロード",
+    "platform": "プラットフォーム：{platform}",
+    "items": "件数：{n} 件",
+    "about": "これはデモモードでページ内に生成した説明ファイルです。catbus には接続していません。",
+    "real": "実際のダウンロードでは、ファイルが 1 つならそのまま、複数なら 1 つの zip にまとめて、ブラウザのダウンロード先に保存されます。"
+  },
+  "panel": {
+    "title": "ダウンロードオプション",
+    "open": "ダウンロードオプション",
+    "short": "オプション",
+    "content": "内容",
+    "media": "メディア",
+    "mediaDesc": "画像・動画などの元ファイル",
+    "meta": "情報",
+    "metaDesc": "タイトル・本文・投稿者・反応数",
+    "comments": "コメント",
+    "commentsHint": "コメント {comments}・返信 {replies}（コメントごと）",
+    "metaLocked": "コメントをダウンロードすると情報も含まれます",
+    "atLeastOne": "1 つ以上選んでください",
+    "commentsUnsupported": "{platform} はコメントのダウンロードにまだ対応していません",
+    "listSep": "、",
+    "toSettings": "件数は設定で変更",
+    "format": "形式",
+    "formatTxt": "テキスト",
+    "formatNote": {
+      "json": "情報とコメントを JSON で保存（投稿ごとに 1 ファイル）",
+      "txt": "情報とコメントを読みやすいテキストで保存（投稿ごとに info.txt）",
+      "xlsx": "まとめて 1 つの Excel ファイルにします"
+    },
+    "formatNoMeta": "形式は情報とコメントにのみ適用されます",
+    "downloadCount": "{n} 件をダウンロード"
+  },
+  "got": {
+    "media": "メディア ✓",
+    "noMedia": "メディア ✗",
+    "meta": "情報 ✓",
+    "comments": "コメント {n}/{limit}",
+    "commentsAll": "コメント {n}",
+    "truncated": "（制限にかかったため停止）"
+  },
+  "qbit": {
+    "title": "qBittorrent に送る",
+    "desc": "ダウンロード後、catbus を実行しているパソコンの qBittorrent に追加します",
+    "torrent": "トレントファイル",
+    "torrentDesc": ".torrent、ブラウザで保存",
+    "torrentOptional": "送るだけなら不要",
+    "formatNoMeta": "形式は情報とコメントにのみ適用されます",
+    "category": "カテゴリ",
+    "categoryInvalid": "\\ / : * ? \" < > | と制御文字は使えません。64 文字まで",
+    "savepath": "保存先",
+    "savepathPlaceholder": "qBittorrent の既定のフォルダ",
+    "savepathInvalid": "絶対パス（/ またはドライブ文字で始まる）で、.. を含めないでください",
+    "paused": "追加後に一時停止",
+    "where": "送信は catbus を実行しているパソコンが行います",
+    "go": {
+      "both": "ダウンロードして送る",
+      "bothCount": "{n} 件をダウンロードして送る",
+      "push": "送る",
+      "pushCount": "{n} 件を送る"
+    },
+    "retry": "送信を再試行",
+    "got": {
+      "torrent": "トレント ✓",
+      "added": "送信済み",
+      "exists": "すでにリストにあります",
+      "failed": "送信失敗（トレントは保存済み）",
+      "reason": "：{reason}"
+    },
+    "batch": {
+      "added": "{n} 件送信済み",
+      "exists": "{n} 件はすでにリストにあります"
+    },
+    "toast": {
+      "added": "{n} 件を qBittorrent に送りました",
+      "exists": "{added} 件を送信、{exists} 件はすでに qBittorrent のリストにあります",
+      "failed": "{n} 件の送信に失敗しました。トレントファイルは保存済みです"
+    },
+    "metaDesc": "タイトル、紹介、サイズ、シード数"
+  }
+}

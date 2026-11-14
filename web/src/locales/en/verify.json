@@ -1,0 +1,24 @@
+{
+  "title": "Complete {platform} verification",
+  "defaultMessage": "The platform blocked the request for now. Please verify once yourself",
+  "copyPrompt": "Copy the verification link:",
+  "platformFallback": "the platform",
+  "open": {
+    "title": "Open the verification page",
+    "desc": "Open it in a browser {account}. If you're not logged in, log in in a new tab first.",
+    "account": "logged in to the same {platform} account",
+    "again": "Open again",
+    "copyLink": "Copy link"
+  },
+  "solve": {
+    "title": "Follow the prompts on the page",
+    "desc": "Slider, image selection or SMS code. Once it says verified, you can close that tab."
+  },
+  "back": {
+    "title": "Come back and retry",
+    "desc": "Verification can take a few seconds to apply. If you're still blocked, wait a bit and try again, without retrying too often."
+  },
+  "noLink": "{platform} didn't provide a verification link. Open the {platform} website in your browser and follow the prompts, or try again in a few minutes.",
+  "later": "Later",
+  "doneRetry": "Verified, retry"
+}

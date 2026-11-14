@@ -1,0 +1,110 @@
+{
+  "dialog": "详情",
+  "closeTip": "关闭（Esc）",
+  "loadingLabel": "加载中",
+  "author": {
+    "unknown": "未知作者"
+  },
+  "published": {
+    "on": "发布于 {date}",
+    "ago": "{time}发布"
+  },
+  "stat": {
+    "seeders": "做种",
+    "leechers": "下载",
+    "files": "文件",
+    "likes": "赞",
+    "collects": "收藏",
+    "comments": "评论",
+    "shares": "分享",
+    "aria": "{n} {label}"
+  },
+  "torrent": {
+    "fallback": "种子",
+    "untitled": "（无标题）"
+  },
+  "show": {
+    "fallback": "演出",
+    "time": "时间",
+    "venue": "场馆",
+    "prices": "票价",
+    "images": "演出详情",
+    "priceFrom": "起"
+  },
+  "head": {
+    "raw": "原始 JSON",
+    "rawBack": "回到详情",
+    "rawOpen": "查看平台返回的原始数据",
+    "downloaded": "已加入下载",
+    "downloadedTip": "已加入下载，可在顶栏的下载列表查看",
+    "downloadTip": "下载到本地",
+    "downloading": "下载中",
+    "origin": "原链接",
+    "openOn": "在{platform}打开",
+    "platform": "平台"
+  },
+  "itemError": "详情没有加载完整：{error}",
+  "nav": {
+    "prev": "上一条",
+    "prevTip": "上一条（W / ↑）",
+    "next": "下一条",
+    "nextTip": "下一条（S / ↓）"
+  },
+  "image": {
+    "prev": "上一张",
+    "next": "下一张",
+    "nth": "第 {n} 张"
+  },
+  "media": {
+    "video": "视频",
+    "failed": "视频无法在这里播放",
+    "noSource": "没有拿到可播放的视频地址",
+    "openOrigin": "去原链接观看",
+    "unmute": "点击开启声音",
+    "back": "后退 {n} 秒",
+    "backTip": "后退 {n} 秒（A）",
+    "forward": "快进 {n} 秒",
+    "forwardTip": "快进 {n} 秒，按住倍速播放（D）",
+    "seek": "{sign}{n} 秒",
+    "fast": "{rate}× 倍速播放中",
+    "play": "播放",
+    "pause": "暂停",
+    "progress": "播放进度",
+    "soundOn": "开启声音",
+    "mute": "静音",
+    "fullscreen": "全屏"
+  },
+  "related": {
+    "title": "相关推荐",
+    "prev": "向左翻",
+    "next": "向右翻",
+    "untitled": "无标题"
+  },
+  "lightbox": {
+    "title": "查看大图"
+  },
+  "raw": {
+    "title": "原始 JSON",
+    "expandAll": "全部展开",
+    "collapseAll": "全部折叠",
+    "loading": "正在加载原始数据…",
+    "demoNote": "演示数据：真实模式下这里是平台接口返回的原始对象"
+  },
+  "json": {
+    "items": "{n} 项",
+    "fields": "{n} 个字段",
+    "expand": "展开",
+    "collapse": "折叠"
+  },
+  "countdown": {
+    "label": "距开售 {time}",
+    "until": "距开售 · {when}",
+    "onSale": "已开售",
+    "unit": {
+      "day": "天",
+      "hour": "时",
+      "minute": "分",
+      "second": "秒"
+    }
+  }
+}

@@ -1,0 +1,149 @@
+@import '@fontsource/nunito/800.css';
+@import '@fontsource/geist-mono/400.css';
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+/* iOS 地址栏伸缩时用动态视口高度 */
+@supports (height: 100dvh) {
+  html,
+  body,
+  #app {
+    height: 100dvh;
+  }
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  touch-action: manipulation;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  padding: 0;
+}
+
+/* 手机上输入框字号不小于 16px，避免 iOS 聚焦时自动放大页面 */
+@media (max-width: 640px) {
+  input,
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-stroke);
+  backdrop-filter: blur(40px) saturate(1.6);
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* 主题切换：View Transitions 的圆形展开，由 useTheme 设置起点 */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* 设置里「减少动效」= 总是减少（或系统开启）时 motion.ts 给 <html> 加 data-motion="reduce"，效果同上 */
+[data-motion='reduce'] *,
+[data-motion='reduce'] *::before,
+[data-motion='reduce'] *::after {
+  transition-duration: 0.01ms !important;
+  transition-delay: 0s !important;
+  animation-duration: 0.01ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+}
+
+/* v-tip 的浮层（src/directives/tip.ts） */
+.catbus-tip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  max-width: min(320px, calc(100vw - 16px));
+  padding: 7px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #fff;
+  background: #232838f2;
+  box-shadow: 0 8px 24px #0b0d1a33;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+}
+.catbus-tip[data-visible='true'] {
+  opacity: 1;
+}
+[data-theme='dark'] .catbus-tip {
+  color: var(--ink);
+  background: #2c3142f2;
+  border: 1px solid #ffffff1a;
+}
+@media (prefers-reduced-motion: reduce) {
+  .catbus-tip {
+    transition: none;
+  }
+}

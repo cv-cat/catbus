@@ -1,0 +1,94 @@
+{
+  "title": "発見",
+  "end": "— 終点です —",
+  "toTop": "トップに戻る",
+  "eyebrow": {
+    "search": "{platform} · {item}を検索",
+    "feed": "{platform} · おすすめ{item}",
+    "sep": "、",
+    "aggregate": "集約 · {names}",
+    "aggregateMany": "集約 · {names} ほか {n} チャンネル"
+  },
+  "search": {
+    "label": "検索",
+    "searching": "検索中",
+    "placeholder": "{platform}で{item}を検索",
+    "placeholderMany": "{n} チャンネルで検索"
+  },
+  "demo": {
+    "title": "このページのデータはすべてデモデータです。どのプラットフォームにもアクセスせず、実際のアカウントも使いません",
+    "long": "デモ表示中です",
+    "short": "デモ"
+  },
+  "filter": {
+    "sort": "並び替え",
+    "kind": "フィードの種類",
+    "time": "期間",
+    "timeChip": "期間 · {label}"
+  },
+  "count": {
+    "feed": "{kind} · {n} 件読み込み済み",
+    "search": "{n} 件 · {elapsed}s"
+  },
+  "unsupported": {
+    "kind": "{platform}は「{label}」フィードに未対応です",
+    "noKinds": "{platform}にはフィードの種類がありません",
+    "sort": "{platform}は「{label}」での並び替えに未対応です",
+    "type": "{platform}は「{label}」のみの表示に未対応です",
+    "time": "{platform}は「{label}」に未対応です",
+    "feedOnly": "{platform}はおすすめフィードのみで、絞り込みには未対応です",
+    "noFilter": {
+      "sort": "{platform}は並び替えに未対応です",
+      "type": "{platform}は種類での絞り込みに未対応です",
+      "time": "{platform}は期間での絞り込みに未対応です"
+    }
+  },
+  "unsupportedAll": {
+    "kind": "選択したチャンネルはどれも「{label}」フィードに未対応です",
+    "sort": "選択したチャンネルはどれも「{label}」での並び替えに未対応です",
+    "type": "選択したチャンネルはどれも「{label}」のみの表示に未対応です",
+    "time": "選択したチャンネルはどれも「{label}」に未対応です",
+    "noFilter": {
+      "sort": "選択したチャンネルはどれも並び替えに未対応です",
+      "type": "選択したチャンネルはどれも種類での絞り込みに未対応です",
+      "time": "選択したチャンネルはどれも期間での絞り込みに未対応です",
+      "kind": "選択したチャンネルはどれもフィードの種類に未対応です"
+    }
+  },
+  "toast": {
+    "accountFailed": "{platform} · {account}：{error}",
+    "laneFailed": "{platform}：{error}"
+  },
+  "card": {
+    "untitled": "（タイトルなし）",
+    "select": "選択",
+    "seeders": "{n} 人がシード中",
+    "leechers": "{n} 人がダウンロード中",
+    "priceFrom": "〜",
+    "authorPage": "{name}の作者ページ",
+    "likes": "いいね {n}",
+    "collects": "保存 {n}",
+    "comments": "コメント {n}"
+  },
+  "show": {
+    "notOnSale": "発売前"
+  },
+  "selection": {
+    "label": "選択操作",
+    "picked": "{n} 件選択",
+    "all": "全選択",
+    "none": "選択解除",
+    "invert": "選択反転",
+    "download": "選択をダウンロード",
+    "downloadCount": "選択した {n} 件をダウンロード"
+  },
+  "suggest": {
+    "hot": "トレンド",
+    "suggest": "候補",
+    "hotLabel": "{platform}のトレンド",
+    "label": "検索候補",
+    "keyMove": "↑↓ 選択",
+    "keyEnter": "Enter 検索",
+    "keyEsc": "Esc 閉じる"
+  }
+}

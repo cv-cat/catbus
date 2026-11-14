@@ -1,0 +1,62 @@
+{
+  "city": {
+    "chip": "City: {city}. Click to change",
+    "title": "Choose a city",
+    "current": "Now: {city}",
+    "search": "Search cities",
+    "clear": "Clear",
+    "recent": "Recent",
+    "hot": "Popular cities",
+    "results": "City results",
+    "noMatch": "No city matches “{kw}”",
+    "noMatchHint": "Only cities with shows can be found. Try another name",
+    "failed": "City search failed. Try again later",
+    "eyebrow": "{platform} · {city} · Featured shows"
+  },
+  "tickets": {
+    "title": "Sessions & tickets",
+    "total": "{n} session | {n} sessions",
+    "sessions": "Sessions",
+    "loading": "Checking sessions and availability",
+    "idle": {
+      "title": "See ticket tiers and availability for each session",
+      "hint": "Checked only when you click; it won't refresh by itself",
+      "action": "Check sessions & tickets"
+    },
+    "auth": {
+      "title": "Log in to see sessions and availability",
+      "hint": "Scan with the Dianping app; stays valid for about 7 days",
+      "action": "Log in"
+    },
+    "expired": {
+      "title": "Login expired",
+      "hint": "Log in again to see sessions and availability",
+      "action": "Log in again"
+    },
+    "error": {
+      "title": "Couldn't load sessions and availability"
+    },
+    "none": {
+      "title": "No sessions yet",
+      "hint": "Sessions and ticket tiers will appear here once tickets are released"
+    },
+    "noTiers": {
+      "title": "No ticket tiers for this session yet",
+      "hint": "Pick another session, or check back later"
+    },
+    "allSoldOut": "All sessions are sold out",
+    "col": {
+      "tier": "Tier",
+      "face": "Face value",
+      "sell": "Price",
+      "stock": "Left"
+    },
+    "soldOut": "Sold out",
+    "plenty": "Available",
+    "few": "{n} left",
+    "queriedAt": "Checked {time}",
+    "refresh": "Check again",
+    "note": "Availability as of the check; large numbers show as “Available”",
+    "open": "Open on Maoyan"
+  }
+}

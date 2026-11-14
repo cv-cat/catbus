@@ -1,0 +1,127 @@
+{
+  "title": "Downloads",
+  "close": "Close downloads",
+  "clear": "Clear finished",
+  "empty": "No downloads yet. Select some cards and click Download.",
+  "note": "Files are saved by your browser. Check its download list for the location",
+  "batch": {
+    "title": "{platform} · {n} item | {platform} · {n} items",
+    "progress": "Downloading {done}/{total}",
+    "delivered": "Sent to browser",
+    "failed": "{n} failed",
+    "expired": "{n} file expired | {n} files expired",
+    "finished": "Finished"
+  },
+  "status": {
+    "queued": "Queued",
+    "running": "Downloading…",
+    "runningLabel": "Downloading",
+    "failed": "Download failed",
+    "expired": "File expired, please download again",
+    "downloaded": "Downloaded · {n} file | Downloaded · {n} files",
+    "delivered": "Sent to browser · {n} file | Sent to browser · {n} files"
+  },
+  "action": {
+    "verify": "Verify",
+    "verifyRetryFailed": "Verify, then retry failed",
+    "redownload": "Download again",
+    "retryFailed": "Retry failed",
+    "redownloadExpired": "Re-download expired",
+    "resave": "Save again",
+    "resaveBatch": "Save this batch again",
+    "remove": "Remove record",
+    "cancelRemove": "Cancel and remove",
+    "removeBatch": "Remove this batch"
+  },
+  "toast": {
+    "done": "Download complete, sent to your browser",
+    "saved": "Sent to your browser",
+    "demoXlsx": "Demo mode doesn't make Excel files, so you got a JSON file instead"
+  },
+  "error": {
+    "requestFailed": "Request failed ({status})",
+    "busy": "Still downloading. Remove it when it's done",
+    "nothing": "No files to save",
+    "saveFailed": "Save failed (HTTP {status})"
+  },
+  "demoFile": {
+    "title": "catbus demo download",
+    "platform": "Platform: {platform}",
+    "items": "Items: {n}",
+    "about": "This file was generated in the page by demo mode. catbus was not contacted.",
+    "real": "In a real download, a single file is saved directly and multiple files are bundled into one zip, saved by the browser to its download location."
+  },
+  "panel": {
+    "title": "Download options",
+    "open": "Download options",
+    "short": "Options",
+    "content": "Content",
+    "media": "Media",
+    "mediaDesc": "Original images, videos and other files",
+    "meta": "Info",
+    "metaDesc": "Title, text, author, engagement counts",
+    "comments": "Comments",
+    "commentsHint": "Comments: {comments} · replies per comment: {replies}",
+    "metaLocked": "Comments always include the post info",
+    "atLeastOne": "Pick at least one",
+    "commentsUnsupported": "Comments can't be downloaded from {platform} yet",
+    "listSep": ", ",
+    "toSettings": "Change the counts in Settings",
+    "format": "Format",
+    "formatTxt": "Plain text",
+    "formatNote": {
+      "json": "Info and comments saved as JSON, one file per post",
+      "txt": "Info and comments saved as readable text, one info.txt per post",
+      "xlsx": "The whole batch in one Excel spreadsheet"
+    },
+    "formatNoMeta": "The format only applies to info and comments",
+    "downloadCount": "Download {n} item | Download {n} items"
+  },
+  "got": {
+    "media": "Media ✓",
+    "noMedia": "Media ✗",
+    "meta": "Info ✓",
+    "comments": "Comments {n}/{limit}",
+    "commentsAll": "Comments {n}",
+    "truncated": " (stopped by rate limiting)"
+  },
+  "qbit": {
+    "title": "Send to qBittorrent",
+    "desc": "After downloading, add it to qBittorrent on the computer running catbus",
+    "torrent": "Torrent file",
+    "torrentDesc": ".torrent, saved by your browser",
+    "torrentOptional": "Optional when only sending",
+    "formatNoMeta": "The format only applies to info and comments",
+    "category": "Category",
+    "categoryInvalid": "No \\ / : * ? \" < > | or control characters, up to 64 characters",
+    "savepath": "Save path",
+    "savepathPlaceholder": "qBittorrent's default folder",
+    "savepathInvalid": "Use an absolute path (starting with / or a drive letter) without ..",
+    "paused": "Add paused",
+    "where": "Sending is done by the computer running catbus",
+    "go": {
+      "both": "Download and send",
+      "bothCount": "Download and send {n} | Download and send {n}",
+      "push": "Send",
+      "pushCount": "Send {n} | Send {n}"
+    },
+    "retry": "Retry sending",
+    "got": {
+      "torrent": "Torrent ✓",
+      "added": "Sent",
+      "exists": "Already in the list",
+      "failed": "Sending failed (torrent saved)",
+      "reason": ": {reason}"
+    },
+    "batch": {
+      "added": "{n} sent",
+      "exists": "{n} already in the list"
+    },
+    "toast": {
+      "added": "Sent {n} to qBittorrent | Sent {n} to qBittorrent",
+      "exists": "{added} sent, {exists} already in qBittorrent's list",
+      "failed": "{n} failed to send; the torrent file is saved | {n} failed to send; the torrent files are saved"
+    },
+    "metaDesc": "Title, description, size, seeders"
+  }
+}

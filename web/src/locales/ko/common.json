@@ -1,0 +1,34 @@
+{
+  "action": {
+    "cancel": "취소",
+    "confirm": "확인",
+    "close": "닫기",
+    "retry": "다시 시도",
+    "save": "저장",
+    "delete": "삭제",
+    "copy": "복사",
+    "copied": "복사됨",
+    "back": "뒤로",
+    "refresh": "새로고침",
+    "more": "더 보기",
+    "open": "열기",
+    "download": "다운로드",
+    "login": "로그인",
+    "relogin": "다시 로그인"
+  },
+  "state": {
+    "loading": "불러오는 중…",
+    "empty": "내용이 없어요",
+    "failed": "불러오지 못했어요",
+    "demo": "데모 데이터"
+  },
+  "time": {
+    "justNow": "방금"
+  },
+  "unit": {
+    "items": "{n}개"
+  },
+  "select": {
+    "placeholder": "선택하세요"
+  }
+}
