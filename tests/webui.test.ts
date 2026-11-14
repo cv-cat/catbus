@@ -685,3 +685,153 @@ describe('搜索联想与热搜：放行 keyword suggest / keyword hot', () => {
     expect(all.douyin).toMatchObject({ suggest: false, hot: false })
   })
 })
+
+describe('M-Team「我的」页与浏览筛选（AGENTS 7.9）', () => {
+  it('只读命令只认 mteam，可带 -a，选项按白名单和取值校验', () => {
+    expect(validateArgv(['mteam', 'seed', 'stats'])).toEqual(['mteam', 'seed', 'stats'])
+    expect(validateArgv(['mteam', 'bonus', 'get', '-a', 'work'])).toEqual(['mteam', 'bonus', 'get', '-a', 'work'])
+    expect(validateArgv(['mteam', 'exam', 'get'])).toEqual(['mteam', 'exam', 'get'])
+    expect(validateArgv(['mteam', 'item', 'categories'])).toEqual(['mteam', 'item', 'categories'])
+    expect(validateArgv(['mteam', 'seed', 'list', '--status', 'completed', '--limit', '20', '--cursor', '2'])).toEqual(
+      ['mteam', 'seed', 'list', '--status', 'completed', '--limit', '20', '--cursor', '2'],
+    )
+    expect(validateArgv(['mteam', 'bonus', 'history', '-a', 'work', '--limit', '40'])).toEqual(['mteam', 'bonus', 'history', '-a', 'work', '--limit', '40'])
+    expect(validateArgv(['mteam', 'user', 'collects', '--mode', 'movie'])).toEqual(['mteam', 'user', 'collects', '--mode', 'movie'])
+    // 取值不合法、重复、不在白名单、位置参数、guest
+    expect(() => validateArgv(['mteam', 'seed', 'list', '--status', 'all'])).toThrow('取值不合法')
+    expect(() => validateArgv(['mteam', 'seed', 'list', '--limit', '0'])).toThrow('取值不合法')
+    expect(() => validateArgv(['mteam', 'seed', 'list', '--limit', '101'])).toThrow('取值不合法')
+    expect(() => validateArgv(['mteam', 'seed', 'list', '--cursor', '--raw'])).toThrow('取值不合法')
+    expect(() => validateArgv(['mteam', 'seed', 'list', '--status', 'seeding', '--status', 'leeching'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['mteam', 'seed', 'stats', '--raw'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['mteam', 'bonus', 'get', 'me'])).toThrow('不允许的选项')
+    expect(() => validateArgv(['mteam', 'user', 'collects', '--mode', 'xxx'])).toThrow('取值不合法')
+    expect(() => validateArgv(['mteam', 'seed', 'stats', '-a', 'guest'])).toThrow('账号名不合法')
+    // 别的平台没有这些命令；mteam 的写操作仍不放行
+    expect(() => validateArgv(['xhs', 'seed', 'stats'])).toThrow('暂不开放')
+    expect(() => validateArgv(['xhs', 'user', 'collects'])).toThrow('暂不开放')
+    expect(() => validateArgv(['xhs', 'item', 'categories'])).toThrow('暂不开放')
+    expect(() => validateArgv(['mteam', 'item', 'collect', '123'])).toThrow('暂不开放')
+    expect(() => validateArgv(['mteam', 'msg', 'list'])).toThrow('暂不开放')
+  })
+
+  it('item search / feed list 放行 --mode、--category、--free，取值校验', () => {
+    expect(validateArgv(['mteam', 'feed', 'list', '--limit', '20', '--mode', 'tvshow', '--category', '402', '--free'])).toEqual(
+      ['mteam', 'feed', 'list', '--limit', '20', '--mode', 'tvshow', '--category', '402', '--free'],
+    )
+    expect(validateArgv(['mteam', 'item', 'search', '1080p', '--mode', 'movie', '--category', '419,421', '--free', '--order-by', 'size'])).toEqual(
+      ['mteam', 'item', 'search', '--mode', 'movie', '--category', '419,421', '--free', '--order-by', 'size', '--', '1080p'],
+    )
+    expect(() => validateArgv(['mteam', 'feed', 'list', '--mode', 'all'])).toThrow('取值不合法')
+    expect(() => validateArgv(['mteam', 'feed', 'list', '--category', '100;rm'])).toThrow('取值不合法')
+    expect(() => validateArgv(['mteam', 'feed', 'list', '--category', 'abc'])).toThrow('取值不合法')
+    expect(() => validateArgv(['mteam', 'item', 'get', '123', '--free'])).toThrow('不允许的选项')
+  })
+})
+
+describe('推送到 qBittorrent（AGENTS 7.9「批量选择与下载」）', () => {
+  it('选项白名单：只对 mteam，分类 / 目录限制字符，目录必须是绝对路径，推送必须下种子文件', async () => {
+    const { parseOptions, optionArgs, validSavepath } = await import('../src/webui/download.js')
+    const base = { media: true }
+    expect(parseOptions({ ...base }, 'mteam').qbit).toBeUndefined()
+    expect(parseOptions({ ...base, qbit: false }, 'mteam').qbit).toBeUndefined()
+    const o = parseOptions({ ...base, qbit: true }, 'mteam')
+    expect(o.qbit).toEqual({ category: 'mteam', savepath: null, paused: false })
+    expect(optionArgs(o)).toEqual(['--qbit', '--qbit-category', 'mteam'])
+    const full = parseOptions({ ...base, qbit: true, qbitCategory: '剧集', qbitSavepath: '/Volumes/PT/剧集', qbitPaused: true }, 'mteam')
+    expect(optionArgs(full)).toEqual(['--qbit', '--qbit-category', '剧集', '--qbit-savepath', '/Volumes/PT/剧集', '--qbit-paused'])
+    expect(parseOptions({ ...base, qbit: true, qbitSavepath: 'D:\\PT\\movies' }, 'mteam').qbit!.savepath).toBe('D:\\PT\\movies')
+    expect(() => parseOptions({ ...base, qbit: true }, 'xhs')).toThrow('M-Team')
+    expect(() => parseOptions({ ...base, qbit: 'yes' }, 'mteam')).toThrow('qbit')
+    expect(() => parseOptions({ media: false, meta: true, qbit: true }, 'mteam')).toThrow('种子文件')
+    expect(() => parseOptions({ ...base, qbit: true, qbitCategory: 'a/b' }, 'mteam')).toThrow('分类')
+    expect(() => parseOptions({ ...base, qbit: true, qbitCategory: 'a\nb' }, 'mteam')).toThrow('分类')
+    expect(() => parseOptions({ ...base, qbit: true, qbitCategory: 'x'.repeat(65) }, 'mteam')).toThrow('分类')
+    expect(() => parseOptions({ ...base, qbit: true, qbitPaused: 'true' }, 'mteam')).toThrow('qbitPaused')
+    expect(validSavepath('relative/dir')).toBe(false)
+    expect(validSavepath('/a/../etc')).toBe(false)
+    expect(validSavepath('/a\nb')).toBe(false)
+    expect(validSavepath('/' + 'x'.repeat(600))).toBe(false)
+    expect(validSavepath('C:/PT')).toBe(true)
+    expect(() => parseOptions({ ...base, qbit: true, qbitSavepath: '--qbit-paused' }, 'mteam')).toThrow('绝对路径')
+  })
+
+  it('解析 item download 的三种信封：File[]、{id files qbit}、推送失败', async () => {
+    const { parseDownloadEnvelope } = await import('../src/webui/download.js')
+    expect(parseDownloadEnvelope({ ok: true, data: [{ path: '/t/a.torrent', type: 'torrent' }] })).toEqual({ files: [{ path: '/t/a.torrent', type: 'torrent' }], qbit: null })
+    expect(parseDownloadEnvelope({ ok: true, data: { id: '1', files: [{ path: '/t/a.torrent', type: 'torrent' }], qbit: { status: 'exists', category: 'mteam' } } })).toEqual({
+      files: [{ path: '/t/a.torrent', type: 'torrent' }],
+      qbit: { status: 'exists' },
+    })
+    try {
+      parseDownloadEnvelope({ ok: false, error: { code: 'NETWORK', message: '连不上', detail: { qbit: 'failed', id: '1', files: [{ path: '/t/a.torrent', type: 'torrent' }], http_status: null } } })
+      expect.unreachable()
+    } catch (e) {
+      expect(e).toMatchObject({ message: '连不上', code: 'NETWORK', qbitFailed: { files: [{ path: '/t/a.torrent', type: 'torrent' }], http_status: null } })
+    }
+    try {
+      parseDownloadEnvelope({ ok: false, error: { code: 'UPSTREAM', message: '种子不存在', detail: null } })
+      expect.unreachable()
+    } catch (e) {
+      expect(e).toMatchObject({ code: 'UPSTREAM', qbitFailed: null })
+    }
+  })
+
+  // 假的 catbus（shebang 脚本）：Windows 上不能直接执行，跳过
+  it.skipIf(process.platform === 'win32')('一批推送：已推送 / 已在任务列表 / 推送失败（种子已保存，可交给浏览器、可重试）', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'catbus-fake-'))
+    const bin = join(dir, 'catbus')
+    const argvLog = join(dir, 'argv.log')
+    writeFileSync(bin, `#!${process.execPath}
+const fs = require('node:fs'), path = require('node:path')
+const a = process.argv.slice(2)
+fs.appendFileSync(${JSON.stringify(argvLog)}, JSON.stringify(a) + '\\n')
+const item = a[a.length - 1], out = a[a.indexOf('--dir') + 1]
+fs.mkdirSync(out, { recursive: true })
+const f = path.join(out, 'mteam_' + item + '_1.torrent')
+fs.writeFileSync(f, 'd4:infod4:name1:xee')
+const files = [{ path: f, type: 'torrent', url: null, size: 19 }]
+const retried = fs.readFileSync(${JSON.stringify(argvLog)}, 'utf8').split('\\n').filter((l) => l.includes('"' + item + '"')).length > 1
+if (item === 'n3' && !retried) {
+  console.log(JSON.stringify({ ok: false, data: null, error: { code: 'NETWORK', message: '连不上 qBittorrent Web UI', hint: null, detail: { qbit: 'failed', id: item, files, http_status: null } } }))
+  process.exit(6)
+}
+console.log(JSON.stringify({ ok: true, data: { id: item, files, qbit: { status: item === 'n2' ? 'exists' : 'added', category: 'mteam', savepath: null, paused: false } }, error: null }))
+`, { mode: 0o755 })
+    const prev = process.env.CATBUS_BIN
+    process.env.CATBUS_BIN = bin
+    const mod = await import('../src/webui/download.js')
+    mod.resetDownloadsForTest()
+    try {
+      const batch = mod.startBatch({ platform: 'mteam', items: [{ id: 'n1' }, { id: 'n2' }, { id: 'n3' }], media: true, qbit: true, qbitSavepath: '/Volumes/PT', qbitPaused: true })
+      const settled = async () => {
+        for (let i = 0; i < 200; i++) {
+          const b = mod.listBatches().find((x) => x.id === batch.id)!
+          if (b.items.every((it) => it.status === 'done' || it.status === 'failed')) return b
+          await new Promise((r) => setTimeout(r, 25))
+        }
+        throw new Error('timeout')
+      }
+      let b = await settled()
+      expect(b.items.map((it) => [it.status, it.qbit?.status])).toEqual([['done', 'added'], ['done', 'exists'], ['failed', 'failed']])
+      expect(b.items[2]).toMatchObject({ code: 'NETWORK', qbit: { category: 'mteam', savepath: '/Volumes/PT', paused: true, code: 'NETWORK', http_status: null } })
+      expect(b.items[2]!.files).toHaveLength(1)
+      const first = JSON.parse(readFileSync(argvLog, 'utf8').split('\n')[0]!) as string[]
+      expect(first.slice(first.indexOf('--qbit'))).toEqual(['--qbit', '--qbit-category', 'mteam', '--qbit-savepath', '/Volumes/PT', '--qbit-paused', '--', 'n1'])
+      // 推送失败的种子文件已经保存：照样能交给浏览器
+      const d = await mod.prepareDelivery(batch.id, 'n3')
+      expect(d.name).toBe('mteam_n3_1.torrent')
+      expect(d.type).toBe('application/x-bittorrent')
+      // 重试：重跑整条，推送结果重新记
+      mod.retryFailed({ batch: batch.id, item: 'n3' })
+      expect(mod.listBatches().find((x) => x.id === batch.id)!.items[2]!.qbit).toBeNull()
+      b = await settled()
+      expect(b.items[2]).toMatchObject({ status: 'done', qbit: { status: 'added' } })
+    } finally {
+      if (prev === undefined) delete process.env.CATBUS_BIN
+      else process.env.CATBUS_BIN = prev
+      mod.resetDownloadsForTest()
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+})
