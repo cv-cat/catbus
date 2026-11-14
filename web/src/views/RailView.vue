@@ -439,11 +439,17 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+/* 变淡加在每一行上，不加在整个列表上：列表可能有几百行毛玻璃、几万像素高，
+   整体设 opacity 要建一块超大的离屏图层，加载时下半截来不及画，会露出一片白 */
+.list > * {
   transition: opacity 0.25s;
 }
 .list.stale {
-  opacity: 0.5;
   pointer-events: none;
+}
+.list.stale > * {
+  opacity: 0.5;
 }
 .skeleton {
   display: grid;
