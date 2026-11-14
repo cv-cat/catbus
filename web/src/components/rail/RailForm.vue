@@ -300,7 +300,8 @@ onBeforeUnmount(() => {
   right: 20px;
   z-index: 30;
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--detail-bg) 94%, transparent);
+  /* 父级表单本身是毛玻璃，嵌套的 backdrop-filter 模糊不到表单外面：用不透明底色 */
+  background: var(--detail-bg);
   box-shadow: var(--shadow-panel), 0 18px 44px #1b1f2e1f;
   backdrop-filter: blur(30px) saturate(1.6);
 }
@@ -366,6 +367,7 @@ onBeforeUnmount(() => {
     min-height: 50px;
   }
   .go.wide {
+    flex: none;
     width: 100%;
     height: 50px;
     border-radius: 25px;

@@ -83,13 +83,15 @@ const current = computed(() => (props.railPage ? RAIL.id : active.value))
 const railOff = computed(() => (aggregate.value ? t('rail.nav.noAggregate') : null))
 
 /** 选中块跟着当前渠道滑动 */
-function place(instant = false) {
+function place(instant = false, scroll = true) {
   const el = list.value?.querySelector<HTMLElement>(`[data-id="${current.value}"]`)
   if (!el || !highlight.value) return
   const vars = { y: el.offsetTop, height: el.offsetHeight, opacity: 1, duration: 0.5, ease: 'power3.out' }
   instant ? gsap.set(highlight.value, vars) : animate(highlight.value, vars)
-  el.scrollIntoView({ block: 'nearest', behavior: instant ? 'auto' : 'smooth' })
+  if (scroll) el.scrollIntoView({ block: 'nearest', behavior: instant ? 'auto' : 'smooth' })
 }
+/** 渠道行在首屏之后才定下高度（字体、图标加载完）：列表尺寸变了就把选中块对齐，不滚动 */
+let listObserver: ResizeObserver | undefined
 
 function pickRail(e: MouseEvent) {
   if (railOff.value) return flashTip(e.currentTarget)
@@ -229,6 +231,9 @@ onMounted(async () => {
   addEventListener('keydown', onKey)
   await nextTick()
   place(true)
+  listObserver = new ResizeObserver(() => place(true, false))
+  listObserver.observe(list.value!)
+  list.value!.querySelectorAll('.channel').forEach((el) => listObserver!.observe(el))
   animateFrom(
     list.value!.querySelectorAll('.channel'),
     { x: -12, opacity: 0 },
@@ -236,6 +241,7 @@ onMounted(async () => {
   )
 })
 onBeforeUnmount(() => {
+  listObserver?.disconnect()
   removeEventListener('keydown', onKey)
   document.documentElement.classList.remove('nav-locked')
 })

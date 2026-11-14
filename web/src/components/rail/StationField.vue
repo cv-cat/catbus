@@ -327,7 +327,8 @@ onBeforeUnmount(() => clearTimeout(timer))
   z-index: 20;
   padding: 8px;
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--detail-bg) 92%, transparent);
+  /* 父级表单本身是毛玻璃，嵌套的 backdrop-filter 模糊不到表单外面：用不透明底色 */
+  background: var(--detail-bg);
   box-shadow: var(--shadow-panel), 0 18px 44px #1b1f2e1f;
   backdrop-filter: blur(30px) saturate(1.6);
 }

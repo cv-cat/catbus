@@ -113,9 +113,9 @@
     "changeStation": "需换站",
     "via": "经 {station} 中转",
     "total": "全程 {time}",
-    "waitSameTrain": "不用下车，在 {station} 换个座位 · 等候 {wait}",
-    "waitSameStation": "在 {station} 换乘 · 等候 {wait}",
-    "waitChange": "在 {from} 下车，前往 {to} 换乘 · 等候 {wait}"
+    "waitSameTrain": "不用下车，在{station}换个座位 · 等候 {wait}",
+    "waitSameStation": "在{station}换乘 · 等候 {wait}",
+    "waitChange": "在{from}下车，前往{to}换乘 · 等候 {wait}"
   },
   "empty": {
     "intro": "输入出发站和到达站，查询车次和余票",

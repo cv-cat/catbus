@@ -7,13 +7,17 @@ import { seatCells, yuan } from '@/composables/rail'
  * 席别格（AGENTS.md 7.9「12306 查询页」「结果」）：按这一趟车自己的席别从左排，
  * 席别名、余票（≤ 9 张标红，无票置灰）、票价。inline 时余票和票价排在一行（中转方案）。
  */
-const props = defineProps<{
-  remaining: Record<string, Remaining>
-  prices: Record<string, { amount: number; currency: string }>
-  bookable?: boolean
-  inline?: boolean
-}>()
-const cells = computed(() => seatCells({ remaining: props.remaining, prices: props.prices, bookable: props.bookable ?? true }))
+// 布尔 prop 不传时 Vue 会给 false：中转段没有 bookable，默认按可订
+const props = withDefaults(
+  defineProps<{
+    remaining: Record<string, Remaining>
+    prices: Record<string, { amount: number; currency: string }>
+    bookable?: boolean
+    inline?: boolean
+  }>(),
+  { bookable: true, inline: false },
+)
+const cells = computed(() => seatCells({ remaining: props.remaining, prices: props.prices, bookable: props.bookable }))
 </script>
 
 <template>
@@ -33,18 +37,19 @@ const cells = computed(() => seatCells({ remaining: props.remaining, prices: pro
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  display: flex;
   gap: 6px 12px;
 }
-.seats.inline {
-  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
-}
 .seat {
+  flex: 1 1 0;
+  max-width: 96px;
   display: flex;
   flex-direction: column;
   gap: 1px;
   min-width: 0;
+}
+.inline .seat {
+  max-width: 120px;
 }
 .name {
   font-size: 11px;
@@ -90,7 +95,10 @@ const cells = computed(() => seatCells({ remaining: props.remaining, prices: pro
 }
 @media (max-width: 640px) {
   .seats {
-    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    flex-wrap: wrap;
+  }
+  .seat {
+    flex: 0 0 calc((100% - 36px) / 4);
   }
   .left {
     font-size: 14px;
