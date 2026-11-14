@@ -1,0 +1,195 @@
+{
+  "success": true,
+  "data": {
+    "ticketsVO": [
+      {
+        "ticketId": 31027845,
+        "set": false,
+        "setTicketType": 0,
+        "shouldDisplay": true,
+        "hasIssuedNumber": false,
+        "setNumber": 1,
+        "description": null,
+        "ticketName": "N",
+        "rgb": "#3D6799",
+        "ticketLevel": null,
+        "baseTicketID": 0,
+        "onSaleTime": 1732793400000,
+        "specificTimeSale": 0,
+        "tpId": 4,
+        "showStatus": 2,
+        "sortWeight": 0,
+        "remainingStock": 0,
+        "ticketDiscountVO": {
+          "setDiscountInfoList": null,
+          "discount": null
+        },
+        "ticketPriceVO": {
+          "ticketPrice": 80,
+          "sellPrice": 80,
+          "totalPrice": 80,
+          "supplierPrice": 80
+        },
+        "ticketBuyLimitVO": {
+          "maxBuyLimit": 6,
+          "minBuyLimit": 0,
+          "userBuyLimit": 6,
+          "setBuyLimit": null
+        },
+        "promotionTags": [],
+        "promotionDetails": [],
+        "activityTypeList": []
+      },
+      {
+        "ticketId": 31027843,
+        "set": false,
+        "setTicketType": 0,
+        "shouldDisplay": true,
+        "hasIssuedNumber": false,
+        "setNumber": 1,
+        "description": null,
+        "ticketName": "I",
+        "rgb": "#D26DF2",
+        "ticketLevel": null,
+        "baseTicketID": 0,
+        "onSaleTime": 1732793400000,
+        "specificTimeSale": 0,
+        "tpId": 4,
+        "showStatus": 0,
+        "sortWeight": 0,
+        "remainingStock": 6,
+        "ticketDiscountVO": {
+          "setDiscountInfoList": null,
+          "discount": null
+        },
+        "ticketPriceVO": {
+          "ticketPrice": 280,
+          "sellPrice": 168,
+          "totalPrice": 280,
+          "supplierPrice": 280
+        },
+        "ticketBuyLimitVO": {
+          "maxBuyLimit": 6,
+          "minBuyLimit": 0,
+          "userBuyLimit": 6,
+          "setBuyLimit": null
+        },
+        "promotionTags": [
+          {
+            "type": 10,
+            "tag": "每满3张减336元",
+            "discountId": null,
+            "crowdType": null
+          }
+        ],
+        "promotionDetails": [
+          {
+            "type": 6,
+            "details": [
+              {
+                "text": "280元票档 每满1张减112元，每满2张减224元，每满3张减336元",
+                "remain": null,
+                "ticketId": null,
+                "baseTicketId": null,
+                "setNumber": null,
+                "crowdType": null,
+                "promotionDetailTextInfoVOList": [
+                  {
+                    "promotionText": "280元票档 每满1张减112元",
+                    "supplementText": null
+                  },
+                  {
+                    "promotionText": "每满2张减224元",
+                    "supplementText": null
+                  },
+                  {
+                    "promotionText": "每满3张减336元",
+                    "supplementText": null
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "activityTypeList": [
+          2
+        ]
+      },
+      {
+        "ticketId": 31027838,
+        "set": false,
+        "setTicketType": 0,
+        "shouldDisplay": true,
+        "hasIssuedNumber": false,
+        "setNumber": 1,
+        "description": null,
+        "ticketName": "A",
+        "rgb": "#FA3243",
+        "ticketLevel": null,
+        "baseTicketID": 0,
+        "onSaleTime": 1732793400000,
+        "specificTimeSale": 0,
+        "tpId": 4,
+        "showStatus": 0,
+        "sortWeight": 0,
+        "remainingStock": 4,
+        "ticketDiscountVO": {
+          "setDiscountInfoList": null,
+          "discount": null
+        },
+        "ticketPriceVO": {
+          "ticketPrice": 1080,
+          "sellPrice": 648,
+          "totalPrice": 1080,
+          "supplierPrice": 1080
+        },
+        "ticketBuyLimitVO": {
+          "maxBuyLimit": 6,
+          "minBuyLimit": 0,
+          "userBuyLimit": 6,
+          "setBuyLimit": null
+        },
+        "promotionTags": [
+          {
+            "type": 10,
+            "tag": "每满3张减1296元",
+            "discountId": null,
+            "crowdType": null
+          }
+        ],
+        "promotionDetails": [
+          {
+            "type": 6,
+            "details": [
+              {
+                "text": "1080元票档 每满1张减432元，每满2张减864元，每满3张减1296元",
+                "remain": null,
+                "ticketId": null,
+                "baseTicketId": null,
+                "setNumber": null,
+                "crowdType": null,
+                "promotionDetailTextInfoVOList": [
+                  {
+                    "promotionText": "1080元票档 每满1张减432元",
+                    "supplementText": null
+                  },
+                  {
+                    "promotionText": "每满2张减864元",
+                    "supplementText": null
+                  },
+                  {
+                    "promotionText": "每满3张减1296元",
+                    "supplementText": null
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "activityTypeList": [
+          2
+        ]
+      }
+    ]
+  }
+}

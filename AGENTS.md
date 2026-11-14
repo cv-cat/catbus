@@ -297,7 +297,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | x | `article delete <article>` | 删文章：草稿或已发布的都可以，已发布的连同文章推文一起删 | `{id}` |
 | youtube | `channel create [--name <名称>] [--handle <handle>]` | 给当前 Google 账号开 YouTube 频道（上传、评论、直播聊天都要求有频道）。名称默认用账号名，handle 默认用 YouTube 推荐的；已有频道时报 `USAGE` | User |
 | maoyan | `feed list [--city <城市>]` | 私有选项：城市，城市名或演出城市 ID（`poi search` 输出的 `id`），默认北京 | Item[] |
-| maoyan | `item get <item> [--tickets]` | 私有选项：同时查场次、票档、实售价、余票，逐行追加到 `text`，原始字段在 `--raw` 的 `shows`。只有这个选项需要登录，未登录报 `AUTH_REQUIRED` | Item |
+| maoyan | `item get <item> [--tickets]` | 私有选项：同时查场次（含开始时间）、票档、票面价、实售价、余票、每单限购，逐行追加到 `text`（格式见 4.8），原始字段在 `--raw` 的 `shows`。只有这个选项需要登录，未登录报 `AUTH_REQUIRED` | Item |
 | 12306 | `station search <keyword>` | 车站搜索（支持站名、拼音前缀、电报码） | Station[] |
 | 12306 | `ticket search <from> <to> [--date <YYYY-MM-DD>] [--type <G,D...>] [--available]` | 直达车次与余票（`--date` 默认今天；`--type` 过滤车型；`--available` 只看有票车次） | Ticket[] |
 | 12306 | `ticket price <train> --from-no <序号> --to-no <序号> --seat-types <编码> [--date <YYYY-MM-DD>]` | 票价详情（参数取自 ticket search 输出的 train_no、from.no、to.no、seat_types） | Fare |
@@ -344,7 +344,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 - bilibili 的 `comment list` / `replies` 读取图文动态时，先用非上游的动态详情接口取 `basic.comment_type=11` 与 `comment_id_str`（相簿 ID），不能把动态 ID 当作评论区 oid；输出 `Comment.item_id` 仍为动态 ID。同一条命令翻页时复用解析结果。`comment add` / `delete` 仍只支持纯文字和转发动态。
 - `msg send --item <item>`：对商品卖家 / 客服发消息（闲鱼、淘宝、京东）。
 - `msg send --to <user> --item <item>`：就这件商品给指定用户发消息（闲鱼：卖家主动联系买家）。不支持的平台报 `UNSUPPORTED`。
-- maoyan：演出（item）的场次时间、城市、场馆、票价档、售卖状态没有对应的 Item 字段，按「键：值」逐行写进 `text`，原始字段用 `--raw`。接口给了开售时间（`onSaleTime`）时，`feed list` 和 `item get` 的 `text` 另有一行「开售时间：<带时区的 ISO 8601>」（已开售的演出同样有，是过去的时间）；`feed list` 的「开售」仍是站点的相对文案（如「明天开售」）。`poi search` 只搜演出城市，`id` 是 `feed list --city` 的取值。`item get --tickets` 的场次和票档同样写进 `text`，不新增类型。
+- maoyan：演出（item）的场次时间、城市、场馆、票价档、售卖状态没有对应的 Item 字段，按「键：值」逐行写进 `text`，原始字段用 `--raw`。接口给了开售时间（`onSaleTime`）时，`feed list` 和 `item get` 的 `text` 另有一行「开售时间：<带时区的 ISO 8601>」（已开售的演出同样有，是过去的时间）；`feed list` 的「开售」仍是站点的相对文案（如「明天开售」）。`poi search` 只搜演出城市，`id` 是 `feed list --city` 的取值。`item get --tickets` 的场次和票档同样写进 `text`，不新增类型：每个场次一行「场次：<站点的场次名>」（如「场次：2026-11-14 周六 19:30」），接口给了开始时间（`startTime`）时下一行是「场次时间：<带时区的 ISO 8601>」，写法与「开售时间」一致；之后该场次的每个票档一行，如「票档：A，票面价 1080，实售价 648，余票 3，限购 6」，依次是票档名（`ticketName`，站点给的是 `A`、`L` 这样的字母，不是价格）、票面价（`ticketPriceVO.ticketPrice`）、实售价（`ticketPriceVO.sellPrice`，打折时低于票面价）、余票（`remainingStock`）、每单限购张数（`ticketBuyLimitVO.maxBuyLimit`），售罄（`showStatus` 为 2）时末尾加「售罄」；取不到的项省略，站点不显示的票档不输出。实测（2026-11-14）余票只出现过不超过限购数的值、限购数又常与余票相同，看起来余票封顶在每单限购数：余票等于限购时应理解为「至少这么多张」，不是精确库存。还没开票的演出没有场次（`--raw` 的 `shows` 为空数组），`text` 里不出现场次行和票档行。
 - taobao 没有按用户查询、按用户发起会话的接口：`user get <user>` 的 `<user>` 只接受商品链接，返回这件商品的卖家；`msg send` 不支持 `--to`（报 `UNSUPPORTED`）。
 - weibo 的转发微博（Item）：`id`、`url`、`author`、正文和计数仍取转发这条自己的（转发语和转发者）。转发这条自己没有媒体（没有 `page_info`，也没有图片）时，`kind`、`cover`、`media`、文章的 `title` 和视频的 `stats.views` 取原微博（`retweeted_status`），否则详情里只剩转发语、看不到被转发的视频和图片；原微博本身仍挂在 `--raw` 的 `retweeted_status` 上。
 - x 的推文归一化（Item）：转推（`legacy.retweeted_status_result`）按原推归一化：`id`、`url`、`author`、正文、媒体和计数都取原推，因为外层只有截断的「RT @…」正文，没有媒体，计数也是 0；原始的转推对象仍挂在 `--raw` 上。推文自己没有媒体时，`cover` 依次退到被引用推文（`quoted_status_result`）的第一张媒体，再退到链接卡片（`card.legacy.binding_values`）的缩略图；`media` 只放推文自己的媒体。
