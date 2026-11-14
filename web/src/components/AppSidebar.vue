@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { X } from 'lucide-vue-next'
+import { Layers, UserRound, X } from 'lucide-vue-next'
 import MascotAvatar from './MascotAvatar.vue'
 import ChannelItem from './ChannelItem.vue'
 import AccountSwitcher from './AccountSwitcher.vue'
@@ -33,6 +33,8 @@ const props = defineProps<{
   busy: Set<string>
   /** 正在看 12306 查询页（AGENTS.md 7.9「12306 查询页」） */
   railPage: boolean
+  /** 正在看 M-Team「我的」页（AGENTS.md 7.9「M-Team「我的」页与筛选」） */
+  mePage: boolean
 }>()
 const active = defineModel<string>({ required: true })
 /** 单一 / 聚合：聚合模式下点渠道是选上 / 去掉，不是切换 */
@@ -48,6 +50,10 @@ const emit = defineEmits<{
   openRail: []
   /** 在查询页上点了别的渠道：先离开查询页，再切过去 */
   leaveRail: [id: string]
+  /** 点了 M-Team 下面的「我的」 */
+  openMe: []
+  /** 在「我的」页上点了「发现」或别的渠道：离开「我的」页再切过去 */
+  leaveMe: [id: string]
 }>()
 
 /**
@@ -87,6 +93,8 @@ function place(instant = false, scroll = true) {
   const el = list.value?.querySelector<HTMLElement>(`[data-id="${current.value}"]`)
   if (!el || !highlight.value) return
   const vars = { y: el.offsetTop, height: el.offsetHeight, opacity: 1, duration: 0.5, ease: 'power3.out' }
+  // 立即对齐时先停掉还在跑的滑动：否则它会滑到旧位置（例如展开 M-Team 子项后行高变了）
+  if (instant) gsap.killTweensOf(highlight.value)
   instant ? gsap.set(highlight.value, vars) : animate(highlight.value, vars)
   if (scroll) el.scrollIntoView({ block: 'nearest', behavior: instant ? 'auto' : 'smooth' })
 }
@@ -99,7 +107,22 @@ function pickRail(e: MouseEvent) {
   if (mode.value !== 'desktop') closeNav()
 }
 
+/** M-Team 的「发现 / 我的」子项：单一模式下当前渠道是 M-Team（或正在看「我的」）时展开 */
+const ME_ID = 'mteam'
+const showSub = computed(() => !aggregate.value && !rail.value && !props.railPage && active.value === ME_ID)
+function pickSub(which: 'discover' | 'me') {
+  if (which === 'me') {
+    if (!props.mePage) emit('openMe')
+  } else if (props.mePage) emit('leaveMe', ME_ID)
+  if (mode.value !== 'desktop') closeNav()
+}
+
 function pick(id: string) {
+  if (props.mePage) {
+    emit('leaveMe', id)
+    if (mode.value !== 'desktop') closeNav()
+    return
+  }
   if (props.railPage) {
     emit('leaveRail', id)
     if (mode.value !== 'desktop') closeNav()
@@ -248,6 +271,8 @@ onBeforeUnmount(() => {
 watch(current, () => place())
 // 回到单一模式：滑动的选中块直接落到当前渠道上，再淡入
 watch(aggregate, () => nextTick(() => place(true)))
+// 展开 / 收起 M-Team 子项会改变各行的位置
+watch(showSub, () => nextTick(() => place(true, false)))
 watch(() => props.platforms, () => nextTick(() => place(true)))
 </script>
 
@@ -323,18 +348,26 @@ watch(() => props.platforms, () => nextTick(() => place(true)))
 
     <nav ref="list" class="channels" :class="{ multi: aggregate }">
       <span ref="highlight" class="highlight" aria-hidden="true" />
-      <ChannelItem
-        v-for="p in platforms"
-        :key="p.id"
-        :platform="p"
-        :active="aggregate ? selected.includes(p.id) : !railPage && p.id === active"
-        :health="health.get(p.id) ?? null"
-        :compact="rail"
-        :multi="aggregate"
-        :order="selected.indexOf(p.id) + 1"
-        :busy="busy.has(p.id)"
-        @click="pick(p.id)"
-      />
+      <template v-for="p in platforms" :key="p.id">
+        <ChannelItem
+          :platform="p"
+          :active="aggregate ? selected.includes(p.id) : !railPage && p.id === active"
+          :health="health.get(p.id) ?? null"
+          :compact="rail"
+          :multi="aggregate"
+          :order="selected.indexOf(p.id) + 1"
+          :busy="busy.has(p.id)"
+          @click="pick(p.id)"
+        />
+        <div v-if="showSub && p.id === ME_ID" class="subnav" role="group" :aria-label="t('mteam.nav.label')">
+          <button type="button" class="sub" :class="{ on: !mePage }" :aria-current="!mePage ? 'page' : undefined" @click="pickSub('discover')">
+            <Layers :size="15" aria-hidden="true" />{{ t('mteam.nav.discover') }}
+          </button>
+          <button type="button" class="sub" :class="{ on: mePage }" :aria-current="mePage ? 'page' : undefined" @click="pickSub('me')">
+            <UserRound :size="15" aria-hidden="true" />{{ t('mteam.nav.me') }}
+          </button>
+        </div>
+      </template>
       <div class="rail-sep" aria-hidden="true" />
       <ChannelItem
         :platform="RAIL"
@@ -424,6 +457,45 @@ watch(() => props.platforms, () => nextTick(() => place(true)))
   font-weight: 600;
   letter-spacing: 1px;
   color: var(--ink-3);
+}
+.subnav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 6px 30px;
+  padding-left: 10px;
+  border-left: 1px solid var(--hair);
+}
+.sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.sub:hover {
+  background: var(--hair);
+}
+.sub.on {
+  background: var(--red-soft);
+  color: var(--red);
+  font-weight: 600;
+}
+.sub:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: -2px;
+}
+.sidebar.phone .sub {
+  min-height: var(--tap);
 }
 .channels {
   position: relative;

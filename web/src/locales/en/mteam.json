@@ -1,0 +1,87 @@
+{
+  "nav": {
+    "label": "M-Team pages",
+    "discover": "Discover",
+    "me": "Mine"
+  },
+  "stats": {
+    "seeding": "Seeding",
+    "leeching": "Leeching {n}",
+    "bonus": "Bonus rate",
+    "perHour": "/ hour",
+    "counted": "{n} counted · {size}",
+    "a": "A value",
+    "aDesc": "The bonus rate is based on it",
+    "twoFactor": "Two-factor auth",
+    "on": "On",
+    "off": "Off",
+    "setOnSite": "Set it up on M-Team",
+    "twoFactorOk": "Your account is protected by two-factor auth"
+  },
+  "exam": {
+    "label": "Assessment",
+    "left": "{d}d {h}h left",
+    "ongoing": "In progress",
+    "none": "No assessment in progress",
+    "done": "Met",
+    "lack": "{v} to go",
+    "item": {
+      "download": "Downloaded",
+      "upload": "Uploaded",
+      "bonus": "Bonus"
+    }
+  },
+  "seeds": {
+    "title": "My torrents",
+    "tab": {
+      "seeding": "Seeding",
+      "leeching": "Leeching",
+      "completed": "Completed",
+      "incomplete": "Incomplete",
+      "uploaded": "Uploaded"
+    },
+    "loaded": "{n} loaded",
+    "loadedOf": "{n} / {total} loaded",
+    "col": {
+      "torrent": "Torrent",
+      "size": "Size",
+      "up": "My upload",
+      "down": "My download",
+      "ratio": "Ratio"
+    },
+    "empty": {
+      "seeding": "Nothing seeding",
+      "leeching": "Nothing downloading",
+      "completed": "No completed torrents",
+      "incomplete": "No incomplete torrents",
+      "uploaded": "You haven't uploaded any torrents"
+    }
+  },
+  "bonus": {
+    "title": "Bonus history",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "onlyChange": "Bonus changes only",
+    "empty": "No bonus records yet",
+    "emptyChange": "No bonus changes in the loaded records",
+    "foot": "Upload and download changes are noted on each record; the site doesn't give balances before and after"
+  },
+  "collects": {
+    "title": "Bookmarks",
+    "mode": "Section",
+    "empty": "No bookmarks in this section",
+    "emptyDesc": "Torrents you bookmark on M-Team show up here"
+  },
+  "me": {
+    "title": "Mine",
+    "updated": "Updated {time}",
+    "updatedIn": "Updated {time} · {s}s",
+    "refresh": "Refresh",
+    "method": {
+      "apikey": "API Key",
+      "password": "Password"
+    },
+    "login": "Log in to M-Team to see your seeding, bonus and assessments",
+    "loginDesc": "You can log in with an API Key or your username and password"
+  }
+}

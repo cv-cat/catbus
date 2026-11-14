@@ -49,6 +49,14 @@ export interface Settings {
   // 实验性
   rawJson: boolean
   hoverPreview: boolean
+  // M-Team（AGENTS.md 7.9「M-Team「我的」页与筛选」「推送到 qBittorrent」）
+  /** 显示成人分区（设置 › 显示 › M-Team） */
+  mteamAdult: boolean
+  /** 下载面板上次的推送选择：推送到 qBittorrent、分类、保存目录（空 = 用 qBittorrent 的设置）、添加后暂停 */
+  qbit: boolean
+  qbitCategory: string
+  qbitSavepath: string
+  qbitPaused: boolean
 }
 
 const KEY = 'catbus.settings'
@@ -74,6 +82,11 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   dlFormat: 'json',
   rawJson: false,
   hoverPreview: false,
+  mteamAdult: false,
+  qbit: false,
+  qbitCategory: 'mteam',
+  qbitSavepath: '',
+  qbitPaused: false,
 })
 
 /** 每一项的合法性校验：读到的值不合法时回退默认值 */
@@ -104,6 +117,11 @@ const valid = (): Validators => (validators ??= {
   dlFormat: oneOf(['json', 'txt', 'xlsx'] as const),
   rawJson: bool,
   hoverPreview: bool,
+  mteamAdult: bool,
+  qbit: bool,
+  qbitCategory: (v: unknown): v is string => typeof v === 'string' && v.length <= 64,
+  qbitSavepath: (v: unknown): v is string => typeof v === 'string' && v.length <= 512,
+  qbitPaused: bool,
 })
 
 function storage(): Storage | null {
@@ -134,8 +152,8 @@ function load(): Settings {
   for (const k of Object.keys(valid()) as (keyof Settings)[]) {
     if (valid()[k](saved[k])) (out as unknown as Record<string, unknown>)[k] = saved[k]
   }
-  // 下载内容至少一项：存下的是全都不选时回到默认
-  if (!out.dlMedia && !out.dlMeta && !out.dlComments) out.dlMedia = true
+  // 下载内容至少一项：存下的是全都不选时回到默认（打开了推送到 qBittorrent 时可以只推送）
+  if (!out.dlMedia && !out.dlMeta && !out.dlComments && !out.qbit) out.dlMedia = true
   try {
     const legacy = ls?.getItem(LEGACY_THEME_KEY)
     if (legacy != null) {

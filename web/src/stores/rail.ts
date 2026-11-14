@@ -16,7 +16,7 @@ import {
   type TrainKind,
   type TransferSort,
 } from '@/composables/rail'
-import { authorRoute, isRailPath, railActive } from './route'
+import { authorRoute, isRailPath, meActive, railActive } from './route'
 import { isDemo } from './source'
 import { useSelectionStore } from './selection'
 
@@ -345,6 +345,7 @@ export const useRailStore = defineStore('rail', () => {
   function open() {
     if (active.value) return
     authorRoute.value = null
+    meActive.value = false
     selection.none()
     active.value = true
     history.pushState(null, '', toUrl(query.value, view.value, via.value))

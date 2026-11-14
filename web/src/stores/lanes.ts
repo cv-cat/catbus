@@ -22,6 +22,8 @@ export interface Lane {
   kind: string
   time: string
   keyword: string
+  /** M-Team 的筛选（别的平台为 null） */
+  mt: { mode: string; category: string; free: boolean } | null
   items: Item[]
   cursor: string | null
   hasMore: boolean
@@ -45,6 +47,7 @@ export function newLane(platform: string): Lane {
     kind: 'recommend',
     time: 'all',
     keyword: '',
+    mt: null,
     items: [],
     cursor: null,
     hasMore: false,

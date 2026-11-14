@@ -6,6 +6,9 @@ import SettingSwitch from './SettingSwitch.vue'
 import SegmentedControl from '@/components/SegmentedControl.vue'
 import { useSettingsStore, type ThemePref } from '@/stores/settings'
 import { useTheme } from '@/composables/useTheme'
+import { PLATFORMS } from '@/data/platforms'
+
+const mteamLogo = PLATFORMS.find((p) => p.id === 'mteam')?.logo
 
 const { settings: s } = useSettingsStore()
 const th = useTheme()
@@ -52,4 +55,31 @@ const theme = computed({
   <SettingRow :title="t('settings.display.motion.title')" :desc="t('settings.display.motion.desc')">
     <SegmentedControl v-model="s.reduceMotion" :options="MOTIONS" :label="t('settings.display.motion.title')" />
   </SettingRow>
+  <!-- M-Team（设计稿 Y7）：成人分区默认不显示 -->
+  <div class="sub" data-setting-row>
+    <img class="sub-logo" :src="mteamLogo" alt="" />
+    <span>{{ t('settings.display.mteam.section') }}</span>
+  </div>
+  <SettingRow v-slot="{ labelId, descId }" :title="t('settings.display.mteam.adult.title')" :desc="t('settings.display.mteam.adult.desc')">
+    <SettingSwitch v-model="s.mteamAdult" :labelledby="labelId" :describedby="descId" />
+  </SettingRow>
 </template>
+
+<style scoped>
+.sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding-bottom: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+}
+.sub-logo {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+</style>

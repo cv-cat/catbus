@@ -43,3 +43,11 @@ export const RAIL_ID = '12306'
 export const isRailPath = () => /^\/12306\/?$/.test(location.pathname)
 /** 正在看 12306 查询页；打开页面时按地址初始化 */
 export const railActive = shallowRef(isRailPath())
+
+/**
+ * M-Team「我的」页（AGENTS.md 7.9「M-Team「我的」页与筛选」）：地址 `/mteam/me[?tab=<status>]`。
+ * 同样盖在发现页上面，发现页在后台不动；状态在 stores/mteam。
+ */
+export const isMePath = () => /^\/mteam\/me\/?$/.test(location.pathname)
+/** 正在看「我的」页；打开页面时按地址初始化 */
+export const meActive = shallowRef(isMePath())

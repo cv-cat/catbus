@@ -10,7 +10,10 @@ import { toast } from './toast'
 import { t } from '@/i18n'
 import { errorTitle } from '@/i18n/errors'
 import { cursorsFor, fill, interleave, itemCell, joinCursors, newLane, roundRobin, skeletonCells, type Cell, type Lane } from './lanes'
-import { authorRoute, isRailPath, parseAuthorPath, railActive } from './route'
+import { authorRoute, isMePath, isRailPath, meActive, parseAuthorPath, railActive } from './route'
+import { categories as mteamCategories, MTEAM_MODES, type MteamMode } from '@/api/mteam'
+import { categoryIn } from '@/data/mteam'
+import type { Category } from '@/api/types'
 
 export { KINDS, SORTS, TIMES, TYPES }
 
@@ -18,7 +21,25 @@ export { KINDS, SORTS, TIMES, TYPES }
  * 发现页状态的兜底值：平台、排序、类型。综合、全部任何平台都能用（不带选项），
  * 平台不支持设置里的默认排序 / 类型时退回这里。日常的默认值来自设置（见 `useSettingsStore`）。
  */
-export const DEFAULTS = { platform: PLATFORMS[0]!.id, keyword: '', sort: 'general', type: 'all', kind: 'recommend', time: 'all' }
+export const DEFAULTS = {
+  platform: PLATFORMS[0]!.id,
+  keyword: '',
+  sort: 'general',
+  type: 'all',
+  kind: 'recommend',
+  time: 'all',
+  /** M-Team 的浏览筛选（AGENTS.md 7.9「M-Team「我的」页与筛选」）：分区、子类 id、只看免费（'1'）；只对 mteam 生效 */
+  mtMode: 'normal' as string,
+  mtCategory: '',
+  mtFree: '',
+}
+
+export const MTEAM = 'mteam'
+/** 一个渠道的 M-Team 筛选：只有 mteam 有，别的平台为 null */
+export type MteamQuery = { mode: string; category: string; free: boolean }
+export function mteamQuery(id: string, s: { mtMode: string; mtCategory: string; mtFree: string }): MteamQuery | null {
+  return id === MTEAM ? { mode: s.mtMode, category: s.mtCategory, free: s.mtFree === '1' } : null
+}
 
 /** 置灰规则适用的筛选：排序、类型、时间（有关键词时），推荐流分类（没有关键词时） */
 export type FilterKind = 'sort' | 'type' | 'time' | 'kind'
@@ -55,7 +76,8 @@ function writeLastPlatform(id: string) {
  */
 function fromUrl(d: { platform: string; sort: string; type: string }): DiscoverState {
   // 直接打开作者页（`/<平台>/user?u=...`）：发现页在后台停在作者的平台
-  const id = parseAuthorPath()?.platform ?? decodeURIComponent(location.pathname.replace(/^\/+|\/+$/g, ''))
+  // 直接打开 M-Team「我的」页（`/mteam/me`）：发现页在后台停在 M-Team
+  const id = parseAuthorPath()?.platform ?? (isMePath() ? MTEAM : decodeURIComponent(location.pathname.replace(/^\/+|\/+$/g, '')))
   const q = new URLSearchParams(location.search)
   const pick = (v: string | null, list: readonly { value: string }[], d: string) =>
     v && list.some((o) => o.value === v) ? v : d
@@ -66,6 +88,9 @@ function fromUrl(d: { platform: string; sort: string; type: string }): DiscoverS
     type: pick(q.get('type'), TYPES, d.type),
     kind: pick(q.get('kind'), KINDS, DEFAULTS.kind),
     time: pick(q.get('time'), TIMES, DEFAULTS.time),
+    mtMode: MTEAM_MODES.includes(q.get('mode') as MteamMode) ? q.get('mode')! : DEFAULTS.mtMode,
+    mtCategory: /^\d{1,6}$/.test(q.get('category') ?? '') ? q.get('category')! : '',
+    mtFree: q.get('free') === '1' ? '1' : '',
   }
 }
 
@@ -87,6 +112,12 @@ function toUrl(s: DiscoverState, d: { sort: string; type: string }, agg: string[
   if (s.type !== d.type) parts.push(`type=${encodeURIComponent(s.type)}`)
   if (s.kind !== DEFAULTS.kind) parts.push(`kind=${encodeURIComponent(s.kind)}`)
   if (s.time !== DEFAULTS.time) parts.push(`time=${encodeURIComponent(s.time)}`)
+  // M-Team 的筛选：只在单一模式的 mteam、或聚合里选了 mteam 时出现
+  if (s.platform === MTEAM || agg?.includes(MTEAM)) {
+    if (s.mtMode !== DEFAULTS.mtMode) parts.push(`mode=${encodeURIComponent(s.mtMode)}`)
+    if (s.mtCategory) parts.push(`category=${encodeURIComponent(s.mtCategory)}`)
+    if (s.mtFree) parts.push('free=1')
+  }
   if (s.keyword) parts.push(`keyword=${encodeURIComponent(s.keyword)}`)
   return `/${encodeURIComponent(s.platform)}${parts.length ? `?${parts.join('&')}` : ''}`
 }
@@ -115,6 +146,8 @@ type ChannelSnapshot = {
   kind: string
   time: string
   keyword: string
+  /** M-Team 的筛选（别的平台为 null） */
+  mt: MteamQuery | null
   items: Item[]
   cursor: string | null
   hasMore: boolean
@@ -125,7 +158,7 @@ type ChannelSnapshot = {
 }
 
 const channelKey = (s: DiscoverState, accounts: readonly string[]) =>
-  JSON.stringify([s.platform, accounts.join(','), s.sort, s.type, s.kind, s.time, s.keyword.trim()])
+  JSON.stringify([s.platform, accounts.join(','), s.sort, s.type, s.kind, s.time, s.keyword.trim(), mteamQuery(s.platform, s)])
 
 /** 多账号请求的结果：合并后的条目（还没按 id 去重）、合起来的翻页位置，以及每个账号的成败 */
 type MultiPage = {
@@ -257,7 +290,80 @@ export const useDiscoverStore = defineStore('discover', () => {
     if (unsupported('type', state.type)) state.type = firstSupported('type')
     if (unsupported('kind', state.kind)) state.kind = DEFAULTS.kind
     if (unsupported('time', state.time)) state.time = DEFAULTS.time
+    clampMteam()
   }
+
+  // ---------- M-Team 的浏览筛选 ----------
+  /** 分类表（`item categories`），本页会话只取一次；取不到时为 null（分类 chip 置灰） */
+  const mtCategories = shallowRef<Category[] | null>(null)
+  const mtCategoriesError = ref(false)
+  /** 筛选只对 mteam 生效：单一模式的 mteam，或聚合里选了 mteam */
+  const mteamOn = computed(() => (aggregate.value ? lanes.value.some((l) => l.platform === MTEAM) : state.platform === MTEAM))
+  let categoriesLoading = false
+  async function loadMtCategories() {
+    if (mtCategories.value || categoriesLoading) return
+    categoriesLoading = true
+    try {
+      const categories = mteamCategories
+      const env = await categories(accountsFor(MTEAM)[0] ?? null)
+      if (env.ok && env.data) {
+        mtCategories.value = env.data
+        mtCategoriesError.value = false
+        // 地址里的分类不属于当前分区：丢掉并重新请求
+        if (state.mtCategory && !categoryIn(env.data, state.mtMode as MteamMode, state.mtCategory)) {
+          state.mtCategory = ''
+          scheduleSearch()
+        }
+      } else mtCategoriesError.value = true
+    } catch {
+      mtCategoriesError.value = true
+    } finally {
+      categoriesLoading = false
+    }
+  }
+  /** 成人分区没有打开时，地址带 mode=adult 回到综合并提示；分类不属于分区时丢掉 */
+  function clampMteam() {
+    if (state.mtMode === 'adult' && !settings.mteamAdult) {
+      state.mtMode = DEFAULTS.mtMode
+      state.mtCategory = ''
+      if (mteamOn.value) {
+        toast(t('filters.mteam.adultOff'), 4000, {
+          label: t('filters.mteam.toSettings'),
+          run: () => useSettingsStore().show('display'),
+        })
+      }
+    }
+    const all = mtCategories.value
+    if (state.mtCategory && all && !categoryIn(all, state.mtMode as MteamMode, state.mtCategory)) state.mtCategory = ''
+    if (mteamOn.value) void loadMtCategories()
+  }
+  /** 换分区：清掉分类 */
+  function setMtMode(m: string) {
+    if (state.mtMode === m) return
+    state.mtMode = m
+    state.mtCategory = ''
+    scheduleSearch()
+  }
+  function setMtCategory(id: string) {
+    if (state.mtCategory === id) return
+    state.mtCategory = id
+    scheduleSearch()
+  }
+  function toggleMtFree() {
+    state.mtFree = state.mtFree ? '' : '1'
+    scheduleSearch()
+  }
+  // 设置里关掉成人分区：正在看成人分区就回到综合
+  watch(
+    () => settings.mteamAdult,
+    (on) => {
+      if (!on && state.mtMode === 'adult') {
+        state.mtMode = DEFAULTS.mtMode
+        state.mtCategory = ''
+        scheduleSearch()
+      }
+    },
+  )
 
   async function initFilters() {
     filters.value = await loadFilters()
@@ -267,7 +373,7 @@ export const useDiscoverStore = defineStore('discover', () => {
    * 第一次同步用 replace：把不规范的地址（如 `/`、未知平台）改成规范地址，不多出一条历史。
    * 从 12306 查询页打开的：查询页那一条要留在历史里，之后一律 push
    */
-  let urlSynced = isRailPath()
+  let urlSynced = isRailPath() || isMePath()
   /** 上次写进地址栏的状态（关键词是提交时的，不是输入框里正在打的） */
   let synced: DiscoverState | null = null
   const urlFor = (s: DiscoverState) =>
@@ -282,7 +388,7 @@ export const useDiscoverStore = defineStore('discover', () => {
     synced = { ...state, keyword: state.keyword.trim() }
     committed.value = synced.keyword
     // 在作者页 / 12306 查询页上：发现页在后台更新，地址栏归它们（之后写地址用 push，不替换掉它们）
-    if (authorRoute.value || railActive.value) return void (urlSynced = true)
+    if (authorRoute.value || railActive.value || meActive.value) return void (urlSynced = true)
     const next = urlFor(synced)
     if (next === location.pathname + location.search) return
     if (urlSynced) history.pushState(null, '', next)
@@ -309,7 +415,7 @@ export const useDiscoverStore = defineStore('discover', () => {
   /** 浏览器前进 / 后退：按地址恢复状态再搜索（平台、筛选的 watch 也会触发 search，合并成一次）。store 只建一次，监听也只挂一次 */
   addEventListener('popstate', () => {
     // 作者页的前进 / 后退由 stores/author 处理；从作者页后退回来、地址就是发现页上次写的：状态没变，不重新请求
-    if (parseAuthorPath() || isRailPath()) return
+    if (parseAuthorPath() || isRailPath() || isMePath()) return
     if (synced && location.pathname + location.search === urlFor(synced)) return
     const next = fromUrl(urlDefaults())
     restoring = next.platform !== state.platform
@@ -342,6 +448,11 @@ export const useDiscoverStore = defineStore('discover', () => {
       state.type = snap?.type ?? settings.defaultType
       state.kind = snap?.kind ?? DEFAULTS.kind
       state.time = snap?.time ?? DEFAULTS.time
+      if (id === MTEAM) {
+        state.mtMode = snap?.mt?.mode ?? DEFAULTS.mtMode
+        state.mtCategory = snap?.mt?.category ?? ''
+        state.mtFree = snap?.mt?.free ? '1' : ''
+      }
       if (snap) state.keyword = snap.keyword
     },
   )
@@ -592,6 +703,7 @@ export const useDiscoverStore = defineStore('discover', () => {
           type: state.type,
           kind: state.kind,
           time: state.time,
+          mteam: mteamQuery(platform, query),
           // 每页条数取设置，改了之后下一次请求（含翻页）生效
           limit: settings.pageSize,
         },
@@ -631,6 +743,7 @@ export const useDiscoverStore = defineStore('discover', () => {
         kind: query.kind,
         time: query.time,
         keyword: query.keyword,
+        mt: mteamQuery(platform, query),
         items: items.value,
         cursor: cursor.value,
         hasMore: hasMore.value,
@@ -693,8 +806,11 @@ export const useDiscoverStore = defineStore('discover', () => {
       type: effective(id, 'type', s.type),
       kind: effective(id, 'kind', s.kind),
       time: effective(id, 'time', s.time),
+      mtMode: s.mtMode,
+      mtCategory: s.mtCategory,
+      mtFree: s.mtFree,
     }
-    return { ...q, accounts: accs, key: channelKey(q, accs) }
+    return { ...q, mt: mteamQuery(id, q), accounts: accs, key: channelKey(q, accs) }
   }
 
   /**
@@ -714,6 +830,7 @@ export const useDiscoverStore = defineStore('discover', () => {
       kind: q.kind,
       time: q.time,
       keyword: q.keyword,
+      mt: q.mt,
       items: snap.items,
       cursor: snap.cursor,
       hasMore: snap.hasMore,
@@ -762,6 +879,7 @@ export const useDiscoverStore = defineStore('discover', () => {
         kind: l.kind,
         time: l.time,
         keyword: l.keyword,
+        mt: l.mt,
         items: l.items,
         cursor: l.cursor,
         hasMore: l.hasMore,
@@ -835,7 +953,7 @@ export const useDiscoverStore = defineStore('discover', () => {
     }
     if (!append) {
       const q = laneQuery(lane.platform)
-      Object.assign(lane, { key: q.key, accounts: q.accounts, sort: q.sort, type: q.type, kind: q.kind, time: q.time, keyword: q.keyword, error: null, empty: 0 })
+      Object.assign(lane, { key: q.key, accounts: q.accounts, sort: q.sort, type: q.type, kind: q.kind, time: q.time, keyword: q.keyword, mt: q.mt, error: null, empty: 0 })
       lane.loading = true
     }
     try {
@@ -848,6 +966,7 @@ export const useDiscoverStore = defineStore('discover', () => {
           type: lane.type,
           kind: lane.kind,
           time: lane.time,
+          mteam: lane.mt,
           limit: settings.pageSize,
         },
         lane.accounts,
@@ -1044,6 +1163,12 @@ export const useDiscoverStore = defineStore('discover', () => {
     kindSwitch,
     committed,
     orderFields,
+    mteamOn,
+    mtCategories,
+    mtCategoriesError,
+    setMtMode,
+    setMtCategory,
+    toggleMtFree,
     filters,
     initFilters,
     /** 发现页当前该在的地址（作者页回到发现页时用）；还没搜索过时为 null */

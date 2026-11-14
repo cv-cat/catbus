@@ -30,5 +30,24 @@
     "month": "1 か月以内",
     "half_year": "半年以内",
     "year": "1 年以内"
+  },
+  "mteam": {
+    "mode": {
+      "label": "区分",
+      "normal": "総合",
+      "movie": "映画",
+      "tvshow": "ドラマ",
+      "music": "音楽",
+      "anime": "アニメ",
+      "adult": "アダルト"
+    },
+    "category": {
+      "label": "カテゴリ",
+      "all": "すべてのカテゴリ",
+      "unavailable": "カテゴリ一覧を取得できないため、カテゴリで絞り込めません"
+    },
+    "free": "無料のみ",
+    "adultOff": "アダルト区分がオフのため、総合に切り替えました",
+    "toSettings": "設定へ"
   }
 }

@@ -8,6 +8,8 @@ import SegmentedControl from '@/components/SegmentedControl.vue'
 import FilterChip from '@/components/FilterChip.vue'
 import KindSwitch from '@/components/KindSwitch.vue'
 import TimeFilter from '@/components/TimeFilter.vue'
+import MteamFilters from '@/components/mteam/MteamFilters.vue'
+import { useMteamStore } from '@/stores/mteam'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import SelectionActions from '@/components/SelectionActions.vue'
 import DownloadCenter from '@/components/DownloadCenter.vue'
@@ -36,6 +38,13 @@ const downloads = useDownloadsStore()
 const src = useSourceStore()
 const bp = useBreakpoint()
 const nav = useNavStore()
+// M-Team：手机上没有常驻侧栏，标题下面是「发现 / 我的」分段（AGENTS.md 7.9「M-Team「我的」页与筛选」）
+const me = useMteamStore()
+const meSections = computed(() => [
+  { value: 'discover', label: t('mteam.nav.discover') },
+  { value: 'me', label: t('mteam.nav.me') },
+])
+const meSection = computed({ get: () => 'discover', set: (v: string) => v === 'me' && me.open() })
 const { t } = useI18n()
 
 /** 排序选项：当前平台不支持的置灰，原因放进 tooltip */
@@ -316,6 +325,9 @@ onBeforeUnmount(() => {
       <DownloadCenter class="tool reveal" />
       <ThemeToggle class="tool reveal" />
     </header>
+    <div v-if="bp.phone && !d.aggregate && state.platform === 'mteam'" class="me-seg reveal">
+      <SegmentedControl v-model="meSection" :options="meSections" :label="d.platform.name" />
+    </div>
 
     <div class="filters reveal" :class="{ stuck }">
       <div
@@ -327,10 +339,12 @@ onBeforeUnmount(() => {
         <!-- 没有关键词：推荐流分类（+ M-Team 的字段排序）；有关键词：排序、类型、时间。两组交叉淡入 -->
         <Transition name="fgroup" mode="out-in" @after-enter="updateFade">
           <div v-if="feedUi" key="feed" class="fgroup">
+            <MteamFilters v-if="d.mteamOn" />
             <KindSwitch v-if="d.kindSwitch" v-model="state.kind" :unsupported="(v) => d.unsupported('kind', v)" />
             <SegmentedControl v-if="d.orderFields" v-model="state.sort" :options="sortOptions" :label="t('discover.filter.sort')" @reselect="toggleOrder" />
           </div>
           <div v-else key="search" class="fgroup">
+            <MteamFilters v-if="d.mteamOn" />
             <SegmentedControl v-model="state.sort" :options="sortOptions" :label="t('discover.filter.sort')" @reselect="toggleOrder" />
             <FilterChip
               v-for="ty in TYPES"
@@ -492,6 +506,9 @@ h1 {
 .mini-search {
   position: relative;
   z-index: 2;
+}
+.me-seg {
+  margin: -4px 0 8px;
 }
 .filters {
   position: sticky;

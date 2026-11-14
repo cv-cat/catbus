@@ -24,6 +24,8 @@ export interface SelectOption<V> {
   icon?: Component
   disabled?: string | null
   divider?: boolean
+  /** 分组标题：不能选、键盘跳过，只用来给后面的选项分组（如 M-Team 分类按大类分组） */
+  header?: boolean
 }
 
 const props = defineProps<{
@@ -83,7 +85,7 @@ function enabledIndex(from: number, step: 1 | -1): number {
   const n = props.options.length
   for (let i = 1; i <= n; i++) {
     const k = (((from + step * i) % n) + n) % n
-    if (!props.options[k]!.disabled) return k
+    if (!props.options[k]!.disabled && !props.options[k]!.header) return k
   }
   return from
 }
@@ -130,7 +132,7 @@ function toggle() {
 
 function choose(i: number, e?: Event) {
   const o = props.options[i]
-  if (!o) return
+  if (!o || o.header) return
   if (o.disabled) return flashTip(e?.currentTarget ?? null)
   model.value = o.value
   close(true)
@@ -151,7 +153,7 @@ function typeahead(ch: string) {
   for (let k = 0; k < n; k++) {
     const i = (start + k) % n
     const o = props.options[i]!
-    if (!o.disabled && o.label.toLocaleLowerCase().startsWith(q)) {
+    if (!o.disabled && !o.header && o.label.toLocaleLowerCase().startsWith(q)) {
       active.value = i
       return true
     }
@@ -283,7 +285,9 @@ function leave(el: Element, done: () => void) {
         @pointerdown.prevent
       >
         <template v-for="(o, i) in options" :key="String(o.value)">
+          <div v-if="o.header" class="group" role="presentation">{{ o.label }}</div>
           <div
+            v-else
             :id="optId(i)"
             v-tip.right="o.disabled"
             class="opt"
@@ -320,7 +324,9 @@ function leave(el: Element, done: () => void) {
       </header>
       <div class="sheet-list" role="listbox" :aria-label="title ?? label">
         <template v-for="(o, i) in options" :key="String(o.value)">
+          <div v-if="o.header" class="group big" role="presentation">{{ o.label }}</div>
           <button
+            v-else
             type="button"
             class="opt big"
             :class="{ checked: o.value === model, disabled: !!o.disabled }"
@@ -476,6 +482,17 @@ function leave(el: Element, done: () => void) {
 .opt.disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+.group {
+  padding: 8px 12px 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: default;
+}
+.group.big {
+  padding: 14px 12px 6px;
+  font-size: 13px;
 }
 .divider {
   flex: none;

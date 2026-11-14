@@ -30,5 +30,24 @@
     "month": "Past month",
     "half_year": "Past 6 months",
     "year": "Past year"
+  },
+  "mteam": {
+    "mode": {
+      "label": "Section",
+      "normal": "General",
+      "movie": "Movies",
+      "tvshow": "TV",
+      "music": "Music",
+      "anime": "Anime",
+      "adult": "Adult"
+    },
+    "category": {
+      "label": "Category",
+      "all": "All categories",
+      "unavailable": "Couldn't load categories, so category filtering isn't available right now"
+    },
+    "free": "Free only",
+    "adultOff": "The adult section is turned off, switched to General",
+    "toSettings": "Settings"
   }
 }

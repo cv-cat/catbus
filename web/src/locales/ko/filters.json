@@ -30,5 +30,24 @@
     "month": "1개월 이내",
     "half_year": "6개월 이내",
     "year": "1년 이내"
+  },
+  "mteam": {
+    "mode": {
+      "label": "구역",
+      "normal": "종합",
+      "movie": "영화",
+      "tvshow": "드라마",
+      "music": "음악",
+      "anime": "애니",
+      "adult": "성인"
+    },
+    "category": {
+      "label": "분류",
+      "all": "모든 분류",
+      "unavailable": "분류 목록을 가져오지 못해 지금은 분류로 거를 수 없습니다"
+    },
+    "free": "무료만",
+    "adultOff": "성인 구역이 꺼져 있어 종합으로 바꿨습니다",
+    "toSettings": "설정으로"
   }
 }
