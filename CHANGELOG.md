@@ -8,6 +8,7 @@
 
 ### Added
 
+- mteam：`item download --qbit` 的推送结果进入信封：成功时 `data` 为 `{id files qbit}`，`qbit.status` 为 `added` 或 `exists`（已在任务列表）；推送失败时报 `NETWORK` / `ERROR` / `UPSTREAM`，`error.detail` 为 `{qbit: "failed", id, files, http_status}`，列出已保存的种子文件。`bonus history` 的 `note` 去掉站点原文里的 IP 和 `[TID=…]` 等标记，促销、考核标签转成中文；`url` 改为相关种子的详情页（原来 `TRACKER` 记录总是 null）
 - `item download` 同时导出帖子信息和评论：`--meta` 在媒体文件旁边写 `<platform>_<id>.json`（`{schema platform exported_at item comments comments_truncated}`，`item` 与 `item get` 的输出相同）；`--comments <N|all>` 带上一级评论（隐含 `--meta`），`--replies <N|all>` 再带上每条评论的回复，自动翻页取满；`--no-media` 只写这个文件、不下载媒体。由 core 调用同一平台的 `item get` / `comment list` / `comment replies`，所有有 `item download` 的平台都支持；取评论中途遇到风控时停下、已取到的照样写出（`comments_truncated: true`），平台没有评论命令时 `comments` 为 `[]`。File.type 新增 `data`
 - maoyan：`feed list`、`item get` 的 `text` 多一行「开售时间：<带时区的 ISO 8601>」（取自接口的 `onSaleTime`）。原来只有「明天开售」这类相对文案，算不出距开售还有多久
 - maoyan：`item get --tickets` 的票档行加上票面价和每单限购（如「票档：A，票面价 1080，实售价 648，余票 3，限购 6」），每个场次后多一行「场次时间：<带时区的 ISO 8601>」（取自接口的 `startTime`）

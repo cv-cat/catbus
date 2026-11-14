@@ -17,7 +17,7 @@
 - `seed stats`：tracker 上当前的做种数和下载数。
 - `exam get`：进行中的考核（新人考核）进度：下载量、上传量、魔力值的当前值、目标和是否达标。
 - `bonus get`：时魔（每小时魔力值、A 值、计入的做种数和体积）。
-- `bonus history`：魔力值、上传量、下载量的变动记录。
+- `bonus history`：魔力值、上传量、下载量的变动记录。note 已去掉 IP 等站点标记，url 是相关种子的详情页。
 - `msg list`、`history`：站内信列表（`--box inbox|system|sent`）、读取一条站内信；只支持账密登录。
 
 ## 做不到
@@ -33,7 +33,7 @@
 - 站内信只认账密登录的令牌，API Key 会话调用报 `UNSUPPORTED`。`msg history` 不会把站内信标记为已读。
 - 搜索 / 浏览支持 `--mode normal|movie|tvshow|music|anime|adult`、`--category <ID>`、`--free`，私有选项 `--order-by date|size|seeders|leechers|name`（默认降序，`--asc` 升序；站点置顶的资源总在最前）。
 - 资源返回 `Torrent`，含大小、文件数、做种人数、下载人数、完成人次和优惠信息。分页沿用 `--limit` / `--all` / `--cursor`。
-- 下载的种子文件含个人 Tracker passkey：不展示、转发或上传种子文件。临时下载地址不会写入 JSON 或日志。`--qbit` 推送时 qBittorrent 回复已存在只在 stderr 警告。
+- 下载的种子文件含个人 Tracker passkey：不展示、转发或上传种子文件。临时下载地址不会写入 JSON 或日志。`--qbit` 时输出为 `{id files qbit}`，`qbit.status` 为 `added` 或 `exists`（已在任务列表，仍算成功）；推送失败时报错（`NETWORK` / `ERROR` / `UPSTREAM`），`error.detail.qbit` 为 `failed`、`detail.files` 是已保存的种子文件，不要重新下载。
 - 下载大文件或非免费种前，先把大小、优惠和做种人数告诉用户；下载会影响分享率和新人考核。
 - 遇到风控或令牌失效时读错误提示，让用户处理后重试。站点限流（「請求過於頻繁」）时放慢速度，命令间隔 3 秒以上。
 

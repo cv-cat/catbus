@@ -39,7 +39,7 @@ export default definePlatform({
         'item categories': impl('full', 'itemCategories'),
         'item download': impl('full', 'itemDownload', {
           summary: '下载种子文件（.torrent），可选推送到 qBittorrent',
-          note: '种子文件含个人 passkey，权限 0600，临时下载链接不输出；--qbit 推送到本机 qBittorrent Web UI（CATBUS_MTEAM_QBIT_URL，默认 http://127.0.0.1:25254），--qbit-savepath 指定保存目录',
+          note: '种子文件含个人 passkey，权限 0600，临时下载链接不输出；--qbit 推送到本机 qBittorrent Web UI（CATBUS_MTEAM_QBIT_URL，默认 http://127.0.0.1:25254），--qbit-savepath 指定保存目录；带 --qbit 时输出 {id files qbit}，qbit.status 为 added / exists，推送失败报错，error.detail.files 是已保存的文件',
           options: {
             qbit: z.boolean().optional().describe('下载后推送到 qBittorrent'),
             qbitCategory: z.string().optional().describe('qBittorrent 分类，默认 mteam'),
@@ -87,6 +87,7 @@ export default definePlatform({
         }),
         'bonus history': impl('full', 'bonusHistory', {
           summary: '魔力值、上传量、下载量的变动记录',
+          note: 'note 已去掉 IP 和站点内部标记，促销、考核标签转成中文；url 为相关种子的详情页',
           args: [],
           auth: 'required',
           paged: true,
