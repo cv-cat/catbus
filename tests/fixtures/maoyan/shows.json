@@ -1,0 +1,43 @@
+{
+  "success": true,
+  "data": {
+    "showListVO": [
+      {
+        "showId": 3924177,
+        "showName": "2026-11-18 周三 19:30",
+        "startTimeDateFormatted": "2026-11-18",
+        "startTimeWeekFormatted": "周三",
+        "startTimeTimeFormatted": "19:30",
+        "startTime": 1795001400000,
+        "endTime": 1795001400000,
+        "onSaleTime": 1732793400000,
+        "offSaleTime": 1795003200000,
+        "showStatus": 0,
+        "showType": 1,
+        "showNote": null,
+        "setExplain": "",
+        "showOrderLimitVO": {
+          "maxBuyLimitPerOrder": 6,
+          "maxBuyLimitPerUser": 20
+        },
+        "needFaceCheck": false,
+        "hasDiscount": null,
+        "minDiscount": null,
+        "minSellPrice": null,
+        "showPriority": 0,
+        "seatMode": null,
+        "seatType": null,
+        "promotionTags": [
+          {
+            "type": 3,
+            "tag": "惠",
+            "discountId": null,
+            "crowdType": null
+          }
+        ],
+        "seatChartUrl": null,
+        "showDiscountDescription": false
+      }
+    ]
+  }
+}
