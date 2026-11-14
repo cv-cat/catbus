@@ -155,6 +155,12 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `series items` | ○ | 规划中。 |
 | `series add` | ✓ | 把已发布的稿件加进合集（`x2/creative/web/season/section/episodes/add`），挂到合集的第一个小节下。平台扩展。 |
 
+### topic
+
+| 命令 | 状态 | 说明 |
+|---|---|---|
+| `topic search` | ◐ | 创作中心投稿话题搜索；返回 ID、名称和稿件播放量，支持游标分页。`--raw` 可查看条目原始状态与活动字段；非上游接口，需登录。 |
+
 ### 整组规划中
 
 下面这些 resource 在本平台还没有已实现的命令，执行时都返回 `NOT_IMPLEMENTED`（退出码 4）。
@@ -165,7 +171,6 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `notice` | `list` `count` |
 | `msg` | `list` `history` `send` `listen` `read` `revoke` `delete` |
 | `history` | `list` |
-| `topic` | `search` |
 
 ## 私有选项与平台扩展
 
