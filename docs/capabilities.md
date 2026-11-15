@@ -293,12 +293,14 @@
 | live like / rank | ○ | ✓ | ✓ | ○ | ○ | ○ | — | ○ | — | — | — | — | — | — | — |
 | live gifts | ✓ | ○ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — | — | — | — | — | — |
 | live products | ✓ | ✓ | ○ | — | ○ | ○ | — | ○ | — | — | — | — | — | — | — |
-| live media | ○ | ◐ | ◐ | ✓ | ○ | ○ | — | ○ | — | — | — | — | — | — | — |
+| live media | ○ | ◐ | ◐ | ✓ | ◐ | ○ | — | ○ | — | — | — | — | — | — | — |
 | live replays | — | ○ | — | ○ | ✓ | ○ | — | ○ | — | — | — | — | — | — | — |
 | live start / stop | ○ | ○ | ○ | ✓ | ○ | ○ | — | ○ | — | — | — | — | — | — | — |
 
+- kuaishou `live get`：直播首页里没有的直播间按主播 ID 查直播间页的 live_api/liveroom/livedetail（非上游，没有对拍）
 - youtube `live get`：<room> 为直播的视频 ID 或链接
 - tiktok `live list`：只有关注的人里正在直播的（上游 get_webcast_feed 是直播页侧栏的关注列表）；没关注的人在播时为空
+- kuaishou `live listen`：直播首页里没有的直播间按主播 ID 查直播间页的 live_api/liveroom/livedetail（非上游，没有对拍）
 - youtube `live listen`：轮询直播聊天：文字消息、Super Chat、会员
 - douyin `live history`：只有进房时 im/fetch 带回的最近 15 条
 - tiktok `live history`：只有进房拉取（im/fetch）时带回的弹幕
@@ -306,8 +308,10 @@
 - douyin `live send`：--gift 规划中
 - tiktok `live send`：--gift 规划中
 - youtube `live send`：只发文字；不支持 --gift
+- kuaishou `live gifts`：直播首页里没有的直播间按主播 ID 查直播间页的 live_api/liveroom/livedetail（非上游，没有对拍）
 - douyin `live media`：拉流地址取自房间资料（room/web/enter）
 - tiktok `live media`：上游没有解析拉流地址：取自 /api-live/user/room 的 liveRoom.streamData，或 room/enter 的 stream_url
+- kuaishou `live media`：非上游：直播流地址取自直播间页的 live_api/liveroom/livedetail（playUrls），没有对拍；没开播时为空
 - `live list --category`：xhs
 - `live send --color`：bilibili
 - `live send --font-size`：bilibili

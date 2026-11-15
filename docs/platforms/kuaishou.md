@@ -84,13 +84,16 @@
 
 | 命令 | 状态 | 说明 |
 |---|---|---|
-| `live get` | ✓ | 直播间信息。 |
+| `live get` | ✓ | 直播间信息。没开播时 `status` 为 `offline`。 |
 | `live list` | ✓ | 直播列表。 |
 | `live categories` | ✓ | 直播分类。 |
 | `live listen` | ✓ | 监听弹幕、礼物、进场等事件。持续输出 jsonl。 |
 | `live gifts` | ✓ | 礼物列表。 |
+| `live media` | ◐ | 直播流地址：每档清晰度一条 flv（h264、hevc），另有一条 hls。没开播时为空数组。 |
 | `live replays` | ✓ | 直播回放。 |
-| `live search`、`live history`、`live send`、`live like`、`live rank`、`live products`、`live media`、`live start`、`live stop` | ○ | 规划中 |
+| `live search`、`live history`、`live send`、`live like`、`live rank`、`live products`、`live start`、`live stop` | ○ | 规划中 |
+
+任何直播间都能查：先在直播首页列表里找（上游的做法），首页里没有时按主播 ID 查直播间页自己用的接口。`live listen`、`live gifts` 要求主播正在直播，没开播时报 `UPSTREAM`。
 
 ### notice
 

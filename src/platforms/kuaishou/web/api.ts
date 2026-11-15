@@ -487,6 +487,16 @@ export async function homeList(ks: Ks): Promise<Json> {
   return data
 }
 
+/**
+ * 按主播 ID 取直播间（非上游，直播间页 `live.kuaishou.com/u/<eid>` 自己调用的接口）：
+ * 在播时 `liveStream` 带 id、playUrls；没开播时 result 671、只有 author；主播不存在时 result 22。
+ * 原样返回响应，业务码由调用方判断。
+ */
+export async function liveDetail(ks: Ks, eid: string): Promise<Json> {
+  const [data] = await ks.live('GET', '/live_api/liveroom/livedetail', { query: [['principalId', eid]], referer: roomReferer(eid) })
+  return data
+}
+
 export async function categoryClassify(ks: Ks, referer = `${LIVE}/`): Promise<Json> {
   const [data] = await ks.live('GET', '/live_api/category/classify', {
     query: [
