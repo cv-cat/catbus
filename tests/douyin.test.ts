@@ -1255,6 +1255,38 @@ describe('douyin 审查修复：参数与发布', () => {
     await expect(resolveShare(d, 'hello')).rejects.toMatchObject({ code: 'USAGE' })
   })
 
+  it('直播分享文案：短链跳到 reflow/<room_id>，经 reflow 接口换成直播间号', async () => {
+    const { resolveRoom } = await import('../src/platforms/douyin/web/resolve.js')
+    const d = new Douyin(makeCtx({ platform: 'douyin' }))
+    const ROOM = '7400000000000000001'
+    const seen: string[] = []
+    let owner: unknown = { web_rid: '87000000001', nickname: '主播' }
+    const restore = mockSender((p) => {
+      seen.push(p.url)
+      if (p.url.startsWith('https://v.douyin.com/'))
+        return fakeResponse('', { status: 302, headers: [['location', `https://webcast.amemv.com/douyin/webcast/reflow/${ROOM}?iid=x&utm_source=copy`]] })
+      if (p.url.startsWith('https://webcast.amemv.com/webcast/room/reflow/info/')) return fakeResponse({ status_code: 0, data: { room: { id_str: ROOM, status: 2, owner } } })
+      throw new Error(`多发了请求：${p.url}`)
+    })
+    try {
+      const share = '8- #在抖音，记录美好生活#【主播】正在直播，来和我一起支持Ta吧。复制下方链接，打开【抖音】，直接观看直播！ https://v.douyin.com/AbC123xYz/ 4@0.com :0pm'
+      expect(await resolveRoom(d, share)).toBe('87000000001')
+      expect(seen[0]).toBe('https://v.douyin.com/AbC123xYz/')
+      const q = new URL(seen[1]!).searchParams
+      expect([q.get('room_id'), q.get('app_id'), q.get('type_id'), q.get('live_id')]).toEqual([ROOM, '1128', '0', '1'])
+      // 已经是 live.douyin.com 链接、直播间号时不发请求
+      seen.length = 0
+      expect(await resolveRoom(d, 'https://live.douyin.com/87000000002?from=x')).toBe('87000000002')
+      expect(await resolveRoom(d, '87000000003')).toBe('87000000003')
+      expect(seen).toEqual([])
+      // 换不到直播间号（直播结束、接口变了）：UPSTREAM，不把 room_id 当直播间号
+      owner = {}
+      await expect(resolveRoom(d, 'https://v.douyin.com/AbC123xYz/')).rejects.toMatchObject({ code: 'UPSTREAM' })
+    } finally {
+      restore()
+    }
+  })
+
   it('item publish 的本地校验（不发请求）与 PublishOptions 映射', async () => {
     const { itemPublish, publishOptions } = await commands()
     for (const options of [{}, { video: 'v.mp4', image: ['a.png'] }, { image: ['a.png'], poiName: '北京' }, { image: ['a.png', 'b.png'], cover: 'c.png' }]) {

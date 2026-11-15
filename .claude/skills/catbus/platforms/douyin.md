@@ -21,7 +21,7 @@
 
 - 作品：`aweme_id`（纯数字）、`douyin.com/video/<id>`（也认 `/note/`、`?modal_id=`）、分享短链 `v.douyin.com/...`，或整段分享文案。
 - 用户：`sec_uid`（`MS4wLjAB` 开头）、主页链接、分享短链或 `me`。
-- 直播间：直播间号（web_rid）或 `live.douyin.com/<号>`。
+- 直播间：直播间号（web_rid）、`live.douyin.com/<号>`，或直播分享链接 / 分享文案（`v.douyin.com` 短链）。
 - 商品评价：传商品链接，或纯 ID 加 `--product`；需要 `shop_id` 的场景传 `live products` 输出的 url。
 
 ## 筛选
