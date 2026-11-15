@@ -170,7 +170,7 @@
 |---|---|
 | 作品 `<item>` | `aweme_id`（纯数字）、作品页链接 `https://www.douyin.com/video/<id>`（也认 `/note/`、`/slides/`、`?modal_id=<id>`）、分享短链 `https://v.douyin.com/...`，或整段分享文案（会从里面找出短链） |
 | 用户 `<user>` | `sec_uid`（`MS4wLjAB` 开头）、主页链接 `https://www.douyin.com/user/<sec_uid>`、分享短链，或 `me` |
-| 直播间 `<room>` | 直播间号（web_rid，数字），或 `https://live.douyin.com/<直播间号>` |
+| 直播间 `<room>` | 直播间号（web_rid，数字）、`https://live.douyin.com/<直播间号>`，或 App 里复制的直播分享链接 / 分享文案（`v.douyin.com` 短链，自动换成直播间号；直播结束后可能换不到） |
 | 商品 `<product>` | `promotion_id`（数字），或 `live products` 输出的商品 url（带 `id`、`promotion_id`、`shop_id`） |
 | 会话 `--conversation` | 单聊会话 ID，形如 `0:1:<uid>:<uid>` |
 | 分享目标 `--share` | 作品（ID 或链接）、用户（`sec_uid`、主页链接或 `me`），其余 http(s) 链接当作网页卡片 |
