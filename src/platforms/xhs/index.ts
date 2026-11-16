@@ -61,7 +61,7 @@ export default definePlatform({
         'comment like': 'none',
         'comment unlike': 'none',
 
-        'feed list': impl('partial', 'feedList', { note: 'following 规划中', options: { kind: filter.kind('recommend', 'following'), category: CATEGORY } }),
+        'feed list': impl('full', 'feedList', { options: { kind: filter.kind('recommend'), category: CATEGORY } }),
         'feed categories': impl('full', 'feedCategories'),
 
         'live get': impl('full', 'liveGet'),
