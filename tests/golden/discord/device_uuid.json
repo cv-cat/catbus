@@ -1,0 +1,16 @@
+{
+  "input": {
+    "os": "Mac OS X",
+    "arch": "arm64",
+    "release": "25.0.0",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "launchId": "0123456789abcdef0123456789abcdef"
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [],
+  "responses": [],
+  "result": "6QMAAAAAAABizu2Ue2xQxKABAAAAAAAA",
+  "error": null
+}

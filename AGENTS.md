@@ -10,7 +10,7 @@
 - 一个命令 `catbus`，按统一的命令规范调用 10 个平台：小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X。另有直接对接官方接口的 12306 和 YouTube（见第 3 节）。
 - 能力来源是作者 [cv-cat](https://github.com/cv-cat) 的 10 个开源仓库，已克隆到 `references/`，作为**只读的原始来源**。
 - 所有平台都在本仓库里**用 TypeScript 重写**，不在运行时调用上游的 Python。
-- **用户只需要安装 Node**（版本见 7.1）。不需要 Python，不需要 C/C++ 编译器，也不需要其他系统依赖。例外：`youtube` 的 `item publish` / `item delete` 需要本机的 Chromium（见 5.7）。
+- **用户只需要安装 Node**（版本见 7.1）。不需要 Python，不需要 C/C++ 编译器，也不需要其他系统依赖。例外：YouTube Studio 写操作和 Discord WebAuthn 需要本机 Chromium（见 5.7、5.10）。
   - `npm i -g catbus-cli` 装完就能离线使用。
   - 必须支持全部目标系统（见 7.2）。
 - 以 **npm 包**分发，不发 PyPI。安装体积不是约束，优先保证开箱即用。
@@ -37,7 +37,7 @@
 
 ## 2. 范围
 
-- 目前支持第 3 节的 15 个平台的 web 端（10 个内容与电商平台 + 12306 铁路平台 `12306` + YouTube `youtube` + 即梦 `jimeng` + 猫眼演出 `maoyan` + M-Team `mteam`）；app / pc 端在注册表里为 planned（见 4.3）。
+- 目前支持第 3 节的 16 个平台。Discord `discord` 使用 macOS 桌面协议（`pc` 端），其余平台使用 `web` 端（见 4.3）。
 - `jimeng` 不调用平台接口，只保存和切换即梦官方 CLI `dreamina` 的登录态，是第 1 节「只需要 Node」「支持全部目标系统」的例外：需要另外安装 `dreamina`，只支持 macOS（见 5.6）。`youtube` 的 `item publish` / `item delete` 同样是「只需要 Node」的例外，需要本机的 Chromium（见 5.7）。
 - 矩阵里的 ○（平台有这个概念、上游没有的能力）只占位：注册为 planned，执行时返回 NOT_IMPLEMENTED，有需要时再实现。移植中发现矩阵与上游不符（上游其实没有、或只是占位）的能力，按上游实际情况标为 ○ 或 ◐，以 `docs/capabilities.md` 为准。
 - 新平台开始移植时，先把平台 id、别名、`item` 叫法等登记到第 3 节、4.2 和 4.5，再进注册表；在那之前 `catbus <平台>` 是未知平台（`USAGE`）。
@@ -62,6 +62,7 @@
 | jimeng | （无上游仓库，封装即梦官方 CLI `dreamina` 的登录态） | `dreamina` 的子命令与钥匙串项（见 `src/platforms/jimeng/UPSTREAM`、5.6） |
 | maoyan | （无上游仓库，直接对接猫眼演出公开接口） | `https://yanchu.maoyan.com`、`https://m.dianping.com`（接口端点见 `src/platforms/maoyan/UPSTREAM`） |
 | mteam | （无上游仓库，直接对接 M-Team 官方 API） | `https://api.m-team.cc/api`（来源与验证范围见 `src/platforms/mteam/UPSTREAM`） |
+| discord | discord-cli（本地 Python 上游） | `discord_cli/api.py`、`fidelity.py`、`gateway.py`、`remote_auth.py`（来源和摘要见 `src/platforms/discord/UPSTREAM`） |
 
 参考资料：
 - 每个仓库的鉴权、登录、API 方法、JS 资产、游客态生成位置，以及 Python → JS 的替换对照，见 [docs/upstream-map.md](docs/upstream-map.md)。
@@ -87,7 +88,7 @@ catbus <platform> <resource> <action> [参数...] [选项...]
 ```
 
 - 选项可以出现在任意位置。`--` 之后的内容一律按参数处理，用于以 `-` 开头的文本。
-- 端用选项 `-e/--endpoint` 指定，默认 `web`（见 4.3）。
+- 端用选项 `-e/--endpoint` 指定，省略时用平台的默认端（见 4.3）。
 
 示例：
 
@@ -124,13 +125,14 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | `jimeng` | `dreamina` |
 | `maoyan` | — |
 | `mteam` | `mt`, `m-team`, `mantou` |
+| `discord` | — |
 
 目录名、配置键、输出里的 `platform` 字段一律使用**规范 id**。只有平台有别名；resource 和 action 没有别名。
 
 ### 4.3 端（endpoint）
 
-- `-e/--endpoint web|app|pc`，默认 `web`，没有配置项可以改默认值。
-- 每个平台在注册表里声明各端的状态：目前 web 为 available，app / pc 为 planned。
+- `-e/--endpoint web|app|pc` 分别表示网页、移动应用和桌面客户端。省略时用注册表里的平台默认端，通常是 `web`，Discord 默认 `pc`。
+- Discord 的 `pc` 端在帮助中标为「macOS 桌面端」。Discord 的 `web`、`app` 与其他平台尚未实现的端标为 planned。
 
 命令无法执行时，按下面的顺序判断：
 
@@ -194,6 +196,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | jimeng | 作品（目前没有 item 命令） |
 | maoyan | 演出项目 |
 | mteam | 种子资源（输出 Torrent，含统一 Item 字段及 PT 元数据） |
+| discord | 消息（使用 `msg` 词表） |
 
 各动作的说明：
 - `item list`：当前账号自己发布的内容，带审核状态，数据来自创作者中心。
@@ -233,6 +236,16 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 
 | 平台 | 命令 | 说明 | 输出 |
 |---|---|---|---|
+| discord | `auth login` | 默认 `qrcode`（手机端确认），支持 `password` 和 `token`。账密登录可用 `--mfa-method totp\|sms` 与 `--code` 提交已有验证码；人工验证码在浏览器完成，`--mfa-method webauthn` 通过浏览器调用通行密钥或安全密钥 | Account |
+| discord | `user get [<user>]` / `account settings` / `device register` | 查询当前用户（默认 `me`）或指定用户、账号设置、按上游算法保存账号设备 ID 至 core 凭证 | User / `{settings}` / `{id client_uuid}` |
+| discord | `guild list` / `guild get <guild>` / `guild leave <guild>` | 列服务器、查详情、退出服务器（确认） | `{id name icon}[]` / `{id name icon}` / `{id}` |
+| discord | `channel list <guild>` / `channel get <channel>` / `channel create <guild> <name>` / `channel update <channel>` / `channel delete <channel>` | 服务器频道。创建支持 `--channel-type`、`--channel-topic`、`--parent`、`--channel-position`，编辑支持 `--name`、`--channel-topic`；删除需确认 | `{id guild_id name type topic}`（列表为数组）/ `{id}` |
+| discord | `msg get <conversation> <message>` / `msg update <conversation> <message> <text>` / `msg purge <conversation> <messages>` / `msg typing <conversation>` | 查单条、编辑、批量删除（2 至 100 个逗号分隔 ID，确认）、输入状态 | Message / `{ids}` / `{id}` |
+| discord | `msg pins <conversation>` / `msg pin <conversation> <message>` / `msg unpin <conversation> <message>` | 查询置顶、置顶、取消置顶 | Message[] / `{id}` |
+| discord | `msg send [<text>] --conversation <id>` 或 `--to <user>`，可加 `--file <path>` / `--reply-to <message>` | 发送至频道或新建单人私信；附件按槽位流程上传并发消息；`msg read` 要求 `--message` | Message / `{id}` |
+| discord | `reaction list <conversation> <message> <emoji>` / `reaction add <conversation> <message> <emoji>` / `reaction delete <conversation> <message> <emoji>` / `reaction clear <conversation> <message> [<emoji>]` | 反应用户列表、加反应、移除反应（`--user-id` 可指定用户，确认）、清空单类或全部反应（确认） | User[] / `{id}` |
+| discord | `friend add <target>` / `friend delete <user>` / `friend accept <user>` / `friend block <user>` / `friend unblock <user>` | 按 ID 或用户名添加好友，其余按 ID 操作；移除好友需确认 | `{id}` |
+| discord | `attachment download <url>` / `gateway get` / `gateway listen` | 下载附件（`--dir`、`--overwrite`）、Gateway 发现、流式接收 Gateway 事件（`--events`） | `{path filename size}` / `{url}` / `{event data}` |
 | mteam | `auth login [--api-key-file <文件> \| --api-key-stdin]` | 官方 API Key 登录，默认 `--method apikey`；TTY 下省略选项时隐藏输入。凭证写入 `scopes.main.tokens.api_key`，不接受命令行明文 Key | Account |
 | mteam | `auth login --method password --username <name> --password-stdin [--email <邮箱>] [--code <验证码>]` | 网页账密登录（`/login`，请求带网页前端的 HMAC 签名）。新设备要两步验证（code 1001）：邮箱方式先用 `--email` 让站点发码，非 TTY 下保存中间态（10 分钟有效，不含密码）后返回 `{sent, verify}`，再带 `--code` 重新执行一次（密码仍从 stdin 读）；TOTP 方式直接带 `--code`。凭证写入 `scopes.main.tokens` 的 `auth`（JWT）、`did`、`visitor_id`；站内信只支持这种登录 | Account |
 | mteam | `item search <kw>` / `feed list` `[--mode normal\|movie\|tvshow\|music\|anime\|adult] [--category <id>] [--free] [--order-by date\|size\|seeders\|leechers\|name] [--asc]` | 资源搜索 / 浏览，默认综合区 normal；`--free` 只看免费资源；私有选项 `--order-by` 按字段排序（默认降序，`--asc` 升序；站点置顶的资源总在最前）；沿用 `--limit` / `--cursor` / `--all`。`feed list` 表示浏览最新资源，`item list` 仍保留“自己的投稿”语义 | Torrent[] |
@@ -356,7 +369,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | 选项 | 说明 |
 |---|---|
 | `-a, --account <name>` | 使用哪个账号（见 5.2） |
-| `-e, --endpoint web\|app\|pc` | 端，默认 `web` |
+| `-e, --endpoint web\|app\|pc` | 端，省略时用平台的默认端 |
 | `-o, --output json\|jsonl` | 输出格式，默认 `json`（见 6.1） |
 | `--raw` | 用平台原始对象代替归一化对象 |
 | `--fields <路径,...>` | 只输出 `data` 条目里的这些字段（见 6.1） |
@@ -479,6 +492,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 以下操作执行前需要确认：
 - 所有 `delete`；
 - `msg revoke`；
+- Discord 的 `guild leave`、`msg purge` 和 `reaction clear`；
 - bilibili 的 `item coin` / `item triple`，以及带 `--name` 的 `user update`（改昵称扣硬币）；
 - `live send --gift`。
 
@@ -549,6 +563,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
   - 目录 0700，文件 0600；
   - Windows 依赖用户目录本身的 ACL。
 - 所有写入都是原子的：先写临时文件，再 rename。
+- 早期 Discord 适配已保存的 `web` 凭证实际使用桌面协议。首次读取账号时，若尚无 `pc` 凭证目录，将旧目录原子迁移到 `pc`，保留当前账号指针。已有桌面凭证优先。
 
 ### 5.2 身份选择与游客态
 
@@ -584,7 +599,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 ### 5.3 登录与登出
 
 ```bash
-catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth|apikey] [--scope <scope>]
+catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth|apikey|token] [--scope <scope>]
 ```
 
 **账号名**：
@@ -603,8 +618,9 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth|api
 | `cookie` | `--cookie <str\|@file\|->` | 导入后调一次 `me` 校验。也接受浏览器导出的 cookie JSON 数组；douyin、tiktok 另外接受一个 JSON 对象，把 ticket、证书、私钥等设备数据一并导入（这两个平台的写操作需要它们） |
 | `oauth` | — | 浏览器授权（OAuth 设备码）：授权链接打到 stderr，用户在已登录该平台的浏览器里打开并同意，然后等待授权完成。目前只有 `jimeng`，由 `dreamina` 完成授权（见 5.6） |
 | `apikey` | `--api-key-file`、`--api-key-stdin`（mteam 私有选项） | 从本地文件或 stdin 读取官方访问令牌，TTY 可隐藏输入；先在线校验，再由 core 保存到账号凭证。令牌只发到官方 API，不传给重定向目标 |
+| `token` | `--token-file <文件>` 或 `--token-stdin`（Discord） | 导入已有 Authorization 凭证，调用 `/users/@me` 校验后由 core 保存。只从文件或 stdin 读取，TTY 隐藏输入 |
 
-- **验证码**：上游能自动过的就自动过，过不了报 `RISK_CONTROL`（`detail.kind = captcha`），退出码 5。
+- **验证码**：上游能自动过的就自动过，需要人工时按平台流程打开验证页，无法继续时报 `RISK_CONTROL`（`detail.kind = captcha`），退出码 5。
 - **登录中的人机验证**：平台在登录流程中途强制的短信验证码验证（例如 xhs 扫码确认后的 HTTP 471，`verifyType` 120 验证页链 / 213 主站登录强制链）由实现自动完成，手机号与验证码沿用 `--phone` / `--code` 或终端输入（非交互可从 stdin 逐行读，包括验证码发往的指定手机号）。验证通过后用同一组未完成的登录参数继续；验证失败与放弃按 `RISK_CONTROL` 报错。站点只接受账号绑定手机时，`hint` 写明。
 - **子站点**（创作者中心、直播、IM 等）：
   - 能自动换取的凭证，登录时或第一次用到时自动获取，不需要用户再登录一次（例如 xhs 的创作者中心：用主站登录态换取）；
@@ -612,7 +628,7 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth|api
   - 命令缺少所需 scope 时，报 `AUTH_REQUIRED`，`hint` 带上 `--scope`。
 - **`auth status`**：在线校验，返回 AuthStatus。未登录或已失效时返回 `logged_in: false`，不报错。校验成功且返回的是同一个用户时，新的昵称 / 头像由 core 回写到凭证文件。
 - **头像**（账号的头像；作者、评论者等 UserRef 的头像见 6.2）：登录、cookie 导入校验和 `auth status` 复用流程里本来就有的那次当前用户请求，取到头像就存进凭证的 `user.avatar`（统一成 https 绝对地址），不为头像额外发请求；取不到时为 null。旧凭证文件没有 `avatar` 时读成 null，不需要迁移。
-- **`auth logout`**：删除本地凭证文件（上游支持服务端登出的，同时调用服务端登出，目前有 B 站和快手），并清除指向它的 `_current`。
+- **`auth logout`**：删除本地凭证文件（上游支持服务端登出的，同时调用服务端登出，包括 B 站、快手、即梦和 Discord），并清除指向它的 `_current`。
 - **`auth use <account>`**：设置 `_current`。端声明了 `use` 钩子的（目前只有 `jimeng`），先调用钩子，再设置 `_current`；钩子报错时不切换。
 - **`auth list`**：列出本平台、本端的账号。
 - **自动刷新**：会自动刷新的 token（如 B 站的 refresh）和响应里的 Set-Cookie，都会合并回凭证文件并原子写入。
@@ -626,7 +642,7 @@ catbus <p> auth login [-a <name>] [--method qrcode|sms|password|cookie|oauth|api
   "endpoint": "web",
   "account": "default",                  // 游客文件为 "guest"
   "user": { "id": "5f...", "name": "...", "url": "...", "avatar": "https://..." },   // AccountUser；游客为 null
-  "method": "qrcode",                    // qrcode | sms | password | cookie | oauth | apikey | guest
+  "method": "qrcode",                    // qrcode | sms | password | cookie | oauth | apikey | token | guest
   "created_at": "2026-09-27T12:00:00+08:00",
   "updated_at": "2026-09-27T12:00:00+08:00",
   "scopes": {                            // 子站点分区；单站点平台只有 main
@@ -657,12 +673,15 @@ proxy = "socks5://..."            # 平台代理
 
 [youtube]
 browser = "/path/to/chromium"     # 发布与删除用的本地 Chromium（见 5.7）
+
+[discord]
+browser = "/path/to/chromium"     # WebAuthn 用的本地 Chromium（见 5.10）
 ```
 
 - 代理的优先级：`--proxy` > `<platform>.proxy` > `proxy`。
 - 不读取 `HTTP(S)_PROXY` 环境变量，代理只能显式配置。
 - `catbus config set xhs.proxy <url>`，用点号表示平台段。
-- `youtube.browser` 只接受已存在的绝对路径（`checkBrowser`），不接受代理地址。
+- `youtube.browser` 与 `discord.browser` 只接受已存在的绝对路径（`checkBrowser`），不接受代理地址。
 
 ### 5.6 代管外部 CLI 的登录态
 
@@ -724,6 +743,12 @@ Google 会定期轮换登录会话的时效性 cookie（`SIDCC`、`__Secure-1PSI
 - **格式排序**：与 yt-dlp 的 FormatSorter 默认一致——视频分辨率 → 帧率 → 编码（av01 > vp9.2 > vp9 > h265 > h264 > vp8）→ 码率，音频码率 → 编码（opus 优先）；各取一路最优，没有分轨时用 muxed。OTF 流（`FORMAT_STREAM_TYPE_OTF`）与 DRM 不能直接下载，跳过（yt-dlp 同款）。
 - **下载**：googlevideo 拒绝整文件请求。tv_samsung 的地址带 Range 请求头也会被 403，必须用它的 TV UA 加 `&range=<start>-<end>` 参数分段（每段 10 MB）；visionos 的地址沿用通用分段。地址来源客户端记在原始对象上，按来源选 UA。
 - **测试**：离线测试用合成 mini player fixture（满足 solver 的 AST 约定，`tests/fixtures/youtube/mini-player.js`）与真实响应裁剪的 fixture，覆盖 tv_samsung 首选、UNPLAYABLE 退回 visionos、人机验证退 PO token、分段下载与 UA 选择。
+
+### 5.10 Discord 人工验证与 WebAuthn
+
+- 账密登录或添加好友遇到 hCaptcha 时，在 `127.0.0.1` 提供一次性页面，用户在系统浏览器操作官方组件。交互式 stderr 自动开启此流程，非交互式调用可显式加 `--captcha`。页面回调绑定源与 CSRF，完成后只在原请求的 `X-Captcha-*` 头里提交当次结果。每次请求最多接受上游既有的两次人工提交。取消、超时或验证未通过返回 `RISK_CONTROL`。
+- Discord 提供 WebAuthn challenge 后，`--mfa-method webauthn` 或仅允许该方式的 MFA 会打开临时 Chromium 窗口。使用经过正常 TLS 验证的 `https://discord.com/robots.txt` 纯文本页和隔离执行上下文。用户点击验证后，浏览器调用系统通行密钥或硬件安全密钥。Chromium 用 DevTools pipe 和临时 profile，接收的只有公开 challenge 参数。
+- CLI 检查 challenge、origin、RP ID 和凭证范围后，将断言 JSON 作为字符串 `code` 提交至 `/auth/mfa/webauthn`。浏览器配置使用 `discord.browser` 或 `CATBUS_DISCORD_BROWSER`，也可发现本机 Chrome、Chromium 和 Playwright Chromium。其他登录方式继续只依赖 Node。
 
 ## 6. 输出
 
@@ -927,7 +952,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 
 | 命令 | data |
 |---|---|
-| `platforms` | Platform[] `{id name aliases endpoints{web app pc} commands[{endpoint resource action auth status upstream note}]}`；带平台参数时返回单个对象 |
+| `platforms` | Platform[] `{id name aliases default_endpoint endpoints{web app pc} commands[{endpoint resource action auth status upstream note}]}`；带平台参数时返回单个对象 |
 | `doctor` | `{name ok message}[]` |
 | `config list` | 对象：只含已设置的项，键用点号展开，例如 `xhs.proxy` |
 | `config get` | 值 |
@@ -1085,6 +1110,7 @@ export default definePlatform({
 - 命令的值可以是 `'full' | 'partial' | 'none'` 的简写，也可以是对象。
 - 矩阵里 — 的命令不写。
 - `auth list` / `use` / `logout` 由 core 自动注册。
+- 平台可通过 `defaultEndpoint` 声明默认端，默认值为 `web`。可用端可以用 `label` 提供 CLI 帮助中的名称。
 - 端的字段：`login`（登录方式与子站点）、`logout?`（服务端登出）、`use?`（`auth use` 设置当前账号前调用，见 5.3、5.6）、`guest?`（是否支持游客态，默认 false）、`commands`。`guest` 为 false 时，除 `auth` 外的命令一律按 `auth: required` 处理，声明 `optional` 会在启动时报错。web 端只有公开内容不登录也能读的平台设 `guest: true`（见 5.2）。
 
 命令的字段：

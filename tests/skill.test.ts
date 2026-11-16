@@ -11,12 +11,12 @@ const SKILL = resolve(dirname(fileURLToPath(import.meta.url)), '../.claude/skill
 const read = (rel: string) => readFileSync(join(SKILL, rel), 'utf8').replace(/\r\n/g, '\n')
 
 const RESOURCES = new Set(
-  PLATFORMS.flatMap((p) => [...web(p).commands.values()].map((c) => c.resource)),
+  PLATFORMS.flatMap((p) => [...primary(p).commands.values()].map((c) => c.resource)),
 )
 
-function web(p: Platform) {
-  const ep = p.endpoints.web
-  if (ep === 'planned') throw new Error(`${p.id} 的 web 端是 planned`)
+function primary(p: Platform) {
+  const ep = p.endpoints[p.defaultEndpoint]
+  if (ep === 'planned') throw new Error(`${p.id} 的默认端是 planned`)
   return ep
 }
 
@@ -72,7 +72,7 @@ describe('Agent 技能 .claude/skills/catbus', () => {
     it(`platforms/${p.id}.md：「能做」恰好是已实现的命令，「做不到」里没有已实现的`, () => {
       const md = read(`platforms/${p.id}.md`)
       const implemented = new Set(
-        [...web(p).commands.values()]
+        [...primary(p).commands.values()]
           .filter((c) => c.status === 'implemented' && c.resource !== 'auth')
           .map((c) => `${c.resource} ${c.action}`),
       )
