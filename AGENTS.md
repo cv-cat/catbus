@@ -829,9 +829,11 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 | 类型 | 字段 |
 |---|---|
 | Live | `id url title status host:UserRef cover stats{viewers}` |
-| Event | `type time user:UserRef text gift{name count}\|null` |
+| Event | `type time user:UserRef text gift{name count}\|null stats{viewers likes}\|null` |
 | Gift | `id name price:Price` |
 | Rank | `rank user:UserRef score` |
+
+`Event.stats` 是这条消息带来的直播间实时数据：`viewers` 为当前在线人数，`likes` 为直播间累计点赞数，消息里没有的那项为 null；不带这类数据的消息为 null。只用来更新直播间的数字、没有用户动作的消息（如抖音的 `RoomStatsMessage`，B 站的 `ONLINE_RANK_COUNT`、`LIKE_INFO_V3_UPDATE`）`type` 为 `other`，`text` 仍是可读的说明；带用户动作的消息照常归类，只是另带 `stats`（如抖音的点赞消息同时带累计点赞数）。
 
 **消息与通知**：
 

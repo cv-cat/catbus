@@ -346,6 +346,12 @@ export function notice(v: any): Notice {
   )
 }
 
+/** 点赞消息的 total：直播间累计点赞数 */
+function likes(total: unknown): Event['stats'] {
+  const v = n.count(total)
+  return v != null && v > 0 ? { viewers: null, likes: v } : null
+}
+
 /** 直播弹幕长连的消息 → Event；不关心的消息返回 null（上游 dy_live/server.py 的 on_message）。 */
 export function liveEvent(method: string, msg: any): Event | null {
   const u = msg?.user
@@ -359,11 +365,17 @@ export function liveEvent(method: string, msg: any): Event | null {
     case 'WebcastMemberMessage':
       return n.event({ type: 'enter', user: who }, msg)
     case 'WebcastLikeMessage':
-      return n.event({ type: 'like', user: who, text: msg.count != null ? String(msg.count) : null }, msg)
+      return n.event(
+        { type: 'like', user: who, text: msg.count != null ? String(msg.count) : null, stats: likes(msg.total) },
+        msg,
+      )
     case 'WebcastSocialMessage':
       return Number(msg.action) === 1 ? n.event({ type: 'follow', user: who }, msg) : null
-    case 'WebcastRoomStatsMessage':
-      return n.event({ type: 'other', text: n.str(msg.displayLong) }, msg)
+    case 'WebcastRoomStatsMessage': {
+      // displayValue 是当前在线人数（displayLong 为「1.2万在线观众」这样的文字）
+      const viewers = n.count(msg.displayValue) ?? n.count(msg.displayMiddle)
+      return n.event({ type: 'other', text: n.str(msg.displayLong), stats: viewers != null ? { viewers, likes: null } : null }, msg)
+    }
     default:
       return null
   }

@@ -23,7 +23,7 @@ catbus douyin live listen "https://live.douyin.com/<直播间号>" --duration 1h
 ```
 
 - **总是带 `--duration`**（`60`、`10m`、`1h`），不然进程会一直挂着。到期或 Ctrl-C 退出码都是 0。
-- 输出总是 jsonl，每行一个 Event：`{type, time, user{id name url}, text, gift{name count}|null}`，`type` 为 `chat` `gift` `like` `enter` `follow` `other`。
+- 输出总是 jsonl，每行一个 Event：`{type, time, user{id name url}, text, gift{name count}|null, stats{viewers likes}|null}`，`type` 为 `chat` `gift` `like` `enter` `follow` `other`。`stats` 是直播间实时的在线人数、累计点赞（抖音、B 站），只更新这些数字的消息 `type` 为 `other`，统计弹幕时可以按 `stats` 不为 null 跳过。
 - 断线自动重连；连续失败才会退出并报错。
 - 统计礼物、高频词这类需求，先落文件再用 jq 处理：
 

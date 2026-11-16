@@ -506,6 +506,22 @@ describe('douyin 对拍：长连接', () => {
       ['follow', '观众D', null, null],
     ])
     expect(events[0]!.user).toEqual({ id: 'MS4wLjABAAAAviewerA', name: '观众A', url: 'https://www.douyin.com/user/MS4wLjABAAAAviewerA', avatar: null })
+    expect(events.every((e) => e.stats === null)).toBe(true)
+  })
+
+  it('直播推送：点赞消息带累计点赞数，RoomStatsMessage 带在线人数（Event.stats）', async () => {
+    const norm = await import('../src/platforms/douyin/web/normalize.js')
+    expect(norm.liveEvent('WebcastLikeMessage', { count: '3', total: '45678', user: { id: '1', nickname: '甲' } })).toMatchObject({
+      type: 'like',
+      text: '3',
+      stats: { viewers: null, likes: 45678 },
+    })
+    expect(norm.liveEvent('WebcastRoomStatsMessage', { displayLong: '1.2万在线观众', displayMiddle: '1.2万', displayValue: '12345' })).toMatchObject({
+      type: 'other',
+      text: '1.2万在线观众',
+      stats: { viewers: 12345, likes: null },
+    })
+    expect(norm.liveEvent('WebcastRoomStatsMessage', { displayLong: '在线观众' })).toMatchObject({ stats: null })
   })
 
   it('私信：设备号 → frontier-im 地址（access_key）与握手头；推送帧转成 Message', async () => {

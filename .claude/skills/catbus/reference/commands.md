@@ -215,7 +215,7 @@ catbus <platform> <resource> <action> [参数...] [选项...]
 | Media | `id type url width height duration` |
 | Comment | `id item_id parent_id author:UserRef text media:Media[] created_at stats{likes replies}` |
 | Live | `id url title status host:UserRef cover stats{viewers}` |
-| Event | `type time user:UserRef text gift{name count}` |
+| Event | `type time user:UserRef text gift{name count} stats{viewers likes}` |
 | Conversation | `id peer:UserRef unread last_message updated_at` |
 | Message | `id conversation_id from:UserRef type text media:Media[] created_at` |
 

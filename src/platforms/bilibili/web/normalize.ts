@@ -326,6 +326,16 @@ export function liveEvent(msg: any): Event {
     }
     case 'LIKE_INFO_V3_CLICK':
       return n.event({ type: 'like', user: ref(d.uid, d.uname, uface(d.uinfo)) }, msg)
+    // 直播间实时数据：在线人数（高能榜人数，新版带 online_count）、累计点赞数
+    case 'ONLINE_RANK_COUNT': {
+      const viewers = n.count(d.online_count) ?? n.count(d.count)
+      const label = n.str(d.online_count_text) ?? n.str(d.count_text) ?? (viewers != null ? String(viewers) : null)
+      return n.event({ type: 'other', text: label ? `在线 ${label}` : cmd, stats: viewers != null ? { viewers, likes: null } : null }, msg)
+    }
+    case 'LIKE_INFO_V3_UPDATE': {
+      const likes = n.count(d.click_count)
+      return n.event({ type: 'other', text: likes != null ? `点赞 ${likes}` : cmd, stats: likes != null ? { viewers: null, likes } : null }, msg)
+    }
     case 'GUARD_BUY':
       return n.event(
         { type: 'gift', time: n.time(d.start_time) ?? undefined, user: ref(d.uid, d.username, uface(d.sender_uinfo)), gift: { name: String(d.gift_name ?? ''), count: Number(d.num ?? 1) } },
