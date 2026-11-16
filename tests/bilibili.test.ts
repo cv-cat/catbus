@@ -832,6 +832,25 @@ describe('bilibili 命令：审查修复', () => {
       url.includes('/wbi/view') ? ok({ bvid: BVID, cid: 1 }) : ok({ durl: [{ order: 1, url: 'https://v/1.flv', length: 5000 }] }),
     )
     expect(old.result).toMatchObject([{ id: '1', type: 'video', url: 'https://v/1.flv', duration: 5 }])
+
+    // --all-tracks：全部视频轨按画质、码率从高到低，全部音频轨（含杜比全景声）按码率从高到低
+    const withDolby = { ...dash, dolby: { type: 1, audio: [{ id: 30250, bandwidth: 500, baseUrl: 'https://a/dolby' }] } }
+    const all = await runCommand('itemMedia', { args: { item: BVID }, options: { allTracks: true } }, (url) =>
+      url.includes('/wbi/view') ? ok({ bvid: BVID, cid: 1 }) : ok({ dash: withDolby }),
+    )
+    expect(all.result.map((m: any) => [m.type, m.url])).toEqual([
+      ['video', 'https://v/80-high'],
+      ['video', 'https://v/80-low'],
+      ['video', 'https://v/64'],
+      ['audio', 'https://a/flac'],
+      ['audio', 'https://a/dolby'],
+      ['audio', 'https://a/192k'],
+      ['audio', 'https://a/64k'],
+    ])
+    expect(all.result[0][RAW]).toEqual(dash.video[2])
+    // 不带选项时不变：杜比全景声不参与挑最高码率的那一路
+    const best = await runCommand('itemMedia', { args: { item: BVID } }, (url) => (url.includes('/wbi/view') ? ok({ bvid: BVID, cid: 1 }) : ok({ dash: withDolby })))
+    expect(best.result.map((m: any) => m.url)).toEqual(['https://v/80-high', 'https://a/flac'])
   })
 
   it('item subtitles：字幕 JSON 按行归一化', async () => {
@@ -1027,6 +1046,30 @@ describe('bilibili 纯算', () => {
       { id: '1234567890123456789', item_id: BVID, offset: 12.5, text: '第一条', created_at: '2023-11-15T06:13:20+08:00' },
       { id: '42', item_id: BVID, offset: 0, text: '第二条', created_at: '2023-11-15T06:13:21+08:00' },
     ])
+  })
+
+  it('视频弹幕 --raw：挂上原始字段（类型、字号、颜色），取不到的为 null', () => {
+    const W = pb.protobuf.Writer
+    // id=1 progress=2 mode=3 fontsize=4 color=5 content=7 ctime=8 pool=11 idStr=12
+    const e = W.create().uint32(8).int64(7).uint32(16).int32(3000).uint32(24).int32(5).uint32(32).int32(25).uint32(40).uint32(16711680)
+    e.uint32(58).string('顶部红字').uint32(64).int64(1700000000).uint32(88).int32(1).uint32(98).string('77')
+    const reply = W.create().uint32(10).bytes(e.finish())
+    const [d] = commands.decodeDanmaku(reply.finish(), BVID)
+    expect(d).toMatchObject({ id: '77', offset: 3, text: '顶部红字' })
+    expect((d as any)[RAW]).toEqual({
+      id: '7',
+      progress: 3000,
+      mode: 5,
+      fontsize: 25,
+      color: 16711680,
+      midHash: null,
+      content: '顶部红字',
+      ctime: 1700000000,
+      weight: null,
+      pool: 1,
+      idStr: '77',
+      attr: null,
+    })
   })
 
   it('直播长连 pack / unpack：头 16 字节；zlib（ver 2）、brotli（ver 3）嵌套解开，op 3 为人气值', () => {

@@ -133,6 +133,7 @@
 - `item search --order-by`：mteam
 - `item search --asc`：mteam
 - `item related --area`：jd
+- `item media --all-tracks`：bilibili
 - `item download --qbit`：mteam
 - `item download --qbit-category`：mteam
 - `item download --qbit-paused`：mteam

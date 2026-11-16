@@ -75,7 +75,9 @@ export default definePlatform({
         }),
         'item related': impl('full', 'itemRelated'),
         'item list': impl('full', 'itemList'),
-        'item media': impl('full', 'itemMedia'),
+        'item media': impl('full', 'itemMedia', {
+          options: { allTracks: z.boolean().optional().describe('返回 DASH 的全部轨道（各画质、编码的视频轨和全部音频轨），不只挑最高画质的一路') },
+        }),
         'item download': impl('full', 'itemDownload'),
         'item like': impl('full', 'itemLike'),
         'item unlike': impl('full', 'itemUnlike'),
