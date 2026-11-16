@@ -132,6 +132,7 @@
   - `utils/challenge_template_runner.js`
   - `utils/challenge_profile.json`、`utils/mstoken_common_profile.json`、`utils/mstoken_profile.json`、`utils/dtrait_profile.json`
 - **注意**：`newsign/package.json` 声明了 `jsdom`、`canvas`、`sdenv`、`jsrsasign`，但没有任何代码引用，是遗留文件，不用管。
+- **非上游（catbus 补充）**：`keyword hot` 按网页端热榜页（douyin.com/hot）补的 `GET /aweme/v1/web/hot/search/list/`（`api.hotSearch`，`detail_list=1&source=6` 加公共平台参数、webid、msToken、a_bogus），没有对拍；只取 `data.word_list`，置顶词（`hot_value` 为 0）和实时上升热点（`trending_list`）不收。
 
 ### tiktok — TiktokApis
 
@@ -176,6 +177,7 @@
   - `comment replies` 是非上游请求：截至 2026-10-20，BilibiliApis 最新仍为基线 `0234d81`，`get_replies` 只读主评论；按 CONTRIBUTING 4.2 补充 `GET /x/v2/reply/reply`（`api.replyReplies`），视频用 `type=1`、`oid=aid`，专栏用 `type=12`、`oid=cv 号的数字`，图文动态用 `type=11`、`oid=相簿 ID`；其余为 `root=根评论 ID`、`pn=页码`、`ps=10`，Referer 为对应视频、专栏或 opus 页。按响应 `page.count` / `size` 翻页，直接父 ID 取 `parent`。视频、专栏前两页及图文动态单页已只读验证；纯文字和转发动态的楼中楼尚未验证，不开放。非上游请求用假数据命令与 CLI 测试覆盖，没有对应上游方法可供对拍，`UPSTREAM` 基线不变。
   - `item subtitles` 用 `get_player_info` 返回的 `subtitle.subtitles[].subtitle_url` 下载字幕 JSON；上游的 `get_subtitle_view` 返回 protobuf，没有用。
   - `folder items` 是非上游的：上游没有收藏夹内容接口，按网页端补的 `x/v3/fav/resource/list`（`api.favResources`），没有对拍。`item uncollect` 不带 `--folder` 时，用 `get_fav_folders` 多带 `type=2&rid=<aid>` 的请求（非上游，`api.favFoldersOf`）按 `fav_state` 找收着它的收藏夹，没有 `fav_state` 时从全部收藏夹移出。
+  - `keyword hot` 是非上游的：上游没有热搜接口，按网页端顶栏搜索框补的 `x/web-interface/wbi/search/square`（`api.searchSquare`，`limit=50&platform=web`，wbi 签名，web_location 取首页的 spm_prefix `333.1007`），没有对拍；只取 `trending.list`，不含偶尔出现的置顶词 `top_list`。
   - `article publish`：上游的 `save_article_draft` / `submit_article` 把 `banner_url` 固定为空串，没有专栏封面，所以没有 `--cover`。
   - upos 上传：上游四段都走 `http_util.request`，cookie 是整份 B 站 cookie，发往 upos 节点（bilivideo.com）时也带，catbus 照做。
   - 直播间参数传主播时，先用 `get_room_by_mid` 换房间号。
@@ -223,6 +225,7 @@
   - `reverse/fixtures/live_ws_proto.json`：直播 proto，可直接作为 protobufjs `Root.fromJSON` 的输入
   - `reverse/fixtures/live_ws_maps.json`：`utils/live_proto.py` 用到的映射表
 - **Python 侧签名**：`utils/sign/weapon_oracle.py`、`like_token.py`，要移植成 TS。
+- **非上游（catbus 补充）**：`keyword hot` 走旧版网页端首页的 GraphQL `visionHotRank(page: "home")`（`api.hotRank`、`gql.HOT_RANK`），没有对拍。新版网页端（ks-web）已经不展示热榜，接口仍可用；旧 query 里的 `tag` 字段服务端已不认（`GRAPHQL_VALIDATION_FAILED`），去掉了。`hotValue` 是「1113.8万」这样的展示值，换算成整数；置顶词（rank 0，`hotValue` 为 null）不收。
 
 ### weibo — WeiboApis
 
@@ -236,6 +239,7 @@
 - **没有移植的**
   - `WeiboApis.getWorkInfo(url)`：请求 `weibo.com/<uid>/<mblogid>`，只取页面里的 `window.$CONFIG`。现在的 weibo.com 是单页应用，页面只是一个壳，`$CONFIG` 是全站配置（登录时多一个当前用户 `user`，`get_self_info` 取的就是它），没有微博正文；正文由前端另外请求 `/ajax/statuses/show`，上游没有这个接口。上游自己的 `app.py` 取详情也走 `WeiboMobileApis.getWorkInfo`。
   - `WeiboApis.searchSome`：只发请求，解析被注释掉，永远返回 None。
+- **非上游（catbus 补充）**：`keyword hot` 按网页端热搜榜补的 `GET weibo.com/ajax/side/hotSearch`（`api.hotSearch`，新版前端 weibo-pro-next 的 `RANK_TAB_GROUP_MAP.search`），没有对拍；只取 `data.realtime`，去掉广告位（`is_ad`），置顶词（`hotgov`）不收。
 - **JS 资产**：`static/weibo.js` 存在，但 Python 里没有引用，不复制。
 
 ### xianyu — XianYuApis

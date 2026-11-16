@@ -717,6 +717,27 @@ describe('bilibili 命令：审查修复', () => {
     expect(web().commands.get('folder items')).toMatchObject({ upstream: 'partial', note: expect.stringContaining('非上游') })
   })
 
+  it('keyword hot：网页端搜索框的热搜，heat 取 heat_score，不含置顶词（非上游，没有对拍）', async () => {
+    const trending = {
+      title: 'bilibili热搜',
+      list: [
+        { keyword: '热词一', show_name: '热词一', heat_score: 19184860 },
+        { keyword: '', show_name: '只有展示名', heat_score: '1.2万' },
+        { keyword: '', show_name: '' },
+      ],
+      top_list: [{ keyword: '置顶词', heat_score: 0 }],
+    }
+    const { result, urls, requests } = await runCommand('keywordHot', {}, (url) => (url.includes('search/square') ? ok({ trending }) : ok({})))
+    const square = urls.find((u) => u.includes('search/square'))!
+    expect(square).toBe('https://api.bilibili.com/x/web-interface/wbi/search/square?limit=50&platform=web&web_location=333.1007&w_rid=00944996ef74fab3b147864142c50715&wts=1790000000')
+    expect(requests.find((r) => r.url === square)!.headers).toContainEqual(['referer', 'https://www.bilibili.com/'])
+    expect(result).toEqual([
+      { text: '热词一', heat: 19184860 },
+      { text: '只有展示名', heat: 12000 },
+    ])
+    expect(web().commands.get('keyword hot')).toMatchObject({ upstream: 'partial', note: expect.stringContaining('非上游') })
+  })
+
   it('feed list --kind following：关注的人的视频动态，游标是接口的 offset，跳过没有 bvid 的动态（非上游，没有对拍）', async () => {
     const FEED = 'https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all?type=video&timezone_offset=-480&features=itemOpusStyle'
     const dyn = (bvid: string | null) => ({

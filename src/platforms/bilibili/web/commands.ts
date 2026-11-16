@@ -848,6 +848,17 @@ export async function folderItems(ctx: Ctx) {
   return paged((d?.medias ?? []).filter((m: any) => m.bvid).map(norm.favVideo), p + 1, Boolean(d?.has_more))
 }
 
+// ================================================================ keyword
+
+/** 热搜榜（非上游，见 api.searchSquare）：网页端搜索框下的「bilibili 热搜」，按热度排好序；只取 list，不含偶尔出现的置顶词（top_list，没有热度）。 */
+export async function keywordHot(ctx: Ctx) {
+  const b = await bili(ctx)
+  const d = await api.searchSquare(b)
+  return (d?.trending?.list ?? [])
+    .map((x: any) => n.keyword({ text: String(x?.keyword || x?.show_name || ''), heat: n.count(x?.heat_score) }, x))
+    .filter((k: { text: string }) => k.text)
+}
+
 // ================================================================ media
 
 export async function mediaUpload(ctx: Ctx): Promise<Media> {

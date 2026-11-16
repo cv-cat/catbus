@@ -243,6 +243,23 @@ export async function popular(b: Bili, page = 1, pageSize = 20) {
 }
 
 /**
+ * 非上游：热搜榜（`keyword hot`）。上游没有这个接口，按网页端顶栏搜索框的请求补的
+ * （bili-header 的 `wbi/search/square`，`platform=web`，web_location 取首页的 spm_prefix），没有对拍。
+ * limit 最大 50，再大接口报错。
+ */
+export async function searchSquare(b: Bili, limit = 50) {
+  const h = headers('GET').referer(`${MAIN}/`)
+  const params = withLocation(
+    [
+      ['limit', limit],
+      ['platform', 'web'],
+    ],
+    '333.1007',
+  )
+  return b.get(`${API}/x/web-interface/wbi/search/square`, { headers: h.get(), query: await b.wbi(params) })
+}
+
+/**
  * 关注的人的视频动态流（非上游：上游没有动态流接口，请求按网页端动态页 t.bilibili.com 补的，没有对拍）。
  * `type=video` 只取视频投稿；`offset` 是上一页返回的 `data.offset`，首页不带。
  */

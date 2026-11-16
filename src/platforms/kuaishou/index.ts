@@ -77,7 +77,9 @@ export default definePlatform({
         'live stop': 'none',
 
         'keyword suggest': 'none',
-        'keyword hot': 'none',
+        'keyword hot': impl('partial', 'keywordHot', {
+          note: '非上游：上游没有热榜接口，请求按旧版网页端首页补的（GraphQL visionHotRank），没有对拍；新版网页端已不展示热榜，接口随时可能下线；不含置顶词',
+        }),
 
         'notice list': 'none',
         'notice count': impl('full', 'noticeCount'),

@@ -106,6 +106,17 @@ export function feedFollowing(w: Weibo, maxId: string | null) {
   return w.json('com', { url: `${WEB}/ajax/feed/friendstimeline`, headers: commonHeaders(w.xsrf), query: params })
 }
 
+// ================================================================ keyword（非上游）
+
+/**
+ * 非上游：热搜榜（`keyword hot`）。上游没有这个接口，按网页端「热搜」榜补的
+ * （weibo-pro-next 的 RANK_TAB_GROUP_MAP.search），没有对拍。
+ * data.realtime 是榜单（夹着广告位，is_ad=1），data.hotgov 是置顶词。
+ */
+export function hotSearch(w: Weibo) {
+  return w.json('com', { url: `${WEB}/ajax/side/hotSearch`, headers: commonHeaders(w.xsrf) })
+}
+
 // ================================================================ WeiboMobileApis（m.weibo.cn）
 
 const RENDER_RE = /var \$render_data = \[([\s\S]*?)\]\[0\] \|\| \{\};\n {2}var __wb_performance_data=\{v:"v8",m:"mainsite",pwa:1,sw:0\};/

@@ -207,7 +207,7 @@
 | feed list | ◐ | ◐ | ✓ | ◐ | ◐ | ✓ | ○ | ○ | ○ | ◐ | ✓ | — | — | ✓ | ✓ | — |
 | feed categories | ✓ | — | ○ | — | — | — | — | — | — | — | — | — | — | ✓ | — | — |
 | keyword suggest | ✓ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ○ | ✓ | — | — | — | — | — |
-| keyword hot | ✓ | ○ | ○ | ○ | ○ | ○ | — | — | ✓ | ○ | — | — | — | — | — | — |
+| keyword hot | ✓ | ◐ | ○ | ◐ | ◐ | ◐ | — | — | ✓ | ○ | — | — | — | — | — | — |
 
 - xhs `feed list`：following 规划中
 - douyin `feed list`：hot、following 规划中
@@ -217,6 +217,10 @@
 - x `feed list`：following 规划中
 - youtube `feed list`：首页推荐与订阅流；游客态首页为空，所以需要登录
 - maoyan `feed list`：一次返回该城市的全部热门演出，没有分页；--category 在本地筛选
+- douyin `keyword hot`：非上游：上游没有热搜接口，请求按网页端热榜页补的（aweme/v1/web/hot/search/list），没有对拍；不含置顶词和实时上升热点
+- bilibili `keyword hot`：非上游：上游没有热搜接口，请求按网页端搜索框补的（x/web-interface/wbi/search/square），没有对拍；最多 50 条，不含置顶词
+- kuaishou `keyword hot`：非上游：上游没有热榜接口，请求按旧版网页端首页补的（GraphQL visionHotRank），没有对拍；新版网页端已不展示热榜，接口随时可能下线；不含置顶词
+- weibo `keyword hot`：非上游：上游没有热搜接口，请求按网页端热搜榜补的（weibo.com/ajax/side/hotSearch），没有对拍；去掉广告位，不含置顶词
 - `feed list --kind` 取值：xhs recommend / following；douyin recommend / hot / following；tiktok recommend / following；bilibili recommend / hot / following；kuaishou recommend / following；weibo recommend / following；xianyu recommend；taobao recommend；jd recommend；x recommend / following；youtube recommend / following；maoyan recommend
 - `feed list --category`：xhs、maoyan、mteam
 - `feed list --city`：maoyan
