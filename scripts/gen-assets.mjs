@@ -30,11 +30,11 @@ const LANGS = {
 const ON_BOARD = [
   ['xhs', 'xhs', 'RedNote'], ['douyin', 'douyin', 'Douyin'], ['tiktok', 'tiktok', 'TikTok'], ['bilibili', 'bilibili', 'Bilibili'], ['kuaishou', 'kuaishou', 'Kuaishou'],
   ['weibo', 'weibo', 'Weibo'], ['x', 'x', 'X'], ['youtube', 'youtube', 'YouTube'], ['xianyu', 'xianyu', 'Xianyu'], ['taobao', 'taobao', 'Taobao'],
-  ['jd', 'jd', 'JD.com'], ['12306', '12306', '12306'], ['maoyan', 'maoyan', 'Maoyan'], ['jimeng', 'jimeng', 'Jimeng'], ['mteam', 'mteam', 'M-Team'],
+  ['jd', 'jd', 'JD.com'], ['12306', '12306', '12306'], ['maoyan', 'maoyan', 'Maoyan'], ['jimeng', 'jimeng', 'Jimeng'], ['mteam', 'mteam', 'M-Team'], ['discord', 'discord', 'Discord'],
 ]
 // 在路上的平台：[图标, 名字]
 const NEXT = [
-  ['instagram', 'Instagram'], ['facebook', 'Facebook'], ['reddit', 'Reddit'], ['telegram', 'Telegram'], ['discord', 'Discord'],
+  ['instagram', 'Instagram'], ['facebook', 'Facebook'], ['reddit', 'Reddit'], ['telegram', 'Telegram'],
   ['whatsapp', 'WhatsApp'], ['linkedin', 'LinkedIn'], ['amazon', 'Amazon'], ['v2ex', 'V2EX'],
   ['zhihu', 'Zhihu'], ['wechat', 'WeChat'], ['toutiao', 'Toutiao'], ['hongguo', 'Hongguo'], ['feishu', 'Feishu'],
   ['pinduoduo', 'Pinduoduo'], ['poizon', 'Poizon'], ['zhuanzhuan', 'Zhuanzhuan'], ['meituan', 'Meituan'],

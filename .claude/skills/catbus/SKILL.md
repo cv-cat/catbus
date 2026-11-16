@@ -1,11 +1,11 @@
 ---
 name: catbus
-description: 用 catbus CLI 读取或操作小红书（RedNote）、抖音、TikTok、B 站（Bilibili）、快手、微博、闲鱼、淘宝、京东、X（Twitter）、YouTube、12306 铁路、猫眼演出、即梦、M-Team 这 15 个平台：搜索、详情、评论、用户、推荐流、下载、发布、点赞关注、私信、直播弹幕、列车余票票价、演出查询、即梦多账号切换，输出统一的 JSON。用户要查询、采集、导出、监听或操作这些平台上的内容和账号时使用。
+description: 用 catbus CLI 读取或操作小红书（RedNote）、抖音、TikTok、B 站（Bilibili）、快手、微博、闲鱼、淘宝、京东、X（Twitter）、YouTube、12306 铁路、猫眼演出、即梦、M-Team、Discord 这 16 个平台：搜索、详情、评论、用户、推荐流、下载、发布、点赞关注、私信、直播弹幕、列车余票票价、演出查询、即梦多账号切换，输出统一的 JSON。用户要查询、采集、导出、监听或操作这些平台上的内容和账号时使用。
 ---
 
 # catbus
 
-catbus（猫巴士）是一个命令行工具，用**同一套命令、同一种 JSON** 调用 14 个平台的 web 端接口，另外管理即梦官方 CLI（dreamina）的多账号登录态。stdout 只有 JSON，日志、提示、二维码都在 stderr。
+catbus（猫巴士）是一个命令行工具，用**同一套命令、同一种 JSON** 调用各平台的默认端接口，包括 Discord macOS 桌面端，另外管理即梦官方 CLI（dreamina）的多账号登录态。stdout 只有 JSON，日志、提示、二维码都在 stderr。
 
 先确认它能用：`catbus version`、`catbus doctor`。找不到 `catbus` 命令时告诉用户安装（`npm i -g catbus-cli`），不要自己去装。
 
@@ -41,6 +41,7 @@ catbus（猫巴士）是一个命令行工具，用**同一套命令、同一种
 | 即梦 | `jimeng` | `dreamina` | 作品 | 浏览器授权（只管 dreamina 的登录态） | [platforms/jimeng.md](platforms/jimeng.md) |
 | 猫眼演出 | `maoyan` | — | 演出项目 | 查询免登录，余票需扫码登录 | [platforms/maoyan.md](platforms/maoyan.md) |
 | M-Team | `mteam` | `mt` `m-team` `mantou` | 种子资源 | 官方 API Key、账密（邮箱 / TOTP 两步验证） | [platforms/mteam.md](platforms/mteam.md) |
+| Discord | `discord` | — | 消息 | 扫码（默认）、账密、凭证导入 | [platforms/discord.md](platforms/discord.md) |
 
 **还不支持**：Instagram、Facebook、知乎、微信公众号、今日头条、得物、拼多多、美团、大众点评正在开发，现在执行会报「未知的平台」（`USAGE`）。用户问到时直接说还不支持，不要尝试调用，也不要拿别的平台凑数。
 
@@ -53,7 +54,7 @@ catbus <platform> <resource> <action> [参数...] [选项...]
 - resource / action 用规范词，**所有平台同名**：笔记、视频、推文、商品一律叫 `item`，搜索叫 `search`，收藏夹叫 `folder`，私信叫 `msg`。`note`、`video`、`tweet` 这类原生叫法会报 `UNSUPPORTED`，`hint` 里给出规范词。
 - 参数接受 ID、URL（包括分享短链）、平台自然标识（B 站 BV 号、X 用户名）；用户参数还可以是 `me`。**输出对象都带 `id` 和 `url`，直接当下一条命令的参数**，小红书一定要传 `url`。
 - 以 `-` 开头的位置参数放在 `--` 之后。选项可以出现在任意位置。
-- `-e app|pc` 都还没实现（`NOT_IMPLEMENTED`），只用默认的 web 端。
+- Discord 默认使用 macOS 桌面端（`pc`），其他平台默认使用 `web`。
 
 ## 先查能力，再调用
 

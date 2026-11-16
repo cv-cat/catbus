@@ -71,10 +71,19 @@
 | xianyu 私信 | `goofish_live.py:18` | `wss://wss-goofish.dingtalk.com/` |
 | taobao 私信 | `taobao_live.py:19` | `wss://wss-cntaobao.dingtalk.com/` |
 | jd 客服 | `jd_apis/jd_chat_ws.py:5` | `wss://ws1-dd.jd.com/` |
+| discord 消息与服务器事件 | `discord_cli/gateway.py`、`gateway_fidelity.py` | `wss://gateway.discord.gg/` |
 
 ---
 
 ## 2. 各仓库
+
+### discord — discord-cli
+
+- **来源**：本机独立的 `discord-cli` Python 项目，源文件摘要、协议基线和验证范围记录在 [`src/platforms/discord/UPSTREAM`](../src/platforms/discord/UPSTREAM)。TypeScript 实现在 `src/platforms/discord/pc/`，默认使用 macOS 桌面协议；不在运行时调用 Python。
+- **请求与设备信息**：`discord_cli/api.py`、`fidelity.py`、`client_context.py`、`device.py` 对应 `pc/api.ts`、`client.ts` 和 `commands.ts`。
+- **登录与实时连接**：`remote_auth.py`、`gateway.py`、`gateway_fidelity.py` 对应 `pc/auth.ts`、`gateway.ts` 和 `socket.ts`；支持扫码、账号密码、导入令牌、心跳和会话恢复。
+- **人工验证**：`captcha.py`、`webauthn.py` 对应 `pc/captcha.ts`、`webauthn.ts` 和 `verification.ts`。浏览器资产原样复制到 `static/discord/`，哈希见 `UPSTREAM`。
+- **离线验证**：`scripts/golden/discord/gen.py` 用合成凭证生成 `tests/golden/discord/`；请求对拍和本地状态机测试在 `tests/discord.test.ts`，人工验证测试在 `tests/discord-verification.test.ts`。生产登录、硬件验证器以及与原客户端的底层网络行为仍需进一步验证。
 
 ### xhs — Spider_XHS
 

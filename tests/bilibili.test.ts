@@ -1074,7 +1074,10 @@ describe('bilibili 纯算', () => {
   it('直播长连：人气值与未映射的 cmd 输出为 other', () => {
     expect(norm.popularityEvent(1234)).toMatchObject({ type: 'other', text: '人气值 1234', user: null })
     expect(norm.liveEvent({ cmd: 'WATCHED_CHANGE', data: { num: 12000, text_large: '1.2万人看过' } })).toMatchObject({ type: 'other', text: '1.2万人看过' })
-    expect(norm.liveEvent({ cmd: 'ONLINE_RANK_COUNT', data: { count: 3 } })).toMatchObject({ type: 'other', text: 'ONLINE_RANK_COUNT', user: null })
+    expect(norm.liveEvent({ cmd: 'ONLINE_RANK_COUNT', data: { count: 3 } })).toMatchObject({ type: 'other', text: '在线 3', user: null, stats: { viewers: 3, likes: null } })
+    expect(norm.liveEvent({ cmd: 'ONLINE_RANK_COUNT', data: { count: 3, online_count: 1520, online_count_text: '1520' } })).toMatchObject({ stats: { viewers: 1520 } })
+    expect(norm.liveEvent({ cmd: 'LIKE_INFO_V3_UPDATE', data: { click_count: 8765 } })).toMatchObject({ type: 'other', text: '点赞 8765', stats: { viewers: null, likes: 8765 } })
+    expect(norm.liveEvent({ cmd: 'DANMU_MSG', info: [[0, 1, 25, 0, 1700000000000], '弹幕', [7, '观众']] })).toMatchObject({ stats: null })
     expect(norm.liveEvent({ cmd: 'GUARD_BUY', data: { uid: 5, username: 'g', gift_name: '舰长', num: 1, start_time: 1700000000 } })).toMatchObject({
       type: 'gift',
       user: { id: '5', name: 'g' },

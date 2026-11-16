@@ -506,6 +506,22 @@ describe('douyin 对拍：长连接', () => {
       ['follow', '观众D', null, null],
     ])
     expect(events[0]!.user).toEqual({ id: 'MS4wLjABAAAAviewerA', name: '观众A', url: 'https://www.douyin.com/user/MS4wLjABAAAAviewerA', avatar: null })
+    expect(events.every((e) => e.stats === null)).toBe(true)
+  })
+
+  it('直播推送：点赞消息带累计点赞数，RoomStatsMessage 带在线人数（Event.stats）', async () => {
+    const norm = await import('../src/platforms/douyin/web/normalize.js')
+    expect(norm.liveEvent('WebcastLikeMessage', { count: '3', total: '45678', user: { id: '1', nickname: '甲' } })).toMatchObject({
+      type: 'like',
+      text: '3',
+      stats: { viewers: null, likes: 45678 },
+    })
+    expect(norm.liveEvent('WebcastRoomStatsMessage', { displayLong: '1.2万在线观众', displayMiddle: '1.2万', displayValue: '12345' })).toMatchObject({
+      type: 'other',
+      text: '1.2万在线观众',
+      stats: { viewers: 12345, likes: null },
+    })
+    expect(norm.liveEvent('WebcastRoomStatsMessage', { displayLong: '在线观众' })).toMatchObject({ stats: null })
   })
 
   it('私信：设备号 → frontier-im 地址（access_key）与握手头；推送帧转成 Message', async () => {
@@ -1253,6 +1269,38 @@ describe('douyin 审查修复：参数与发布', () => {
     // /user/self 不是 sec_uid，当网页
     expect(await resolveShare(d, 'https://www.douyin.com/user/self')).toEqual({ kind: 'web', url: 'https://www.douyin.com/user/self' })
     await expect(resolveShare(d, 'hello')).rejects.toMatchObject({ code: 'USAGE' })
+  })
+
+  it('直播分享文案：短链跳到 reflow/<room_id>，经 reflow 接口换成直播间号', async () => {
+    const { resolveRoom } = await import('../src/platforms/douyin/web/resolve.js')
+    const d = new Douyin(makeCtx({ platform: 'douyin' }))
+    const ROOM = '7400000000000000001'
+    const seen: string[] = []
+    let owner: unknown = { web_rid: '87000000001', nickname: '主播' }
+    const restore = mockSender((p) => {
+      seen.push(p.url)
+      if (p.url.startsWith('https://v.douyin.com/'))
+        return fakeResponse('', { status: 302, headers: [['location', `https://webcast.amemv.com/douyin/webcast/reflow/${ROOM}?iid=x&utm_source=copy`]] })
+      if (p.url.startsWith('https://webcast.amemv.com/webcast/room/reflow/info/')) return fakeResponse({ status_code: 0, data: { room: { id_str: ROOM, status: 2, owner } } })
+      throw new Error(`多发了请求：${p.url}`)
+    })
+    try {
+      const share = '8- #在抖音，记录美好生活#【主播】正在直播，来和我一起支持Ta吧。复制下方链接，打开【抖音】，直接观看直播！ https://v.douyin.com/AbC123xYz/ 4@0.com :0pm'
+      expect(await resolveRoom(d, share)).toBe('87000000001')
+      expect(seen[0]).toBe('https://v.douyin.com/AbC123xYz/')
+      const q = new URL(seen[1]!).searchParams
+      expect([q.get('room_id'), q.get('app_id'), q.get('type_id'), q.get('live_id')]).toEqual([ROOM, '1128', '0', '1'])
+      // 已经是 live.douyin.com 链接、直播间号时不发请求
+      seen.length = 0
+      expect(await resolveRoom(d, 'https://live.douyin.com/87000000002?from=x')).toBe('87000000002')
+      expect(await resolveRoom(d, '87000000003')).toBe('87000000003')
+      expect(seen).toEqual([])
+      // 换不到直播间号（直播结束、接口变了）：UPSTREAM，不把 room_id 当直播间号
+      owner = {}
+      await expect(resolveRoom(d, 'https://v.douyin.com/AbC123xYz/')).rejects.toMatchObject({ code: 'UPSTREAM' })
+    } finally {
+      restore()
+    }
   })
 
   it('item publish 的本地校验（不发请求）与 PublishOptions 映射', async () => {
