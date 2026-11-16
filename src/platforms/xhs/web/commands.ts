@@ -636,7 +636,6 @@ export async function commentReplies(ctx: Ctx) {
 // ================================================================ feed
 
 export async function feedList(ctx: Ctx) {
-  if (ctx.options.kind === 'following') throw new CatbusError('NOT_IMPLEMENTED', 'xhs 的 feed list --kind following 尚未实现', { detail: { upstream: 'none' } })
   return run(ctx, async (p) => {
     // cursor：note_index:cursor_score:频道
     let [index, score, category] = [0, '', (ctx.options.category as string | undefined) ?? 'homefeed_recommend']

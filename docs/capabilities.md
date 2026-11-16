@@ -204,12 +204,11 @@
 
 | 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | youtube | 12306 | jimeng | maoyan | mteam | discord |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| feed list | ◐ | ◐ | ✓ | ◐ | ◐ | ✓ | ○ | ○ | ○ | ◐ | ✓ | — | — | ✓ | ✓ | — |
+| feed list | ✓ | ◐ | ✓ | ◐ | ◐ | ✓ | ○ | ○ | ○ | ◐ | ✓ | — | — | ✓ | ✓ | — |
 | feed categories | ✓ | — | ○ | — | — | — | — | — | — | — | — | — | — | ✓ | — | — |
 | keyword suggest | ✓ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ○ | ✓ | — | — | — | — | — |
 | keyword hot | ✓ | ◐ | ○ | ◐ | ◐ | ◐ | — | — | ✓ | ○ | — | — | — | — | — | — |
 
-- xhs `feed list`：following 规划中
 - douyin `feed list`：hot、following 规划中
 - bilibili `feed list`：following 非上游：上游没有动态流接口，请求按网页端动态页补的（x/polymer/web-dynamic/v1/feed/all），没有对拍；只列关注的人的视频投稿，需要登录
 - kuaishou `feed list`：following 只有首屏
@@ -221,7 +220,7 @@
 - bilibili `keyword hot`：非上游：上游没有热搜接口，请求按网页端搜索框补的（x/web-interface/wbi/search/square），没有对拍；最多 50 条，不含置顶词
 - kuaishou `keyword hot`：非上游：上游没有热榜接口，请求按旧版网页端首页补的（GraphQL visionHotRank），没有对拍；新版网页端已不展示热榜，接口随时可能下线；不含置顶词
 - weibo `keyword hot`：非上游：上游没有热搜接口，请求按网页端热搜榜补的（weibo.com/ajax/side/hotSearch），没有对拍；去掉广告位，不含置顶词
-- `feed list --kind` 取值：xhs recommend / following；douyin recommend / hot / following；tiktok recommend / following；bilibili recommend / hot / following；kuaishou recommend / following；weibo recommend / following；xianyu recommend；taobao recommend；jd recommend；x recommend / following；youtube recommend / following；maoyan recommend
+- `feed list --kind` 取值：xhs recommend；douyin recommend / hot / following；tiktok recommend / following；bilibili recommend / hot / following；kuaishou recommend / following；weibo recommend / following；xianyu recommend；taobao recommend；jd recommend；x recommend / following；youtube recommend / following；maoyan recommend
 - `feed list --category`：xhs、maoyan、mteam
 - `feed list --city`：maoyan
 - `feed list --mode`：mteam
