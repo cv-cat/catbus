@@ -1434,3 +1434,32 @@ describe('bilibili 合集（series）', () => {
     expect(miss.urls.every((u) => !u.includes('episodes/add'))).toBe(true)
   })
 })
+
+describe('bilibili：列表里的视频时长（normalize）', () => {
+  it('durationOf 认秒数和「mm:ss」「h:mm:ss」，取不到为 null', async () => {
+    const { durationOf } = await import('../src/platforms/bilibili/web/normalize.js')
+    expect(durationOf(411)).toBe(411)
+    expect(durationOf('28:24')).toBe(1704)
+    expect(durationOf('1:02:03')).toBe(3723)
+    expect(durationOf('0:00')).toBeNull()
+    expect(durationOf('')).toBeNull()
+    expect(durationOf('ab:cd')).toBeNull()
+    expect(durationOf(null)).toBeNull()
+  })
+
+  it('各列表的视频卡片带一条 url 为 null、只有时长的视频 Media', async () => {
+    const norm = await import('../src/platforms/bilibili/web/normalize.js')
+    const media = (it: { media: unknown[] }) => JSON.parse(JSON.stringify(it.media))
+    const one = (duration: number, width: number | null = null, height: number | null = null) => [{ id: null, type: 'video', url: null, width, height, duration }]
+    expect(media(norm.searchVideo({ bvid: 'BV1', duration: '28:24' }))).toEqual(one(1704))
+    expect(media(norm.spaceVideo({ bvid: 'BV1', length: '03:04' }))).toEqual(one(184))
+    expect(media(norm.feedVideo({ bvid: 'BV1', duration: 14381 }))).toEqual(one(14381))
+    expect(media(norm.favVideo({ bvid: 'BV1', duration: 46 }))).toEqual(one(46))
+    expect(media(norm.followingVideo({ modules: { module_dynamic: { major: { archive: { bvid: 'BV1', duration_text: '02:22' } } } } })!)).toEqual(one(142))
+    // view：竖屏稿件 dimension.rotate=1 时宽高对调
+    expect(media(norm.video({ bvid: 'BV1', duration: 60, dimension: { width: 1920, height: 1080, rotate: 1 } }))).toEqual(one(60, 1080, 1920))
+    expect(media(norm.archive({ Archive: { bvid: 'BV1', duration: 30, dimension: { width: 1920, height: 1080, rotate: 0 } } }))).toEqual(one(30, 1920, 1080))
+    // 没有时长时仍是空数组
+    expect(norm.searchVideo({ bvid: 'BV1' }).media).toEqual([])
+  })
+})
