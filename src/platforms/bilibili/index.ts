@@ -235,7 +235,7 @@ export default definePlatform({
           args: [{ name: 'series', summary: '合集：合集 ID，或空间页合集链接（带 sid=）' }],
           options: { order: z.enum(['asc', 'desc']).default('asc').describe('asc 最早在前，desc 最新在前') },
           auth: 'required',
-          output: '{id}',
+          output: '{id moved}',
           handler: h('seriesSort'),
           note: '非上游：x2/creative/web/season/section/edit，只改小节内顺序；合集自己的「排序方式」开关仍需网页端设置',
         },
