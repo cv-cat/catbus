@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { resolve as resolvePath } from 'node:path'
 import { text as readStdin } from 'node:stream/consumers'
 import { z } from 'zod'
-import { checkAccountName, endpointFlag, getCurrent, GUEST, newCredential, readCredential, syncStatusUser, writeCredential } from '../core/auth-store.js'
+import { checkAccountName, endpointFlag, getCurrent, GUEST, migrateDiscordDesktopAuth, newCredential, readCredential, syncStatusUser, writeCredential } from '../core/auth-store.js'
 import { resolveNetwork } from '../core/config.js'
 import { CatbusError, toCatbusError } from '../core/errors.js'
 import { createLogger, type Logger, redact } from '../core/log.js'
@@ -135,8 +135,8 @@ async function runGlobal(name: string, words: string[], parsed: Parsed, out: Out
   throw new CatbusError('ERROR', `未处理的全局命令：${name}`)
 }
 
-function parseEndpoint(value: string | undefined): Endpoint {
-  if (value == null) return 'web'
+function parseEndpoint(value: string | undefined, fallback: Endpoint): Endpoint {
+  if (value == null) return fallback
   if (!(ENDPOINTS as readonly string[]).includes(value)) {
     throw new CatbusError('USAGE', `不支持的端：${value}`, { hint: '-e web、-e app 或 -e pc' })
   }
@@ -175,7 +175,7 @@ function unsupported(platform: Platform, endpoint: Endpoint, resource: string, a
 
 async function runPlatform(platform: Platform, words: string[], parsed: Parsed, out: Output, log: Logger): Promise<number> {
   const g = parsed.global
-  const endpoint = parseEndpoint(g.endpoint)
+  const endpoint = parseEndpoint(g.endpoint, platform.defaultEndpoint)
   const p = platform.id
   const [resource, action, ...argWords] = words
   out.meta = { platform: p, endpoint, resource: resource ?? null, action: action ?? null, account: null }
@@ -185,7 +185,7 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
   const ep = platform.endpoints[endpoint]
   const known = hasResource(platform, resource)
   if (action == null || g.help) {
-    const listed = ep === 'planned' ? platform.endpoints.web : ep
+    const listed = ep === 'planned' ? platform.endpoints[platform.defaultEndpoint] : ep
     const found = action != null && listed !== 'planned' ? listed.commands.get(`${resource} ${action}`) : undefined
     if (found) return printHelp(commandHelp(platform, endpoint, found))
     if (known) return printHelp(resourceHelp(platform, endpoint, resource))
@@ -393,6 +393,7 @@ export async function resolveIdentity(
   log: Logger,
 ): Promise<{ account: string | null; credential: Credential }> {
   const p = platform.id
+  if (p === 'discord' && endpoint === 'pc') await migrateDiscordDesktopAuth()
   const e = endpointFlag(endpoint)
   const ep = platform.endpoints[endpoint] as AvailableEndpoint
   const blank = () => newCredential({ platform: p, endpoint, account: GUEST, method: 'guest' })

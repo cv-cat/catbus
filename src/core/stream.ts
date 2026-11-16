@@ -9,6 +9,8 @@ import type { HandlerContext } from './registry.js'
 export interface Socket {
   send(data: string | Uint8Array): Promise<void>
   close(): void
+  /** 仅在收到对端关闭帧后有值。 */
+  readonly closeCode?: number
   messages: AsyncIterable<string | Buffer>
 }
 
@@ -19,6 +21,7 @@ export async function openSocket(url: string, options: WebSocketOptions & { sign
   let wake: (() => void) | null = null
   let done = false
   let failure: unknown = null
+  let closeCode: number | undefined
   const notify = () => {
     const w = wake
     wake = null
@@ -34,7 +37,8 @@ export async function openSocket(url: string, options: WebSocketOptions & { sign
     queue.push(e.data as string | Buffer)
     notify()
   }
-  ws.onclose = () => {
+  ws.onclose = (event) => {
+    closeCode = event.code
     done = true
     notify()
   }
@@ -49,11 +53,16 @@ export async function openSocket(url: string, options: WebSocketOptions & { sign
     notify()
   }
   signal?.addEventListener('abort', onAbort, { once: true })
+  if (signal?.aborted) onAbort()
   return {
     send: async (data) => {
       await ws.send(data as never)
     },
-    close: () => ws.close(),
+    close: () => {
+      signal?.removeEventListener('abort', onAbort)
+      onAbort()
+    },
+    get closeCode() { return closeCode },
     messages: {
       async *[Symbol.asyncIterator]() {
         try {
