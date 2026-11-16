@@ -42,7 +42,7 @@ describe('全局命令', () => {
       auth: 'required',
       status: 'implemented',
       upstream: 'partial',
-      note: 'following 规划中',
+      note: expect.stringMatching(/^following 规划中；/),
     })
     expect((await cli('platforms', 'nope')).code).toBe(2)
   })

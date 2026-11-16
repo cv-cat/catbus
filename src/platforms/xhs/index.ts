@@ -17,18 +17,21 @@ export default definePlatform({
         'auth login': impl('full', 'authLogin'),
         'auth status': impl('full', 'authStatus'),
 
-        'user get': impl('full', 'userGet'),
+        'user get': impl('full', 'userGet', { note: 'stats.likes 是「获赞与收藏」的合计' }),
         'user search': impl('full', 'userSearch'),
-        'user items': impl('full', 'userItems'),
-        'user likes': impl('full', 'userLikes'),
-        'user collects': impl('full', 'userCollects'),
+        'user items': impl('full', 'userItems', { note: '列表卡片只有点赞数（过万时平台只给「1.2万」这样的展示值，换算后精度到千位），收藏、评论、分享为 null' }),
+        'user likes': impl('full', 'userLikes', { note: '列表卡片只有点赞数（过万时平台只给「1.2万」这样的展示值，换算后精度到千位），收藏、评论、分享为 null' }),
+        'user collects': impl('full', 'userCollects', { note: '列表卡片只有点赞数（过万时平台只给「1.2万」这样的展示值，换算后精度到千位），收藏、评论、分享为 null' }),
         'user followers': 'none',
         'user following': impl('partial', 'userFollowing', { note: '只支持 me' }),
         'user follow': 'none',
         'user unfollow': 'none',
 
-        'item get': impl('full', 'itemGet'),
+        'item get': impl('full', 'itemGet', {
+          note: '点赞、收藏、评论、分享数过万时，平台只给「1.1万」这样的展示值，换算后精度到千位；要精确值用 item search',
+        }),
         'item search': impl('full', 'itemSearch', {
+          note: '点赞、收藏、评论、分享数是精确值',
           options: {
             sort: filter.sort('general', 'latest', 'popular', 'comments', 'collects'),
             type: filter.type('all', 'video', 'image'),
@@ -61,7 +64,7 @@ export default definePlatform({
         'comment like': 'none',
         'comment unlike': 'none',
 
-        'feed list': impl('partial', 'feedList', { note: 'following 规划中', options: { kind: filter.kind('recommend', 'following'), category: CATEGORY } }),
+        'feed list': impl('partial', 'feedList', { note: 'following 规划中；列表卡片只有点赞数（过万时平台只给「1.2万」这样的展示值，换算后精度到千位），收藏、评论、分享为 null', options: { kind: filter.kind('recommend', 'following'), category: CATEGORY } }),
         'feed categories': impl('full', 'feedCategories'),
 
         'live get': impl('full', 'liveGet'),

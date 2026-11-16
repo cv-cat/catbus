@@ -1270,3 +1270,26 @@ describe('xhs 发布与上传', () => {
     expect(requests.find((r) => r.method === 'PUT')!.url).toBe('https://ros-upload.xiaohongshu.com/spectrum/fid1')
   })
 })
+
+describe('xhs 互动数口径（#7）', () => {
+  it('详情过万后是「1.1万」这样的展示值，按 6.2 换算成整数；列表卡片只有点赞数', () => {
+    // 2026-11-14 真机：同一篇笔记，item search 的收藏是 11155，item get 的原始值是 "1.1万"
+    const detail = norm.note({ id: 'n1', note_card: { note_id: 'n1', type: 'normal', interact_info: { liked_count: '8109', collected_count: '1.1万', comment_count: '129', share_count: '1373' } } })
+    expect(detail.stats).toEqual({ views: null, likes: 8109, collects: 11000, comments: 129, shares: 1373 })
+    const searched = norm.card({ id: 'n1', note_card: { type: 'normal', interact_info: { liked_count: '8108', collected_count: '11155', comment_count: '129', shared_count: '1373' } } })
+    expect(searched.stats).toEqual({ views: null, likes: 8108, collects: 11155, comments: 129, shares: 1373 })
+    const posted = norm.card({ note_id: 'n1', type: 'normal', interact_info: { liked: false, liked_count: '1.8万' } })
+    expect(posted.stats).toEqual({ views: null, likes: 18000, collects: null, comments: null, shares: null })
+  })
+
+  it('注册表的 note 写明各命令的口径（catbus platforms / 能力矩阵里能看到）', async () => {
+    const { default: xhs } = await import('../src/platforms/xhs/index.js')
+    const web = xhs.endpoints.web
+    if (web === 'planned') throw new Error('web 是 planned')
+    const note = (k: string) => web.commands.get(k)?.note ?? ''
+    expect(note('item search')).toContain('精确值')
+    expect(note('item get')).toContain('1.1万')
+    for (const k of ['user items', 'user likes', 'user collects', 'feed list']) expect(note(k), k).toContain('只有点赞数')
+    expect(note('user get')).toContain('获赞与收藏')
+  })
+})
