@@ -11,7 +11,7 @@ import * as pb from '../../../core/pb.js'
 import { jsonLoads } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
-import type { AuthStatus, Credential, Danmaku, Item, Media, Series, Subtitle } from '../../../core/schemas.js'
+import { type AuthStatus, type Credential, type Danmaku, type Item, type Media, type Series, type Subtitle, withRaw } from '../../../core/schemas.js'
 import { openSocket, reconnecting } from '../../../core/stream.js'
 import { paged, scope } from '../../../core/toolkit.js'
 import * as api from './api.js'
@@ -269,17 +269,22 @@ export async function itemList(ctx: Ctx) {
   return paged(list, p + 1, p * Number(d.page?.ps ?? 20) < Number(d.page?.count ?? 0))
 }
 
-/** 播放地址：DASH 取最高画质的视频轨和音频轨；老稿件是 durl 整段。 */
-async function playMedia(b: Bili, bvid: string, cid: string | number): Promise<Media[]> {
+/**
+ * 播放地址：DASH 取最高画质的视频轨和音频轨；`all` 时给出全部轨道（--all-tracks：视频按画质、码率从高到低，
+ * 音频含杜比全景声，按码率从高到低）。老稿件是 durl 整段。
+ */
+async function playMedia(b: Bili, bvid: string, cid: string | number, all = false): Promise<Media[]> {
   const d = await api.playUrl(b, bvid, cid)
   if (d.dash) {
     const duration = n.seconds(d.dash.duration)
-    const video = [...(d.dash.video ?? [])].sort((a: any, c: any) => c.id - a.id || c.bandwidth - a.bandwidth)[0]
-    const audio = [...(d.dash.audio ?? []), ...(d.dash.flac?.audio ? [d.dash.flac.audio] : [])].sort((a: any, c: any) => c.bandwidth - a.bandwidth)[0]
-    const out: Media[] = []
-    if (video) out.push(n.media({ id: String(video.id), type: 'video', url: video.baseUrl ?? video.base_url, width: video.width, height: video.height, duration }, video))
-    if (audio) out.push(n.media({ id: String(audio.id), type: 'audio', url: audio.baseUrl ?? audio.base_url, duration }, audio))
-    return out
+    const videos = [...(d.dash.video ?? [])].sort((a: any, c: any) => c.id - a.id || c.bandwidth - a.bandwidth)
+    const audios = [...(d.dash.audio ?? []), ...(d.dash.flac?.audio ? [d.dash.flac.audio] : []), ...(all ? (d.dash.dolby?.audio ?? []) : [])].sort(
+      (a: any, c: any) => c.bandwidth - a.bandwidth,
+    )
+    const video = (v: any) => n.media({ id: String(v.id), type: 'video', url: v.baseUrl ?? v.base_url, width: v.width, height: v.height, duration }, v)
+    const audio = (a: any) => n.media({ id: String(a.id), type: 'audio', url: a.baseUrl ?? a.base_url, duration }, a)
+    if (all) return [...videos.map(video), ...audios.map(audio)]
+    return [...videos.slice(0, 1).map(video), ...audios.slice(0, 1).map(audio)]
   }
   return (d.durl ?? []).map((x: any) => n.media({ id: String(x.order), type: 'video', url: x.url, duration: n.seconds(x.length / 1000) }, x))
 }
@@ -288,7 +293,7 @@ export async function itemMedia(ctx: Ctx) {
   const b = await bili(ctx)
   const { bvid } = await resolveItem(b, ctx.args.item!)
   const info = await api.videoInfo(b, bvid)
-  return playMedia(b, bvid, info.cid)
+  return playMedia(b, bvid, info.cid, ctx.options.allTracks === true)
 }
 
 export async function itemDownload(ctx: Ctx) {
@@ -743,15 +748,36 @@ export const commentUnpin = (ctx: Ctx) => pinComment(ctx, false)
 
 // ================================================================ 弹幕（扩展）
 
-/** 解 DmSegMobileReply：elems=1，每条 id=1 progress=2 ctime=8 content=7 idStr=12。 */
+/**
+ * 解 DmSegMobileReply：elems=1，每条 id=1 progress=2 mode=3 fontsize=4 color=5 midHash=6 content=7 ctime=8
+ * weight=9 pool=11 idStr=12 attr=13。原始字段挂给 --raw（弹幕的类型、颜色、字号）。
+ */
 export function decodeDanmaku(buf: Uint8Array, bvid: string): Danmaku[] {
-  return pb.messages(pb.decode(buf), 1).map((e) => ({
-    id: pb.str(e, 12) ?? pb.int64(e, 1) ?? '',
-    item_id: bvid,
-    offset: (pb.int(e, 2) ?? 0) / 1000,
-    text: pb.str(e, 7) ?? '',
-    created_at: n.time(pb.int(e, 8)),
-  }))
+  return pb.messages(pb.decode(buf), 1).map((e) =>
+    withRaw(
+      {
+        id: pb.str(e, 12) ?? pb.int64(e, 1) ?? '',
+        item_id: bvid,
+        offset: (pb.int(e, 2) ?? 0) / 1000,
+        text: pb.str(e, 7) ?? '',
+        created_at: n.time(pb.int(e, 8)),
+      },
+      {
+        id: pb.int64(e, 1),
+        progress: pb.int(e, 2),
+        mode: pb.int(e, 3),
+        fontsize: pb.int(e, 4),
+        color: pb.int(e, 5),
+        midHash: pb.str(e, 6),
+        content: pb.str(e, 7),
+        ctime: pb.int(e, 8),
+        weight: pb.int(e, 9),
+        pool: pb.int(e, 11),
+        idStr: pb.str(e, 12),
+        attr: pb.int(e, 13),
+      },
+    ),
+  )
 }
 
 export async function danmakuList(ctx: Ctx) {

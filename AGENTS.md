@@ -271,7 +271,8 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | bilibili | `series add <series> <item>` | 把已发布的稿件加进合集（`x2/creative/web/season/section/episodes/add`），挂到合集的第一个小节下；只能加进自己创建的合集 | `{id}`（稿件 BV 号） |
 | bilibili | `series sort <series> [--order asc\|desc]` | 按发布时间重排合集第一个小节里的稿件（`x2/creative/web/season/section/edit`），`asc` 最早在前（默认），`desc` 最新在前；只能排自己创建的合集，合集自己的「排序方式」开关仍要在网页端设置 | `{id moved}`（合集 ID、移动的稿件数，顺序已对时为 0） |
 | bilibili | `item subtitles <item>` | 字幕 | Subtitle[] |
-| bilibili | `danmaku list <item>` | 视频弹幕 | Danmaku[] |
+| bilibili | `danmaku list <item>` | 视频弹幕。`--raw` 时每条是弹幕分段（`DmSegMobileReply`）里的原始字段：`id` `progress`（毫秒）`mode`（1–3 滚动、4 底部、5 顶部、6 逆向、7 高级、8 代码、9 BAS）`fontsize` `color`（十进制 RGB）`midHash` `content` `ctime` `weight` `pool` `idStr` `attr`，取不到的为 null | Danmaku[] |
+| bilibili | `item media <item> [--all-tracks]` | 私有选项：返回 DASH 的全部轨道，不只挑最高画质的一路视频和码率最高的一路音频。视频轨按画质（`Media.id` 为 B 站的 qn，如 80 是 1080P、120 是 4K、125 是 HDR、126 是杜比视界）从高到低、同画质按码率从高到低，音频轨（含杜比全景声、Hi-Res 无损）按码率从高到低；`--raw` 时每条是 playurl 里的原始轨道（带 `codecs`、`SegmentBase`、`backupUrl`）。账号看不了的画质不在里面。老稿件没有 DASH 时和不带这个选项一样，是整段的 durl | Media[] |
 | bilibili | `danmaku send <item> <text> --offset <秒> [--color] [--font-size] [--position]` | 发视频弹幕。`--color` 为 `#RRGGBB` 或十进制，`--font-size` 默认 25，`--position scroll\|top\|bottom` 默认 `scroll` | `{id}` |
 | bilibili | `dynamic publish --text [--image]` | 发动态 | `{id url}` |
 | bilibili | `dynamic delete <id>` | 删动态。`<id>` 为动态 ID 或动态链接（`dynamic publish` 输出的 `id`、`url` 都可以） | `{id}` |
