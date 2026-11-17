@@ -1,0 +1,66 @@
+{
+  "title": "本地收藏",
+  "eyebrow": "只保存在这个浏览器里",
+  "search": "搜索标题、正文、作者",
+  "export": "导出",
+  "button": {
+    "add": "稍后看",
+    "saved": "已在本地收藏"
+  },
+  "toast": {
+    "storageFailed": "浏览器没能保存本地收藏，关掉页面后会丢失",
+    "full": "本地收藏最多 {n} 条，先清理一些再加",
+    "added": "已加入「{group}」",
+    "toGroup": "加入分组",
+    "undo": "撤销"
+  },
+  "group": {
+    "later": "稍后看",
+    "all": "全部",
+    "label": "分组",
+    "create": "新建分组",
+    "rename": "改名",
+    "delete": "删除分组",
+    "deleteConfirm": "再点一次删除（条目会保留）",
+    "namePlaceholder": "分组名称",
+    "nameEmpty": "请输入分组名称",
+    "nameLong": "分组名称最多 {n} 个字",
+    "nameTaken": "已经有同名的分组"
+  },
+  "menu": {
+    "title": "加入分组",
+    "remove": "从本地收藏移除"
+  },
+  "detail": {
+    "saved": "已在本地收藏"
+  },
+  "import": {
+    "label": "导入",
+    "done": "导入了 {added} 条，与已有的合并了 {merged} 条，跳过 {skipped} 条",
+    "invalid": "这个文件不是 catbus 导出的本地收藏"
+  },
+  "sort": {
+    "label": "排序",
+    "addedDesc": "最近加入",
+    "addedAsc": "最早加入",
+    "published": "发布时间"
+  },
+  "bulk": {
+    "count": "已选 {n} 条",
+    "move": "移到分组",
+    "moved": "已把 {n} 条移到「{group}」",
+    "remove": "移除",
+    "removeConfirm": "确认移除",
+    "removed": "已移除 {n} 条"
+  },
+  "empty": {
+    "title": "还没有本地收藏",
+    "desc": "在卡片右上角或详情卡片里点书签，先存到「稍后看」，不用登录。",
+    "filtered": "没有符合条件的条目"
+  },
+  "gone": {
+    "title": "原内容已不可用",
+    "remove": "移除",
+    "origin": "原链接"
+  }
+}

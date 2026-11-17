@@ -1,0 +1,15 @@
+{
+  "code": {
+    "ERROR": "出错了",
+    "USAGE": "请求参数不对",
+    "UNSUPPORTED": "这个平台不支持这项操作",
+    "CONFIRM_REQUIRED": "这项操作需要确认",
+    "AUTH_REQUIRED": "需要先登录",
+    "AUTH_EXPIRED": "登录已失效，请重新登录",
+    "NOT_IMPLEMENTED": "这项能力还没有实现",
+    "RISK_CONTROL": "平台要求人机验证或限制了访问",
+    "NETWORK": "网络或代理出错",
+    "UPSTREAM": "平台返回了错误",
+    "BRIDGE": "连不上本地服务"
+  }
+}

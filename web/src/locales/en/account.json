@@ -1,0 +1,55 @@
+{
+  "sep": ", ",
+  "dialogLabel": "{platform} accounts",
+  "card": {
+    "aggName": "{channels} ch · {n} account | {channels} ch · {n} accounts",
+    "expired": "{platforms}: {n} account expired | {platforms}: {n} accounts expired",
+    "aggLabel": "{channels} channels, {n} account in total. Switch accounts | {channels} channels, {n} accounts in total. Switch accounts",
+    "notLoggedIn": "Not logged in · Log in",
+    "notLoggedInLabel": "Not logged in. Click to log in",
+    "many": "{name} and others ({n})",
+    "manySub": "{platform} · {n} account | {platform} · {n} accounts",
+    "switchLabel": "{names}. Switch accounts",
+    "switch": "Switch accounts"
+  },
+  "tabs": {
+    "prev": "Previous channels",
+    "next": "Next channels",
+    "label": "Channels",
+    "selected": "{n} account selected | {n} accounts selected",
+    "expired": "Some accounts have expired"
+  },
+  "head": {
+    "selected": "{n} / {total} selected",
+    "hintAgg": "Pick accounts per channel, at least one each",
+    "hint": "Multi-select · results are merged"
+  },
+  "remove": {
+    "ask": "Remove “{name}”?",
+    "serverLogout": "Deletes the local session and logs out of {platform}",
+    "localOnly": "Only deletes the session saved on this device",
+    "removing": "Removing…",
+    "removingLabel": "Removing",
+    "tip": "Remove account"
+  },
+  "row": {
+    "default": "Default",
+    "expired": "Session expired · can't select",
+    "browsing": "Browsing",
+    "loggedInAt": "{time}",
+    "setDefault": "Set default",
+    "keepOne": "Keep at least one account",
+    "empty": "No {platform} accounts yet. Add one below."
+  },
+  "collapse": "Collapse",
+  "expandAll": "Show all accounts",
+  "merge": "{n} account loading · duplicates shown once | {n} accounts loading together · duplicates shown once",
+  "add": {
+    "title": "Add {platform} account",
+    "methods": "QR code · SMS · Cookie import"
+  },
+  "error": {
+    "removeFailed": "Couldn't remove the account",
+    "useFailed": "Couldn't set as default"
+  }
+}

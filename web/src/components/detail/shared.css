@@ -1,0 +1,154 @@
+/*
+ * 详情卡片各部分共用的样式（头像、标题、正文、BBCode 块、骨架、分隔线、计数）。
+ * 各子组件用 <style scoped src="./shared.css"> 引入，按各自的 scope 编译，不会漏到别处。
+ * 有手机覆盖的规则都在本文件里，覆盖写在最后，保证先后顺序不变。
+ */
+.ava {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: inset 0 0 0 2px #ffffff33;
+}
+.ava.sm {
+  width: 32px;
+  height: 32px;
+  font-size: 13px;
+}
+.title {
+  margin: 0 0 10px;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.text {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.tag {
+  color: var(--link);
+}
+.bb {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.bb-img {
+  display: block;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--hair);
+}
+.bb-img img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.bb-quote {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--red);
+  border-radius: 10px;
+  background: var(--hair);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.bb-code {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--hair) 50%, transparent);
+  color: var(--ink-2);
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: pre;
+  overflow-x: auto;
+}
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+.lines span,
+.sk-lines span,
+.sk-ava {
+  display: block;
+  height: 12px;
+  border-radius: 6px;
+  background: var(--skeleton);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+.lines .short {
+  width: 60%;
+}
+@keyframes shimmer {
+  50% {
+    opacity: 0.45;
+  }
+}
+.sk-row {
+  display: flex;
+  gap: 10px;
+}
+.sk-ava {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+.sk-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 2px;
+}
+.sk-lines span:last-child {
+  width: 70%;
+}
+.divider {
+  height: 1px;
+  margin: 18px 0 14px;
+  background: var(--hair);
+}
+.count {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.grow {
+  flex: 1;
+}
+
+/* 手机：头像、字号略收 */
+@media (max-width: 640px) {
+  .title {
+    font-size: 17px;
+  }
+  .text {
+    font-size: 14px;
+  }
+  .ava {
+    width: 36px;
+    height: 36px;
+  }
+  .ava.sm,
+  .sk-ava {
+    width: 28px;
+    height: 28px;
+  }
+}

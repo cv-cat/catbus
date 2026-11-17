@@ -1,0 +1,53 @@
+{
+  "sort": {
+    "general": "総合",
+    "latest": "新着",
+    "popular": "人気",
+    "comments": "コメント数"
+  },
+  "order": {
+    "general": "既定",
+    "date": "投稿日時",
+    "size": "サイズ",
+    "seeders": "シード",
+    "leechers": "DL 数",
+    "name": "名前"
+  },
+  "type": {
+    "all": "すべて",
+    "video": "動画",
+    "image": "画像"
+  },
+  "kind": {
+    "recommend": "おすすめ",
+    "hot": "人気",
+    "following": "フォロー中"
+  },
+  "time": {
+    "all": "指定なし",
+    "day": "1 日以内",
+    "week": "1 週間以内",
+    "month": "1 か月以内",
+    "half_year": "半年以内",
+    "year": "1 年以内"
+  },
+  "mteam": {
+    "mode": {
+      "label": "区分",
+      "normal": "総合",
+      "movie": "映画",
+      "tvshow": "ドラマ",
+      "music": "音楽",
+      "anime": "アニメ",
+      "adult": "アダルト"
+    },
+    "category": {
+      "label": "カテゴリ",
+      "all": "すべてのカテゴリ",
+      "unavailable": "カテゴリ一覧を取得できないため、カテゴリで絞り込めません"
+    },
+    "free": "無料のみ",
+    "adultOff": "アダルト区分がオフのため、総合に切り替えました",
+    "toSettings": "設定へ"
+  }
+}

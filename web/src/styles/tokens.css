@@ -1,0 +1,174 @@
+/* 设计稿 web-desgin.pen：A · 晨雾玻璃（light）/ B · 午夜车厢（dark） */
+:root {
+  --navy: #232838;
+  --red: #e8414f;
+  --online: #34c759;
+  --warn: #f5a524;
+
+  --font: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Noto Sans SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-brand: 'Nunito', var(--font);
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-xl: 26px;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --sidebar-w: 256px;
+
+  /* 响应式（与 composables/useBreakpoint.ts 的 BREAKPOINTS 一致；CSS 媒体查询里不能用变量，写死数值）：
+     phone ≤ 640px：侧栏为抽屉，内容区铺满
+     tablet 641–1024px：侧栏收成图标窄栏（--sidebar-rail-w），点开展开完整侧栏
+     desktop > 1024px：完整侧栏
+     触屏另用 (hover: none) and (pointer: coarse) 判断，不跟宽度绑定 */
+  --sidebar-rail-w: 72px;
+  --tap: 44px; /* 触屏上最小可点区域 */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  /* 内容区的左边界：随侧栏形态变化，内容区一律用它定位 */
+  --content-left: calc(var(--sidebar-inset) + var(--sidebar-w) + 4px);
+}
+@media (max-width: 1024px) {
+  :root {
+    --content-left: calc(var(--sidebar-inset) + var(--sidebar-rail-w) + 4px);
+  }
+}
+@media (max-width: 640px) {
+  :root {
+    --sidebar-inset: 10px;
+    --content-left: 0px;
+  }
+}
+
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f3f4f7;
+  --pixel: #232838;
+  --pixel-accent: #e8414f;
+  /* 背景：方块像素（边长、遮罩最浓处的透明度）与两团光晕，只用品牌的红和藏青 */
+  --pixel-size: 20;
+  --pixel-base: 0.16;
+  --blob-1: #e8414f24;
+  --blob-2: #2328381a;
+  /* 关掉像素背景时的静态底色（App.vue 的 .calm-bg） */
+  --calm-1: #e8414f14;
+  --calm-2: #23283812;
+  --calm-dot: #2328381f;
+
+  --glass: #ffffffa6;
+  --glass-strong: #ffffffe0;
+  --glass-stroke: #ffffffcc;
+  --shadow-panel: 0 12px 40px #1b1f2e14;
+  --shadow-card: 0 6px 24px #1b1f2e10;
+  --shadow-card-hover: 0 18px 44px #1b1f2e22;
+  --ink: #1b1f2e;
+  --ink-2: #5b6175;
+  --ink-3: #9097ab;
+  --hair: #1b1f2e14;
+  --red-soft: #e8414f1a;
+  --primary-btn: var(--navy);
+  --skeleton: #1b1f2e0d;
+
+  /* 详情卡片（设计稿 E / F） */
+  --detail-bg: #ffffff;
+  --detail-chip: #f3f4f7;
+  --detail-scrim: #14172a73;
+  --detail-shadow: 0 24px 64px #0b0e1a40;
+  --detail-media-bg: #0b0d14;
+  --link: #3b6fd8;
+
+  /* 通知类型色（收件箱，设计稿 inbox-desgin）：徽标是类型色底 + --type-on 的图标，chip 上是类型色的图标 */
+  --type-comment: #2f64c8;
+  --type-mention: #0a7f7a;
+  --type-like: #e8414f;
+  --type-follow: #23864a;
+  --type-system: #5b6175;
+  --type-on: #ffffff;
+  /* 藏青实心按钮（收件箱详情栏的「在<平台>打开」）：亮色藏青底白字，暗色浅藏青底藏青字 */
+  --navy-btn: #232838;
+  --navy-btn-hover: #343b55;
+  --navy-btn-ink: #ffffff;
+
+  /* A：侧栏浮在页面上 */
+  --sidebar-inset: 16px;
+  --sidebar-radius: var(--radius-xl);
+  --avatar-ring: #ffffff;
+  --avatar-bg: radial-gradient(circle, #ffffff 0%, #fbe3e5 100%);
+  --avatar-glow: 0 10px 28px #e8414f33;
+
+  /* 按钮的透明玻璃（components/ui/GlassButton.vue、styles/glass-button.css） */
+  --lg-fill: linear-gradient(180deg, #ffffffb3, #ffffff4d), #1b1f2e0a;
+  --lg-fill-hover: linear-gradient(180deg, #ffffffd9, #ffffff73), #1b1f2e0f;
+  --lg-edge: inset 0 1px 0 #ffffffa6, inset 0 -1px 1px #ffffff26, inset 0 0 0 0.5px #ffffff59, inset 0 0 0 1px #1b1f2e14;
+  --lg-shadow: 0 2px 8px #1b1f2e14;
+  --lg-ink: var(--ink-2);
+  --lg-accent-fill: linear-gradient(180deg, #ffffff80, #ffffff1a), #e8414f1f;
+  --lg-accent-ink: var(--red);
+  --lg-primary-fill: linear-gradient(180deg, #ffffff4d, #ffffff00), #e8414fe6;
+  --lg-media-fill: linear-gradient(180deg, #ffffff40, #ffffff0d), #1b1f2e40;
+  --lg-blur: blur(14px) saturate(180%);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #14172a;
+  --pixel: #aeb6d6;
+  --pixel-accent: #ff5a67;
+  --pixel-size: 20;
+  --pixel-base: 0.22;
+  --blob-1: #e8414f38;
+  --blob-2: #3a4366aa;
+  --calm-1: #e8414f1f;
+  --calm-2: #3a436666;
+  --calm-dot: #aeb6d626;
+
+  --glass: #1e2238a6;
+  --glass-strong: #2a2f4acc;
+  --glass-stroke: #ffffff1f;
+  --shadow-card: 0 10px 30px #00000055;
+  --shadow-card-hover: 0 20px 50px #00000080;
+  --ink: #f2f3f8;
+  --ink-2: #a3a9c2;
+  --ink-3: #6e7591;
+  --hair: #ffffff14;
+  --red-soft: #e8414f2e;
+  --primary-btn: var(--red);
+  --skeleton: #ffffff0f;
+
+  --detail-bg: #1c2034;
+  --detail-chip: #ffffff0d;
+  --detail-scrim: #05060ca6;
+  --detail-shadow: 0 24px 80px #000000a0, 0 0 0 1px #ffffff14;
+  --detail-media-bg: #05060c;
+  --link: #8fa9ff;
+  --type-comment: #78a2f5;
+  --type-mention: #34c7bf;
+  --type-like: #ff6b77;
+  --type-follow: #4cd07f;
+  --type-system: #9097ab;
+  --type-on: #14172a;
+  --navy-btn: #dfe3f2;
+  --navy-btn-hover: #eef0f8;
+  --navy-btn-ink: #232838;
+  --online: #3ddc84;
+  --warn: #ffc247;
+
+  /* 侧栏与亮色一致：浮在页面上（沿用 :root 的 --sidebar-inset / --sidebar-radius） */
+  --shadow-panel: 0 12px 40px #00000040;
+  --avatar-ring: var(--red);
+  --avatar-bg: radial-gradient(circle, #3a4066 0%, #1e2238 100%);
+  --avatar-glow: 0 0 40px #e8414f88;
+
+  --lg-fill: linear-gradient(180deg, #ffffff1f, #ffffff08);
+  --lg-fill-hover: linear-gradient(180deg, #ffffff2e, #ffffff0d);
+  --lg-edge: inset 0 1px 0 #ffffff33, inset 0 0 0 0.5px #ffffff26;
+  --lg-shadow: 0 2px 10px #00000066;
+  /* 暗色下红字压在红玻璃上对比度不够，字换成浅一点的红 */
+  --lg-accent-fill: linear-gradient(180deg, #ffffff1a, #ffffff05), #e8414f2e;
+  --lg-accent-ink: #ff8a94;
+  --lg-primary-fill: linear-gradient(180deg, #ffffff33, #ffffff00), #e8414fd9;
+  --lg-media-fill: linear-gradient(180deg, #ffffff33, #ffffff0a), #0b0d1a59;
+}

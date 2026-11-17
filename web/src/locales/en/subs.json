@@ -1,0 +1,58 @@
+{
+  "title": "Subscriptions",
+  "eyebrow": "New posts for keywords and creators",
+  "nav": {
+    "unread": "{n} unread | {n} unread"
+  },
+  "kind": {
+    "keyword": "Keyword",
+    "author": "Creator"
+  },
+  "button": {
+    "subscribe": "Subscribe",
+    "subscribed": "Subscribed",
+    "unsubscribe": "Click again to unsubscribe",
+    "tipKeyword": "Get notified here when new results show up",
+    "tipAuthor": "Get notified here when this creator posts"
+  },
+  "list": {
+    "label": "Subscriptions",
+    "checked": "checked {time}",
+    "never": "not checked yet"
+  },
+  "content": {
+    "count": "{n} new | {n} new",
+    "markRead": "Mark all as read",
+    "check": "Check now",
+    "pausedTip": "Subscriptions for this platform are paused. Resume them first.",
+    "remove": "Unsubscribe",
+    "removeConfirm": "Click again to confirm",
+    "error": "Last check failed: {reason}",
+    "emptyTitle": "Nothing new",
+    "emptyDesc": "New posts will show up here. Checks run about every 30 minutes while catbus web is running.",
+    "pendingTitle": "Waiting for the first check",
+    "pendingDesc": "The first check only records what's already there. Anything posted after that counts as new."
+  },
+  "paused": {
+    "title": "{platform} hit a security check. Subscriptions are paused.",
+    "desc": "Complete the verification in a browser signed in to the same account, then click Resume.",
+    "resume": "Resume"
+  },
+  "empty": {
+    "title": "No subscriptions yet",
+    "desc": "Search on Discover and click Subscribe next to the result count, or click Subscribe on a creator's page. New posts will show up here."
+  },
+  "error": {
+    "title": "Couldn't load subscriptions"
+  },
+  "toast": {
+    "added": "Subscribed to “{name}”",
+    "view": "View",
+    "removed": "Unsubscribed from “{name}”",
+    "full": "You can have up to {n} subscriptions. Remove some first.",
+    "failed": "Couldn't subscribe: {reason}",
+    "checkedNew": "{n} new post | {n} new posts",
+    "checkedNone": "Nothing new yet",
+    "resumed": "{platform} subscriptions resumed"
+  }
+}

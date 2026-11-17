@@ -1,0 +1,58 @@
+{
+  "xhs": {
+    "name": "RedNote",
+    "item": "notes"
+  },
+  "douyin": {
+    "name": "Douyin",
+    "item": "videos"
+  },
+  "bilibili": {
+    "name": "Bilibili",
+    "item": "videos"
+  },
+  "tiktok": {
+    "name": "TikTok",
+    "item": "videos"
+  },
+  "kuaishou": {
+    "name": "Kuaishou",
+    "item": "videos"
+  },
+  "weibo": {
+    "name": "Weibo",
+    "item": "posts"
+  },
+  "x": {
+    "name": "X",
+    "item": "posts"
+  },
+  "youtube": {
+    "name": "YouTube",
+    "item": "videos"
+  },
+  "xianyu": {
+    "name": "Xianyu",
+    "item": "listings"
+  },
+  "taobao": {
+    "name": "Taobao",
+    "item": "products"
+  },
+  "jd": {
+    "name": "JD",
+    "item": "products"
+  },
+  "maoyan": {
+    "name": "Maoyan",
+    "item": "shows"
+  },
+  "mteam": {
+    "name": "M-Team",
+    "item": "torrents"
+  },
+  "12306": {
+    "name": "12306",
+    "item": "train"
+  }
+}
