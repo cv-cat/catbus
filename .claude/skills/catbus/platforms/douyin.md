@@ -8,7 +8,7 @@
 
 ## 能做
 
-- **读**：`item search` / `get` / `media` / `download` / `list`（自己的）；`user get` / `search` / `items` / `likes` / `followers` / `following`；`comment list` / `replies`（也能列商品评价）；`feed list`（只有推荐）；`product get`；`live get` / `search` / `listen` / `history`（最近 15 条）/ `rank` / `products` / `media`；`notice list`；`msg listen`（收新私信）；`folder list`；`keyword hot`（热榜）。
+- **读**：`item search` / `get` / `media` / `download` / `list`（自己的）；`user get` / `search` / `items` / `likes` / `followers` / `following`；`comment list` / `replies`（也能列商品评价）；`feed list`（只有推荐）；`product get`；`live get` / `list` / `search` / `categories` / `listen` / `history`（最近 15 条）/ `rank` / `products` / `media`；`notice list`；`msg listen`（收新私信）；`folder list`；`keyword hot`（热榜）。
 - **写**：`item like` / `unlike` / `collect` / `uncollect` / `publish`；`comment add`；`live send` / `like`；`msg send`；`media upload`。
 
 **写操作目前基本跑不通**：发布、评论、点赞、收藏、私信要带设备风控头（dtrait），实测发布被拦下（报 `RISK_CONTROL`），点赞还可能让登录态失效、需要重新扫码。用户要做写操作时先把这个情况告诉他，不要在他的常用账号上反复尝试。
@@ -22,6 +22,7 @@
 - 作品：`aweme_id`（纯数字）、`douyin.com/video/<id>`（也认 `/note/`、`?modal_id=`）、分享短链 `v.douyin.com/...`，或整段分享文案。
 - 用户：`sec_uid`（`MS4wLjAB` 开头）、主页链接、分享短链或 `me`。
 - 直播间：直播间号（web_rid）、`live.douyin.com/<号>`，或直播分享链接 / 分享文案（`v.douyin.com` 短链）。
+- 直播分区：`live list --category` 取 `live categories` 输出的 id（如 `4_103`、`4_103_1_1011032`），也认分区名（`游戏`、`王者荣耀`）或分区页链接 `live.douyin.com/categorynew/...`；不带时是直播首页推荐。
 - 商品评价：传商品链接，或纯 ID 加 `--product`；需要 `shop_id` 的场景传 `live products` 输出的 url。
 
 ## 筛选
@@ -43,5 +44,7 @@ catbus douyin item search 猫 --type video --time week --limit 20
 catbus douyin item get "https://v.douyin.com/xxxx/"
 catbus douyin comment list <作品> --limit 100 -o jsonl
 catbus douyin user items <sec_uid> --limit 50
+catbus douyin live categories
+catbus douyin live list --category 王者荣耀 --limit 30
 catbus douyin live listen <直播间号> --duration 10m
 ```
