@@ -1,0 +1,191 @@
+/*
+ * 按钮的统一基础样式：透明玻璃（半透明渐变底 + 背景模糊提饱和 + 顶部高光描边）。
+ * 组件写法用 components/ui/GlassButton.vue；不方便换组件的地方（<a>、第三方结构）直接加类名：
+ *   lg-btn                      基础（必需）
+ *   lg-icon                     正方形圆按钮，只放图标
+ *   lg-sm / lg-lg               尺寸：28 / 40（默认 32）
+ *   lg-accent                   强调：红字红玻璃（选中、已收藏等）
+ *   lg-primary                  主操作：实心红玻璃、白字
+ *   lg-media                    压在图片 / 视频上：深色玻璃、白字
+ *   lg-danger                   危险操作：红字，悬停红玻璃
+ *   lg-quiet                    安静：平时没有底，悬停才出玻璃（列表行内的小按钮）
+ *   is-on / [aria-pressed=true] 开启态，同 lg-accent
+ *   lg-split（容器）            分体按钮：里面两个 lg-btn 拼成一颗胶囊，中间一条细分隔线
+ * 颜色变量在 tokens.css 的 --lg-*，亮色 / 暗色各一套。
+ */
+.lg-btn {
+  --lg-h: 32px;
+  --lg-bg: var(--lg-fill);
+  --lg-fg: var(--lg-ink, var(--ink-2));
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: none;
+  height: var(--lg-h);
+  min-width: var(--lg-h);
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--lg-fg);
+  background: var(--lg-bg);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  box-shadow: var(--lg-edge), var(--lg-shadow);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.2s, background 0.2s, box-shadow 0.2s, opacity 0.2s, transform 0.2s var(--ease-out);
+}
+.lg-btn:hover {
+  --lg-bg: var(--lg-fill-hover);
+  --lg-fg: var(--ink);
+}
+.lg-btn:active {
+  transform: scale(0.94);
+}
+.lg-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--red) 70%, transparent);
+  outline-offset: 2px;
+}
+.lg-btn:disabled,
+.lg-btn[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+.lg-btn:disabled:hover,
+.lg-btn[aria-disabled='true']:hover {
+  --lg-bg: var(--lg-fill);
+  --lg-fg: var(--lg-ink, var(--ink-2));
+}
+
+.lg-btn.lg-icon {
+  width: var(--lg-h);
+  padding: 0;
+  border-radius: 50%;
+}
+.lg-btn.lg-sm {
+  --lg-h: 28px;
+  font-size: 12px;
+}
+.lg-btn.lg-sm:not(.lg-icon) {
+  padding: 0 11px;
+}
+.lg-btn.lg-lg {
+  --lg-h: 40px;
+  font-size: 14px;
+}
+.lg-btn.lg-lg:not(.lg-icon) {
+  padding: 0 18px;
+}
+
+.lg-btn.lg-accent,
+.lg-btn.is-on,
+.lg-btn[aria-pressed='true'] {
+  --lg-bg: var(--lg-accent-fill);
+  --lg-fg: var(--lg-accent-ink);
+}
+.lg-btn.lg-primary {
+  --lg-bg: var(--lg-primary-fill);
+  --lg-fg: #fff;
+  box-shadow: inset 0 1px 0 #ffffff66, inset 0 0 0 0.5px #ffffff40, 0 4px 14px #e8414f40;
+}
+.lg-btn.lg-primary:hover {
+  --lg-bg: var(--lg-primary-fill);
+  --lg-fg: #fff;
+  filter: brightness(1.06);
+}
+.lg-btn.lg-media {
+  --lg-bg: var(--lg-media-fill);
+  --lg-fg: #fff;
+  box-shadow: inset 0 1px 0 #ffffff59, inset 0 0 0 0.5px #ffffff40, 0 4px 14px #0b0d1a40;
+}
+.lg-btn.lg-media:hover {
+  --lg-bg: var(--lg-media-fill);
+  --lg-fg: #fff;
+  filter: brightness(1.15);
+}
+.lg-btn.lg-media.lg-accent,
+.lg-btn.lg-media.is-on,
+.lg-btn.lg-media[aria-pressed='true'] {
+  --lg-bg: linear-gradient(180deg, #ffffff40, #ffffff00), color-mix(in srgb, var(--red) 78%, transparent);
+}
+.lg-btn.lg-danger {
+  --lg-fg: var(--lg-accent-ink);
+}
+.lg-btn.lg-danger:hover {
+  --lg-bg: var(--lg-accent-fill);
+  --lg-fg: var(--lg-accent-ink);
+}
+/* 特异度与 .lg-btn 相同，组件的 scoped 样式可以覆盖 */
+.lg-btn:where(.lg-quiet:not(:hover):not(.is-on):not([aria-pressed='true'])) {
+  --lg-bg: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* 分体按钮：.lg-split 容器里放两个 .lg-btn（同一种 tone），拼成一颗胶囊 */
+.lg-split {
+  display: inline-flex;
+  flex: none;
+  border-radius: 999px;
+  box-shadow: var(--lg-shadow);
+}
+.lg-split:has(> .lg-primary) {
+  box-shadow: 0 4px 14px #e8414f40;
+}
+.lg-split > .lg-btn {
+  border-radius: 0;
+  box-shadow: var(--lg-edge);
+}
+.lg-split > .lg-btn:active {
+  transform: none;
+}
+.lg-split > .lg-btn:first-child {
+  border-radius: 999px 0 0 999px;
+}
+.lg-split > .lg-btn:last-child {
+  border-radius: 0 999px 999px 0;
+}
+.lg-split > .lg-btn + .lg-btn {
+  box-shadow: var(--lg-edge), inset 1px 0 0 var(--hair);
+}
+.lg-split > .lg-primary {
+  box-shadow: inset 0 1px 0 #ffffff66, inset 0 0 0 0.5px #ffffff40;
+}
+.lg-split > .lg-primary + .lg-primary {
+  box-shadow: inset 0 1px 0 #ffffff66, inset 0 0 0 0.5px #ffffff40, inset 1px 0 0 #ffffff4d;
+}
+.lg-split > .lg-btn:focus-visible {
+  outline-offset: -3px;
+}
+
+@media (hover: none) {
+  .lg-btn:hover {
+    --lg-bg: var(--lg-fill);
+    --lg-fg: var(--lg-ink, var(--ink-2));
+  }
+}
+@media (hover: none) and (pointer: coarse) {
+  .lg-btn:not(.lg-sm) {
+    --lg-h: var(--tap);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .lg-btn {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    --lg-bg: var(--detail-chip);
+  }
+  .lg-btn.lg-media {
+    --lg-bg: #1b1f2ecc;
+  }
+}

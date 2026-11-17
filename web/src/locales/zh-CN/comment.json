@@ -1,0 +1,27 @@
+{
+  "title": "评论",
+  "count": "共 {n} 条评论",
+  "anonymous": "匿名用户",
+  "loading": "评论加载中",
+  "empty": "还没有评论",
+  "end": "— 到底了 —",
+  "verify": "去验证",
+  "viewImage": "查看第 {n} 张图",
+  "replies": {
+    "count": "{n} 条回复",
+    "failed": "回复加载失败",
+    "expand": "展开 {n} 条回复",
+    "expandMore": "展开更多回复",
+    "collapse": "收起"
+  },
+  "filter": {
+    "sortDefault": "默认",
+    "sortHot": "最热",
+    "sortNew": "最新",
+    "placeholder": "在已加载的评论里找",
+    "search": "搜索评论",
+    "sort": "评论排序",
+    "result": "在已加载的 {n} 条里找到 {m} 条",
+    "clear": "清除"
+  }
+}

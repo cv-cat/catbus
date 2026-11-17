@@ -1,0 +1,27 @@
+{
+  "title": "Comments",
+  "count": "{n} comment | {n} comments",
+  "anonymous": "Anonymous",
+  "loading": "Loading comments",
+  "empty": "No comments yet",
+  "end": "— That's all —",
+  "verify": "Verify",
+  "viewImage": "View image {n}",
+  "replies": {
+    "count": "{n} reply | {n} replies",
+    "failed": "Couldn't load replies",
+    "expand": "View {n} reply | View {n} replies",
+    "expandMore": "View more replies",
+    "collapse": "Hide"
+  },
+  "filter": {
+    "sortDefault": "Default",
+    "sortHot": "Top",
+    "sortNew": "Newest",
+    "placeholder": "Search loaded comments",
+    "search": "Search comments",
+    "sort": "Sort comments",
+    "result": "Found {m} in {n} loaded | Found {m} in {n} loaded",
+    "clear": "Clear"
+  }
+}

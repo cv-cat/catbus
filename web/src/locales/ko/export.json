@@ -1,0 +1,27 @@
+{
+  "title": "선택한 항목 내보내기",
+  "short": "내보내기",
+  "head": "{n}개 내보내기",
+  "csv": "표 형식, Excel에서 바로 열림",
+  "json": "전체 구조화 데이터",
+  "columns": {
+    "platform": "플랫폼",
+    "id": "ID",
+    "kind": "유형",
+    "title": "제목",
+    "text": "본문",
+    "author": "작성자",
+    "author_url": "작성자 링크",
+    "created_at": "게시 시간",
+    "views": "조회",
+    "likes": "좋아요",
+    "comments": "댓글",
+    "collects": "저장",
+    "shares": "공유",
+    "price": "가격",
+    "url": "링크",
+    "size": "크기",
+    "seeders": "시드",
+    "leechers": "다운로드"
+  }
+}

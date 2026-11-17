@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f3f4f7" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14172a" />
+    <title>catbus</title>
+    <link rel="icon" href="/favicon.png" />
+    <script>
+      // 首帧前定好主题，避免闪烁：读设置里的 theme（light | dark | system），兼容迁移前的旧键 catbus.theme
+      try {
+        let t = null
+        try { t = JSON.parse(localStorage.getItem('catbus.settings') || 'null')?.theme } catch {}
+        if (t !== 'light' && t !== 'dark' && t !== 'system') t = localStorage.getItem('catbus.theme') || 'light'
+        const dark = t === 'system' ? matchMedia('(prefers-color-scheme: dark)').matches : t === 'dark'
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+      } catch { document.documentElement.dataset.theme = 'light' }
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

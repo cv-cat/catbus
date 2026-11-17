@@ -1,0 +1,27 @@
+{
+  "title": "导出已选的条目",
+  "short": "导出",
+  "head": "导出 {n} 条",
+  "csv": "表格，Excel 可直接打开",
+  "json": "完整的结构化数据",
+  "columns": {
+    "platform": "平台",
+    "id": "ID",
+    "kind": "类型",
+    "title": "标题",
+    "text": "正文",
+    "author": "作者",
+    "author_url": "作者链接",
+    "created_at": "发布时间",
+    "views": "播放",
+    "likes": "点赞",
+    "comments": "评论",
+    "collects": "收藏",
+    "shares": "分享",
+    "price": "价格",
+    "url": "链接",
+    "size": "体积",
+    "seeders": "做种",
+    "leechers": "下载"
+  }
+}

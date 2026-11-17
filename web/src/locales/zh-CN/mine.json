@@ -1,0 +1,34 @@
+{
+  "title": "我的",
+  "joiner": "、",
+  "login": "登录{platform}后查看你的{tabs}",
+  "loginDesc": "只读取你自己账号的内容，不会修改任何东西。",
+  "expired": "登录已失效",
+  "expiredDesc": "重新登录后接着看。",
+  "refresh": "刷新",
+  "empty": "还没有{tab}",
+  "folderEmpty": "这里面还没有内容",
+  "openOn": "在{platform}打开",
+  "nav": {
+    "label": "{platform}页面"
+  },
+  "tab": {
+    "works": "作品",
+    "notes": "笔记",
+    "posts": "投稿",
+    "likes": "赞过",
+    "loved": "喜欢",
+    "collects": "收藏",
+    "reposts": "转发",
+    "folders": "收藏夹",
+    "series": "合集",
+    "playlists": "播放列表",
+    "history": "浏览记录"
+  },
+  "status": {
+    "reviewing": "审核中",
+    "private": "仅自己可见",
+    "rejected": "未通过",
+    "draft": "草稿"
+  }
+}
