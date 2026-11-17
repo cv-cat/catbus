@@ -389,7 +389,9 @@ export async function jsonpOf<T = any>(res: HttpResponse): Promise<T> {
 export function toNetworkError(err: unknown): CatbusError {
   if (err instanceof CatbusError) return err
   const message = err instanceof Error ? err.message : String(err)
-  if (!(err instanceof RequestError) && !(err instanceof Error && err.name === 'AbortError')) {
+  // 响应体读一半断掉（wreq 报 "request or response body error: …"）同样是网络错误，只是发生在请求返回之后
+  const bodyError = err instanceof Error && err.message.startsWith('request or response body error')
+  if (!bodyError && !(err instanceof RequestError) && !(err instanceof Error && err.name === 'AbortError')) {
     return new CatbusError('ERROR', message, { cause: err })
   }
   const kind = /timed? ?out/i.test(message)
