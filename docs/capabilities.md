@@ -296,7 +296,7 @@
 | 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x | youtube | 12306 | jimeng | maoyan | mteam | discord |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | live get | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — | ✓ | — | — | — | — | — |
-| live list | ✓ | ○ | ✓ | ○ | ✓ | ○ | — | ○ | — | — | — | — | — | — | — | — |
+| live list | ✓ | ○ | ✓ | ◐ | ✓ | ○ | — | ○ | — | — | — | — | — | — | — | — |
 | live search | ○ | ✓ | ✓ | ✓ | ○ | ○ | — | ○ | — | — | ✓ | — | — | — | — | — |
 | live categories | ✓ | ○ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — | — | — | — | — | — | — |
 | live listen | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | — | ○ | — | — | ✓ | — | — | — | — | — |
@@ -312,6 +312,7 @@
 - kuaishou `live get`：直播首页里没有的直播间按主播 ID 查直播间页的 live_api/liveroom/livedetail（非上游，没有对拍）
 - youtube `live get`：<room> 为直播的视频 ID 或链接
 - tiktok `live list`：只有关注的人里正在直播的（上游 get_webcast_feed 是直播页侧栏的关注列表）；没关注的人在播时为空
+- bilibili `live list`：非上游：上游没有直播列表接口，请求按网页端直播首页（getListV2）和分区页（second/getList，wbi 签名）补的，没有对拍；不带 --category 是首页推荐，--category 取 live categories 的父分区或子分区 id
 - kuaishou `live listen`：直播首页里没有的直播间按主播 ID 查直播间页的 live_api/liveroom/livedetail（非上游，没有对拍）
 - youtube `live listen`：轮询直播聊天：文字消息、Super Chat、会员
 - douyin `live history`：只有进房时 im/fetch 带回的最近 15 条
@@ -324,7 +325,7 @@
 - douyin `live media`：拉流地址取自房间资料（room/web/enter）
 - tiktok `live media`：上游没有解析拉流地址：取自 /api-live/user/room 的 liveRoom.streamData，或 room/enter 的 stream_url
 - kuaishou `live media`：非上游：直播流地址取自直播间页的 live_api/liveroom/livedetail（playUrls），没有对拍；没开播时为空
-- `live list --category`：xhs
+- `live list --category`：xhs、bilibili
 - `live send --color`：bilibili
 - `live send --font-size`：bilibili
 - `live send --position`：bilibili

@@ -919,6 +919,48 @@ export function areaList(b: Bili) {
   return b.get(`${LIVE_API}/xlive/web-interface/v1/index/getWebAreaList`, { headers: headers('GET', { origin: LIVE }).get(), query: [['source_id', 2]] })
 }
 
+/** 直播首页的推荐列表（非上游：按网页端 live.bilibili.com 首页补的，按页翻，不签名）。 */
+export function liveIndexList(b: Bili, page: number) {
+  return b.get(`${LIVE_API}/xlive/web-interface/v1/index/getListV2`, {
+    headers: headers('GET', { origin: LIVE }).get(),
+    query: [
+      ['platform', 'web'],
+      ['page', page],
+      ['web_location', '444.7'],
+    ],
+  })
+}
+
+/** 直播分区页的地址：子分区为 0 时是整个父分区。 */
+export const liveAreaPage = (parentAreaId: string | number, areaId: string | number) => `${LIVE}/p/eden/area-tags?parentAreaId=${parentAreaId}&areaId=${areaId}`
+
+/**
+ * 分区页 HTML 里 `window._render_data_.access_id`：second/getList 的 w_webid，缺了报 -352。
+ * 是 gaia 签发的 JWT（绑定 buvid 与 UA，有效 1 天），取不到时返回空串，由接口自己报错。
+ */
+export async function liveAccessId(b: Bili, parentAreaId: string | number, areaId: string | number): Promise<string> {
+  const h = headers('DOC').set('sec-fetch-site', 'same-origin')
+  h.insertBefore('accept-encoding', 'referer', `${LIVE}/`)
+  const res = await b.request({ url: liveAreaPage(parentAreaId, areaId), headers: h.get() })
+  if (res.status !== 200) return ''
+  return /"access_id"\s*:\s*"([^"]+)"/.exec(await res.text())?.[1] ?? ''
+}
+
+/** 分区的直播间列表（非上游：按网页端分区页 /p/eden/area-tags 补的）。子分区为 0 时是整个父分区；带 w_webid 后 wbi 签名。 */
+export async function liveAreaList(b: Bili, parentAreaId: string | number, areaId: string | number, page: number, webid: string) {
+  const params: Pairs = [
+    ['platform', 'web'],
+    ['parent_area_id', parentAreaId],
+    ['area_id', areaId],
+    ['sort_type', ''],
+    ['page', page],
+    ['vajra_business_key', ''],
+    ['web_location', '444.253'],
+    ['w_webid', webid],
+  ]
+  return b.get(`${LIVE_API}/xlive/web-interface/v1/second/getList`, { headers: headers('GET', { origin: LIVE }).get(), query: await b.wbi(params) })
+}
+
 export function bagList(b: Bili, roomId: string | number) {
   const h = headers('GET', { origin: LIVE }).referer(`${LIVE}/${roomId}`)
   return b.get(`${LIVE_API}/xlive/web-room/v1/gift/bag_list`, {

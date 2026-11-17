@@ -95,6 +95,7 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | 命令 | 状态 | 说明 |
 |---|---|---|
 | `live get` | ✓ | 直播间信息。 |
+| `live list` | ◐ | 正在直播的直播间。不带 `--category` 为直播首页推荐；`--category` 取 `live categories` 的父分区或子分区 id。非上游：请求按网页端直播首页和分区页补的。 |
 | `live search` | ✓ | 搜索直播。 |
 | `live categories` | ✓ | 直播分类。 |
 | `live listen` | ✓ | 监听弹幕、礼物、进场等事件。持续输出 jsonl。 |
@@ -104,7 +105,7 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `live media` | ✓ | 直播流地址。 |
 | `live start` | ✓ | 开播。`--category` 为直播分区，取值见 `live categories`。 |
 | `live stop` | ✓ | 下播。 |
-| `live list`、`live like`、`live rank`、`live replays` | ○ | 规划中 |
+| `live like`、`live rank`、`live replays` | ○ | 规划中 |
 
 ### media
 
