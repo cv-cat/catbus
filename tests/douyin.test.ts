@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import * as rand from '../src/core/rand.js'
@@ -1457,5 +1457,115 @@ describe('douyin keyword hot（非上游，没有对拍）', () => {
     const web = douyin.endpoints.web
     if (web === 'planned') throw new Error('web 是 planned')
     expect(web.commands.get('keyword hot')).toMatchObject({ upstream: 'partial', note: expect.stringContaining('非上游') })
+  })
+})
+
+// ================================================================ 直播列表与分区（非上游，fixture 取自网页版真实响应，已换成假数据）
+
+const dyFixture = (name: string) => readFileSync(new URL(`./fixtures/douyin/${name}`, import.meta.url), 'utf8')
+
+describe('douyin live list / live categories', () => {
+  useTempHome()
+
+  it('live categories：从首页 HTML 的 RSC 行解出分区树，先父后子，id 是分区页路径', async () => {
+    const { liveCategories } = await commands()
+    await withServer([[/^https:\/\/live\.douyin\.com\/$/, () => fakeResponse(dyFixture('live_home.html'))]], async (seen) => {
+      const list: any = await liveCategories(loggedFrom('search_live'))
+      expect(list.map((c: any) => [c.id, c.name, c.parent_id])).toEqual([
+        ['4_101', '聊天', null],
+        ['4_103', '游戏', null],
+        ['4_103_1_1011032', '三角洲行动', '4_103'],
+        ['4_103_1_1010045', '王者荣耀', '4_103'],
+        ['4_107', '生活"]测试', null],
+      ])
+      expect(list[2][RAW].partition.id_str).toBe('1011032')
+      expect(reqPath(seen[0]!)).toBe('GET https://live.douyin.com/')
+    })
+  })
+
+  it('live categories：页面里没有分区树时报 UPSTREAM', async () => {
+    const { liveCategories } = await commands()
+    await withServer([[/^https:\/\/live\.douyin\.com\/$/, () => fakeResponse('<html></html>')]], async () => {
+      await expect(liveCategories(loggedFrom('search_live'))).rejects.toMatchObject({ code: 'UPSTREAM' })
+    })
+  })
+
+  it('live list 不带 --category：首页推荐流，cursor 为 extra.max_time，带 a_bogus', async () => {
+    const { liveList } = await commands()
+    await withServer([['/webcast/feed/', () => fakeResponse(dyFixture('live_feed.json'))]], async (seen) => {
+      const res: any = await liveList(loggedFrom('search_live', { cursor: '1789999999000' }))
+      expect(res.page).toEqual({ cursor: '1790000000999', has_more: true })
+      expect(res.data[0]).toEqual({
+        id: '100000000000',
+        url: 'https://live.douyin.com/100000000000',
+        title: '测试直播间 0',
+        status: 'live',
+        host: { id: 'MS4wLjABAAAAfakeHost0', name: '主播0', url: 'https://www.douyin.com/user/MS4wLjABAAAAfakeHost0', avatar: 'https://p3.douyinpic.com/aweme/100x100/fake_avatar_0.jpeg' },
+        cover: 'https://p3-webcast.douyinpic.com/img/webcast/fake_cover_0.jpg',
+        stats: { viewers: expect.any(Number) },
+      })
+      const r = seen.find((x) => x.url.includes('/webcast/feed/'))!
+      const q = query(r)
+      expect([q.get('maxtime'), q.get('custom_count'), q.get('enter_source'), q.get('enter_from')]).toEqual(['1789999999000', '20', 'web_homepage_hot_web_live_card', 'link_share'])
+      expect(q.get('a_bogus')).toBeTruthy()
+      expect(q.get('msToken')).not.toBeNull()
+    })
+  })
+
+  it('live list 推荐流：has_more 为 false 或空页时停下', async () => {
+    const { liveList } = await commands()
+    await withServer([['/webcast/feed/', () => fakeResponse({ status_code: 0, data: [], extra: { has_more: true, max_time: 1 } })]], async () => {
+      const res: any = await liveList(loggedFrom('search_live'))
+      expect(res.page).toEqual({ cursor: null, has_more: false })
+    })
+  })
+
+  it('live list --category：分区页接口，partition / partition_type 取路径最后一段，cursor 为 data.offset；空页时停下', async () => {
+    const { liveList } = await commands()
+    let empty = false
+    await withServer(
+      [['/webcast/web/partition/detail/room/v2/', () => fakeResponse(empty ? { status_code: 0, data: { count: 15, offset: 45, data: [] } } : dyFixture('live_partition.json'))]],
+      async (seen) => {
+        const res: any = await liveList(loggedFrom('search_live', { options: { category: '4_103_1_1011032' }, cursor: '15' }))
+        expect(res.data.map((l: any) => [l.id, l.title, l.status, l.host.name])).toEqual([
+          ['100000000010', '测试直播间 10', 'live', '主播10'],
+          ['100000000011', '测试直播间 11', 'live', '主播11'],
+        ])
+        expect(res.page).toEqual({ cursor: '30', has_more: true })
+        const q = query(seen[0]!)
+        expect([q.get('partition'), q.get('partition_type'), q.get('offset'), q.get('count'), q.get('req_from'), q.get('enter_from')]).toEqual(['1011032', '1', '15', '15', '2', null])
+        expect(seen[0]!.headers.find(([k]) => k.toLowerCase() === 'referer')?.[1]).toBe('https://live.douyin.com/categorynew/4_103_1_1011032')
+        empty = true
+        const last: any = await liveList(loggedFrom('search_live', { options: { category: 'https://live.douyin.com/categorynew/4_107' }, cursor: '30' }))
+        expect(last.page).toEqual({ cursor: null, has_more: false })
+        expect(query(seen[1]!).get('partition')).toBe('107')
+      },
+    )
+  })
+
+  it('live list --category 分区名 / 数字 id：先查分区列表；查不到报 USAGE', async () => {
+    const { liveList } = await commands()
+    await withServer(
+      [
+        [/^https:\/\/live\.douyin\.com\/$/, () => fakeResponse(dyFixture('live_home.html'))],
+        ['/webcast/web/partition/detail/room/v2/', () => fakeResponse(dyFixture('live_partition.json'))],
+      ],
+      async (seen) => {
+        await liveList(loggedFrom('search_live', { options: { category: '王者荣耀' } }))
+        await liveList(loggedFrom('search_live', { options: { category: '1011032' } }))
+        const parts = seen.filter((r) => r.url.includes('/partition/'))
+        expect(parts.map((r) => query(r).get('partition'))).toEqual(['1010045', '1011032'])
+        await expect(liveList(loggedFrom('search_live', { options: { category: '不存在' } }))).rejects.toMatchObject({ code: 'USAGE' })
+      },
+    )
+  })
+
+  it('注册表：live list 声明 category 选项（WebUI 的分类 chip 靠它），两条命令都标为非上游', async () => {
+    const { default: douyin } = await import('../src/platforms/douyin/index.js')
+    const web = douyin.endpoints.web
+    if (web === 'planned') throw new Error('web 是 planned')
+    expect(web.commands.get('live list')?.options.category).toBeTruthy()
+    expect(web.commands.get('live list')).toMatchObject({ upstream: 'partial', note: expect.stringContaining('非上游') })
+    expect(web.commands.get('live categories')).toMatchObject({ upstream: 'partial', note: expect.stringContaining('非上游') })
   })
 })

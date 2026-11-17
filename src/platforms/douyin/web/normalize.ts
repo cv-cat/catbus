@@ -1,6 +1,6 @@
 import * as n from '../../../core/normalize.js'
 import { jsonLoads } from '../../../core/py.js'
-import type { AccountUser, Comment, Event, Item, ItemStatus, Live, Media, Notice, Rank, User, UserRef } from '../../../core/schemas.js'
+import type { AccountUser, Category, Comment, Event, Item, ItemStatus, Live, Media, Notice, Rank, User, UserRef } from '../../../core/schemas.js'
 import { commentMedia, reviewMedia } from '../../_shared/aweme.js'
 import { LIVE, WWW } from './profile.js'
 
@@ -188,6 +188,93 @@ export function searchLive(item: any): Live | null {
     },
     item,
   )
+}
+
+/**
+ * 推荐流（webcast/feed 的 data 项，房间在 data）和分区（partition/detail/room/v2 的 data.data 项，房间在 room）里的直播间 → Live。
+ * 列表里的房间都在播，status 字段没有填（为 0），只有明确为 4（已下播）时才算 offline。
+ */
+export function feedLive(item: any): Live | null {
+  const room = item?.room ?? item?.data
+  const webRid = item?.web_rid || room?.owner?.web_rid
+  if (!room || typeof room !== 'object' || !webRid) return null
+  return n.live(
+    {
+      id: String(webRid),
+      url: liveUrl(webRid),
+      title: n.str(room.title),
+      status: Number(room.status) === 4 ? 'offline' : 'live',
+      host: authorRef(room.owner),
+      cover: first(room.cover),
+      stats: { viewers: n.count(room.user_count ?? room.room_view_stats?.display_value) },
+    },
+    item,
+  )
+}
+
+/**
+ * 直播首页 HTML 里的分区树。服务端渲染的数据在 `self.__pace_f.push([1,"<RSC 行>"])` 脚本里，
+ * 先按 JSON 解出这一行，再取其中的 `"categoryData":[...]`。取不到时返回 null。
+ * 每项是 `{partition: {id_str, type, title}, sub_partition: [...]}`。
+ */
+export function categoryTree(html: string): any[] | null {
+  for (const m of html.matchAll(/self\.__pace_f\.push\((\[[\s\S]*?\])\)\s*;?\s*<\/script>/g)) {
+    if (!m[1]!.includes('categoryData')) continue
+    let row: unknown
+    try {
+      row = jsonLoads(m[1]!)?.[1]
+    } catch {
+      continue
+    }
+    if (typeof row !== 'string') continue
+    const key = row.indexOf('"categoryData":')
+    if (key < 0) continue
+    const tree = jsonAt(row, row.indexOf('[', key))
+    if (Array.isArray(tree)) return tree
+  }
+  return null
+}
+
+/** 从 `start` 处的 `[` 或 `{` 起取一个完整的 JSON 值（跳过字符串里的括号），解析失败时返回 undefined。 */
+function jsonAt(s: string, start: number): unknown {
+  if (start < 0) return undefined
+  let depth = 0
+  let inStr = false
+  for (let j = start; j < s.length; j++) {
+    const c = s[j]
+    if (inStr) {
+      if (c === '\\') j++
+      else if (c === '"') inStr = false
+    } else if (c === '"') inStr = true
+    else if (c === '[' || c === '{') depth++
+    else if ((c === ']' || c === '}') && --depth === 0) {
+      try {
+        return jsonLoads(s.slice(start, j + 1))
+      } catch {
+        return undefined
+      }
+    }
+  }
+  return undefined
+}
+
+/**
+ * 分区树 → Category[]，先父后子。id 是分区页路径（`<type>_<id_str>`，子分区接在父分区后面，如 `4_103_1_1011032`），
+ * 也就是 `live list --category` 的取值；parent_id 是父分区的 id。
+ */
+export function liveCategories(tree: any[]): Category[] {
+  const out: Category[] = []
+  const walk = (nodes: any[], parent: string | null) => {
+    for (const node of nodes ?? []) {
+      const p = node?.partition
+      if (p?.id_str == null || p.type == null) continue
+      const id = `${parent ? `${parent}_` : ''}${p.type}_${p.id_str}`
+      out.push(n.category({ id, name: String(p.title ?? id), parent_id: parent }, node))
+      walk(node.sub_partition ?? [], id)
+    }
+  }
+  walk(tree, null)
+  return out
 }
 
 /** room/web/enter 的响应 → Live。 */

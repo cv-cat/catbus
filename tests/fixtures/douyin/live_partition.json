@@ -1,0 +1,78 @@
+{
+  "data": {
+    "count": 15,
+    "offset": 30,
+    "data": [
+      {
+        "room": {
+          "id_str": "7700000000000000010",
+          "status": 0,
+          "title": "测试直播间 10",
+          "user_count": 7195,
+          "cover": {
+            "url_list": [
+              "https://p3-webcast.douyinpic.com/img/webcast/fake_cover_10.jpg"
+            ],
+            "uri": "webcast-cover/fake10"
+          },
+          "owner": {
+            "id_str": "1010",
+            "sec_uid": "MS4wLjABAAAAfakeHost10",
+            "nickname": "主播10",
+            "avatar_thumb": {
+              "url_list": [
+                "https://p3.douyinpic.com/aweme/100x100/fake_avatar_10.jpeg"
+              ]
+            },
+            "web_rid": "100000000010"
+          },
+          "room_view_stats": {
+            "is_hidden": false,
+            "display_value": 7195,
+            "display_long": "7195在线观众"
+          }
+        },
+        "tag_name": "",
+        "web_rid": "100000000010",
+        "is_recommend": 0
+      },
+      {
+        "room": {
+          "id_str": "7700000000000000011",
+          "status": 0,
+          "title": "测试直播间 11",
+          "user_count": 2684,
+          "cover": {
+            "url_list": [
+              "https://p3-webcast.douyinpic.com/img/webcast/fake_cover_11.jpg"
+            ],
+            "uri": "webcast-cover/fake11"
+          },
+          "owner": {
+            "id_str": "1011",
+            "sec_uid": "MS4wLjABAAAAfakeHost11",
+            "nickname": "主播11",
+            "avatar_thumb": {
+              "url_list": [
+                "https://p3.douyinpic.com/aweme/100x100/fake_avatar_11.jpeg"
+              ]
+            },
+            "web_rid": "100000000011"
+          },
+          "room_view_stats": {
+            "is_hidden": false,
+            "display_value": 2684,
+            "display_long": "2684在线观众"
+          }
+        },
+        "tag_name": "",
+        "web_rid": "100000000011",
+        "is_recommend": 0
+      }
+    ]
+  },
+  "extra": {
+    "now": 1790000001000
+  },
+  "status_code": 0
+}

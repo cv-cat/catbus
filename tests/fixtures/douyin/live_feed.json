@@ -1,0 +1,79 @@
+{
+  "data": [
+    {
+      "type": 1,
+      "web_rid": "100000000000",
+      "data": {
+        "id_str": "7700000000000000000",
+        "status": 0,
+        "title": "测试直播间 0",
+        "user_count": 546,
+        "cover": {
+          "url_list": [
+            "https://p3-webcast.douyinpic.com/img/webcast/fake_cover_0.jpg"
+          ],
+          "uri": "webcast-cover/fake0"
+        },
+        "owner": {
+          "id_str": "1000",
+          "sec_uid": "MS4wLjABAAAAfakeHost0",
+          "nickname": "主播0",
+          "avatar_thumb": {
+            "url_list": [
+              "https://p3.douyinpic.com/aweme/100x100/fake_avatar_0.jpeg"
+            ]
+          },
+          "web_rid": "100000000000"
+        },
+        "room_view_stats": {
+          "is_hidden": false,
+          "display_value": 546,
+          "display_long": "546在线观众"
+        }
+      },
+      "tags": [],
+      "is_recommend_card": false
+    },
+    {
+      "type": 1,
+      "web_rid": "100000000001",
+      "data": {
+        "id_str": "7700000000000000001",
+        "status": 0,
+        "title": "测试直播间 1",
+        "user_count": 26,
+        "cover": {
+          "url_list": [
+            "https://p3-webcast.douyinpic.com/img/webcast/fake_cover_1.jpg"
+          ],
+          "uri": "webcast-cover/fake1"
+        },
+        "owner": {
+          "id_str": "1001",
+          "sec_uid": "MS4wLjABAAAAfakeHost1",
+          "nickname": "主播1",
+          "avatar_thumb": {
+            "url_list": [
+              "https://p3.douyinpic.com/aweme/100x100/fake_avatar_1.jpeg"
+            ]
+          },
+          "web_rid": "100000000001"
+        },
+        "room_view_stats": {
+          "is_hidden": false,
+          "display_value": 26,
+          "display_long": "26在线观众"
+        }
+      },
+      "tags": [],
+      "is_recommend_card": false
+    }
+  ],
+  "extra": {
+    "has_more": true,
+    "max_time": 1790000000999,
+    "now": 1790000001000,
+    "total": 2
+  },
+  "status_code": 0
+}

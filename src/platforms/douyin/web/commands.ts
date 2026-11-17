@@ -348,6 +348,54 @@ export async function liveSearch(ctx: Ctx) {
   return paged(list, Number(offset) + 15, more(body.has_more) && data.length > 0)
 }
 
+/**
+ * 直播间列表：不带 --category 时是直播首页的推荐流（webcast/feed，cursor 为 maxtime），
+ * 带 --category 时是分区页（partition/detail/room/v2，cursor 为 offset）。
+ */
+export async function liveList(ctx: Ctx) {
+  const d = await douyin(ctx)
+  const category = ctx.options.category as string | undefined
+  if (category) {
+    const path = await resolveCategory(d, category)
+    const body = check(ctx, await api.livePartition(d, path, cursor(ctx)))
+    const raw: any[] = body.data?.data ?? []
+    // 分区接口没有 has_more：offset 是下一页的起点，空页时停下
+    return paged(raw.map(norm.feedLive).filter(Boolean), body.data?.offset, raw.length > 0)
+  }
+  const body = check(ctx, await api.liveFeed(d, cursor(ctx)))
+  const raw: any[] = Array.isArray(body.data) ? body.data : []
+  return paged(raw.map(norm.feedLive).filter(Boolean), body.extra?.max_time, more(body.extra?.has_more) && raw.length > 0)
+}
+
+/** 直播分区：直播首页 HTML 里的分区树（先父后子）。 */
+export async function liveCategories(ctx: Ctx) {
+  return norm.liveCategories(await categoryTree(await douyin(ctx)))
+}
+
+async function categoryTree(d: Douyin): Promise<any[]> {
+  const tree = norm.categoryTree(await api.liveHome(d))
+  if (!tree) throw new CatbusError('UPSTREAM', '直播首页里没有找到分区列表，可能页面结构变了')
+  return tree
+}
+
+/** 分区页路径：`4_103`、`4_103_1_1011032` 这样成对的 `<type>_<id>`。 */
+const CATEGORY_PATH = /^\d+_\d+(?:_\d+_\d+)*$/
+
+/**
+ * `--category`：分区页路径（live categories 的 id）、分区页链接（/categorynew/…），
+ * 或者分区名 / 分区数字 id（这两种要先取一次分区列表来查）。
+ */
+async function resolveCategory(d: Douyin, input: string): Promise<string> {
+  const s = input.trim()
+  const fromUrl = /\/categorynew\/([\d_]+)/.exec(s)?.[1]
+  const path = fromUrl ?? s
+  if (CATEGORY_PATH.test(path)) return path
+  const list = norm.liveCategories(await categoryTree(d))
+  const hit = list.find((c) => c.name === s) ?? list.find((c) => c.id.split('_').at(-1) === s)
+  if (hit) return hit.id
+  throw new CatbusError('USAGE', `没有这个直播分区：${input}`, { hint: 'catbus douyin live categories' })
+}
+
 /** 直播间榜单：默认贡献榜（get_live_contribution_rank），`--ranking thousand` 为千票榜（get_live_thousand_ticket_rank）。 */
 export async function liveRank(ctx: Ctx) {
   const d = await douyin(ctx)

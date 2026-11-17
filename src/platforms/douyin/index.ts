@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { filter, PRODUCT } from '../../core/options.js'
+import { CATEGORY, filter, PRODUCT } from '../../core/options.js'
 import { definePlatform, type Handler, handlers } from '../../core/registry.js'
 import { type Args, checkMsgSend, type Options } from '../../core/vocab.js'
 
@@ -99,9 +99,12 @@ export default definePlatform({
         }),
 
         'live get': read('full', 'liveGet'),
-        'live list': 'none',
+        'live list': read('partial', 'liveList', {
+          note: '非上游：请求按直播网页版补的（webcast/feed、webcast/web/partition/detail/room/v2），没有对拍；不带 --category 是首页推荐流，带 --category 是分区页（取值为 live categories 的 id、分区名或分区页链接）',
+          options: { category: CATEGORY },
+        }),
         'live search': read('full', 'liveSearch'),
-        'live categories': 'none',
+        'live categories': read('partial', 'liveCategories', { note: '非上游：取自直播网页版首页 HTML 里的分区栏，没有对拍；网页版只给出部分分区的子分区' }),
         'live listen': read('full', 'liveListen'),
         'live history': read('partial', 'liveHistory', { note: '只有进房时 im/fetch 带回的最近 15 条' }),
         'live send': write('partial', 'liveSend', { note: '--gift 规划中' }),

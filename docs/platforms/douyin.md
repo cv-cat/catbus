@@ -93,7 +93,9 @@
 | 命令 | 状态 | 说明 |
 |---|---|---|
 | `live get` | ✓ | 直播间信息。 |
+| `live list` | ◐ | 直播列表。不带 `--category` 是直播首页的推荐，带 `--category` 是分区里的直播间；`--category` 取 `live categories` 的 id（如 `4_103`），也认分区名或分区页链接。请求按直播网页版补的，上游没有。 |
 | `live search` | ✓ | 搜索直播。 |
+| `live categories` | ◐ | 直播分区（父分区和子分区）。取自直播网页版首页，网页版只给出部分分区的子分区。 |
 | `live listen` | ✓ | 监听弹幕、礼物、进场等事件。持续输出 jsonl。 |
 | `live history` | ◐ | 最近的弹幕。只有进房时 im/fetch 带回的最近 15 条。 |
 | `live send` | ◐ | 发弹幕，或用 `--gift` 送礼。`--gift` 规划中。送礼（`--gift`）需要确认。 |
@@ -101,7 +103,7 @@
 | `live rank` | ✓ | 直播间排行榜。私有选项 `--ranking`。 |
 | `live products` | ✓ | 直播间商品。 |
 | `live media` | ◐ | 直播流地址。拉流地址取自房间资料（room/web/enter）。 |
-| `live list`、`live categories`、`live gifts`、`live replays`、`live start`、`live stop` | ○ | 规划中 |
+| `live gifts`、`live replays`、`live start`、`live stop` | ○ | 规划中 |
 
 ### notice
 

@@ -821,18 +821,88 @@ export async function liveInfo(d: Douyin, webRid: string): Promise<LiveInfo | nu
   return null
 }
 
-/** 直播 GET 公共参数（上游 _get_live_web）。 */
-async function liveWeb(d: Douyin, api: string, endpoint: [string, string | null][], webRid = '', enterFrom = 'link_share'): Promise<DyJson> {
-  const h = headers('GET').referer(webRid ? `${LIVE}/${webRid}` : LIVE)
+/**
+ * 直播 GET 公共参数（上游 _get_live_web）。`page` 是 referer 的路径（直播间的 web_rid，或分区页 `categorynew/<分区>`）；
+ * `enterFrom` 为 null 时不带 enter_from（网页版的分区接口不带它）。
+ */
+async function liveWeb(d: Douyin, api: string, endpoint: [string, string | null][], page = '', enterFrom: string | null = 'link_share'): Promise<DyJson> {
+  const h = headers('GET').referer(page ? `${LIVE}/${page}` : LIVE)
   const p = new Params()
   p.add('aid', '6383').add('app_name', 'douyin_web').add('live_id', '1').add('device_platform', 'web').add('language', 'zh-CN')
-  p.add('enter_from', enterFrom).add('cookie_enabled', 'true').add('screen_width', PROFILE.screenWidth).add('screen_height', PROFILE.screenHeight)
+  if (enterFrom != null) p.add('enter_from', enterFrom)
+  p.add('cookie_enabled', 'true').add('screen_width', PROFILE.screenWidth).add('screen_height', PROFILE.screenHeight)
   p.add('browser_language', 'zh-CN').add('browser_platform', PROFILE.platform).add('browser_name', PROFILE.browserName)
   p.add('browser_version', PROFILE.browserVersion).add('os_name', 'Windows').add('os_version', '10')
   for (const [k, v] of endpoint) if (v != null) p.add(k, v)
   await withMsToken(d, p)
   withABogus(d, p, undefined, LIVE_HOST)
   return getJson(d, LIVE + api, h, p, 30)
+}
+
+/**
+ * 直播首页的推荐流（live.douyin.com 首页「为你推荐」，上游没有，参数照网页版抓包，2026-11-17）。
+ * 翻页：下一页的 maxtime 取上一页 extra.max_time，首页为 0。
+ */
+export function liveFeed(d: Douyin, maxTime = '0', count = '20'): Promise<DyJson> {
+  return liveWeb(d, '/webcast/feed/', [
+    ['channel', 'channel_pc_web'],
+    ['request_tag_from', 'web'],
+    ['need_map', '1'],
+    ['liveid', '1'],
+    ['is_draw', '1'],
+    ['inner_from_drawer', '0'],
+    ['custom_count', count],
+    ['action', 'load_more'],
+    ['action_type', 'loadmore'],
+    ['enter_source', 'web_homepage_hot_web_live_card'],
+    ['source_key', 'web_homepage_hot_web_live_card'],
+    ['maxtime', maxTime],
+  ])
+}
+
+/**
+ * 分区里的直播间（分区页 /categorynew/<分区>，上游没有，参数照网页版抓包，2026-11-17）。
+ * `path` 是分区页路径（如 `4_103`、`4_103_1_1011032`），接口只要最后一段的类型与 id。翻页：offset 取上一页 data.offset。
+ */
+export function livePartition(d: Douyin, path: string, offset = '0', count = '15'): Promise<DyJson> {
+  const [type, id] = path.split('_').slice(-2)
+  return liveWeb(
+    d,
+    '/webcast/web/partition/detail/room/v2/',
+    [
+      ['count', count],
+      ['offset', offset],
+      ['partition', id!],
+      ['partition_type', type!],
+      ['req_from', '2'],
+    ],
+    `categorynew/${path}`,
+    null,
+  )
+}
+
+/** 直播首页 HTML：分区树（categoryData）只在服务端渲染的脚本里，没有单独的接口。 */
+export async function liveHome(d: Douyin): Promise<string> {
+  const res = await d.request({
+    url: `${LIVE}/`,
+    headers: [
+      ['accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7'],
+      ['accept-language', 'zh-CN,zh;q=0.9'],
+      ['cache-control', 'no-cache'],
+      ['pragma', 'no-cache'],
+      ['priority', 'u=0, i'],
+      ['sec-ch-ua', '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"'],
+      ['sec-ch-ua-mobile', '?0'],
+      ['sec-ch-ua-platform', '"Windows"'],
+      ['sec-fetch-dest', 'document'],
+      ['sec-fetch-mode', 'navigate'],
+      ['sec-fetch-site', 'none'],
+      ['upgrade-insecure-requests', '1'],
+      ['user-agent', PROFILE.ua],
+    ],
+    timeout: 30,
+  })
+  return res.text()
 }
 
 /** 房间资料（上游 get_live_room_enter）。 */
