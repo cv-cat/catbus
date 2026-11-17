@@ -38,9 +38,10 @@ npm i -g catbus-cli         # 必要なのは Node だけ
 catbus bilibili auth login  # QR コードでログイン
 catbus bilibili item search cat --limit 20
 catbus tui           # コマンドを覚えたくない？全画面 UI を使う
+catbus web           # ローカルの Web UI で見る
 ```
 
-Docker やソースからのインストールは[クイックスタートガイド](docs/guide/quick-start.md)、全画面 UI は[ターミナル UI](docs/guide/tui.md)をご覧ください。
+Docker やソースからのインストールは[クイックスタートガイド](docs/guide/quick-start.md)、全画面 UI は[ターミナル UI](docs/guide/tui.md)をご覧ください。`catbus web` はローカルの Web UI を開き、プラットフォームをまたいで検索・閲覧・ダウンロードできます。[オンラインデモ](https://catbus-demo.crush-hub.com)（デモデータ、ログイン不要）もあります。
 
 ## ひとつのコマンド体系で、すべてのプラットフォームを
 

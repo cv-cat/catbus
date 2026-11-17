@@ -38,9 +38,10 @@ npm i -g catbus-cli         # 只需要 Node
 catbus bilibili auth login  # 扫码登录
 catbus bilibili item search 猫 --limit 20
 catbus tui    # 不想记命令？用全屏界面
+catbus web    # 或者在本地网页里浏览
 ```
 
-想用 Docker 或源码安装？看[快速上手指南](docs/guide/quick-start.md)；全屏界面见[终端界面](docs/guide/tui.md)。
+想用 Docker 或源码安装？看[快速上手指南](docs/guide/quick-start.md)；全屏界面见[终端界面](docs/guide/tui.md)。`catbus web` 打开本地网页界面，跨平台搜索、浏览和下载，可以先看[在线演示](https://catbus-demo.crush-hub.com)（演示数据，不用登录）。
 
 ## 一套命令，所有平台通用
 
