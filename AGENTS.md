@@ -356,6 +356,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
   - 传商品 URL 时，自动识别为商品。
   - 传纯 ID 时要加 `--product`，否则按 item 处理。
 - bilibili 的 `comment replies <item> <comment>` 支持视频、专栏和图文动态：`<item>` 接受 BV 号、av 号、aid、视频链接（含分享短链），`cv<id>` / 专栏链接，或动态链接 / ID。纯文字和转发动态的楼中楼尚未验证，不开放。`<comment>` 是 `comment list` 返回的根评论 ID。分页读取该根评论下的可见楼中楼，沿用 `--limit`、`--cursor`、`--all`；`comment list --raw` 中的少量 `replies` 只是预览。
+- bilibili 的 `live list`：不带 `--category` 时是直播首页推荐；`--category` 取 `live categories` 输出的 id，父分区（`parent_id` 为 null）和子分区都可以传，父分区列整个分区，子分区按它的 `parent_id` 找到父分区。分区列表接口要分区页 HTML 里的 `access_id` 作 `w_webid`（缺了报 -352），同一条命令翻页时只取一次。两个接口只返回正在直播的直播间。
 - bilibili 的 `comment list` / `replies` 读取图文动态时，先用非上游的动态详情接口取 `basic.comment_type=11` 与 `comment_id_str`（相簿 ID），不能把动态 ID 当作评论区 oid；输出 `Comment.item_id` 仍为动态 ID。同一条命令翻页时复用解析结果。`comment add` / `delete` 仍只支持纯文字和转发动态。
 - `msg send --item <item>`：对商品卖家 / 客服发消息（闲鱼、淘宝、京东）。
 - `msg send --to <user> --item <item>`：就这件商品给指定用户发消息（闲鱼：卖家主动联系买家）。不支持的平台报 `UNSUPPORTED`。

@@ -1022,6 +1022,47 @@ export async function liveCategories(ctx: Ctx) {
   ])
 }
 
+/** live categories 的 id → 分区页的 (parent_area_id, area_id)：父分区取整个分区（子分区为 0），子分区带上所属父分区。 */
+async function liveArea(b: Bili, category: string): Promise<[string, string]> {
+  const parents: any[] = (await api.areaList(b)).data ?? []
+  for (const p of parents) {
+    if (String(p.id) === category) return [category, '0']
+    const c = (p.list ?? []).find((x: any) => String(x.id) === category)
+    if (c) return [String(c.parent_id ?? p.id), category]
+  }
+  throw new CatbusError('USAGE', `没有 id 为 ${category} 的直播分区`, { hint: 'catbus bilibili live categories' })
+}
+
+// 同一条命令翻页时复用分区解析和 w_webid（分区页 HTML 每条命令只取一次）；缓存随 args 存活，不写入凭证。
+const liveAreaSessions = new WeakMap<Ctx['args'], Promise<{ area: [string, string]; webid: string }>>()
+
+function liveAreaSession(b: Bili, ctx: Ctx, category: string) {
+  let s = liveAreaSessions.get(ctx.args)
+  if (!s) {
+    s = (async () => {
+      const area = await liveArea(b, category)
+      return { area, webid: await api.liveAccessId(b, ...area) }
+    })()
+    liveAreaSessions.set(ctx.args, s)
+  }
+  return s
+}
+
+export async function liveList(ctx: Ctx) {
+  const b = await bili(ctx)
+  const p = page(ctx)
+  const category = ctx.options.category as string | undefined
+  let d: any
+  if (category) {
+    const { area, webid } = await liveAreaSession(b, ctx, category)
+    d = await api.liveAreaList(b, area[0], area[1], p, webid)
+  } else {
+    d = await api.liveIndexList(b, p)
+  }
+  const list = (d.list ?? []).map(norm.listLive)
+  return paged(list, p + 1, list.length > 0 && Number(d.has_more ?? 0) === 1)
+}
+
 export async function liveHistory(ctx: Ctx) {
   const b = await bili(ctx)
   const r = await room(b, ctx.args.room!)
