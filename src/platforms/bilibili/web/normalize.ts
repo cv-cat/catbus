@@ -28,6 +28,7 @@ export function video(v: any): Item {
       author: ref(v.owner?.mid, v.owner?.name, v.owner?.face),
       created_at: n.time(v.pubdate),
       cover: n.url(v.pic),
+      media: videoMedia(v.duration, v.dimension),
       stats: {
         views: n.count(v.stat?.view),
         likes: n.count(v.stat?.like),
@@ -38,6 +39,29 @@ export function video(v: any): Item {
     },
     v,
   )
+}
+
+/**
+ * 列表接口只给时长、不给播放地址：放一条 url 为 null 的视频 Media，让调用方知道这是多长的视频（AGENTS.md 6.2 的 Media）。
+ * 时长有秒数（view、popular、推荐流、收藏夹、稿件管理）和「mm:ss」/「h:mm:ss」文本（搜索、空间投稿、关注动态）两种。
+ */
+export function durationOf(value: unknown): number | null {
+  if (typeof value === 'string' && value.includes(':')) {
+    const parts = value.split(':').map(Number)
+    if (parts.some((x) => !Number.isFinite(x) || x < 0)) return null
+    return parts.reduce((acc, x) => acc * 60 + x, 0) || null
+  }
+  const sec = n.seconds(value)
+  return sec && sec > 0 ? sec : null
+}
+function videoMedia(duration: unknown, dim?: any): Media[] {
+  const d = durationOf(duration)
+  if (!d) return []
+  // dimension 的 rotate 为 1 时宽高对调
+  const rotate = Number(dim?.rotate) === 1
+  const w = n.count(rotate ? dim?.height : dim?.width) || null
+  const h = n.count(rotate ? dim?.width : dim?.height) || null
+  return [n.media({ id: null, type: 'video', url: null, width: w, height: h, duration: d })]
 }
 
 /** 搜索结果里的视频卡片。 */
@@ -52,6 +76,7 @@ export function searchVideo(v: any): Item {
       author: ref(v.mid, v.author, v.upic),
       created_at: n.time(v.pubdate),
       cover: n.url(v.pic),
+      media: videoMedia(v.duration),
       stats: { views: n.count(v.play), likes: n.count(v.like), comments: n.count(v.review), collects: n.count(v.favorites) },
     },
     v,
@@ -105,6 +130,7 @@ export function spaceVideo(v: any): Item {
       author: ref(v.mid, v.author),
       created_at: n.time(v.created),
       cover: n.url(v.pic),
+      media: videoMedia(v.length),
       stats: { views: n.count(v.play), comments: n.count(v.comment) },
     },
     v,
@@ -122,6 +148,7 @@ export function feedVideo(v: any): Item {
       author: ref(v.owner?.mid, v.owner?.name, v.owner?.face),
       created_at: n.time(v.pubdate),
       cover: n.url(v.pic),
+      media: videoMedia(v.duration),
       stats: { views: n.count(v.stat?.view), likes: n.count(v.stat?.like) },
     },
     v,
@@ -148,6 +175,7 @@ export function followingVideo(v: any): Item | null {
       author: ref(au?.mid, au?.name, au?.face),
       created_at: n.time(au?.pub_ts),
       cover: n.url(a.cover),
+      media: videoMedia(a.duration_text),
       stats: {
         views: n.count(a.stat?.play),
         likes: n.count(st?.like?.count),
@@ -172,6 +200,7 @@ export function favVideo(v: any): Item {
       author: ref(v.upper?.mid, v.upper?.name, v.upper?.face),
       created_at: n.time(v.pubtime),
       cover: n.url(v.cover),
+      media: videoMedia(v.duration),
       stats: { views: n.count(v.cnt_info?.play), collects: n.count(v.cnt_info?.collect) },
     },
     v,
@@ -200,6 +229,7 @@ export function archive(v: any): Item {
       author: ref(a.mid, a.author),
       created_at: n.time(a.ptime || a.ctime),
       cover: n.url(a.cover),
+      media: videoMedia(a.duration, a.dimension),
       stats: {
         views: n.count(v.stat?.view),
         likes: n.count(v.stat?.like),

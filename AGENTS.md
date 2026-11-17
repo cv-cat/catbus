@@ -805,7 +805,7 @@ stdout 只输出结果。日志、提示、进度、二维码一律输出到 std
 |---|---|
 | UserRef | `id name url avatar`。`avatar` 为头像的 https 绝对地址，从同一个原始对象里取，不为头像额外发请求；取不到时为 null |
 | Price | `amount currency`。`amount` 用货币主单位（元）的十进制数。虚拟货币也用它，`currency` 写平台货币代码 |
-| Media | `id type url width height duration`。`url` 在刚上传、平台还没给出可访问地址时（例如视频转码前）为 null |
+| Media | `id type url width height duration`。`url` 在刚上传、平台还没给出可访问地址时（例如视频转码前），或列表接口只给时长、不给播放地址时（例如 bilibili 的搜索、推荐流，此时 Media 只用来表示视频时长）为 null |
 
 **内容与互动**：
 
