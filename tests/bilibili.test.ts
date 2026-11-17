@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { brotliCompressSync, deflateSync } from 'node:zlib'
@@ -275,6 +275,10 @@ async function runCommand(
 }
 
 const ok = (data: unknown) => ({ code: 0, message: '0', data })
+
+/** 直播首页 / 分区列表：真实响应裁剪，直播间、主播、图片地址都换成了虚构值。 */
+const LIVE_FIXTURES = join(import.meta.dirname, 'fixtures', 'bilibili')
+const liveFixture = (name: string) => JSON.parse(readFileSync(join(LIVE_FIXTURES, name), 'utf8'))
 
 // 非上游楼中楼接口：只用虚构评论、用户、视频 aid 和专栏 ID。
 const THREAD_ITEM = 'av100001'
@@ -870,6 +874,72 @@ describe('bilibili 命令：审查修复', () => {
     ])
   })
 
+  it('live list：不带 --category 走直播首页推荐（getListV2，按页翻、不签名）', async () => {
+    const index = liveFixture('live-index.json')
+    const { result, urls, requests } = await runCommand('liveList', {}, () => index)
+    expect(urls).toEqual(['https://api.live.bilibili.com/xlive/web-interface/v1/index/getListV2?platform=web&page=1&web_location=444.7'])
+    expect(requests[0]!.headers).toContainEqual(['origin', 'https://live.bilibili.com'])
+    expect(result.page).toEqual({ cursor: '2', has_more: true })
+    expect(result.data).toEqual([
+      {
+        id: '900001',
+        url: 'https://live.bilibili.com/900001',
+        title: '测试直播间标题1',
+        status: 'live',
+        host: { id: '920001', name: '测试主播1', url: 'https://space.bilibili.com/920001', avatar: 'https://i0.hdslb.com/bfs/face/fake1.jpg' },
+        cover: 'https://i0.hdslb.com/bfs/live/fake_cover_1.jpg',
+        stats: { viewers: 12345 },
+      },
+      {
+        id: '900002',
+        url: 'https://live.bilibili.com/900002',
+        title: '测试直播间标题2',
+        status: 'live',
+        host: { id: '920002', name: '测试主播2', url: 'https://space.bilibili.com/920002', avatar: 'https://i0.hdslb.com/bfs/face/fake2.jpg' },
+        cover: null,
+        stats: { viewers: 678 },
+      },
+    ])
+    expect(result.data[0][RAW]).toEqual(index.data.list[0])
+
+    const next = await runCommand('liveList', { cursor: '3' }, () => ok({ list: [], has_more: 0 }))
+    expect(next.urls[0]).toContain('&page=3&')
+    expect(next.result.page).toEqual({ cursor: null, has_more: false })
+  })
+
+  it.each([
+    ['父分区', '2', '2', '0'],
+    ['子分区', '329', '2', '329'],
+  ])('live list --category %s：按 live categories 解析出 (父, 子)，取分区页的 access_id 作 w_webid 再 wbi 签名', async (_kind, category, parent, area) => {
+    const route = (url: string) => {
+      if (url.includes('/getWebAreaList')) return liveFixture('live-area-list.json')
+      if (url.startsWith('https://live.bilibili.com/p/eden/area-tags')) return readFileSync(join(LIVE_FIXTURES, 'live-area-page.html'), 'utf8')
+      return liveFixture('live-area.json')
+    }
+    const { result, urls, requests } = await runCommand('liveList', { options: { category }, cursor: '2' }, route)
+    expect(urls).toHaveLength(3)
+    expect(urls[0]).toBe('https://api.live.bilibili.com/xlive/web-interface/v1/index/getWebAreaList?source_id=2')
+    expect(urls[1]).toBe(`https://live.bilibili.com/p/eden/area-tags?parentAreaId=${parent}&areaId=${area}`)
+    expect(requests[1]!.headers).toContainEqual(['referer', 'https://live.bilibili.com/'])
+    expect(urls[2]).toMatch(
+      new RegExp(
+        `^https://api\\.live\\.bilibili\\.com/xlive/web-interface/v1/second/getList\\?platform=web&parent_area_id=${parent}&area_id=${area}` +
+          '&sort_type=&page=2&vajra_business_key=&web_location=444\\.253&w_webid=fake\\.webid\\.token&w_rid=[0-9a-f]{32}&wts=1790000000$',
+      ),
+    )
+    expect(result.page).toEqual({ cursor: '3', has_more: true })
+    expect(result.data.map((l: any) => [l.id, l.host.name, l.cover, l.stats.viewers])).toEqual([
+      ['800001', '测试主播1', 'https://i0.hdslb.com/bfs/live/fake_user_cover_1.jpg', 12345],
+      ['800002', '测试主播2', 'https://i0.hdslb.com/bfs/live/fake_cover_2.jpg', 678],
+    ])
+  })
+
+  it('live list --category：不存在的分区报 USAGE，提示 live categories，不请求列表', async () => {
+    const { error, urls } = await runCommand('liveList', { options: { category: '99999' } }, () => liveFixture('live-area-list.json'))
+    expect(error).toMatchObject({ code: 'USAGE', hint: 'catbus bilibili live categories' })
+    expect(urls).toHaveLength(1)
+  })
+
   it('live send：弹幕和送礼都返回直播间 id', async () => {
     const chat = await runCommand('liveSend', { args: { room: '21452505', text: '你好' } }, liveRoute(() => ok({ mode_info: { extra: '{"id_str":"abc"}' } })))
     expect(chat.result).toEqual({ id: '21452505' })
@@ -1461,5 +1531,48 @@ describe('bilibili：列表里的视频时长（normalize）', () => {
     expect(media(norm.archive({ Archive: { bvid: 'BV1', duration: 30, dimension: { width: 1920, height: 1080, rotate: 0 } } }))).toEqual(one(30, 1920, 1080))
     // 没有时长时仍是空数组
     expect(norm.searchVideo({ bvid: 'BV1' }).media).toEqual([])
+  })
+})
+
+describe('bilibili live list：CLI 分页', () => {
+  useTempHome()
+
+  it('--category --all 翻到 has_more 为 0；分区页 HTML 每条命令只取一次，新命令重新取', async () => {
+    await writeCredential(loggedCtx().credential)
+    const area = liveFixture('live-area.json')
+    const pages: number[] = []
+    const htmls: string[] = []
+    const restoreRand = deterministic({ now: NOW })
+    const restore = mockSender((p) => {
+      const json = (body: object) => fakeResponse(body, { headers: [['content-type', 'application/json']], url: p.url })
+      if (p.url.includes('/getWebAreaList')) return json(liveFixture('live-area-list.json'))
+      if (p.url.startsWith('https://live.bilibili.com/p/eden/area-tags')) {
+        htmls.push(p.url)
+        return fakeResponse(readFileSync(join(LIVE_FIXTURES, 'live-area-page.html'), 'utf8'), { headers: [['content-type', 'text/html']], url: p.url })
+      }
+      const u = new URL(p.url)
+      expect(u.pathname).toBe('/xlive/web-interface/v1/second/getList')
+      expect(u.searchParams.get('w_webid')).toBe('fake.webid.token')
+      const pn = Number(u.searchParams.get('page'))
+      pages.push(pn)
+      const list = area.data.list.map((v: any) => ({ ...v, roomid: v.roomid + pn * 10 }))
+      return json(ok({ ...area.data, list, has_more: pn < 3 ? 1 : 0 }))
+    })
+    try {
+      const all = await cli('bilibili', 'live', 'list', '--category', '86', '-a', 'default', '-q', '--all')
+      expect(all.code).toBe(0)
+      expect(all.env).toMatchObject({ ok: true, resource: 'live', action: 'list', page: { cursor: null, has_more: false } })
+      expect(all.env.data.map((l: any) => l.id)).toEqual(['800011', '800012', '800021', '800022', '800031', '800032'])
+      expect(pages).toEqual([1, 2, 3])
+      expect(htmls).toEqual(['https://live.bilibili.com/p/eden/area-tags?parentAreaId=2&areaId=86'])
+
+      const limited = await cli('bilibili', 'live', 'list', '--category', '86', '-a', 'default', '-q', '--limit', '3')
+      expect(limited.env.data).toHaveLength(3)
+      expect(limited.env.page).toEqual({ cursor: '2#skip=1', has_more: true })
+      expect(htmls).toHaveLength(2)
+    } finally {
+      restore()
+      restoreRand()
+    }
   })
 })

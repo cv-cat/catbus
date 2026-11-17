@@ -1,0 +1,59 @@
+{
+  "code": 0,
+  "message": "0",
+  "ttl": 1,
+  "data": {
+    "banners": [],
+    "my_idols": {
+      "list": [],
+      "more_link": "",
+      "count": 0
+    },
+    "area_list": [],
+    "recommend_room_list": [],
+    "list": [
+      {
+        "area_v2_id": 561,
+        "area_v2_parent_id": 13,
+        "area_v2_name": "游戏赛事",
+        "area_v2_parent_name": "赛事",
+        "broadcast_type": 0,
+        "cover": "https://i0.hdslb.com/bfs/live/fake_cover_1.jpg",
+        "link": "/900001?hotRank=0",
+        "online": 12345,
+        "roomid": 900001,
+        "title": "测试直播间标题1",
+        "uname": "测试主播1",
+        "face": "https://i0.hdslb.com/bfs/face/fake1.jpg",
+        "uid": 920001,
+        "keyframe": "https://i0.hdslb.com/bfs/live/fake_keyframe_1.jpg",
+        "is_auto_play": 1,
+        "flag": 0,
+        "session_id": "fake_session",
+        "group_id": 0
+      },
+      {
+        "area_v2_id": 145,
+        "area_v2_parent_id": 1,
+        "area_v2_name": "颜值",
+        "area_v2_parent_name": "娱乐",
+        "broadcast_type": 1,
+        "cover": "",
+        "link": "/900002?hotRank=0",
+        "online": 678,
+        "roomid": 900002,
+        "title": "测试直播间标题2",
+        "uname": "测试主播2",
+        "face": "https://i0.hdslb.com/bfs/face/fake2.jpg",
+        "uid": 920002,
+        "keyframe": "https://i0.hdslb.com/bfs/live/fake_keyframe_2.jpg",
+        "is_auto_play": 1,
+        "flag": 0,
+        "session_id": "fake_session",
+        "group_id": 0
+      }
+    ],
+    "has_more": 1,
+    "big_tv_rec_switch": 1
+  }
+}

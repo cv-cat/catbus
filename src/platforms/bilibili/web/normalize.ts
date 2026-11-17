@@ -309,6 +309,22 @@ export function searchLive(v: any): Live {
   )
 }
 
+/** 直播首页推荐（getListV2）和分区列表（second/getList）里的直播间：只列正在直播的，没有 live_status 字段。 */
+export function listLive(v: any): Live {
+  return n.live(
+    {
+      id: n.id(v.roomid),
+      url: liveUrl(v.roomid),
+      title: n.str(v.title),
+      status: v.live_status == null || v.live_status === 1 ? 'live' : 'offline',
+      host: ref(v.uid, v.uname, v.face),
+      cover: n.url(v.user_cover || v.cover || v.system_cover),
+      stats: { viewers: n.count(v.online) },
+    },
+    v,
+  )
+}
+
 /** 没有专门映射的 cmd：能读出内容的给内容，其余给 cmd 名（上游 live/server.py 的 on('*') 兜底）。 */
 function otherText(cmd: string, d: any): string {
   switch (cmd) {

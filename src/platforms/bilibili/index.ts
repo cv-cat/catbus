@@ -156,7 +156,10 @@ export default definePlatform({
         }),
 
         'live get': impl('full', 'liveGet', withRoom()),
-        'live list': 'none',
+        'live list': impl('partial', 'liveList', {
+          note: '非上游：上游没有直播列表接口，请求按网页端直播首页（getListV2）和分区页（second/getList，wbi 签名）补的，没有对拍；不带 --category 是首页推荐，--category 取 live categories 的父分区或子分区 id',
+          options: { category: CATEGORY },
+        }),
         'live search': impl('full', 'liveSearch'),
         'live categories': impl('full', 'liveCategories'),
         'live listen': impl('full', 'liveListen', withRoom()),
