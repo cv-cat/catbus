@@ -1052,6 +1052,34 @@ describe('douyin 审查修复：登录态与错误映射', () => {
     }
   })
 
+  it('视频发布发现创作者会话失效时在封面预检前报 AUTH_EXPIRED', async () => {
+    const c = loadCase('douyin', 'post_video_extra')
+    const i = c.requests.findIndex((request) => request.url.includes('/janus/douyin/creator/pc/work_list'))
+    expect(i).toBeGreaterThan(-1)
+    c.responses[i]!.body = { status_code: 8, aweme_list: [] }
+    const { requests, error } = await replayBin(c, () => CASES.post_video_extra!(c))
+    expect(error).toMatchObject({
+      code: 'AUTH_EXPIRED',
+      message: '抖音创作者中心会话未登录或已失效',
+      hint: 'catbus douyin auth login -a default',
+    })
+    expectReqs(requests, c.requests.slice(0, i + 1))
+  })
+
+  it('创作者上传凭证返回未登录时保留 AUTH_EXPIRED 分类', async () => {
+    const c = loadCase('douyin', 'post_images_extra')
+    const i = c.requests.findIndex((request) => request.url.includes('/web/api/media/upload/auth/v5/'))
+    expect(i).toBeGreaterThan(-1)
+    c.responses[i]!.body = { status_code: 8, status_msg: '用户未登录' }
+    const { requests, error } = await replayBin(c, () => CASES.post_images_extra!(c))
+    expect(error).toMatchObject({
+      code: 'AUTH_EXPIRED',
+      message: '抖音创作者中心会话未登录或已失效',
+      hint: 'catbus douyin auth login -a default',
+    })
+    expectReqs(requests, c.requests.slice(0, i + 1))
+  })
+
   it('webcast 的 20003（User doesn\'t login）按登录墙处理，说明取 data.message', async () => {
     const { check } = await import('../src/platforms/douyin/web/client.js')
     const body = { status_code: 20003, data: { message: "User doesn't login" } }
