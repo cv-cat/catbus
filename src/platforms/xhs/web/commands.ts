@@ -586,7 +586,16 @@ export async function itemPublish(ctx: Ctx) {
       }
       postLoc = { name: loc.name, subname: loc.full_address, poi_id: loc.poi_id, poi_type: loc.poi_type }
     }
-    const note = { title: o.title ?? '', desc: o.text ?? '', postTime, postLoc, privacy: o.visibility === 'private' ? 1 : 0 }
+    const note = {
+      title: o.title ?? '',
+      desc: o.text ?? '',
+      postTime,
+      postLoc,
+      privacy: o.visibility === 'private' ? 1 : 0,
+      original: !!o.original,
+      ai: !!o.ai,
+      creatorId: c.state.cookies['x-user-id-creator.xiaohongshu.com'] ?? '',
+    }
     let data: Record<string, any>
     if (o.video) {
       const video = await readMedia(c.http, o.video)
