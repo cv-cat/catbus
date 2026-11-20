@@ -240,6 +240,55 @@ describe('douyin 对拍：请求构造与签名', () => {
   }
 })
 
+describe('douyin 发布原生 AI 声明', () => {
+  it.each(['post_video_extra', 'post_images_extra'])('%s：只在 create_v2 的 item.declare 添加声明', async (name) => {
+    const c = loadCase('douyin', name)
+    const { publishOptions } = await import('../src/platforms/douyin/web/commands.js')
+    const video = name === 'post_video_extra'
+    const o = {
+      ...publishOptions({
+        title: video ? '视频标题' : '标题',
+        text: video ? '视频描述' : '正文 #话题 @好友',
+        visibility: video ? 'public' : 'private',
+        aiGenerated: true,
+        noDownload: true,
+        poi: POI.poi_id,
+        poiName: POI.poi_name,
+        series: MIX,
+        hotspot: '热点词',
+      }),
+      ...(video ? {} : { coverIndex: 1, timing: 1790086400 }),
+    }
+    const { requests, error } = await replayBin(c, () =>
+      logged(c, (d) =>
+        video ? creator.postVideo(d, media(c.input.video), 'tos-cn-i-fake/mycover', o) : creator.postImages(d, [media(PNG), media(PNG)], o),
+      ),
+    )
+    if (error) throw error
+
+    const expected = c.requests.at(-1)!
+    expect(expected.url).toContain('/web/api/media/aweme/create_v2/')
+    const body = JSON.parse(expected.body as string)
+    expect(body.item).not.toHaveProperty('declare')
+    // 声明子结构取自创作者中心 create_v2 的发布表单，其他部分沿用上游对拍数据。
+    body.item.declare = { user_declare_info: '{"choose_value":"aigc"}' }
+    const encoded = JSON.stringify(body)
+    expectReqs(requests.slice(0, -1), c.requests.slice(0, -1))
+    const actual = requests.at(-1)!
+    const [url, signature] = actual.url.split('&a_bogus=')
+    const [expectedUrl, previousSignature] = expected.url.split('&a_bogus=')
+    // a_bogus 对请求体签名，随声明变化。签名算法另有上游对拍。
+    expect(signature).toBeTruthy()
+    expect(signature).not.toBe(previousSignature)
+    expect({ ...actual, url }).toEqual({
+      ...expected,
+      url: expectedUrl,
+      body: encoded,
+      headers: expected.headers.map(([key, value]) => [key, key === 'content-length' ? String(Buffer.byteLength(encoded)) : value]),
+    })
+  })
+})
+
 describe('douyin 对拍：命令流程', () => {
   it('游客 item get：注册 ttwid → 设备号 → mssdk 换 msToken → 作品详情', async () => {
     const c = loadCase('douyin', 'guest_item_get')
@@ -1003,6 +1052,34 @@ describe('douyin 审查修复：登录态与错误映射', () => {
     }
   })
 
+  it('视频发布发现创作者会话失效时在封面预检前报 AUTH_EXPIRED', async () => {
+    const c = loadCase('douyin', 'post_video_extra')
+    const i = c.requests.findIndex((request) => request.url.includes('/janus/douyin/creator/pc/work_list'))
+    expect(i).toBeGreaterThan(-1)
+    c.responses[i]!.body = { status_code: 8, aweme_list: [] }
+    const { requests, error } = await replayBin(c, () => CASES.post_video_extra!(c))
+    expect(error).toMatchObject({
+      code: 'AUTH_EXPIRED',
+      message: '抖音创作者中心会话未登录或已失效',
+      hint: 'catbus douyin auth login -a default',
+    })
+    expectReqs(requests, c.requests.slice(0, i + 1))
+  })
+
+  it('创作者上传凭证返回未登录时保留 AUTH_EXPIRED 分类', async () => {
+    const c = loadCase('douyin', 'post_images_extra')
+    const i = c.requests.findIndex((request) => request.url.includes('/web/api/media/upload/auth/v5/'))
+    expect(i).toBeGreaterThan(-1)
+    c.responses[i]!.body = { status_code: 8, status_msg: '用户未登录' }
+    const { requests, error } = await replayBin(c, () => CASES.post_images_extra!(c))
+    expect(error).toMatchObject({
+      code: 'AUTH_EXPIRED',
+      message: '抖音创作者中心会话未登录或已失效',
+      hint: 'catbus douyin auth login -a default',
+    })
+    expectReqs(requests, c.requests.slice(0, i + 1))
+  })
+
   it('webcast 的 20003（User doesn\'t login）按登录墙处理，说明取 data.message', async () => {
     const { check } = await import('../src/platforms/douyin/web/client.js')
     const body = { status_code: 20003, data: { message: "User doesn't login" } }
@@ -1321,6 +1398,7 @@ describe('douyin 审查修复：参数与发布', () => {
       poi: { poi_id: '123', poi_name: '北京' },
       mixId: '777',
       hotSpot: { word: '热点' },
+      aiGenerated: undefined,
     })
     expect(publishOptions({ visibility: 'private', poi: '1' })).toMatchObject({ desc: '', visibility: 1, allowDownload: true, poi: { poi_id: '1', poi_name: '' }, timing: undefined })
   })
