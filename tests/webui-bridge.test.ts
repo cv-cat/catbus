@@ -1,20 +1,19 @@
-import { chmodSync, existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createBridge, validateArgv } from '../src/webui/bridge.js'
 import { resetDownloadsForTest } from '../src/webui/download.js'
 import { MAX_LIGHT, MAX_RUNNING, runnerStats } from '../src/webui/runner.js'
 
 /**
  * bridge 的并发上限与取消（AGENTS.md 7.9「bridge 的边界」）。
- * CATBUS_BIN 指向一个假的 catbus：启动时在目录里留 start-<pid>，收到 SIGTERM 时留 term-<pid> 后退出；
+ * 通过 Node 启动假的 catbus：启动时在目录里留 start-<pid>，在 POSIX 收到 SIGTERM 时留 term-<pid> 后退出；
  * `version` 立即输出，其余命令等到目录里出现 release 才输出信封。不联网、不跑真的平台命令。
  */
-const FAKE = `#!${process.execPath}
-const fs = require('node:fs'), path = require('node:path')
+const FAKE = `const fs = require('node:fs'), path = require('node:path')
 const dir = process.env.FAKE_CATBUS_DIR
 const env = JSON.stringify({ ok: true, data: { argv: process.argv.slice(2) }, page: null, error: null })
 if (process.argv.includes('version')) { process.stdout.write(env); process.exit(0) }
@@ -25,21 +24,23 @@ const t = setInterval(() => {
 }, 15)
 `
 
+const fakeCli = vi.hoisted(() => ({ script: '' }))
+vi.mock('../src/webui/cli.js', () => ({
+  resolveCli: () => ({ file: process.execPath, prefix: [fakeCli.script] }),
+}))
+
 let home = ''
-let bin = ''
 let dir = ''
 let server: Server
 let base = ''
 const saved: Record<string, string | undefined> = {}
 
 beforeAll(async () => {
-  for (const k of ['CATBUS_HOME', 'CATBUS_BIN', 'FAKE_CATBUS_DIR']) saved[k] = process.env[k]
+  for (const k of ['CATBUS_HOME', 'FAKE_CATBUS_DIR']) saved[k] = process.env[k]
   home = mkdtempSync(join(tmpdir(), 'catbus-bridge-'))
   process.env.CATBUS_HOME = home
-  bin = join(home, 'fake-catbus.cjs')
-  writeFileSync(bin, FAKE)
-  chmodSync(bin, 0o755)
-  process.env.CATBUS_BIN = bin
+  fakeCli.script = join(home, 'fake-catbus.cjs')
+  writeFileSync(fakeCli.script, FAKE)
   const handle = createBridge()
   server = createServer((req, res) => {
     if (!handle(req, res)) res.end()
@@ -51,6 +52,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await new Promise((r) => server.close(r))
   resetDownloadsForTest()
+  fakeCli.script = ''
   for (const [k, v] of Object.entries(saved)) v === undefined ? delete process.env[k] : (process.env[k] = v)
   rmSync(home, { recursive: true, force: true })
 })
@@ -148,9 +150,12 @@ describe('bridge 的并发上限与取消（AGENTS 7.9）', () => {
 
     ac.abort()
     expect(((await running) as Error).name).toBe('AbortError')
-    await until(() => files('term-').length === 1)
+    // Windows 会直接终止子进程，不调用它的 SIGTERM 处理器。
+    if (process.platform !== 'win32') {
+      await until(() => files('term-').length === 1)
+      expect(pidOf(files('term-')[0]!)).toBe(pid)
+    }
     await until(() => !alive(pid))
-    expect(pidOf(files('term-')[0]!)).toBe(pid)
     await until(() => runnerStats().running === 0)
   })
 
