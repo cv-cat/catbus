@@ -1086,6 +1086,43 @@ describe('douyin 审查修复：登录态与错误映射', () => {
   })
 })
 
+describe('douyin riskJson：安全网关的二次验证（#17）', () => {
+  // 真浏览器与 catbus 的 create_v2 响应头除了决策头以外完全相同（1102 / 2 这几个签名结果在浏览器里也一样）
+  const GATEWAY: [string, string][] = [
+    ['content-type', 'application/json'],
+    ['content-length', '0'],
+    ['bd-ticket-guard-key-sign-result', '2'],
+    ['bd-ticket-guard-sign-res-static-sign', '1102'],
+    ['bd-ticket-guard-sign-res-static-ts-sign', '1102'],
+    ['bd_passport_security_gateway', '1'],
+    ['access-control-expose-headers', 'x-tt-verify-passport-decision'],
+    ['x-tt-logid', 'logid-1'],
+  ]
+
+  it('决策头被 HTTP 层丢掉（值里有中文，wreq-js 不收）时，按网关头认出二次验证，不再报成「空响应」', async () => {
+    const { riskJson } = await import('../src/platforms/douyin/web/client.js')
+    const err = await riskJson(fakeResponse('', { headers: GATEWAY })).catch((e) => e)
+    expect(err).toMatchObject({ code: 'RISK_CONTROL', detail: { kind: 'blocked', reason: 'passport_verify', scene: null, decision_header: 'dropped', logid: 'logid-1' } })
+    expect(err.message).toContain('二次身份验证')
+    expect(err.hint).toContain('creator.douyin.com')
+  })
+
+  it('读得到决策头时带上 verify_scene 与 verify_reason', async () => {
+    const { riskJson } = await import('../src/platforms/douyin/web/client.js')
+    const decision = JSON.stringify({ account_flow: 'verify', event_params: { log_id: 'logid-1', verify_reason: 'gateway_web_authlv_check', verify_scene: 'creator' }, verify_way_name_list: 'mobile_sms_verify,face_verify,pwd_verify' })
+    const err = await riskJson(fakeResponse('', { headers: [...GATEWAY, ['x-tt-verify-passport-decision', decision]] })).catch((e) => e)
+    expect(err).toMatchObject({ code: 'RISK_CONTROL', detail: { reason: 'passport_verify', scene: 'creator', verify_reason: 'gateway_web_authlv_check', decision_header: 'present' } })
+  })
+
+  it('没有网关头的空响应仍然报「空响应」；网关头配上 JSON 正文照常解析', async () => {
+    const { riskJson } = await import('../src/platforms/douyin/web/client.js')
+    const err = await riskJson(fakeResponse('', { headers: [['x-tt-logid', 'logid-2']] })).catch((e) => e)
+    expect(err).toMatchObject({ code: 'RISK_CONTROL', detail: { kind: 'blocked', status: 200, logid: 'logid-2' } })
+    expect(err.message).toContain('空响应')
+    await expect(riskJson(fakeResponse({ status_code: 0 }, { headers: GATEWAY.filter(([k]) => k !== 'content-length') }))).resolves.toEqual({ status_code: 0 })
+  })
+})
+
 describe('douyin 审查修复：私信', () => {
   const file = loadCase('douyin', 'im_send_file')
   const create = loadCase('douyin', 'im_create')

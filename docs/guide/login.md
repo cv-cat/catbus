@@ -158,7 +158,7 @@ catbus douyin auth login --method cookie --cookie @dy.json
 - dtrait 设备素材（`dtrait_blob`、`dtrait_profile`、`session_dtrait`）：不给时按随包的设备档案现算。想用自己浏览器的设备指纹时再导入：`dtrait_blob` 是抓到的内层 blob，`dtrait_profile` 是设备档案对象（结构同 `static/douyin/dtrait_profile.json`），两者都给时 `dtrait_blob` 优先。
 - JSON 里出现任何一个 dtrait 键时，这一组整体替换，值为 `null` 表示清掉；一个都没有时沿用同名账号已有的。之后再扫码登录同名账号，也会继承已有的 dtrait 素材。
 
-**已知问题**：目前即使凭证齐全，抖音的发布仍返回空响应（上游同样失败），点赞在缺设备素材时还会导致登录态被踢。详见 [抖音的已知限制](../platforms/douyin.md#已知限制)。
+**已知问题**：凭证齐全时，抖音的发布可能被安全网关要求先做二次身份验证（短信、人脸或密码），浏览器里同一账号也会被拦下，catbus 还不能代为完成，报 `RISK_CONTROL`（`detail.reason` 为 `passport_verify`）。点赞在缺设备素材时还会导致登录态被踢。详见 [抖音的已知限制](../platforms/douyin.md#已知限制)。
 
 ### TikTok：导入浏览器会话 JSON
 
