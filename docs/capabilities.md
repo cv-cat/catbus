@@ -146,6 +146,7 @@
 - `item publish --series`：douyin、bilibili
 - `item publish --hotspot`：douyin
 - `item publish --no-download`：douyin
+- `item publish --ai-generated`：douyin
 - `item publish --allow-comment`：tiktok
 - `item publish --allow-duet`：tiktok
 - `item publish --allow-stitch`：tiktok

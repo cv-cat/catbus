@@ -78,6 +78,7 @@ export default definePlatform({
             series: z.string().optional().describe('加入合集（合集 ID）'),
             hotspot: z.string().optional().describe('关联热点（热点词）'),
             noDownload: z.boolean().optional().describe('不允许别人下载'),
+            aiGenerated: z.boolean().optional().describe('添加「内容由 AI 生成」声明'),
           },
         }),
         'item delete': 'none',

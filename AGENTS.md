@@ -291,7 +291,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | xianyu | `item publish [--pickup]` | 私有选项：支持自提 | Item |
 | douyin | `item search <kw> [--length all\|short\|medium\|long] [--range all\|seen\|unseen\|following]` | 私有选项：视频时长（不限 / 1 分钟内 / 1–5 分钟 / 5 分钟以上）、搜索范围（不限 / 看过 / 没看过 / 关注的人）。`--type video` 走视频频道搜索，其余走综合频道（筛选值随 `filter_selected` 发出）；`--type image` 只要图文 | Item[] |
 | douyin | `user search <kw> [--fans 0_1k\|1k_1w\|1w_10w\|10w_100w\|100w_] [--user-type common\|enterprise\|personal]` | 私有选项：粉丝数区间、用户类型（普通 / 企业 / 个人认证） | User[] |
-| douyin | `item publish [--poi-name <名称>] [--series <合集 id>] [--hotspot <热点词>] [--no-download]` | 私有选项：地点名称（配合 `--poi`）、加入合集、关联热点、不允许下载 | Item |
+| douyin | `item publish [--poi-name <名称>] [--series <合集 id>] [--hotspot <热点词>] [--no-download] [--ai-generated]` | 私有选项：地点名称（配合 `--poi`）、加入合集、关联热点、不允许下载、为视频或图文添加「内容由 AI 生成」声明（默认不声明） | Item |
 | douyin | `item collect <item> --folder <folder>`、`item uncollect <item> --folder <folder>` | 私有选项：收藏后移进某个收藏夹 / 从某个收藏夹移出（仍保留收藏）。`<folder>` 是收藏夹 ID 或名字 | `{id}` |
 | douyin | `msg send [--file <path>] [--share <item\|user\|url>]` | 私有选项：发文件（≤10MB）、分享作品 / 用户名片 / 网页卡片 | Message |
 | douyin | `live rank <room> [--ranking contribution\|thousand]` | 私有选项：榜单，默认贡献榜，`thousand` 为千票榜 | Rank[] |

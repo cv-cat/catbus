@@ -240,6 +240,55 @@ describe('douyin 对拍：请求构造与签名', () => {
   }
 })
 
+describe('douyin 发布原生 AI 声明', () => {
+  it.each(['post_video_extra', 'post_images_extra'])('%s：只在 create_v2 的 item.declare 添加声明', async (name) => {
+    const c = loadCase('douyin', name)
+    const { publishOptions } = await import('../src/platforms/douyin/web/commands.js')
+    const video = name === 'post_video_extra'
+    const o = {
+      ...publishOptions({
+        title: video ? '视频标题' : '标题',
+        text: video ? '视频描述' : '正文 #话题 @好友',
+        visibility: video ? 'public' : 'private',
+        aiGenerated: true,
+        noDownload: true,
+        poi: POI.poi_id,
+        poiName: POI.poi_name,
+        series: MIX,
+        hotspot: '热点词',
+      }),
+      ...(video ? {} : { coverIndex: 1, timing: 1790086400 }),
+    }
+    const { requests, error } = await replayBin(c, () =>
+      logged(c, (d) =>
+        video ? creator.postVideo(d, media(c.input.video), 'tos-cn-i-fake/mycover', o) : creator.postImages(d, [media(PNG), media(PNG)], o),
+      ),
+    )
+    if (error) throw error
+
+    const expected = c.requests.at(-1)!
+    expect(expected.url).toContain('/web/api/media/aweme/create_v2/')
+    const body = JSON.parse(expected.body as string)
+    expect(body.item).not.toHaveProperty('declare')
+    // 声明子结构取自创作者中心 create_v2 的发布表单，其他部分沿用上游对拍数据。
+    body.item.declare = { user_declare_info: '{"choose_value":"aigc"}' }
+    const encoded = JSON.stringify(body)
+    expectReqs(requests.slice(0, -1), c.requests.slice(0, -1))
+    const actual = requests.at(-1)!
+    const [url, signature] = actual.url.split('&a_bogus=')
+    const [expectedUrl, previousSignature] = expected.url.split('&a_bogus=')
+    // a_bogus 对请求体签名，随声明变化。签名算法另有上游对拍。
+    expect(signature).toBeTruthy()
+    expect(signature).not.toBe(previousSignature)
+    expect({ ...actual, url }).toEqual({
+      ...expected,
+      url: expectedUrl,
+      body: encoded,
+      headers: expected.headers.map(([key, value]) => [key, key === 'content-length' ? String(Buffer.byteLength(encoded)) : value]),
+    })
+  })
+})
+
 describe('douyin 对拍：命令流程', () => {
   it('游客 item get：注册 ttwid → 设备号 → mssdk 换 msToken → 作品详情', async () => {
     const c = loadCase('douyin', 'guest_item_get')
@@ -1321,6 +1370,7 @@ describe('douyin 审查修复：参数与发布', () => {
       poi: { poi_id: '123', poi_name: '北京' },
       mixId: '777',
       hotSpot: { word: '热点' },
+      aiGenerated: undefined,
     })
     expect(publishOptions({ visibility: 'private', poi: '1' })).toMatchObject({ desc: '', visibility: 1, allowDownload: true, poi: { poi_id: '1', poi_name: '' }, timing: undefined })
   })

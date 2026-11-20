@@ -626,6 +626,7 @@ export function publishOptions(o: Record<string, any>): creator.PublishOptions {
     poi: o.poi != null ? { poi_id: String(o.poi), poi_name: String(o.poiName ?? '') } : undefined,
     mixId: o.series,
     hotSpot: o.hotspot != null ? { word: String(o.hotspot) } : undefined,
+    aiGenerated: o.aiGenerated,
   }
 }
 

@@ -410,6 +410,8 @@ export interface PublishOptions {
   mixId?: string
   /** 关联热点：common.hot_sentence 取它的 word。 */
   hotSpot?: { word: string }
+  /** 主动声明内容由 AI 生成。 */
+  aiGenerated?: boolean
 }
 
 /** mix_id / poi / hot_sentence 追加到 common 末尾（上游 build_*_create_item 的可选段）。 */
@@ -420,6 +422,11 @@ function withExtras(common: Record<string, unknown>, o: PublishOptions, hotSente
     common.poi_name = o.poi.poi_name ?? ''
   }
   if (hotSentence && o.hotSpot) common.hot_sentence = o.hotSpot.word ?? ''
+}
+
+/** 创作者中心 create_v2 表单把自主声明序列化为 item.declare 下的 JSON 字符串。 */
+function aiDeclaration(enabled?: boolean) {
+  return enabled ? { declare: { user_declare_info: compactJson({ choose_value: 'aigc' }) } } : {}
 }
 
 /** 图文的 create_v2 item（上游 build_image_create_item）。 */
@@ -441,7 +448,14 @@ export function imageItem(images: ImageInfo[], o: PublishOptions, creationId: st
     creation_id: creationId,
   }
   withExtras(common, o, true)
-  return { item: { common, cover: { poster: cover }, anchor: o.poi ? { poi: o.poi } : {} } }
+  return {
+    item: {
+      common,
+      cover: { poster: cover },
+      anchor: o.poi ? { poi: o.poi } : {},
+      ...aiDeclaration(o.aiGenerated),
+    },
+  }
 }
 
 /** 封面编辑器状态（上游 build_video_cover_tools_extend_info，没有推荐帧时的默认结构）。 */
@@ -531,6 +545,7 @@ export function videoItem(info: VideoInfo, posterUri: string, o: PublishOptions,
       sync: { should_sync: false, sync_to_toutiao: 0 },
       open_platform: {},
       assistant: { is_preview: 0, is_post_assistant: 1 },
+      ...aiDeclaration(o.aiGenerated),
     },
   }
 }

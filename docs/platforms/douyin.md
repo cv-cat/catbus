@@ -64,7 +64,7 @@
 | `item unlike` | ✓ | 取消点赞。 |
 | `item collect` | ✓ | 收藏。私有选项 `--folder`。 |
 | `item uncollect` | ✓ | 取消收藏。私有选项 `--folder`。 |
-| `item publish` | ✓ | 发布作品。`--image`（图文）和 `--video` 二选一；图文的 `--cover` 要是 `--image` 里的一张。取值：`--visibility` public / private / friends。不支持 `--category`、`--price`。私有选项 `--poi-name`、`--series`、`--hotspot`、`--no-download`。 |
+| `item publish` | ✓ | 发布作品。`--image`（图文）和 `--video` 二选一；图文的 `--cover` 要是 `--image` 里的一张。取值：`--visibility` public / private / friends。不支持 `--category`、`--price`。私有选项 `--poi-name`、`--series`、`--hotspot`、`--no-download`、`--ai-generated`。 |
 | `item related`、`item delete` | ○ | 规划中 |
 
 ### product
@@ -160,7 +160,7 @@
 | `item search` | `--range all\|seen\|unseen\|following` | 搜索范围：不限 / 看过 / 没看过 / 关注的人 |
 | `user search` | `--fans 0_1k\|1k_1w\|1w_10w\|10w_100w\|100w_` | 粉丝数区间 |
 | `user search` | `--user-type common\|enterprise\|personal` | 用户类型：普通 / 企业 / 个人认证 |
-| `item publish` | `--poi-name <名称>`、`--series <合集 id>`、`--hotspot <热点词>`、`--no-download` | 地点名称（配合 `--poi`）、加入合集、关联热点、不允许别人下载 |
+| `item publish` | `--poi-name <名称>`、`--series <合集 id>`、`--hotspot <热点词>`、`--no-download`、`--ai-generated` | 地点名称（配合 `--poi`）、加入合集、关联热点、不允许别人下载、为视频或图文添加抖音「内容由 AI 生成」声明（默认不声明） |
 | `item collect` / `uncollect` | `--folder <收藏夹 ID 或名字>` | 收藏后移进这个收藏夹 / 只从这个收藏夹移出（仍保留收藏） |
 | `msg send` | `--file <路径或 URL>`、`--share <作品、用户或网页>` | 发文件（≤10MB）；分享作品 / 用户名片 / 网页卡片 |
 | `live rank` | `--ranking contribution\|thousand` | 榜单：贡献榜（默认） / 千票榜 |
