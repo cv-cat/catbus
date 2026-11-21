@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import * as rand from '../src/core/rand.js'
@@ -238,6 +238,55 @@ describe('douyin 对拍：请求构造与签名', () => {
       expectReqs(requests, c.requests)
     })
   }
+})
+
+describe('douyin 发布原生 AI 声明', () => {
+  it.each(['post_video_extra', 'post_images_extra'])('%s：只在 create_v2 的 item.declare 添加声明', async (name) => {
+    const c = loadCase('douyin', name)
+    const { publishOptions } = await import('../src/platforms/douyin/web/commands.js')
+    const video = name === 'post_video_extra'
+    const o = {
+      ...publishOptions({
+        title: video ? '视频标题' : '标题',
+        text: video ? '视频描述' : '正文 #话题 @好友',
+        visibility: video ? 'public' : 'private',
+        aiGenerated: true,
+        noDownload: true,
+        poi: POI.poi_id,
+        poiName: POI.poi_name,
+        series: MIX,
+        hotspot: '热点词',
+      }),
+      ...(video ? {} : { coverIndex: 1, timing: 1790086400 }),
+    }
+    const { requests, error } = await replayBin(c, () =>
+      logged(c, (d) =>
+        video ? creator.postVideo(d, media(c.input.video), 'tos-cn-i-fake/mycover', o) : creator.postImages(d, [media(PNG), media(PNG)], o),
+      ),
+    )
+    if (error) throw error
+
+    const expected = c.requests.at(-1)!
+    expect(expected.url).toContain('/web/api/media/aweme/create_v2/')
+    const body = JSON.parse(expected.body as string)
+    expect(body.item).not.toHaveProperty('declare')
+    // 声明子结构取自创作者中心 create_v2 的发布表单，其他部分沿用上游对拍数据。
+    body.item.declare = { user_declare_info: '{"choose_value":"aigc"}' }
+    const encoded = JSON.stringify(body)
+    expectReqs(requests.slice(0, -1), c.requests.slice(0, -1))
+    const actual = requests.at(-1)!
+    const [url, signature] = actual.url.split('&a_bogus=')
+    const [expectedUrl, previousSignature] = expected.url.split('&a_bogus=')
+    // a_bogus 对请求体签名，随声明变化。签名算法另有上游对拍。
+    expect(signature).toBeTruthy()
+    expect(signature).not.toBe(previousSignature)
+    expect({ ...actual, url }).toEqual({
+      ...expected,
+      url: expectedUrl,
+      body: encoded,
+      headers: expected.headers.map(([key, value]) => [key, key === 'content-length' ? String(Buffer.byteLength(encoded)) : value]),
+    })
+  })
 })
 
 describe('douyin 对拍：命令流程', () => {
@@ -506,6 +555,22 @@ describe('douyin 对拍：长连接', () => {
       ['follow', '观众D', null, null],
     ])
     expect(events[0]!.user).toEqual({ id: 'MS4wLjABAAAAviewerA', name: '观众A', url: 'https://www.douyin.com/user/MS4wLjABAAAAviewerA', avatar: null })
+    expect(events.every((e) => e.stats === null)).toBe(true)
+  })
+
+  it('直播推送：点赞消息带累计点赞数，RoomStatsMessage 带在线人数（Event.stats）', async () => {
+    const norm = await import('../src/platforms/douyin/web/normalize.js')
+    expect(norm.liveEvent('WebcastLikeMessage', { count: '3', total: '45678', user: { id: '1', nickname: '甲' } })).toMatchObject({
+      type: 'like',
+      text: '3',
+      stats: { viewers: null, likes: 45678 },
+    })
+    expect(norm.liveEvent('WebcastRoomStatsMessage', { displayLong: '1.2万在线观众', displayMiddle: '1.2万', displayValue: '12345' })).toMatchObject({
+      type: 'other',
+      text: '1.2万在线观众',
+      stats: { viewers: 12345, likes: null },
+    })
+    expect(norm.liveEvent('WebcastRoomStatsMessage', { displayLong: '在线观众' })).toMatchObject({ stats: null })
   })
 
   it('私信：设备号 → frontier-im 地址（access_key）与握手头；推送帧转成 Message', async () => {
@@ -987,6 +1052,34 @@ describe('douyin 审查修复：登录态与错误映射', () => {
     }
   })
 
+  it('视频发布发现创作者会话失效时在封面预检前报 AUTH_EXPIRED', async () => {
+    const c = loadCase('douyin', 'post_video_extra')
+    const i = c.requests.findIndex((request) => request.url.includes('/janus/douyin/creator/pc/work_list'))
+    expect(i).toBeGreaterThan(-1)
+    c.responses[i]!.body = { status_code: 8, aweme_list: [] }
+    const { requests, error } = await replayBin(c, () => CASES.post_video_extra!(c))
+    expect(error).toMatchObject({
+      code: 'AUTH_EXPIRED',
+      message: '抖音创作者中心会话未登录或已失效',
+      hint: 'catbus douyin auth login -a default',
+    })
+    expectReqs(requests, c.requests.slice(0, i + 1))
+  })
+
+  it('创作者上传凭证返回未登录时保留 AUTH_EXPIRED 分类', async () => {
+    const c = loadCase('douyin', 'post_images_extra')
+    const i = c.requests.findIndex((request) => request.url.includes('/web/api/media/upload/auth/v5/'))
+    expect(i).toBeGreaterThan(-1)
+    c.responses[i]!.body = { status_code: 8, status_msg: '用户未登录' }
+    const { requests, error } = await replayBin(c, () => CASES.post_images_extra!(c))
+    expect(error).toMatchObject({
+      code: 'AUTH_EXPIRED',
+      message: '抖音创作者中心会话未登录或已失效',
+      hint: 'catbus douyin auth login -a default',
+    })
+    expectReqs(requests, c.requests.slice(0, i + 1))
+  })
+
   it('webcast 的 20003（User doesn\'t login）按登录墙处理，说明取 data.message', async () => {
     const { check } = await import('../src/platforms/douyin/web/client.js')
     const body = { status_code: 20003, data: { message: "User doesn't login" } }
@@ -1255,6 +1348,38 @@ describe('douyin 审查修复：参数与发布', () => {
     await expect(resolveShare(d, 'hello')).rejects.toMatchObject({ code: 'USAGE' })
   })
 
+  it('直播分享文案：短链跳到 reflow/<room_id>，经 reflow 接口换成直播间号', async () => {
+    const { resolveRoom } = await import('../src/platforms/douyin/web/resolve.js')
+    const d = new Douyin(makeCtx({ platform: 'douyin' }))
+    const ROOM = '7400000000000000001'
+    const seen: string[] = []
+    let owner: unknown = { web_rid: '87000000001', nickname: '主播' }
+    const restore = mockSender((p) => {
+      seen.push(p.url)
+      if (p.url.startsWith('https://v.douyin.com/'))
+        return fakeResponse('', { status: 302, headers: [['location', `https://webcast.amemv.com/douyin/webcast/reflow/${ROOM}?iid=x&utm_source=copy`]] })
+      if (p.url.startsWith('https://webcast.amemv.com/webcast/room/reflow/info/')) return fakeResponse({ status_code: 0, data: { room: { id_str: ROOM, status: 2, owner } } })
+      throw new Error(`多发了请求：${p.url}`)
+    })
+    try {
+      const share = '8- #在抖音，记录美好生活#【主播】正在直播，来和我一起支持Ta吧。复制下方链接，打开【抖音】，直接观看直播！ https://v.douyin.com/AbC123xYz/ 4@0.com :0pm'
+      expect(await resolveRoom(d, share)).toBe('87000000001')
+      expect(seen[0]).toBe('https://v.douyin.com/AbC123xYz/')
+      const q = new URL(seen[1]!).searchParams
+      expect([q.get('room_id'), q.get('app_id'), q.get('type_id'), q.get('live_id')]).toEqual([ROOM, '1128', '0', '1'])
+      // 已经是 live.douyin.com 链接、直播间号时不发请求
+      seen.length = 0
+      expect(await resolveRoom(d, 'https://live.douyin.com/87000000002?from=x')).toBe('87000000002')
+      expect(await resolveRoom(d, '87000000003')).toBe('87000000003')
+      expect(seen).toEqual([])
+      // 换不到直播间号（直播结束、接口变了）：UPSTREAM，不把 room_id 当直播间号
+      owner = {}
+      await expect(resolveRoom(d, 'https://v.douyin.com/AbC123xYz/')).rejects.toMatchObject({ code: 'UPSTREAM' })
+    } finally {
+      restore()
+    }
+  })
+
   it('item publish 的本地校验（不发请求）与 PublishOptions 映射', async () => {
     const { itemPublish, publishOptions } = await commands()
     for (const options of [{}, { video: 'v.mp4', image: ['a.png'] }, { image: ['a.png'], poiName: '北京' }, { image: ['a.png', 'b.png'], cover: 'c.png' }]) {
@@ -1273,6 +1398,7 @@ describe('douyin 审查修复：参数与发布', () => {
       poi: { poi_id: '123', poi_name: '北京' },
       mixId: '777',
       hotSpot: { word: '热点' },
+      aiGenerated: undefined,
     })
     expect(publishOptions({ visibility: 'private', poi: '1' })).toMatchObject({ desc: '', visibility: 1, allowDownload: true, poi: { poi_id: '1', poi_name: '' }, timing: undefined })
   })
@@ -1374,5 +1500,150 @@ describe('douyin 审查修复：TOS 上传', () => {
         else await run
       })
     }
+  })
+})
+
+describe('douyin keyword hot（非上游，没有对拍）', () => {
+  useTempHome()
+
+  it('请求网页端热榜接口；按榜单顺序输出，置顶词（没有热度）不收，实时上升热点不收', async () => {
+    const { keywordHot } = await commands()
+    const data = {
+      word_list: [
+        { word: '置顶词', hot_value: 0, position: 0 },
+        { word: '热搜一', hot_value: 12106988, position: 1, label: 3 },
+        { word: '热搜二', hot_value: '1.1万', position: 2 },
+        { word: '', hot_value: 100, position: 3 },
+      ],
+      trending_list: [{ word: '上升热点', hot_value: 0 }],
+      trending_desc: '实时上升热点',
+    }
+    await withServer([['/aweme/v1/web/hot/search/list/', () => fakeResponse({ status_code: 0, data })]], async (seen) => {
+      const r: any = await keywordHot(loggedFrom('search_general'))
+      expect(r).toEqual([
+        { text: '热搜一', heat: 12106988 },
+        { text: '热搜二', heat: 11000 },
+      ])
+      const hot = seen.find((s) => s.url.includes('/hot/search/list/'))!
+      const q = query(hot)
+      expect([q.get('device_platform'), q.get('aid'), q.get('channel'), q.get('detail_list'), q.get('source')]).toEqual(['webapp', '6383', 'channel_pc_web', '1', '6'])
+      expect(q.get('a_bogus')).toBeTruthy()
+      expect(q.get('msToken')).toBeTruthy()
+      expect(hot.headers).toContainEqual(['referer', 'https://www.douyin.com/hot'])
+    })
+    const { default: douyin } = await import('../src/platforms/douyin/index.js')
+    const web = douyin.endpoints.web
+    if (web === 'planned') throw new Error('web 是 planned')
+    expect(web.commands.get('keyword hot')).toMatchObject({ upstream: 'partial', note: expect.stringContaining('非上游') })
+  })
+})
+
+// ================================================================ 直播列表与分区（非上游，fixture 取自网页版真实响应，已换成假数据）
+
+const dyFixture = (name: string) => readFileSync(new URL(`./fixtures/douyin/${name}`, import.meta.url), 'utf8')
+
+describe('douyin live list / live categories', () => {
+  useTempHome()
+
+  it('live categories：从首页 HTML 的 RSC 行解出分区树，先父后子，id 是分区页路径', async () => {
+    const { liveCategories } = await commands()
+    await withServer([[/^https:\/\/live\.douyin\.com\/$/, () => fakeResponse(dyFixture('live_home.html'))]], async (seen) => {
+      const list: any = await liveCategories(loggedFrom('search_live'))
+      expect(list.map((c: any) => [c.id, c.name, c.parent_id])).toEqual([
+        ['4_101', '聊天', null],
+        ['4_103', '游戏', null],
+        ['4_103_1_1011032', '三角洲行动', '4_103'],
+        ['4_103_1_1010045', '王者荣耀', '4_103'],
+        ['4_107', '生活"]测试', null],
+      ])
+      expect(list[2][RAW].partition.id_str).toBe('1011032')
+      expect(reqPath(seen[0]!)).toBe('GET https://live.douyin.com/')
+    })
+  })
+
+  it('live categories：页面里没有分区树时报 UPSTREAM', async () => {
+    const { liveCategories } = await commands()
+    await withServer([[/^https:\/\/live\.douyin\.com\/$/, () => fakeResponse('<html></html>')]], async () => {
+      await expect(liveCategories(loggedFrom('search_live'))).rejects.toMatchObject({ code: 'UPSTREAM' })
+    })
+  })
+
+  it('live list 不带 --category：首页推荐流，cursor 为 extra.max_time，带 a_bogus', async () => {
+    const { liveList } = await commands()
+    await withServer([['/webcast/feed/', () => fakeResponse(dyFixture('live_feed.json'))]], async (seen) => {
+      const res: any = await liveList(loggedFrom('search_live', { cursor: '1789999999000' }))
+      expect(res.page).toEqual({ cursor: '1790000000999', has_more: true })
+      expect(res.data[0]).toEqual({
+        id: '100000000000',
+        url: 'https://live.douyin.com/100000000000',
+        title: '测试直播间 0',
+        status: 'live',
+        host: { id: 'MS4wLjABAAAAfakeHost0', name: '主播0', url: 'https://www.douyin.com/user/MS4wLjABAAAAfakeHost0', avatar: 'https://p3.douyinpic.com/aweme/100x100/fake_avatar_0.jpeg' },
+        cover: 'https://p3-webcast.douyinpic.com/img/webcast/fake_cover_0.jpg',
+        stats: { viewers: expect.any(Number) },
+      })
+      const r = seen.find((x) => x.url.includes('/webcast/feed/'))!
+      const q = query(r)
+      expect([q.get('maxtime'), q.get('custom_count'), q.get('enter_source'), q.get('enter_from')]).toEqual(['1789999999000', '20', 'web_homepage_hot_web_live_card', 'link_share'])
+      expect(q.get('a_bogus')).toBeTruthy()
+      expect(q.get('msToken')).not.toBeNull()
+    })
+  })
+
+  it('live list 推荐流：has_more 为 false 或空页时停下', async () => {
+    const { liveList } = await commands()
+    await withServer([['/webcast/feed/', () => fakeResponse({ status_code: 0, data: [], extra: { has_more: true, max_time: 1 } })]], async () => {
+      const res: any = await liveList(loggedFrom('search_live'))
+      expect(res.page).toEqual({ cursor: null, has_more: false })
+    })
+  })
+
+  it('live list --category：分区页接口，partition / partition_type 取路径最后一段，cursor 为 data.offset；空页时停下', async () => {
+    const { liveList } = await commands()
+    let empty = false
+    await withServer(
+      [['/webcast/web/partition/detail/room/v2/', () => fakeResponse(empty ? { status_code: 0, data: { count: 15, offset: 45, data: [] } } : dyFixture('live_partition.json'))]],
+      async (seen) => {
+        const res: any = await liveList(loggedFrom('search_live', { options: { category: '4_103_1_1011032' }, cursor: '15' }))
+        expect(res.data.map((l: any) => [l.id, l.title, l.status, l.host.name])).toEqual([
+          ['100000000010', '测试直播间 10', 'live', '主播10'],
+          ['100000000011', '测试直播间 11', 'live', '主播11'],
+        ])
+        expect(res.page).toEqual({ cursor: '30', has_more: true })
+        const q = query(seen[0]!)
+        expect([q.get('partition'), q.get('partition_type'), q.get('offset'), q.get('count'), q.get('req_from'), q.get('enter_from')]).toEqual(['1011032', '1', '15', '15', '2', null])
+        expect(seen[0]!.headers.find(([k]) => k.toLowerCase() === 'referer')?.[1]).toBe('https://live.douyin.com/categorynew/4_103_1_1011032')
+        empty = true
+        const last: any = await liveList(loggedFrom('search_live', { options: { category: 'https://live.douyin.com/categorynew/4_107' }, cursor: '30' }))
+        expect(last.page).toEqual({ cursor: null, has_more: false })
+        expect(query(seen[1]!).get('partition')).toBe('107')
+      },
+    )
+  })
+
+  it('live list --category 分区名 / 数字 id：先查分区列表；查不到报 USAGE', async () => {
+    const { liveList } = await commands()
+    await withServer(
+      [
+        [/^https:\/\/live\.douyin\.com\/$/, () => fakeResponse(dyFixture('live_home.html'))],
+        ['/webcast/web/partition/detail/room/v2/', () => fakeResponse(dyFixture('live_partition.json'))],
+      ],
+      async (seen) => {
+        await liveList(loggedFrom('search_live', { options: { category: '王者荣耀' } }))
+        await liveList(loggedFrom('search_live', { options: { category: '1011032' } }))
+        const parts = seen.filter((r) => r.url.includes('/partition/'))
+        expect(parts.map((r) => query(r).get('partition'))).toEqual(['1010045', '1011032'])
+        await expect(liveList(loggedFrom('search_live', { options: { category: '不存在' } }))).rejects.toMatchObject({ code: 'USAGE' })
+      },
+    )
+  })
+
+  it('注册表：live list 声明 category 选项（WebUI 的分类 chip 靠它），两条命令都标为非上游', async () => {
+    const { default: douyin } = await import('../src/platforms/douyin/index.js')
+    const web = douyin.endpoints.web
+    if (web === 'planned') throw new Error('web 是 planned')
+    expect(web.commands.get('live list')?.options.category).toBeTruthy()
+    expect(web.commands.get('live list')).toMatchObject({ upstream: 'partial', note: expect.stringContaining('非上游') })
+    expect(web.commands.get('live categories')).toMatchObject({ upstream: 'partial', note: expect.stringContaining('非上游') })
   })
 })

@@ -1,7 +1,7 @@
 {
   "name": "catbus-cli",
   "version": "0.3.0",
-  "description": "catbus（猫巴士）：上车，开往任何平台。一个命令操作小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X、YouTube、12306、猫眼演出。",
+  "description": "catbus（猫巴士）：上车，开往任何平台。一个命令操作小红书、抖音、TikTok、B 站、快手、微博、闲鱼、淘宝、京东、X、YouTube、12306、猫眼演出、Discord。",
   "keywords": [
     "cli",
     "xiaohongshu",
@@ -17,7 +17,8 @@
     "youtube",
     "12306",
     "maoyan",
-    "jimeng"
+    "jimeng",
+    "discord"
   ],
   "author": "cv-cat",
   "license": "MIT",
@@ -52,7 +53,8 @@
     "test:e2e": "vitest run -c tests/e2e/vitest.config.ts",
     "gen:capabilities": "npm run build && node scripts/gen-capabilities.mjs",
     "gen:assets": "npm run build && node scripts/gen-assets.mjs",
-    "prepack": "npm run build",
+    "build:web": "node scripts/build-web.mjs",
+    "prepack": "npm run build && npm run build:web",
     "assets:jd": "node scripts/fetch-jd-models.mjs",
     "assets:ocr": "node scripts/fetch-ocr-models.mjs"
   },
@@ -74,6 +76,7 @@
     "smol-toml": "^1.9.0",
     "string-width": "^8.3.0",
     "wreq-js": "^3.2.0",
+    "yazl": "^3.3.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {
@@ -82,6 +85,7 @@
     "@types/node": "^22.20.4",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.3.0",
+    "@types/yazl": "^3.3.1",
     "fontkit": "^2.0.4",
     "typescript": "^7.0.2",
     "vitest": "^5.0.2"

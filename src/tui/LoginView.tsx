@@ -172,7 +172,7 @@ export function ProgressView({
           <T>{'  ' + view.text}</T>
         </Box>
       ) : null}
-      {view.type === 'qrcode' ? <QrBlock content={view.content} png={view.png} hint={view.hint} cols={cols - 2} rows={rows - 2} spin={spin} /> : null}
+      {view.type === 'qrcode' ? <QrBlock content={view.content} png={view.png} hint={view.hint} scanned={view.scanned} cols={cols - 2} rows={rows - 2} spin={spin} /> : null}
       {view.type === 'link' ? (
         <Box flexDirection="column" paddingLeft={2} paddingTop={1}>
           <T bold>{view.title}</T>
@@ -221,8 +221,9 @@ function PromptBox({ editor, hidden, width }: { editor: TextState; hidden: boole
   )
 }
 
-function QrBlock({ content, png, hint, cols, rows, spin }: { content: string; png: string; hint: string; cols: number; rows: number; spin: string }) {
+function QrBlock({ content, png, hint, scanned, cols, rows, spin }: { content: string; png: string; hint: string; scanned: string | null; cols: number; rows: number; spin: string }) {
   const look = useLook()
+  const g = useGlyphs()
   const size = useMemo(() => qrSize(content), [content])
   // 并排还是上下排：宽度够就把说明放在二维码右边（只需要二维码本身的行数），否则说明排在下面（再留 9 行）
   const side = cols >= size.cols + 4 + 34
@@ -243,8 +244,8 @@ function QrBlock({ content, png, hint, cols, rows, spin }: { content: string; pn
           </Box>
         ))}
         <Box>
-          <T c="accent">{spin}</T>
-          <T>{' ' + clip(hint, cols - 22, '…')}</T>
+          {scanned ? <T c="green" bold>{g.check}</T> : <T c="accent">{spin}</T>}
+          <T c={scanned ? 'green' : undefined}>{' ' + clip(scanned ?? hint, cols - 22, '…')}</T>
           <T c="dim">{'  o 看图片'}</T>
         </Box>
       </Box>
@@ -277,8 +278,14 @@ function QrBlock({ content, png, hint, cols, rows, spin }: { content: string; pn
         <T bold>{hint}</T>
         <Box height={1} />
         <Box>
-          <T c="accent">{spin}</T>
-          <T>{'  等待扫码和确认'}</T>
+          {scanned ? (
+            <T c="green" bold>
+              {g.check}
+            </T>
+          ) : (
+            <T c="accent">{spin}</T>
+          )}
+          <T c={scanned ? 'green' : undefined}>{'  ' + (scanned ?? '等待扫码和确认')}</T>
         </Box>
         <Box height={1} />
         <T c="dim">二维码图片</T>

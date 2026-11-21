@@ -1,0 +1,87 @@
+{
+  "nav": {
+    "label": "M-Team 페이지",
+    "discover": "발견",
+    "me": "내 정보"
+  },
+  "stats": {
+    "seeding": "시딩 중",
+    "leeching": "다운로드 중 {n}",
+    "bonus": "시간 보너스",
+    "perHour": "/ 시간",
+    "counted": "{n}개 · {size} 반영",
+    "a": "A 값",
+    "aDesc": "시간 보너스는 이 값으로 계산됩니다",
+    "twoFactor": "2단계 인증",
+    "on": "켜짐",
+    "off": "꺼짐",
+    "setOnSite": "M-Team 사이트에서 설정",
+    "twoFactorOk": "계정이 2단계 인증으로 보호되고 있습니다"
+  },
+  "exam": {
+    "label": "심사",
+    "left": "{d}일 {h}시간 남음",
+    "ongoing": "진행 중",
+    "none": "진행 중인 심사가 없습니다",
+    "done": "달성",
+    "lack": "{v} 부족",
+    "item": {
+      "download": "다운로드량",
+      "upload": "업로드량",
+      "bonus": "보너스"
+    }
+  },
+  "seeds": {
+    "title": "내 토렌트",
+    "tab": {
+      "seeding": "시딩 중",
+      "leeching": "다운로드 중",
+      "completed": "완료",
+      "incomplete": "미완료",
+      "uploaded": "업로드함"
+    },
+    "loaded": "{n}개 불러옴",
+    "loadedOf": "{n} / {total}개 불러옴",
+    "col": {
+      "torrent": "토렌트",
+      "size": "크기",
+      "up": "내 업로드",
+      "down": "내 다운로드",
+      "ratio": "공유율"
+    },
+    "empty": {
+      "seeding": "시딩 중인 토렌트가 없습니다",
+      "leeching": "다운로드 중인 토렌트가 없습니다",
+      "completed": "완료된 토렌트가 없습니다",
+      "incomplete": "미완료 토렌트가 없습니다",
+      "uploaded": "아직 업로드한 토렌트가 없습니다"
+    }
+  },
+  "bonus": {
+    "title": "보너스 내역",
+    "today": "오늘",
+    "yesterday": "어제",
+    "onlyChange": "보너스 변동만",
+    "empty": "보너스 기록이 아직 없습니다",
+    "emptyChange": "불러온 기록에 보너스 변동이 없습니다",
+    "foot": "업로드·다운로드 변화는 각 기록에 적혀 있습니다. 사이트는 변동 전후 잔액을 제공하지 않습니다"
+  },
+  "collects": {
+    "title": "즐겨찾기",
+    "mode": "구역",
+    "empty": "이 구역에는 즐겨찾기가 없습니다",
+    "emptyDesc": "M-Team 사이트에서 즐겨찾기한 토렌트가 여기에 표시됩니다"
+  },
+  "me": {
+    "title": "내 정보",
+    "updated": "{time}에 업데이트",
+    "updatedIn": "{time}에 업데이트 · {s}s",
+    "refresh": "새로고침",
+    "method": {
+      "apikey": "API Key",
+      "password": "비밀번호"
+    },
+    "login": "M-Team에 로그인하면 시딩, 보너스, 심사를 볼 수 있습니다",
+    "loginDesc": "API Key나 아이디·비밀번호로 로그인할 수 있습니다"
+  }
+}

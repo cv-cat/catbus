@@ -75,9 +75,13 @@ def session(cols, rows, steps):
         elif step[0] == "resize":
             fcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack("HHHH", step[2], step[1], 0, 0))
             os.kill(pid, signal.SIGWINCH)
-        # 每一步之后：等到有新的输出（界面重绘了），再多给 0.3 秒让它画完；进程退出了就不用等
-        drain(5, until=lambda: len(buf) > before)
-        drain(0.3)
+        if step[0] == "resize":
+            # 等到调整后的页面。后台状态刷新或清屏序列也会产生输出。
+            expected = step[3].encode()
+            drain(8, until=lambda: expected in buf[before:])
+        else:
+            drain(5, until=lambda: len(buf) > before)
+            drain(0.3)
         if state["exited"]:
             break
     # 最后一步如果是退出键：最多再等 10 秒让进程自己退出。
@@ -130,7 +134,7 @@ text = plain(out)
 check("命令面板", "命令面板" in text and "12306 ticket search" in text)
 check("Ctrl-C 退出", exited)
 
-out, exited, status = session(120, 34, [("resize", 60, 15), ("resize", 120, 34), ("send", "q")])
+out, exited, status = session(120, 34, [("resize", 60, 15, "终端太小了"), ("resize", 120, 34, "平台"), ("send", "q")])
 text = plain(out)
 check("窗口缩小提示放大，放大后恢复", "终端太小了" in text and text.rfind("平台") > text.rfind("终端太小了"))
 

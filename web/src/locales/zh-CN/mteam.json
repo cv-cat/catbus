@@ -1,0 +1,87 @@
+{
+  "nav": {
+    "label": "M-Team 页面",
+    "discover": "发现",
+    "me": "我的"
+  },
+  "stats": {
+    "seeding": "做种中",
+    "leeching": "下载中 {n}",
+    "bonus": "时魔",
+    "perHour": "/ 小时",
+    "counted": "计入 {n} 个 · {size}",
+    "a": "A 值",
+    "aDesc": "时魔按它计算",
+    "twoFactor": "两步验证",
+    "on": "已开启",
+    "off": "未开启",
+    "setOnSite": "在 M-Team 网页设置",
+    "twoFactorOk": "账号受两步验证保护"
+  },
+  "exam": {
+    "label": "考核",
+    "left": "剩 {d} 天 {h} 小时",
+    "ongoing": "进行中",
+    "none": "没有进行中的考核",
+    "done": "已达标",
+    "lack": "差 {v}",
+    "item": {
+      "download": "下载量",
+      "upload": "上传量",
+      "bonus": "魔力值"
+    }
+  },
+  "seeds": {
+    "title": "我的种子",
+    "tab": {
+      "seeding": "做种中",
+      "leeching": "下载中",
+      "completed": "已完成",
+      "incomplete": "未完成",
+      "uploaded": "已发布"
+    },
+    "loaded": "已加载 {n}",
+    "loadedOf": "已加载 {n} / {total}",
+    "col": {
+      "torrent": "种子",
+      "size": "体积",
+      "up": "我的上传",
+      "down": "我的下载",
+      "ratio": "分享率"
+    },
+    "empty": {
+      "seeding": "没有正在做种的种子",
+      "leeching": "没有正在下载的种子",
+      "completed": "没有已完成的种子",
+      "incomplete": "没有未完成的种子",
+      "uploaded": "还没有发布过种子"
+    }
+  },
+  "bonus": {
+    "title": "魔力流水",
+    "today": "今天",
+    "yesterday": "昨天",
+    "onlyChange": "只看魔力变动",
+    "empty": "还没有魔力记录",
+    "emptyChange": "已加载的记录里没有魔力变动",
+    "foot": "上传、下载的变化写在每条里；站点不提供变动前后的余额"
+  },
+  "collects": {
+    "title": "收藏",
+    "mode": "分区",
+    "empty": "这个分区还没有收藏",
+    "emptyDesc": "在 M-Team 网页上收藏的种子会出现在这里"
+  },
+  "me": {
+    "title": "我的",
+    "updated": "更新于 {time}",
+    "updatedIn": "更新于 {time} · {s}s",
+    "refresh": "刷新",
+    "method": {
+      "apikey": "API Key",
+      "password": "账号密码"
+    },
+    "login": "登录 M-Team 后查看做种、时魔和考核",
+    "loginDesc": "支持 API Key 和账号密码两种登录方式"
+  }
+}

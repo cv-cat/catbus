@@ -31,7 +31,7 @@ describe('全局命令', () => {
 
   it('platforms 列出全部平台，带参数时返回单个对象（接受别名）', async () => {
     const all = await cli('platforms')
-    expect(all.env.data.map((p: any) => p.id)).toEqual(['xhs', 'douyin', 'tiktok', 'bilibili', 'kuaishou', 'weibo', 'xianyu', 'taobao', 'jd', 'x', 'youtube', '12306', 'jimeng', 'maoyan', 'mteam'])
+    expect(all.env.data.map((p: any) => p.id)).toEqual(['xhs', 'douyin', 'tiktok', 'bilibili', 'kuaishou', 'weibo', 'xianyu', 'taobao', 'jd', 'x', 'youtube', '12306', 'jimeng', 'maoyan', 'mteam', 'discord'])
     const one = await cli('platforms', 'rednote')
     expect(one.env.data.id).toBe('xhs')
     expect(one.env.data.endpoints).toEqual({ web: 'available', app: 'planned', pc: 'planned' })
@@ -41,8 +41,8 @@ describe('全局命令', () => {
       action: 'list',
       auth: 'required',
       status: 'implemented',
-      upstream: 'partial',
-      note: 'following 规划中',
+      upstream: 'full',
+      note: null,
     })
     expect((await cli('platforms', 'nope')).code).toBe(2)
   })
@@ -176,16 +176,18 @@ describe('命令判定', () => {
   it('筛选：标准值但平台不支持 → UNSUPPORTED；不是标准值 → USAGE', async () => {
     const hot = await cli('xhs', 'feed', 'list', '--kind', 'hot')
     expect(hot.env.error.code).toBe('UNSUPPORTED')
-    expect(hot.env.error.hint).toBe('可选：recommend、following')
+    expect(hot.env.error.hint).toBe('可选：recommend')
     const nope = await cli('xhs', 'feed', 'list', '--kind', 'nope')
     expect(nope.env.error.code).toBe('USAGE')
     // USAGE 的 hint 同样只列本平台支持的取值，不列词表全集（hot 是标准值，但 xhs 不支持）
-    expect(nope.env.error.hint).toBe('可选：recommend、following')
+    expect(nope.env.error.hint).toBe('可选：recommend')
     expect((await cli('xhs', 'item', 'search', 'kw', '--sort', 'hottest')).env.error).toMatchObject({
       code: 'USAGE', hint: '可选：general、latest、popular、comments、collects',
     })
+    // 标准值但 xhs 不支持（上游没有关注流）：UNSUPPORTED，hint 列出可用的取值
+    expect((await cli('xhs', 'feed', 'list', '--kind', 'following')).env.error).toMatchObject({ code: 'UNSUPPORTED', hint: '可选：recommend' })
     // 取值通过校验后进入身份检查：web 端不支持游客，需要登录
-    expect((await cli('xhs', 'feed', 'list', '--kind', 'following')).env.error.code).toBe('AUTH_REQUIRED')
+    expect((await cli('xhs', 'feed', 'list', '--kind', 'recommend')).env.error.code).toBe('AUTH_REQUIRED')
   })
 
   it('参数与选项校验先于 NOT_IMPLEMENTED', async () => {

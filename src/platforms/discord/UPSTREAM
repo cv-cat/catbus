@@ -1,0 +1,32 @@
+source: local discord-cli Python project, sibling checkout ../discord-cli
+baseline: Discord 0.0.419 stable / macOS arm64 / Electron 42.11.15
+original executable sha256: 697a88ba14116443af81ce4951152357693cff7ee5bbe687c7afd86b419b564d
+webapp: build 649389, sha256 8694f2d540278e3d14c45eb414e96ada1c64f5a9cbcb52df69347ea35a72574e
+core: discord_desktop_core distribution module 1, sha256 e24a5b8393384dc885f5e1dabb48d8b6833731f01c40460c99815a9169a12770
+
+Python reference source SHA-256:
+  06c88de2c1b4cd5e3dc9ec340c1731f0739ef657c540ce05ce8e0cdc9f88923f  discord_cli/api.py
+  d752f335944bfed3c11d21cb1d78d4be8e54af608b424f1228ae979a76812b34  discord_cli/fidelity.py
+  680b5b42a4bf8e1890f4186a58fdb7879b353a8210c567ae0ed8054ba9c47fc9  discord_cli/client_context.py
+  eb929dfe61ce03ee537b920b3bde7287c5a1bbd7a53c9acbe2b9d3c8a754f326  discord_cli/device.py
+  79017529945e8cad34581df98242273273928e88fc302e866a19064d9b3818dc  discord_cli/gateway.py
+  d034b5dce59b0f380fce5d849ac4ba01cd167f8fc2c592017e79bf2feaa7ec02  discord_cli/gateway_fidelity.py
+  3e0b12ee3549350f431261ab694a9c19add7614e824de5e6166a87ec655bc7cd  discord_cli/remote_auth.py
+
+Offline request fixtures: tests/golden/discord. Regenerate from the sibling checkout:
+  PYTHONDONTWRITEBYTECODE=1 ../discord-cli/.local/venv/bin/python scripts/golden/discord/gen.py
+  DISCORD_CLI_REFERENCE may point at a copy with these source digests.
+Evidence scope: prepared requests against the Python reference and local protocol simulations.
+The Catbus wreq-js TLS/HTTP2 wire, production login and production Gateway have no original-client comparison.
+The CDN upload intentionally omits browser context headers and uses a separate credential-free transport.
+
+Interactive verification (static source and asset hashes):
+  4e99af957e486c048863f4e8a3091745eebec876447bf03100ab42a4cf5f4efa  discord_cli/captcha.py
+  66c0804ae0afcc866ac3357d42a06160377b8d47e74c071ebf8047ed5b591905  discord_cli/webauthn.py
+  d048a7273e5896389679b7d115baca2a7a265a944277881ed815b70cd2fe5aef  discord_cli/captcha_react_bundle.js
+  6f2018dd6ad7c6fe7d7d4112beec6254e1d4b10426a47729bcc5bdf67e5563ae  discord_cli/captcha_react.css
+  be5ec44ea0141e5cf9b70260c94409461093d555cb8901fa79ab7248d5d6e1f9  discord_cli/captcha-modal.svg
+The three browser assets are byte-identical copies under static/discord/.
+WebAuthn browser API: https://www.w3.org/TR/webauthn-3/ (parseRequestOptionsFromJSON and assertion result).
+Local evidence: loopback callback tests, simulated MFA responses, and a Chromium virtual authenticator signature check.
+Native hardware, real hCaptcha challenges, and production Discord login remain unverified.

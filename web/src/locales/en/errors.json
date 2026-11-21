@@ -1,0 +1,15 @@
+{
+  "code": {
+    "ERROR": "Something went wrong",
+    "USAGE": "Invalid request parameters",
+    "UNSUPPORTED": "This platform doesn't support this action",
+    "CONFIRM_REQUIRED": "This action needs confirmation",
+    "AUTH_REQUIRED": "Please log in first",
+    "AUTH_EXPIRED": "Session expired, please log in again",
+    "NOT_IMPLEMENTED": "This feature isn't available yet",
+    "RISK_CONTROL": "The platform requires verification or has limited access",
+    "NETWORK": "Network or proxy error",
+    "UPSTREAM": "The platform returned an error",
+    "BRIDGE": "Can't reach the local service"
+  }
+}

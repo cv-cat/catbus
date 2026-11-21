@@ -87,16 +87,17 @@ export interface Glyphs {
   sep: string
   more: string
   cursor: string
+  check: string
   box: 'round' | 'classic'
   spin: string[]
 }
 
 export const UNICODE: Glyphs = {
-  dotOn: '●', dotOff: '○', caret: '▌', open: '▾', closed: '▸', arrow: '→', sep: '›', more: '…', cursor: '█', box: 'round',
+  dotOn: '●', dotOff: '○', caret: '▌', open: '▾', closed: '▸', arrow: '→', sep: '›', more: '…', cursor: '█', check: '✓', box: 'round',
   spin: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'],
 }
 
 export const PLAIN: Glyphs = {
-  dotOn: '*', dotOff: 'o', caret: '>', open: 'v', closed: '>', arrow: '->', sep: '>', more: '...', cursor: '_', box: 'classic',
+  dotOn: '*', dotOff: 'o', caret: '>', open: 'v', closed: '>', arrow: '->', sep: '>', more: '...', cursor: '_', check: '+', box: 'classic',
   spin: ['|', '/', '-', '\\'],
 }

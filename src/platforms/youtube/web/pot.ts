@@ -6,11 +6,14 @@
  * 流程与 yt-dlp 的 PO Token Provider（bgutil）一致，全部在 Node 里完成，不需要浏览器：
  * 首页的 ytAtN 挑战 → interpreter（www.google.com 白名单 + jsdom 环境）→ BotGuard 快照 →
  * GenerateIT 换 integrity token → WebPoMinter 按内容绑定（视频 ID）铸造 token。
+ * minter 是带闭包的实例只做进程内缓存（catbus 每条命令是独立进程，跨命令本来就复用不到）；
+ * 早期把它挂进凭证 device 落盘，读回来成了没有方法的对象，缓存命中时报 mintAsWebsafeString is not a function。
  * 实测（2026-11-10）：player 与 GVS 的 token 都绑视频 ID；iOS 请求带 serviceIntegrityDimensions
  * 后 pbp 门控放开，分组直链 + URL 追加 `&pot=` 能完整下载。
  */
 
 import { BotGuardClient } from 'bgutils-js/botguard'
+import { GOOG_API_KEY } from 'bgutils-js/utils'
 import { WebPoMinter as Minter } from 'bgutils-js/webpo'
 import { createRequire } from 'node:module'
 import { format } from 'node:util'
@@ -25,14 +28,15 @@ const { JSDOM, VirtualConsole } = require('jsdom') as {
   VirtualConsole: new () => any
 }
 
-/** GenerateIT 是 Google WAA 的 protobuf 风格 RPC：双元素请求 `[API key, botguard 响应]`，四元素响应。 */
-const GENERATE_IT_URL = 'https://youtube-.runtime.googleapis.com/$rpc/google.internal.waa.v1.Waa/GenerateIT'
-/** YouTube 客户端共用、多年未变的 WAA API key（bgutils-js 同值）。 */
-const GENERATE_IT_KEY = 'O43z0dpjhgX20SCx4KAo'
+/**
+ * GenerateIT 是 Google WAA 的 protobuf 风格 RPC：双元素请求 `[API key, botguard 响应]`，四元素响应。
+ * 端点与 key 都用 bgutils-js 的常量（jnn-pa.googleapis.com / GOOG_API_KEY）。网页用的
+ * youtube-.runtime.googleapis.com 在部分网络路径下下发的证书不覆盖 runtime 子域
+ * （2026-11-10 实测 CERTIFICATE_VERIFY_FAILED），jnn-pa 正常；两处是同一个 WAA 服务的前端。
+ */
+const GENERATE_IT_URL = 'https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/GenerateIT'
 /** interpreter 只能来自 YouTube 网页环境用的 www.google.com 静态脚本（与 Studio 的 BotGuard 白名单一致）。 */
 const INTERPRETER_HOST = 'www.google.com'
-/** integrity token 的实测 TTL 是 12h（43200s），minter 按一半取保守值缓存。 */
-const MINTER_TTL_MS = 6 * 3600 * 1000
 /** challenge 里 program 会随部署轮转，短缓存即可（够一条命令内复用，不跨命令依赖它）。 */
 const CHALLENGE_TTL_MS = 30 * 60 * 1000
 
@@ -47,16 +51,22 @@ interface MintFn {
   mintAsWebsafeString(contentBinding: string): Promise<string>
 }
 
-/** 缓存挂凭证 device，随凭证由 core 落盘（guest 凭证同样适用）。 */
+/** 缓存挂凭证 device，随凭证由 core 落盘（guest 凭证同样适用）。challenge 是纯数据，可以落盘；minter 不行。 */
 export interface PotCache {
   challenge?: { data: BgChallenge; fetchedAt: number }
-  minter?: { minter: MintFn; expiresAt: number }
 }
+
+/** WebPoMinter 是带闭包的实例，JSON 序列化会丢掉方法：缓存只能放进程内（每条命令是一个独立进程）。 */
+let procMinter: MintFn | null = null
 
 /** PO token 链路失败：仍按人机验证报错（上层维持 RISK_CONTROL 语义），与原 VISIONOS 失败的提示不同。 */
 export class PotError extends CatbusError {
   constructor(message: string) {
-    super('RISK_CONTROL', message, { hint: 'PO Token 链路失败，过一段时间再试，或换一个代理出口', detail: { kind: 'captcha' } })
+    super('RISK_CONTROL', message, {
+      // pot 压不住的是出口 IP 的信誉分（2026-11-11 实测：重度下载后 iOS/ANDROID+pot 全被拦，换出口或等恢复是仅有的解法）
+      hint: '出口 IP 被人机验证盯上了：换一个代理出口节点，或等几十分钟让 IP 信誉恢复后重试',
+      detail: { kind: 'captcha' },
+    })
   }
 }
 
@@ -95,9 +105,8 @@ async function loadChallenge(c: YtClient, cache: PotCache): Promise<BgChallenge>
  */
 export async function poMinter(c: YtClient): Promise<MintFn> {
   if (potTest.fakeMinter) return { mintAsWebsafeString: (binding: string) => potTest.fakeMinter!(binding) }
+  if (procMinter) return procMinter
   const cache = (c.ctx.credential.device.pot ??= {}) as PotCache
-  const hit = cache.minter
-  if (hit && hit.expiresAt > rand.now()) return hit.minter
 
   const challenge = await loadChallenge(c, cache)
   // interpreter 的 host 白名单：只认客户端实测使用的 www.google.com 静态脚本（AGENTS 5.7 的口径）
@@ -122,10 +131,10 @@ export async function poMinter(c: YtClient): Promise<MintFn> {
 
   const itRes = await c.postRaw(GENERATE_IT_URL, [
     ['Content-Type', 'application/json+protobuf'],
-    ['X-Goog-Api-Key', GENERATE_IT_KEY],
+    ['X-Goog-Api-Key', GOOG_API_KEY],
     ['X-User-Agent', 'grpc-web-javascript/0.1'],
     ['User-Agent', c.ua],
-  ], JSON.stringify([GENERATE_IT_KEY, botguardResponse]))
+  ], JSON.stringify([GOOG_API_KEY, botguardResponse]))
   await c.check(itRes, 'GenerateIT')
   const [integrityToken, ttlSecs, mintRefreshThreshold, websafeFallbackToken] = await jsonLoads(await itRes.text())
   if (!integrityToken) throw new PotError('GenerateIT 没有返回 integrity token')
@@ -135,7 +144,10 @@ export async function poMinter(c: YtClient): Promise<MintFn> {
     { integrityToken, estimatedTtlSecs: ttlSecs, mintRefreshThreshold, websafeFallbackToken },
     webPoSignalOutput as never,
   )) as unknown as MintFn
-  cache.minter = { minter, expiresAt: rand.now() + MINTER_TTL_MS }
+  if (typeof (minter as unknown as Record<string, unknown>).mintAsWebsafeString !== 'function') {
+    throw new PotError('WebPoMinter 不是可用的铸造器')
+  }
+  procMinter = minter
   return minter
 }
 
@@ -166,6 +178,11 @@ function runInterpreter(c: YtClient, interpreterJS: string): void {
     try {
       Object.defineProperty(g, 'navigator', { value: dom.window.navigator })
     } catch { /* Node 的 navigator 只读，保留原生即可 */ }
+  }
+  // BotGuard 的 program 会把宿主当 EventTarget 用（绑定用户交互事件），jsdom 的 window 是唯一的 EventTarget
+  for (const name of ['addEventListener', 'removeEventListener', 'dispatchEvent'] as const) {
+    const fn = (dom.window as unknown as Record<string, unknown>)[name]
+    if (typeof fn === 'function') g[name] = (fn as (...args: unknown[]) => void).bind(dom.window)
   }
   // interpreter 的 BotGuard program 会读 ytcfg（EVENT_ID 等），提供与主页同源的最小配置
   g.yt = { config_: c.configNow() }

@@ -8,7 +8,7 @@
 | 上游仓库 | [cv-cat/BilibiliApis](https://github.com/cv-cat/BilibiliApis) |
 | 移植基线 | master 上的 [`0234d81`](https://github.com/cv-cat/BilibiliApis/commit/0234d8188b40314d011358d60424bb88fd291a1f)，记录在 [`src/platforms/bilibili/UPSTREAM`](../../src/platforms/bilibili/UPSTREAM) |
 | 端 | web ✓ · app ○ 规划中 · pc ○ 规划中 |
-| 命令（web） | 已实现 49 条（✓ 41 · ◐ 8），规划中 ○ 29 条 |
+| 命令（web） | 已实现 50 条（✓ 41 · ◐ 9），规划中 ○ 28 条 |
 
 B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 个平台里登录方式最全的。命令表由注册表生成，与 `catbus platforms bilibili` 一致；选项以 `catbus bilibili <resource> <action> --help` 为准。通用的命令语法、输出结构见 [AGENTS.md 第 4 节](../../AGENTS.md#4-命令规范)。
 
@@ -95,6 +95,7 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | 命令 | 状态 | 说明 |
 |---|---|---|
 | `live get` | ✓ | 直播间信息。 |
+| `live list` | ◐ | 正在直播的直播间。不带 `--category` 为直播首页推荐；`--category` 取 `live categories` 的父分区或子分区 id。非上游：请求按网页端直播首页和分区页补的。 |
 | `live search` | ✓ | 搜索直播。 |
 | `live categories` | ✓ | 直播分类。 |
 | `live listen` | ✓ | 监听弹幕、礼物、进场等事件。持续输出 jsonl。 |
@@ -104,7 +105,7 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `live media` | ✓ | 直播流地址。 |
 | `live start` | ✓ | 开播。`--category` 为直播分区，取值见 `live categories`。 |
 | `live stop` | ✓ | 下播。 |
-| `live list`、`live like`、`live rank`、`live replays` | ○ | 规划中 |
+| `live like`、`live rank`、`live replays` | ○ | 规划中 |
 
 ### media
 
@@ -154,7 +155,14 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `series list` | ◐ | 我创建的合集：id、标题、集数、链接。非上游：创作中心合集管理接口（`x2/creative/web/seasons`），只能列自己的合集。 |
 | `series items` | ○ | 规划中。 |
 | `series add` | ✓ | 把已发布的稿件加进合集（`x2/creative/web/season/section/episodes/add`），挂到合集的第一个小节下。平台扩展。 |
-| `series sort` | ◐ | 按发布时间重排自己合集的第一个小节；`--order asc` 最早在前（默认），`desc` 最新在前。发布时间不可用时中止且不写入。平台扩展。 |
+| `series sort` | ◐ | 按发布时间重排合集第一个小节里的稿件（`--order asc` 最早在前，默认；`desc` 最新在前）。非上游：`x2/creative/web/season/section/edit`，合集自己的「排序方式」开关仍需网页端设置。任一稿件的发布时间不可用时中止且不写入。平台扩展。 |
+
+### keyword
+
+| 命令 | 状态 | 说明 |
+|---|---|---|
+| `keyword hot` | ◐ | 热搜词：网页端搜索框下的「bilibili 热搜」，按热度排序，`heat` 为热度值。非上游：请求按网页端补的（`x/web-interface/wbi/search/square`），最多 50 条，不含置顶词。 |
+| `keyword suggest` | ○ | 规划中 |
 
 ### 整组规划中
 
@@ -162,7 +170,6 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 
 | resource | 命令 |
 |---|---|
-| `keyword` | `suggest` `hot` |
 | `notice` | `list` `count` |
 | `msg` | `list` `history` `send` `listen` `read` `revoke` `delete` |
 | `history` | `list` |

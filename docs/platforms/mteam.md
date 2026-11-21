@@ -90,7 +90,7 @@ catbus mteam msg history <id>
 
 - `item collect` / `uncollect` 按目标状态设置，重复执行不报错。`user collects` 按分区列出收藏（`--mode`，默认 normal）。
 - `seed list --status` 取 `seeding`（默认）、`leeching`、`completed`、`incomplete`、`uploaded`。输出 `Torrent[]`，本账号在该种子上的上传量、下载量、分享率写在 `text` 开头；种子已删除时 `title` 为 null。
-- `bonus history` 输出 `BonusRecord[]`：`type` 为站点的记录类型（如 `TRACKER`、`TORRENT`），`change` 为魔力值变化，上传量、下载量的变化写进 `note`；站点不提供变动前后的余额，`before` / `after` 为 null。
+- `bonus history` 输出 `BonusRecord[]`：`type` 为站点的记录类型（如 `TRACKER`、`TORRENT`），`change` 为魔力值变化，`note` 是给人看的说明，以「；」分隔（如「促销：50%；考核期间；上传：1.51 GiB」）：站点原文里的 IP、种子 ID 等内部标记已去掉，促销和考核标签转成中文，认不出的标签原样保留；`url` 是相关种子的详情页（没有相关种子时为 null）；站点不提供变动前后的余额，`before` / `after` 为 null。
 - `exam get` 列出进行中的考核（新人考核等）：`items` 依次为 `download`、`upload`（字节）和 `bonus`（魔力值），各带 `current`、`target`、`done`；没有考核时为空数组。
 - `bonus get` 给出时魔：`per_hour` 每小时魔力值、`a` A 值、`seeding_count` / `seeding_size_gb` 计入时魔的做种数和体积（GB）、`two_factor` 是否开启两步验证。`seed stats` 给出 tracker 上当前的做种数和下载数。
 - `msg list --box` 取 `inbox`（默认，收件箱）、`system`（系统通知）、`sent`（发件箱），每条站内信作为一个会话；系统消息的 `peer` 为 `{id: "0", name: "系统"}`。`msg history` 读取一条，不会标记已读。站内信只支持账密登录的会话，API Key 会话报 `UNSUPPORTED`。
@@ -103,7 +103,7 @@ catbus mteam item download 12345 --dir ./torrents --overwrite
 catbus mteam item download 12345 --dir ./torrents --qbit --qbit-category movie --qbit-paused
 ```
 
-保存 `mteam_<id>_1.torrent`。已有文件默认跳过，不申请新的下载链接；`--overwrite` 覆盖文件。`--qbit` 把种子推送到本机 qBittorrent Web UI（地址用 `CATBUS_MTEAM_QBIT_URL` 指定，默认 `http://127.0.0.1:25254`，直连、不走代理；Web UI 需要对本机地址免认证），默认分类 `mteam`，分类不存在时自动创建；`--qbit-paused` 推送后先暂停；`--qbit-savepath <目录>` 指定保存目录（qBittorrent 所在机器上的路径），不给时由 qBittorrent 决定（关闭自动种子管理时，分类的保存路径不生效）。qBittorrent 里已有同一个种子时只在 stderr 警告。
+保存 `mteam_<id>_1.torrent`。已有文件默认跳过，不申请新的下载链接；`--overwrite` 覆盖文件。`--qbit` 把种子推送到本机 qBittorrent Web UI（地址用 `CATBUS_MTEAM_QBIT_URL` 指定，默认 `http://127.0.0.1:25254`，直连、不走代理；Web UI 需要对本机地址免认证），默认分类 `mteam`，分类不存在时自动创建；`--qbit-paused` 推送后先暂停；`--qbit-savepath <目录>` 指定保存目录（qBittorrent 所在机器上的路径），不给时由 qBittorrent 决定（关闭自动种子管理时，分类的保存路径不生效）。带 `--qbit` 时输出改为 `{id, files, qbit}`，`qbit.status` 为 `added`（已添加）或 `exists`（qBittorrent 里已有同一个种子，仍算成功）。推送失败时命令报错（连不上为 `NETWORK`，Web UI 要求认证为 `ERROR`，其他错误为 `UPSTREAM`），种子文件照样保存：`error.detail` 为 `{qbit: "failed", id, files, http_status}`，`files` 是已保存的文件。
 
 下载链接由 `api.m-team.cc` 跳转到下载节点 `*.halomt.com`；catbus 只跟随这两类 HTTPS 地址。
 

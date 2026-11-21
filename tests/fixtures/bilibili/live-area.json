@@ -1,0 +1,86 @@
+{
+  "code": 0,
+  "message": "0",
+  "ttl": 1,
+  "data": {
+    "banner": [],
+    "new_tags": [
+      {
+        "id": 2221,
+        "name": "热门",
+        "icon": "",
+        "sort_type": "sort_type_2221",
+        "type": 0,
+        "sub": [],
+        "hero_list": [],
+        "sort": 0,
+        "content_type": 1
+      },
+      {
+        "id": 2222,
+        "name": "最新",
+        "icon": "",
+        "sort_type": "live_time",
+        "type": 0,
+        "sub": [],
+        "hero_list": [],
+        "sort": 0,
+        "content_type": 1
+      }
+    ],
+    "list": [
+      {
+        "roomid": 800001,
+        "uid": 820001,
+        "title": "测试直播间标题1",
+        "uname": "测试主播1",
+        "online": 12345,
+        "user_cover": "https://i0.hdslb.com/bfs/live/fake_user_cover_1.jpg",
+        "user_cover_flag": 1,
+        "system_cover": "https://i0.hdslb.com/bfs/live/fake_system_cover_1.jpg",
+        "cover": "https://i0.hdslb.com/bfs/live/fake_cover_1.jpg",
+        "show_cover": "",
+        "link": "/800001?hotRank=0",
+        "face": "https://i0.hdslb.com/bfs/face/fake1.jpg",
+        "parent_id": 13,
+        "parent_name": "赛事",
+        "area_id": 561,
+        "area_name": "游戏赛事",
+        "area_v2_parent_id": 13,
+        "area_v2_parent_name": "赛事",
+        "area_v2_id": 561,
+        "area_v2_name": "游戏赛事",
+        "session_id": "fake_session",
+        "group_id": 0
+      },
+      {
+        "roomid": 800002,
+        "uid": 820002,
+        "title": "测试直播间标题2",
+        "uname": "测试主播2",
+        "online": 678,
+        "user_cover": "",
+        "user_cover_flag": 1,
+        "system_cover": "https://i0.hdslb.com/bfs/live/fake_system_cover_2.jpg",
+        "cover": "https://i0.hdslb.com/bfs/live/fake_cover_2.jpg",
+        "show_cover": "",
+        "link": "/800002?hotRank=0",
+        "face": "https://i0.hdslb.com/bfs/face/fake2.jpg",
+        "parent_id": 2,
+        "parent_name": "网游",
+        "area_id": 86,
+        "area_name": "英雄联盟",
+        "area_v2_parent_id": 2,
+        "area_v2_parent_name": "网游",
+        "area_v2_id": 86,
+        "area_v2_name": "英雄联盟",
+        "session_id": "fake_session",
+        "group_id": 0
+      }
+    ],
+    "count": 0,
+    "has_more": 1,
+    "vajra": [],
+    "cover_source": 0
+  }
+}

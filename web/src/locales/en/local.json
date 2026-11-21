@@ -1,0 +1,66 @@
+{
+  "title": "Saved locally",
+  "eyebrow": "Stored only in this browser",
+  "search": "Search titles, text, authors",
+  "export": "Export",
+  "button": {
+    "add": "Watch later",
+    "saved": "Saved locally"
+  },
+  "toast": {
+    "storageFailed": "The browser couldn't save your local collection; it will be lost when you close the page",
+    "full": "Local collection holds up to {n} items; remove some first",
+    "added": "Added to “{group}”",
+    "toGroup": "Add to group",
+    "undo": "Undo"
+  },
+  "group": {
+    "later": "Watch later",
+    "all": "All",
+    "label": "Groups",
+    "create": "New group",
+    "rename": "Rename",
+    "delete": "Delete group",
+    "deleteConfirm": "Click again to delete (items are kept)",
+    "namePlaceholder": "Group name",
+    "nameEmpty": "Enter a group name",
+    "nameLong": "Group names can be up to {n} characters",
+    "nameTaken": "A group with this name already exists"
+  },
+  "menu": {
+    "title": "Add to group",
+    "remove": "Remove from local collection"
+  },
+  "detail": {
+    "saved": "Saved locally"
+  },
+  "import": {
+    "label": "Import",
+    "done": "Imported {added}, merged {merged} already saved, skipped {skipped}",
+    "invalid": "This file isn't a catbus local collection export"
+  },
+  "sort": {
+    "label": "Sort",
+    "addedDesc": "Recently added",
+    "addedAsc": "Oldest added",
+    "published": "Published"
+  },
+  "bulk": {
+    "count": "{n} selected",
+    "move": "Move to group",
+    "moved": "Moved {n} to “{group}”",
+    "remove": "Remove",
+    "removeConfirm": "Confirm remove",
+    "removed": "Removed {n}"
+  },
+  "empty": {
+    "title": "Nothing saved locally yet",
+    "desc": "Tap the bookmark on a card or in the detail view to save it to “Watch later” — no login needed.",
+    "filtered": "Nothing matches these filters"
+  },
+  "gone": {
+    "title": "Original no longer available",
+    "remove": "Remove",
+    "origin": "Original link"
+  }
+}

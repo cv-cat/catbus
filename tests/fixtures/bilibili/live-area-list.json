@@ -1,0 +1,74 @@
+{
+  "code": 0,
+  "message": "0",
+  "ttl": 1,
+  "data": {
+    "data": [
+      {
+        "id": 2,
+        "name": "网游",
+        "list": [
+          {
+            "id": "86",
+            "parent_id": "2",
+            "old_area_id": "",
+            "name": "英雄联盟",
+            "act_id": "",
+            "pk_status": "",
+            "hot_status": 0,
+            "lock_status": "",
+            "pic": "http://i0.hdslb.com/bfs/vc/0e808167886ad2299971ea49aade69b3663db9b9.png",
+            "parent_name": "网游",
+            "area_type": 2
+          },
+          {
+            "id": "329",
+            "parent_id": "2",
+            "old_area_id": "",
+            "name": "无畏契约",
+            "act_id": "",
+            "pk_status": "",
+            "hot_status": 0,
+            "lock_status": "",
+            "pic": "http://i0.hdslb.com/bfs/vc/78d7a625ebcb88f0d1143cf4ba0426ebb7a4a853.png",
+            "parent_name": "网游",
+            "area_type": 2
+          }
+        ]
+      },
+      {
+        "id": 1,
+        "name": "娱乐",
+        "list": [
+          {
+            "id": "530",
+            "parent_id": "1",
+            "old_area_id": "",
+            "name": "萌宅领域",
+            "act_id": "",
+            "pk_status": "",
+            "hot_status": 0,
+            "lock_status": "",
+            "pic": "http://message.biliimg.com/bfs/im/5ea1fc721896f02eef1d5a712cd0bb151d1b8ca5.png",
+            "parent_name": "娱乐",
+            "area_type": 2
+          },
+          {
+            "id": "21",
+            "parent_id": "1",
+            "old_area_id": "",
+            "name": "视频唱见",
+            "act_id": "",
+            "pk_status": "",
+            "hot_status": 0,
+            "lock_status": "",
+            "pic": "http://i0.hdslb.com/bfs/vc/72b93ddafdf63c9f0b626ad546847a3c03c92b6f.png",
+            "parent_name": "娱乐",
+            "area_type": 2
+          }
+        ]
+      }
+    ],
+    "expid": 0
+  }
+}

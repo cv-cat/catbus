@@ -691,3 +691,43 @@ describe('weibo feed list（CLI）', () => {
     }
   })
 })
+
+// ---------------------------------------------------------------- keyword hot：非上游，没有对拍；fixture 由真机响应裁剪，词换成了占位词
+
+describe('weibo keyword hot（非上游，fixture）', () => {
+  useTempHome()
+
+  it('按榜单顺序输出 Keyword，去掉广告位，不收置顶词', async () => {
+    const m = mockFeed({ '/ajax/side/hotSearch': feedFixture('hot_search.json') })
+    try {
+      const result = await cmd.keywordHot(loggedCtx())
+      expect(m.calls.map((c) => c.url)).toEqual(['https://weibo.com/ajax/side/hotSearch'])
+      expect(result).toEqual([
+        { text: '热搜一', heat: 1152710 },
+        { text: '热搜二', heat: 807411 },
+        { text: '热搜三', heat: 674425 },
+      ])
+      expect((result[1] as any)[RAW]).toMatchObject({ label_name: '新' })
+    } finally {
+      m.restore()
+    }
+  })
+
+  it('CLI：登录后输出信封；注册表标注非上游', async () => {
+    const cred = newCredential({ platform: 'weibo', endpoint: 'web', account: 'default', method: 'cookie' })
+    cred.scopes.main!.cookies = parseCookieInput(COOKIES, '.weibo.com')
+    await writeCredential(cred)
+    await setCurrent('weibo', 'web', 'default')
+    const m = mockFeed({ '/ajax/side/hotSearch': feedFixture('hot_search.json') })
+    try {
+      const r = await cli('weibo', 'keyword', 'hot')
+      expect(r.code).toBe(0)
+      expect(r.env).toMatchObject({ ok: true, platform: 'weibo', resource: 'keyword', action: 'hot', error: null })
+      expect(r.env.data.map((k: any) => k.text)).toEqual(['热搜一', '热搜二', '热搜三'])
+    } finally {
+      m.restore()
+    }
+    const p = await cli('platforms', 'weibo')
+    expect(p.env.data.commands).toContainEqual(expect.objectContaining({ resource: 'keyword', action: 'hot', status: 'implemented', upstream: 'partial', note: expect.stringContaining('非上游') }))
+  })
+})

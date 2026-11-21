@@ -311,6 +311,89 @@ describe('mteam：官方 API 适配', () => {
     expect(existsSync(join(home.dir, 'mteam_1001_1.torrent'))).toBe(false)
   })
 
+  describe('--qbit 推送结果（假的 qBittorrent，不连真实服务）', () => {
+    const qbit = (add: Route) => mock({
+      '/api/v2/torrents/categories': () => fakeResponse(JSON.stringify({ mteam: { name: 'mteam', savePath: '' } })),
+      '/api/v2/torrents/add': add,
+    })
+    const torrentFile = () => ({ path: join(home.dir, 'mteam_1001_1.torrent'), type: 'torrent', url: null, size: torrentBytes.length })
+
+    it('Ok. → status added，data 为 {id files qbit}；推送不经代理、不带 API Key', async () => {
+      qbit(() => fakeResponse('Ok.'))
+      const result = await cli('mt', 'item', 'download', '1001', '--dir', home.dir, '--qbit', '--qbit-savepath', '/data/pt', '--qbit-paused')
+      expect(result.code).toBe(0)
+      expect(result.env.data).toEqual({ id: '1001', files: [torrentFile()], qbit: { status: 'added', category: 'mteam', savepath: '/data/pt', paused: true } })
+      const add = requests.find((r) => r.url.endsWith('/api/v2/torrents/add'))!
+      expect(add.url).toBe('http://127.0.0.1:25254/api/v2/torrents/add')
+      expect(Object.fromEntries(add.headers)).not.toHaveProperty('x-api-key')
+    })
+
+    it('Fails.（已在任务列表）→ 仍然成功，status 为 exists；不带 --qbit 时仍是 File[]', async () => {
+      qbit(() => fakeResponse('Fails.'))
+      const result = await cli('mt', 'item', 'download', '1001', '--dir', home.dir, '--qbit')
+      expect(result.code).toBe(0)
+      expect(result.env.data.qbit).toEqual({ status: 'exists', category: 'mteam', savepath: null, paused: false })
+      expect(result.stderr).toContain('已经在任务列表')
+      expect((await cli('mt', 'item', 'download', '1001', '--dir', home.dir)).env.data).toEqual([torrentFile()])
+    })
+
+    it('连不上 qBittorrent → NETWORK，detail 标明 qbit 失败并列出已保存的种子文件', async () => {
+      mock({ '/api/v2/torrents/categories': () => { throw new Error('connect ECONNREFUSED 127.0.0.1:25254') } })
+      const result = await cli('mt', 'item', 'download', '1001', '--dir', home.dir, '--qbit')
+      expect(result.code).toBe(6)
+      expect(result.env.error).toMatchObject({ code: 'NETWORK', detail: { qbit: 'failed', id: '1001', files: [torrentFile()], http_status: null } })
+      expect(readFileSync(torrentFile().path)).toEqual(torrentBytes)
+    })
+
+    it('qBittorrent 回 HTTP 错误 → UPSTREAM，带 http_status；--meta 的 ExportDoc 也在 files 里', async () => {
+      mock({
+        '/api/v2/torrents/categories': () => fakeResponse('{}'),
+        '/api/v2/torrents/createCategory': () => fakeResponse(''),
+        '/api/v2/torrents/add': () => fakeResponse('Unsupported Media Type', { status: 415 }),
+      })
+      const result = await cli('mt', 'item', 'download', '1001', '--dir', home.dir, '--qbit', '--meta')
+      expect(result.code).toBe(7)
+      expect(result.env.error.code).toBe('UPSTREAM')
+      expect(result.env.error.detail).toMatchObject({ qbit: 'failed', id: '1001', http_status: 415 })
+      expect(result.env.error.detail.files.map((f: any) => f.type)).toEqual(['torrent', 'data'])
+    })
+
+    it('qBittorrent 要求认证（403）→ ERROR，同样带 qbit 失败标记', async () => {
+      mock({ '/api/v2/torrents/categories': () => fakeResponse('Forbidden', { status: 403 }) })
+      const result = await cli('mt', 'item', 'download', '1001', '--dir', home.dir, '--qbit')
+      expect(result.env.error).toMatchObject({ code: 'ERROR', detail: { qbit: 'failed', http_status: 403 } })
+    })
+
+    it('下载种子本身失败时没有 qbit 标记（种子没有保存）', async () => {
+      mock({ '/api/torrent/genDlToken': () => ok(null) })
+      const result = await cli('mt', 'item', 'download', '1001', '--dir', home.dir, '--qbit')
+      expect(result.env.error.code).toBe('UPSTREAM')
+      expect(result.env.error.detail?.qbit).toBeUndefined()
+    })
+  })
+
+  it('bonus history：note 去掉 IP 和站点标签，TID 拆成种子详情页 url', async () => {
+    const logs = [
+      { id: '1', createdDate: '2026-11-14 18:43:28', operation: 'TRACKER', bonus: '0.0', uploaded: '1621350000', downloaded: '0', relatedId: '1001', text: '[TID=1001][DP=P50][IP=2001:db8::7][EXAM]' },
+      { id: '2', createdDate: '2026-11-14 18:00:00', operation: 'TRACKER', bonus: '0.0', uploaded: '0', downloaded: '1048576', relatedId: '1002', text: '[TID=1002][IP=192.0.2.7][SN_DL_DIFF][EXAM]' },
+      { id: '3', createdDate: '2026-11-14 17:00:00', operation: 'TRACKER', bonus: '46.3', uploaded: '0', downloaded: '0', relatedId: null, text: '[做種積分][考核期間無加成][EXAM]' },
+      { id: '5', createdDate: '2026-11-14 16:30:00', operation: 'OTHER', bonus: '1', uploaded: '0', downloaded: '0', relatedId: null, text: '考核獎勵 [EXAM]' },
+      { id: '4', createdDate: '2026-11-14 16:00:00', operation: 'OTHER', bonus: '-10', uploaded: '0', downloaded: '0', relatedId: null, text: '手动调整 192.0.2.9 [NOTE=fe80::1]' },
+    ]
+    mock({ '/api/credit/logs': () => ok({ pageNumber: 1, pageSize: 20, total: logs.length, totalPages: 1, data: logs }) })
+    const result = await cli('mt', 'bonus', 'history')
+    expect(result.code).toBe(0)
+    expect(result.env.data.map((r: any) => [r.note, r.url])).toEqual([
+      ['促销：50%；考核期间；上传：1.51 GiB', 'https://kp.m-team.cc/detail/1001'],
+      ['[SN_DL_DIFF]；考核期间；下载：1.00 MiB', 'https://kp.m-team.cc/detail/1002'],
+      ['做種積分；考核期間無加成', null],
+      ['考核獎勵', null],
+      ['手动调整；[NOTE=]', null],
+    ])
+    expect(result.stdout).not.toMatch(/192\.0\.2|2001:db8|fe80/)
+    expect(result.env.data[2].change).toBe(46.3)
+  })
+
   it('登出清理本地账号；未登录命令不联网', async () => {
     expect((await cli('mt', 'auth', 'logout')).code).toBe(0)
     expect(existsSync(credentialFile())).toBe(false)

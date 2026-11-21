@@ -1,0 +1,27 @@
+{
+  "title": "コメント",
+  "count": "コメント {n} 件",
+  "anonymous": "匿名ユーザー",
+  "loading": "コメントを読み込み中",
+  "empty": "コメントはまだありません",
+  "end": "— ここまで —",
+  "verify": "認証する",
+  "viewImage": "{n} 枚目の画像を表示",
+  "replies": {
+    "count": "返信 {n} 件",
+    "failed": "返信を読み込めませんでした",
+    "expand": "返信 {n} 件を表示",
+    "expandMore": "さらに返信を表示",
+    "collapse": "閉じる"
+  },
+  "filter": {
+    "sortDefault": "デフォルト",
+    "sortHot": "人気順",
+    "sortNew": "新しい順",
+    "placeholder": "読み込んだコメントを検索",
+    "search": "コメントを検索",
+    "sort": "コメントの並び替え",
+    "result": "読み込んだ {n} 件中 {m} 件",
+    "clear": "解除"
+  }
+}

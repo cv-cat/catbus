@@ -1,0 +1,34 @@
+{
+  "title": "マイページ",
+  "joiner": "・",
+  "login": "{platform}にログインすると{tabs}を表示できます",
+  "loginDesc": "自分のアカウントの内容を読み取るだけで、何も変更しません。",
+  "expired": "ログインの有効期限が切れました",
+  "expiredDesc": "もう一度ログインしてください。",
+  "refresh": "更新",
+  "empty": "{tab}はまだありません",
+  "folderEmpty": "まだ何もありません",
+  "openOn": "{platform}で開く",
+  "nav": {
+    "label": "{platform}のページ"
+  },
+  "tab": {
+    "works": "投稿",
+    "notes": "ノート",
+    "posts": "投稿動画",
+    "likes": "いいね",
+    "loved": "いいね",
+    "collects": "保存",
+    "reposts": "リポスト",
+    "folders": "コレクション",
+    "series": "シリーズ",
+    "playlists": "再生リスト",
+    "history": "閲覧履歴"
+  },
+  "status": {
+    "reviewing": "審査中",
+    "private": "自分のみ",
+    "rejected": "非承認",
+    "draft": "下書き"
+  }
+}
