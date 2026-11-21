@@ -140,7 +140,7 @@
 - `item download --qbit-savepath`：mteam
 - `item collect --folder`：douyin、bilibili
 - `item uncollect --folder`：douyin、bilibili
-- `item publish` 不支持的标准选项：xhs --mention --category --price；douyin --category --price；tiktok --title --poi --category --schedule --price；bilibili --image --topic --mention --poi --price；kuaishou --cover --mention --poi --category --price；weibo --title --cover --tag --mention --poi --category --schedule --price；xianyu --video --cover --tag --topic --mention --poi --category --schedule；x --title --cover --tag --topic --mention --poi --category --schedule --price；youtube --image --topic --mention --poi --category --price
+- `item publish` 不支持的标准选项：xhs --mention --category --price；douyin --category --price；tiktok --title --poi --category --schedule --price；bilibili --image --mention --poi --price；kuaishou --cover --mention --poi --category --price；weibo --title --cover --tag --mention --poi --category --schedule --price；xianyu --video --cover --tag --topic --mention --poi --category --schedule；x --title --cover --tag --topic --mention --poi --category --schedule --price；youtube --image --topic --mention --poi --category --price
 - `item publish --visibility` 取值：默认 public / private / friends；xhs public / private；bilibili public / private；weibo public / private / friends / fans；xianyu public；x public；youtube public / private
 - `item publish --original`：xhs
 - `item publish --ai`：xhs
@@ -154,6 +154,7 @@
 - `item publish --allow-stitch`：tiktok
 - `item publish --allow-content-reuse`：tiktok
 - `item publish --allow-ai-remix`：tiktok
+- `item publish --topic-name`：bilibili
 - `item publish --cover43`：bilibili
 - `item publish --source`：bilibili
 - `item publish --dynamic`：bilibili
