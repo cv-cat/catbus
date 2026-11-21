@@ -59,25 +59,27 @@ export default definePlatform({
           options: { kind: filter.kind('recommend', 'following') },
         }),
 
-        'live get': impl('full', 'liveGet'),
+        'live get': impl('full', 'liveGet', { note: '直播首页里没有的直播间按主播 ID 查直播间页的 live_api/liveroom/livedetail（非上游，没有对拍）' }),
         'live list': impl('full', 'liveList'),
         'live search': 'none',
         'live categories': impl('full', 'liveCategories'),
-        'live listen': impl('full', 'liveListen'),
+        'live listen': impl('full', 'liveListen', { note: '直播首页里没有的直播间按主播 ID 查直播间页的 live_api/liveroom/livedetail（非上游，没有对拍）' }),
         'live history': 'none',
         // 上游没有发直播弹幕、直播间点赞的方法（README：“直播间主动发送弹幕尚未接入”）
         'live send': 'none',
         'live like': 'none',
         'live rank': 'none',
-        'live gifts': impl('full', 'liveGifts'),
+        'live gifts': impl('full', 'liveGifts', { note: '直播首页里没有的直播间按主播 ID 查直播间页的 live_api/liveroom/livedetail（非上游，没有对拍）' }),
         'live products': 'none',
-        'live media': 'none',
+        'live media': impl('partial', 'liveMedia', { note: '非上游：直播流地址取自直播间页的 live_api/liveroom/livedetail（playUrls），没有对拍；没开播时为空' }),
         'live replays': impl('full', 'liveReplays'),
         'live start': 'none',
         'live stop': 'none',
 
         'keyword suggest': 'none',
-        'keyword hot': 'none',
+        'keyword hot': impl('partial', 'keywordHot', {
+          note: '非上游：上游没有热榜接口，请求按旧版网页端首页补的（GraphQL visionHotRank），没有对拍；新版网页端已不展示热榜，接口随时可能下线；不含置顶词',
+        }),
 
         'notice list': 'none',
         'notice count': impl('full', 'noticeCount'),

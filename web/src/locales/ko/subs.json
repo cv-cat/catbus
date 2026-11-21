@@ -1,0 +1,58 @@
+{
+  "title": "구독",
+  "eyebrow": "키워드와 크리에이터의 새 콘텐츠",
+  "nav": {
+    "unread": "읽지 않음 {n}개"
+  },
+  "kind": {
+    "keyword": "키워드",
+    "author": "크리에이터"
+  },
+  "button": {
+    "subscribe": "구독",
+    "subscribed": "구독 중",
+    "unsubscribe": "한 번 더 누르면 구독 취소",
+    "tipKeyword": "새 검색 결과가 있으면 구독 페이지에서 알려 드립니다",
+    "tipAuthor": "이 크리에이터가 새로 올리면 구독 페이지에서 알려 드립니다"
+  },
+  "list": {
+    "label": "구독 목록",
+    "checked": "{time} 확인",
+    "never": "아직 확인 안 함"
+  },
+  "content": {
+    "count": "새 콘텐츠 {n}개",
+    "markRead": "모두 읽음으로 표시",
+    "check": "지금 확인",
+    "pausedTip": "이 플랫폼의 구독이 일시 중지되었습니다. 먼저 재개하세요",
+    "remove": "구독 취소",
+    "removeConfirm": "한 번 더 누르면 확인",
+    "error": "지난 확인 실패: {reason}",
+    "emptyTitle": "새 콘텐츠 없음",
+    "emptyDesc": "새 콘텐츠가 생기면 여기에 표시됩니다. catbus web이 실행 중일 때 약 30분마다 확인합니다.",
+    "pendingTitle": "첫 확인을 기다리는 중",
+    "pendingDesc": "첫 확인에서는 이미 있는 콘텐츠만 기록하고, 그 뒤에 올라온 것부터 새 콘텐츠로 칩니다."
+  },
+  "paused": {
+    "title": "{platform}에서 보안 확인이 필요해 구독을 일시 중지했습니다",
+    "desc": "같은 계정으로 로그인한 브라우저에서 인증을 마친 뒤 '재개'를 누르세요.",
+    "resume": "재개"
+  },
+  "empty": {
+    "title": "아직 구독이 없습니다",
+    "desc": "발견 페이지에서 검색한 뒤 개수 옆의 '구독'을 누르거나, 크리에이터 페이지에서 '구독'을 누르세요. 새 콘텐츠는 여기에 표시됩니다."
+  },
+  "error": {
+    "title": "구독을 불러올 수 없습니다"
+  },
+  "toast": {
+    "added": "'{name}'을(를) 구독했습니다",
+    "view": "보기",
+    "removed": "'{name}' 구독을 취소했습니다",
+    "full": "구독은 최대 {n}개까지입니다. 먼저 일부를 취소하세요",
+    "failed": "구독하지 못했습니다: {reason}",
+    "checkedNew": "새 콘텐츠 {n}개",
+    "checkedNone": "아직 새 콘텐츠가 없습니다",
+    "resumed": "{platform} 구독을 재개했습니다"
+  }
+}

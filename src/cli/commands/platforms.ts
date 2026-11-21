@@ -6,6 +6,7 @@ export function platformInfo(platform: Platform) {
     id: platform.id,
     name: platform.name,
     aliases: platform.aliases,
+    default_endpoint: platform.defaultEndpoint,
     endpoints: Object.fromEntries(ENDPOINTS.map((e) => [e, platform.endpoints[e] === 'planned' ? 'planned' : 'available'])),
     commands: ENDPOINTS.flatMap((endpoint) => {
       const ep = platform.endpoints[endpoint]

@@ -38,9 +38,10 @@ npm i -g catbus-cli         # 只需要 Node
 catbus bilibili auth login  # 扫码登录
 catbus bilibili item search 猫 --limit 20
 catbus tui    # 不想记命令？用全屏界面
+catbus web    # 或者在本地网页里浏览
 ```
 
-想用 Docker 或源码安装？看[快速上手指南](docs/guide/quick-start.md)；全屏界面见[终端界面](docs/guide/tui.md)。
+想用 Docker 或源码安装？看[快速上手指南](docs/guide/quick-start.md)；全屏界面见[终端界面](docs/guide/tui.md)。`catbus web` 打开本地网页界面，跨平台搜索、浏览和下载，可以先看[在线演示](https://catbus-demo.crush-hub.com)（演示数据，不用登录）。
 
 ## 一套命令，所有平台通用
 
@@ -84,7 +85,7 @@ catbus 12306 ticket search 北京 上海                  # 查火车票
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/platforms-dark.svg">
-  <img src="assets/platforms-light.svg" alt="已上车 15 个平台，标着 soon 的 27 个在路上" width="100%">
+  <img src="assets/platforms-light.svg" alt="已上车 16 个平台，标着 soon 的 26 个在路上" width="100%">
 </picture>
 
 标着 `soon` 的在路上，目标是所有平台。没有你要的？[提 issue](https://github.com/cv-cat/catbus/issues) 或者[自己加](.github/CONTRIBUTING.md)，一个平台就是一个目录。每个平台支持什么，见[能力矩阵](docs/capabilities.md)。

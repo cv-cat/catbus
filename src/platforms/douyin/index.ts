@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { filter, PRODUCT } from '../../core/options.js'
+import { CATEGORY, filter, PRODUCT } from '../../core/options.js'
 import { definePlatform, type Handler, handlers } from '../../core/registry.js'
 import { type Args, checkMsgSend, type Options } from '../../core/vocab.js'
 
@@ -78,6 +78,7 @@ export default definePlatform({
             series: z.string().optional().describe('加入合集（合集 ID）'),
             hotspot: z.string().optional().describe('关联热点（热点词）'),
             noDownload: z.boolean().optional().describe('不允许别人下载'),
+            aiGenerated: z.boolean().optional().describe('添加「内容由 AI 生成」声明'),
           },
         }),
         'item delete': 'none',
@@ -99,9 +100,12 @@ export default definePlatform({
         }),
 
         'live get': read('full', 'liveGet'),
-        'live list': 'none',
+        'live list': read('partial', 'liveList', {
+          note: '非上游：请求按直播网页版补的（webcast/feed、webcast/web/partition/detail/room/v2），没有对拍；不带 --category 是首页推荐流，带 --category 是分区页（取值为 live categories 的 id、分区名或分区页链接）',
+          options: { category: CATEGORY },
+        }),
         'live search': read('full', 'liveSearch'),
-        'live categories': 'none',
+        'live categories': read('partial', 'liveCategories', { note: '非上游：取自直播网页版首页 HTML 里的分区栏，没有对拍；网页版只给出部分分区的子分区' }),
         'live listen': read('full', 'liveListen'),
         'live history': read('partial', 'liveHistory', { note: '只有进房时 im/fetch 带回的最近 15 条' }),
         'live send': write('partial', 'liveSend', { note: '--gift 规划中' }),
@@ -117,7 +121,9 @@ export default definePlatform({
         'live stop': 'none',
 
         'keyword suggest': 'none',
-        'keyword hot': 'none',
+        'keyword hot': read('partial', 'keywordHot', {
+          note: '非上游：上游没有热搜接口，请求按网页端热榜页补的（aweme/v1/web/hot/search/list），没有对拍；不含置顶词和实时上升热点',
+        }),
 
         'notice list': read('full', 'noticeList', {
           options: { group: z.enum(['all', 'fans', 'mention', 'comment', 'like', 'danmaku']).optional().describe('通知分组，不带时为默认分组') },

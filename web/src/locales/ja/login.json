@@ -1,0 +1,102 @@
+{
+  "title": "{platform}にログイン",
+  "storage": "ログイン情報はこの端末の ~/.catbus に保存され、catbus でのみ使われます",
+  "methodsLabel": "ログイン方法",
+  "submitting": "ログイン中…",
+  "submittingLabel": "ログイン中",
+  "method": {
+    "qrcode": "QR コード",
+    "sms": "SMS 認証",
+    "password": "パスワード"
+  },
+  "api": {
+    "requestFailed": "リクエストに失敗しました（{status}）"
+  },
+  "error": {
+    "noMethods": "このチャンネルには WebUI で完了できるログイン方法がありません",
+    "bridgeHint": "catbus web が起動しているか確認して、もう一度お試しください",
+    "failed": "ログインに失敗しました",
+    "setDefaultFailed": "既定のアカウントを設定できませんでした"
+  },
+  "success": {
+    "title": "ログインしました",
+    "who": "{name} · アカウント {account}",
+    "alreadyDefault": "既定のアカウントです",
+    "askDefault": "{name} を既定のアカウントにしますか？",
+    "currentDefault": "現在の既定のアカウントは {account} です",
+    "notNow": "今はしない",
+    "setDefault": "既定にする"
+  },
+  "demo": {
+    "unsupported": "デモではログイン不可",
+    "hint": "{platform}は {command}（--demo なし）でログイン"
+  },
+  "qrcode": {
+    "alt": "ログイン用 QR コード",
+    "scanned": "スキャン済み。スマートフォンで確認してください",
+    "reload": "再取得",
+    "loading": "QR コードを取得中…",
+    "refresh": "QR コードを更新"
+  },
+  "cookie": {
+    "placeholder": "a1=...; web_session=...  またはブラウザから書き出した cookie の JSON 配列",
+    "help": "ブラウザで{platform}にログインし、開発者ツール → ネットワークを開いて、任意のリクエストの Cookie ヘッダーをコピーしてください。"
+  },
+  "apikey": {
+    "placeholder": "サイトの「コントロールパネル → ラボ」で生成"
+  },
+  "voice": {
+    "help": "このアカウントには音声認証コードも必要です。電話番号 {phone} に音声認証コードの電話がかかってきますので、応答して読み上げられるコードを控えてください。認証状態の有効期限は 10 分で、切れた場合は最初からログインし直してください。",
+    "status": {
+      "calling": "発信中…",
+      "idle": "未発信",
+      "called": "発信しました。電話に出てください"
+    },
+    "redialIn": "{n} 秒後に再発信できます",
+    "redial": "電話が来ない場合は再発信",
+    "get": "音声認証コードを取得",
+    "code": "音声認証コード",
+    "codePlaceholder": "電話で聞いた認証コード",
+    "reenter": "入力し直す",
+    "refetchIn": "{n} 秒後に再取得できます",
+    "refetch": "音声認証コードを再取得",
+    "backToUsers": "アカウント選択に戻る",
+    "restart": "最初からやり直す",
+    "callFailed": "音声認証コードの電話を発信できませんでした。しばらくしてからお試しください",
+    "getFailed": "音声認証コードを要求できませんでした",
+    "enterCode": "電話で聞いた認証コードを入力してください",
+    "verifyAgain": "もう一度認証が必要です。音声認証コードを再取得してください",
+    "wrongCode": "認証コードが間違っているか期限切れです。入力し直すか、音声認証コードを再取得してください"
+  },
+  "user": {
+    "noName": "（ニックネームなし）",
+    "id": "ID {id}",
+    "pick": "この電話番号には複数のアカウントがあります。ログインするアカウントを選んでください：",
+    "changePhone": "電話番号を変える"
+  },
+  "sms": {
+    "phone": "電話番号",
+    "phonePlaceholder": "11 桁の電話番号",
+    "resendIn": "{n}s",
+    "resend": "再送信",
+    "send": "コードを送信",
+    "code": "認証コード",
+    "codePlaceholder": "SMS の認証コード"
+  },
+  "password": {
+    "username": "ユーザー名",
+    "password": "パスワード",
+    "email": "メール（新しい端末の 2 段階認証で必要）",
+    "optional": "任意",
+    "emailCode": "メール認証コード",
+    "totp": "認証コード（TOTP、任意）",
+    "emailSent": "認証コードをメールに送信しました。パスワードはもう一度入力してください（catbus はパスワードを保存しません）。"
+  },
+  "account": {
+    "saveAs": "アカウント {account} として保存",
+    "auto": "自動",
+    "label": "アカウント名",
+    "placeholder": "空欄：ログインしたユーザーに応じて自動で選択",
+    "help": "空欄の場合、同じユーザーなら既存のアカウントを更新し、新しいユーザーならアカウントを追加します。アカウント名を入力するとそのアカウントにログインし、以前のユーザーは置き換えられます。"
+  }
+}

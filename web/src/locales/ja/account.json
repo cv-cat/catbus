@@ -1,0 +1,55 @@
+{
+  "sep": "、",
+  "dialogLabel": "{platform}のアカウント",
+  "card": {
+    "aggName": "{channels}ch · {n}件",
+    "expired": "{platforms}で {n} 件のアカウントが無効です",
+    "aggLabel": "{channels} チャンネル、計 {n} アカウント。アカウントを切り替え",
+    "notLoggedIn": "クリックしてログイン",
+    "notLoggedInLabel": "未ログイン。クリックしてログイン",
+    "many": "{name} ほか {n} 件",
+    "manySub": "{platform} · {n} アカウント",
+    "switchLabel": "{names}。アカウントを切り替え",
+    "switch": "アカウント切替"
+  },
+  "tabs": {
+    "prev": "前のチャンネル",
+    "next": "次のチャンネル",
+    "label": "チャンネル",
+    "selected": "{n} アカウントを選択中",
+    "expired": "無効なアカウントがあります"
+  },
+  "head": {
+    "selected": "選択 {n} / {total}",
+    "hintAgg": "集約モード · チャンネルごとにアカウントを選択（各 1 つ以上）",
+    "hint": "複数選択可 · 選んだアカウントで同時に読み込み、結果を統合して重複を除きます"
+  },
+  "remove": {
+    "ask": "「{name}」を削除しますか？",
+    "serverLogout": "この端末のログイン情報を削除し、{platform}のサーバー側からもログアウトします",
+    "localOnly": "この端末に保存したログイン情報のみ削除します",
+    "removing": "削除中…",
+    "removingLabel": "削除中",
+    "tip": "アカウントを削除"
+  },
+  "row": {
+    "default": "既定",
+    "expired": "ログイン無効 · 選択不可",
+    "browsing": "閲覧中",
+    "loggedInAt": "{time}ログイン",
+    "setDefault": "既定にする",
+    "keepOne": "アカウントは 1 つ以上必要です",
+    "empty": "{platform}のアカウントはまだありません。下から追加してください"
+  },
+  "collapse": "閉じる",
+  "expandAll": "すべてのアカウントを表示",
+  "merge": "{n} アカウントで同時に読み込み · 重複は 1 件のみ表示",
+  "add": {
+    "title": "{platform}のアカウントを追加",
+    "methods": "QR コード · SMS · Cookie 取り込み"
+  },
+  "error": {
+    "removeFailed": "アカウントを削除できませんでした",
+    "useFailed": "既定に設定できませんでした"
+  }
+}

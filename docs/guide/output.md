@@ -94,7 +94,9 @@ catbus bilibili item delete BV1xx411c7mD --dry-run
 | Price | `amount currency`（`amount` 以元等主单位计） |
 | Comment | `id item_id parent_id author:UserRef text media:Media[] created_at stats{likes replies}` |
 | Live | `id url title status host:UserRef cover stats{viewers}` |
-| Event | `type time user:UserRef text gift{name count}\|null` |
+| Event | `type time user:UserRef text gift{name count}\|null stats{viewers likes}\|null` |
+
+`stats` 是直播间的实时数据（在线人数、累计点赞），只有带这类数据的消息才有，其余为 null；只更新这些数字的消息 `type` 为 `other`。
 | Conversation | `id peer:UserRef unread last_message updated_at` |
 | Message | `id conversation_id from:UserRef type text media:Media[] created_at` |
 | Notice | `id type user:UserRef target{id url}\|null text created_at` |

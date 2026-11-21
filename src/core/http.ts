@@ -389,7 +389,9 @@ export async function jsonpOf<T = any>(res: HttpResponse): Promise<T> {
 export function toNetworkError(err: unknown): CatbusError {
   if (err instanceof CatbusError) return err
   const message = err instanceof Error ? err.message : String(err)
-  if (!(err instanceof RequestError) && !(err instanceof Error && err.name === 'AbortError')) {
+  // 响应体读一半断掉（wreq 报 "request or response body error: …"）同样是网络错误，只是发生在请求返回之后
+  const bodyError = err instanceof Error && err.message.startsWith('request or response body error')
+  if (!bodyError && !(err instanceof RequestError) && !(err instanceof Error && err.name === 'AbortError')) {
     return new CatbusError('ERROR', message, { cause: err })
   }
   const kind = /timed? ?out/i.test(message)
@@ -414,7 +416,9 @@ export function toNetworkError(err: unknown): CatbusError {
 export function fakeResponse(body: string | Uint8Array | object, init: { status?: number; headers?: HeaderPairs; url?: string } = {}): HttpResponse {
   const text = typeof body === 'string' || body instanceof Uint8Array ? body : JSON.stringify(body)
   const headers = new globalThis.Headers(init.headers ?? [])
-  const res = new globalThis.Response(text as ConstructorParameters<typeof globalThis.Response>[0], { status: init.status ?? 200, headers })
+  const status = init.status ?? 200
+  const payload = [204, 205, 304].includes(status) ? null : text
+  const res = new globalThis.Response(payload as ConstructorParameters<typeof globalThis.Response>[0], { status, headers })
   Object.defineProperty(res, 'url', { value: init.url ?? '' })
   return res as unknown as HttpResponse
 }

@@ -75,7 +75,9 @@ export default definePlatform({
         }),
         'item related': impl('full', 'itemRelated'),
         'item list': impl('full', 'itemList'),
-        'item media': impl('full', 'itemMedia'),
+        'item media': impl('full', 'itemMedia', {
+          options: { allTracks: z.boolean().optional().describe('返回 DASH 的全部轨道（各画质、编码的视频轨和全部音频轨），不只挑最高画质的一路') },
+        }),
         'item download': impl('full', 'itemDownload'),
         'item like': impl('full', 'itemLike'),
         'item unlike': impl('full', 'itemUnlike'),
@@ -155,7 +157,10 @@ export default definePlatform({
         }),
 
         'live get': impl('full', 'liveGet', withRoom()),
-        'live list': 'none',
+        'live list': impl('partial', 'liveList', {
+          note: '非上游：上游没有直播列表接口，请求按网页端直播首页（getListV2）和分区页（second/getList，wbi 签名）补的，没有对拍；不带 --category 是首页推荐，--category 取 live categories 的父分区或子分区 id',
+          options: { category: CATEGORY },
+        }),
         'live search': impl('full', 'liveSearch'),
         'live categories': impl('full', 'liveCategories'),
         'live listen': impl('full', 'liveListen', withRoom()),
@@ -174,7 +179,9 @@ export default definePlatform({
         'live stop': impl('full', 'liveStop'),
 
         'keyword suggest': 'none',
-        'keyword hot': 'none',
+        'keyword hot': impl('partial', 'keywordHot', {
+          note: '非上游：上游没有热搜接口，请求按网页端搜索框补的（x/web-interface/wbi/search/square），没有对拍；最多 50 条，不含置顶词',
+        }),
 
         'notice list': 'none',
         'notice count': 'none',
@@ -234,7 +241,7 @@ export default definePlatform({
           args: [{ name: 'series', summary: '合集：合集 ID，或空间页合集链接（带 sid=）' }],
           options: { order: z.enum(['asc', 'desc']).default('asc').describe('asc 最早在前，desc 最新在前') },
           auth: 'required',
-          output: '{id}',
+          output: '{id moved}',
           handler: h('seriesSort'),
           note: '非上游：x2/creative/web/season/section/edit，只改小节内顺序；合集自己的「排序方式」开关仍需网页端设置',
         },

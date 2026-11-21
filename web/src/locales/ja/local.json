@@ -1,0 +1,66 @@
+{
+  "title": "ローカル保存",
+  "eyebrow": "このブラウザにだけ保存されます",
+  "search": "タイトル・本文・作者を検索",
+  "export": "エクスポート",
+  "button": {
+    "add": "後で見る",
+    "saved": "ローカルに保存済み"
+  },
+  "toast": {
+    "storageFailed": "ブラウザに保存できませんでした。ページを閉じると消えます",
+    "full": "ローカル保存は最大 {n} 件です。先に整理してください",
+    "added": "「{group}」に追加しました",
+    "toGroup": "グループに追加",
+    "undo": "元に戻す"
+  },
+  "group": {
+    "later": "後で見る",
+    "all": "すべて",
+    "label": "グループ",
+    "create": "新しいグループ",
+    "rename": "名前を変更",
+    "delete": "グループを削除",
+    "deleteConfirm": "もう一度押すと削除（項目は残ります）",
+    "namePlaceholder": "グループ名",
+    "nameEmpty": "グループ名を入力してください",
+    "nameLong": "グループ名は {n} 文字までです",
+    "nameTaken": "同じ名前のグループがあります"
+  },
+  "menu": {
+    "title": "グループに追加",
+    "remove": "ローカル保存から削除"
+  },
+  "detail": {
+    "saved": "ローカルに保存済み"
+  },
+  "import": {
+    "label": "インポート",
+    "done": "{added} 件をインポート、保存済みの {merged} 件を統合、{skipped} 件をスキップしました",
+    "invalid": "catbus のローカル保存のエクスポートファイルではありません"
+  },
+  "sort": {
+    "label": "並び替え",
+    "addedDesc": "追加が新しい順",
+    "addedAsc": "追加が古い順",
+    "published": "投稿日時"
+  },
+  "bulk": {
+    "count": "{n} 件選択中",
+    "move": "グループへ移動",
+    "moved": "{n} 件を「{group}」へ移動しました",
+    "remove": "削除",
+    "removeConfirm": "削除を確認",
+    "removed": "{n} 件を削除しました"
+  },
+  "empty": {
+    "title": "ローカル保存はまだありません",
+    "desc": "カードや詳細のブックマークを押すと「後で見る」に保存できます。ログインは不要です。",
+    "filtered": "条件に合う項目がありません"
+  },
+  "gone": {
+    "title": "元のコンテンツは利用できません",
+    "remove": "削除",
+    "origin": "元のリンク"
+  }
+}

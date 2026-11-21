@@ -378,6 +378,37 @@ describe('maoyan 平台（web）', () => {
       )
     })
 
+    it('真实响应：票面价、实售价、余票、限购逐项写出，打折 / 售罄 / 余票少于限购都保留；场次后一行场次时间', async () => {
+      mock({
+        '/api/account/v1/getUserInfoByToken': USER,
+        '/my/odea/project/shows/preselect': onSale,
+        '/my/odea/project/shows': () => json(fixture('shows.json')),
+        '/my/odea/show/tickets': () => json(fixture('tickets.json')),
+      })
+      await login()
+      const r = await cli('maoyan', 'item', 'get', '458416', '--tickets')
+      expect(r.code).toBe(0)
+      expect(r.env.data.text).toContain(
+        '场次：2026-11-18 周三 19:30\n场次时间：2026-11-18T19:30:00+08:00\n' +
+          '票档：N，票面价 80，实售价 80，余票 0，限购 6，售罄\n' +
+          '票档：I，票面价 280，实售价 168，余票 6，限购 6\n' +
+          '票档：A，票面价 1080，实售价 648，余票 4，限购 6',
+      )
+    })
+
+    it('还没开票（shows 为空）：text 里没有场次行和票档行', async () => {
+      mock({
+        '/api/account/v1/getUserInfoByToken': USER,
+        '/my/odea/project/shows/preselect': () => json('{"success":true,"data":{"showListVO":[]}}'),
+      })
+      await login()
+      const r = await cli('maoyan', 'item', 'get', '514992', '--tickets')
+      expect(r.code).toBe(0)
+      expect(r.env.data.text).not.toMatch(/场次|票档/)
+      const raw = await cli('maoyan', 'item', 'get', '514992', '--tickets', '--raw')
+      expect(raw.env.data.shows).toEqual([])
+    })
+
     it('未开售：走 preselect，不请求在售接口', async () => {
       const { calls } = mock({
         '/api/account/v1/getUserInfoByToken': USER,

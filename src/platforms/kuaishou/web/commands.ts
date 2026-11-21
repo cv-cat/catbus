@@ -2,7 +2,7 @@ import { basename, extname } from 'node:path'
 import { endpointFlag, GUEST } from '../../../core/auth-store.js'
 import { CatbusError } from '../../../core/errors.js'
 import { downloadMedia, type LocalMedia, readMedia } from '../../../core/files.js'
-import { cookieCredential, finishLogin, freshCredential, interactive, loginContext, poll, prompt, showQrcode, type SmsIntermediate, smsLogin, smsState } from '../../../core/login.js'
+import { cookieCredential, finishLogin, freshCredential, interactive, loginContext, poll, prompt, qrcodeScanned, showQrcode, type SmsIntermediate, smsLogin, smsState } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
@@ -149,7 +149,7 @@ async function qrcodeLogin(ctx: Ctx) {
       { interval: 1000, timeout: deadline - rand.now(), what: '扫码登录' },
     )
   await wait('scan')
-  ctx.log.info('已扫码，请在手机上确认')
+  qrcodeScanned(ctx)
   const accepted = await wait('accept')
   const qrToken = accepted.qrToken ?? accepted.qr_token
   if (!qrToken) throw new CatbusError('UPSTREAM', '确认登录后没有拿到 qrToken', { detail: { stage: 'acceptResult' } })
@@ -883,6 +883,19 @@ function feedCursor(cursor: string | null): [pcursor: string, pages: number] {
   return [i < 0 ? cursor : cursor.slice(0, i), pages]
 }
 
+// ================================================================ keyword
+
+/** 热榜（非上游，见 api.hotRank）：按 rank 顺序；hotValue 是「1113.8万」这样的展示值，置顶词（rank 0，没有热度）不收。 */
+export async function keywordHot(ctx: Ctx) {
+  return run(ctx, 'www', async (k) => {
+    const r = await api.hotRank(k)
+    if (r?.result != null && r.result !== 1) k.check(r, '热榜')
+    return ((r.items ?? []) as Json[])
+      .map((x) => n.keyword({ text: String(x?.name ?? ''), heat: n.count(x?.hotValue) }, x))
+      .filter((kw) => kw.text && kw.heat != null)
+  })
+}
+
 // ================================================================ live
 
 const ROOM_CACHE_TTL = 6 * 3600_000
@@ -906,19 +919,63 @@ function homeRooms(home: Json): Json[] {
   return out
 }
 
-/** get_room_state：在直播首页 home/list 里找这个主播的直播间（拿 liveStreamId），找不到时用最近见过的快照。 */
+/** livedetail 的业务码：671 主播没开播，22 没有这个主播 */
+const DETAIL_OFFLINE = 671
+const DETAIL_NOT_FOUND = 22
+
+/**
+ * get_room_state：先在直播首页 home/list 里找这个主播的直播间（上游的做法，拿 liveStreamId）；
+ * 首页里没有时按主播 ID 查 livedetail（非上游，直播间页自己用的接口，不受首页轮换影响），
+ * 用首页快照补上标题、在线人数；livedetail 出错时退回最近见过的快照。
+ * 没开播时返回没有 id 的直播间（`liveRoom` 归一化为 offline），需要直播流的命令自己报错。
+ */
 async function roomState(k: Ks, eid: string): Promise<Json> {
   const rooms = homeRooms(k.checkLive(await api.homeList(k)))
   rememberRooms(k.ctx, rooms)
   const found = rooms.find((item) => String(item.author.id) === eid)
   if (found) return found
   const cached = (k.ctx.credential.extra.live_rooms as Record<string, Json> | undefined)?.[eid]
-  if (cached && rand.now() - Number(cached.at) < ROOM_CACHE_TTL) return cached
-  throw new CatbusError('UPSTREAM', `直播首页列表里没有这个直播间：${eid}`, { hint: 'catbus kuaishou live list 查看当前可访问的直播间', detail: { room: eid } })
+  const fresh = cached && rand.now() - Number(cached.at) < ROOM_CACHE_TTL ? cached : null
+  let detail: Json
+  try {
+    detail = (await api.liveDetail(k, eid))?.data ?? {}
+  } catch (err) {
+    if (err instanceof CatbusError && err.code !== 'NETWORK') throw err
+    if (fresh) return fresh
+    throw err
+  }
+  const code = detail.result
+  if (code === 1 && detail.liveStream?.id) {
+    const room = norm.detailRoom(detail, eid)
+    // 首页快照是同一场直播时，补上 livedetail 不给的标题、在线人数
+    if (fresh && String(fresh.id) === room.id) return { ...room, caption: fresh.caption, watchingCount: fresh.watchingCount, poster: room.poster ?? fresh.poster }
+    return room
+  }
+  if (code === DETAIL_OFFLINE || (code === 1 && detail.author?.id)) return norm.detailRoom(detail, eid)
+  if (code === DETAIL_NOT_FOUND) throw new CatbusError('USAGE', `没有这个快手直播间：${eid}`, { hint: '直播间参数是主播 ID 或 https://live.kuaishou.com/u/<id>', detail: { room: eid, result: code } })
+  k.checkLive({ data: detail })
+  throw new CatbusError('UPSTREAM', `没有取到直播间：${eid}`, { detail: { room: eid, result: code ?? null } })
+}
+
+/** 需要直播流（liveStreamId）的命令：没开播时报错 */
+function requireLive(room: Json, eid: string): string {
+  if (room.id) return String(room.id)
+  throw new CatbusError('UPSTREAM', `主播当前不在直播：${eid}`, { detail: { room: eid, living: false } })
 }
 
 export async function liveGet(ctx: Ctx) {
   return run(ctx, 'live', async (k) => norm.liveRoom(await roomState(k, await resolveRoom(k, ctx.args.room!))))
+}
+
+/** 直播流地址（非上游）：livedetail 的 playUrls，没开播时为空数组。 */
+export async function liveMedia(ctx: Ctx) {
+  return run(ctx, 'live', async (k) => {
+    const eid = await resolveRoom(k, ctx.args.room!)
+    const detail = (await api.liveDetail(k, eid))?.data ?? {}
+    if (detail.result === DETAIL_NOT_FOUND) throw new CatbusError('USAGE', `没有这个快手直播间：${eid}`, { detail: { room: eid, result: detail.result } })
+    if (detail.result !== 1 && detail.result !== DETAIL_OFFLINE) k.checkLive({ data: detail })
+    return norm.liveStreams(norm.detailRoom(detail, eid))
+  })
 }
 
 export async function liveList(ctx: Ctx) {
@@ -958,12 +1015,12 @@ export async function liveCategories(ctx: Ctx): Promise<Category[]> {
 export async function liveGifts(ctx: Ctx): Promise<Gift[]> {
   return run(ctx, 'live', async (k) => {
     const eid = await resolveRoom(k, ctx.args.room!)
-    const room = await roomState(k, eid)
+    const liveStreamId = requireLive(await roomState(k, eid), eid)
     // 进房间时的首屏列表，再点开“更多礼物”（sortType=0）取全量；全量取不到时退回首屏
-    const first: Json[] = k.checkLive(await api.giftList(k, String(room.id), eid)).gifts ?? []
+    const first: Json[] = k.checkLive(await api.giftList(k, liveStreamId, eid)).gifts ?? []
     let all: Json[] = []
     try {
-      all = k.checkLive(await api.giftList(k, String(room.id), eid, 0)).gifts ?? []
+      all = k.checkLive(await api.giftList(k, liveStreamId, eid, 0)).gifts ?? []
     } catch (err) {
       k.log.warn(`“更多礼物”没有取到，只列出首屏礼物：${(err as Error).message}`)
     }
@@ -994,9 +1051,7 @@ export function liveListen(ctx: Ctx) {
           throw new CatbusError('AUTH_REQUIRED', '快手直播弹幕需要登录（缺少直播站票据）', { hint: 'catbus kuaishou auth login' })
         }
       }
-      const room = await roomState(k, eid)
-      const liveStreamId = String(room.id)
-      if (!(room.living || room.author?.living)) ctx.log.warn(`主播当前可能不在播：${eid}`)
+      const liveStreamId = requireLive(await roomState(k, eid), eid)
       let info = (await api.websocketInfo(k, liveStreamId, eid))?.data ?? {}
       if (!info.token) {
         ctx.log.info('websocketinfo 没有给 token，重建直播会话后重试')

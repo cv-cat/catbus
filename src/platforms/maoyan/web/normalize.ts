@@ -81,21 +81,33 @@ function detailImages(html: unknown): Media[] {
   }))
 }
 
-/** 场次一行，票档各一行。`--tickets` 用，不显示的票档（shouldDisplay 为 false）跳过。 */
+/**
+ * 场次一行（有开始时间时下一行是「场次时间：<ISO>」），票档各一行。`--tickets` 用，
+ * 不显示的票档（shouldDisplay 为 false）跳过。票档行依次是名称、票面价、实售价、余票、每单限购、售罄，
+ * 取不到的项省略。
+ */
 function showLines(shows: any[]): string[] {
-  return shows.flatMap((s) => [
-    `场次：${s.showName ?? s.showId}`,
-    ...(s.tickets ?? [])
-      .filter((t: any) => t.shouldDisplay !== false)
-      .map((t: any) => {
-        const parts = [t.ticketName ?? t.ticketId]
-        const sell = t.ticketPriceVO?.sellPrice
-        if (sell != null) parts.push(`实售价 ${sell}`)
-        if (t.remainingStock != null) parts.push(`余票 ${t.remainingStock}`)
-        if (t.showStatus === 2) parts.push('售罄')
-        return `票档：${parts.join('，')}`
-      }),
-  ])
+  return shows.flatMap((s) => {
+    const start = n.time(s.startTime)
+    return [
+      `场次：${s.showName ?? s.showId}`,
+      ...(start ? [`场次时间：${start}`] : []),
+      ...(s.tickets ?? [])
+        .filter((t: any) => t.shouldDisplay !== false)
+        .map((t: any) => {
+          const parts = [t.ticketName ?? t.ticketId]
+          const face = t.ticketPriceVO?.ticketPrice
+          const sell = t.ticketPriceVO?.sellPrice
+          const limit = t.ticketBuyLimitVO?.maxBuyLimit
+          if (face != null) parts.push(`票面价 ${face}`)
+          if (sell != null) parts.push(`实售价 ${sell}`)
+          if (t.remainingStock != null) parts.push(`余票 ${t.remainingStock}`)
+          if (limit != null && Number(limit) > 0) parts.push(`限购 ${limit}`)
+          if (t.showStatus === 2) parts.push('售罄')
+          return `票档：${parts.join('，')}`
+        }),
+    ]
+  })
 }
 
 /** project/detail 的 data；`shows` 是 `--tickets` 查到的场次和票档，放进原始对象。 */

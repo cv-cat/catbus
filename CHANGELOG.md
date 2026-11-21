@@ -8,8 +8,13 @@
 
 ### Added
 
+- bilibili、weibo、douyin、kuaishou：`keyword hot`（热搜榜），输出 Keyword[]，`heat` 为热度值（快手的「1113.8万」换算成整数），按榜单顺序，不含置顶词。上游都没有热搜接口，请求按各自网页端补的，没有对拍：bilibili 是搜索框的 `x/web-interface/wbi/search/square`（最多 50 条）；weibo 是热搜榜 `ajax/side/hotSearch`（去掉广告位）；douyin 是热榜页的 `aweme/v1/web/hot/search/list`（不含实时上升热点）；kuaishou 是旧版网页端首页的 GraphQL `visionHotRank`（新版网页端已不展示热榜，接口随时可能下线）
+- 新增 `discord` 平台：按 macOS 桌面协议连接，默认使用 `pc` 端，支持扫码、账号密码及 Token 登录、服务器与频道、消息与附件、好友和表情回应、实时消息。支持人工验证码与通行密钥验证；旧版 web 登录信息会迁移至 pc。验证范围与限制见 `docs/platforms/discord.md`。
+- mteam：`item download --qbit` 的推送结果进入信封：成功时 `data` 为 `{id files qbit}`，`qbit.status` 为 `added` 或 `exists`（已在任务列表）；推送失败时报 `NETWORK` / `ERROR` / `UPSTREAM`，`error.detail` 为 `{qbit: "failed", id, files, http_status}`，列出已保存的种子文件。`bonus history` 的 `note` 去掉站点原文里的 IP 和 `[TID=…]` 等标记，促销、考核标签转成中文；`url` 改为相关种子的详情页（原来 `TRACKER` 记录总是 null）
 - `item download` 同时导出帖子信息和评论：`--meta` 在媒体文件旁边写 `<platform>_<id>.json`（`{schema platform exported_at item comments comments_truncated}`，`item` 与 `item get` 的输出相同）；`--comments <N|all>` 带上一级评论（隐含 `--meta`），`--replies <N|all>` 再带上每条评论的回复，自动翻页取满；`--no-media` 只写这个文件、不下载媒体。由 core 调用同一平台的 `item get` / `comment list` / `comment replies`，所有有 `item download` 的平台都支持；取评论中途遇到风控时停下、已取到的照样写出（`comments_truncated: true`），平台没有评论命令时 `comments` 为 `[]`。File.type 新增 `data`
 - maoyan：`feed list`、`item get` 的 `text` 多一行「开售时间：<带时区的 ISO 8601>」（取自接口的 `onSaleTime`）。原来只有「明天开售」这类相对文案，算不出距开售还有多久
+- maoyan：`item get --tickets` 的票档行加上票面价和每单限购（如「票档：A，票面价 1080，实售价 648，余票 3，限购 6」），每个场次后多一行「场次时间：<带时区的 ISO 8601>」（取自接口的 `startTime`）
+- 12306：Ticket 新增 `start{code name}`、`end{code name}`（本车次的始发站和终到站；`from.code` 与 `start.code` 相同表示在始发站上车，`to.code` 与 `end.code` 相同表示坐到终到站）；`transfer search` 每一段（TransferLeg）的 `url` 由 null 改为这一段的余票深链，日期是这一段的上车日期，接口没给电报码或日期时仍为 null
 - 全局选项 `--fields <路径,...>`：只输出 `data` 条目里的这些字段，点号进入嵌套对象，经过数组时作用到每个元素，没有的字段为 null；json、jsonl 都适用，在 `--raw` 之后生效
 - 全局选项 `--dry-run`：做完参数、选项、是否已实现、本地登录态的检查就停下，不调用平台接口；`data` 为 `{args options confirm}`，凭证类选项打码
 - UserRef 带上头像：作者、评论者、主播、观众、私信对方等所有 UserRef 改为 `id name url avatar`，`avatar` 从同一个原始对象里取（统一成 https，不额外请求），取不到时为 null。AccountUser 的字段与 UserRef 相同，类型名保留

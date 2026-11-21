@@ -1,0 +1,80 @@
+{
+ "ok": 1,
+ "data": {
+  "hotgov": {
+   "flag": 2,
+   "is_gov": 1,
+   "is_hot": 1,
+   "word": "#置顶词#",
+   "note": "#置顶词#",
+   "name": "#置顶词#",
+   "topic_flag": 1
+  },
+  "realtime": [
+   {
+    "emoticon": "",
+    "flag": 0,
+    "word": "热搜一",
+    "topic_flag": 1,
+    "realpos": 1,
+    "num": 1152710,
+    "word_scheme": "#热搜一#",
+    "label_name": "",
+    "note": "热搜一",
+    "rank": 0
+   },
+   {
+    "num": 807411,
+    "emoticon": "",
+    "flag": 1,
+    "realpos": 2,
+    "word": "热搜二",
+    "icon_desc": "新",
+    "small_icon_desc_color": "#ff3852",
+    "icon_desc_color": "#ff3852",
+    "small_icon_desc": "新",
+    "icon": "https://simg.s.weibo.com/moter/flags/1_0.png",
+    "icon_width": 24,
+    "icon_height": 24,
+    "word_scheme": "热搜二",
+    "topic_flag": 0,
+    "label_name": "新",
+    "note": "热搜二",
+    "rank": 1
+   },
+   {
+    "emoticon": "",
+    "word": "广告词",
+    "monitors": {},
+    "dot_icon": 1,
+    "topic_flag": 1,
+    "topic_ad": 1,
+    "icon_type": "jian",
+    "icon_desc": "重磅",
+    "small_icon_desc": "商",
+    "icon_desc_color": "#00b7ee",
+    "is_ad": 1,
+    "id": 366925,
+    "small_icon_desc_color": "#00b7ee",
+    "icon_height": 24,
+    "num": 530322,
+    "icon_width": 24,
+    "icon": "https://simg.s.weibo.com/imgtool/20241104_20241104_zhongbang_icon.png",
+    "note": "广告词",
+    "rank": 5
+   },
+   {
+    "emoticon": "",
+    "flag": 0,
+    "word": "热搜三",
+    "topic_flag": 1,
+    "realpos": 3,
+    "num": 674425,
+    "word_scheme": "#热搜三#",
+    "label_name": "",
+    "note": "热搜三",
+    "rank": 2
+   }
+  ]
+ }
+}

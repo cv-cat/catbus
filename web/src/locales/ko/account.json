@@ -1,0 +1,55 @@
+{
+  "sep": ", ",
+  "dialogLabel": "{platform} 계정",
+  "card": {
+    "aggName": "채널 {channels}개 · 계정 {n}개",
+    "expired": "{platforms}: 계정 {n}개 만료됨",
+    "aggLabel": "채널 {channels}개, 계정 총 {n}개, 계정 전환",
+    "notLoggedIn": "클릭해서 로그인",
+    "notLoggedInLabel": "로그인 안 됨, 클릭해서 로그인",
+    "many": "{name} 외 {n}개",
+    "manySub": "{platform} · 계정 {n}개",
+    "switchLabel": "{names}, 계정 전환",
+    "switch": "계정 전환"
+  },
+  "tabs": {
+    "prev": "이전 채널",
+    "next": "다음 채널",
+    "label": "채널",
+    "selected": "계정 {n}개 선택됨",
+    "expired": "만료된 계정이 있어요"
+  },
+  "head": {
+    "selected": "{n} / {total} 선택",
+    "hintAgg": "통합 모드 · 채널마다 계정을 따로 고르고, 채널당 하나 이상 남겨 두세요",
+    "hint": "여러 개 선택 가능 · 선택한 계정으로 함께 불러와 결과를 합치고 중복을 없애요"
+  },
+  "remove": {
+    "ask": "「{name}」을(를) 삭제할까요?",
+    "serverLogout": "이 기기의 로그인 정보를 삭제하고 {platform} 서버에서도 로그아웃해요",
+    "localOnly": "이 기기에 저장된 로그인 정보만 삭제해요",
+    "removing": "삭제 중…",
+    "removingLabel": "삭제 중",
+    "tip": "계정 삭제"
+  },
+  "row": {
+    "default": "기본",
+    "expired": "로그인 만료 · 선택 불가",
+    "browsing": "사용 중",
+    "loggedInAt": "{time} 로그인",
+    "setDefault": "기본으로 설정",
+    "keepOne": "계정을 하나 이상 남겨 두세요",
+    "empty": "아직 {platform} 계정이 없어요. 아래에서 추가하세요"
+  },
+  "collapse": "접기",
+  "expandAll": "모든 계정 펼치기",
+  "merge": "계정 {n}개로 함께 불러오는 중 · 중복 항목은 한 번만 표시",
+  "add": {
+    "title": "{platform} 계정 추가",
+    "methods": "QR 코드 · 문자 인증 · Cookie 가져오기"
+  },
+  "error": {
+    "removeFailed": "계정을 삭제하지 못했어요",
+    "useFailed": "기본 계정으로 설정하지 못했어요"
+  }
+}

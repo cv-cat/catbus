@@ -8,7 +8,7 @@
 | 上游仓库 | [cv-cat/WeiboApis](https://github.com/cv-cat/WeiboApis) |
 | 移植基线 | master 上的 [`757582c`](https://github.com/cv-cat/WeiboApis/commit/757582c41831cda3723c41b4544b93d4f47fe179)，记录在 [`src/platforms/weibo/UPSTREAM`](../../src/platforms/weibo/UPSTREAM) |
 | 端 | web ✓ · app ○ 规划中 · pc ○ 规划中 |
-| 命令（web） | 已实现 12 条（✓ 10 · ◐ 2），规划中 ○ 55 条 |
+| 命令（web） | 已实现 13 条（✓ 10 · ◐ 3），规划中 ○ 54 条 |
 
 上游 WeiboApis 的能力不多（用户、微博详情、评论、搜索、发布），所以微博的大部分命令还是规划中。命令表由注册表生成，与 `catbus platforms weibo` 一致；选项以 `catbus weibo <resource> <action> --help` 为准。通用的命令语法、输出结构见 [AGENTS.md 第 4 节](../../AGENTS.md#4-命令规范)。
 
@@ -69,6 +69,13 @@ catbus weibo auth login --cookie @weibo-cookie.txt
 |---|---|---|
 | `media upload` | ✓ | 上传媒体。 |
 
+### keyword
+
+| 命令 | 状态 | 说明 |
+|---|---|---|
+| `keyword hot` | ◐ | 热搜词：网页端热搜榜，按榜单顺序，`heat` 为热度值。非上游：请求按网页端补的（`weibo.com/ajax/side/hotSearch`），去掉广告位，不含置顶词。 |
+| `keyword suggest` | ○ | 规划中 |
+
 ### 整组规划中
 
 下面这些 resource 在本平台还没有已实现的命令，执行时都返回 `NOT_IMPLEMENTED`（退出码 4）。
@@ -77,7 +84,6 @@ catbus weibo auth login --cookie @weibo-cookie.txt
 |---|---|
 | `feed` | `list` |
 | `live` | `get` `list` `search` `categories` `listen` `history` `send` `like` `rank` `gifts` `products` `media` `replays` `start` `stop` |
-| `keyword` | `suggest` `hot` |
 | `notice` | `list` `count` |
 | `msg` | `list` `history` `send` `listen` `read` `revoke` `delete` |
 | `folder` | `list` `items` |

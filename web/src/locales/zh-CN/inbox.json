@@ -1,0 +1,91 @@
+{
+  "nav": "收件箱",
+  "badge": "{n} 条未读通知",
+  "title": {
+    "notices": "通知",
+    "messages": "私信",
+    "both": "通知与私信"
+  },
+  "readonlyNote": "只读 · 回复和管理请到{platform}",
+  "login": {
+    "notices": "登录{platform}后查看通知",
+    "messages": "登录{platform}后查看私信",
+    "both": "登录{platform}后查看通知和私信"
+  },
+  "loginDesc": "只读取你自己账号的内容，不会标记已读，也不会替你回复。",
+  "expired": "{platform}的登录已失效",
+  "expiredDesc": "重新登录后再查看。",
+  "tab": {
+    "label": "通知或私信",
+    "notices": "通知",
+    "messages": "私信"
+  },
+  "type": {
+    "label": "通知类型",
+    "all": "全部",
+    "comment": "评论",
+    "mention": "{'@'}",
+    "like": "赞",
+    "follow": "关注",
+    "system": "系统"
+  },
+  "what": {
+    "comment": "评论了你",
+    "mention": "{'@'}了你",
+    "like": "赞了你",
+    "follow": "关注了你",
+    "system": "系统通知"
+  },
+  "anon": {
+    "comment": "有人评论了你",
+    "mention": "有人{'@'}了你",
+    "like": "有人赞了你",
+    "follow": "有人关注了你",
+    "system": "系统通知"
+  },
+  "group": {
+    "today": "今天",
+    "yesterday": "昨天",
+    "week": "本周",
+    "earlier": "更早"
+  },
+  "loaded": "已加载 {n} 条",
+  "detail": {
+    "title": "通知详情",
+    "open": "在{platform}打开",
+    "profile": "TA 的主页",
+    "hint": "在新标签页打开{platform}",
+    "none": "选一条通知查看详情"
+  },
+  "overview": {
+    "title": "按类型",
+    "unread": "未读",
+    "loadedHint": "按已加载的通知统计。点一类只看这一类。",
+    "countHint": "数字是平台给的未读数。点一类只看这一类。"
+  },
+  "empty": {
+    "notices": "还没有通知",
+    "noticesDesc": "有人评论、{'@'}、赞或关注你时，会出现在这里。",
+    "type": "没有这一类通知",
+    "typeDesc": "已加载的 {n} 条里没有这一类。",
+    "all": "看全部",
+    "convs": "还没有私信",
+    "convsDesc": "收到的私信会出现在这里。",
+    "msgs": "这个会话还没有消息"
+  },
+  "conv": {
+    "title": "会话",
+    "loaded": "已加载 {n} 个",
+    "group": "群聊",
+    "msgs": "已加载 {n} 条消息"
+  },
+  "older": "加载更早的消息",
+  "readonly": "只读，回复请到{platform}",
+  "reply": "去{platform}回复",
+  "msg": {
+    "image": "[图片]",
+    "video": "[视频]",
+    "card": "[卡片]",
+    "other": "[其他消息]"
+  }
+}
