@@ -29,7 +29,7 @@ function table(rows: string[][], indent = '  '): string {
 
 const GLOBAL_OPTIONS = [
   ['-a, --account <name>', '使用哪个账号'],
-  ['-e, --endpoint <端>', 'web | app | pc，默认 web'],
+  ['-e, --endpoint <端>', 'web | app | pc，省略时用平台的默认端'],
   ['-o, --output <格式>', 'json | jsonl，默认 json'],
   ['    --raw', '用平台原始对象代替归一化对象'],
   ['    --fields <路径,...>', '只输出这些字段，如 id,url,author.name'],
@@ -40,6 +40,7 @@ const GLOBAL_OPTIONS = [
   ['-y, --yes', '跳过危险操作的确认'],
   ['-h, --help', '帮助'],
   ['    --version', '版本信息'],
+  ['    --web', '启动本地 WebUI，同 catbus web'],
 ]
 
 export function rootHelp(): string {
@@ -62,6 +63,7 @@ export function rootHelp(): string {
       ['auth list', '所有平台、所有端的账号'],
       ['config get|set|unset|list', '读写配置（~/.catbus/config.toml）'],
       ['version', '版本、Node 版本、系统与架构'],
+      ['web [stop|status]', '本地 WebUI：启动并打开浏览器 / 停止 / 查看'],
       ['tui', '全屏交互界面（需要交互式终端）'],
     ]),
     '',
@@ -79,7 +81,10 @@ export function rootHelp(): string {
 }
 
 function endpointsLine(platform: Platform): string {
-  return ENDPOINTS.map((e) => (platform.endpoints[e] === 'planned' ? `${e} ○ planned` : `${e} ✓`)).join(' · ')
+  return ENDPOINTS.map((e) => {
+    const ep = platform.endpoints[e]
+    return ep === 'planned' ? `${e} ○ planned` : `${e}${ep.label ? `（${ep.label}）` : ''} ✓${e !== 'web' && e === platform.defaultEndpoint ? ' 默认' : ''}`
+  }).join(' · ')
 }
 
 function title(platform: Platform): string {
@@ -87,13 +92,13 @@ function title(platform: Platform): string {
   return `${platform.name} (${platform.id})${aliases}`
 }
 
-/** 请求的端还是 planned 时，列出 web 端的命令作参考。 */
+/** 请求的端还是 planned 时，列出平台默认端的命令作参考。 */
 function listedEndpoint(platform: Platform, endpoint: Endpoint): { ep: AvailableEndpoint; notice: string | null } {
   const ep = platform.endpoints[endpoint]
   if (ep !== 'planned') return { ep, notice: null }
   return {
-    ep: platform.endpoints.web as AvailableEndpoint,
-    notice: `${endpoint} 端尚未实现，所有命令都返回 NOT_IMPLEMENTED。下面是 web 端的命令。`,
+    ep: platform.endpoints[platform.defaultEndpoint] as AvailableEndpoint,
+    notice: `${endpoint} 端尚未实现，所有命令都返回 NOT_IMPLEMENTED。下面是 ${platform.defaultEndpoint} 端的命令。`,
   }
 }
 
@@ -148,7 +153,7 @@ function optionUsage(key: string, command: Command): string {
 
 export function commandHelp(platform: Platform, endpoint: Endpoint, command: Command): string {
   const p = platform.id
-  const e = endpoint === 'web' ? '' : ` -e ${endpoint}`
+  const e = endpoint === platform.defaultEndpoint ? '' : ` -e ${endpoint}`
   const argUsage = command.args.map((a) => (a.optional ? `[${a.name}]` : `<${a.name}>`))
   const optionKeys = Object.keys(command.options)
   const requiredOptions = optionKeys.filter((k) => describeOption(command.options[k]!).required)
@@ -156,7 +161,7 @@ export function commandHelp(platform: Platform, endpoint: Endpoint, command: Com
     const ep = platform.endpoints[name]
     if (ep === 'planned') return `${name} ○ planned`
     const c = ep.commands.get(command.key)
-    return !c ? `${name} —` : c.status === 'planned' ? `${name} ○ planned` : `${name} ✓`
+    return !c ? `${name} —` : c.status === 'planned' ? `${name} ○ planned` : `${name}${ep.label ? `（${ep.label}）` : ''} ✓${name !== 'web' && name === platform.defaultEndpoint ? ' 默认' : ''}`
   })
   const confirm = command.confirm === true ? '危险操作，执行前需要确认；-y 跳过' : command.confirm ? '部分情况需要确认（见选项）；-y 跳过' : null
 
@@ -232,6 +237,7 @@ export const GLOBAL_HELP: Record<string, string> = {
       ['timeout', '单次请求超时（秒），默认 30'],
       ['<platform>.proxy', '平台代理，例如 xhs.proxy'],
       ['youtube.browser', 'YouTube 发布与删除用的本地 Chromium 可执行文件（绝对路径），见 AGENTS 5.7'],
+      ['discord.browser', 'Discord WebAuthn 用的本地 Chromium 可执行文件（绝对路径），见 AGENTS 5.10'],
     ]),
     '',
     '代理的优先级：--proxy > <platform>.proxy > proxy。不读取 HTTP(S)_PROXY 环境变量。',
@@ -251,4 +257,27 @@ export const GLOBAL_HELP: Record<string, string> = {
     ]),
   ].join('\n'),
   version: ['用法: catbus version（或 catbus --version）', '', '输出 catbus 版本、Node 版本、系统与架构。'].join('\n'),
+  web: [
+    '用法:',
+    '  catbus web [--port <n>] [--host <addr>] [--demo] [--headless] [--detach]（或 catbus --web …）',
+    '  catbus web stop',
+    '  catbus web status',
+    '',
+    '启动本地 WebUI 并打开浏览器。默认在前台运行，Ctrl-C 退出；已有服务在运行时直接复用。',
+    '',
+    '选项:',
+    table([
+      ['--port <n>', '端口，默认 5174；0 表示随机端口'],
+      ['--host <addr>', '监听地址，默认 127.0.0.1；不是回环地址（如 0.0.0.0）时启用访问令牌，--demo 时不需要'],
+      ['--demo', '演示模式：只用演示数据，不会用到任何真实账号'],
+      ['--headless', '只启动服务，不打开浏览器'],
+      ['--detach', '后台运行：就绪后立即返回，关掉终端也继续运行；用 catbus web stop 停止'],
+    ]),
+    '',
+    '示例:',
+    '  catbus web',
+    '  catbus web --demo',
+    '  catbus web --detach --headless --port 8080',
+    '  catbus web status',
+  ].join('\n'),
 }

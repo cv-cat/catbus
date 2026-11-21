@@ -245,7 +245,7 @@ export function live(v: Input<Live, 'id' | 'status'>, raw?: unknown): Live {
 }
 
 export function event(v: Partial<Event> & { type: Event['type'] }, raw?: unknown): Event {
-  return attach({ type: v.type, time: v.time ?? isoNow(new Date(now())), user: v.user ?? null, text: v.text ?? null, gift: v.gift ?? null }, raw)
+  return attach({ type: v.type, time: v.time ?? isoNow(new Date(now())), user: v.user ?? null, text: v.text ?? null, gift: v.gift ?? null, stats: v.stats ?? null }, raw)
 }
 
 export function gift(v: Partial<Gift> & { id: string; name: string }, raw?: unknown): Gift {

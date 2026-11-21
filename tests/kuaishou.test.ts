@@ -1228,3 +1228,101 @@ describe('kuaishou 短信多用户（官方 result 100110031：手机号下有�
     await expect(replaySms({ method: 'sms', user: '20002' }, {})).rejects.toMatchObject({ code: 'USAGE', message: expect.stringContaining('待选') })
   })
 })
+
+describe('kuaishou keyword hot（非上游，没有对拍）', () => {
+  it('发 visionHotRank GraphQL；按 rank 顺序输出，热度「万」换成整数，置顶词（没有热度）不收', async () => {
+    const { keywordHot } = await import('../src/platforms/kuaishou/web/commands.js')
+    const items = [
+      { id: '置顶词', rank: 0, name: '置顶词', hotValue: null },
+      { id: '热榜一', rank: 1, name: '热榜一', hotValue: '1113.8万' },
+      { id: '热榜二', rank: 2, name: '热榜二', hotValue: '98765' },
+    ]
+    const { requests, result, error } = await session(
+      (req) => (req.url.pathname === '/graphql' ? { data: { visionHotRank: { result: 1, pcursor: 'no_more', items } } } : { result: 1 }),
+      () => keywordHot(makeCtx({ platform: 'kuaishou' })) as Promise<any>,
+    )
+    expect(error).toBeUndefined()
+    expect(result).toEqual([
+      { text: '热榜一', heat: 11138000 },
+      { text: '热榜二', heat: 98765 },
+    ])
+    const gql = requests.find((r) => r.url.pathname === '/graphql')!
+    expect([gql.url.origin, gql.body.operationName, gql.body.variables]).toEqual(['https://www.kuaishou.com', 'visionHotRank', { page: 'home' }])
+    expect(gql.body.query).not.toContain('tag')
+  })
+
+  it('result 不是 1 时按业务码报错；注册表标注非上游', async () => {
+    const { keywordHot } = await import('../src/platforms/kuaishou/web/commands.js')
+    const { error } = await session(
+      (req) => (req.url.pathname === '/graphql' ? { data: { visionHotRank: { result: 2 } } } : { result: 1 }),
+      () => keywordHot(makeCtx({ platform: 'kuaishou' })) as Promise<any>,
+    )
+    expect(error).toMatchObject({ code: 'RISK_CONTROL' })
+    const { default: kuaishou } = await import('../src/platforms/kuaishou/index.js')
+    const web = kuaishou.endpoints.web
+    if (web === 'planned') throw new Error('web 是 planned')
+    expect(web.commands.get('keyword hot')).toMatchObject({ upstream: 'partial', note: expect.stringContaining('非上游') })
+  })
+})
+
+describe('kuaishou 直播间：首页里没有时按主播 ID 查 livedetail（非上游）', () => {
+  const EMPTY_HOME = { data: { result: 1, list: [] } }
+  const LIVE_DETAIL = {
+    data: {
+      result: 1,
+      liveStream: {
+        id: 'fakeStream01',
+        poster: 'https://live2.static.yximgs.com/live/fake.jpg',
+        hlsPlayUrl: 'https://hls.example.yximgs.com/gifshow/fakeStream01.m3u8',
+        playUrls: {
+          h264: { adaptationSet: { representation: [{ qualityType: 'STANDARD', url: 'https://tx-origin.pull.yximgs.com/gifshow/fakeStream01_Sd.flv' }, { qualityType: 'HIGH', url: 'https://tx-origin.pull.yximgs.com/gifshow/fakeStream01_Hd.flv' }] } },
+          hevc: { adaptationSet: { representation: [{ qualityType: 'HIGH', url: 'https://tx-origin.pull.yximgs.com/gifshow/fakeStream01_HevcHd.flv' }] } },
+        },
+      },
+      author: { id: ROOM, name: '主播', avatar: 'https://p1.a.kwimgs.com/fake.jpg', living: false },
+    },
+  }
+  const respond = (detail: unknown) => (req: SentRequest) =>
+    req.url.pathname === '/live_api/home/list' ? EMPTY_HOME : req.url.pathname === '/live_api/liveroom/livedetail' ? detail : { data: { result: 1 } }
+
+  it('live get：首页里没有 → livedetail 给出直播流 id，状态为 live（不看恒为 false 的 living）', async () => {
+    const { liveGet } = await import('../src/platforms/kuaishou/web/commands.js')
+    const { requests, result, error } = await session(respond(LIVE_DETAIL), () => liveGet(makeCtx({ platform: 'kuaishou', args: { room: ROOM } })) as Promise<any>)
+    if (error) throw error
+    expect(paths(requests)).toEqual(['/live_api/home/list', '/live_api/liveroom/livedetail'])
+    expect(requests[1]!.url.searchParams.get('principalId')).toBe(ROOM)
+    expect(result).toMatchObject({ id: ROOM, status: 'live', host: { id: ROOM, name: '主播' }, cover: 'https://live2.static.yximgs.com/live/fake.jpg' })
+  })
+
+  it('live get：没开播（result 671）为 offline；主播不存在（result 22）报 USAGE', async () => {
+    const { liveGet } = await import('../src/platforms/kuaishou/web/commands.js')
+    const offline = { data: { result: 671, liveStream: { type: 'live' }, author: { id: ROOM, name: '主播', living: false } } }
+    const a = await session(respond(offline), () => liveGet(makeCtx({ platform: 'kuaishou', args: { room: ROOM } })) as Promise<any>)
+    if (a.error) throw a.error
+    expect(a.result).toMatchObject({ id: ROOM, status: 'offline', cover: null })
+    const b = await session(respond({ data: { result: 22, liveStream: {}, author: { living: false } } }), () => liveGet(makeCtx({ platform: 'kuaishou', args: { room: ROOM } })))
+    expect(b.error).toMatchObject({ code: 'USAGE' })
+  })
+
+  it('live gifts：没开播时报 UPSTREAM，不请求礼物列表', async () => {
+    const { liveGifts } = await import('../src/platforms/kuaishou/web/commands.js')
+    const offline = { data: { result: 671, author: { id: ROOM } } }
+    const { requests, error } = await session(respond(offline), () => liveGifts(makeCtx({ platform: 'kuaishou', args: { room: ROOM } })))
+    expect(error).toMatchObject({ code: 'UPSTREAM', detail: { living: false } })
+    expect(paths(requests)).not.toContain('/live_api/gift/list')
+  })
+
+  it('live media：playUrls 每档一条 flv（hevc 带前缀），另有 hls；没开播时为空数组', async () => {
+    const { liveMedia } = await import('../src/platforms/kuaishou/web/commands.js')
+    const { result, error } = await session(respond(LIVE_DETAIL), () => liveMedia(makeCtx({ platform: 'kuaishou', args: { room: ROOM } })) as Promise<any>)
+    if (error) throw error
+    expect(result.map((m: any) => [m.id, m.type, m.url])).toEqual([
+      ['standard.flv', 'video', 'https://tx-origin.pull.yximgs.com/gifshow/fakeStream01_Sd.flv'],
+      ['high.flv', 'video', 'https://tx-origin.pull.yximgs.com/gifshow/fakeStream01_Hd.flv'],
+      ['hevc-high.flv', 'video', 'https://tx-origin.pull.yximgs.com/gifshow/fakeStream01_HevcHd.flv'],
+      ['hls', 'video', 'https://hls.example.yximgs.com/gifshow/fakeStream01.m3u8'],
+    ])
+    const off = await session(respond({ data: { result: 671, author: { id: ROOM } } }), () => liveMedia(makeCtx({ platform: 'kuaishou', args: { room: ROOM } })))
+    expect(off.result).toEqual([])
+  })
+})

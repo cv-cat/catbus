@@ -1,0 +1,34 @@
+{
+  "title": "Mine",
+  "joiner": ", ",
+  "login": "Log in to {platform} to see your {tabs}",
+  "loginDesc": "Only your own account's content is read; nothing is changed.",
+  "expired": "Login expired",
+  "expiredDesc": "Log in again to continue.",
+  "refresh": "Refresh",
+  "empty": "No {tab} yet",
+  "folderEmpty": "Nothing in here yet",
+  "openOn": "Open on {platform}",
+  "nav": {
+    "label": "{platform} pages"
+  },
+  "tab": {
+    "works": "Posts",
+    "notes": "Notes",
+    "posts": "Uploads",
+    "likes": "Liked",
+    "loved": "Liked",
+    "collects": "Saved",
+    "reposts": "Reposts",
+    "folders": "Collections",
+    "series": "Series",
+    "playlists": "Playlists",
+    "history": "History"
+  },
+  "status": {
+    "reviewing": "In review",
+    "private": "Only me",
+    "rejected": "Rejected",
+    "draft": "Draft"
+  }
+}

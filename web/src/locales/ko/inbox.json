@@ -1,0 +1,91 @@
+{
+  "nav": "받은함",
+  "badge": "읽지 않은 알림 {n}개",
+  "title": {
+    "notices": "알림",
+    "messages": "메시지",
+    "both": "알림과 메시지"
+  },
+  "readonlyNote": "읽기 전용 · 답장과 관리는 {platform}에서",
+  "login": {
+    "notices": "{platform}에 로그인하면 알림을 볼 수 있습니다",
+    "messages": "{platform}에 로그인하면 메시지를 볼 수 있습니다",
+    "both": "{platform}에 로그인하면 알림과 메시지를 볼 수 있습니다"
+  },
+  "loginDesc": "내 계정을 읽기만 하며, 읽음 처리하거나 대신 답장하지 않습니다.",
+  "expired": "{platform} 로그인이 만료되었습니다",
+  "expiredDesc": "다시 로그인한 뒤 확인하세요.",
+  "tab": {
+    "label": "알림 또는 메시지",
+    "notices": "알림",
+    "messages": "메시지"
+  },
+  "type": {
+    "label": "알림 유형",
+    "all": "전체",
+    "comment": "댓글",
+    "mention": "멘션",
+    "like": "좋아요",
+    "follow": "팔로우",
+    "system": "시스템"
+  },
+  "what": {
+    "comment": "님이 댓글을 남겼습니다",
+    "mention": "님이 멘션했습니다",
+    "like": "님이 좋아합니다",
+    "follow": "님이 팔로우했습니다",
+    "system": "시스템 알림"
+  },
+  "anon": {
+    "comment": "누군가 댓글을 남겼습니다",
+    "mention": "누군가 멘션했습니다",
+    "like": "누군가 좋아합니다",
+    "follow": "누군가 팔로우했습니다",
+    "system": "시스템 알림"
+  },
+  "group": {
+    "today": "오늘",
+    "yesterday": "어제",
+    "week": "이번 주",
+    "earlier": "이전"
+  },
+  "loaded": "{n}개 불러옴",
+  "detail": {
+    "title": "알림 상세",
+    "open": "{platform}에서 열기",
+    "profile": "상대 프로필",
+    "hint": "새 탭에서 {platform}을(를) 엽니다",
+    "none": "알림을 선택하면 상세가 표시됩니다"
+  },
+  "overview": {
+    "title": "유형별",
+    "unread": "읽지 않음",
+    "loadedHint": "불러온 알림 기준입니다. 유형을 누르면 그 유형만 표시합니다.",
+    "countHint": "플랫폼의 읽지 않은 수입니다. 유형을 누르면 그 유형만 표시합니다."
+  },
+  "empty": {
+    "notices": "아직 알림이 없습니다",
+    "noticesDesc": "댓글, 멘션, 좋아요, 팔로우가 여기에 표시됩니다.",
+    "type": "이 유형의 알림이 없습니다",
+    "typeDesc": "불러온 {n}개 중에 이 유형이 없습니다.",
+    "all": "전체 보기",
+    "convs": "아직 메시지가 없습니다",
+    "convsDesc": "받은 메시지가 여기에 표시됩니다.",
+    "msgs": "이 대화에는 아직 메시지가 없습니다"
+  },
+  "conv": {
+    "title": "대화",
+    "loaded": "{n}개 불러옴",
+    "group": "그룹 채팅",
+    "msgs": "메시지 {n}개 불러옴"
+  },
+  "older": "이전 메시지 불러오기",
+  "readonly": "읽기 전용. 답장은 {platform}에서",
+  "reply": "{platform}에서 답장",
+  "msg": {
+    "image": "[이미지]",
+    "video": "[동영상]",
+    "card": "[카드]",
+    "other": "[기타 메시지]"
+  }
+}

@@ -74,7 +74,7 @@
 
 | 命令 | 状态 | 说明 |
 |---|---|---|
-| `feed list` | ◐ | 推荐 / 热门 / 关注流。following 规划中。取值：`--kind` recommend / following。 |
+| `feed list` | ✓ | 推荐 / 热门 / 关注流。取值：`--kind` recommend。 |
 | `feed categories` | ✓ | 推荐流分类。 |
 
 ### live

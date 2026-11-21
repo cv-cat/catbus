@@ -243,6 +243,23 @@ export async function popular(b: Bili, page = 1, pageSize = 20) {
 }
 
 /**
+ * 非上游：热搜榜（`keyword hot`）。上游没有这个接口，按网页端顶栏搜索框的请求补的
+ * （bili-header 的 `wbi/search/square`，`platform=web`，web_location 取首页的 spm_prefix），没有对拍。
+ * limit 最大 50，再大接口报错。
+ */
+export async function searchSquare(b: Bili, limit = 50) {
+  const h = headers('GET').referer(`${MAIN}/`)
+  const params = withLocation(
+    [
+      ['limit', limit],
+      ['platform', 'web'],
+    ],
+    '333.1007',
+  )
+  return b.get(`${API}/x/web-interface/wbi/search/square`, { headers: h.get(), query: await b.wbi(params) })
+}
+
+/**
  * 关注的人的视频动态流（非上游：上游没有动态流接口，请求按网页端动态页 t.bilibili.com 补的，没有对拍）。
  * `type=video` 只取视频投稿；`offset` 是上一页返回的 `data.offset`，首页不带。
  */
@@ -909,6 +926,48 @@ export async function giftList(b: Bili, roomId: string | number, areaParentId: n
 
 export function areaList(b: Bili) {
   return b.get(`${LIVE_API}/xlive/web-interface/v1/index/getWebAreaList`, { headers: headers('GET', { origin: LIVE }).get(), query: [['source_id', 2]] })
+}
+
+/** 直播首页的推荐列表（非上游：按网页端 live.bilibili.com 首页补的，按页翻，不签名）。 */
+export function liveIndexList(b: Bili, page: number) {
+  return b.get(`${LIVE_API}/xlive/web-interface/v1/index/getListV2`, {
+    headers: headers('GET', { origin: LIVE }).get(),
+    query: [
+      ['platform', 'web'],
+      ['page', page],
+      ['web_location', '444.7'],
+    ],
+  })
+}
+
+/** 直播分区页的地址：子分区为 0 时是整个父分区。 */
+export const liveAreaPage = (parentAreaId: string | number, areaId: string | number) => `${LIVE}/p/eden/area-tags?parentAreaId=${parentAreaId}&areaId=${areaId}`
+
+/**
+ * 分区页 HTML 里 `window._render_data_.access_id`：second/getList 的 w_webid，缺了报 -352。
+ * 是 gaia 签发的 JWT（绑定 buvid 与 UA，有效 1 天），取不到时返回空串，由接口自己报错。
+ */
+export async function liveAccessId(b: Bili, parentAreaId: string | number, areaId: string | number): Promise<string> {
+  const h = headers('DOC').set('sec-fetch-site', 'same-origin')
+  h.insertBefore('accept-encoding', 'referer', `${LIVE}/`)
+  const res = await b.request({ url: liveAreaPage(parentAreaId, areaId), headers: h.get() })
+  if (res.status !== 200) return ''
+  return /"access_id"\s*:\s*"([^"]+)"/.exec(await res.text())?.[1] ?? ''
+}
+
+/** 分区的直播间列表（非上游：按网页端分区页 /p/eden/area-tags 补的）。子分区为 0 时是整个父分区；带 w_webid 后 wbi 签名。 */
+export async function liveAreaList(b: Bili, parentAreaId: string | number, areaId: string | number, page: number, webid: string) {
+  const params: Pairs = [
+    ['platform', 'web'],
+    ['parent_area_id', parentAreaId],
+    ['area_id', areaId],
+    ['sort_type', ''],
+    ['page', page],
+    ['vajra_business_key', ''],
+    ['web_location', '444.253'],
+    ['w_webid', webid],
+  ]
+  return b.get(`${LIVE_API}/xlive/web-interface/v1/second/getList`, { headers: headers('GET', { origin: LIVE }).get(), query: await b.wbi(params) })
 }
 
 export function bagList(b: Bili, roomId: string | number) {

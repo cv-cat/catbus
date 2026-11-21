@@ -1,4 +1,5 @@
 import { CatbusError } from '../../../core/errors.js'
+import { jsonLoads } from '../../../core/py.js'
 import * as api from './api.js'
 import type { Douyin } from './client.js'
 import { LIVE } from './profile.js'
@@ -64,12 +65,32 @@ export async function resolveShare(d: Douyin, input: string): Promise<ShareTarge
   throw new CatbusError('USAGE', `无法识别的分享目标：${input}`, { hint: '传作品 ID / 链接、用户 sec_uid / 主页链接，或一个网页链接' })
 }
 
-/** 直播间：直播间号（web_rid）或 live.douyin.com 链接。 */
+/** 直播分享页（reflow）的接口，不用登录：按场次的 room_id 取主播的直播间号 owner.web_rid。 */
+const REFLOW_INFO = 'https://webcast.amemv.com/webcast/room/reflow/info/'
+
+async function webRidOfRoom(d: Douyin, roomId: string): Promise<string | undefined> {
+  const q = new URLSearchParams({ type_id: '0', live_id: '1', room_id: roomId, app_id: '1128' })
+  const res = await d.http.request({ url: `${REFLOW_INFO}?${q}`, cookies: false, headers: [['user-agent', 'Mozilla/5.0']] })
+  const rid = (jsonLoads(await res.text()) ?? {})?.data?.room?.owner?.web_rid
+  return typeof rid === 'string' && /^\d+$/.test(rid) ? rid : undefined
+}
+
+/**
+ * 直播间：直播间号（web_rid）、live.douyin.com 链接，或直播分享短链 / 分享文案。
+ * 直播的分享短链跳到 webcast.amemv.com/douyin/webcast/reflow/<room_id>（浏览器里再由页面 JS 跳到 live.douyin.com），
+ * room_id 是这一场的场次 ID，要经 reflow 接口换成直播间号。
+ */
 export async function resolveRoom(d: Douyin, input: string): Promise<string> {
   const s = await expand(d, input)
+  const reflow = /webcast\.amemv\.com\/douyin\/webcast\/reflow\/(\d+)/.exec(s)?.[1]
+  if (reflow) {
+    const rid = await webRidOfRoom(d, reflow)
+    if (rid) return rid
+    throw new CatbusError('UPSTREAM', `直播分享链接里的场次取不到直播间号：${reflow}`, { hint: `直播可能已经结束；也可以传直播间链接 ${LIVE}/<直播间号>` })
+  }
   const m = /live\.douyin\.com\/(\d+)/.exec(s)?.[1] ?? /^\d+$/.exec(s)?.[0]
   if (m) return m
-  throw new CatbusError('USAGE', `无法识别的直播间：${input}`, { hint: `传直播间号或直播间链接 ${LIVE}/<直播间号>` })
+  throw new CatbusError('USAGE', `无法识别的直播间：${input}`, { hint: `传直播间号、直播间链接 ${LIVE}/<直播间号>，或直播分享链接` })
 }
 
 export interface ProductRef {

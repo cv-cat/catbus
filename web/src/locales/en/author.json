@@ -1,0 +1,23 @@
+{
+  "title": "Author",
+  "eyebrow": "{platform} · Profile",
+  "origin": "View on site",
+  "works": "All posts",
+  "empty": "This author has no public {item} yet",
+  "loaded": {
+    "withTotal": "{n} / {total} loaded",
+    "count": "{n} loaded"
+  },
+  "header": {
+    "label": "{name}'s profile",
+    "fallbackName": "Author",
+    "loading": "Loading author",
+    "unknown": "Unknown author"
+  },
+  "stats": {
+    "followers": "Followers",
+    "following": "Following",
+    "items": "Posts",
+    "likes": "Likes"
+  }
+}

@@ -1,5 +1,5 @@
 import { createWriteStream } from 'node:fs'
-import { mkdir, readdir, readFile, rename, rm, stat } from 'node:fs/promises'
+import { mkdir, readdir, readFile, rename, rm, stat, truncate } from 'node:fs/promises'
 import { basename, extname, join, resolve } from 'node:path'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
@@ -7,6 +7,8 @@ import type { ReadableStream as WebReadableStream } from 'node:stream/web'
 import { CatbusError } from './errors.js'
 import { exportItem, exportSettings } from './export.js'
 import type { HeaderInit, HttpClient } from './http.js'
+import { toNetworkError } from './http.js'
+import * as rand from './rand.js'
 import type { HandlerContext } from './registry.js'
 import type { File, Media } from './schemas.js'
 
@@ -97,14 +99,39 @@ export interface DownloadOptions {
   chunked?: (media: Media) => { total: number; bytes: number; url: (start: number, end: number) => string } | undefined
 }
 
+/** 分段请求的瞬时故障才值得重试：网络错误、429、5xx。403 / 410 是确定性的（pot / 直链过期），重试无意义。 */
+function retryableDownloadError(err: unknown): boolean {
+  if (!(err instanceof CatbusError)) return false
+  if (err.code === 'NETWORK') return true
+  const status = (err.detail as { status?: unknown } | undefined)?.status
+  return status === 429 || (typeof status === 'number' && status >= 500)
+}
+
+/** 把临时文件截到 len 字节。只在缩小（写多了）时截：truncate 对更小的文件会用 0 填洞，续传就错位了。 */
+async function shrinkTmp(tmp: string, len: number): Promise<void> {
+  const st = await stat(tmp).catch(() => null)
+  if (st && st.size > len) await truncate(tmp, len)
+}
+
+/** 分段失败后的收尾：写多了截回段边界，对不齐（服务端少发等）只能删掉，无法安全续传。 */
+async function parkTmp(tmp: string, start: number): Promise<void> {
+  const st = await stat(tmp).catch(() => null)
+  if (!st) return
+  if (st.size >= start) await truncate(tmp, start)
+  else await rm(tmp, { force: true })
+}
+
 /**
  * 把一组媒体下载到 `--dir`（`--subdir` 时放进 item 自己的子目录），文件名 `<platform>_<id>_<序号>.<ext>`；
  * 已有文件默认跳过，`--overwrite` 时覆盖。
+ * 分段下载（chunked）支持容错：单段失败重试两次（网络错误、429/5xx），命令失败时保留
+ * `<文件>.part` 并按段边界截齐，重跑命令从未完成的段续传（直链过期的话重解析后会拿到新 URL，
+ * range 位置与 URL 无关，照样续得上）。
  *
  * 各平台的 item download 都经这里落盘，所以 `--meta` / `--comments` / `--replies` / `--no-media`（AGENTS 4.9）也在这里处理：
  * `--no-media` 时不下载媒体，目录规则不变；需要导出时媒体之后写 `<platform>_<id>.json`（core/export.ts）。
  */
-export async function downloadMedia(ctx: HandlerContext, http: HttpClient, itemId: string, media: Media[], options: DownloadOptions = {}): Promise<File[]> {
+export async function downloadMedia(ctx: HandlerContext, http: Pick<HttpClient, 'request'>, itemId: string, media: Media[], options: DownloadOptions = {}): Promise<File[]> {
   const settings = exportSettings(ctx.options, ctx.log)
   const dir = await itemDir(ctx, itemId, options.title)
   await mkdir(dir, { recursive: true })
@@ -113,7 +140,7 @@ export async function downloadMedia(ctx: HandlerContext, http: HttpClient, itemI
   return files
 }
 
-async function saveMedia(ctx: HandlerContext, http: HttpClient, dir: string, itemId: string, media: Media[], options: DownloadOptions): Promise<File[]> {
+async function saveMedia(ctx: HandlerContext, http: Pick<HttpClient, 'request'>, dir: string, itemId: string, media: Media[], options: DownloadOptions): Promise<File[]> {
   const overwrite = Boolean(ctx.options.overwrite)
   const files: File[] = []
   for (const [i, m] of media.entries()) {
@@ -135,14 +162,51 @@ async function saveMedia(ctx: HandlerContext, http: HttpClient, dir: string, ite
     const headers = typeof options.headers === 'function' ? options.headers(m, i) : options.headers
     try {
       if (chunks) {
-        // 分段：依次请求 [start, end]，追加写入同一个临时文件
-        await rm(tmp, { force: true })
-        for (let start = 0; start < chunks.total; start += chunks.bytes) {
+        // 分段：依次请求 [start, end]，追加写入同一个临时文件。
+        // 失败时保留 .part（按 10MB 这类固定边界截齐），重跑命令从这里续传；--overwrite 才清掉重来。
+        if (overwrite) await rm(tmp, { force: true })
+        let start = 0
+        if (!overwrite) {
+          const part = await stat(tmp).catch(() => null)
+          if (part) {
+            if (part.size >= chunks.total) {
+              // 上次在改名前中断：内容已经齐了，直接收尾
+              await rename(tmp, path)
+              files.push({ path, type: m.type, url: m.url, size: part.size })
+              continue
+            }
+            start = Math.floor(part.size / chunks.bytes) * chunks.bytes
+            if (part.size > start) await truncate(tmp, start) // 丢弃最后一段写了一半的数据
+            if (start > 0) ctx.log.info(`从 ${start} 字节处继续下载`)
+          }
+        }
+        for (; start < chunks.total; start += chunks.bytes) {
           const end = Math.min(start + chunks.bytes, chunks.total) - 1
           const url = chunks.url(start, end)
-          const res = await http.request({ url, headers })
-          if (!res.ok) throw new CatbusError('UPSTREAM', `下载失败：HTTP ${res.status}`, { detail: { status: res.status, url, range: [start, end] } })
-          await pipeline(res.body ? Readable.fromWeb(res.body as unknown as WebReadableStream) : Readable.from([Buffer.from(await res.arrayBuffer())]), createWriteStream(tmp, { flags: 'a' }))
+          let attempt = 0
+          for (;;) {
+            try {
+              const res = await http.request({ url, headers })
+              if (!res.ok) throw new CatbusError('UPSTREAM', `下载失败：HTTP ${res.status}`, { detail: { status: res.status, url, range: [start, end] } })
+              // 读响应体断掉（超时、连接重置）按网络错误归类，才能进下面的重试
+              try {
+                await pipeline(res.body ? Readable.fromWeb(res.body as unknown as WebReadableStream) : Readable.from([Buffer.from(await res.arrayBuffer())]), createWriteStream(tmp, { flags: 'a' }))
+              } catch (err) {
+                throw toNetworkError(err)
+              }
+              break
+            } catch (err) {
+              // 只重试瞬时故障（网络错误、429/5xx）；403 等业务层已处理过（补 pot），再重试也是同一个结果
+              if (!retryableDownloadError(err) || attempt >= 2) {
+                await parkTmp(tmp, start) // 留 .part 给下次续传
+                throw err
+              }
+              attempt++
+              ctx.log.warn(`分段请求失败（${err instanceof Error ? err.message : String(err)}），重试 ${attempt}/2`)
+              await rand.sleep(1000 * attempt)
+              await shrinkTmp(tmp, start) // 上一次尝试可能写入了半截
+            }
+          }
         }
       } else {
         const res = await http.request({ url: m.url, headers })
@@ -152,7 +216,8 @@ async function saveMedia(ctx: HandlerContext, http: HttpClient, dir: string, ite
       }
       await rename(tmp, path)
     } catch (err) {
-      await rm(tmp, { force: true })
+      // 分段路径留着 .part 给续传，只清未分段路径的临时文件
+      if (!chunks) await rm(tmp, { force: true })
       throw err
     }
     files.push({ path, type: m.type, url: m.url, size: (await stat(path)).size })

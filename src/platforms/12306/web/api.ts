@@ -28,7 +28,8 @@ export async function ticketSearch(
     })
   }
   const wanted = params.types ? new Set(params.types.toUpperCase().split(',').map((s) => s.trim())) : null
-  return parseTickets(res.data, params.date).filter((x) => !wanted || wanted.has(x.type))
+  const stations = Object.fromEntries((await client.loadStations()).map((s) => [s.code, s.name]))
+  return parseTickets(res.data, params.date, stations).filter((x) => !wanted || wanted.has(x.type))
 }
 
 export async function trainRoute(

@@ -8,7 +8,7 @@
 | 上游仓库 | [cv-cat/KuaiShou-Spider](https://github.com/cv-cat/KuaiShou-Spider) |
 | 移植基线 | `feat/fix-slider-fingerprint-http2` 分支的 [`552cf60`](https://github.com/cv-cat/KuaiShou-Spider/commit/552cf60e59f6e97c759956b229f3f5563fb152bc)（还没合进上游 master），记录在 [`src/platforms/kuaishou/UPSTREAM`](../../src/platforms/kuaishou/UPSTREAM) |
 | 端 | web ✓ · app ○ 规划中 · pc ○ 规划中 |
-| 命令（web） | 已实现 30 条（✓ 25 · ◐ 5），规划中 ○ 41 条 |
+| 命令（web） | 已实现 31 条（✓ 25 · ◐ 6），规划中 ○ 40 条 |
 
 命令表由注册表生成，与 `catbus platforms kuaishou` 一致；选项以 `catbus kuaishou <resource> <action> --help` 为准。通用的命令语法、输出结构见 [AGENTS.md 第 4 节](../../AGENTS.md#4-命令规范)。
 
@@ -84,13 +84,16 @@
 
 | 命令 | 状态 | 说明 |
 |---|---|---|
-| `live get` | ✓ | 直播间信息。 |
+| `live get` | ✓ | 直播间信息。没开播时 `status` 为 `offline`。 |
 | `live list` | ✓ | 直播列表。 |
 | `live categories` | ✓ | 直播分类。 |
 | `live listen` | ✓ | 监听弹幕、礼物、进场等事件。持续输出 jsonl。 |
 | `live gifts` | ✓ | 礼物列表。 |
+| `live media` | ◐ | 直播流地址：每档清晰度一条 flv（h264、hevc），另有一条 hls。没开播时为空数组。 |
 | `live replays` | ✓ | 直播回放。 |
-| `live search`、`live history`、`live send`、`live like`、`live rank`、`live products`、`live media`、`live start`、`live stop` | ○ | 规划中 |
+| `live search`、`live history`、`live send`、`live like`、`live rank`、`live products`、`live start`、`live stop` | ○ | 规划中 |
+
+任何直播间都能查：先在直播首页列表里找（上游的做法），首页里没有时按主播 ID 查直播间页自己用的接口。`live listen`、`live gifts` 要求主播正在直播，没开播时报 `UPSTREAM`。
 
 ### notice
 
@@ -105,6 +108,13 @@
 |---|---|---|
 | `media upload` | ✓ | 上传媒体。 |
 
+### keyword
+
+| 命令 | 状态 | 说明 |
+|---|---|---|
+| `keyword hot` | ◐ | 热搜词：快手热榜，按排名顺序，`heat` 由「1113.8万」这样的展示值换算成整数。非上游：请求按旧版网页端首页补的（GraphQL `visionHotRank`），新版网页端已不展示热榜，接口随时可能下线；不含置顶词。 |
+| `keyword suggest` | ○ | 规划中 |
+
 ### 整组规划中
 
 下面这些 resource 在本平台还没有已实现的命令，执行时都返回 `NOT_IMPLEMENTED`（退出码 4）。
@@ -112,7 +122,6 @@
 | resource | 命令 |
 |---|---|
 | `product` | `get` |
-| `keyword` | `suggest` `hot` |
 | `msg` | `list` `history` `send` `listen` `read` `revoke` `delete` |
 | `folder` | `list` `items` `create` `update` `delete` |
 | `series` | `list` `items` |

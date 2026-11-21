@@ -1,0 +1,91 @@
+{
+  "nav": "Inbox",
+  "badge": "{n} unread notification | {n} unread notifications",
+  "title": {
+    "notices": "Notifications",
+    "messages": "Messages",
+    "both": "Notifications & messages"
+  },
+  "readonlyNote": "Read only · Reply and manage on {platform}",
+  "login": {
+    "notices": "Log in to {platform} to see notifications",
+    "messages": "Log in to {platform} to see messages",
+    "both": "Log in to {platform} to see notifications and messages"
+  },
+  "loginDesc": "Only reads your own account. Nothing is marked as read and nothing is sent.",
+  "expired": "Your {platform} login has expired",
+  "expiredDesc": "Log in again to keep reading.",
+  "tab": {
+    "label": "Notifications or messages",
+    "notices": "Notifications",
+    "messages": "Messages"
+  },
+  "type": {
+    "label": "Notification type",
+    "all": "All",
+    "comment": "Comments",
+    "mention": "Mentions",
+    "like": "Likes",
+    "follow": "Follows",
+    "system": "System"
+  },
+  "what": {
+    "comment": "commented",
+    "mention": "mentioned you",
+    "like": "liked your post",
+    "follow": "followed you",
+    "system": "System notice"
+  },
+  "anon": {
+    "comment": "Someone commented",
+    "mention": "Someone mentioned you",
+    "like": "Someone liked your post",
+    "follow": "Someone followed you",
+    "system": "System notice"
+  },
+  "group": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "week": "This week",
+    "earlier": "Earlier"
+  },
+  "loaded": "{n} loaded",
+  "detail": {
+    "title": "Notification details",
+    "open": "Open on {platform}",
+    "profile": "Their profile",
+    "hint": "Opens {platform} in a new tab",
+    "none": "Select a notification to see details"
+  },
+  "overview": {
+    "title": "By type",
+    "unread": "Unread",
+    "loadedHint": "Counted from the notifications loaded so far. Click a type to show only that type.",
+    "countHint": "Unread counts from the platform. Click a type to show only that type."
+  },
+  "empty": {
+    "notices": "No notifications yet",
+    "noticesDesc": "Comments, mentions, likes and new followers will show up here.",
+    "type": "No notifications of this type",
+    "typeDesc": "None of the {n} loaded notifications are of this type.",
+    "all": "Show all",
+    "convs": "No messages yet",
+    "convsDesc": "Messages you receive will show up here.",
+    "msgs": "No messages in this conversation yet"
+  },
+  "conv": {
+    "title": "Conversations",
+    "loaded": "{n} loaded",
+    "group": "Group chat",
+    "msgs": "{n} message loaded | {n} messages loaded"
+  },
+  "older": "Load earlier messages",
+  "readonly": "Read only. Reply on {platform}",
+  "reply": "Reply on {platform}",
+  "msg": {
+    "image": "[Image]",
+    "video": "[Video]",
+    "card": "[Card]",
+    "other": "[Other message]"
+  }
+}

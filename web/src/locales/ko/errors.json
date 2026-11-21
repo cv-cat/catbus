@@ -1,0 +1,15 @@
+{
+  "code": {
+    "ERROR": "오류가 발생했어요",
+    "USAGE": "요청 매개변수가 올바르지 않아요",
+    "UNSUPPORTED": "이 플랫폼은 이 작업을 지원하지 않아요",
+    "CONFIRM_REQUIRED": "이 작업은 확인이 필요해요",
+    "AUTH_REQUIRED": "먼저 로그인해야 해요",
+    "AUTH_EXPIRED": "로그인이 만료됐어요. 다시 로그인하세요",
+    "NOT_IMPLEMENTED": "아직 구현되지 않은 기능이에요",
+    "RISK_CONTROL": "플랫폼이 보안 인증을 요구하거나 접근을 제한했어요",
+    "NETWORK": "네트워크 또는 프록시 오류",
+    "UPSTREAM": "플랫폼이 오류를 반환했어요",
+    "BRIDGE": "로컬 서비스에 연결할 수 없어요"
+  }
+}

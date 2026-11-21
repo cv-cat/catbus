@@ -212,11 +212,41 @@ export function fileEncryption(c: Creator, fileId: string) {
   return c.request(cspl('/web_api/sns/v5/creator/file/encryption', { file_id: fileId, type: 'image', ts: String(rand.now()), sign: urlSign(fileId) }), '', 'GET', { target: WEB })
 }
 
-const BUSINESS_BINDS =
-  '{"version":1,"noteId":0,"bizType":0,"noteOrderBind":{},"notePostTiming":{},"noteCollectionBind":{"id":""},"noteSketchCollectionBind":{"id":""},"noteCopyBind":{"copyable":false},"interactionPermissionBind":{"commentPermission":0},"optionRelationList":[]}'
-// 视频笔记的 noteCopyBind.copyable 是 true（浏览器实测 2026-10-17；图片是 false）
-const VIDEO_BUSINESS_BINDS =
-  '{"version":1,"noteId":0,"bizType":0,"noteOrderBind":{},"notePostTiming":{},"noteCollectionBind":{"id":""},"noteSketchCollectionBind":{"id":""},"noteCopyBind":{"copyable":true},"interactionPermissionBind":{"commentPermission":0},"optionRelationList":[]}'
+/**
+ * 发布声明。原创走 ORIGINAL_STATEMENT 关联（bizId 是创作者 id），AI 走
+ * userDeclarationBind.origin=2 加 AI_GENERATED_CONTENT 关联。
+ * 两者都要求立即发布：定时发布的 business_binds 是另一种结构，暂不合并。
+ */
+function businessBinds(type: 'normal' | 'video', n: NoteCommon): string {
+  const relations: Record<string, unknown>[] = []
+  if (n.original) {
+    relations.push({
+      type: 'ORIGINAL_STATEMENT',
+      relationList: [
+        { bizType: 'ORIGINAL_STATEMENT', bizId: n.creatorId ?? '', extraInfo: '{}' },
+      ],
+    })
+  }
+  if (n.ai) {
+    relations.push({ type: 'AI_GENERATED_CONTENT', relationList: [] })
+  }
+  const binds: Record<string, unknown> = {
+    version: 1,
+    noteId: 0,
+    bizType: 0,
+    noteOrderBind: {},
+    notePostTiming: {},
+    noteCollectionBind: { id: '' },
+    noteSketchCollectionBind: { id: '' },
+    // 视频笔记的 noteCopyBind.copyable 是 true（浏览器实测 2026-10-17；图片是 false）
+    noteCopyBind: { copyable: type === 'video' || !!n.original },
+    interactionPermissionBind: { commentPermission: 0 },
+    optionRelationList: relations,
+  }
+  if (n.original) binds.coProduceBind = { enable: true }
+  if (n.ai) binds.userDeclarationBind = { origin: 2 }
+  return JSON.stringify(binds)
+}
 const scheduledBinds = (postTime: number) => `{"version":1,"noteId":0,"bizType":13,"noteOrderBind":{},"notePostTiming":{"postTime":"${postTime}"},"noteCollectionBind":{"id":""}}`
 const SOURCE = '{"type":"web","ids":"","extraInfo":"{\\"subType\\":\\"official\\",\\"systemId\\":\\"web\\"}"}'
 const CONTEXT_JSON = '{"recommend_title":{"recommend_title_id":"","is_use":3,"used_index":-1},"recommendTitle":[],"recommend_topics":{"used":[]}}'
@@ -242,6 +272,11 @@ export interface NoteCommon {
   postTime: number | null
   postLoc: Record<string, unknown> | null
   privacy: number
+  /** 原创声明；bizId 需要 creatorId。 */
+  original?: boolean
+  /** 笔记含 AI 合成内容声明。 */
+  ai?: boolean
+  creatorId?: string
 }
 
 function common(type: 'normal' | 'video', n: NoteCommon, withContext: string): Record<string, unknown> {
@@ -251,7 +286,7 @@ function common(type: 'normal' | 'video', n: NoteCommon, withContext: string): R
     note_id: '',
     desc: n.desc,
     source: SOURCE,
-    business_binds: n.postTime == null ? (type === 'video' ? VIDEO_BUSINESS_BINDS : BUSINESS_BINDS) : scheduledBinds(n.postTime),
+    business_binds: n.postTime == null ? businessBinds(type, n) : scheduledBinds(n.postTime),
     ats: [],
     hash_tag: [],
     post_loc: n.postLoc ?? {},

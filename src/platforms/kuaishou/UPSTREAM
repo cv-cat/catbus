@@ -1,3 +1,9 @@
 repo: https://github.com/cv-cat/KuaiShou-Spider
 commit: 552cf60e59f6e97c759956b229f3f5563fb152bc
 branch: feat/fix-slider-fingerprint-http2
+
+非上游：
+- live_api/liveroom/livedetail?principalId=<主播 ID>：直播间页 live.kuaishou.com/u/<id> 自己用的接口。
+  直播首页 home/list 里没有这个主播时用它取 liveStreamId（live get / listen / gifts），live media 的 playUrls 也取自它。
+  在播时 data.liveStream 带 id、playUrls、hlsPlayUrl；没开播时 result 671、只有 author；主播不存在时 result 22。
+  直播首页和它给的 living 字段实测恒为 false，在播与否看有没有 liveStream.id。（2026-11-15 实测）

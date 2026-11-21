@@ -15,7 +15,7 @@
 
 </div>
 
-catbus is an open-source CLI that drives every platform with one set of commands: RedNote, Douyin, TikTok, Bilibili, X, YouTube and more. Search, read, download, publish and message, and get the same JSON back every time. Use it yourself, or hand it to an AI agent.
+catbus is an open-source CLI that drives every platform with one set of commands: RedNote, Douyin, TikTok, Bilibili, X, YouTube, Discord and more. Search, read, download, publish and message, and get the same JSON back every time. Use it yourself, or hand it to an AI agent.
 
 <div align="center">
 
@@ -38,9 +38,10 @@ npm i -g catbus-cli         # only Node needed
 catbus bilibili auth login  # scan a QR code
 catbus bilibili item search cat --limit 20
 catbus tui    # don't want to memorize commands? use the full-screen UI
+catbus web    # or browse in a local web UI
 ```
 
-Prefer Docker or a source install? See the [quick start guide](docs/guide/quick-start.md). The full-screen interface is described in [Terminal UI](docs/guide/tui.md).
+Prefer Docker or a source install? See the [quick start guide](docs/guide/quick-start.md). The full-screen interface is described in [Terminal UI](docs/guide/tui.md). `catbus web` opens a local web UI for searching, reading and downloading across platforms; try the [online demo](https://catbus-demo.crush-hub.com) (demo data, no login).
 
 ## One set of commands for every platform
 
@@ -84,7 +85,7 @@ Every command returns the same JSON shape (trimmed here):
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/platforms-dark.svg">
-  <img src="assets/platforms-light.svg" alt="15 platforms on board, and 27 more tagged soon" width="100%">
+  <img src="assets/platforms-light.svg" alt="16 platforms on board, and 26 more tagged soon" width="100%">
 </picture>
 
 Tagged `soon` means on the way: the goal is every platform. Missing yours? [Open an issue](https://github.com/cv-cat/catbus/issues) or [add it yourself](.github/CONTRIBUTING.md), a platform is one directory. See the [capability matrix](docs/capabilities.md) for what each one supports.

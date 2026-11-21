@@ -1,7 +1,7 @@
 import { GUEST } from '../../../core/auth-store.js'
 import { CatbusError } from '../../../core/errors.js'
 import { readMedia } from '../../../core/files.js'
-import { cookieCredential, finishLogin, freshCredential, loginContext, poll, showQrcode } from '../../../core/login.js'
+import { cookieCredential, finishLogin, freshCredential, loginContext, poll, qrcodeScanned, showQrcode } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
@@ -45,7 +45,7 @@ async function qrcodeLogin(ctx: Ctx) {
       const d = await api.qrQuery(x, csrf, cookie2, cna, qr)
       const status = String(d.qrCodeStatus ?? '')
       if (status !== last) ctx.log.debug(`扫码状态：${status || '（空）'}`, { keys: Object.keys(d), titleMsg: d.titleMsg ?? null })
-      if (status !== last && status === 'SCANNED') ctx.log.info('已扫码，请在手机上确认')
+      if (status !== last && status === 'SCANNED') qrcodeScanned(ctx)
       last = status
       if (status === 'CONFIRMED') return String(d.token ?? d.lgToken ?? '')
       if (status === 'EXPIRED') throw new CatbusError('AUTH_REQUIRED', '二维码已过期', { hint: '重新执行 catbus xianyu auth login' })

@@ -284,45 +284,64 @@ export function multipartBody(fields: Array<[string, string]>, file: { name: str
   return { body: Buffer.concat(chunks), contentType: `multipart/form-data; boundary=${boundary}` }
 }
 
-/** 推送到本机 qBittorrent Web UI：直连，不走 catbus 的代理设置。 */
-async function pushToQbit(ctx: HandlerContext, name: string, bytes: Uint8Array): Promise<void> {
+/** `--qbit` 的推送结果（AGENTS 4.7 mteam `item download`）：added 已添加，exists 已在任务列表（qBittorrent 回 `Fails.`）。 */
+export interface QbitPush { status: 'added' | 'exists'; category: string; savepath: string | null; paused: boolean }
+
+/**
+ * 推送到本机 qBittorrent Web UI：直连，不走 catbus 的代理设置。
+ * 推送失败时抛错，`detail` 为 `{qbit: 'failed', id, files, http_status}`：files 是已经写好的文件（种子文件已保存）。
+ */
+async function pushToQbit(ctx: HandlerContext, id: string, name: string, bytes: Uint8Array, files: File[]): Promise<QbitPush> {
   const base = (process.env.CATBUS_MTEAM_QBIT_URL || QBIT_DEFAULT).replace(/\/+$/, '')
   const http = new HttpClient({ proxy: null, timeout: ctx.config.timeout })
   const headers = { referer: base, origin: base }
   const category = String(ctx.options.qbitCategory ?? 'mteam')
-  const paused = ctx.options.qbitPaused ? 'true' : 'false'
+  const paused = Boolean(ctx.options.qbitPaused)
   const savepath = ctx.options.qbitSavepath ? String(ctx.options.qbitSavepath) : null
+  const fail = (code: 'ERROR' | 'NETWORK' | 'UPSTREAM', message: string, extra: { hint?: string; status?: number; cause?: unknown } = {}) =>
+    new CatbusError(code, message, {
+      hint: extra.hint ?? '种子文件已保存，可以手动添加到 qBittorrent',
+      detail: { qbit: 'failed', id, files, http_status: extra.status ?? null }, cause: extra.cause,
+    })
   let res
   try {
     const cats = await http.request({ url: `${base}/api/v2/torrents/categories`, headers, cookies: false })
-    if (cats.status === 403) throw new CatbusError('ERROR', 'qBittorrent Web UI 拒绝访问：需要对本机地址免认证（Bypass authentication for clients on localhost）')
+    if (cats.status === 403) {
+      throw fail('ERROR', 'qBittorrent Web UI 拒绝访问：需要对本机地址免认证（Bypass authentication for clients on localhost），种子文件已保存', { status: 403, hint: '在 qBittorrent 的 Web UI 设置里勾选「对本地主机上的客户端跳过身份验证」后重试' })
+    }
     if (cats.ok && category && !(category in ((await cats.json()) as object))) {
       await http.request({ method: 'POST', url: `${base}/api/v2/torrents/createCategory`, headers, cookies: false, form: { category, savePath: '' } })
     }
-    const fields: Array<[string, string]> = [['category', category], ['paused', paused], ['stopped', paused], ...(savepath ? [['savepath', savepath] as [string, string]] : [])]
+    const flag = paused ? 'true' : 'false'
+    const fields: Array<[string, string]> = [['category', category], ['paused', flag], ['stopped', flag], ...(savepath ? [['savepath', savepath] as [string, string]] : [])]
     const form = multipartBody(fields, { name: 'torrents', filename: name, data: bytes })
     res = await http.request({
       method: 'POST', url: `${base}/api/v2/torrents/add`, headers: { ...headers, 'content-type': form.contentType }, cookies: false, body: form.body,
     })
   } catch (error) {
-    if (error instanceof CatbusError && error.code === 'ERROR') throw error
-    throw new CatbusError('ERROR', `连不上 qBittorrent Web UI（${base}），种子文件已保存`, {
-      hint: '确认 qBittorrent 已启动并开启 Web UI，或用 CATBUS_MTEAM_QBIT_URL 指定地址', cause: error,
+    if (error instanceof CatbusError && (error.detail as { qbit?: string } | null)?.qbit === 'failed') throw error
+    throw fail('NETWORK', `连不上 qBittorrent Web UI（${base}），种子文件已保存`, {
+      hint: '确认 qBittorrent 已启动并开启 Web UI，或用 CATBUS_MTEAM_QBIT_URL 指定地址；种子文件已保存，可以手动添加', cause: error,
     })
   }
-  const body = (await res.text()).trim()
+  const body = (await res.text().catch(() => '')).trim()
+  const result = { category, savepath, paused }
   if (res.ok && body === 'Ok.') {
-    ctx.log.info(`已推送到 qBittorrent（分类 ${category}${savepath ? `，保存到 ${savepath}` : ''}${ctx.options.qbitPaused ? '，暂停' : ''}）`)
-    return
+    ctx.log.info(`已推送到 qBittorrent（分类 ${category}${savepath ? `，保存到 ${savepath}` : ''}${paused ? '，暂停' : ''}）`)
+    return { status: 'added', ...result }
   }
   if (res.ok && body === 'Fails.') {
     ctx.log.warn('qBittorrent 没有添加这个种子（通常是已经在任务列表里）')
-    return
+    return { status: 'exists', ...result }
   }
-  throw new CatbusError('ERROR', `qBittorrent 添加种子失败：HTTP ${res.status} ${body.slice(0, 80)}`, { hint: '种子文件已保存，可以手动添加' })
+  throw fail('UPSTREAM', `qBittorrent 添加种子失败：HTTP ${res.status} ${body.slice(0, 80)}`, { status: res.status })
 }
 
-export async function itemDownload(ctx: HandlerContext): Promise<File[]> {
+/**
+ * 不带 `--qbit` 时返回 File[]；带 `--qbit` 时返回 `{id, files, qbit}`（AGENTS 4.7），
+ * 推送失败时报错，`detail.files` 列出已保存的文件。
+ */
+export async function itemDownload(ctx: HandlerContext): Promise<File[] | { id: string; files: File[]; qbit: QbitPush }> {
   const id = resolveItem(ctx.args.item!)
   // --meta / --comments / --no-media（AGENTS 4.9「下载」）：种子文件不经 downloadMedia，这里同样处理
   const settings = exportSettings(ctx.options, ctx.log)
@@ -332,10 +351,12 @@ export async function itemDownload(ctx: HandlerContext): Promise<File[]> {
   const dir = await itemDir(ctx, id, title)
   await mkdir(dir, { recursive: true })
   const files = settings.media ? await saveTorrent(ctx, id, dir) : []
-  // --qbit：已存在而跳过下载时，推送本地已有的种子文件
-  if (ctx.options.qbit) await pushToQbit(ctx, `mteam_${id}.torrent`, await readFile(files[0]!.path))
+  // 先写完 ExportDoc 再推送：推送失败时 detail.files 是全部已保存的文件
   if (settings.meta) files.push(await exportItem(ctx, id, dir, settings))
-  return files
+  if (!ctx.options.qbit) return files
+  // 已存在而跳过下载时，推送本地已有的种子文件
+  const qbit = await pushToQbit(ctx, id, `mteam_${id}.torrent`, await readFile(files[0]!.path), files)
+  return { id, files, qbit }
 }
 
 async function saveTorrent(ctx: HandlerContext, id: string, dir: string): Promise<File[]> {

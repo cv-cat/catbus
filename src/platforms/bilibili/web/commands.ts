@@ -5,13 +5,13 @@ import { CatbusError } from '../../../core/errors.js'
 import { downloadMedia, readMedia } from '../../../core/files.js'
 import { imageSize } from '../../../core/image.js'
 import { parseJson } from '../../../core/http.js'
-import { cookieCredential, finishLogin, freshCredential, loginContext, poll, readPassword, showQrcode, smsLogin } from '../../../core/login.js'
+import { cookieCredential, finishLogin, freshCredential, loginContext, poll, qrcodeScanned, readPassword, showQrcode, smsLogin } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
 import * as pb from '../../../core/pb.js'
 import { jsonLoads } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
-import type { AuthStatus, Credential, Danmaku, Item, Media, Series, Subtitle } from '../../../core/schemas.js'
+import { type AuthStatus, type Credential, type Danmaku, type Item, type Media, type Series, type Subtitle, withRaw } from '../../../core/schemas.js'
 import { openSocket, reconnecting } from '../../../core/stream.js'
 import { paged, scope } from '../../../core/toolkit.js'
 import * as api from './api.js'
@@ -79,7 +79,7 @@ export async function authLogin(ctx: Ctx) {
       const code = r.data?.code
       if (code === 0) return r.data.refresh_token ?? ''
       if (code === 86038) throw new CatbusError('AUTH_REQUIRED', '二维码已失效', { hint: '重新执行 catbus bilibili auth login' })
-      if (code === 86090 && last !== code) ctx.log.info('已扫码，请在手机上确认')
+      if (code === 86090 && last !== code) qrcodeScanned(ctx)
       last = code ?? null
       return undefined
     })
@@ -296,17 +296,22 @@ export async function itemList(ctx: Ctx) {
   return paged(list, p + 1, p * Number(d.page?.ps ?? 20) < Number(d.page?.count ?? 0))
 }
 
-/** 播放地址：DASH 取最高画质的视频轨和音频轨；老稿件是 durl 整段。 */
-async function playMedia(b: Bili, bvid: string, cid: string | number): Promise<Media[]> {
+/**
+ * 播放地址：DASH 取最高画质的视频轨和音频轨；`all` 时给出全部轨道（--all-tracks：视频按画质、码率从高到低，
+ * 音频含杜比全景声，按码率从高到低）。老稿件是 durl 整段。
+ */
+async function playMedia(b: Bili, bvid: string, cid: string | number, all = false): Promise<Media[]> {
   const d = await api.playUrl(b, bvid, cid)
   if (d.dash) {
     const duration = n.seconds(d.dash.duration)
-    const video = [...(d.dash.video ?? [])].sort((a: any, c: any) => c.id - a.id || c.bandwidth - a.bandwidth)[0]
-    const audio = [...(d.dash.audio ?? []), ...(d.dash.flac?.audio ? [d.dash.flac.audio] : [])].sort((a: any, c: any) => c.bandwidth - a.bandwidth)[0]
-    const out: Media[] = []
-    if (video) out.push(n.media({ id: String(video.id), type: 'video', url: video.baseUrl ?? video.base_url, width: video.width, height: video.height, duration }, video))
-    if (audio) out.push(n.media({ id: String(audio.id), type: 'audio', url: audio.baseUrl ?? audio.base_url, duration }, audio))
-    return out
+    const videos = [...(d.dash.video ?? [])].sort((a: any, c: any) => c.id - a.id || c.bandwidth - a.bandwidth)
+    const audios = [...(d.dash.audio ?? []), ...(d.dash.flac?.audio ? [d.dash.flac.audio] : []), ...(all ? (d.dash.dolby?.audio ?? []) : [])].sort(
+      (a: any, c: any) => c.bandwidth - a.bandwidth,
+    )
+    const video = (v: any) => n.media({ id: String(v.id), type: 'video', url: v.baseUrl ?? v.base_url, width: v.width, height: v.height, duration }, v)
+    const audio = (a: any) => n.media({ id: String(a.id), type: 'audio', url: a.baseUrl ?? a.base_url, duration }, a)
+    if (all) return [...videos.map(video), ...audios.map(audio)]
+    return [...videos.slice(0, 1).map(video), ...audios.slice(0, 1).map(audio)]
   }
   return (d.durl ?? []).map((x: any) => n.media({ id: String(x.order), type: 'video', url: x.url, duration: n.seconds(x.length / 1000) }, x))
 }
@@ -315,7 +320,7 @@ export async function itemMedia(ctx: Ctx) {
   const b = await bili(ctx)
   const { bvid } = await resolveItem(b, ctx.args.item!)
   const info = await api.videoInfo(b, bvid)
-  return playMedia(b, bvid, info.cid)
+  return playMedia(b, bvid, info.cid, ctx.options.allTracks === true)
 }
 
 export async function itemDownload(ctx: Ctx) {
@@ -770,15 +775,36 @@ export const commentUnpin = (ctx: Ctx) => pinComment(ctx, false)
 
 // ================================================================ 弹幕（扩展）
 
-/** 解 DmSegMobileReply：elems=1，每条 id=1 progress=2 ctime=8 content=7 idStr=12。 */
+/**
+ * 解 DmSegMobileReply：elems=1，每条 id=1 progress=2 mode=3 fontsize=4 color=5 midHash=6 content=7 ctime=8
+ * weight=9 pool=11 idStr=12 attr=13。原始字段挂给 --raw（弹幕的类型、颜色、字号）。
+ */
 export function decodeDanmaku(buf: Uint8Array, bvid: string): Danmaku[] {
-  return pb.messages(pb.decode(buf), 1).map((e) => ({
-    id: pb.str(e, 12) ?? pb.int64(e, 1) ?? '',
-    item_id: bvid,
-    offset: (pb.int(e, 2) ?? 0) / 1000,
-    text: pb.str(e, 7) ?? '',
-    created_at: n.time(pb.int(e, 8)),
-  }))
+  return pb.messages(pb.decode(buf), 1).map((e) =>
+    withRaw(
+      {
+        id: pb.str(e, 12) ?? pb.int64(e, 1) ?? '',
+        item_id: bvid,
+        offset: (pb.int(e, 2) ?? 0) / 1000,
+        text: pb.str(e, 7) ?? '',
+        created_at: n.time(pb.int(e, 8)),
+      },
+      {
+        id: pb.int64(e, 1),
+        progress: pb.int(e, 2),
+        mode: pb.int(e, 3),
+        fontsize: pb.int(e, 4),
+        color: pb.int(e, 5),
+        midHash: pb.str(e, 6),
+        content: pb.str(e, 7),
+        ctime: pb.int(e, 8),
+        weight: pb.int(e, 9),
+        pool: pb.int(e, 11),
+        idStr: pb.str(e, 12),
+        attr: pb.int(e, 13),
+      },
+    ),
+  )
 }
 
 export async function danmakuList(ctx: Ctx) {
@@ -873,6 +899,17 @@ export async function folderItems(ctx: Ctx) {
   const p = page(ctx)
   const d = await api.favResources(b, folder, p)
   return paged((d?.medias ?? []).filter((m: any) => m.bvid).map(norm.favVideo), p + 1, Boolean(d?.has_more))
+}
+
+// ================================================================ keyword
+
+/** 热搜榜（非上游，见 api.searchSquare）：网页端搜索框下的「bilibili 热搜」，按热度排好序；只取 list，不含偶尔出现的置顶词（top_list，没有热度）。 */
+export async function keywordHot(ctx: Ctx) {
+  const b = await bili(ctx)
+  const d = await api.searchSquare(b)
+  return (d?.trending?.list ?? [])
+    .map((x: any) => n.keyword({ text: String(x?.keyword || x?.show_name || ''), heat: n.count(x?.heat_score) }, x))
+    .filter((k: { text: string }) => k.text)
 }
 
 // ================================================================ media
@@ -1010,6 +1047,47 @@ export async function liveCategories(ctx: Ctx) {
     n.category({ id: n.id(p.id), name: p.name }, p),
     ...(p.list ?? []).map((c: any) => n.category({ id: n.id(c.id), name: c.name, parent_id: n.id(c.parent_id ?? p.id) }, c)),
   ])
+}
+
+/** live categories 的 id → 分区页的 (parent_area_id, area_id)：父分区取整个分区（子分区为 0），子分区带上所属父分区。 */
+async function liveArea(b: Bili, category: string): Promise<[string, string]> {
+  const parents: any[] = (await api.areaList(b)).data ?? []
+  for (const p of parents) {
+    if (String(p.id) === category) return [category, '0']
+    const c = (p.list ?? []).find((x: any) => String(x.id) === category)
+    if (c) return [String(c.parent_id ?? p.id), category]
+  }
+  throw new CatbusError('USAGE', `没有 id 为 ${category} 的直播分区`, { hint: 'catbus bilibili live categories' })
+}
+
+// 同一条命令翻页时复用分区解析和 w_webid（分区页 HTML 每条命令只取一次）；缓存随 args 存活，不写入凭证。
+const liveAreaSessions = new WeakMap<Ctx['args'], Promise<{ area: [string, string]; webid: string }>>()
+
+function liveAreaSession(b: Bili, ctx: Ctx, category: string) {
+  let s = liveAreaSessions.get(ctx.args)
+  if (!s) {
+    s = (async () => {
+      const area = await liveArea(b, category)
+      return { area, webid: await api.liveAccessId(b, ...area) }
+    })()
+    liveAreaSessions.set(ctx.args, s)
+  }
+  return s
+}
+
+export async function liveList(ctx: Ctx) {
+  const b = await bili(ctx)
+  const p = page(ctx)
+  const category = ctx.options.category as string | undefined
+  let d: any
+  if (category) {
+    const { area, webid } = await liveAreaSession(b, ctx, category)
+    d = await api.liveAreaList(b, area[0], area[1], p, webid)
+  } else {
+    d = await api.liveIndexList(b, p)
+  }
+  const list = (d.list ?? []).map(norm.listLive)
+  return paged(list, p + 1, list.length > 0 && Number(d.has_more ?? 0) === 1)
 }
 
 export async function liveHistory(ctx: Ctx) {

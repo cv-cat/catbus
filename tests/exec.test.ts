@@ -252,7 +252,7 @@ describe('界面里能运行的命令（AGENTS 4.13）', () => {
     // 这个用例只是不让它被悄悄漏掉：只读的加进 READ_ACTIONS（并改 AGENTS 4.13），其余加进下面这份。
     const WRITE = new Set([
       'add', 'coin', 'collect', 'create', 'delete', 'download', 'edit', 'follow', 'like', 'login', 'logout', 'pin', 'publish', 'read', 'repost',
-      'revoke', 'send', 'start', 'stop', 'triple', 'uncollect', 'unfollow', 'unlike', 'unpin', 'unrepost', 'update', 'upload', 'use', 'listen',
+      'revoke', 'send', 'sort', 'start', 'stop', 'triple', 'uncollect', 'unfollow', 'unlike', 'unpin', 'unrepost', 'update', 'upload', 'use', 'listen',
     ])
     const unknown = [...new Set(all.map(({ c }) => c.action))].filter((a) => !READ_ACTIONS.has(a) && !WRITE.has(a))
     expect(unknown, '这些动作还没有登记是读取还是写入').toEqual([])

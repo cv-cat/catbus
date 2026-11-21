@@ -129,6 +129,15 @@ export async function userInfo(ks: Ks): Promise<Json> {
   return data?.data?.userInfo ?? {}
 }
 
+/**
+ * 非上游：热榜（`keyword hot`）。上游没有这个方法，按旧版网页端首页的 visionHotRank 补的，没有对拍。
+ * 新版网页端（ks-web）已经不展示热榜，接口仍然可用，随时可能下线。
+ */
+export async function hotRank(ks: Ks): Promise<Json> {
+  const data = await ks.graphql('visionHotRank', { page: 'home' }, gql.HOT_RANK, `${WWW}/`)
+  return data?.data?.visionHotRank ?? {}
+}
+
 // ================================================================ 登录：KuaishouLoginAPI
 
 export const SID_LIVE = 'kuaishou.live.web'
@@ -484,6 +493,16 @@ export const roomReferer = (eid: string) => `${LIVE}/u/${eid}`
 
 export async function homeList(ks: Ks): Promise<Json> {
   const [data] = await ks.live('GET', '/live_api/home/list', { referer: `${LIVE}/`, cookieProfile: ks.homeProfile('initial') })
+  return data
+}
+
+/**
+ * 按主播 ID 取直播间（非上游，直播间页 `live.kuaishou.com/u/<eid>` 自己调用的接口）：
+ * 在播时 `liveStream` 带 id、playUrls；没开播时 result 671、只有 author；主播不存在时 result 22。
+ * 原样返回响应，业务码由调用方判断。
+ */
+export async function liveDetail(ks: Ks, eid: string): Promise<Json> {
+  const [data] = await ks.live('GET', '/live_api/liveroom/livedetail', { query: [['principalId', eid]], referer: roomReferer(eid) })
   return data
 }
 

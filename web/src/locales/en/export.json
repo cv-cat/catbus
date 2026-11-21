@@ -1,0 +1,27 @@
+{
+  "title": "Export selected items",
+  "short": "Export",
+  "head": "Export {n} item | Export {n} items",
+  "csv": "Spreadsheet, opens in Excel",
+  "json": "Full structured data",
+  "columns": {
+    "platform": "Platform",
+    "id": "ID",
+    "kind": "Type",
+    "title": "Title",
+    "text": "Text",
+    "author": "Author",
+    "author_url": "Author URL",
+    "created_at": "Published",
+    "views": "Views",
+    "likes": "Likes",
+    "comments": "Comments",
+    "collects": "Collects",
+    "shares": "Shares",
+    "price": "Price",
+    "url": "URL",
+    "size": "Size",
+    "seeders": "Seeders",
+    "leechers": "Leechers"
+  }
+}

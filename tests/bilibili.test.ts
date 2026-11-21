@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { brotliCompressSync, deflateSync } from 'node:zlib'
@@ -275,6 +275,10 @@ async function runCommand(
 }
 
 const ok = (data: unknown) => ({ code: 0, message: '0', data })
+
+/** 直播首页 / 分区列表：真实响应裁剪，直播间、主播、图片地址都换成了虚构值。 */
+const LIVE_FIXTURES = join(import.meta.dirname, 'fixtures', 'bilibili')
+const liveFixture = (name: string) => JSON.parse(readFileSync(join(LIVE_FIXTURES, name), 'utf8'))
 
 // 非上游楼中楼接口：只用虚构评论、用户、视频 aid 和专栏 ID。
 const THREAD_ITEM = 'av100001'
@@ -717,6 +721,27 @@ describe('bilibili 命令：审查修复', () => {
     expect(web().commands.get('folder items')).toMatchObject({ upstream: 'partial', note: expect.stringContaining('非上游') })
   })
 
+  it('keyword hot：网页端搜索框的热搜，heat 取 heat_score，不含置顶词（非上游，没有对拍）', async () => {
+    const trending = {
+      title: 'bilibili热搜',
+      list: [
+        { keyword: '热词一', show_name: '热词一', heat_score: 19184860 },
+        { keyword: '', show_name: '只有展示名', heat_score: '1.2万' },
+        { keyword: '', show_name: '' },
+      ],
+      top_list: [{ keyword: '置顶词', heat_score: 0 }],
+    }
+    const { result, urls, requests } = await runCommand('keywordHot', {}, (url) => (url.includes('search/square') ? ok({ trending }) : ok({})))
+    const square = urls.find((u) => u.includes('search/square'))!
+    expect(square).toBe('https://api.bilibili.com/x/web-interface/wbi/search/square?limit=50&platform=web&web_location=333.1007&w_rid=00944996ef74fab3b147864142c50715&wts=1790000000')
+    expect(requests.find((r) => r.url === square)!.headers).toContainEqual(['referer', 'https://www.bilibili.com/'])
+    expect(result).toEqual([
+      { text: '热词一', heat: 19184860 },
+      { text: '只有展示名', heat: 12000 },
+    ])
+    expect(web().commands.get('keyword hot')).toMatchObject({ upstream: 'partial', note: expect.stringContaining('非上游') })
+  })
+
   it('feed list --kind following：关注的人的视频动态，游标是接口的 offset，跳过没有 bvid 的动态（非上游，没有对拍）', async () => {
     const FEED = 'https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all?type=video&timezone_offset=-480&features=itemOpusStyle'
     const dyn = (bvid: string | null) => ({
@@ -811,6 +836,25 @@ describe('bilibili 命令：审查修复', () => {
       url.includes('/wbi/view') ? ok({ bvid: BVID, cid: 1 }) : ok({ durl: [{ order: 1, url: 'https://v/1.flv', length: 5000 }] }),
     )
     expect(old.result).toMatchObject([{ id: '1', type: 'video', url: 'https://v/1.flv', duration: 5 }])
+
+    // --all-tracks：全部视频轨按画质、码率从高到低，全部音频轨（含杜比全景声）按码率从高到低
+    const withDolby = { ...dash, dolby: { type: 1, audio: [{ id: 30250, bandwidth: 500, baseUrl: 'https://a/dolby' }] } }
+    const all = await runCommand('itemMedia', { args: { item: BVID }, options: { allTracks: true } }, (url) =>
+      url.includes('/wbi/view') ? ok({ bvid: BVID, cid: 1 }) : ok({ dash: withDolby }),
+    )
+    expect(all.result.map((m: any) => [m.type, m.url])).toEqual([
+      ['video', 'https://v/80-high'],
+      ['video', 'https://v/80-low'],
+      ['video', 'https://v/64'],
+      ['audio', 'https://a/flac'],
+      ['audio', 'https://a/dolby'],
+      ['audio', 'https://a/192k'],
+      ['audio', 'https://a/64k'],
+    ])
+    expect(all.result[0][RAW]).toEqual(dash.video[2])
+    // 不带选项时不变：杜比全景声不参与挑最高码率的那一路
+    const best = await runCommand('itemMedia', { args: { item: BVID } }, (url) => (url.includes('/wbi/view') ? ok({ bvid: BVID, cid: 1 }) : ok({ dash: withDolby })))
+    expect(best.result.map((m: any) => m.url)).toEqual(['https://v/80-high', 'https://a/flac'])
   })
 
   it('item subtitles：字幕 JSON 按行归一化', async () => {
@@ -828,6 +872,72 @@ describe('bilibili 命令：审查修复', () => {
       ['1', '辣条', { amount: 100, currency: 'BILI_SILVER' }],
       ['31036', '小花花', { amount: 0.1, currency: 'CNY' }],
     ])
+  })
+
+  it('live list：不带 --category 走直播首页推荐（getListV2，按页翻、不签名）', async () => {
+    const index = liveFixture('live-index.json')
+    const { result, urls, requests } = await runCommand('liveList', {}, () => index)
+    expect(urls).toEqual(['https://api.live.bilibili.com/xlive/web-interface/v1/index/getListV2?platform=web&page=1&web_location=444.7'])
+    expect(requests[0]!.headers).toContainEqual(['origin', 'https://live.bilibili.com'])
+    expect(result.page).toEqual({ cursor: '2', has_more: true })
+    expect(result.data).toEqual([
+      {
+        id: '900001',
+        url: 'https://live.bilibili.com/900001',
+        title: '测试直播间标题1',
+        status: 'live',
+        host: { id: '920001', name: '测试主播1', url: 'https://space.bilibili.com/920001', avatar: 'https://i0.hdslb.com/bfs/face/fake1.jpg' },
+        cover: 'https://i0.hdslb.com/bfs/live/fake_cover_1.jpg',
+        stats: { viewers: 12345 },
+      },
+      {
+        id: '900002',
+        url: 'https://live.bilibili.com/900002',
+        title: '测试直播间标题2',
+        status: 'live',
+        host: { id: '920002', name: '测试主播2', url: 'https://space.bilibili.com/920002', avatar: 'https://i0.hdslb.com/bfs/face/fake2.jpg' },
+        cover: null,
+        stats: { viewers: 678 },
+      },
+    ])
+    expect(result.data[0][RAW]).toEqual(index.data.list[0])
+
+    const next = await runCommand('liveList', { cursor: '3' }, () => ok({ list: [], has_more: 0 }))
+    expect(next.urls[0]).toContain('&page=3&')
+    expect(next.result.page).toEqual({ cursor: null, has_more: false })
+  })
+
+  it.each([
+    ['父分区', '2', '2', '0'],
+    ['子分区', '329', '2', '329'],
+  ])('live list --category %s：按 live categories 解析出 (父, 子)，取分区页的 access_id 作 w_webid 再 wbi 签名', async (_kind, category, parent, area) => {
+    const route = (url: string) => {
+      if (url.includes('/getWebAreaList')) return liveFixture('live-area-list.json')
+      if (url.startsWith('https://live.bilibili.com/p/eden/area-tags')) return readFileSync(join(LIVE_FIXTURES, 'live-area-page.html'), 'utf8')
+      return liveFixture('live-area.json')
+    }
+    const { result, urls, requests } = await runCommand('liveList', { options: { category }, cursor: '2' }, route)
+    expect(urls).toHaveLength(3)
+    expect(urls[0]).toBe('https://api.live.bilibili.com/xlive/web-interface/v1/index/getWebAreaList?source_id=2')
+    expect(urls[1]).toBe(`https://live.bilibili.com/p/eden/area-tags?parentAreaId=${parent}&areaId=${area}`)
+    expect(requests[1]!.headers).toContainEqual(['referer', 'https://live.bilibili.com/'])
+    expect(urls[2]).toMatch(
+      new RegExp(
+        `^https://api\\.live\\.bilibili\\.com/xlive/web-interface/v1/second/getList\\?platform=web&parent_area_id=${parent}&area_id=${area}` +
+          '&sort_type=&page=2&vajra_business_key=&web_location=444\\.253&w_webid=fake\\.webid\\.token&w_rid=[0-9a-f]{32}&wts=1790000000$',
+      ),
+    )
+    expect(result.page).toEqual({ cursor: '3', has_more: true })
+    expect(result.data.map((l: any) => [l.id, l.host.name, l.cover, l.stats.viewers])).toEqual([
+      ['800001', '测试主播1', 'https://i0.hdslb.com/bfs/live/fake_user_cover_1.jpg', 12345],
+      ['800002', '测试主播2', 'https://i0.hdslb.com/bfs/live/fake_cover_2.jpg', 678],
+    ])
+  })
+
+  it('live list --category：不存在的分区报 USAGE，提示 live categories，不请求列表', async () => {
+    const { error, urls } = await runCommand('liveList', { options: { category: '99999' } }, () => liveFixture('live-area-list.json'))
+    expect(error).toMatchObject({ code: 'USAGE', hint: 'catbus bilibili live categories' })
+    expect(urls).toHaveLength(1)
   })
 
   it('live send：弹幕和送礼都返回直播间 id', async () => {
@@ -1008,6 +1118,30 @@ describe('bilibili 纯算', () => {
     ])
   })
 
+  it('视频弹幕 --raw：挂上原始字段（类型、字号、颜色），取不到的为 null', () => {
+    const W = pb.protobuf.Writer
+    // id=1 progress=2 mode=3 fontsize=4 color=5 content=7 ctime=8 pool=11 idStr=12
+    const e = W.create().uint32(8).int64(7).uint32(16).int32(3000).uint32(24).int32(5).uint32(32).int32(25).uint32(40).uint32(16711680)
+    e.uint32(58).string('顶部红字').uint32(64).int64(1700000000).uint32(88).int32(1).uint32(98).string('77')
+    const reply = W.create().uint32(10).bytes(e.finish())
+    const [d] = commands.decodeDanmaku(reply.finish(), BVID)
+    expect(d).toMatchObject({ id: '77', offset: 3, text: '顶部红字' })
+    expect((d as any)[RAW]).toEqual({
+      id: '7',
+      progress: 3000,
+      mode: 5,
+      fontsize: 25,
+      color: 16711680,
+      midHash: null,
+      content: '顶部红字',
+      ctime: 1700000000,
+      weight: null,
+      pool: 1,
+      idStr: '77',
+      attr: null,
+    })
+  })
+
   it('直播长连 pack / unpack：头 16 字节；zlib（ver 2）、brotli（ver 3）嵌套解开，op 3 为人气值', () => {
     const head = commands.pack(Buffer.from('ab'), 7, 0)
     expect([...head.subarray(0, 16)]).toEqual([0, 0, 0, 18, 0, 16, 0, 0, 0, 0, 0, 7, 0, 0, 0, 1])
@@ -1053,7 +1187,10 @@ describe('bilibili 纯算', () => {
   it('直播长连：人气值与未映射的 cmd 输出为 other', () => {
     expect(norm.popularityEvent(1234)).toMatchObject({ type: 'other', text: '人气值 1234', user: null })
     expect(norm.liveEvent({ cmd: 'WATCHED_CHANGE', data: { num: 12000, text_large: '1.2万人看过' } })).toMatchObject({ type: 'other', text: '1.2万人看过' })
-    expect(norm.liveEvent({ cmd: 'ONLINE_RANK_COUNT', data: { count: 3 } })).toMatchObject({ type: 'other', text: 'ONLINE_RANK_COUNT', user: null })
+    expect(norm.liveEvent({ cmd: 'ONLINE_RANK_COUNT', data: { count: 3 } })).toMatchObject({ type: 'other', text: '在线 3', user: null, stats: { viewers: 3, likes: null } })
+    expect(norm.liveEvent({ cmd: 'ONLINE_RANK_COUNT', data: { count: 3, online_count: 1520, online_count_text: '1520' } })).toMatchObject({ stats: { viewers: 1520 } })
+    expect(norm.liveEvent({ cmd: 'LIKE_INFO_V3_UPDATE', data: { click_count: 8765 } })).toMatchObject({ type: 'other', text: '点赞 8765', stats: { viewers: null, likes: 8765 } })
+    expect(norm.liveEvent({ cmd: 'DANMU_MSG', info: [[0, 1, 25, 0, 1700000000000], '弹幕', [7, '观众']] })).toMatchObject({ stats: null })
     expect(norm.liveEvent({ cmd: 'GUARD_BUY', data: { uid: 5, username: 'g', gift_name: '舰长', num: 1, start_time: 1700000000 } })).toMatchObject({
       type: 'gift',
       user: { id: '5', name: 'g' },
@@ -1368,6 +1505,35 @@ describe('bilibili 合集（series）', () => {
   })
 })
 
+describe('bilibili：列表里的视频时长（normalize）', () => {
+  it('durationOf 认秒数和「mm:ss」「h:mm:ss」，取不到为 null', async () => {
+    const { durationOf } = await import('../src/platforms/bilibili/web/normalize.js')
+    expect(durationOf(411)).toBe(411)
+    expect(durationOf('28:24')).toBe(1704)
+    expect(durationOf('1:02:03')).toBe(3723)
+    expect(durationOf('0:00')).toBeNull()
+    expect(durationOf('')).toBeNull()
+    expect(durationOf('ab:cd')).toBeNull()
+    expect(durationOf(null)).toBeNull()
+  })
+
+  it('各列表的视频卡片带一条 url 为 null、只有时长的视频 Media', async () => {
+    const norm = await import('../src/platforms/bilibili/web/normalize.js')
+    const media = (it: { media: unknown[] }) => JSON.parse(JSON.stringify(it.media))
+    const one = (duration: number, width: number | null = null, height: number | null = null) => [{ id: null, type: 'video', url: null, width, height, duration }]
+    expect(media(norm.searchVideo({ bvid: 'BV1', duration: '28:24' }))).toEqual(one(1704))
+    expect(media(norm.spaceVideo({ bvid: 'BV1', length: '03:04' }))).toEqual(one(184))
+    expect(media(norm.feedVideo({ bvid: 'BV1', duration: 14381 }))).toEqual(one(14381))
+    expect(media(norm.favVideo({ bvid: 'BV1', duration: 46 }))).toEqual(one(46))
+    expect(media(norm.followingVideo({ modules: { module_dynamic: { major: { archive: { bvid: 'BV1', duration_text: '02:22' } } } } })!)).toEqual(one(142))
+    // view：竖屏稿件 dimension.rotate=1 时宽高对调
+    expect(media(norm.video({ bvid: 'BV1', duration: 60, dimension: { width: 1920, height: 1080, rotate: 1 } }))).toEqual(one(60, 1080, 1920))
+    expect(media(norm.archive({ Archive: { bvid: 'BV1', duration: 30, dimension: { width: 1920, height: 1080, rotate: 0 } } }))).toEqual(one(30, 1920, 1080))
+    // 没有时长时仍是空数组
+    expect(norm.searchVideo({ bvid: 'BV1' }).media).toEqual([])
+  })
+})
+
 describe('bilibili 投稿话题搜索', () => {
   const TOPIC = '/x/vupre/web/topic/search'
   const page = (offset: number, more: boolean, topics: unknown[]) => ok({ result: { topics, page_info: { offset, has_more: more } } })
@@ -1429,5 +1595,48 @@ describe('bilibili 投稿话题搜索', () => {
   it('命令注册为已实现的可分页搜索', () => {
     const c = web().commands.get('topic search')!
     expect(c).toMatchObject({ status: 'implemented', paged: true })
+  })
+})
+
+describe('bilibili live list：CLI 分页', () => {
+  useTempHome()
+
+  it('--category --all 翻到 has_more 为 0；分区页 HTML 每条命令只取一次，新命令重新取', async () => {
+    await writeCredential(loggedCtx().credential)
+    const area = liveFixture('live-area.json')
+    const pages: number[] = []
+    const htmls: string[] = []
+    const restoreRand = deterministic({ now: NOW })
+    const restore = mockSender((p) => {
+      const json = (body: object) => fakeResponse(body, { headers: [['content-type', 'application/json']], url: p.url })
+      if (p.url.includes('/getWebAreaList')) return json(liveFixture('live-area-list.json'))
+      if (p.url.startsWith('https://live.bilibili.com/p/eden/area-tags')) {
+        htmls.push(p.url)
+        return fakeResponse(readFileSync(join(LIVE_FIXTURES, 'live-area-page.html'), 'utf8'), { headers: [['content-type', 'text/html']], url: p.url })
+      }
+      const u = new URL(p.url)
+      expect(u.pathname).toBe('/xlive/web-interface/v1/second/getList')
+      expect(u.searchParams.get('w_webid')).toBe('fake.webid.token')
+      const pn = Number(u.searchParams.get('page'))
+      pages.push(pn)
+      const list = area.data.list.map((v: any) => ({ ...v, roomid: v.roomid + pn * 10 }))
+      return json(ok({ ...area.data, list, has_more: pn < 3 ? 1 : 0 }))
+    })
+    try {
+      const all = await cli('bilibili', 'live', 'list', '--category', '86', '-a', 'default', '-q', '--all')
+      expect(all.code).toBe(0)
+      expect(all.env).toMatchObject({ ok: true, resource: 'live', action: 'list', page: { cursor: null, has_more: false } })
+      expect(all.env.data.map((l: any) => l.id)).toEqual(['800011', '800012', '800021', '800022', '800031', '800032'])
+      expect(pages).toEqual([1, 2, 3])
+      expect(htmls).toEqual(['https://live.bilibili.com/p/eden/area-tags?parentAreaId=2&areaId=86'])
+
+      const limited = await cli('bilibili', 'live', 'list', '--category', '86', '-a', 'default', '-q', '--limit', '3')
+      expect(limited.env.data).toHaveLength(3)
+      expect(limited.env.page).toEqual({ cursor: '2#skip=1', has_more: true })
+      expect(htmls).toHaveLength(2)
+    } finally {
+      restore()
+      restoreRand()
+    }
   })
 })

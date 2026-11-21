@@ -159,6 +159,8 @@ const Ticket = z.strictObject({
   url: str,
   train_no: str,
   type: str,
+  start: z.strictObject({ code: str, name: str }),
+  end: z.strictObject({ code: str, name: str }),
   from: TicketStation,
   to: TicketStation,
   depart: str,

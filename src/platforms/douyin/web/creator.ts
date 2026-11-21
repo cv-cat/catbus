@@ -159,7 +159,14 @@ async function creatorApi(d: Douyin, method: 'GET' | 'POST', path: string, o: Cr
   }
 }
 
-function ok(body: DyJson, what: string): DyJson {
+function requireCreatorSession(d: Douyin, body: DyJson): void {
+  if (body.status_code === 8 || body.status_code === 2483) {
+    throw authError(d.ctx, '抖音创作者中心会话未登录或已失效')
+  }
+}
+
+function ok(d: Douyin, body: DyJson, what: string): DyJson {
+  requireCreatorSession(d, body)
   if (body.status_code != null && body.status_code !== 0) throw new CatbusError('UPSTREAM', `${what} 失败：${body.status_msg ?? body.status_code}`, { detail: { status_code: body.status_code } })
   return body
 }
@@ -185,6 +192,7 @@ export async function uploadAuth(d: Douyin, referer = POST_VIDEO_REFERER): Promi
   const h = await xhrHeaders(d, referer)
   const query = await signedParams(d)
   const body = jsonLoads(await (await d.request({ url: `${CREATOR}/web/api/media/upload/auth/v5/`, headers: h.list(), query })).text())
+  requireCreatorSession(d, body)
   let sts: Sts
   try {
     sts = jsonLoads(body.auth)
@@ -322,7 +330,7 @@ export async function uploadVideo(d: Douyin, sts: Sts, file: LocalMedia, userId:
 
 /** 素材的访问地址（上游 get_creator_media_url）。 */
 export async function mediaUrl(d: Douyin, uri: string): Promise<string> {
-  const body = ok(await creatorApi(d, 'GET', '/aweme/v1/creator/get/url/', { initial: [['uri', uri]] }), 'creator/get/url')
+  const body = ok(d, await creatorApi(d, 'GET', '/aweme/v1/creator/get/url/', { initial: [['uri', uri]] }), 'creator/get/url')
   const url = body.url?.url_list?.[0]
   if (!url) throw new CatbusError('UPSTREAM', 'creator/get/url 没有返回地址')
   return url
@@ -335,7 +343,7 @@ export async function mediaUrl(d: Douyin, uri: string): Promise<string> {
  * 实录不带 msToken / a_bogus。上游只取第一页（max_cursor=0），翻页时换成上一页返回的 max_cursor。
  */
 export async function workList(d: Douyin, maxCursor: string | number = 0): Promise<DyJson> {
-  return creatorApi(d, 'GET', '/janus/douyin/creator/pc/work_list', {
+  const body = await creatorApi(d, 'GET', '/janus/douyin/creator/pc/work_list', {
     initial: [
       ['scene', 'star_atlas'],
       ['device_platform', 'android'],
@@ -346,6 +354,8 @@ export async function workList(d: Douyin, maxCursor: string | number = 0): Promi
     msToken: false,
     sign: false,
   })
+  requireCreatorSession(d, body)
+  return body
 }
 
 // ---------------------------------------------------------------- 发布
@@ -410,6 +420,8 @@ export interface PublishOptions {
   mixId?: string
   /** 关联热点：common.hot_sentence 取它的 word。 */
   hotSpot?: { word: string }
+  /** 主动声明内容由 AI 生成。 */
+  aiGenerated?: boolean
 }
 
 /** mix_id / poi / hot_sentence 追加到 common 末尾（上游 build_*_create_item 的可选段）。 */
@@ -420,6 +432,11 @@ function withExtras(common: Record<string, unknown>, o: PublishOptions, hotSente
     common.poi_name = o.poi.poi_name ?? ''
   }
   if (hotSentence && o.hotSpot) common.hot_sentence = o.hotSpot.word ?? ''
+}
+
+/** 创作者中心 create_v2 表单把自主声明序列化为 item.declare 下的 JSON 字符串。 */
+function aiDeclaration(enabled?: boolean) {
+  return enabled ? { declare: { user_declare_info: compactJson({ choose_value: 'aigc' }) } } : {}
 }
 
 /** 图文的 create_v2 item（上游 build_image_create_item）。 */
@@ -441,7 +458,14 @@ export function imageItem(images: ImageInfo[], o: PublishOptions, creationId: st
     creation_id: creationId,
   }
   withExtras(common, o, true)
-  return { item: { common, cover: { poster: cover }, anchor: o.poi ? { poi: o.poi } : {} } }
+  return {
+    item: {
+      common,
+      cover: { poster: cover },
+      anchor: o.poi ? { poi: o.poi } : {},
+      ...aiDeclaration(o.aiGenerated),
+    },
+  }
 }
 
 /** 封面编辑器状态（上游 build_video_cover_tools_extend_info，没有推荐帧时的默认结构）。 */
@@ -531,6 +555,7 @@ export function videoItem(info: VideoInfo, posterUri: string, o: PublishOptions,
       sync: { should_sync: false, sync_to_toutiao: 0 },
       open_platform: {},
       assistant: { is_preview: 0, is_post_assistant: 1 },
+      ...aiDeclaration(o.aiGenerated),
     },
   }
 }
@@ -612,9 +637,10 @@ export async function postVideo(d: Douyin, video: LocalMedia, cover: LocalMedia 
   const userId = await creatorUid(d)
   const cid = creationId()
   await workList(d)
-  ok(await creatorApi(d, 'GET', '/aweme/v1/cover/gen/ref/', { initial: [['creation_id', cid]] }), 'cover/gen/ref')
+  ok(d, await creatorApi(d, 'GET', '/aweme/v1/cover/gen/ref/', { initial: [['creation_id', cid]] }), 'cover/gen/ref')
   const feats = compactJson({ has_ai_metadata: false, is_xing_tu_submit: false, has_marketing_poi: false, item_type: 'video' })
   ok(
+    d,
     await creatorApi(d, 'GET', '/aweme/v3/user_declaration/suggestion/', {
       initial: [
         ['scene', 'new_self_media_before_publish'],

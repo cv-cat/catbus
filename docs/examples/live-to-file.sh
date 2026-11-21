@@ -17,7 +17,7 @@
 #   CATBUS    catbus 命令，默认 catbus；从源码运行时可设为 "node /path/to/catbus/dist/cli/main.js"
 #
 # 输出：每行一个 Event（AGENTS.md 6.2），例如
-#   {"type":"chat","time":"2026-09-29T20:00:01+08:00","user":{"id":"...","name":"...","url":"..."},"text":"...","gift":null}
+#   {"type":"chat","time":"2026-09-29T20:00:01+08:00","user":{"id":"...","name":"...","url":"..."},"text":"...","gift":null,"stats":null}
 #   type 取值 chat / gift / like / enter / follow / other。
 #
 # 依赖：bash；jq 只用于结束时的统计，没有 jq 也能录。

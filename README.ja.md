@@ -38,9 +38,10 @@ npm i -g catbus-cli         # 必要なのは Node だけ
 catbus bilibili auth login  # QR コードでログイン
 catbus bilibili item search cat --limit 20
 catbus tui           # コマンドを覚えたくない？全画面 UI を使う
+catbus web           # ローカルの Web UI で見る
 ```
 
-Docker やソースからのインストールは[クイックスタートガイド](docs/guide/quick-start.md)、全画面 UI は[ターミナル UI](docs/guide/tui.md)をご覧ください。
+Docker やソースからのインストールは[クイックスタートガイド](docs/guide/quick-start.md)、全画面 UI は[ターミナル UI](docs/guide/tui.md)をご覧ください。`catbus web` はローカルの Web UI を開き、プラットフォームをまたいで検索・閲覧・ダウンロードできます。[オンラインデモ](https://catbus-demo.crush-hub.com)（デモデータ、ログイン不要）もあります。
 
 ## ひとつのコマンド体系で、すべてのプラットフォームを
 
@@ -84,7 +85,7 @@ catbus 12306 ticket search beijing shanghai           # 列車の空席を検索
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/platforms-dark.svg">
-  <img src="assets/platforms-light.svg" alt="乗車済み 15 プラットフォーム、soon の 27 は準備中" width="100%">
+  <img src="assets/platforms-light.svg" alt="乗車済み 16 プラットフォーム、soon の 26 は準備中" width="100%">
 </picture>
 
 `soon` が付いているものは準備中です。目標はすべてのプラットフォーム。足りなければ [issue を立てる](https://github.com/cv-cat/catbus/issues)か、[自分で追加](.github/CONTRIBUTING.md)してください。1 プラットフォームは 1 ディレクトリです。各プラットフォームの対応状況は[機能一覧](docs/capabilities.md)にあります。

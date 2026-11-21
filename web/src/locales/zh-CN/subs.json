@@ -1,0 +1,58 @@
+{
+  "title": "订阅",
+  "eyebrow": "关键词和作者的新内容",
+  "nav": {
+    "unread": "{n} 条未读"
+  },
+  "kind": {
+    "keyword": "关键词",
+    "author": "作者"
+  },
+  "button": {
+    "subscribe": "订阅",
+    "subscribed": "已订阅",
+    "unsubscribe": "再点一次取消订阅",
+    "tipKeyword": "有新的搜索结果时在订阅页提醒",
+    "tipAuthor": "这位作者发了新作品时在订阅页提醒"
+  },
+  "list": {
+    "label": "订阅列表",
+    "checked": "{time}检查",
+    "never": "还没检查"
+  },
+  "content": {
+    "count": "{n} 条新内容",
+    "markRead": "全部标为已读",
+    "check": "立即检查",
+    "pausedTip": "这个平台的订阅已暂停，先恢复",
+    "remove": "取消订阅",
+    "removeConfirm": "再点一次确认",
+    "error": "上次检查失败：{reason}",
+    "emptyTitle": "没有新内容",
+    "emptyDesc": "有新内容时会出现在这里。只在 catbus web 运行时检查，大约每 30 分钟一次。",
+    "pendingTitle": "等待第一次检查",
+    "pendingDesc": "第一次检查只记下已有的内容，之后出现的才算新内容。"
+  },
+  "paused": {
+    "title": "{platform}遇到风控，订阅已暂停",
+    "desc": "在登录了同一账号的浏览器里完成验证后，点「恢复」继续检查。",
+    "resume": "恢复"
+  },
+  "empty": {
+    "title": "还没有订阅",
+    "desc": "在发现页搜索后点计数旁的「订阅」，或在作者页点「订阅」。有新内容时会显示在这里。"
+  },
+  "error": {
+    "title": "读不到订阅"
+  },
+  "toast": {
+    "added": "已订阅「{name}」",
+    "view": "查看",
+    "removed": "已取消订阅「{name}」",
+    "full": "最多 {n} 条订阅，先取消一些",
+    "failed": "订阅失败：{reason}",
+    "checkedNew": "有 {n} 条新内容",
+    "checkedNone": "暂时没有新内容",
+    "resumed": "{platform}的订阅已恢复"
+  }
+}

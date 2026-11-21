@@ -5,11 +5,11 @@ import { CatbusError } from './errors.js'
 import { readTextIfExists, writeFileAtomic } from './fsutil.js'
 import { configFile } from './paths.js'
 
-/** config.toml（AGENTS 5.5、5.7）：proxy、timeout、<platform>.proxy、youtube.browser。 */
+/** config.toml（AGENTS 5.5、5.7）：proxy、timeout、<platform>.proxy、youtube.browser、discord.browser。 */
 
 export const DEFAULT_TIMEOUT = 30
 const PROXY_SCHEMES = ['http:', 'https:', 'socks4:', 'socks5:', 'socks5h:']
-const KEYS_HINT = '可用的配置项：proxy、timeout、<platform>.proxy、youtube.browser'
+const KEYS_HINT = '可用的配置项：proxy、timeout、<platform>.proxy、youtube.browser、discord.browser'
 
 type Table = Record<string, unknown>
 
@@ -58,8 +58,7 @@ export function parseKey(key: string, resolvePlatform: (name: string) => string 
   if (key === 'proxy' || key === 'timeout') return [key]
   const m = /^([^.]+)\.(proxy|browser)$/.exec(key)
   const id = m && resolvePlatform(m[1]!)
-  // browser 目前只有 youtube 用到（AGENTS 5.7）
-  if (!m || !id || (m[2] === 'browser' && id !== 'youtube')) throw new CatbusError('USAGE', `未知的配置项：${key}`, { hint: KEYS_HINT })
+  if (!m || !id || (m[2] === 'browser' && id !== 'youtube' && id !== 'discord')) throw new CatbusError('USAGE', `未知的配置项：${key}`, { hint: KEYS_HINT })
   return [id, m[2] as 'proxy' | 'browser']
 }
 

@@ -1,0 +1,27 @@
+{
+  "title": "選択した項目をエクスポート",
+  "short": "エクスポート",
+  "head": "{n} 件をエクスポート",
+  "csv": "表形式、Excel で開けます",
+  "json": "完全な構造化データ",
+  "columns": {
+    "platform": "プラットフォーム",
+    "id": "ID",
+    "kind": "種類",
+    "title": "タイトル",
+    "text": "本文",
+    "author": "投稿者",
+    "author_url": "投稿者リンク",
+    "created_at": "投稿日時",
+    "views": "再生",
+    "likes": "いいね",
+    "comments": "コメント",
+    "collects": "保存",
+    "shares": "シェア",
+    "price": "価格",
+    "url": "リンク",
+    "size": "サイズ",
+    "seeders": "シード",
+    "leechers": "ダウンロード"
+  }
+}

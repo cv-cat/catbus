@@ -1,6 +1,6 @@
 import { CatbusError } from '../../../core/errors.js'
 import { buildUrl, type HttpClient } from '../../../core/http.js'
-import { cookieCredential, finishLogin, freshCredential, loginContext, poll, showQrcode } from '../../../core/login.js'
+import { cookieCredential, finishLogin, freshCredential, loginContext, poll, qrcodeScanned, showQrcode } from '../../../core/login.js'
 import { jsonLoads } from '../../../core/py.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { Account, Credential } from '../../../core/schemas.js'
@@ -100,7 +100,7 @@ export async function qrcodeLogin(ctx: HandlerContext): Promise<Account> {
         const status = await checkQrcode(http, qruuid, guard)
         if (status === STATUS_SCANNED && !scanned) {
           scanned = true
-          ctx.log.info('已扫码，请在手机上确认')
+          qrcodeScanned(ctx)
         }
         return status === STATUS_CONFIRMED ? true : undefined
       },

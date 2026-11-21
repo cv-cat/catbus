@@ -1,0 +1,23 @@
+{
+  "title": "作者",
+  "eyebrow": "{platform} · 作者ページ",
+  "origin": "元のページ",
+  "works": "すべての作品",
+  "empty": "この作者の公開{item}はまだありません",
+  "loaded": {
+    "withTotal": "{n} / {total} 件を読み込み済み",
+    "count": "{n} 件を読み込み済み"
+  },
+  "header": {
+    "label": "{name}のページ",
+    "fallbackName": "作者",
+    "loading": "作者を読み込み中",
+    "unknown": "不明な作者"
+  },
+  "stats": {
+    "followers": "フォロワー",
+    "following": "フォロー",
+    "items": "作品",
+    "likes": "いいね"
+  }
+}

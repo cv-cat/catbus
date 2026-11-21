@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { resolve as resolvePath } from 'node:path'
 import { text as readStdin } from 'node:stream/consumers'
 import { z } from 'zod'
-import { checkAccountName, endpointFlag, getCurrent, GUEST, newCredential, readCredential, syncStatusUser, writeCredential } from '../core/auth-store.js'
+import { checkAccountName, endpointFlag, getCurrent, GUEST, migrateDiscordDesktopAuth, newCredential, readCredential, syncStatusUser, writeCredential } from '../core/auth-store.js'
 import { resolveNetwork } from '../core/config.js'
 import { CatbusError, toCatbusError } from '../core/errors.js'
 import { createLogger, type Logger, redact } from '../core/log.js'
@@ -32,7 +32,7 @@ import { FORMATS, type Format, Output, parseFields } from './output.js'
 
 z.config(z.locales.zhCN())
 
-const GLOBAL_COMMANDS = ['platforms', 'doctor', 'auth', 'config', 'version', 'tui']
+const GLOBAL_COMMANDS = ['platforms', 'doctor', 'auth', 'config', 'version', 'web', 'tui']
 
 function printHelp(text: string): number {
   process.stdout.write(text + '\n')
@@ -53,12 +53,17 @@ export async function run(argv: string[]): Promise<number> {
     if (g.fields != null) out.fields = parseFields(g.fields)
     const log = createLogger({ verbose: g.verbose, quiet: g.quiet })
 
+    // --web 是 catbus web 的别名（AGENTS 4.10）：catbus --web stop 等同于 catbus web stop
+    if (g.web) {
+      const words = parsed.positionals[0] === 'web' ? parsed.positionals.slice(1) : parsed.positionals
+      return await runGlobal('web', words, parsed, out, log)
+    }
     const [first, ...rest] = parsed.positionals
     if (first == null) {
-      if (g.version && !g.help) return await runGlobal('version', [], parsed, out)
+      if (g.version && !g.help) return await runGlobal('version', [], parsed, out, log)
       return printHelp(rootHelp())
     }
-    if (GLOBAL_COMMANDS.includes(first)) return await runGlobal(first, rest, parsed, out)
+    if (GLOBAL_COMMANDS.includes(first)) return await runGlobal(first, rest, parsed, out, log)
     const platform = findPlatform(first)
     if (!platform) {
       throw new CatbusError('USAGE', `未知的平台或命令：${first}`, { hint: 'catbus platforms 列出所有平台；catbus --help 查看用法' })
@@ -71,11 +76,20 @@ export async function run(argv: string[]): Promise<number> {
   }
 }
 
-async function runGlobal(name: string, words: string[], parsed: Parsed, out: Output): Promise<number> {
+async function runGlobal(name: string, words: string[], parsed: Parsed, out: Output, log: Logger): Promise<number> {
   const action = words[0] ?? null
   out.meta = { platform: null, endpoint: null, resource: name, action: null, account: null }
   if (parsed.global.help) return printHelp(GLOBAL_HELP[name]!)
   if (parsed.global['dry-run']) throw new CatbusError('USAGE', '--dry-run 只用于平台命令', { hint: `catbus ${name} --help` })
+  if (name === 'web') {
+    const { web, WEB_OPTIONS } = await import('./commands/web.js')
+    const extra = Object.keys(parsed.options).filter((k) => !(k in WEB_OPTIONS))
+    if (extra.length) throw new CatbusError('USAGE', `catbus web 不接受选项 --${flagName(extra[0]!)}`, { hint: 'catbus web --help' })
+    if (words.length > 1) throw new CatbusError('USAGE', `多余的参数：${words.slice(1).join(' ')}`, { hint: 'catbus web --help' })
+    out.meta.action = action
+    await web(action, parsed.options, log, (info) => out.result(info))
+    return 0
+  }
   const extra = Object.keys(parsed.options)
   if (extra.length) throw new CatbusError('USAGE', `catbus ${name} 不接受选项 --${flagName(extra[0]!)}`, { hint: `catbus ${name} --help` })
   const noArgs = () => {
@@ -135,8 +149,8 @@ async function runGlobal(name: string, words: string[], parsed: Parsed, out: Out
   throw new CatbusError('ERROR', `未处理的全局命令：${name}`)
 }
 
-function parseEndpoint(value: string | undefined): Endpoint {
-  if (value == null) return 'web'
+function parseEndpoint(value: string | undefined, fallback: Endpoint): Endpoint {
+  if (value == null) return fallback
   if (!(ENDPOINTS as readonly string[]).includes(value)) {
     throw new CatbusError('USAGE', `不支持的端：${value}`, { hint: '-e web、-e app 或 -e pc' })
   }
@@ -175,7 +189,7 @@ function unsupported(platform: Platform, endpoint: Endpoint, resource: string, a
 
 async function runPlatform(platform: Platform, words: string[], parsed: Parsed, out: Output, log: Logger): Promise<number> {
   const g = parsed.global
-  const endpoint = parseEndpoint(g.endpoint)
+  const endpoint = parseEndpoint(g.endpoint, platform.defaultEndpoint)
   const p = platform.id
   const [resource, action, ...argWords] = words
   out.meta = { platform: p, endpoint, resource: resource ?? null, action: action ?? null, account: null }
@@ -185,7 +199,7 @@ async function runPlatform(platform: Platform, words: string[], parsed: Parsed, 
   const ep = platform.endpoints[endpoint]
   const known = hasResource(platform, resource)
   if (action == null || g.help) {
-    const listed = ep === 'planned' ? platform.endpoints.web : ep
+    const listed = ep === 'planned' ? platform.endpoints[platform.defaultEndpoint] : ep
     const found = action != null && listed !== 'planned' ? listed.commands.get(`${resource} ${action}`) : undefined
     if (found) return printHelp(commandHelp(platform, endpoint, found))
     if (known) return printHelp(resourceHelp(platform, endpoint, resource))
@@ -393,6 +407,7 @@ export async function resolveIdentity(
   log: Logger,
 ): Promise<{ account: string | null; credential: Credential }> {
   const p = platform.id
+  if (p === 'discord' && endpoint === 'pc') await migrateDiscordDesktopAuth()
   const e = endpointFlag(endpoint)
   const ep = platform.endpoints[endpoint] as AvailableEndpoint
   const blank = () => newCredential({ platform: p, endpoint, account: GUEST, method: 'guest' })
