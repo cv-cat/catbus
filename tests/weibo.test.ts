@@ -150,10 +150,10 @@ describe('weibo 对拍：命令流程', () => {
     expect(cookies.find((x) => x.name === 'SUB' && x.domain === '.weibo.com')?.value).toBe('_2A25fakeSUB0000')
   })
 
-  it('item search：综合搜索，合并顶层与 card_group 里的微博；只取第一页', async () => {
+  it('item searchM（旧实现，回退）：综合搜索，合并顶层与 card_group 里的微博；只取第一页', async () => {
     const c = loadCase('weibo', 'mobile_search')
     const ctx = loggedCtx({ args: { keyword: '猫 咪&狗' } })
-    const { requests, result, error } = await replay(withVisitor(c, '.weibo.cn'), () => cmd.itemSearch(ctx))
+    const { requests, result, error } = await replay(withVisitor(c, '.weibo.cn'), () => cmd.itemSearchM(ctx))
     if (error) throw error
     expectVisitor(requests[0]!, 'visitor.passport.weibo.cn', 'https://m.weibo.cn/')
     expectRequests(requests.slice(1), visitorCookies(c.requests))
@@ -379,7 +379,7 @@ describe('weibo 行为', () => {
     const wall = { status: 200, headers: {}, body: { ok: -100, url: 'https://passport.weibo.com/sso/signin' } }
     const ctx = loggedCtx({ args: { keyword: '猫 咪&狗' } })
     ctx.credential.scopes.main!.cookies.push({ name: 'SUB', value: 'stale', domain: '.weibo.cn', path: '/', expires: null })
-    const renewed = await replay({ ...c, responses: [wall, visitorResponse('.weibo.cn'), ...c.responses] }, () => cmd.itemSearch(ctx))
+    const renewed = await replay({ ...c, responses: [wall, visitorResponse('.weibo.cn'), ...c.responses] }, () => cmd.itemSearchM(ctx))
     if (renewed.error) throw renewed.error
     expect(renewed.requests.map((r) => r.url.split('?')[0])).toEqual([
       'https://m.weibo.cn/api/container/getIndex',
@@ -393,7 +393,7 @@ describe('weibo 行为', () => {
     ])
     expect((renewed.result as any).data).toHaveLength(2)
 
-    const fresh = await replay({ ...c, responses: [visitorResponse('.weibo.cn'), wall] }, () => cmd.itemSearch(loggedCtx({ args: { keyword: '猫' } })))
+    const fresh = await replay({ ...c, responses: [visitorResponse('.weibo.cn'), wall] }, () => cmd.itemSearchM(loggedCtx({ args: { keyword: '猫' } })))
     expect(fresh.requests).toHaveLength(2)
     expect(fresh.error).toMatchObject({ code: 'AUTH_REQUIRED' })
   })
@@ -729,5 +729,108 @@ describe('weibo keyword hot（非上游，fixture）', () => {
     }
     const p = await cli('platforms', 'weibo')
     expect(p.env.data.commands).toContainEqual(expect.objectContaining({ resource: 'keyword', action: 'hot', status: 'implemented', upstream: 'partial', note: expect.stringContaining('非上游') }))
+  })
+})
+
+// ---------------------------------------------------------------- item search：主站综合搜索（非上游，见 api.siteSearch；没有对拍，用真机响应裁剪的 fixture 覆盖）
+
+const siteFixture = (name: string) => readFileSync(join(import.meta.dirname, 'fixtures/weibo', name), 'utf8')
+
+/** 按完整 URL 回放（搜索的两页是同一个路径 /weibo）。 */
+function mockSite(routes: Record<string, string | { status: number; location?: string; body?: string }>) {
+  const calls: { url: string; headers: [string, string][] }[] = []
+  return {
+    calls,
+    restore: mockSender((p) => {
+      calls.push({ url: p.url, headers: p.headers })
+      const r = routes[p.url]
+      if (r == null) throw new Error(`未录制的请求：${p.url}`)
+      if (typeof r === 'string') return fakeResponse(r, { headers: [['content-type', 'text/html']] })
+      return fakeResponse(r.body ?? '', {
+        status: r.status,
+        headers: r.location ? [['location', r.location]] : [['content-type', 'text/html']],
+      })
+    }),
+  }
+}
+
+describe('weibo item search：主站综合搜索（fixture）', () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  it('第一页：请求 s.weibo.com/weibo?q=…&page=1，卡片解析成统一的 Item，广告卡过滤', async () => {
+    const m = mockSite({ 'https://s.weibo.com/weibo?q=%E5%92%96%E5%95%A1&page=1': siteFixture('site_search_p1.html') })
+    try {
+      const result = await cmd.itemSearch(loggedCtx({ args: { keyword: '咖啡' } }))
+      const r = result as { data: any[]; page: { cursor: string | null; has_more: boolean } }
+      expect(m.calls).toHaveLength(1)
+      expect(m.calls[0]!.url).toBe('https://s.weibo.com/weibo?q=%E5%92%96%E5%95%A1&page=1')
+      expect(Object.fromEntries(m.calls[0]!.headers)).toMatchObject({ referer: 'https://s.weibo.com/' })
+      // 广告卡（wb-ad-tile）被过滤，其余按页面顺序
+      expect(r.data.map((x) => x.id)).toEqual(['5100000000000001', '5100000000000002', '5100000000000003'])
+      expect(r.data[0]).toMatchObject({
+        kind: 'text',
+        url: 'https://weibo.com/10001/FakeBid0001',
+        text: '周末愉快\n[来抱抱]',
+        author: { id: '10001', name: '测试用户A' },
+      })
+      expect(r.data[0]!.stats).toMatchObject({ likes: 289, comments: 10, shares: 4 })
+      expect(r.data[1]).toMatchObject({
+        kind: 'image',
+        text: '第一行\n第二行 #咖啡#',
+        cover: 'https://wx1.sinaimg.cn/large/fakepic1.jpg',
+      })
+      expect(r.data[1]!.media.map((x: any) => x.url)).toEqual([
+        'https://wx1.sinaimg.cn/large/fakepic1.jpg',
+        'https://wx2.sinaimg.cn/large/fakepic2.jpg',
+      ])
+      expect(r.data[2]).toMatchObject({
+        kind: 'video',
+        cover: 'https://wx4.sinaimg.cn/orj480/fakeposter.jpg',
+        media: [{ type: 'video', url: 'https://f.video.weibocdn.com/o0/fakevideo.mp4?label=mp4_720p&Expires=1899999999&ssig=FakeSig' }],
+      })
+      expect(r.page).toEqual({ cursor: '2', has_more: true })
+    } finally {
+      m.restore()
+    }
+  })
+
+  it('翻页：cursor 是页码，第二页请求 page=2；分页器没有 page=3 就结束', async () => {
+    const m = mockSite({
+      'https://s.weibo.com/weibo?q=%E5%92%96%E5%95%A1&page=1': siteFixture('site_search_p1.html'),
+      'https://s.weibo.com/weibo?q=%E5%92%96%E5%95%A1&page=2': siteFixture('site_search_p2.html'),
+    })
+    try {
+      const ctx = loggedCtx({ args: { keyword: '咖啡' } })
+      const first = (await cmd.itemSearch(ctx)) as { page: { cursor: string | null } }
+      expect(first.page.cursor).toBe('2')
+
+      const second = (await cmd.itemSearch({ ...ctx, cursor: first.page.cursor! })) as { data: any[]; page: { cursor: string | null; has_more: boolean } }
+      expect(m.calls[1]!.url).toBe('https://s.weibo.com/weibo?q=%E5%92%96%E5%95%A1&page=2')
+      expect(second.data.map((x) => x.id)).toEqual(['5100000000000010'])
+      expect(second.data[0]).toMatchObject({ text: '十月的一条微博', created_at: '2026-10-01T09:00:00+08:00' })
+      expect(second.page).toEqual({ cursor: null, has_more: false })
+    } finally {
+      m.restore()
+    }
+  })
+
+  it('未登录：s.weibo.com 302 到 passport → AUTH_EXPIRED（有账号但登录态失效）；页面要求验证 → RISK_CONTROL', async () => {
+    const m = mockSite({
+      'https://s.weibo.com/weibo?q=%E5%92%96%E5%95%A1&page=1': { status: 302, location: 'https://passport.weibo.com/sso/signin?entry=wb' },
+      'https://s.weibo.com/weibo?q=%E7%8C%AB&page=1': '<html>…geetest 验证页…</html>',
+    })
+    try {
+      await expect(cmd.itemSearch(loggedCtx({ args: { keyword: '咖啡' } }))).rejects.toMatchObject({ code: 'AUTH_EXPIRED' })
+      await expect(cmd.itemSearch(loggedCtx({ args: { keyword: '猫' } }))).rejects.toMatchObject({ code: 'RISK_CONTROL' })
+    } finally {
+      m.restore()
+    }
+  })
+
+  it('parseSiteSearch：相对时间按给定 now 归一化成 YYYY-MM-DD HH:MM（n.time 只认这个格式）', () => {
+    const now = new Date('2026-11-21T13:00:00+08:00')
+    const items = cmd.parseSiteSearch(siteFixture('site_search_p1.html'), now)
+    expect(items.map((x) => x.created_at)).toEqual(['2026-11-21 13:14', '2026-11-20 11:30', '2026-11-21 12:57'])
+    expect(items.map((x) => x.mid)).toEqual(['5100000000000001', '5100000000000002', '5100000000000003'])
   })
 })
