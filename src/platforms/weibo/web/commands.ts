@@ -103,13 +103,151 @@ function searchMblogs(cards: any[]): any[] {
 }
 
 /**
- * 只取第一页：m.weibo.cn 用访客身份访问（登录 cookie 不发往 .weibo.cn），访客从第二页起就是登录墙；
- * 上游 searchSome 的 page 参数同样翻不过去。
+ * 旧实现（上游 searchSome，m.weibo.cn 容器 100103type=1）：m.weibo.cn 用访客身份访问（登录 cookie
+ * 不发往 .weibo.cn），访客从第二页起就是登录墙；即使换用登录会话，容器接口也从第二页起返回 ok=-100
+ * （2026-11 实测）。只能取第一页，保留为回退（item search 现走主站搜索页，见下面的 itemSearch）。
  */
-export async function itemSearch(ctx: Ctx) {
+export async function itemSearchM(ctx: Ctx) {
   const w = new Weibo(ctx)
   const body = await api.mobileSearch(w, ctx.args.keyword!, 1)
   return paged(searchMblogs(body.data?.cards).map((m) => norm.mblog(m)), null, false)
+}
+
+// ---------------------------------------------------------------- item search：主站综合搜索（非上游，见 api.siteSearch）
+
+/**
+ * 主站搜索卡片的时间（`今天13:14`、`11月20日 11:30`、`3分钟前`、`2026-11-20`，可能带「转赞人数…」尾巴）
+ * → `YYYY-MM-DD HH:MM`（n.time 只认这个格式；北京时间，vitest 与对拍都固定 Asia/Shanghai）。
+ */
+function siteTime(raw: unknown, now: Date): string | null {
+  const s = String(raw ?? '').replace(/转赞人数.*$/, '').trim()
+  if (!s) return null
+  const two = (v: number | string) => String(v).padStart(2, '0')
+  const ymd = (d: Date) => `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`
+  let m: RegExpExecArray | null
+  if ((m = /^(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2}):(\d{2})/.exec(s))) return `${m[1]}-${m[2]}-${m[3]} ${two(Number(m[4]))}:${m[5]}`
+  if ((m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s))) return `${m[1]}-${m[2]}-${m[3]} 00:00`
+  if ((m = /^今天\s*(\d{1,2}):(\d{2})/.exec(s))) return `${ymd(now)} ${two(Number(m[1]))}:${m[2]}`
+  if ((m = /^昨天\s*(\d{1,2}):(\d{2})/.exec(s))) {
+    const d = new Date(now.getTime() - 86_400_000)
+    return `${ymd(d)} ${two(Number(m[1]))}:${m[2]}`
+  }
+  if ((m = /^(\d{1,2})月(\d{1,2})日\s*(\d{1,2}):(\d{2})/.exec(s))) {
+    const d = new Date(now.getFullYear(), Number(m[1]) - 1, Number(m[2]), Number(m[3]), Number(m[4]))
+    if (d.getTime() > now.getTime() + 86_400_000) d.setFullYear(d.getFullYear() - 1)
+    return `${ymd(d)} ${two(Number(m[3]))}:${two(Number(m[4]))}`
+  }
+  if ((m = /^(\d{1,2})月(\d{1,2})日$/.exec(s))) {
+    const d = new Date(now.getFullYear(), Number(m[1]) - 1, Number(m[2]))
+    if (d.getTime() > now.getTime() + 86_400_000) d.setFullYear(d.getFullYear() - 1)
+    return `${ymd(d)} 00:00`
+  }
+  if (/^\d+\s*秒前/.test(s)) return `${ymd(now)} ${two(now.getHours())}:${two(now.getMinutes())}`
+  if ((m = /^(\d+)\s*分钟前/.exec(s))) {
+    const d = new Date(now.getTime() - Number(m[1]) * 60_000)
+    return `${ymd(d)} ${two(d.getHours())}:${two(d.getMinutes())}`
+  }
+  if ((m = /^(\d+)\s*小时前/.exec(s))) {
+    const d = new Date(now.getTime() - Number(m[1]) * 3_600_000)
+    return `${ymd(d)} ${two(d.getHours())}:${two(d.getMinutes())}`
+  }
+  return null
+}
+
+/** 缩略图地址换成原图：/orj360、/thumb180、/mw1024 这类尺寸段 → /large。 */
+const LARGE_RE = /\/(orj360|thumb\d*|bmiddle|mw\d+)\//
+/** 图片列表：<a action-data=…pic_id=…> 后面紧跟的 <img src=…sinaimg…>。 */
+const IMG_TAGS_RE = /action-data="[^"]*pic_id=([0-9A-Za-z_-]+)[^"]*"[\s\S]{0,600}?<img[^>]*?src="((?:https?:)?\/\/[^"\s]+?sinaimg[^"\s]+)"/g
+
+/** 主站搜索的一张微博卡（feed_list_item 锚点块）→ 伪 mblog，喂给 norm.mblog 走统一归一化；非微博卡返回 null。 */
+function parseSiteCard(block: string, now: Date): any | null {
+  if (/wb-ad-tile|sinaads|data-aid=|>推广<|>广告</.test(block)) return null
+  const mid = /mid="(\d+)"/.exec(block)?.[1]
+  if (!mid) return null
+  const uid = /uid=(\d+)/.exec(block)?.[1] ?? /weibo\.com\/(\d+)/.exec(block)?.[1] ?? null
+  const nick = /nick-name="([^"]*)"/.exec(block)?.[1] ?? null
+  const bid =
+    (uid ? new RegExp(`weibo\\.com/${uid}/([0-9A-Za-z]+)`).exec(block)?.[1] : null) ??
+    /weibo\.com\/\d+\/([0-9A-Za-z]+)/.exec(block)?.[1] ??
+    null
+  const txt = /node-type="feed_list_content(_full)?"[^>]*>([\s\S]*?)<\/p>/.exec(block)?.[2] ?? null
+  const text = txt
+    ? (n.plainText(txt) ?? '')
+        .split('\n')
+        .map((l) => l.replace(/\s+/g, ' ').trim())
+        .filter(Boolean)
+        .join('\n') || null
+    : null
+  const from = /class="from"[^>]*>\s*(?:<a[^>]*>)?([\s\S]*?)<\//.exec(block)?.[1] ?? null
+  const pics = [...block.matchAll(IMG_TAGS_RE)]
+    .map((mm) => ({ pid: mm[1]!, url: mm[2]!.replace(LARGE_RE, '/large/') }))
+    .filter((p) => p.pid && p.url)
+  // 视频在 WB_video_h5 的 data-str 里：JS 对象字面量，单引号字符串（HTML 里转义成 \'，也有不转义的），poster 后可能带空格
+  const vsrc = /src:\s*\\?'((?:\/\/|https?:\/\/)f\.video\.weibocdn\.com[^']+?)\\?'/.exec(block)?.[1] ?? null
+  const vposter = /poster:\s*\\?'([^']+?)\\?'/.exec(block)?.[1] ?? null
+  let likes: number | null = null
+  let comments: number | null = null
+  let shares: number | null = null
+  for (const m of block.matchAll(/action-type="feed_list_(forward|comment|like)"[^>]*>([\s\S]*?)<\/a>/g)) {
+    const num = n.count(m[2]!.replace(/<[^>]+>/g, ' ').trim())
+    if (m[1] === 'forward') shares = num
+    else if (m[1] === 'comment') comments = num
+    else likes = num
+  }
+  return {
+    idstr: mid,
+    mid,
+    mblogid: bid,
+    user: uid ? { idstr: uid, screen_name: nick } : null,
+    text_raw: text,
+    created_at: siteTime(from, now),
+    ...(pics.length ? { pics } : {}),
+    ...(vsrc
+      ? { page_info: { type: 'video', media_info: { mp4_hd_url: vsrc }, ...(vposter ? { page_pic: { url: vposter } } : {}) } }
+      : {}),
+    attitudes_count: likes,
+    comments_count: comments,
+    reposts_count: shares,
+  }
+}
+
+/** s.weibo.com 综合搜索页 HTML → 伪 mblog[]（按 mid 去重、保序；导出供离线测试）。 */
+export function parseSiteSearch(html: string, now: Date = new Date(rand.now())): any[] {
+  // 先剥掉 HTML 注释：注释紧跟在卡片 div 之间，里面若提到 wb-ad-tile 这类标记词，会污染上一张卡的块
+  const clean = html.replace(/<!--[\s\S]*?-->/g, '')
+  const out: any[] = []
+  const seen = new Set<string>()
+  // 锚点是卡片 div 标签里的 action-type="feed_list_item" 属性，在 class 之后：块从所在 div 的开标签起切。
+  // 否则广告位自己的 class（wb-ad-tile）会落在上一张卡的块里（把上一张误杀），而自己的块反而没有它。
+  const anchors = [...clean.matchAll(/action-type="feed_list_item"/g)].map((m) => Math.max(0, clean.lastIndexOf('<div', m.index!)))
+  for (let i = 0; i < anchors.length; i++) {
+    const block = clean.slice(anchors[i], Math.min(anchors[i + 1] ?? anchors[i] + 20_000, anchors[i] + 20_000))
+    const mb = parseSiteCard(block, now)
+    if (!mb || seen.has(mb.mid)) continue
+    seen.add(mb.mid)
+    out.push(mb)
+  }
+  return out
+}
+
+/**
+ * 综合搜索改走主站 s.weibo.com（非上游，见 api.siteSearch）：.weibo.com 的登录 cookie 天然覆盖
+ * s.weibo.com，page 参数直接翻页（2026-11 协议实验实测）。cursor 即页码；has_more 看分页器里
+ * 有没有 page=N+1 的链接。
+ */
+export async function itemSearch(ctx: Ctx) {
+  const w = new Weibo(ctx)
+  const page = Math.max(1, Number(ctx.cursor) || 1)
+  const res = await api.siteSearch(w, ctx.args.keyword!, page)
+  // 未登录（或登录态失效）时 s.weibo.com 302 到 passport
+  if (res.status >= 300 && res.status < 400) throw authError(w.ctx, '微博搜索需要登录')
+  const html = res.text ?? ''
+  if (/passport\.weibo\.com\/(anon|verifyuser)|wt_?captcha|geetest|\/aj\/captcha/.test(html)) {
+    throw new CatbusError('RISK_CONTROL', '微博搜索触发验证，请稍后再试', { detail: { kind: 'blocked', page } })
+  }
+  const mblogs = parseSiteSearch(html)
+  const hasNext = mblogs.length > 0 && new RegExp(`[?&]page=${page + 1}["&]`).test(html)
+  return paged(mblogs.map((m) => norm.mblog(m)), hasNext ? String(page + 1) : null, hasNext)
 }
 
 /** post_weibo 的 type（请求里的 visible）：0 公开、1 仅自己可见、6 朋友圈可见、10 粉丝可见。 */

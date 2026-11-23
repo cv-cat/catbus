@@ -52,7 +52,7 @@ catbus weibo auth login --cookie @weibo-cookie.txt
 | 命令 | 状态 | 说明 |
 |---|---|---|
 | `item get` | ✓ | 微博详情。 |
-| `item search` | ◐ | 搜索微博。只能取第一页（m.weibo.cn 的访客从第二页起要求登录）。 |
+| `item search` | ✓ | 搜索微博。主站 s.weibo.com 综合搜索，登录态下可翻页（cursor 即页码）。 |
 | `item publish` | ✓ | 发布微博。`--image`（最多 15 张）和 `--video` 不能同时用。取值：`--visibility` public / private / friends / fans。不支持 `--title`、`--cover`、`--tag`、`--mention`、`--poi`、`--category`、`--schedule`、`--price`。私有选项 `--poi-name`。 |
 | `item list`、`item media`、`item download`、`item like`、`item unlike`、`item collect`、`item uncollect`、`item repost`、`item unrepost`、`item delete` | ○ | 规划中 |
 
@@ -123,7 +123,7 @@ catbus weibo user items "https://weibo.com/u/<uid>" --limit 50 -o jsonl
 catbus weibo item get "<weibo_url>"
 catbus weibo comment list "<weibo_url>" --all -o jsonl > comments.jsonl
 
-# 搜索（只有第一页）
+# 搜索（登录态下自动翻页取满 --limit）
 catbus weibo item search 咖啡
 
 # 发一条仅自己可见的微博，带图和地点标签
@@ -132,7 +132,7 @@ catbus weibo item publish --text "今天的咖啡" --image latte.jpg --poi-name 
 
 ## 已知限制
 
-- **搜索只能取第一页**：m.weibo.cn 的访客从第二页起要求登录，`--limit` / `--all` 也只会返回第一页。
+- **搜索需要登录**：搜索走主站 s.weibo.com，未登录（或登录态失效）报 AUTH_REQUIRED，触发验证时报 RISK_CONTROL。m.weibo.cn 的容器接口访客从第二页起就是登录墙，不再用于搜索（保留为回退，同样只能取第一页）。
 - **只有一级评论**：`comment list` 不含楼中楼；`comment replies` 规划中。
 - **删不掉微博**：`item delete` 上游没有（○），发出去的微博要在网页或 App 里手动删除。测试发布请用 `--visibility private`。
 - **PC 端详情不移植**：上游的 `WeiboApis.getWorkInfo` 取的是 weibo.com 页面里的 `$CONFIG`，现在的 weibo.com 是单页应用，那里没有正文；catbus 的 `item get` 走 m.weibo.cn。

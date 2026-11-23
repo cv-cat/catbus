@@ -234,11 +234,12 @@
 - **上游凭证来源**：无。仓库另带一个 FastAPI 服务 `app.py`，不移植。
 - **API**
   - `apis/weibo_apis.py` 的 `WeiboApis`：`get_self_info`、`getUserInfo`、`getUserPosted`、`getWordComments`、`getWorkInfo`、`searchSome`、`get_user_all_posted`、`getHotTimeline`（推荐流 → `feed list`，`hot` 是同一条流；翻页把上一页响应里的 `since_id` 对象序列化成紧凑 JSON 原样回传）、`getFriendsTimeline`（关注流 → `feed list --kind following`，翻页带上一页的 `max_id`）
-  - `apis/weibo_mobile_apis.py` 的 `WeiboMobileApis`（m.weibo.cn，上游不带 cookie；catbus 带访客 cookie，见 1.2）：`getWorkInfo`（`item get`，`comment list` 缺作者 uid 时也用它查）、`searchSome`（`item search`：访客从第二页起是登录墙，只取第一页）。
+  - `apis/weibo_mobile_apis.py` 的 `WeiboMobileApis`（m.weibo.cn，上游不带 cookie；catbus 带访客 cookie，见 1.2）：`getWorkInfo`（`item get`，`comment list` 缺作者 uid 时也用它查）、`searchSome`（旧搜索实现 `itemSearchM`：访客从第二页起是登录墙，只取第一页，保留为回退）。
   - `apis/weibo_creator_apis.py` 的 `WeiboCreaterApis.post_weibo`。`type`（请求里的 `visible`）：0 公开、1 仅自己、6 朋友圈（互相关注）、10 粉丝，对应 `--visibility public / private / friends / fans`
 - **没有移植的**
   - `WeiboApis.getWorkInfo(url)`：请求 `weibo.com/<uid>/<mblogid>`，只取页面里的 `window.$CONFIG`。现在的 weibo.com 是单页应用，页面只是一个壳，`$CONFIG` 是全站配置（登录时多一个当前用户 `user`，`get_self_info` 取的就是它），没有微博正文；正文由前端另外请求 `/ajax/statuses/show`，上游没有这个接口。上游自己的 `app.py` 取详情也走 `WeiboMobileApis.getWorkInfo`。
   - `WeiboApis.searchSome`：只发请求，解析被注释掉，永远返回 None。
+- **非上游（catbus 补充）**：`item search` 改走主站综合搜索页 `s.weibo.com/weibo?q=…&page=N`（`api.siteSearch`，网页端「综合」搜索的 HTML；.weibo.com 的登录 cookie 天然覆盖 s.weibo.com，page 参数直接翻页），没有对拍，用真机响应裁剪的 fixture 命令测试覆盖。改走它的原因：m.weibo.cn 的容器接口（上游 searchSome）访客从第二页起是登录墙，换成登录会话也从第二页起返回 ok=-100（2026-11 实测），只能取第一页；主站搜索页在登录态下可以直接翻页。搜索卡的解析在 `commands.parseSiteSearch`（HTML → 伪 mblog，复用 `norm.mblog` 归一化）。上游的 searchSome 保留为 `itemSearchM` 回退。
 - **非上游（catbus 补充）**：`keyword hot` 按网页端热搜榜补的 `GET weibo.com/ajax/side/hotSearch`（`api.hotSearch`，新版前端 weibo-pro-next 的 `RANK_TAB_GROUP_MAP.search`），没有对拍；只取 `data.realtime`，去掉广告位（`is_ad`），置顶词（`hotgov`）不收。
 - **JS 资产**：`static/weibo.js` 存在，但 Python 里没有引用，不复制。
 

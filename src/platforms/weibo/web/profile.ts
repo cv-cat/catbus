@@ -245,6 +245,29 @@ export function formHeaders(t: string): HeaderPairs {
   ]
 }
 
+// ================================================================ 主站搜索（非上游）
+
+/** s.weibo.com 综合搜索页的 HTML 请求头（非上游：item search 改走主站搜索页，见 api.siteSearch）。 */
+export function siteSearchHeaders(): HeaderPairs {
+  return [
+    ['accept', DOC_ACCEPT],
+    ['accept-language', 'zh-CN,zh;q=0.9'],
+    ['cache-control', 'no-cache'],
+    ['pragma', 'no-cache'],
+    ['priority', 'u=0, i'],
+    ['referer', 'https://s.weibo.com/'],
+    ['sec-ch-ua', SEC_CH_UA_132],
+    ['sec-ch-ua-mobile', '?0'],
+    ['sec-ch-ua-platform', '"Windows"'],
+    ['sec-fetch-dest', 'document'],
+    ['sec-fetch-mode', 'navigate'],
+    ['sec-fetch-site', 'same-origin'],
+    ['sec-fetch-user', '?1'],
+    ['upgrade-insecure-requests', '1'],
+    ['user-agent', UA_132],
+  ]
+}
+
 // ================================================================ 访客（上游没有，见 client.ts）
 
 /** 新浪访客系统 genvisitor2 的 XHR 头：与访客页里 ufp.util.postData 发出的一致。 */

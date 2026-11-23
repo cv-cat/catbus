@@ -29,7 +29,7 @@ export default definePlatform({
         'user unfollow': 'none',
 
         'item get': impl('full', 'itemGet'),
-        'item search': impl('partial', 'itemSearch', { note: '只能取第一页（m.weibo.cn 的访客从第二页起要求登录）' }),
+        'item search': impl('full', 'itemSearch', { note: '主站 s.weibo.com 综合搜索，登录态下可翻页（cursor 即页码）' }),
         'item list': 'none',
         'item media': 'none',
         'item download': 'none',

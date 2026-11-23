@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>s.weibo.com 综合搜索第一页（测试用假数据，结构照真机裁剪）</title></head>
+<body>
+<div class="card-wrap m-con-center" node-type="feed_list_page0">
+
+<!-- 卡1：纯文字，相对时间「今天」，表情 img（alt 文本进正文） -->
+<div class="card-wrap" action-type="feed_list_item" mid="5100000000000001" >
+  <div class="card-top"><h4 class="title"></h4></div>
+  <p class="txt" node-type="feed_list_content" nick-name="测试用户A" >周末愉快<br /><img alt="[来抱抱]" src="//face.t.sinajs.cn/t4/style/images/face_emoji_1.png" /></p>
+  <div class="from"  >
+    <a href="//weibo.com/10001/FakeBid0001?refer_flag=1001030103_" target="_blank" suda-data="key=tblog_search_weibo">今天13:14</a>
+    <span>&nbsp;转赞人数 291</span>
+  </div>
+  <div class="card-act">
+    <ul>
+      <li><a action-data="mid=5100000000000001" action-type="feed_list_forward" suda-data="key=tblog_search_weibo"> <span class="woo-box-flex woo-box-alignCenter woo-box-justifyCenter toolbar_iconWrap"><i class="woo-font woo-font--retweet toolbar_icon"></i></span> 4</a></li>
+      <li><a action-type="feed_list_comment" suda-data="key=tblog_search_weibo"> <span class="woo-box-flex woo-box-alignCenter woo-box-justifyCenter toolbar_iconWrap"><i class="woo-font woo-font--comment toolbar_icon"></i></span> 10</a></li>
+      <li><a action-type="feed_list_like" suda-data="key=tblog_search_weibo"> <span class="woo-box-flex woo-box-alignCenter woo-box-justifyCenter toolbar_iconWrap"><i class="woo-font woo-font--like toolbar_icon"></i></span> 289</a></li>
+    </ul>
+  </div>
+</div>
+
+<!-- 卡2：图两张，全文节点，时间「11月20日 11:30」 -->
+<div class="card-wrap" action-type="feed_list_item" mid="5100000000000002" >
+  <p class="txt" node-type="feed_list_content_full" nick-name="测试用户B" >第一行<br />第二行 <a href="/weibo?q=%23%E5%92%96%E5%95%A1%23"><span class="surl-text">#咖啡#</span></a></p>
+  <div class="from"  >
+    <a href="//weibo.com/10002/FakeBid0002?refer_flag=1001030103_" target="_blank" suda-data="key=tblog_search_weibo">11月20日 11:30</a>
+    <span>&nbsp;转赞人数 60</span>
+  </div>
+  <div class="media media-piclist" node-type="fl_pic_list" action-data="uid=10002&mid=5100000000000002&pic_ids=fakepic1,fakepic2">
+    <ul class="pictlist">
+      <li class="pli"><a action-data="uid=10002&mid=5100000000000002&pic_id=fakepic1&gif_url=&ai_tip=0" action-type="fl_pics" href="javascript:void(0);"><img src="//wx1.sinaimg.cn/orj360/fakepic1.jpg" /></a></li>
+      <li class="pli"><a action-data="uid=10002&mid=5100000000000002&pic_id=fakepic2&gif_url=&ai_tip=0" action-type="fl_pics" href="javascript:void(0);"><img src="//wx2.sinaimg.cn/mw1024/fakepic2.jpg" /></a></li>
+    </ul>
+  </div>
+  <div class="card-act">
+    <ul>
+      <li><a action-type="feed_list_forward" suda-data="key=tblog_search_weibo"> <span class="woo-box-flex woo-box-alignCenter woo-box-justifyCenter toolbar_iconWrap"><i class="woo-font woo-font--retweet toolbar_icon"></i></span> 12</a></li>
+      <li><a action-type="feed_list_comment" suda-data="key=tblog_search_weibo"> <span class="woo-box-flex woo-box-alignCenter woo-box-justifyCenter toolbar_iconWrap"><i class="woo-font woo-font--comment toolbar_icon"></i></span> 3</a></li>
+      <li><a action-type="feed_list_like" suda-data="key=tblog_search_weibo"> <span class="woo-box-flex woo-box-alignCenter woo-box-justifyCenter toolbar_iconWrap"><i class="woo-font woo-font--like toolbar_icon"></i></span> 45</a></li>
+    </ul>
+  </div>
+</div>
+
+<!-- 卡3：视频（WB_video_h5 的 data-str，src / poster） -->
+<div class="card-wrap" action-type="feed_list_item" mid="5100000000000003" >
+  <p class="txt" node-type="feed_list_content" nick-name="测试用户C" >一条带视频的微博</p>
+  <div class="from"  >
+    <a href="//weibo.com/10003/FakeBid0003?refer_flag=1001030103_" target="_blank" suda-data="key=tblog_search_weibo">3分钟前</a>
+    <span>&nbsp;转赞人数 6</span>
+  </div>
+  <div class="media media-video" node-type="feed_list_media_prev">
+    <div class="thumbnail" style="height:auto;min-height:304px;">
+      <a href="javascript:void(0);" class="WB_video_h5" data-str="{
+	muted: false,
+	autoplay: false,
+	sources: [
+        {
+          type:'video/mp4',
+          src:'//f.video.weibocdn.com/o0/fakevideo.mp4?label=mp4_720p&Expires=1899999999&ssig=FakeSig'
+        },
+	],
+	poster: 'https://wx4.sinaimg.cn/orj480/fakeposter.jpg',
+	address: 'https://weibo.com/tv/show/FakeVid'
+}">视频</a>
+    </div>
+  </div>
+  <div class="card-act">
+    <ul>
+      <li><a action-type="feed_list_forward" suda-data="key=tblog_search_weibo"> <span class="woo-box-flex woo-box-alignCenter woo-box-justifyCenter toolbar_iconWrap"><i class="woo-font woo-font--retweet toolbar_icon"></i></span> 1</a></li>
+      <li><a action-type="feed_list_comment" suda-data="key=tblog_search_weibo"> <span class="woo-box-flex woo-box-alignCenter woo-box-justifyCenter toolbar_iconWrap"><i class="woo-font woo-font--comment toolbar_icon"></i></span> 2</a></li>
+      <li><a action-type="feed_list_like" suda-data="key=tblog_search_weibo"> <span class="woo-box-flex woo-box-alignCenter woo-box-justifyCenter toolbar_iconWrap"><i class="woo-font woo-font--like toolbar_icon"></i></span> 3</a></li>
+    </ul>
+  </div>
+</div>
+
+<!-- 卡4：广告位（wb-ad-tile），过滤 -->
+<div class="card-wrap wb-ad-tile" action-type="feed_list_item" mid="5199999999999999" >
+  <p class="txt" node-type="feed_list_content" nick-name="推广账号" >这是一条广告</p>
+  <div class="from"  ><a href="//weibo.com/10999/FakeAd0001" target="_blank">11月19日 10:00</a></div>
+</div>
+
+<!-- 分页器：有 page=2，has_more -->
+<div class="m-page">
+  <a href="/weibo?q=%E5%92%96%E5%95%A1&page=1">上一页</a>
+  <span class="cur">1</span>
+  <a href="/weibo?q=%E5%92%96%E5%95%A1&page=2">2</a>
+  <a href="/weibo?q=%E5%92%96%E5%95%A1&page=3">3</a>
+  <a href="/weibo?q=%E5%92%96%E5%95%A1&page=2" class="next">下一页</a>
+</div>
+
+</div>
+</body>
+</html>

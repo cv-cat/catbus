@@ -1,6 +1,6 @@
 import { CatbusError } from '../../../core/errors.js'
 import { parseJson } from '../../../core/http.js'
-import { jsonDumps, jsonLoads, type Pairs } from '../../../core/py.js'
+import { jsonDumps, jsonLoads, quote, type Pairs } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { Weibo, WeiboJson } from './client.js'
 import {
@@ -12,6 +12,7 @@ import {
   postImageHeaders,
   postVideoHeaders,
   searchHeaders,
+  siteSearchHeaders,
   uploadImageHeaders,
   uploadVideoHeaders,
   videoCheckHeaders,
@@ -138,7 +139,7 @@ export async function mobileDetail(w: Weibo, id: string): Promise<any> {
   }
 }
 
-/** searchSome：综合搜索（容器 100103type=1）。 */
+/** searchSome：综合搜索（容器 100103type=1）。访客从第二页起要求登录，只能取第一页；保留给回退与对拍。 */
 export function mobileSearch(w: Weibo, query: string, page: number | string = 1) {
   return w.json('cn', {
     url: `${MOBILE}/api/container/getIndex`,
@@ -148,6 +149,22 @@ export function mobileSearch(w: Weibo, query: string, page: number | string = 1)
       ['page_type', 'searchall'],
       ['page', String(page)],
     ],
+  })
+}
+
+// ================================================================ 主站搜索（非上游）
+
+/**
+ * 非上游：主站综合搜索页（s.weibo.com/weibo?q=…&page=N，网页端「综合」搜索的 HTML）。
+ * 上游的 searchSome（m.weibo.cn 容器接口）只能取第一页：访客从第二页起就是登录墙，换成登录会话也
+ * 返回 ok=-100（2026-11 实测）。主站搜索页在 .weibo.com 的登录 cookie 下可以直接用 page 翻页，
+ * 所以 item search 改走这里（commands.itemSearch），mobileSearch 保留为回退。
+ * 没有对拍，用真机响应裁剪的 fixture 命令测试覆盖（tests/fixtures/weibo/site_search_*.html）。
+ */
+export function siteSearch(w: Weibo, query: string, page: number | string = 1) {
+  return w.html('com', {
+    url: `https://s.weibo.com/weibo?q=${quote(query, '')}&page=${String(page)}`,
+    headers: siteSearchHeaders(),
   })
 }
 
