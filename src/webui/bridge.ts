@@ -2,6 +2,7 @@ import { createReadStream, statSync } from 'node:fs'
 import { ZipFile } from 'yazl'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { AbortedError, runCatbus } from './runner.js'
+import { BodyTooLargeError, readJson } from './body.js'
 import { proxyMedia } from './media.js'
 import { handleLive } from './live.js'
 import { handleSubs, initSubs } from './subscriptions.js'
@@ -317,13 +318,16 @@ export function validateArgv(argv: unknown): string[] {
   return [platform, resource, action, ...options, ...(positional.length ? ['--', ...positional] : [])]
 }
 
-async function readBody(req: IncomingMessage): Promise<unknown> {
-  let raw = ''
-  for await (const chunk of req) {
-    raw += chunk
-    if (raw.length > 64 * 1024) throw new Error('请求体过大')
-  }
-  return raw ? JSON.parse(raw) : {}
+/**
+ * 请求体上限：要装得下一次批量下载的 200 条（每条带 url、封面、标题）和 256 KB 的 cookie 登录（login.ts 的 secret 上限）。
+ */
+const BODY_LIMIT = 1024 * 1024
+const readBody = (req: IncomingMessage) => readJson(req, BODY_LIMIT)
+
+/** 处理请求时抛出的错误 → HTTP 状态码：请求体过大 413，参数错误（含 JSON 不合法）400，其余 500。 */
+function errorStatus(e: unknown, clientError: (e: unknown) => boolean): number {
+  if (e instanceof BodyTooLargeError) return e.status
+  return clientError(e) || e instanceof SyntaxError ? 400 : 500
 }
 
 function send(res: ServerResponse, status: number, body: string) {
@@ -381,7 +385,7 @@ async function handleLogin(req: IncomingMessage, res: ServerResponse) {
     }
     send(res, 404, bridgeError('未知的登录接口'))
   } catch (e) {
-    const status = e instanceof LoginError || e instanceof SyntaxError ? 400 : 500
+    const status = errorStatus(e, (x) => x instanceof LoginError)
     send(res, status, bridgeError((e as Error).message))
   }
 }
@@ -403,7 +407,7 @@ async function handleDownload(req: IncomingMessage, res: ServerResponse) {
     if (req.method === 'POST' && action === 'clear') return send(res, 200, JSON.stringify({ batches: clearFinished() }))
     send(res, 404, bridgeError('未知的下载接口'))
   } catch (e) {
-    const status = e instanceof DownloadError || e instanceof SyntaxError ? 400 : 500
+    const status = errorStatus(e, (x) => x instanceof DownloadError)
     send(res, status, bridgeError((e as Error).message))
   }
 }
@@ -478,7 +482,7 @@ async function handleSettings(req: IncomingMessage, res: ServerResponse) {
     }
     send(res, 405, bridgeError('只接受 GET、PUT'))
   } catch (e) {
-    const status = e instanceof SettingsError || e instanceof SyntaxError ? 400 : 500
+    const status = errorStatus(e, (x) => x instanceof SettingsError)
     send(res, status, bridgeError((e as Error).message))
   }
 }
@@ -562,7 +566,7 @@ async function handleCatbus(req: IncomingMessage, res: ServerResponse) {
   try {
     argv = validateArgv(((await readBody(req)) as { argv?: unknown }).argv)
   } catch (e) {
-    return send(res, 400, bridgeError((e as Error).message))
+    return send(res, e instanceof BodyTooLargeError ? e.status : 400, bridgeError((e as Error).message))
   }
   try {
     send(res, 200, await runCatbus(argv, ac.signal))

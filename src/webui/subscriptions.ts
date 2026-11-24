@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { catbusHome } from '../core/paths.js'
+import { BodyTooLargeError, readJson } from './body.js'
 import { itemRef } from './download.js'
 import { platformFilters } from './filters.js'
 import { ACCOUNT } from './login.js'
@@ -285,12 +286,12 @@ export function tick(): Promise<void> {
 
 // ---------- HTTP ----------
 async function readBody(req: IncomingMessage): Promise<Record<string, unknown>> {
-  let raw = ''
-  for await (const chunk of req) {
-    raw += chunk
-    if (raw.length > 16 * 1024) throw new SubsError('请求体过大')
+  let v: unknown
+  try {
+    v = await readJson(req, 16 * 1024)
+  } catch (e) {
+    throw e instanceof BodyTooLargeError ? new SubsError(e.message, e.status) : e
   }
-  const v = raw ? JSON.parse(raw) : {}
   if (!v || typeof v !== 'object' || Array.isArray(v)) throw new SubsError('请求体必须是对象')
   return v as Record<string, unknown>
 }
