@@ -59,7 +59,7 @@
 | `item list` | ✓ | 我发布的笔记，带审核状态。走创作者中心（creator 子站点）。 |
 | `item media` | ✓ | 笔记的媒体地址。 |
 | `item download` | ✓ | 下载笔记的媒体，可同时导出信息和评论（`--meta`、`--comments`）。 |
-| `item publish` | ✓ | 发布笔记。走创作者中心；`--image` 和 `--video` 二选一，视频要同时给 `--cover`；`--poi` 要和 `--poi-name` 一起用。取值：`--visibility` public / private。不支持 `--mention`、`--category`、`--price`。私有选项 `--poi-name`。 |
+| `item publish` | ✓ | 发布笔记。走创作者中心；`--image` 和 `--video` 二选一，视频要同时给 `--cover`；`--poi` 要和 `--poi-name` 一起用。取值：`--visibility` public / private。不支持 `--mention`、`--category`、`--price`。私有选项 `--poi-name`、`--original`、`--ai-generated`。 |
 | `item related`、`item like`、`item unlike`、`item collect`、`item uncollect`、`item delete` | ○ | 规划中 |
 
 ### comment
@@ -156,6 +156,7 @@
 | 命令 | 选项 | 说明 |
 |---|---|---|
 | `item publish` | `--poi-name <名称>`，可配 `--poi <id>` | 地点。小红书的地点只能按名称搜，所以 `--poi` 要和 `--poi-name` 一起用（取 id 相同的那个）；只给 `--poi-name` 时取名称完全相同的；都找不到时报 `USAGE` 并列出相近的地点。先用 `catbus xhs poi search <名称>` 查名称和 id |
+| `item publish` | `--original`、`--ai-generated` | 原创声明、「笔记含 AI 合成内容」声明，默认都不声明。不能和 `--schedule` 一起用（定时发布带不了声明，会报 `USAGE`） |
 
 小红书没有扩展命令。定义见 [AGENTS.md 4.7](../../AGENTS.md#47-平台扩展)。
 
