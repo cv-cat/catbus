@@ -143,12 +143,11 @@
 - `item publish` 不支持的标准选项：xhs --mention --category --price；douyin --category --price；tiktok --title --poi --category --schedule --price；bilibili --image --topic --mention --poi --price；kuaishou --cover --mention --poi --category --price；weibo --title --cover --tag --mention --poi --category --schedule --price；xianyu --video --cover --tag --topic --mention --poi --category --schedule；x --title --cover --tag --topic --mention --poi --category --schedule --price；youtube --image --topic --mention --poi --category --price
 - `item publish --visibility` 取值：默认 public / private / friends；xhs public / private；bilibili public / private；weibo public / private / friends / fans；xianyu public；x public；youtube public / private
 - `item publish --original`：xhs
-- `item publish --ai`：xhs
+- `item publish --ai-generated`：xhs、douyin
 - `item publish --poi-name`：xhs、douyin、weibo
 - `item publish --series`：douyin、bilibili
 - `item publish --hotspot`：douyin
 - `item publish --no-download`：douyin
-- `item publish --ai-generated`：douyin
 - `item publish --allow-comment`：tiktok
 - `item publish --allow-duet`：tiktok
 - `item publish --allow-stitch`：tiktok

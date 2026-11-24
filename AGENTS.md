@@ -299,6 +299,7 @@ catbus xianyu item get <id> -e app           # app 端尚未实现：NOT_IMPLEME
 | douyin | `comment list <product> --product [--label <标签名或 id>]` | 私有选项：商品评价按标签筛选（好评 / 差评 / 有图等） | Comment[] |
 | douyin | `notice list [--group all\|fans\|mention\|comment\|like\|danmaku]` | 私有选项：通知分组，不带时为默认分组 | Notice[] |
 | xhs | `item publish [--poi-name <名称>] [--poi <id>]` | 私有选项：地点名称。小红书的地点只能按名称搜，搜不到 id，所以 `--poi` 要和 `--poi-name` 一起用（取 id 相同的那个）；只给 `--poi-name` 时取名称完全相同的。都找不到时报 `USAGE` 并列出相近的地点 | Item |
+| xhs | `item publish [--original] [--ai-generated]` | 私有选项：原创声明、「笔记含 AI 合成内容」声明，默认都不声明。名称与 douyin 的 `--ai-generated` 相同。定时发布（`--schedule`）的请求里没有声明字段，所以和 `--schedule` 一起用时报 `USAGE`；原创声明要用创作者 ID，登录态里没有时报 `AUTH_REQUIRED` | Item |
 | weibo | `item publish [--poi-name <名称>]` | 私有选项：地点名称，发成「#名称[地点]#」的地点标签。微博发布没有地点 id，不支持 `--poi` | Item |
 | douyin | `auth login --method sms --sso` | 私有选项：短信登录改走 `login.douyin.com` 页的 SSO 链 | Account |
 | jd | `order list` | 订单 | Order[] |

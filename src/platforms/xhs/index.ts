@@ -47,8 +47,8 @@ export default definePlatform({
           supports: ['title', 'text', 'image', 'video', 'cover', 'tag', 'topic', 'poi', 'visibility', 'schedule'],
           options: {
             visibility: visibility('public', 'private'),
-            original: z.boolean().optional().describe('原创声明'),
-            ai: z.boolean().optional().describe('笔记含AI合成内容声明'),
+            original: z.boolean().optional().describe('原创声明；不能和 --schedule 一起用'),
+            aiGenerated: z.boolean().optional().describe('添加「笔记含 AI 合成内容」声明；不能和 --schedule 一起用'),
             poiName: z.string().optional().describe('地点名称（按它搜地点）；同时给 --poi 时取 id 相同的那个，否则取名称完全相同的'),
           },
         }),

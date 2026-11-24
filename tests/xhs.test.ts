@@ -1256,6 +1256,57 @@ describe('xhs 发布与上传', () => {
     }
   })
 
+  it('item publish --original / --ai-generated 与 --schedule 一起用：报 USAGE，不上传、不发布', async () => {
+    for (const decl of [{ original: true }, { aiGenerated: true }]) {
+      const { requests, error } = await serve(security, () =>
+        cmd.itemPublish(bothCtx({ image: ['/nonexistent.png'], schedule: '2026-12-01T10:00:00+08:00', visibility: 'public', ...decl })),
+      )
+      expect(error).toMatchObject({ code: 'USAGE', message: expect.stringContaining('定时发布') })
+      expect(hits(requests, '/upload/creator/permit')).toHaveLength(0)
+      expect(hits(requests, '/web_api/sns/v2/note')).toHaveLength(0)
+    }
+  })
+
+  it('item publish --original --ai-generated：business_binds 带上两种声明，图文的 copyable 变成 true', async () => {
+    const file = join(tmpdir(), `catbus-xhs-decl-${process.pid}.png`)
+    writeFileSync(file, PNG)
+    const route = (r: GoldenRequest): Reply => {
+      if (r.url.includes('/upload/creator/permit')) return ok({ uploadTempPermits: [{ fileIds: ['spectrum/fid1'], token: 't', expireTime: 1790000000000, uploadAddr: 'ros-upload.xiaohongshu.com' }] })
+      if (r.method === 'PUT') return { body: '' }
+      if (r.url.includes('/web_api/sns/v2/note')) return ok({ id: NOTE_ID })
+      return security(r)
+    }
+    const run = async (decl: Record<string, unknown>) => {
+      const { requests, error } = await serve(route, () => cmd.itemPublish(bothCtx({ image: [file], visibility: 'public', ...decl })))
+      if (error) throw error
+      return JSON.parse(jsonBody(hits(requests, '/web_api/sns/v2/note')[0]!).common.business_binds)
+    }
+    const plain = await run({})
+    expect(plain.optionRelationList).toEqual([])
+    expect(plain.noteCopyBind).toEqual({ copyable: false })
+    expect(plain).not.toHaveProperty('coProduceBind')
+    expect(plain).not.toHaveProperty('userDeclarationBind')
+
+    const creatorId = bothCtx().credential.scopes.creator!.cookies.find((c) => c.name === 'x-user-id-creator.xiaohongshu.com')?.value
+    expect(creatorId).toBeTruthy()
+    const both = await run({ original: true, aiGenerated: true })
+    expect(both.optionRelationList).toEqual([
+      { type: 'ORIGINAL_STATEMENT', relationList: [{ bizType: 'ORIGINAL_STATEMENT', bizId: creatorId, extraInfo: '{}' }] },
+      { type: 'AI_GENERATED_CONTENT', relationList: [] },
+    ])
+    expect(both.noteCopyBind).toEqual({ copyable: true })
+    expect(both.coProduceBind).toEqual({ enable: true })
+    expect(both.userDeclarationBind).toEqual({ origin: 2 })
+  })
+
+  it('item publish --original：创作者登录态里没有 x-user-id-creator 时报 AUTH_REQUIRED，不发布', async () => {
+    const ctx = bothCtx({ image: ['/nonexistent.png'], visibility: 'public', original: true })
+    ctx.credential.scopes.creator!.cookies = ctx.credential.scopes.creator!.cookies.filter((c) => c.name !== 'x-user-id-creator.xiaohongshu.com')
+    const { requests, error } = await serve(security, () => cmd.itemPublish(ctx))
+    expect(error).toMatchObject({ code: 'AUTH_REQUIRED', hint: 'catbus xhs auth login --scope creator' })
+    expect(hits(requests, '/web_api/sns/v2/note')).toHaveLength(0)
+  })
+
   it('media upload：url 是文件 PUT 到的绝对地址', async () => {
     const file = join(tmpdir(), `catbus-xhs-up-${process.pid}.png`)
     writeFileSync(file, PNG)
