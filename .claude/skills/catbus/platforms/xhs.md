@@ -32,6 +32,7 @@
 - 发布走创作者中心，catbus 自动用主站登录态换取；`--image` 与 `--video` 二选一，视频必须带 `--cover`；地点先 `poi search` 再 `--poi-name <名称>`（可配 `--poi <id>`）。`--visibility` 只有 `public` / `private`。
 - **发出去删不掉**（`item delete` 未实现），测试一定用 `--visibility private`。
 - 列表里的 `stats.views`、`keyword hot` 的 `heat` 恒为 null。
+- 互动数只有 `item search` 是精确值；`item get`、`user items` 过万后是取整值（「1.8万」→ 18000），`user items` 只有 `likes`。要比较或统计互动数时用 `item search` 的值。`user get` 的 `stats.likes` 是「获赞与收藏」合计。
 
 ## 示例
 

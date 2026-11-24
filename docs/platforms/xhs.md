@@ -208,6 +208,12 @@ catbus xhs live listen <room_id> --duration 10m > live.jsonl
   其他验证方式（如 `124` App 扫码、滑块）仍报 `RISK_CONTROL`（`detail.kind` 为 `captcha`），`hint` 提示改用 cookie 导入。cookie 导入实测可用。
 - **评论接口间歇性要求人机验证**：`comment list` 偶尔返回 HTTP 461（`verifytype 124`），请求越密越容易触发。报 `RISK_CONTROL`，`error.hint` 和 `detail.verify_url` 里是网页验证链接：在登录了同一账号的浏览器里打开、完成验证后再重试。不验证时有时几分钟自己恢复，也见过持续 8 小时以上的；批量翻页时放慢节奏。
 - **字段恒为空**：列表里的 `stats.views`（公开接口不返回播放量）、`keyword hot` 的 `heat`（热搜接口不给热度值）。
+- **互动数的精度因命令而异**：同一篇笔记在不同命令里的 `stats` 可能不一样，因为平台各接口给的数字口径不同，catbus 只做原样换算（「1.8万」→ 18000）。
+  - `item search`：精确值（如 18471）。
+  - `item get`：过万后是平台展示用的取整值（「1.8万」→ 18000、「2万」→ 20000），不过万时是精确值。
+  - `user items` / `likes` / `collects`：只有 `likes`，同样过万取整；`comments`、`collects`、`shares` 接口不返回，为 null。
+  - 需要精确值时用 `item search` 搜到这篇笔记再取。
+  - `user get` 的 `stats.likes` 是主页上的「获赞与收藏」合计，不是单独的获赞数。
 - **还没真机验证**：`msg send` / `read` / `revoke` / `delete`、`msg listen`、`live listen`、`live send`。关注列表与群聊的字段名参考了第三方代码（上游没有样本）。
 - **删不掉笔记**：`item delete` 上游没有（○），发出去的笔记要在 App 里手动删除。测试发布请用 `--visibility private`。
 - **视频发布要给封面**：catbus 不解码视频，截不了首帧，`--video` 必须配 `--cover`。
