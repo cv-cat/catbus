@@ -833,4 +833,43 @@ describe('weibo item search：主站综合搜索（fixture）', () => {
     expect(items.map((x) => x.created_at)).toEqual(['2026-11-21 13:14', '2026-11-20 11:30', '2026-11-21 12:57'])
     expect(items.map((x) => x.mid)).toEqual(['5100000000000001', '5100000000000002', '5100000000000003'])
   })
+
+  it('parseSiteSearch：相对时间按北京时间算，和运行机器的时区无关', () => {
+    // 北京时间 11-22 07:30 = UTC 11-21 23:30 = 洛杉矶 11-21 15:30：按本机时区算会差一天
+    const now = new Date('2026-11-22T07:30:00+08:00')
+    const html = ['今天09:00', '昨天23:10', '3分钟前', '2小时前', '11月20日 11:30', '12月31日 08:00']
+      .map((t, i) => `<div class="card-wrap" action-type="feed_list_item" mid="51000000000000${10 + i}"><p class="from"><a>${t}</a></p></div>`)
+      .join('')
+    const want = ['2026-11-22 09:00', '2026-11-21 23:10', '2026-11-22 07:27', '2026-11-22 05:30', '2026-11-20 11:30', '2025-12-31 08:00']
+    const tz = process.env.TZ
+    try {
+      for (const zone of ['Asia/Shanghai', 'UTC', 'America/Los_Angeles', 'Pacific/Kiritimati']) {
+        process.env.TZ = zone
+        expect(cmd.parseSiteSearch(html, now).map((x) => x.created_at), zone).toEqual(want)
+      }
+    } finally {
+      process.env.TZ = tz
+    }
+  })
+
+  it('parseSiteSearch：长微博优先取 feed_list_content_full，去掉「展开 / 收起」链接', () => {
+    const html =
+      '<div class="card-wrap" action-type="feed_list_item" mid="5100000000000020">' +
+      '<p class="txt" node-type="feed_list_content" nick-name="A">前半段…<a href="javascript:void(0);" action-type="fl_unfold">展开<i>c</i></a></p>' +
+      '<p class="txt" node-type="feed_list_content_full" nick-name="A" style="display: none">前半段和后半段的完整正文<a href="javascript:void(0);" action-type="fl_fold">收起<i>d</i></a></p>' +
+      '</div>'
+    expect(cmd.parseSiteSearch(html, new Date('2026-11-22T07:30:00+08:00'))[0]!.text_raw).toBe('前半段和后半段的完整正文')
+  })
+
+  it('整页卡片都被过滤（全是广告）时，分页器里有下一页就继续翻', async () => {
+    const ad = '<div class="card-wrap wb-ad-tile" action-type="feed_list_item" mid="5100000000000099">推广</div>'
+    const m = mockSite({ 'https://s.weibo.com/weibo?q=%E5%92%96%E5%95%A1&page=1': `${ad}<a href="/weibo?q=%E5%92%96%E5%95%A1&page=2">下一页</a>` })
+    try {
+      const r = (await cmd.itemSearch(loggedCtx({ args: { keyword: '咖啡' } }))) as { data: any[]; page: { cursor: string | null; has_more: boolean } }
+      expect(r.data).toEqual([])
+      expect(r.page).toEqual({ cursor: '2', has_more: true })
+    } finally {
+      m.restore()
+    }
+  })
 })
