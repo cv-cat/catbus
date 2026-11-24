@@ -991,12 +991,13 @@ describe('WebUI 登录子进程出错不弄崩服务', () => {
     })
   })
 
-  it('二维码图片读不到：只更新提示，不产生未处理的 rejection', async () => {
+  // 假的 catbus（shebang 脚本）：Windows 上不能直接执行，跳过（同上面「已扫码」那条）
+  it.skipIf(process.platform === 'win32')('二维码图片读不到：只更新提示，不产生未处理的 rejection', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'catbus-webui-qr-'))
     const bin = join(dir, 'catbus')
     writeFileSync(
       bin,
-      `#!/usr/bin/env node
+      `#!${process.execPath}
 process.stderr.write('[catbus] 请扫码。二维码图片：${join(dir, 'gone.png')}\\n')
 setTimeout(() => console.log(JSON.stringify({ ok: false, data: null, error: { code: 'AUTH_REQUIRED' } })), 300)
 `,
