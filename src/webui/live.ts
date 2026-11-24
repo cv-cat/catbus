@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { BodyTooLargeError, readJson } from './body.js'
 import { resolveCli } from './cli.js'
 import { itemRef } from './download.js'
 import { ACCOUNT } from './login.js'
@@ -223,12 +224,11 @@ function attach(id: string, res: ServerResponse) {
 }
 
 async function readBody(req: IncomingMessage): Promise<unknown> {
-  let raw = ''
-  for await (const chunk of req) {
-    raw += chunk
-    if (raw.length > 16 * 1024) throw new LiveError('请求体过大')
+  try {
+    return await readJson(req, 16 * 1024)
+  } catch (e) {
+    throw e instanceof BodyTooLargeError ? new LiveError(e.message, e.status) : e
   }
-  return raw ? JSON.parse(raw) : {}
 }
 
 function sendJson(res: ServerResponse, status: number, body: unknown) {

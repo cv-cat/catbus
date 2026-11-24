@@ -964,3 +964,71 @@ const wait = (n) => new Promise((r) => { const t = setInterval(() => { if (fs.ex
     }
   })
 })
+
+describe('WebUI 登录子进程出错不弄崩服务', () => {
+  const withBin = async (bin: string, run: () => Promise<void>) => {
+    const prev = process.env.CATBUS_BIN
+    process.env.CATBUS_BIN = bin
+    try {
+      await run()
+    } finally {
+      if (prev === undefined) delete process.env.CATBUS_BIN
+      else process.env.CATBUS_BIN = prev
+    }
+  }
+  const until = async (ok: () => boolean) => {
+    for (let i = 0; i < 300 && !ok(); i++) await new Promise((r) => setTimeout(r, 10))
+    expect(ok()).toBe(true)
+  }
+
+  it('catbus 起不来（ENOENT）：runOnce 返回错误信封，扫码会话变成 error', async () => {
+    const { runOnce, startQrcode, getSession, publicSession } = await import('../src/webui/login.js')
+    await withBin(join(tmpdir(), `catbus-missing-${process.pid}`), async () => {
+      const env = (await runOnce(['xhs', 'auth', 'login', '--method', 'cookie', '--cookie', '-'], 'a1=x')) as any
+      expect(env).toMatchObject({ ok: false, error: { code: 'BRIDGE', message: expect.stringContaining('无法运行 catbus') } })
+      const s = startQrcode('xhs', ['xhs', 'auth', 'login'])
+      await until(() => publicSession(getSession(s.id)!).state === 'error')
+    })
+  })
+
+  it('二维码图片读不到：只更新提示，不产生未处理的 rejection', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'catbus-webui-qr-'))
+    const bin = join(dir, 'catbus')
+    writeFileSync(
+      bin,
+      `#!/usr/bin/env node
+process.stderr.write('[catbus] 请扫码。二维码图片：${join(dir, 'gone.png')}\\n')
+setTimeout(() => console.log(JSON.stringify({ ok: false, data: null, error: { code: 'AUTH_REQUIRED' } })), 300)
+`,
+      { mode: 0o755 },
+    )
+    const { startQrcode, getSession, publicSession } = await import('../src/webui/login.js')
+    try {
+      await withBin(bin, async () => {
+        const s = startQrcode('xhs', ['xhs', 'auth', 'login'])
+        await until(() => publicSession(getSession(s.id)!).message?.includes('读不到二维码图片') === true)
+        await until(() => publicSession(getSession(s.id)!).state === 'error')
+        expect(publicSession(getSession(s.id)!).qrcode).toBeNull()
+      })
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('WebUI 请求体', () => {
+  const req = (chunks: Buffer[]) => (async function* () { yield* chunks })() as unknown as IncomingMessage
+
+  it('多字节字符跨块到达时不乱码', async () => {
+    const { readJson } = await import('../src/webui/body.js')
+    const buf = Buffer.from(JSON.stringify({ title: '猫巴士' }))
+    const cut = buf.indexOf(Buffer.from('巴')) + 1 // 切在「巴」的 3 个字节中间
+    expect(await readJson(req([buf.subarray(0, cut), buf.subarray(cut)]), 1024)).toEqual({ title: '猫巴士' })
+  })
+
+  it('按字节算上限，超过时报 BodyTooLargeError（413）；空请求体为 {}', async () => {
+    const { readJson, BodyTooLargeError } = await import('../src/webui/body.js')
+    await expect(readJson(req([Buffer.alloc(600, 'a'), Buffer.alloc(600, 'a')]), 1024)).rejects.toBeInstanceOf(BodyTooLargeError)
+    await expect(readJson(req([]), 1024)).resolves.toEqual({})
+  })
+})

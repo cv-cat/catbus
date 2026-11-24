@@ -155,8 +155,17 @@ function spawnCli(argv: string[], stdin: string | null): ChildProcess {
   const { file, prefix } = resolveCli()
   // 登录不加 -q：二维码图片路径和提示都在 stderr 的 info 行里
   const child = spawn(file, [...prefix, '-o', 'json', ...argv], { stdio: [stdin == null ? 'ignore' : 'pipe', 'pipe', 'pipe'] })
-  if (stdin != null) child.stdin!.end(stdin)
+  if (stdin != null) {
+    // 子进程没读完 stdin 就退出时写管道会 EPIPE；没人监听的 'error' 会让整个服务进程退出
+    child.stdin!.on('error', () => {})
+    child.stdin!.end(stdin)
+  }
   return child
+}
+
+/** 子进程起不来（ENOENT 等：例如服务在后台跑着时 Node 被升级，旧的 execPath 没了）时的信封。 */
+function spawnError(e: Error): unknown {
+  return { ok: false, data: null, page: null, error: { code: 'BRIDGE', message: `无法运行 catbus：${e.message}`, hint: null, detail: null } }
 }
 
 function parseEnvelope(stdout: string): unknown {
@@ -175,6 +184,11 @@ export function runOnce(argv: string[], stdin: string | null): Promise<unknown> 
     child.stdout!.on('data', (c) => (out += c))
     child.stderr!.resume()
     const timer = setTimeout(() => child.kill('SIGTERM'), 120_000)
+    // 'error' 之后可能还有 'close'（也可能没有）：resolve 只认第一次
+    child.on('error', (e) => {
+      clearTimeout(timer)
+      resolve(spawnError(e))
+    })
     child.on('close', () => {
       clearTimeout(timer)
       resolve(parseEnvelope(out))
@@ -203,11 +217,21 @@ export function startQrcode(platform: string, argv: string[]): Session {
       const qr = QR_LINE.exec(line)
       if (qr) {
         s.scanned = false // 新二维码（过期后换码）还没被扫
-        void readFile(qr[1]!).then((png) => {
-          s.qrcode = `data:image/png;base64,${png.toString('base64')}`
-          s.state = 'qrcode'
-          s.updatedAt = Date.now()
-        })
+        readFile(qr[1]!).then(
+          (png) => {
+            // 读文件期间子进程可能已经结束（close 已把状态设成 done / error）：不再退回「等待扫码」
+            if (s.child !== child) return
+            s.qrcode = `data:image/png;base64,${png.toString('base64')}`
+            s.state = 'qrcode'
+            s.updatedAt = Date.now()
+          },
+          // 二维码图片在 cache/ 里，可能被删；读不到时只更新提示，不能让未处理的 rejection 弄崩服务
+          (e: Error) => {
+            if (s.child !== child) return
+            s.message = `读不到二维码图片：${e.message}`
+            s.updatedAt = Date.now()
+          },
+        )
         s.message = line.replace(/^\[catbus\]\s*/, '').replace(/。?二维码图片：.*$/, '')
       } else {
         if (SCANNED_LINE.test(line)) s.scanned = true
@@ -217,8 +241,18 @@ export function startQrcode(platform: string, argv: string[]): Session {
     }
   })
   const timer = setTimeout(() => child.kill('SIGTERM'), QR_TIMEOUT)
+  child.on('error', (e) => {
+    clearTimeout(timer)
+    if (s.child !== child) return
+    s.child = null
+    s.envelope = spawnError(e)
+    s.state = 'error'
+    s.qrcode = null
+    s.updatedAt = Date.now()
+  })
   child.on('close', () => {
     clearTimeout(timer)
+    if (s.child !== child) return // 'error' 已经处理过
     s.child = null
     if (s.state === 'error' && s.envelope) return // 已取消
     s.envelope = parseEnvelope(out)
