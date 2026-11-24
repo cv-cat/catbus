@@ -117,39 +117,40 @@ export async function itemSearchM(ctx: Ctx) {
 
 /**
  * 主站搜索卡片的时间（`今天13:14`、`11月20日 11:30`、`3分钟前`、`2026-11-20`，可能带「转赞人数…」尾巴）
- * → `YYYY-MM-DD HH:MM`（n.time 只认这个格式；北京时间，vitest 与对拍都固定 Asia/Shanghai）。
+ * → `YYYY-MM-DD HH:MM`（n.time 按北京时间解析这个格式）。
+ * 页面上的时间都是北京时间：日期运算一律在 UTC+8 上做（UTC getter + 8 小时偏移），不依赖运行机器的时区。
  */
+const BJ = 8 * 3_600_000
 function siteTime(raw: unknown, now: Date): string | null {
   const s = String(raw ?? '').replace(/转赞人数.*$/, '').trim()
   if (!s) return null
   const two = (v: number | string) => String(v).padStart(2, '0')
-  const ymd = (d: Date) => `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`
+  /** 时间戳 → 北京时间的「墙上时间」（用 UTC getter 读）。 */
+  const wall = (ms: number) => new Date(ms + BJ)
+  const ymd = (d: Date) => `${d.getUTCFullYear()}-${two(d.getUTCMonth() + 1)}-${two(d.getUTCDate())}`
+  const hm = (d: Date) => `${two(d.getUTCHours())}:${two(d.getUTCMinutes())}`
+  const today = wall(now.getTime())
+  /** 只有月日的时间：取今年，比现在晚一天以上时算去年。 */
+  const monthDay = (mo: number, day: number, h: number, mi: number) => {
+    let year = today.getUTCFullYear()
+    if (Date.UTC(year, mo - 1, day, h, mi) - BJ > now.getTime() + 86_400_000) year -= 1
+    return `${year}-${two(mo)}-${two(day)} ${two(h)}:${two(mi)}`
+  }
   let m: RegExpExecArray | null
   if ((m = /^(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2}):(\d{2})/.exec(s))) return `${m[1]}-${m[2]}-${m[3]} ${two(Number(m[4]))}:${m[5]}`
   if ((m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s))) return `${m[1]}-${m[2]}-${m[3]} 00:00`
-  if ((m = /^今天\s*(\d{1,2}):(\d{2})/.exec(s))) return `${ymd(now)} ${two(Number(m[1]))}:${m[2]}`
-  if ((m = /^昨天\s*(\d{1,2}):(\d{2})/.exec(s))) {
-    const d = new Date(now.getTime() - 86_400_000)
-    return `${ymd(d)} ${two(Number(m[1]))}:${m[2]}`
-  }
-  if ((m = /^(\d{1,2})月(\d{1,2})日\s*(\d{1,2}):(\d{2})/.exec(s))) {
-    const d = new Date(now.getFullYear(), Number(m[1]) - 1, Number(m[2]), Number(m[3]), Number(m[4]))
-    if (d.getTime() > now.getTime() + 86_400_000) d.setFullYear(d.getFullYear() - 1)
-    return `${ymd(d)} ${two(Number(m[3]))}:${two(Number(m[4]))}`
-  }
-  if ((m = /^(\d{1,2})月(\d{1,2})日$/.exec(s))) {
-    const d = new Date(now.getFullYear(), Number(m[1]) - 1, Number(m[2]))
-    if (d.getTime() > now.getTime() + 86_400_000) d.setFullYear(d.getFullYear() - 1)
-    return `${ymd(d)} 00:00`
-  }
-  if (/^\d+\s*秒前/.test(s)) return `${ymd(now)} ${two(now.getHours())}:${two(now.getMinutes())}`
+  if ((m = /^今天\s*(\d{1,2}):(\d{2})/.exec(s))) return `${ymd(today)} ${two(Number(m[1]))}:${m[2]}`
+  if ((m = /^昨天\s*(\d{1,2}):(\d{2})/.exec(s))) return `${ymd(wall(now.getTime() - 86_400_000))} ${two(Number(m[1]))}:${m[2]}`
+  if ((m = /^(\d{1,2})月(\d{1,2})日\s*(\d{1,2}):(\d{2})/.exec(s))) return monthDay(Number(m[1]), Number(m[2]), Number(m[3]), Number(m[4]))
+  if ((m = /^(\d{1,2})月(\d{1,2})日$/.exec(s))) return monthDay(Number(m[1]), Number(m[2]), 0, 0)
+  if (/^\d+\s*秒前/.test(s)) return `${ymd(today)} ${hm(today)}`
   if ((m = /^(\d+)\s*分钟前/.exec(s))) {
-    const d = new Date(now.getTime() - Number(m[1]) * 60_000)
-    return `${ymd(d)} ${two(d.getHours())}:${two(d.getMinutes())}`
+    const d = wall(now.getTime() - Number(m[1]) * 60_000)
+    return `${ymd(d)} ${hm(d)}`
   }
   if ((m = /^(\d+)\s*小时前/.exec(s))) {
-    const d = new Date(now.getTime() - Number(m[1]) * 3_600_000)
-    return `${ymd(d)} ${two(d.getHours())}:${two(d.getMinutes())}`
+    const d = wall(now.getTime() - Number(m[1]) * 3_600_000)
+    return `${ymd(d)} ${hm(d)}`
   }
   return null
 }
@@ -170,7 +171,10 @@ function parseSiteCard(block: string, now: Date): any | null {
     (uid ? new RegExp(`weibo\\.com/${uid}/([0-9A-Za-z]+)`).exec(block)?.[1] : null) ??
     /weibo\.com\/\d+\/([0-9A-Za-z]+)/.exec(block)?.[1] ??
     null
-  const txt = /node-type="feed_list_content(_full)?"[^>]*>([\s\S]*?)<\/p>/.exec(block)?.[2] ?? null
+  // 长微博有两个节点：先是截断版 feed_list_content（末尾带「展开」链接），再是隐藏的 feed_list_content_full；优先取完整版。
+  // 「展开 / 收起」链接（action-type="fl_unfold" / "fl_fold"）不是正文，先去掉
+  const node = (full: boolean) => new RegExp(`node-type="feed_list_content${full ? '_full' : ''}"[^>]*>([\\s\\S]*?)<\\/p>`).exec(block)?.[1]
+  const txt = (node(true) ?? node(false))?.replace(/<a[^>]*action-type="fl_(?:un)?fold"[^>]*>[\s\S]*?<\/a>/g, '') ?? null
   const text = txt
     ? (n.plainText(txt) ?? '')
         .split('\n')
@@ -246,7 +250,8 @@ export async function itemSearch(ctx: Ctx) {
     throw new CatbusError('RISK_CONTROL', '微博搜索触发验证，请稍后再试', { detail: { kind: 'blocked', page } })
   }
   const mblogs = parseSiteSearch(html)
-  const hasNext = mblogs.length > 0 && new RegExp(`[?&]page=${page + 1}["&]`).test(html)
+  // 只看分页器：某一页的卡片全被过滤（广告、解析不出 mid）时也要继续翻；游标是页码，每次都前进，不会死循环
+  const hasNext = new RegExp(`[?&]page=${page + 1}["&]`).test(html)
   return paged(mblogs.map((m) => norm.mblog(m)), hasNext ? String(page + 1) : null, hasNext)
 }
 
