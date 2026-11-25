@@ -11,7 +11,7 @@
 - **读**：`item search` / `get` / `media` / `download` / `list`（自己的）；`user get` / `search` / `items` / `likes` / `followers` / `following`；`comment list` / `replies`（也能列商品评价）；`feed list`（只有推荐）；`product get`；`live get` / `list` / `search` / `categories` / `listen` / `history`（最近 15 条）/ `rank` / `products` / `media`；`notice list`；`msg listen`（收新私信）；`folder list`；`keyword hot`（热榜）。
 - **写**：`item like` / `unlike` / `collect` / `uncollect` / `publish`；`comment add`；`live send` / `like`；`msg send`；`media upload`。
 
-**写操作目前基本跑不通**：发布、评论、点赞、收藏、私信要带设备风控头（dtrait），实测发布被拦下（报 `RISK_CONTROL`），点赞还可能让登录态失效、需要重新扫码。用户要做写操作时先把这个情况告诉他，不要在他的常用账号上反复尝试。
+**写操作目前基本跑不通**：发布、评论、点赞、收藏、私信要带设备风控头（dtrait）；发布会被安全网关要求先做二次身份验证（短信、人脸或密码），catbus 不能代为完成，报 `RISK_CONTROL` 且 `error.detail.reason` 为 `passport_verify` 时就是这种情况，照实告诉用户，不要重试；点赞还可能让登录态失效、需要重新扫码。用户要做写操作时先把这个情况告诉他，不要在他的常用账号上反复尝试。
 
 ## 做不到
 
