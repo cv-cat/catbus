@@ -293,6 +293,16 @@ export interface Ticket {
   seat_types: string
 }
 
+export interface Vote {
+  id: string
+  url: string
+  title: string
+  description: string | null
+  ends_at: string | null
+  participants: number
+  options: { id: string; text: string; image: string | null; votes: number }[]
+}
+
 export interface Stop {
   id: string
   url: string | null
@@ -343,7 +353,7 @@ export interface Transfer {
 export const OUTPUT_TYPES = new Set([
   'User', 'Item', 'Comment', 'Folder', 'Series', 'Category', 'Keyword', 'Topic', 'Poi', 'Live', 'Event', 'Gift',
   'Rank', 'Conversation', 'Message', 'Notice', 'NoticeCount', 'Media', 'AuthStatus', 'Account', 'File', 'Subtitle',
-  'Danmaku', 'Order', 'Coupon', 'Station', 'Ticket', 'Stop', 'Fare', 'Transfer', 'Torrent', 'BonusRecord',
+  'Danmaku', 'Vote', 'Order', 'Coupon', 'Station', 'Ticket', 'Stop', 'Fare', 'Transfer', 'Torrent', 'BonusRecord',
 ])
 
 /** 归一化对象上挂平台原始对象，`--raw` 时用它替换。JSON 序列化会忽略 symbol 键。 */

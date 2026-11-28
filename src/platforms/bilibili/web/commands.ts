@@ -7,11 +7,12 @@ import { imageSize } from '../../../core/image.js'
 import { parseJson } from '../../../core/http.js'
 import { cookieCredential, finishLogin, freshCredential, loginContext, poll, qrcodeScanned, readPassword, showQrcode, smsLogin } from '../../../core/login.js'
 import * as n from '../../../core/normalize.js'
+import { parseDuration } from '../../../core/options.js'
 import * as pb from '../../../core/pb.js'
 import { jsonLoads } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
-import { type AuthStatus, type Credential, type Danmaku, type Item, type Media, type Series, type Subtitle, withRaw } from '../../../core/schemas.js'
+import { type AuthStatus, type Credential, type Danmaku, type Item, type Media, type Series, type Subtitle, type Vote, withRaw } from '../../../core/schemas.js'
 import { openSocket, reconnecting } from '../../../core/stream.js'
 import { paged, scope } from '../../../core/toolkit.js'
 import * as api from './api.js'
@@ -657,6 +658,63 @@ export async function itemSubtitles(ctx: Ctx): Promise<Subtitle[]> {
   return out
 }
 
+function voteUrl(id: string) {
+  return `https://t.bilibili.com/vote/h5/index/#/result?vote_id=${id}`
+}
+
+export async function voteCreate(ctx: Ctx) {
+  const o = ctx.options
+  const labels = o.option as string[]
+  const images = (o.image ?? []) as string[]
+  const deadline = o.endsAt ? Math.floor(Date.parse(String(o.endsAt)) / 1000) : undefined
+  const duration = () => {
+    const seconds = deadline === undefined ? Math.floor(parseDuration(String(o.duration)) / 1000) : deadline - rand.nowSeconds()
+    if (!Number.isSafeInteger(seconds) || seconds < 1) throw new CatbusError('USAGE', '投票剩余时间须至少为一秒')
+    return seconds
+  }
+  duration()
+  const b = await bili(ctx)
+  b.requireLogin()
+  const mid = Number(b.mid || ctx.credential.user?.id)
+  if (!Number.isSafeInteger(mid) || mid < 1) throw new CatbusError('AUTH_REQUIRED', '无法获取投票发起人的 UID，请重新登录')
+  const options: { opt_desc: string; img_url?: string }[] = []
+  for (const [index, label] of labels.entries()) {
+    const image = images[index]
+    if (image === undefined) {
+      options.push({ opt_desc: label })
+      continue
+    }
+    const file = await readMedia(b.http, image)
+    if (!['image/png', 'image/jpeg'].includes(file.contentType)) throw new CatbusError('USAGE', '投票图片须为 PNG 或 JPEG')
+    const uploaded = await api.uploadDynamicImage(b, file.data, file.filename, file.contentType)
+    if (!uploaded?.image_url) throw new CatbusError('UPSTREAM', 'B 站未返回投票图片地址')
+    options.push({ opt_desc: label, img_url: uploaded.image_url })
+  }
+  // 上传图片可能耗时，按绝对截止时间计算最后一次提交时的剩余秒数。
+  const data = await api.createVote(b, {
+    title: String(o.title), desc: String(o.text ?? ''), type: images.length ? 1 : 0,
+    duration: duration(), vote_publisher: mid, options,
+  })
+  const id = n.id(data?.vote_id)
+  if (!/^[1-9]\d*$/.test(id)) throw new CatbusError('UPSTREAM', 'B 站未返回投票 ID')
+  return withRaw({ id, url: voteUrl(id) }, data)
+}
+
+export async function voteGet(ctx: Ctx): Promise<Vote> {
+  const id = ctx.args.vote!
+  if (!/^[1-9]\d*$/.test(id)) throw new CatbusError('USAGE', '投票 ID 是正整数')
+  const data = await api.voteInfo(await bili(ctx), id)
+  const vote = data?.vote_info
+  if (n.id(vote?.vote_id) !== id || !Array.isArray(vote.options)) throw new CatbusError('UPSTREAM', 'B 站未返回所查询的投票详情')
+  return withRaw({
+    id, url: voteUrl(id), title: vote.title, description: n.str(vote.desc),
+    ends_at: n.time(vote.end_time), participants: n.count(vote.join_num) ?? 0,
+    options: vote.options.map((option: { opt_idx: number; opt_desc: string; img_url?: string; cnt?: number }) => ({
+      id: n.id(option.opt_idx), text: option.opt_desc, image: n.str(option.img_url), votes: n.count(option.cnt) ?? 0,
+    })),
+  }, data)
+}
+
 // ================================================================ comment
 
 /** 评论排序 → 上游 get_replies 的 mode：3 热门、2 时间。 */
@@ -722,8 +780,9 @@ export async function commentAdd(ctx: Ctx) {
   const t = await resolveReplyTarget(b, ctx.args.item!)
   const to = ctx.options.replyTo as string | undefined
   const root = (ctx.options.root as string | undefined) ?? to ?? ''
-  const d = await onReplies(t, () => api.addReply(b, t.oid, ctx.args.text!, t.type, root, to ?? ''))
-  return d.reply ? norm.reply(d.reply, t.itemId) : n.comment({ id: n.id(d.rpid_str ?? d.rpid), item_id: t.itemId, text: ctx.args.text!, parent_id: to ?? null }, d)
+  const text = ctx.options.vote ? `${ctx.args.text}\n\n投票｜${voteUrl(String(ctx.options.vote))}` : ctx.args.text!
+  const d = await onReplies(t, () => api.addReply(b, t.oid, text, t.type, root, to ?? ''))
+  return d.reply ? norm.reply(d.reply, t.itemId) : n.comment({ id: n.id(d.rpid_str ?? d.rpid), item_id: t.itemId, text, parent_id: to ?? null }, d)
 }
 
 export async function commentDelete(ctx: Ctx) {

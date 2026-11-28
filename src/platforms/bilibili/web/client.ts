@@ -183,8 +183,8 @@ export class Bili {
   }
 
   /** 请求并解析 JSON，不检查业务码。 */
-  async json<T = any>(req: HttpRequest): Promise<BiliJson<T>> {
-    const res = await this.request(req)
+  async json<T = any>(req: HttpRequest, retries = 3): Promise<BiliJson<T>> {
+    const res = await this.request(req, retries)
     if (res.status === 412 || res.status === 429) {
       throw new CatbusError('RISK_CONTROL', `B 站拒绝了请求（HTTP ${res.status}），请稍后再试`, { detail: { kind: 'rate_limit', status: res.status } })
     }

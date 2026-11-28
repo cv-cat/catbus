@@ -1576,3 +1576,79 @@ describe('bilibili live list：CLI 分页', () => {
     }
   })
 })
+
+describe('bilibili 评论区投票', () => {
+  useTempHome()
+  const options = { title: '选张头像', option: ['蓝', '绿'], duration: '48h' }
+  const voteUrl = 'https://t.bilibili.com/vote/h5/index/#/result?vote_id=123'
+
+  it('文字投票仅创建一次，返回可用于评论的入口', async () => {
+    const { urls, bodies, result, error } = await runCommand('voteCreate', { options }, () => ok({ vote_id: 123 }))
+    expect(error).toBeUndefined()
+    expect(urls).toEqual(['https://api.bilibili.com/x/vote/create?csrf=fakecsrf0123456789abcdef01234567'])
+    expect(JSON.parse(String(bodies[0]))).toEqual({ vote_info: {
+      title: '选张头像', desc: '', type: 0, duration: 172800, vote_publisher: 10001,
+      options: [{ opt_desc: '蓝' }, { opt_desc: '绿' }], choice_cnt: 1, only_fans_level: 0, release_scene: 'reply',
+    } })
+    expect(result).toEqual({ id: '123', url: voteUrl })
+  })
+
+  it('图片与选项按顺序配对，从绝对截止时刻算剩余时间', async () => {
+    let uploads = 0
+    const { urls, bodies, requests, error } = await runCommand('voteCreate', { options: {
+      ...options, duration: undefined, endsAt: new Date(NOW + 900_000).toISOString(), image: [IMAGE_FILE, COVER_FILE],
+    } }, (url) => url.includes('/upload_bfs') ? ok({ image_url: `image-${++uploads}` }) : ok({ vote_id: 123 }))
+    expect(error).toBeUndefined()
+    expect(uploads).toBe(2)
+    expect(urls).toHaveLength(3)
+    expect(requests[0]?.multipart?.[0]?.filename).toBe('pic.png')
+    expect(requests[1]?.multipart?.[0]?.filename).toBe('cover.JPG')
+    expect(JSON.parse(String(bodies[2])).vote_info).toMatchObject({
+      type: 1, duration: 900, options: [{ opt_desc: '蓝', img_url: 'image-1' }, { opt_desc: '绿', img_url: 'image-2' }],
+    })
+  })
+
+  it('截止时间已过或图片上传失败时不创建投票', async () => {
+    const expired = await runCommand('voteCreate', { options: { ...options, endsAt: new Date(NOW - 1).toISOString() } }, () => ok({}))
+    expect(expired.error).toMatchObject({ code: 'USAGE' })
+    expect(expired.urls).toEqual([])
+    const failed = await runCommand('voteCreate', { options: { ...options, image: [IMAGE_FILE, IMAGE_FILE] } }, () => ok({}))
+    expect(failed.error).toMatchObject({ code: 'UPSTREAM' })
+    expect(failed.urls).toHaveLength(1)
+    expect(failed.urls[0]).toContain('/upload_bfs')
+  })
+
+  it.each([
+    ['--duration', '48h', '--image', 'one.png'],
+    ['--duration', '48h', '--ends-at', '2030-04-03T18:00:00+08:00'],
+    ['--ends-at', '2030-04-03T18:00:00'],
+    [],
+  ])('CLI 校验图片数与互斥截止参数 %j', async (...flags) => {
+    const r = await cli('bilibili', 'vote', 'create', '--title', '选张头像', '--option', '蓝', '--option', '绿', ...flags, '-q')
+    expect(r.env.error.code).toBe('USAGE')
+  })
+
+  it('查询读取服务端票数和截止时间，未返回的零票按网页规则显示', async () => {
+    const { urls, result, error } = await runCommand('voteGet', { args: { vote: '123' } }, () => ok({ vote_info: {
+      vote_id: 123, title: '选张头像', end_time: 1795930905, join_num: 4,
+      options: [{ opt_idx: 1, opt_desc: '蓝', img_url: 'image-1', cnt: 4 }, { opt_idx: 2, opt_desc: '绿' }],
+    } }))
+    expect(error).toBeUndefined()
+    expect(urls).toEqual(['https://api.bilibili.com/x/vote/vote_info?vote_id=123'])
+    expect(result).toEqual({ id: '123', url: voteUrl, title: '选张头像', description: null,
+      ends_at: expect.any(String), participants: 4, options: [
+        { id: '1', text: '蓝', image: 'image-1', votes: 4 }, { id: '2', text: '绿', image: null, votes: 0 },
+      ],
+    })
+    expect(Date.parse(result.ends_at)).toBe(1795930905000)
+  })
+
+  it('保留评论全文与上期链接，末尾的投票入口随评论 ID 一同返回', async () => {
+    const original = '请投票\n上一期｜https://www.bilibili.com/video/' + BVID + '/'
+    const { result, bodies, error } = await runCommand('commentAdd', { args: { item: BVID, text: original }, options: { vote: '123' } }, () => ok({ rpid_str: '456' }))
+    const text = original + '\n\n投票｜' + voteUrl
+    expect(error).toBeUndefined()
+    expect(new URLSearchParams(String(bodies[0])).get('message')).toBe(text)
+    expect(result).toMatchObject({ id: '456', text })
+  })
+})
