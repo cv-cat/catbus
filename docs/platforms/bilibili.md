@@ -78,7 +78,7 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | 命令 | 状态 | 说明 |
 |---|---|---|
 | `comment list` | ◐ | 评论列表。支持视频、专栏、纯文字 / 转发动态及图文动态；图文动态通过非上游动态详情接口获取相簿评论区 ID，没有对拍。取值：`--sort` popular / latest。 |
-| `comment add` | ◐ | 发表评论。动态只支持纯文字和转发：图文动态（带图）的评论区挂在相簿上，上游没有查相簿 ID 的接口；稿件、专栏不受影响。私有选项 `--root`。 |
+| `comment add` | ◐ | 发表评论。动态只支持纯文字和转发：图文动态（带图）的评论区挂在相簿上，上游没有查相簿 ID 的接口；稿件、专栏不受影响。可用 `--root` 指定根评论，`--vote <投票 ID>` 在文末附上投票页链接。 |
 | `comment delete` | ◐ | 删除评论。动态只支持纯文字和转发：图文动态（带图）的评论区挂在相簿上，上游没有查相簿 ID 的接口；稿件、专栏不受影响。危险操作，需要确认。 |
 | `comment pin` / `unpin` | ✓ | 置顶 / 取消置顶一级评论。平台扩展，接口 `x/v2/reply/top`；只能置顶自己管理的评论区里的一级评论，已有置顶时再置顶报 12029。 |
 | `comment replies <item> <comment>` | ◐ | 视频、专栏、图文动态根评论下的可见楼中楼。`<comment>` 为 `comment list` 返回的根评论 ID。使用非上游的楼中楼及动态详情接口，没有对拍；纯文字和转发动态的楼中楼尚未验证，不支持。支持 `--limit`、`--cursor`、`--all`、jsonl 和 `--raw`。 |
@@ -174,6 +174,20 @@ B 站是 catbus 的参考实现（`src/platforms/bilibili/web/`），也是 10 �
 | `msg` | `list` `history` `send` `listen` `read` `revoke` `delete` |
 | `history` | `list` |
 | `topic` | `search` |
+
+### 评论区投票
+
+创建单选投票时，依次传入选项。图片投票再按同一顺序传入 PNG 或 JPEG 图片（本地文件或 URL）。命令返回投票 ID 和观众可打开的 B 站链接。
+
+```bash
+catbus bilibili vote create --title "下一张头像选哪张？" --duration 48h \
+  --option "A 工牌蓝" --option "B 周末绿" --image ./blue.png --image ./green.png
+catbus bilibili comment add "$BVID" "点投票选一张，票高的换头像。" --vote "$VOTE_ID"
+catbus bilibili comment pin "$BVID" "$COMMENT_ID"
+catbus bilibili vote get "$VOTE_ID"
+```
+
+`VOTE_ID` 取创建结果的 `data.id`，`COMMENT_ID` 取评论结果的 `data.id`。评论或置顶失败时，使用已返回的 ID 从该步重试。文字投票只需省略图片。若按发稿时间结票，把 `--duration 48h` 换为 `--ends-at` 加上发稿后 48 小时的带时区时间，如 `2030-04-03T18:00:00+08:00`。用 `vote get` 核对平台记录的截止时间、参与人数和各选项票数。
 
 ## 私有选项与平台扩展
 

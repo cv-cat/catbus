@@ -2,7 +2,7 @@ import { CatbusError } from '../../../core/errors.js'
 import { type MultipartPart } from '../../../core/http.js'
 import { compactJson, jsonDumps, type Pairs, quote } from '../../../core/py.js'
 import * as rand from '../../../core/rand.js'
-import type { Bili } from './client.js'
+import { type Bili, check } from './client.js'
 import { API, headers, LIVE_API, MEMBER, ORIGIN, PASSPORT, PROFILE } from './profile.js'
 import { bv2av, dumps, qvId, randomHex } from './sign.js'
 
@@ -460,6 +460,28 @@ export async function addReply(b: Bili, oid: string, message: string, type = 1, 
   if (root) form.push(['root', root], ['parent', parent || root])
   form.push(['gaia_source', 'main_web'], ['csrf', b.csrf], ['statistics', STATISTICS])
   return b.post(`${API}/x/v2/reply/add`, { headers: h.get(), query, form })
+}
+
+/** 非上游：投票网页在评论场景使用 x/vote 和 release_scene=reply。 */
+export async function createVote(b: Bili, info: {
+  title: string; desc: string; type: number; duration: number; vote_publisher: number
+  options: { opt_desc: string; img_url?: string }[]
+}) {
+  const h = headers('POST', { origin: ORIGIN.dynamic }).referer(`${ORIGIN.dynamic}/`)
+  // 创建没有幂等键；网关错误可能发生在服务端已创建之后。
+  const body = await b.json({
+    method: 'POST', url: `${API}/x/vote/create`,
+    headers: h.get(),
+    query: [['csrf', b.csrf]],
+    json: { vote_info: { ...info, choice_cnt: 1, only_fans_level: 0, release_scene: 'reply' } },
+  }, 0)
+  check(b.ctx, body)
+  return body.data
+}
+
+export function voteInfo(b: Bili, id: string) {
+  const h = headers('GET', { origin: ORIGIN.dynamic }).referer(`${ORIGIN.dynamic}/`)
+  return b.get(`${API}/x/vote/vote_info`, { headers: h.get(), query: [['vote_id', id]] })
 }
 
 export function deleteReply(b: Bili, oid: string, rpid: string, type = 1) {

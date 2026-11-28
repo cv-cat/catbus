@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CATEGORY, filter, PUBLISH, visibility } from '../../core/options.js'
+import { CATEGORY, filter, PUBLISH, STREAM, visibility } from '../../core/options.js'
 import { type CommandDecl, definePlatform, handlers } from '../../core/registry.js'
 import { type Args, type Options, VOCAB } from '../../core/vocab.js'
 
@@ -127,7 +127,10 @@ export default definePlatform({
         'comment add': impl('partial', 'commentAdd', {
           note: DYNAMIC_REPLY_NOTE,
           args: [replyTarget, { name: 'text', summary: '评论内容' }],
-          options: { root: z.string().regex(/^\d+$/, '评论 ID 是数字').optional().describe('根评论 ID：回复楼中楼时用，--reply-to 给被回复的那条') },
+          options: {
+            root: z.string().regex(/^\d+$/, '评论 ID 是数字').optional().describe('根评论 ID：回复楼中楼时用，--reply-to 给被回复的那条'),
+            vote: z.string().regex(/^[1-9]\d*$/, '投票 ID 是正整数').optional().describe('在评论末尾附上该投票的 B 站链接'),
+          },
           check: (_a, o) => (o.root != null && o.replyTo == null ? '--root 要和 --reply-to 一起用' : undefined),
         }),
         'comment delete': impl('partial', 'commentDelete', { note: DYNAMIC_REPLY_NOTE, args: [replyTarget, { name: 'comment', summary: '评论 ID' }] }),
@@ -225,6 +228,36 @@ export default definePlatform({
           handler: h('itemCoin'),
         },
         'item triple': { upstream: 'full', summary: '一键三连', args: [item], auth: 'required', confirm: true, output: '{id}', handler: h('itemTriple') },
+        'vote create': {
+          upstream: 'partial',
+          summary: '创建评论区文字或图片单选投票',
+          args: [],
+          options: {
+            title: z.string().trim().min(1).max(32).describe('投票题面，最多 32 字'),
+            text: z.string().optional().describe('投票说明'),
+            option: z.array(z.string().trim().min(1)).min(2).max(20).describe('选项文字，重复传 2 至 20 次'),
+            image: PUBLISH.image,
+            duration: STREAM.duration.describe('自创建起的投票时长，例如 48h；与 --ends-at 二选一'),
+            endsAt: z.iso.datetime({ offset: true }).optional().describe('截止时间，ISO 8601，必须带时区'),
+          },
+          check: (_args, o) => {
+            if ((o.duration == null) === (o.endsAt == null)) return '--duration 和 --ends-at 必须选一个'
+            if (o.image && (o.image as string[]).length !== (o.option as string[]).length) return '图片数量必须与选项数量一致，按相同顺序传入'
+          },
+          auth: 'required',
+          output: '{id url}',
+          handler: h('voteCreate'),
+          note: '非上游：B 站网页投票接口，创建后用 comment add --vote 把投票入口放到稿件评论区',
+        },
+        'vote get': {
+          upstream: 'partial',
+          summary: '查询投票选项、票数和截止时间',
+          args: [{ name: 'vote', summary: '投票 ID，由 vote create 返回' }],
+          auth: 'required',
+          output: 'Vote',
+          handler: h('voteGet'),
+          note: '非上游：B 站网页投票详情接口',
+        },
         'series add': {
           upstream: 'partial',
           summary: '把稿件加进合集',
